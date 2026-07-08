@@ -40442,3 +40442,14 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   one transfer retried after invalidating the retained scoped session. DevTools
   sampling around the job showed the service-managed Gemini port reopening on
   `45019` with three Gemini page targets and no tab-count growth.
+- 2026-07-08: Installed the ChatGPT project-resolution cache-authority fix
+  into the user runtime and restarted `auracall-api.service`. The installed
+  bundle at
+  `~/.auracall/user-runtime/node_modules/auracall/dist/src/browser/llmService/llmService.js`
+  contains `project_discovery_failed`, `project_not_found`, and
+  `project_cache_miss`; `/home/ecochran76/.local/bin/auracall --version`
+  reports `0.1.1`. The service restarted as PID `12029` at
+  `2026-07-08T11:24:20Z`, listens on `127.0.0.1:18095`, and direct
+  `GET /status` returned `ok=true`, `version=0.1.1`, and auth enabled.
+  The stop phase timed out and systemd killed the old PID `5064`, then the new
+  unit started cleanly.
