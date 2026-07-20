@@ -144,34 +144,37 @@ no issues; favor useful, actionable information.
 
 This repo keeps its durable repo-local policy under `docs/dev/policies/`.
 
-Always read:
+Read and follow:
+- `docs/dev/policies/0001-policy-management.md`
+- `docs/dev/policies/0002-policy-upgrade-management.md`
+- `docs/dev/policies/0003-policy-adoption-feedback-loop.md`
+- `docs/dev/policies/0004-notes-and-memories.md`
+- `docs/dev/policies/0005-planning-discipline.md`
+- `docs/dev/policies/0006-parallel-plan-design.md`
+- `docs/dev/policies/0007-roadmap-runbook-governance.md`
 - `docs/dev/policies/0008-architecture-guardrails.md`
 - `docs/dev/policies/0009-documentation-change-control.md`
-- `docs/dev/policies/0017-turn-closeout.md`
-- `docs/dev/policies/0018-validation-and-handoff.md`
-- `docs/dev/policies/0020-lint-warning-debt.md`
-
-For planning/roadmap work also read:
-- `docs/dev/policies/0005-planning-discipline.md`
-- `docs/dev/policies/0007-roadmap-runbook-governance.md`
-
-For git/integration/release work also read:
 - `docs/dev/policies/0010-git-worktree-hygiene.md`
 - `docs/dev/policies/0011-commit-history-discipline.md`
 - `docs/dev/policies/0012-branch-and-integration-strategy.md`
 - `docs/dev/policies/0013-commit-and-push-cadence.md`
-- `docs/dev/policies/0016-versioning-and-release.md`
-- `docs/dev/policies/0019-upstream-fork-maintenance.md`
-
-For multi-agent or long-running context work also read:
-- `docs/dev/policies/0004-notes-and-memories.md`
-- `docs/dev/policies/0006-parallel-plan-design.md`
 - `docs/dev/policies/0014-multi-agent-reconciliation.md`
 - `docs/dev/policies/0015-subagent-workflow-optimization.md`
+- `docs/dev/policies/0016-versioning-and-release.md`
+- `docs/dev/policies/0017-turn-closeout.md`
+- `docs/dev/policies/0018-validation-and-handoff.md`
+- `docs/dev/policies/0019-upstream-fork-maintenance.md`
+- `docs/dev/policies/0020-lint-warning-debt.md`
+- `docs/dev/policies/0021-graph-backed-memory-usage.md`
+- `docs/dev/policies/0022-codegraph-usage.md`
+- `docs/dev/policies/0023-goal-execution-governance.md`
+- `docs/dev/policies/0024-policy-harvest-loop.md`
+- `docs/dev/policies/0025-subagent-runtime-governance.md`
+- `docs/dev/policies/0026-memory-service-runtime-governance.md`
+- `docs/dev/policies/0027-preview-artifact-review.md`
 
 ## Scope
 
 - `AGENTS.md` includes repo-local guidance plus the policy entry section.
 - The durable policy body lives under `docs/dev/policies/`.
-- Canonical bounded plan artifacts belong under `docs/dev/plans/`.
 - Keep repo-specific commands, environment details, and operational caveats in this file or adjacent local docs.

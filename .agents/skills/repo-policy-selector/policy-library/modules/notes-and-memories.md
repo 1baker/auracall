@@ -1,4 +1,13 @@
-# Policy | Notes And Memories
+---
+id: notes-and-memories
+title: Notes And Memories
+summary: Keep durable notes and memories under docs/dev with deterministic naming and use deterministic helpers to manage them.
+tags:
+  - notes
+  - memories
+  - continuity
+  - governance
+---
 
 ## Policy
 
@@ -17,3 +26,5 @@
 ## Adoption Notes
 
 Use this module when a repo benefits from durable continuity beyond plans alone, especially for migrations, policy evolution, operational knowledge, or recurring maintainer context.
+
+Use `graph-backed-memory-usage` as a companion module when the repo relies on an installed graph-backed memory system during normal work.

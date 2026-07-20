@@ -1,10 +1,16 @@
-# Policy | Policy Adoption Feedback Loop
+---
+id: policy-adoption-feedback-loop
+title: Policy Adoption Feedback Loop
+summary: Record what worked, what did not, and what should change upstream after policy adoption or upgrade so reusable lessons do not disappear into chat history.
+tags:
+  - policy
+  - feedback
+  - upgrades
+  - notes
+---
 
 ## Policy
 
-- After first policy adoption, major policy upgrade, or meaningful policy friction, record a dated feedback note in the adopting repo.
-- The feedback note should identify at least:
-  - installed policy bundle version or ref
 - After first policy adoption, the first substantive execution under that
   policy, a major policy upgrade, or meaningful policy friction, record a dated
   feedback artifact in the adopting repo.
@@ -18,7 +24,6 @@
   - what created friction or ambiguity
   - what should remain repo-local
   - what may warrant an upstream module, profile, or selector change
-- Prefer storing dated adoption feedback under `docs/dev/notes/` and stable long-lived conclusions under `docs/dev/memories/`.
 - Distinguish installation, active wiring, and enacted behavior. Cite the
   `AGENTS.md` entrypoint for wiring and a current plan, runbook entry, closeout,
   audit receipt, or runtime readback for behavioral evidence.
@@ -34,7 +39,6 @@
 - If the repo uses a pinned installed selector bundle, tie feedback to that pinned version so later maintainers can interpret it correctly.
 - When a repo adopts local overrides instead of the exact starter profile, record why; those reasons are often the best signal for future shared policy refinement.
 - When a repo upgrades policy, compare the new experience to prior adoption notes so repeated friction becomes visible over time.
-- A single dated note may satisfy this module, `policy-upgrade-management`, and `notes-and-memories` when it captures both the upgrade or adoption decision and the resulting feedback clearly.
 - Record stale local-policy prose, invalid local facts, and audit-contract
   incompatibilities as adoption defects even when the underlying work outcome
   was successful.

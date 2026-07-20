@@ -1,4 +1,13 @@
-# Policy | Parallel Plan Design
+---
+id: parallel-plan-design
+title: Parallel Plan Design
+summary: Design plans so parallelizable work is explicit, low-conflict lanes are separated from critical-path blockers, and ownership stays clear.
+tags:
+  - planning
+  - parallelism
+  - agents
+  - coordination
+---
 
 ## Policy
 

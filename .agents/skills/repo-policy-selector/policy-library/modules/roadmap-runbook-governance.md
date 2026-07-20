@@ -1,4 +1,14 @@
-# Policy | Roadmap / Runbook Governance
+---
+id: roadmap-runbook-governance
+title: Roadmap / Runbook Governance
+summary: Prevent plan drift by assigning clear authority to roadmap, runbook, and progress files.
+tags:
+  - governance
+  - roadmap
+  - runbook
+  - antidrift
+  - auditability
+---
 
 ## Policy
 
