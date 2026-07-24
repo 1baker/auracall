@@ -13,10 +13,15 @@ import {
 	type AccountMirrorRefreshError,
 	classifyChatgptRateLimitCensusProbeForTest,
 	createAccountMirrorRefreshService,
+	readPreviousAccountMirrorFilesForTest,
+	writeChatgptRateLimitCensusGuardForTest,
 } from "../../src/accountMirror/refreshService.js";
 import { createAccountMirrorStatusRegistry } from "../../src/accountMirror/statusRegistry.js";
 import { setAuracallHomeDirOverrideForTest } from "../../src/auracallHome.js";
-import { writeChatgptRateLimitGuardState } from "../../src/browser/chatgptRateLimitGuard.js";
+import {
+	readChatgptRateLimitGuardState,
+	writeChatgptRateLimitGuardState,
+} from "../../src/browser/chatgptRateLimitGuard.js";
 import { listDomDriftObservations } from "../../src/browser/domDriftObservations.js";
 import {
 	clearBrowserOperationQueueObservationsForTest,
@@ -82,6 +87,38 @@ describe("account mirror refresh service", () => {
 		setAuracallHomeDirOverrideForTest(homeDir);
 		return homeDir;
 	}
+
+	test("bounds prior conversation cache hydration by cycle size and concurrency", async () => {
+		let activeReads = 0;
+		let maxActiveReads = 0;
+		const readConversationFiles = vi.fn(async () => {
+			activeReads += 1;
+			maxActiveReads = Math.max(maxActiveReads, activeReads);
+			await Promise.resolve();
+			activeReads -= 1;
+			return [];
+		});
+		const conversations = Array.from({ length: 100 }, (_, index) => ({
+			id: `conv_${index}`,
+			title: `Conversation ${index}`,
+			provider: "chatgpt" as const,
+		}));
+
+		await readPreviousAccountMirrorFilesForTest({
+			persistence: {
+				...createNoopPersistence(),
+				readConversationFiles,
+			},
+			provider: "chatgpt",
+			boundIdentityKey: "account@example.com",
+			catalogFiles: [],
+			conversations,
+			conversationLimit: 12,
+		});
+
+		expect(readConversationFiles).toHaveBeenCalledTimes(12);
+		expect(maxActiveReads).toBeLessThanOrEqual(4);
+	});
 
 	test("runs an explicit default ChatGPT refresh through the browser operation dispatcher", async () => {
 		const metadataCollector = {
@@ -203,13 +240,14 @@ describe("account mirror refresh service", () => {
 		expect(metadataCollector.collect).toHaveBeenCalledWith({
 			provider: "chatgpt",
 			runtimeProfileId: "default",
-			expectedIdentityKey: "ecochran76@gmail.com",
+			expectedIdentityKey: "service-account:chatgpt:ecochran76@gmail.com|structure=business",
 			sweepMode: "steady_follow",
 			materializationPolicy: null,
 			requestedPhase: null,
 			shouldYield: expect.any(Function),
 			onIdentityVerified: expect.any(Function),
 			onProgress: expect.any(Function),
+			onDiagnosticEvent: expect.any(Function),
 			limits: {
 				maxPageReadsPerCycle: 4,
 				maxConversationRowsPerCycle: 30,
@@ -286,7 +324,7 @@ describe("account mirror refresh service", () => {
 			provider: "chatgpt",
 			runtimeProfileId: "default",
 			browserProfileId: "default",
-			boundIdentityKey: "ecochran76@gmail.com",
+			boundIdentityKey: "service-account:chatgpt:ecochran76@gmail.com|structure=business",
 			detectedIdentityKey: "ecochran76@gmail.com",
 			detectedAccountLevel: "Business",
 			requestId: "acctmirror_test",
@@ -836,6 +874,57 @@ describe("account mirror refresh service", () => {
 				text: "ChatGPT can make mistakes. Check important info.",
 			}),
 		).toBeNull();
+	});
+
+	test("closes a persistent target-census warning tab before a bounded retry", async () => {
+		const firstDetectedAtMs = Date.parse("2026-07-16T12:00:00.000Z");
+		const closeTarget = vi.fn(async () => {});
+		await expect(
+			writeChatgptRateLimitCensusGuardForTest({
+				runtimeProfileId: "default",
+				detectedAtMs: firstDetectedAtMs,
+				reason: "Too many requests.",
+				url: "https://chatgpt.com/",
+				closeTarget,
+			}),
+		).resolves.toMatchObject({
+			state: "cooldown",
+			action: "account-mirror-refresh:target-census-visible-warning",
+		});
+
+		await expect(
+			writeChatgptRateLimitCensusGuardForTest({
+				runtimeProfileId: "default",
+				detectedAtMs: Date.parse("2026-07-16T12:20:00.000Z"),
+				reason: "Too many requests.",
+				url: "https://chatgpt.com/",
+				closeTarget,
+			}),
+		).resolves.toMatchObject({
+			state: "cooldown",
+			action: "account-mirror-refresh:target-census-persistent-warning-tab-closed",
+		});
+		await expect(
+			writeChatgptRateLimitCensusGuardForTest({
+				runtimeProfileId: "default",
+				detectedAtMs: Date.parse("2026-07-16T12:22:00.000Z"),
+				reason: "Too many requests.",
+				url: "https://chatgpt.com/",
+				closeTarget,
+			}),
+		).resolves.toMatchObject({
+			state: "cooldown",
+			cooldownUntilMs: Date.parse("2026-07-16T12:35:00.000Z"),
+			action: "account-mirror-refresh:target-census-persistent-warning-tab-closed",
+		});
+		expect(closeTarget).toHaveBeenCalledOnce();
+		await expect(readChatgptRateLimitGuardState({ profileName: "default" })).resolves.toMatchObject(
+			{
+				cooldownDetectedAt: Date.parse("2026-07-16T12:20:00.000Z"),
+				cooldownUntil: Date.parse("2026-07-16T12:35:00.000Z"),
+				cooldownAction: "account-mirror-refresh:target-census-persistent-warning-tab-closed",
+			},
+		);
 	});
 
 	test("preserves a ChatGPT cooldown guard detected before the collector runs", async () => {
@@ -1910,6 +1999,41 @@ describe("account mirror refresh service", () => {
 		});
 	});
 
+	test("terminates the managed browser after a bounded refresh failure", async () => {
+		const findManagedBrowserPid = vi.fn(async () => 4343);
+		const terminateManagedBrowserProcess = vi.fn(async () => {});
+		const service = createAccountMirrorRefreshService({
+			config,
+			dispatcher: createBrowserOperationDispatcher(),
+			metadataCollector: {
+				collect: vi.fn(async () => {
+					throw new Error("ChatGPT rate limit cooldown active; requests too quickly.");
+				}),
+			},
+			persistence: createNoopPersistence(),
+			findManagedBrowserPid,
+			terminateManagedBrowserProcess,
+			generateRequestId: () => "acctmirror_chatgpt_failed_cleanup",
+		});
+
+		await expect(
+			service.requestRefresh({
+				provider: "chatgpt",
+				runtimeProfileId: "default",
+				explicitRefresh: true,
+				cleanupManagedBrowserAfterRefresh: true,
+			}),
+		).rejects.toThrow("ChatGPT rate limit cooldown active; requests too quickly.");
+		expect(findManagedBrowserPid).toHaveBeenCalledWith(expect.stringContaining("chatgpt"));
+		expect(terminateManagedBrowserProcess).toHaveBeenCalledWith(
+			expect.objectContaining({
+				pid: 4343,
+				provider: "chatgpt",
+				runtimeProfileId: "default",
+			}),
+		);
+	});
+
 	test("reports dispatcher busy instead of bypassing the browser control plane", async () => {
 		const dispatcher = createBrowserOperationDispatcher({
 			now: () => new Date("2026-04-29T12:00:00.000Z"),
@@ -2009,7 +2133,7 @@ describe("account mirror refresh service", () => {
 				provider: "chatgpt",
 				runtimeProfileId: "default",
 				browserProfileId: "default",
-				boundIdentityKey: "ecochran76@gmail.com",
+				boundIdentityKey: "service-account:chatgpt:ecochran76@gmail.com|structure=business",
 				updatedAt: "2026-05-02T20:05:00.000Z",
 				state: expect.objectContaining({
 					lastAttemptAtMs: Date.parse("2026-05-02T20:05:00.000Z"),
@@ -2029,6 +2153,15 @@ describe("account mirror refresh service", () => {
 			mirrorState: expect.objectContaining({
 				queued: false,
 				running: false,
+			}),
+			metadataEvidence: expect.objectContaining({
+				collectorDiagnostics: [
+					expect.objectContaining({
+						stage: "collector",
+						event: "timed_out",
+						timeoutMs: 5,
+					}),
+				],
 			}),
 		});
 
@@ -2053,6 +2186,94 @@ describe("account mirror refresh service", () => {
 					}),
 				},
 			],
+		});
+	});
+
+	test("rejects request-scoped development overrides unless the installed capability is armed", async () => {
+		const service = createAccountMirrorRefreshService({
+			config,
+			registry: createAccountMirrorStatusRegistry({ config }),
+			metadataCollector: { collect: vi.fn() },
+			persistence: createNoopPersistence(),
+		});
+
+		await expect(
+			service.requestRefresh({
+				provider: "chatgpt",
+				runtimeProfileId: "default",
+				explicitRefresh: true,
+				development: {
+					enabled: true,
+					maxWallTimeMs: 300_000,
+					maxConversations: 12,
+					maxMaterializationCandidates: 12,
+					maxPasses: 1,
+				},
+			}),
+		).rejects.toMatchObject({
+			code: "account_mirror_development_controls_not_armed",
+		});
+	});
+
+	test("applies an armed development policy only to the selected refresh", async () => {
+		let observedInput: AccountMirrorMetadataCollectorInput | null = null;
+		const service = createAccountMirrorRefreshService({
+			config,
+			registry: createAccountMirrorStatusRegistry({ config }),
+			developmentControlsEnabled: true,
+			metadataCollector: {
+				collect: vi.fn(async (input: AccountMirrorMetadataCollectorInput) => {
+					observedInput = input;
+					return {
+						detectedIdentityKey: "ecochran76@gmail.com",
+						detectedAccountLevel: "Business",
+						metadataCounts: { projects: 0, conversations: 0, artifacts: 0, files: 0, media: 0 },
+						manifests: { projects: [], conversations: [], artifacts: [], files: [], media: [] },
+						evidence: {
+							identitySource: "profile-menu",
+							projectSampleIds: [],
+							conversationSampleIds: [],
+							truncated: { projects: false, conversations: false, artifacts: false },
+						},
+					};
+				}),
+			},
+			persistence: createNoopPersistence(),
+		});
+
+		const result = await service.requestRefresh({
+			provider: "chatgpt",
+			runtimeProfileId: "default",
+			explicitRefresh: true,
+			development: {
+				enabled: true,
+				maxWallTimeMs: 300_000,
+				maxConversations: 12,
+				maxMaterializationCandidates: 12,
+				maxPasses: 1,
+				providerCallTimeoutMs: 30_000,
+				maxBrowserInteractionsPerMinute: 60,
+				conversationReadCooldownMs: 0,
+				pageRefreshCooldownMs: 0,
+				renavigationCooldownMs: 0,
+			},
+		});
+
+		expect(observedInput).toMatchObject({
+			providerCallTimeoutMs: 30_000,
+			detailReadCap: 12,
+			limits: expect.objectContaining({
+				maxPageReadsPerCycle: 12,
+				maxConversationRowsPerCycle: 12,
+				maxBrowserInteractionsPerMinute: 60,
+				conversationReadCooldownMs: 0,
+			}),
+		});
+		expect(result.development).toMatchObject({
+			mode: "development",
+			provider: "chatgpt",
+			runtimeProfileId: "default",
+			serverCapabilityArmed: true,
 		});
 	});
 

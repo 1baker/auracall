@@ -272,6 +272,13 @@ describe("http responses adapter", () => {
 		);
 	});
 
+	const useTempAuracallHome = async (prefix: string): Promise<string> => {
+		const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), prefix));
+		cleanup.push(homeDir);
+		setAuracallHomeDirOverrideForTest(homeDir);
+		return homeDir;
+	};
+
 	const seedPlannedDirectRun = async (
 		control: ReturnType<typeof createExecutionRuntimeControl>,
 		runId: string,
@@ -2473,7 +2480,7 @@ describe("http responses adapter", () => {
 						provider: "chatgpt",
 						runtimeProfileId: "default",
 						browserProfileId: "default",
-						expectedIdentityKey: "ecochran76@gmail.com",
+						expectedIdentityKey: "service-account:chatgpt:ecochran76@gmail.com|structure=business",
 						accountLevel: "Business",
 						status: "eligible",
 						reason: "eligible",
@@ -2548,7 +2555,7 @@ describe("http responses adapter", () => {
 				},
 			});
 			expect(refreshPayload.mirrorStatus.entries[0]).toMatchObject({
-				detectedIdentityKey: "ecochran76@gmail.com",
+        detectedIdentityKey: "service-account:chatgpt:ecochran76@gmail.com|structure=business",
 				mirrorState: expect.objectContaining({
 					queued: false,
 					running: false,
@@ -2580,15 +2587,130 @@ describe("http responses adapter", () => {
 		}
 	});
 
-	it("keeps broad account mirror status readback off archive hydration paths", async () => {
+	it("previews armed development policy and exposes cancellable asynchronous runs", async () => {
+		const requestRefresh = vi.fn<AccountMirrorRefreshService["requestRefresh"]>((request) => {
+			if (!request) throw new Error("Expected a development refresh request.");
+			return new Promise((_resolve, reject) => {
+				request.abortSignal?.addEventListener(
+					"abort",
+					() => reject(request.abortSignal?.reason ?? new Error("cancelled")),
+					{ once: true },
+				);
+			});
+		});
+		const server = await createResponsesHttpServer(
+			{ host: "127.0.0.1", port: 0 },
+			{
+				env: { AURACALL_ACCOUNT_MIRROR_DEVELOPMENT_CONTROLS: "1" },
+				accountMirrorRefreshService: { requestRefresh },
+			},
+		);
+		const development = {
+			enabled: true,
+			maxWallTimeMs: 300_000,
+			maxConversations: 12,
+			maxMaterializationCandidates: 12,
+			maxPasses: 3,
+			providerCallTimeoutMs: 10_000,
+			maxBrowserInteractionsPerMinute: 60,
+			conversationReadCooldownMs: 0,
+			pageRefreshCooldownMs: 0,
+			renavigationCooldownMs: 0,
+		};
+
+		try {
+			const capability = await fetch(
+				`http://127.0.0.1:${server.port}/v1/account-mirrors/development-policy`,
+			);
+			await expect(capability.json()).resolves.toMatchObject({
+				object: "account_mirror_development_capability",
+				armed: true,
+			});
+
+			const preview = await fetch(
+				`http://127.0.0.1:${server.port}/v1/account-mirrors/development-policy`,
+				{
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ provider: "chatgpt", runtimeProfile: "default", development }),
+				},
+			);
+			expect(preview.status).toBe(200);
+			await expect(preview.json()).resolves.toMatchObject({
+				object: "account_mirror_development_policy_preview",
+				providerWorkStarted: false,
+				normalPolicy: { collectorTimeoutMs: 120_000, detailReadCap: 6 },
+				effective: {
+					mode: "development",
+					provider: "chatgpt",
+					runtimeProfileId: "default",
+					maxConversations: 12,
+				},
+			});
+			expect(requestRefresh).not.toHaveBeenCalled();
+
+			const started = await fetch(
+				`http://127.0.0.1:${server.port}/v1/account-mirrors/development-runs`,
+				{
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({
+						provider: "chatgpt",
+						runtimeProfile: "default",
+						requestedPhase: "detail-inventory",
+						development,
+					}),
+				},
+			);
+			expect(started.status).toBe(202);
+			const run = (await started.json()) as JsonObject;
+			expect(run).toMatchObject({
+				object: "account_mirror_development_run",
+				status: "running",
+				provider: "chatgpt",
+				runtimeProfileId: "default",
+			});
+			expect(requestRefresh).toHaveBeenCalledWith(
+				expect.objectContaining({
+					provider: "chatgpt",
+					runtimeProfileId: "default",
+					requestedPhase: "detail-inventory",
+					abortSignal: expect.any(AbortSignal),
+				}),
+			);
+
+			const cancelled = await fetch(
+				`http://127.0.0.1:${server.port}/v1/account-mirrors/development-runs/${String(run.id)}`,
+				{
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ action: "cancel" }),
+				},
+			);
+			expect(cancelled.status).toBe(200);
+			await expect(cancelled.json()).resolves.toMatchObject({
+				object: "account_mirror_development_run",
+				status: "cancelled",
+			});
+		} finally {
+			await server.close();
+		}
+	});
+
+	it("hydrates broad account mirror status readback from bounded archive paths", async () => {
 		const homeDir = await fs.mkdtemp(
 			path.join(os.tmpdir(), "auracall-http-account-mirror-status-broad-"),
 		);
 		cleanup.push(homeDir);
 		setAuracallHomeDirOverrideForTest(homeDir);
-		const listArchiveItems = vi.fn(async () => {
-			throw new Error("broad status must not list archive items");
-		});
+		const listArchiveItems = vi.fn(async (request) => ({
+			object: "run_archive" as const,
+			generatedAt: "2026-07-07T21:50:00.000Z",
+			kind: request?.kind ?? null,
+			limit: request?.limit ?? 500,
+			items: [],
+			metrics: { total: 0, byKind: {} },
+		}));
 		const listHistoryMaterializationJobs = vi.fn(async () => ({
 			object: "history_materialization_jobs" as const,
 			generatedAt: "2026-06-11T17:15:00.000Z",
@@ -2665,7 +2787,22 @@ describe("http responses adapter", () => {
 				},
 			});
 
-			expect(listArchiveItems).not.toHaveBeenCalled();
+			expect(listArchiveItems).toHaveBeenCalledWith(
+				expect.objectContaining({
+					provider: "chatgpt",
+					runtimeProfile: "default",
+					assetAvailability: "available",
+					limit: 500,
+				}),
+			);
+			expect(listArchiveItems).toHaveBeenCalledWith(
+				expect.objectContaining({
+					provider: "chatgpt",
+					runtimeProfile: "wsl-chrome-2",
+					assetAvailability: "available",
+					limit: 500,
+				}),
+			);
 			expect(listHistoryMaterializationJobs).toHaveBeenCalledWith(
 				expect.objectContaining({
 					status: "terminal",
@@ -3118,8 +3255,7 @@ describe("http responses adapter", () => {
 										browserProfile: "auracall-gemini-pro",
 										boundIdentityKey: "operator@example.com",
 										conversationId: "667691d5b0f04652",
-										providerConversationUrl:
-											"https://gemini.google.com/app/667691d5b0f04652",
+										providerConversationUrl: "https://gemini.google.com/app/667691d5b0f04652",
 										projectId: null,
 									},
 									source: { type: "reconciliation" as const, provider: "gemini" as const },
@@ -3207,13 +3343,19 @@ describe("http responses adapter", () => {
 			};
 			const gemini = payload.liveFollow.targets.accounts.find(
 				(account) =>
-					account.provider === "gemini" &&
-					account.runtimeProfileId === "auracall-gemini-pro",
+					account.provider === "gemini" && account.runtimeProfileId === "auracall-gemini-pro",
 			);
 			expect(gemini?.materializationBacklog).toMatchObject({
 				localMaterialized: { artifacts: 1, total: 1 },
 			});
-			expect(listArchiveItems).not.toHaveBeenCalled();
+			expect(listArchiveItems).toHaveBeenCalledWith(
+				expect.objectContaining({
+					provider: "gemini",
+					runtimeProfile: "auracall-gemini-pro",
+					assetAvailability: "available",
+					limit: 500,
+				}),
+			);
 			expect(listHistoryMaterializationJobs).toHaveBeenCalledWith(
 				expect.objectContaining({
 					status: "terminal",
@@ -3226,7 +3368,202 @@ describe("http responses adapter", () => {
 		}
 	});
 
+	it("hydrates broad live-follow status from archive items for identity-keyed materialized assets", async () => {
+		const homeDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), "auracall-http-account-mirror-status-archive-hydration-"),
+		);
+		cleanup.push(homeDir);
+		setAuracallHomeDirOverrideForTest(homeDir);
+		const config = {
+			runtimeProfiles: {
+				default: {
+					browserProfile: "default",
+					defaultService: "chatgpt",
+					services: {
+						chatgpt: {
+							identity: { email: "operator@example.com" },
+							liveFollow: { enabled: true, materializationPolicy: "full_missing_assets" },
+						},
+					},
+				},
+				"wsl-chrome-2": {
+					browserProfile: "wsl-chrome-2",
+					defaultService: "chatgpt",
+					services: {
+						chatgpt: {
+							identity: { email: "other@example.com" },
+							liveFollow: { enabled: false },
+						},
+					},
+				},
+			},
+		};
+		const registry = createAccountMirrorStatusRegistry({
+			config,
+			now: () => new Date("2026-07-09T14:40:00.000Z"),
+			initialState: {
+				"chatgpt:default": {
+					detectedIdentityKey: "operator@example.com",
+					metadataCounts: { projects: 0, conversations: 1, artifacts: 2, files: 0, media: 0 },
+					metadataEvidence: {
+						identitySource: "auth-session",
+						projectSampleIds: [],
+						conversationSampleIds: ["chatgpt_conv"],
+						truncated: { projects: false, conversations: false, artifacts: false },
+						assetInventory: {
+							state: "observed",
+							summary: "Asset inventory was observed.",
+							detailScannedThisPass: { projects: 0, conversations: 1, total: 1 },
+							localMaterialized: { artifacts: 0, files: 0, media: 0 },
+							remoteKnownMissingLocal: { artifacts: 2, files: 0, media: 0 },
+							unknownOrDeferred: { artifacts: 0, files: 0, media: 0 },
+						},
+					},
+				},
+				"chatgpt:wsl-chrome-2": {
+					detectedIdentityKey: "other@example.com",
+					metadataCounts: { projects: 0, conversations: 0, artifacts: 0, files: 0, media: 0 },
+					metadataEvidence: {
+						identitySource: "auth-session",
+						projectSampleIds: [],
+						conversationSampleIds: [],
+						truncated: { projects: false, conversations: false, artifacts: false },
+						assetInventory: {
+							state: "observed",
+							summary: "No remote assets were observed.",
+							detailScannedThisPass: { projects: 0, conversations: 0, total: 0 },
+							localMaterialized: { artifacts: 0, files: 0, media: 0 },
+							remoteKnownMissingLocal: { artifacts: 0, files: 0, media: 0 },
+							unknownOrDeferred: { artifacts: 0, files: 0, media: 0 },
+						},
+					},
+				},
+			},
+		});
+		const listArchiveItems = vi.fn(async (request) => ({
+			object: "run_archive" as const,
+			generatedAt: "2026-07-09T14:40:00.000Z",
+			kind: request?.kind ?? null,
+			limit: request?.limit ?? 500,
+			items:
+				request?.provider === "chatgpt" && request?.runtimeProfile === "default"
+					? [
+							{
+								id: "history-generated-artifact:chatgpt:operator_default:conv_1:artifact_1",
+								object: "run_archive_item" as const,
+								kind: "generated_artifact" as const,
+								source: "account_mirror" as const,
+								createdAt: "2026-07-09T14:34:34.636Z",
+								updatedAt: "2026-07-09T14:34:34.636Z",
+								title: "Materialized artifact",
+								status: "materialized" as const,
+								runtimeState: null,
+								provider: "chatgpt" as const,
+								runtimeProfile: "default",
+								browserProfile: "default",
+								projectId: null,
+								boundIdentityKey: "operator@example.com",
+								agentId: null,
+								teamId: null,
+								responseId: null,
+								batchId: null,
+								batchIndex: null,
+								mediaGenerationId: null,
+								providerConversationId: "conv_1",
+								providerConversationUrl: "https://chatgpt.com/c/conv_1",
+								artifactId: "artifact_1",
+								fileName: "artifact.txt",
+								mimeType: "text/plain",
+								localPath: "/tmp/artifact.txt",
+								uri: "sandbox:/mnt/data/artifact.txt",
+								cacheKey: "sha256:artifact",
+								checksumSha256: "sha256:artifact",
+								fileAvailable: true,
+								metadata: {},
+								links: {},
+							},
+						]
+					: [],
+			metrics: { total: request?.runtimeProfile === "default" ? 1 : 0, byKind: {} },
+		}));
+		const listHistoryMaterializationJobs = vi.fn(async (request) => ({
+			object: "history_materialization_jobs" as const,
+			generatedAt: "2026-07-09T14:40:00.000Z",
+			status: request?.status ?? null,
+			provider: request?.provider ?? null,
+			runtimeProfile: request?.runtimeProfile ?? null,
+			sourceType: request?.sourceType ?? null,
+			limit: request?.limit ?? 500,
+			jobs: [],
+			metrics: { total: 0, byStatus: {}, active: 0, terminal: 0 },
+		}));
+
+		const server = await createResponsesHttpServer(
+			{ host: "127.0.0.1", port: 0 },
+			{
+				now: () => new Date("2026-07-09T14:40:00.000Z"),
+				config,
+				accountMirrorStatusRegistry: registry,
+				runArchiveService: {
+					listItems: listArchiveItems,
+				} as unknown as RunArchiveService,
+				historyMaterializationService: {
+					listJobs: listHistoryMaterializationJobs,
+					createJob: vi.fn(),
+					readJob: vi.fn(),
+					cancelJob: vi.fn(),
+					runJob: vi.fn(),
+					recoverInterruptedJobs: vi.fn(async () => 0),
+				} as unknown as HistoryMaterializationService,
+			},
+		);
+
+		try {
+			const response = await fetch(`http://127.0.0.1:${server.port}/status`);
+			expect(response.status).toBe(200);
+			const payload = (await response.json()) as {
+				liveFollow: {
+					targets: {
+						accounts: Array<{
+							provider: string;
+							runtimeProfileId: string;
+							materializationBacklog: {
+								localMaterialized: { artifacts: number; total: number };
+								remoteKnownMissingLocal: { artifacts: number; total: number };
+							} | null;
+						}>;
+					};
+				};
+			};
+			const account = payload.liveFollow.targets.accounts.find(
+				(entry) => entry.provider === "chatgpt" && entry.runtimeProfileId === "default",
+			);
+			expect(account?.materializationBacklog).toMatchObject({
+				localMaterialized: { artifacts: 1, total: 1 },
+				remoteKnownMissingLocal: { artifacts: 0, total: 0 },
+			});
+			expect(listArchiveItems).toHaveBeenCalledWith(
+				expect.objectContaining({
+					provider: "chatgpt",
+					runtimeProfile: "default",
+					assetAvailability: "available",
+					limit: 500,
+				}),
+			);
+		} finally {
+			await server.close();
+		}
+	});
+
 	it("queues and polls account history materialization jobs through the API surface", async () => {
+		const terminalJob = historyMaterializationJob("succeeded");
+		if (terminalJob.result) {
+			terminalJob.result.entries = Array.from({ length: 5_000 }, (_, index) => ({
+				kind: "artifact",
+				providerId: `artifact_${index}`,
+				status: "materialized",
+			})) as unknown as NonNullable<HistoryMaterializationJob["result"]>["entries"];
+		}
 		const createJob = vi.fn(async () => ({
 			object: "history_materialization_job_create_result" as const,
 			generatedAt: "2026-05-22T20:00:00.000Z",
@@ -3234,7 +3571,7 @@ describe("http responses adapter", () => {
 			reuseReason: null,
 			job: historyMaterializationJob("queued"),
 		}));
-		const readJob = vi.fn(async () => historyMaterializationJob("succeeded"));
+		const readJob = vi.fn(async () => terminalJob);
 		const listJobs = vi.fn(async () => ({
 			object: "history_materialization_jobs" as const,
 			generatedAt: "2026-05-22T20:01:00.000Z",
@@ -3243,7 +3580,7 @@ describe("http responses adapter", () => {
 			runtimeProfile: "default",
 			sourceType: "catalog_item" as const,
 			limit: 2,
-			jobs: [historyMaterializationJob("succeeded")],
+			jobs: [terminalJob],
 			metrics: {
 				total: 1,
 				byStatus: { succeeded: 1 },
@@ -3314,12 +3651,16 @@ describe("http responses adapter", () => {
 				`http://127.0.0.1:${server.port}/v1/account-mirrors/materializations?status=terminal&provider=chatgpt&runtimeProfile=default&sourceType=catalog_item&limit=2`,
 			);
 			expect(listResponse.status).toBe(200);
-			expect(await listResponse.json()).toMatchObject({
+			const listPayload = (await listResponse.json()) as {
+				jobs: Array<{ result: { entries: unknown[] } | null }>;
+			};
+			expect(listPayload).toMatchObject({
 				object: "history_materialization_jobs",
 				metrics: {
 					total: 1,
 				},
 			});
+			expect(listPayload.jobs[0]?.result?.entries).toEqual([]);
 			expect(listJobs).toHaveBeenCalledWith({
 				status: "terminal",
 				provider: "chatgpt",
@@ -3332,11 +3673,26 @@ describe("http responses adapter", () => {
 				`http://127.0.0.1:${server.port}/v1/account-mirrors/materializations/hmj_http_1`,
 			);
 			expect(readResponse.status).toBe(200);
-			expect(await readResponse.json()).toMatchObject({
+			const readPayload = (await readResponse.json()) as {
+				id: string;
+				status: string;
+				result: { entries: unknown[] } | null;
+			};
+			expect(readPayload).toMatchObject({
 				id: "hmj_http_1",
 				status: "succeeded",
 			});
+			expect(readPayload.result?.entries).toEqual([]);
 			expect(readJob).toHaveBeenCalledWith("hmj_http_1");
+
+			const fullReadResponse = await fetch(
+				`http://127.0.0.1:${server.port}/v1/account-mirrors/materializations/hmj_http_1?detail=full`,
+			);
+			expect(fullReadResponse.status).toBe(200);
+			const fullReadPayload = (await fullReadResponse.json()) as {
+				result: { entries: unknown[] } | null;
+			};
+			expect(fullReadPayload.result?.entries).toHaveLength(5_000);
 
 			const cancelResponse = await fetch(
 				`http://127.0.0.1:${server.port}/v1/account-mirrors/materializations/hmj_http_1`,
@@ -3957,7 +4313,10 @@ describe("http responses adapter", () => {
 			nextAttemptAt: "2026-04-30T12:10:00.000Z",
 			maxPasses: null,
 			passCount: 1,
-			lastRefresh: null,
+			lastRefresh: {
+				completedAt: "2026-04-30T12:00:00.000Z",
+				rowEvidence: Array.from({ length: 5_000 }, (_, index) => ({ index })),
+			} as unknown as AccountMirrorCompletionOperation["lastRefresh"],
 			mirrorCompleteness: completeAccountMirror,
 			liveFollowCycle: {
 				cycleId: "lfc_effective_wake",
@@ -3978,9 +4337,29 @@ describe("http responses adapter", () => {
 				],
 			},
 			error: null,
+			lifecycleEvents: [
+				{
+					at: "2026-04-30T11:59:00.000Z",
+					type: "started",
+					status: "queued",
+					previousStatus: null,
+					processPid: 101,
+					message: "started",
+				},
+				{
+					at: "2026-04-30T12:00:00.000Z",
+					type: "collector_progress",
+					status: "running",
+					previousStatus: "queued",
+					processPid: 101,
+					message: "progress",
+				},
+			],
 		};
 		const list = vi.fn(() => [operation]);
 		const read = vi.fn(() => operation);
+		const refreshMaterializationStatuses = vi.fn(async () => [operation]);
+		const refreshMaterializationStatus = vi.fn(async () => operation);
 		const start = vi.fn(() => operation);
 		const control = vi.fn(() => ({
 			...operation,
@@ -3991,9 +4370,11 @@ describe("http responses adapter", () => {
 			{
 				accountMirrorCompletionService: {
 					start,
-					read,
-					list,
-					control,
+						read,
+						list,
+						refreshMaterializationStatuses,
+						refreshMaterializationStatus,
+						control,
 				},
 			},
 		);
@@ -4036,7 +4417,10 @@ describe("http responses adapter", () => {
 				`http://127.0.0.1:${server.port}/v1/account-mirrors/completions?status=active&provider=chatgpt&runtimeProfile=default&limit=5`,
 			);
 			expect(response.status).toBe(200);
-			expect(await response.json()).toMatchObject({
+			const listPayload = (await response.json()) as {
+				data: Array<Record<string, unknown>>;
+			};
+			expect(listPayload).toMatchObject({
 				object: "list",
 				count: 1,
 				data: [
@@ -4048,6 +4432,9 @@ describe("http responses adapter", () => {
 					},
 				],
 			});
+			expect(listPayload.data[0]).not.toHaveProperty("lastRefresh.rowEvidence");
+			expect(listPayload.data[0]?.lifecycleEvents).toHaveLength(1);
+			expect(refreshMaterializationStatuses).not.toHaveBeenCalled();
 			expect(list).toHaveBeenCalledWith({
 				provider: "chatgpt",
 				runtimeProfileId: "default",
@@ -4060,10 +4447,23 @@ describe("http responses adapter", () => {
 				`http://127.0.0.1:${server.port}/v1/account-mirrors/completions/acctmirror_http_list`,
 			);
 			expect(statusResponse.status).toBe(200);
-			expect(await statusResponse.json()).toMatchObject({
+			const statusPayload = (await statusResponse.json()) as Record<string, unknown>;
+			expect(statusPayload).toMatchObject({
 				id: "acctmirror_http_list",
 			});
+			expect(statusPayload).not.toHaveProperty("lastRefresh.rowEvidence");
+			expect(statusPayload.lifecycleEvents).toHaveLength(1);
 			expect(read).toHaveBeenCalledWith("acctmirror_http_list");
+			expect(refreshMaterializationStatus).not.toHaveBeenCalled();
+
+			const fullStatusResponse = await fetch(
+				`http://127.0.0.1:${server.port}/v1/account-mirrors/completions/acctmirror_http_list?detail=full`,
+			);
+			expect(fullStatusResponse.status).toBe(200);
+			const fullStatusPayload = (await fullStatusResponse.json()) as Record<string, unknown>;
+			expect(fullStatusPayload).toHaveProperty("lastRefresh.rowEvidence");
+			expect(fullStatusPayload.lifecycleEvents).toHaveLength(2);
+			expect(refreshMaterializationStatus).toHaveBeenCalledWith("acctmirror_http_list");
 
 			const controlResponse = await fetch(
 				`http://127.0.0.1:${server.port}/v1/account-mirrors/completions/acctmirror_http_list`,
@@ -4278,19 +4678,7 @@ describe("http responses adapter", () => {
 			);
 			expect(list).toHaveBeenCalledWith({ limit: null });
 			expect(list).toHaveBeenCalledWith({ status: "active", limit: null });
-			expect(refreshMaterializationStatuses).toHaveBeenCalledTimes(2);
-			expect(refreshMaterializationStatuses).toHaveBeenNthCalledWith(
-				1,
-				expect.arrayContaining([expect.objectContaining({ id: "acctmirror_completed_51" })]),
-			);
-			expect(refreshMaterializationStatuses.mock.calls[0]?.[0]).toHaveLength(10);
-			expect(refreshMaterializationStatuses).toHaveBeenNthCalledWith(
-				2,
-				expect.arrayContaining([
-					expect.objectContaining({ id: "acctmirror_running_count_parity" }),
-					expect.objectContaining({ id: "acctmirror_idle_count_parity" }),
-				]),
-			);
+			expect(refreshMaterializationStatuses).not.toHaveBeenCalled();
 		} finally {
 			await server.close();
 		}
@@ -7181,6 +7569,7 @@ describe("http responses adapter", () => {
 	});
 
 	it("reports dry-run lazy account mirror scheduler passes through /status", async () => {
+		await useTempAuracallHome("auracall-http-scheduler-dry-run-");
 		const pass: AccountMirrorSchedulerPassResult = {
 			object: "account_mirror_scheduler_pass",
 			mode: "dry-run",
@@ -7296,6 +7685,7 @@ describe("http responses adapter", () => {
 	});
 
 	it("does not treat an idle background drain cadence timer as foreground scheduler pressure", async () => {
+		await useTempAuracallHome("auracall-http-scheduler-idle-drain-");
 		const pass: AccountMirrorSchedulerPassResult = {
 			object: "account_mirror_scheduler_pass",
 			mode: "execute",
@@ -7379,6 +7769,7 @@ describe("http responses adapter", () => {
 	});
 
 	it("reports foreground scheduler preemption on live-follow target routine decisions", async () => {
+		await useTempAuracallHome("auracall-http-scheduler-preemption-");
 		const config = {
 			model: "gpt-5.2",
 			browser: {},
@@ -7520,6 +7911,7 @@ describe("http responses adapter", () => {
 	});
 
 	it("runs a scheduler foreground-pressure proof without starting provider refresh", async () => {
+		await useTempAuracallHome("auracall-http-scheduler-pressure-proof-");
 		const config = {
 			model: "gpt-5.2",
 			browser: {},
@@ -8109,6 +8501,75 @@ describe("http responses adapter", () => {
 		}
 	});
 
+	it("restores a persisted account mirror scheduler pause before startup cadence", async () => {
+		const homeDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), "auracall-http-status-scheduler-restart-pause-"),
+		);
+		cleanup.push(homeDir);
+		setAuracallHomeDirOverrideForTest(homeDir);
+		const runOnce = vi.fn(
+			async (): Promise<AccountMirrorSchedulerPassResult> => ({
+				object: "account_mirror_scheduler_pass",
+				mode: "dry-run",
+				action: "skipped",
+				startedAt: "2026-07-18T14:00:00.000Z",
+				completedAt: "2026-07-18T14:00:00.000Z",
+				selectedTarget: null,
+				backpressure: { reason: "none", message: null },
+				metrics: {
+					totalTargets: 0,
+					eligibleTargets: 0,
+					delayedTargets: 0,
+					blockedTargets: 0,
+					defaultChatgptEligibleTargets: 0,
+					defaultChatgptDelayedTargets: 0,
+					inProgressEligibleTargets: 0,
+				},
+				refresh: null,
+				error: null,
+			}),
+		);
+		const deps = {
+			accountMirrorSchedulerService: { runOnce },
+			accountMirrorSchedulerLedger: createMemorySchedulerLedger(),
+		};
+		const options = {
+			host: "127.0.0.1",
+			port: 0,
+			accountMirrorSchedulerIntervalMs: 25,
+			accountMirrorSchedulerDryRun: true,
+		};
+
+		const first = await createResponsesHttpServer(options, deps);
+		try {
+			const response = await fetch(`http://127.0.0.1:${first.port}/status`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ accountMirrorScheduler: { action: "pause" } }),
+			});
+			expect(response.status).toBe(200);
+		} finally {
+			await first.close();
+		}
+
+		runOnce.mockClear();
+		const restarted = await createResponsesHttpServer(options, deps);
+		try {
+			await delay(50);
+			const response = await fetch(`http://127.0.0.1:${restarted.port}/status`);
+			const payload = (await response.json()) as {
+				accountMirrorScheduler: { state: string; paused: boolean };
+			};
+			expect(payload.accountMirrorScheduler).toMatchObject({
+				state: "paused",
+				paused: true,
+			});
+			expect(runOnce).not.toHaveBeenCalled();
+		} finally {
+			await restarted.close();
+		}
+	});
+
 	it("clears an account mirror provider guard through POST /status", async () => {
 		const registry = createAccountMirrorStatusRegistry({
 			config: {
@@ -8329,6 +8790,7 @@ describe("http responses adapter", () => {
 	});
 
 	it("nudges lazy account mirror follow-up after media generation settles", async () => {
+		await useTempAuracallHome("auracall-http-media-scheduler-follow-up-");
 		const pass: AccountMirrorSchedulerPassResult = {
 			object: "account_mirror_scheduler_pass",
 			mode: "dry-run",
@@ -20830,8 +21292,10 @@ describe("http responses adapter", () => {
 			const payload = (await response.json()) as { object: string; data: Array<{ id: string }> };
 			expect(payload.object).toBe("list");
 			expect(payload.data.some((entry) => entry.id === "gpt-5.2")).toBe(true);
+			expect(payload.data.some((entry) => entry.id === "gpt-5.6-sol")).toBe(true);
 			expect(payload.data.some((entry) => entry.id === "gemini-3-pro")).toBe(true);
 			expect(payload.data.some((entry) => entry.id === "chatgpt:pro-extended")).toBe(true);
+			expect(payload.data.some((entry) => entry.id === "chatgpt:sol-high")).toBe(true);
 		} finally {
 			await server.close();
 		}

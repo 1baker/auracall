@@ -3,6 +3,7 @@ import { z } from 'zod';
 import {
   createAccountMirrorCompletionService,
   type AccountMirrorCompletionService,
+  projectAccountMirrorCompletionForMonitoring,
 } from '../../accountMirror/completionService.js';
 import type { AccountMirrorRefreshService } from '../../accountMirror/refreshService.js';
 import type { AccountMirrorStatusRegistry } from '../../accountMirror/statusRegistry.js';
@@ -21,6 +22,7 @@ const accountMirrorCompletionStartInputShape = {
 
 const accountMirrorCompletionStatusInputShape = {
   id: z.string().min(1),
+  detail: z.enum(['summary', 'full']).optional(),
 } satisfies z.ZodRawShape;
 
 const accountMirrorCompletionListInputShape = {
@@ -29,6 +31,7 @@ const accountMirrorCompletionListInputShape = {
   status: z.enum(['active', 'queued', 'running', 'idle_waiting', 'paused', 'completed', 'blocked', 'failed', 'cancelled']).optional(),
   activeOnly: z.boolean().optional(),
   limit: z.number().int().positive().max(500).optional(),
+  detail: z.enum(['summary', 'full']).optional(),
 } satisfies z.ZodRawShape;
 
 const accountMirrorCompletionControlInputShape = {
@@ -155,9 +158,11 @@ export function registerAccountMirrorCompletionTools(
         activeOnly: payload.activeOnly,
         limit: payload.limit,
       });
-      const data = service.refreshMaterializationStatuses
-        ? await service.refreshMaterializationStatuses(listed)
-        : listed;
+      const data = payload.detail === 'full'
+        ? service.refreshMaterializationStatuses
+          ? await service.refreshMaterializationStatuses(listed)
+          : listed
+        : listed.map(projectAccountMirrorCompletionForMonitoring);
       return {
         isError: false,
         content: [
@@ -227,9 +232,12 @@ export function registerAccountMirrorCompletionTools(
     },
     async (rawInput: unknown) => {
       const payload = z.object(accountMirrorCompletionStatusInputShape).parse(rawInput);
-      const result = service.refreshMaterializationStatus
+      const fullResult = payload.detail === 'full' && service.refreshMaterializationStatus
         ? await service.refreshMaterializationStatus(payload.id)
         : service.read(payload.id);
+      const result = payload.detail === 'full' || !fullResult
+        ? fullResult
+        : projectAccountMirrorCompletionForMonitoring(fullResult);
       if (!result) {
         return {
           isError: true,

@@ -211,6 +211,18 @@ function buildThinkingTimeExpression(level: ThinkingTimeLevel): string {
           if (aria.includes('pro') || text.includes('pro')) {
             return btn;
           }
+
+          // GPT-5.6 Sol surfaces can label the same control by reasoning level.
+          if (
+            aria.includes('medium') ||
+            aria.includes('high') ||
+            aria.includes('extra high') ||
+            text.includes('medium') ||
+            text.includes('high') ||
+            text.includes('extra high')
+          ) {
+            return btn;
+          }
         }
       }
       return null;
@@ -464,6 +476,6 @@ function resolveThinkingTimeCandidates(level: ThinkingTimeLevel): string[] {
     case 'standard':
       return ['standard', 'medium'];
     default:
-      return ['pro extended', 'extended'];
+      return ['pro extended', 'extended', 'high'];
   }
 }

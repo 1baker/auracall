@@ -39,6 +39,7 @@ export interface ExpireStoredExecutionRunLeasesInput {
 export interface ListStoredExecutionRunsInput {
   limit?: number;
   status?: ExecutionRunStatus;
+  statuses?: ExecutionRunStatus[];
   sourceKind?: ExecutionRunSourceKind;
   updatedSince?: string;
 }

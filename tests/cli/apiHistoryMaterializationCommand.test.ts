@@ -34,7 +34,7 @@ describe('api history materialization CLI helpers', () => {
           job: historyJob({ status: 'queued' }),
         }));
       }
-      expect(url.toString()).toBe('http://127.0.0.1:18095/v1/account-mirrors/materializations/hmj_test_1');
+      expect(url.toString()).toBe('http://127.0.0.1:18095/v1/account-mirrors/materializations/hmj_test_1?detail=summary');
       return new Response(JSON.stringify(historyJob({ status: 'succeeded' })));
     });
 
@@ -71,7 +71,7 @@ describe('api history materialization CLI helpers', () => {
         return new Response(JSON.stringify(historyJob({ status: 'cancelled' })));
       }
       expect(url.toString()).toBe(
-        'http://127.0.0.1:18095/v1/account-mirrors/materializations?status=terminal&provider=chatgpt&runtimeProfile=default&sourceType=catalog_item&limit=2',
+        'http://127.0.0.1:18095/v1/account-mirrors/materializations?detail=summary&status=terminal&provider=chatgpt&runtimeProfile=default&sourceType=catalog_item&limit=2',
       );
       return new Response(JSON.stringify({
         object: 'history_materialization_jobs',

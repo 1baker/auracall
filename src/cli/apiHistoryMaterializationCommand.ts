@@ -101,10 +101,12 @@ export async function readApiHistoryMaterializationJobForCli(
 	const controller = new AbortController();
 	const timeout = setTimeout(() => controller.abort(), timeoutMs);
 	try {
+		const url = new URL(
+			`http://${host}:${port}/v1/account-mirrors/materializations/${encodeURIComponent(id)}`,
+		);
+		url.searchParams.set("detail", "summary");
 		const response = await fetchWithLocalApiAuth(
-			new URL(
-				`http://${host}:${port}/v1/account-mirrors/materializations/${encodeURIComponent(id)}`,
-			),
+			url,
 			{
 				signal: controller.signal,
 			},
@@ -159,6 +161,7 @@ export async function listApiHistoryMaterializationJobsForCli(
 	const port = normalizePort(options.port);
 	const timeoutMs = normalizeTimeoutMs(options.timeoutMs);
 	const url = new URL(`http://${host}:${port}/v1/account-mirrors/materializations`);
+	url.searchParams.set("detail", "summary");
 	appendOptionalSearchParam(url, "status", options.status);
 	appendOptionalSearchParam(url, "provider", options.provider);
 	appendOptionalSearchParam(url, "runtimeProfile", options.runtimeProfile);

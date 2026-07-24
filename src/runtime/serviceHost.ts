@@ -53,6 +53,7 @@ import type {
   ExecutionRunnerRecord,
   ExecutionRunRecordBundle,
   ExecutionRunSourceKind,
+  ExecutionRunStatus,
 } from './types.js';
 import { refreshRunArchiveIndexBestEffort } from './archiveIndexRefresh.js';
 
@@ -96,6 +97,7 @@ function nextUniqueExecutionLeaseId(input: {
 export interface DrainStoredExecutionRunsOnceOptions {
   runId?: string;
   sourceKind?: ExecutionRunSourceKind;
+  candidateStatuses?: ExecutionRunStatus[];
   maxRuns?: number;
   executionGate?: ExecutionServiceHostExecutionGate;
 }
@@ -3116,6 +3118,7 @@ async function listCandidateRuns(
 
   const records = await control.listRuns({
     sourceKind: options.sourceKind,
+    statuses: options.candidateStatuses,
   });
   return records.sort((left, right) => left.bundle.run.createdAt.localeCompare(right.bundle.run.createdAt));
 }

@@ -58,6 +58,16 @@ describe('browser model selection matchers', () => {
     expect(testIdTokens).toContain('gpt-5.2-thinking');
   });
 
+  it('includes Sol reasoning tokens for gpt-5.6-sol', () => {
+    const { labelTokens, testIdTokens, semanticTarget } = buildModelMatchersLiteralForTest('gpt-5.6-sol');
+    expect(semanticTarget).toBe('thinking');
+    expect(labelTokens).toContain('medium');
+    expect(labelTokens).toContain('high');
+    expect(labelTokens).toContain('extra high');
+    expect(labelTokens).toContain('gpt-5.6-sol');
+    expect(testIdTokens).toContain('gpt-5-6-sol');
+  });
+
   it('includes instant tokens for gpt-5.2-instant', () => {
     const { labelTokens, testIdTokens, semanticTarget } = buildModelMatchersLiteralForTest('gpt-5.2-instant');
     expect(semanticTarget).toBe('instant');
@@ -86,5 +96,12 @@ describe('browser model selection matchers', () => {
     expect(scoreModelPickerOptionForTest('Pro', { text: 'Pro Extended' }).optionKind).toBe('pro');
     expect(scoreModelPickerOptionForTest('Pro', { text: 'ChatGPT Pro' }).optionKind).toBe('pro');
     expect(scoreModelPickerOptionForTest('Pro', { text: 'Instant' }).score).toBe(0);
+  });
+
+  it('recognizes GPT-5.6 Sol reasoning labels as Thinking-class options', () => {
+    expect(scoreModelPickerOptionForTest('gpt-5.6-sol', { text: 'Medium' }).optionKind).toBe('thinking');
+    expect(scoreModelPickerOptionForTest('gpt-5.6-sol', { text: 'High' }).score).toBeGreaterThan(0);
+    expect(scoreModelPickerOptionForTest('gpt-5.6-sol', { text: 'Extra High' }).score).toBeGreaterThan(0);
+    expect(scoreModelPickerOptionForTest('gpt-5.6-sol', { text: 'Pro' }).score).toBe(0);
   });
 });

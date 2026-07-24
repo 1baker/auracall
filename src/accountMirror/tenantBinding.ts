@@ -30,16 +30,28 @@ function isGrokHandleIdentityKey(value: string | null): boolean {
 	return Boolean(value && /^@[a-z0-9_]{2,30}$/.test(value));
 }
 
+function providerIdentityComparisonKey(
+	provider: AccountMirrorProvider,
+	value: string | null | undefined,
+): string | null {
+	const normalized = normalizeAccountMirrorProviderIdentityKey(provider, value);
+	if (!normalized) return null;
+	const prefix = `service-account:${provider}:`;
+	if (!normalized.startsWith(prefix)) return normalized;
+	const qualifiedIdentity = normalized.slice(prefix.length).split("|", 1)[0]?.trim();
+	return qualifiedIdentity || null;
+}
+
 export function accountMirrorIdentityKeysComparable(input: {
 	provider: AccountMirrorProvider;
 	expectedIdentityKey: string | null | undefined;
 	detectedIdentityKey: string | null | undefined;
 }): boolean {
-	const expectedIdentityKey = normalizeAccountMirrorProviderIdentityKey(
+	const expectedIdentityKey = providerIdentityComparisonKey(
 		input.provider,
 		input.expectedIdentityKey,
 	);
-	const detectedIdentityKey = normalizeAccountMirrorProviderIdentityKey(
+	const detectedIdentityKey = providerIdentityComparisonKey(
 		input.provider,
 		input.detectedIdentityKey,
 	);
@@ -65,11 +77,11 @@ export function accountMirrorIdentityKeysMismatch(input: {
 	expectedIdentityKey: string | null | undefined;
 	detectedIdentityKey: string | null | undefined;
 }): boolean {
-	const expectedIdentityKey = normalizeAccountMirrorProviderIdentityKey(
+	const expectedIdentityKey = providerIdentityComparisonKey(
 		input.provider,
 		input.expectedIdentityKey,
 	);
-	const detectedIdentityKey = normalizeAccountMirrorProviderIdentityKey(
+	const detectedIdentityKey = providerIdentityComparisonKey(
 		input.provider,
 		input.detectedIdentityKey,
 	);
@@ -93,7 +105,9 @@ export function createAccountMirrorTenantKey(input: {
 		input.provider,
 		input.boundIdentityKey,
 	);
-	return identityKey ? `service-account:${input.provider}:${identityKey}` : null;
+	if (!identityKey) return null;
+	const prefix = `service-account:${input.provider}:`;
+	return identityKey.startsWith(prefix) ? identityKey : `${prefix}${identityKey}`;
 }
 
 export function createAccountMirrorBindingKey(input: {

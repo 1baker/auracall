@@ -281,6 +281,7 @@ function parseMaterializationCursor(
 				: "unknown",
 		reused: readBoolean(value.reused) ?? false,
 		requestedAt: normalizeIsoString(value.requestedAt) ?? new Date(0).toISOString(),
+		providerWorkSettledAt: normalizeIsoString(value.providerWorkSettledAt),
 		passCount: Math.max(0, Math.floor(readNumber(value.passCount) ?? 0)),
 		request: {
 			provider: readProvider(value.request.provider),
@@ -372,6 +373,13 @@ function parseMaterializationOutcome(
 						.filter((entry) => entry[1] > 0),
 				)
 			: {},
+		dispositionCounts: isRecord(value.dispositionCounts)
+			? Object.fromEntries(
+					Object.entries(value.dispositionCounts)
+						.map(([key, count]) => [key, Math.max(0, Math.floor(readNumber(count) ?? 0))] as const)
+						.filter((entry) => entry[1] > 0),
+				)
+			: {},
 		message:
 			typeof value.message === "string" && value.message.trim() ? value.message.trim() : null,
 	};
@@ -417,6 +425,7 @@ function readLifecycleEventType(
 		value === "live_follow_phase_decision" ||
 		value === "automatic_resume_blocked" ||
 		value === "operator_resume_blocked" ||
+		value === "materialization_from_complete_ledger" ||
 		value === "account_library_catchup_queued" ||
 		value === "account_library_catchup_skipped"
 	)

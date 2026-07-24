@@ -210,6 +210,12 @@ export function resolveApiModel(modelValue: string): ModelName {
   if (normalized.includes('5.2') && normalized.includes('pro')) {
     return 'gpt-5.2-pro';
   }
+  if ((normalized.includes('5.6') || normalized.includes('5_6') || normalized.includes('sol')) && normalized.includes('pro')) {
+    return 'gpt-5.1-pro';
+  }
+  if (normalized.includes('5.6') || normalized.includes('5_6') || normalized.includes('sol')) {
+    return 'gpt-5.6-sol';
+  }
   if (normalized.includes('5.1') && normalized.includes('pro')) {
     return 'gpt-5.1-pro';
   }
@@ -257,6 +263,12 @@ export function inferModelFromLabel(modelValue: string): ModelName {
   }
   if ((normalized.includes('5.2') || normalized.includes('5_2')) && normalized.includes('pro')) {
     return 'gpt-5.2-pro';
+  }
+  if ((normalized.includes('5.6') || normalized.includes('5_6') || normalized.includes('sol')) && normalized.includes('pro')) {
+    return 'gpt-5.1-pro';
+  }
+  if (normalized.includes('5.6') || normalized.includes('5_6') || normalized.includes('sol')) {
+    return 'gpt-5.6-sol';
   }
   // Browser-only: pass through 5.2 thinking/instant variants for browser label mapping
   if ((normalized.includes('5.2') || normalized.includes('5_2')) && normalized.includes('thinking')) {

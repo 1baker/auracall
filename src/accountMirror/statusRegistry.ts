@@ -1,4 +1,5 @@
 import { getCurrentRuntimeProfiles, getRuntimeProfileBrowserProfileId } from "../config/model.js";
+import { createConfiguredServiceAccountId } from "../config/serviceAccountIdentity.js";
 import {
 	type AccountMirrorBackfillLedger,
 	normalizeAccountMirrorBackfillLedger,
@@ -197,10 +198,36 @@ export type AccountMirrorCollectorPhaseProgressEvidence = {
 	} | null;
 };
 
+export type AccountMirrorCollectorDiagnosticEvent = {
+	stage:
+		| "dispatcher-wait"
+		| "identity"
+		| "project-index"
+		| "root-rail"
+		| "project-conversations"
+		| "account-files"
+		| "project-files"
+		| "conversation-files"
+		| "conversation-context"
+		| "persistence"
+		| "cleanup"
+		| "collector";
+	event: "started" | "completed" | "failed" | "timed_out" | "aborted" | "checkpoint";
+	observedAt: string;
+	elapsedMs?: number | null;
+	timeoutMs?: number | null;
+	providerCallTimeoutMs?: number | null;
+	projectId?: string | null;
+	conversationId?: string | null;
+	detail?: string | null;
+	attachmentCursor?: AccountMirrorCollectorPhaseProgressEvidence["attachmentCursor"];
+};
+
 export type AccountMirrorMetadataEvidence = {
 	identitySource: string | null;
 	projectSampleIds: string[];
 	conversationSampleIds: string[];
+	detailConversationIdsThisPass?: string[];
 	countEvidence?: AccountMirrorMetadataCountEvidence | null;
 	detailScannedThisPass?: AccountMirrorDetailScannedEvidence | null;
 	assetInventory?: AccountMirrorAssetInventoryEvidence | null;
@@ -208,6 +235,7 @@ export type AccountMirrorMetadataEvidence = {
 	conversationFreshnessFrontier?: ConversationFreshnessFrontierEvidence | null;
 	routeProgress?: AccountMirrorRouteProgressEvidence | null;
 	collectorProgress?: AccountMirrorCollectorPhaseProgressEvidence | null;
+	collectorDiagnostics?: AccountMirrorCollectorDiagnosticEvent[];
 	attachmentInventory?: {
 		nextProjectIndex: number;
 		nextConversationIndex: number;
@@ -586,7 +614,7 @@ export function discoverConfiguredAccountMirrorTargets(
 					provider,
 					runtimeProfileId,
 					browserProfileId,
-					expectedIdentityKey: readIdentityKey(service),
+					expectedIdentityKey: readAccountMirrorIdentityKey(provider, service),
 					accountLevel: readAccountLevel(service),
 					policy: readLiveFollowPolitenessPolicy(provider, service),
 					liveFollow: readLiveFollowDesiredState(provider, service),
@@ -746,6 +774,31 @@ function readIdentityKey(service: MutableRecord): string | null {
 		readString(identity.handle) ??
 		readString(identity.accountId) ??
 		readString(identity.name)
+	);
+}
+
+function readAccountMirrorIdentityKey(
+	provider: AccountMirrorProvider,
+	service: MutableRecord,
+): string | null {
+	const identityKey = readIdentityKey(service);
+	if (provider !== "chatgpt" || !isChatgptBusinessIdentity(service)) return identityKey;
+	const configuredIdentityKey = createConfiguredServiceAccountId(provider, service);
+	if (!configuredIdentityKey) return identityKey;
+	return configuredIdentityKey.includes("|")
+		? configuredIdentityKey
+		: `${configuredIdentityKey}|structure=business`;
+}
+
+function isChatgptBusinessIdentity(service: MutableRecord): boolean {
+	const identity = isRecord(service.identity) ? service.identity : {};
+	const accountLevel = readString(identity.accountLevel)?.toLowerCase() ?? "";
+	const accountPlanType = readString(identity.accountPlanType)?.toLowerCase() ?? "";
+	const accountStructure = readString(identity.accountStructure)?.toLowerCase() ?? "";
+	return (
+		["business", "team", "enterprise", "workspace"].includes(accountLevel) ||
+		["business", "team", "enterprise"].includes(accountPlanType) ||
+		["business", "team", "enterprise", "workspace"].includes(accountStructure)
 	);
 }
 
@@ -990,6 +1043,7 @@ function normalizeMetadataEvidence(
 		identitySource: readString(value.identitySource),
 		projectSampleIds: normalizeStringArray(value.projectSampleIds),
 		conversationSampleIds: normalizeStringArray(value.conversationSampleIds),
+		detailConversationIdsThisPass: normalizeStringArray(value.detailConversationIdsThisPass),
 		countEvidence: normalizeCountEvidence(value.countEvidence),
 		detailScannedThisPass: normalizeDetailScannedEvidence(value.detailScannedThisPass),
 		assetInventory: normalizeAssetInventoryEvidence(value.assetInventory),
@@ -1000,6 +1054,7 @@ function normalizeMetadataEvidence(
 		routeProgress: normalizeRouteProgressEvidence(value.routeProgress),
 		attachmentInventory: normalizeAttachmentInventoryEvidence(value.attachmentInventory),
 		collectorProgress: normalizeCollectorProgressEvidence(value.collectorProgress),
+		collectorDiagnostics: normalizeCollectorDiagnostics(value.collectorDiagnostics),
 		projectConversations: normalizeProjectConversationEvidence(value.projectConversations),
 		truncated: {
 			projects: value.truncated?.projects === true,
@@ -1007,6 +1062,22 @@ function normalizeMetadataEvidence(
 			artifacts: value.truncated?.artifacts === true,
 		},
 	};
+}
+
+function normalizeCollectorDiagnostics(
+	value: AccountMirrorMetadataEvidence["collectorDiagnostics"] | null | undefined,
+): AccountMirrorCollectorDiagnosticEvent[] {
+	if (!Array.isArray(value)) return [];
+	return value
+		.filter((item): item is AccountMirrorCollectorDiagnosticEvent =>
+			Boolean(
+				item &&
+					typeof item.stage === "string" &&
+					typeof item.event === "string" &&
+					typeof item.observedAt === "string",
+			),
+		)
+		.slice(-100);
 }
 
 function normalizeConversationFreshnessFrontierEvidence(

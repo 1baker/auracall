@@ -1123,6 +1123,71 @@ describe("llmService project file cache writes", () => {
 		}
 	});
 
+	test("materializeConversationArtifacts excludes terminal families before spending transfer budget", async () => {
+		const homeDir = await mkdtemp(path.join(os.tmpdir(), "auracall-llm-files-exclusions-"));
+		setAuracallHomeDirOverrideForTest(homeDir);
+		const cacheContext: ProviderCacheContext = {
+			provider: "chatgpt",
+			userConfig: {} as ProviderCacheContext["userConfig"],
+			listOptions: {},
+			identityKey: "cache-test@example.com",
+		};
+		const store = new JsonCacheStore();
+		const artifacts: ConversationArtifact[] = [
+			{
+				id: "artifact_1:download:sandbox:/mnt/data/recovered_guide.pdf",
+				title: "Recovered Guide",
+				kind: "download",
+				uri: "sandbox:/mnt/data/recovered_guide.pdf",
+			},
+			{
+				id: "artifact_2:download:sandbox:/mnt/data/new_guide.zip",
+				title: "New Guide",
+				kind: "download",
+				uri: "sandbox:/mnt/data/new_guide.zip",
+			},
+		];
+		const provider = {
+			id: "chatgpt",
+			config: { id: "chatgpt", selectors: {} as never },
+			readConversationContext: vi.fn(async () => ({
+				provider: "chatgpt",
+				conversationId: "conversation-mixed",
+				messages: [{ role: "assistant", text: "done" }],
+				artifacts,
+			})),
+			materializeConversationArtifact: vi.fn(
+				async (_conversationId: string, artifact: ConversationArtifact) =>
+					({
+						id: `file-${artifact.id}`,
+						name: artifact.title,
+						provider: "chatgpt",
+						source: "conversation",
+						size: 42,
+						localPath: `/tmp/${artifact.title}`,
+						remoteUrl: artifact.uri,
+						mimeType: "application/zip",
+					}) satisfies FileRef,
+			),
+		};
+		const service = new TestLlmService(provider as never, store, cacheContext);
+
+		try {
+			const result = await service.materializeConversationArtifacts("conversation-mixed", {
+				listOptions: {},
+				refresh: true,
+				maxItems: 1,
+				excludeArtifact: (artifact) => artifact.id === artifacts[0]?.id,
+			});
+
+			expect(result.artifacts.map((artifact) => artifact.title)).toEqual(["New Guide"]);
+			expect(provider.materializeConversationArtifact).toHaveBeenCalledTimes(1);
+			expect(provider.materializeConversationArtifact.mock.calls[0]?.[1].title).toBe("New Guide");
+		} finally {
+			await rm(homeDir, { recursive: true, force: true });
+		}
+	});
+
 	test("materializeConversationFiles writes a sidecar fetch manifest without changing the attachment manifest shape", async () => {
 		const homeDir = await mkdtemp(path.join(os.tmpdir(), "auracall-llm-files-"));
 		setAuracallHomeDirOverrideForTest(homeDir);
@@ -1257,6 +1322,136 @@ describe("llmService project file cache writes", () => {
 					error: "conversation file fetch failed",
 				}),
 			]);
+
+			const filtered = await service.materializeConversationFiles("conversation-123", {
+				listOptions: {},
+				maxItems: 1,
+				excludeFile: (file) => file.id === "conv-file-1",
+			});
+			expect(filtered.conversationFiles.map((file) => file.id)).toEqual(["conv-file-2"]);
+			expect(provider.downloadConversationFile.mock.calls.at(-1)?.[1]).toBe("conv-file-2");
+		} finally {
+			await rm(homeDir, { recursive: true, force: true });
+		}
+	});
+
+	test("materializeConversationFiles batches twelve uncached files through one provider call", async () => {
+		const homeDir = await mkdtemp(path.join(os.tmpdir(), "auracall-llm-files-batch-"));
+		setAuracallHomeDirOverrideForTest(homeDir);
+		const conversationId = "conversation-twelve-files";
+		const cacheContext: ProviderCacheContext = {
+			provider: "chatgpt",
+			userConfig: {} as ProviderCacheContext["userConfig"],
+			listOptions: {},
+			identityKey: "cache-test@example.com",
+		};
+		const store = new JsonCacheStore();
+		const conversationFiles: FileRef[] = Array.from({ length: 12 }, (_, index) => ({
+			id: `conversation-file-${index + 1}`,
+			name: `asset-${index + 1}.txt`,
+			provider: "chatgpt",
+			source: "conversation",
+			mimeType: "text/plain",
+		}));
+		const provider = {
+			id: "chatgpt",
+			config: { id: "chatgpt", selectors: {} as never },
+			listConversationFiles: vi.fn(async () => conversationFiles),
+			downloadConversationFiles: vi.fn(
+				async (_conversationId: string, items: Array<{ file: FileRef; destPath: string }>) => {
+					for (const item of items) {
+						await fs.writeFile(item.destPath, `body:${item.file.id}`, "utf8");
+					}
+					return items.map((item) => ({
+						fileId: item.file.id,
+						status: "materialized" as const,
+					}));
+				},
+			),
+			downloadConversationFile: vi.fn(async () => {
+				throw new Error("singular download must not run when batch download is available");
+			}),
+		};
+		const service = new TestLlmService(provider as never, store, cacheContext);
+
+		try {
+			const result = await service.materializeConversationFiles(conversationId, {
+				listOptions: {},
+			});
+
+			expect(provider.downloadConversationFiles).toHaveBeenCalledTimes(1);
+			expect(provider.downloadConversationFiles.mock.calls[0]?.[1]).toHaveLength(12);
+			expect(provider.downloadConversationFile).not.toHaveBeenCalled();
+			expect(result.files).toHaveLength(12);
+		} finally {
+			await rm(homeDir, { recursive: true, force: true });
+		}
+	});
+
+	test("materializeConversationFiles preserves one scoped session across project file listing and batch transfer", async () => {
+		const homeDir = await mkdtemp(path.join(os.tmpdir(), "auracall-llm-files-session-"));
+		setAuracallHomeDirOverrideForTest(homeDir);
+		const conversationId = "conversation-project-session";
+		const cacheContext: ProviderCacheContext = {
+			provider: "chatgpt",
+			userConfig: {} as ProviderCacheContext["userConfig"],
+			listOptions: {},
+			identityKey: "cache-test@example.com",
+		};
+		const store = new JsonCacheStore();
+		const file: FileRef = {
+			id: "conversation-project-session:turn:0:asset.txt",
+			name: "asset.txt",
+			provider: "chatgpt",
+			source: "conversation",
+			mimeType: "text/plain",
+		};
+		const session = {
+			providerId: "chatgpt" as const,
+			key: "chatgpt:127.0.0.1:9222:https://chatgpt.com/c/conversation-project-session",
+			value: {},
+			close: vi.fn(async () => undefined),
+		};
+		let listingOptions: BrowserProviderListOptions | undefined;
+		let batchOptions: BrowserProviderListOptions | undefined;
+		let batchSession: BrowserProviderListOptions["providerSession"];
+		const provider = {
+			id: "chatgpt",
+			config: { id: "chatgpt", selectors: {} as never },
+			listConversationFiles: vi.fn(
+				async (_conversationId: string, options?: BrowserProviderListOptions) => {
+					listingOptions = options;
+					if (options) options.providerSession = session;
+					return [file];
+				},
+			),
+			downloadConversationFiles: vi.fn(
+				async (
+					_conversationId: string,
+					items: Array<{ file: FileRef; destPath: string }>,
+					options?: BrowserProviderListOptions,
+				) => {
+					batchOptions = options;
+					batchSession = options?.providerSession;
+					for (const item of items) await fs.writeFile(item.destPath, "body", "utf8");
+					return items.map((item) => ({
+						fileId: item.file.id,
+						status: "materialized" as const,
+					}));
+				},
+			),
+		};
+		const service = new TestLlmService(provider as never, store, cacheContext);
+
+		try {
+			await service.materializeConversationFiles(conversationId, {
+				projectId: "project-session",
+				listOptions: {},
+			});
+
+			expect(batchOptions).toBe(listingOptions);
+			expect(batchSession).toBe(session);
+			expect(session.close).toHaveBeenCalledTimes(1);
 		} finally {
 			await rm(homeDir, { recursive: true, force: true });
 		}

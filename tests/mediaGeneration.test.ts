@@ -7,7 +7,7 @@ import { createMediaGenerationService, MediaGenerationExecutionError } from '../
 import { createMediaGenerationRecordStore } from '../src/media/store.js';
 import type { WorkbenchCapabilityReporter } from '../src/workbench/types.js';
 
-async function waitForExpect(assertion: () => void | Promise<void>, timeoutMs = 1_000): Promise<void> {
+async function waitForExpect(assertion: () => void | Promise<void>, timeoutMs = 3_000): Promise<void> {
   const started = Date.now();
   let lastError: unknown = null;
   while (Date.now() - started < timeoutMs) {

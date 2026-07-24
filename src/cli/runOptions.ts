@@ -14,7 +14,7 @@ import {
 
 const DEFAULT_BROWSER_MODEL_SELECTOR = 'chatgpt:instant';
 const BROWSER_COMPAT_INSTANT_MODEL: ModelName = 'gpt-5.2-instant';
-const BROWSER_COMPAT_THINKING_MODEL: ModelName = 'gpt-5.2-thinking';
+const BROWSER_COMPAT_THINKING_MODEL: ModelName = 'gpt-5.6-sol';
 
 export interface ResolveRunOptionsInput {
   prompt: string;

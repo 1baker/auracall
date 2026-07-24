@@ -501,6 +501,8 @@ export type WaitForPredicateOptions = {
   timeoutMs?: number;
   pollMs?: number;
   description?: string;
+  interrupt?: () => Promise<void> | void;
+  interruptPollMs?: number;
 };
 
 export type WaitForPredicateResult = {
@@ -902,6 +904,7 @@ export async function waitForPredicate(
   const deadline = startedAt + timeoutMs;
   let attempts = 0;
   let lastValue: unknown;
+  let lastInterruptAt = Number.NEGATIVE_INFINITY;
   while (Date.now() < deadline) {
     attempts += 1;
     const { result } = await Runtime.evaluate({
@@ -917,6 +920,11 @@ export async function waitForPredicate(
         elapsedMs: Date.now() - startedAt,
         description: options.description,
       };
+    }
+    const interruptPollMs = Math.max(0, options.interruptPollMs ?? 0);
+    if (options.interrupt && Date.now() - lastInterruptAt >= interruptPollMs) {
+      lastInterruptAt = Date.now();
+      await options.interrupt();
     }
     await sleep(pollMs);
   }

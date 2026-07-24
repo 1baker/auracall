@@ -52,6 +52,17 @@ describe('resolveRunOptionsFromConfig', () => {
     expect(browserModelSelection).toEqual({ desiredModel: 'Pro', thinkingTime: 'extended' });
   });
 
+  it('maps semantic ChatGPT Sol High to the Sol browser compatibility model', () => {
+    const { runOptions, resolvedEngine, browserModelSelection } = resolveRunOptionsFromConfig({
+      prompt: basePrompt,
+      model: 'chatgpt:sol-high',
+      engine: 'browser',
+    });
+    expect(resolvedEngine).toBe('browser');
+    expect(runOptions.model).toBe('gpt-5.6-sol');
+    expect(browserModelSelection).toEqual({ desiredModel: 'Thinking', thinkingTime: 'extended' });
+  });
+
   it('uses config model when caller does not provide one', () => {
     const { runOptions } = resolveRunOptionsFromConfig({
       prompt: basePrompt,
@@ -163,6 +174,16 @@ describe('resolveRunOptionsFromConfig', () => {
     expect(runOptions.model).toBe('gpt-5.1-pro');
   });
 
+  it('keeps browser engine Sol aliases on the ChatGPT Sol reasoning path', () => {
+    const { resolvedEngine, runOptions } = resolveRunOptionsFromConfig({
+      prompt: basePrompt,
+      model: 'gpt-5.6-sol',
+      engine: 'browser',
+    });
+    expect(resolvedEngine).toBe('browser');
+    expect(runOptions.model).toBe('gpt-5.6-sol');
+  });
+
   it('forces api engine for gpt-5.1-codex when engine is auto-detected', () => {
     const { resolvedEngine, runOptions } = resolveRunOptionsFromConfig({
       prompt: basePrompt,
@@ -200,6 +221,16 @@ describe('resolveRunOptionsFromConfig', () => {
 
     expect(runOptions.model).toBe('gpt-5.1');
     expect(runOptions.models).toEqual(['gpt-5.1', 'gemini-3-pro', 'claude-4.5-sonnet']);
+  });
+
+  it('normalizes Sol API shorthand entries', () => {
+    const { runOptions } = resolveRunOptionsFromConfig({
+      prompt: basePrompt,
+      models: ['sol', 'sol pro'],
+    });
+
+    expect(runOptions.model).toBe('gpt-5.6-sol');
+    expect(runOptions.models).toEqual(['gpt-5.6-sol', 'gpt-5.1-pro']);
   });
 
   it('rejects browser engine for claude when explicitly set', () => {

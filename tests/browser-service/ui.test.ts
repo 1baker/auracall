@@ -1048,6 +1048,26 @@ describe('browser-service ui wait helpers', () => {
     expect(dismissCalls).toBe(1);
   });
 
+  test('waitForPredicate stops when an interrupt probe detects a hard stop', async () => {
+    const runtime = createRuntime([false, false, false, false]);
+    let interruptCalls = 0;
+
+    await expect(
+      waitForPredicate(runtime as never, 'window.__ready === true', {
+        timeoutMs: 1_000,
+        pollMs: 0,
+        interrupt: async () => {
+          interruptCalls += 1;
+          if (interruptCalls === 2) {
+            throw new Error('ChatGPT rate limit hard stop');
+          }
+        },
+      }),
+    ).rejects.toThrow('ChatGPT rate limit hard stop');
+
+    expect(runtime.evaluate).toHaveBeenCalledTimes(2);
+  });
+
   test('dismissOpenMenus sends Escape only when a visible menu is present', async () => {
     const runtime = createRuntime([true, true, true]);
 

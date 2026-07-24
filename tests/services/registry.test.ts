@@ -146,12 +146,15 @@ describe('service registry manifest helpers', () => {
 
   test('resolves chatgpt model aliases through the bundled manifest', () => {
     expect(resolveBundledServiceModelLabels('chatgpt', 'gpt-5.2-thinking')).toEqual(['Thinking']);
+    expect(resolveBundledServiceModelLabels('chatgpt', 'gpt-5.6-sol')).toEqual(['Thinking']);
     expect(resolveBundledServiceModelLabels('chatgpt', 'gpt-5.2')).toEqual(['Instant']);
     expect(resolveBundledServiceModelLabels('chatgpt', 'gpt-5.2-pro')).toEqual(['Pro']);
+    expect(resolveBundledServiceModelLabels('chatgpt', 'sol pro')).toEqual(['Pro']);
   });
 
   test('requires bundled model labels for manifest-owned browser models', () => {
     expect(requireBundledServiceModelLabel('chatgpt', 'gpt-5.2')).toBe('Instant');
+    expect(requireBundledServiceModelLabel('chatgpt', 'gpt-5.6-sol')).toBe('Thinking');
     expect(requireBundledServiceModelLabel('chatgpt', 'gpt-5.1-pro')).toBe('Pro');
     expect(requireBundledServiceModelLabel('gemini', 'gemini-3-pro')).toBe('Gemini 3 Pro');
     expect(requireBundledServiceModelLabel('grok', 'grok-4.1')).toBe('Expert');

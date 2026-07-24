@@ -149,6 +149,57 @@ describe('workbench capability service', () => {
         company_knowledge: true,
         create_image: true,
         apps: ['github', 'google drive'],
+        composer_mode: 'work',
+        composer_apps: [
+          {
+            name: 'GitHub',
+            app_id: 'connector_76869538009648d5b282a4bb21c3d157',
+            plugin_id: 'plugin_connector_github',
+            selection_state: 'selectable',
+          },
+          {
+            name: 'Google Drive',
+            app_id: 'connector_google_drive',
+            plugin_id: 'plugin_connector_google_drive',
+            selection_state: 'selectable',
+          },
+        ],
+        installed_apps: [
+          {
+            plugin_id: 'plugin_connector_github',
+            name: 'GitHub',
+            app_ids: ['connector_76869538009648d5b282a4bb21c3d157'],
+            status: 'ENABLED',
+            enabled: true,
+            installation_policy: 'AVAILABLE',
+            authentication_policy: 'ON_INSTALL',
+          },
+          {
+            plugin_id: 'plugin_connector_google_drive',
+            name: 'Google Drive',
+            app_ids: ['connector_google_drive'],
+            status: 'ENABLED',
+            enabled: true,
+          },
+        ],
+        linked_apps: [
+          {
+            link_id: 'link_github',
+            connector_id: 'connector_76869538009648d5b282a4bb21c3d157',
+            name: 'GitHub',
+            auth_status: 'ACTIVE',
+            connector_status: 'ENABLED',
+            visibility: 'VISIBLE',
+          },
+          {
+            link_id: 'link_google_drive',
+            connector_id: 'connector_google_drive',
+            name: 'Google Drive',
+            auth_status: 'ACTIVE',
+            connector_status: 'ENABLED',
+            visibility: 'VISIBLE',
+          },
+        ],
         skills: ['study and learn'],
         model_controls: {
           visible: true,
@@ -198,7 +249,12 @@ describe('workbench capability service', () => {
         category: 'app',
         providerLabels: ['GitHub'],
         availability: 'available',
-        safety: expect.objectContaining({ requiresUserConsent: true }),
+        invocationMode: 'composer_mention',
+        metadata: expect.objectContaining({
+          installed: true,
+          composerMode: 'work',
+          linkAuthStatuses: ['ACTIVE'],
+        }),
       }),
       expect.objectContaining({
         id: 'chatgpt.apps.google_drive',
@@ -273,7 +329,7 @@ describe('workbench capability service', () => {
     ]);
   });
 
-  it('merges discovered ChatGPT app visibility without losing account-gated catalog entries', async () => {
+  it('does not treat legacy ChatGPT app-token visibility as proof of installed availability', async () => {
     const service = createWorkbenchCapabilityService({
       now: () => new Date('2026-04-23T12:00:00.000Z'),
       discoverCapabilities: async () =>
@@ -303,15 +359,96 @@ describe('workbench capability service', () => {
       }),
       expect.objectContaining({
         id: 'chatgpt.apps.github',
-        availability: 'available',
+        availability: 'unknown',
         source: 'browser_discovery',
+        metadata: expect.objectContaining({
+          installed: false,
+          featureSignatureSignal: 'apps',
+        }),
       }),
     ]));
     expect(report.summary).toMatchObject({
       total: 2,
-      available: 1,
+      available: 0,
       accountGated: 1,
+      unknown: 1,
     });
+  });
+
+  it('reports an installed ChatGPT plugin as account-gated when its link requires reauthentication', () => {
+    const capabilities = deriveChatgptWorkbenchCapabilitiesFromFeatureSignature(
+      JSON.stringify({
+        installed_apps: [
+          {
+            plugin_id: 'plugin_adobe_acrobat',
+            name: 'Adobe Acrobat',
+            app_ids: ['connector_adobe_acrobat'],
+            status: 'ENABLED',
+            enabled: true,
+          },
+        ],
+        linked_apps: [
+          {
+            link_id: 'link_adobe_acrobat',
+            connector_id: 'connector_adobe_acrobat',
+            name: 'Adobe Acrobat',
+            auth_status: 'REAUTH_REQUIRED',
+            connector_status: 'ENABLED',
+            visibility: 'VISIBLE',
+          },
+        ],
+      }),
+      '2026-07-24T12:00:00.000Z',
+    );
+
+    expect(capabilities).toEqual([
+      expect.objectContaining({
+        id: 'chatgpt.apps.adobe_acrobat',
+        availability: 'account_gated',
+        invocationMode: 'composer_mention',
+        metadata: expect.objectContaining({
+          installed: true,
+          linkAuthStatuses: ['REAUTH_REQUIRED'],
+        }),
+      }),
+    ]);
+  });
+
+  it('matches ChatGPT app SDK installs to connector links with the same provider identity', () => {
+    const capabilities = deriveChatgptWorkbenchCapabilitiesFromFeatureSignature(
+      JSON.stringify({
+        installed_apps: [
+          {
+            plugin_id: 'plugin_photoshop',
+            name: 'Adobe (formerly Photoshop)',
+            app_ids: ['asdk_app_69312da8'],
+            status: 'ENABLED',
+            enabled: true,
+          },
+        ],
+        linked_apps: [
+          {
+            link_id: 'link_photoshop',
+            connector_id: 'connector_69312da8',
+            name: 'Adobe Photoshop',
+            auth_status: 'ACTIVE',
+            connector_status: 'ENABLED',
+          },
+        ],
+      }),
+      '2026-07-24T12:00:00.000Z',
+    );
+
+    expect(capabilities).toEqual([
+      expect.objectContaining({
+        id: 'chatgpt.apps.adobe_formerly_photoshop',
+        availability: 'available',
+        metadata: expect.objectContaining({
+          installed: true,
+          linkAuthStatuses: ['ACTIVE'],
+        }),
+      }),
+    ]);
   });
 
   it('derives available Grok Imagine capabilities from browser discovery evidence', () => {

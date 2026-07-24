@@ -65,19 +65,60 @@ describe('browser-backed workbench capability discovery', () => {
   it('maps ChatGPT browser apps, skills, and research labels into capabilities', async () => {
     browserClientMock.getFeatureSignature.mockResolvedValue(JSON.stringify({
       detector: 'chatgpt-feature-probe-v1',
-      detected: {
-        web_search: true,
-        deep_research: true,
-        company_knowledge: true,
-        apps: ['github', 'google drive'],
-        skills: ['study and learn'],
-      },
+      web_search: true,
+      deep_research: true,
+      company_knowledge: true,
+      apps: ['github', 'google drive'],
+      composer_mode: 'work',
+      composer_apps: [
+        { name: 'GitHub', app_id: 'connector_github', selection_state: 'selectable' },
+        { name: 'Google Drive', app_id: 'connector_google_drive', selection_state: 'selectable' },
+      ],
+      skills: ['study and learn'],
+      installed_apps: [
+        {
+          plugin_id: 'plugin_github',
+          name: 'GitHub',
+          app_ids: ['connector_github'],
+          status: 'ENABLED',
+          enabled: true,
+        },
+        {
+          plugin_id: 'plugin_google_drive',
+          name: 'Google Drive',
+          app_ids: ['connector_google_drive'],
+          status: 'ENABLED',
+          enabled: true,
+        },
+      ],
+      linked_apps: [
+        {
+          link_id: 'link_github',
+          connector_id: 'connector_github',
+          name: 'GitHub',
+          auth_status: 'ACTIVE',
+          connector_status: 'ENABLED',
+        },
+        {
+          link_id: 'link_google_drive',
+          connector_id: 'connector_google_drive',
+          name: 'Google Drive',
+          auth_status: 'ACTIVE',
+          connector_status: 'ENABLED',
+        },
+      ],
     }));
     const discover = createBrowserWorkbenchCapabilityDiscovery(userConfig);
 
     const capabilities = await discover({ provider: 'chatgpt' });
 
     expect(browserClientMock.fromConfig).toHaveBeenCalledWith(userConfig, { target: 'chatgpt' });
+    expect(browserClientMock.getFeatureSignature).toHaveBeenCalledOnce();
+    expect(browserClientMock.getFeatureSignature).toHaveBeenCalledWith({
+      includeInstalledApps: true,
+      preserveActiveTab: true,
+      mutationSourcePrefix: 'workbench:chatgpt-app-discovery',
+    });
     expect(capabilities).toEqual(expect.arrayContaining([
       expect.objectContaining({
         id: 'chatgpt.search.web_search',
@@ -90,7 +131,9 @@ describe('browser-backed workbench capability discovery', () => {
       expect.objectContaining({
         id: 'chatgpt.apps.github',
         providerLabels: ['GitHub'],
-        safety: expect.objectContaining({ requiresUserConsent: true }),
+        availability: 'available',
+        invocationMode: 'composer_mention',
+        metadata: expect.objectContaining({ installed: true }),
       }),
       expect.objectContaining({
         id: 'chatgpt.apps.google_drive',

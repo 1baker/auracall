@@ -4,6 +4,7 @@ import {
 	AccountMirrorRefreshError,
 	type AccountMirrorRefreshResult,
 } from "../../src/accountMirror/refreshService.js";
+import { createAccountMirrorProviderWorkCoordinator } from "../../src/accountMirror/providerWorkCoordinator.js";
 import { createAccountMirrorSchedulerPassService } from "../../src/accountMirror/schedulerService.js";
 import { createAccountMirrorStatusRegistry } from "../../src/accountMirror/statusRegistry.js";
 
@@ -238,6 +239,38 @@ function createMultiChatgptConfig() {
 }
 
 describe("account mirror scheduler pass service", () => {
+	test("waits for the shared provider lease before a direct scheduler refresh", async () => {
+		const providerWorkCoordinator = createAccountMirrorProviderWorkCoordinator();
+		const completionLease = await providerWorkCoordinator.acquire({
+			provider: "chatgpt",
+			ownerId: "acctmirror_active_completion",
+		});
+		const requestRefresh = vi.fn(async () => createRefreshResult());
+		const service = createAccountMirrorSchedulerPassService({
+			registry: createAccountMirrorStatusRegistry({
+				config,
+				now: () => new Date("2026-04-29T12:00:00.000Z"),
+			}),
+			refreshService: { requestRefresh },
+			providerWorkCoordinator,
+			now: () => new Date("2026-04-29T12:00:00.000Z"),
+		});
+
+		const pass = service.runOnce({ dryRun: false });
+		await new Promise((resolve) => setTimeout(resolve, 25));
+		expect(requestRefresh).not.toHaveBeenCalled();
+
+		completionLease?.release();
+		await expect(pass).resolves.toMatchObject({
+			action: "refresh-completed",
+			selectedTarget: {
+				provider: "chatgpt",
+				runtimeProfileId: "default",
+			},
+		});
+		expect(requestRefresh).toHaveBeenCalledTimes(1);
+	});
+
 	test("dry-run pass selects the first eligible live-follow target without refreshing", async () => {
 		const requestRefresh = vi.fn(async () => createRefreshResult());
 		const service = createAccountMirrorSchedulerPassService({
@@ -316,6 +349,8 @@ describe("account mirror scheduler pass service", () => {
 			requestedPhase: "identity",
 			explicitRefresh: false,
 			queueTimeoutMs: 0,
+			cleanupManagedBrowserAfterRefresh: true,
+			collectorTimeoutMs: 300_000,
 		});
 		expect(result).toMatchObject({
 			action: "refresh-completed",
@@ -357,6 +392,8 @@ describe("account mirror scheduler pass service", () => {
 			requestedPhase: "identity",
 			explicitRefresh: false,
 			queueTimeoutMs: 0,
+			cleanupManagedBrowserAfterRefresh: true,
+			collectorTimeoutMs: 900_000,
 		});
 		expect(result).toMatchObject({
 			mode: "execute",
@@ -636,6 +673,8 @@ describe("account mirror scheduler pass service", () => {
 			requestedPhase: "detail-inventory",
 			explicitRefresh: false,
 			queueTimeoutMs: 0,
+			cleanupManagedBrowserAfterRefresh: true,
+			collectorTimeoutMs: 900_000,
 		});
 		expect(result).toMatchObject({
 			action: "refresh-completed",
@@ -649,6 +688,80 @@ describe("account mirror scheduler pass service", () => {
 					reason: "freshness frontier selected 1 conversation row(s) for detail",
 				},
 			},
+		});
+	});
+
+	test("runs full-sweep ChatGPT detail continuation as a wide steady-follow request", async () => {
+		const requestRefresh = vi.fn(async () => createRefreshResult());
+		const fullSweepConfig = {
+			...config,
+			runtimeProfiles: {
+				...config.runtimeProfiles,
+				default: {
+					...config.runtimeProfiles.default,
+					services: {
+						...config.runtimeProfiles.default.services,
+						chatgpt: {
+							...config.runtimeProfiles.default.services.chatgpt,
+							liveFollow: {
+								...config.runtimeProfiles.default.services.chatgpt.liveFollow,
+								sweepMode: "full_sweep" as const,
+							},
+						},
+					},
+				},
+			},
+		};
+		const service = createAccountMirrorSchedulerPassService({
+			registry: createAccountMirrorStatusRegistry({
+				config: fullSweepConfig,
+				initialState: {
+					"chatgpt:default": {
+						metadataCounts: {
+							projects: 5,
+							conversations: 24,
+							artifacts: 3,
+							files: 24,
+							media: 0,
+						},
+						metadataEvidence: {
+							identitySource: "profile-menu",
+							projectSampleIds: ["project_1"],
+							conversationSampleIds: ["conv_1"],
+							attachmentInventory: {
+								nextProjectIndex: 5,
+								nextConversationIndex: 7,
+								detailReadLimit: 6,
+								scannedProjects: 5,
+								scannedConversations: 1,
+								yielded: true,
+							},
+							truncated: {
+								projects: false,
+								conversations: false,
+								artifacts: true,
+							},
+						},
+					},
+				},
+				now: () => new Date("2026-04-29T12:00:00.000Z"),
+			}),
+			refreshService: { requestRefresh },
+			now: () => new Date("2026-04-29T12:00:00.000Z"),
+		});
+
+		await service.runOnce({ dryRun: false });
+
+		expect(requestRefresh).toHaveBeenCalledWith({
+			provider: "chatgpt",
+			runtimeProfileId: "default",
+			sweepMode: "steady_follow",
+			materializationPolicy: null,
+			requestedPhase: "detail-inventory",
+			explicitRefresh: false,
+			queueTimeoutMs: 0,
+			cleanupManagedBrowserAfterRefresh: true,
+			collectorTimeoutMs: 900_000,
 		});
 	});
 
@@ -700,6 +813,8 @@ describe("account mirror scheduler pass service", () => {
 			requestedPhase: "project-conversations",
 			explicitRefresh: false,
 			queueTimeoutMs: 0,
+			cleanupManagedBrowserAfterRefresh: true,
+			collectorTimeoutMs: 900_000,
 		});
 		expect(result).toMatchObject({
 			action: "refresh-completed",

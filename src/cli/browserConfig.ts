@@ -78,7 +78,7 @@ export function normalizeChatGptModelForBrowser(model: ModelName): ModelName {
   }
 
   // Explicit model variants: keep as-is (they have their own browser labels)
-  if (normalized === 'gpt-5.2-thinking' || normalized === 'gpt-5.2-instant') {
+  if (normalized === 'gpt-5.2-thinking' || normalized === 'gpt-5.2-instant' || normalized === 'gpt-5.6-sol') {
     return normalized;
   }
 

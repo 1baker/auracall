@@ -23,6 +23,7 @@ import {
   openMenu,
   openSubmenu,
   selectAndVerifyNestedMenuPathOption,
+  waitForPredicate,
 } from '../service/ui.js';
 
 type ComposerToolOutcome =
@@ -49,19 +50,23 @@ const COMPOSER_TOP_MENU_SIGNAL_SUBSTRINGS = resolveBundledServiceComposerTopMenu
 const KNOWN_COMPOSER_TOOL_LABELS = resolveBundledServiceComposerKnownLabels('chatgpt', []);
 const COMPOSER_FILE_REQUEST_LABELS = resolveBundledServiceComposerFileRequestLabels('chatgpt', []);
 const COMPOSER_CHIP_IGNORE_TOKENS = resolveBundledServiceComposerChipIgnoreTokens('chatgpt', []);
+const CHATGPT_COMPOSER_POPOVER_SELECTOR = '.popover';
+const CHATGPT_COMPOSER_POPOVER_ITEM_SELECTOR =
+  '.__menu-item[tabindex], [data-fill][tabindex]';
 
 export async function ensureChatgptComposerTool(
-  Runtime: ChromeClient['Runtime'],
+  client: ChromeClient,
   requestedTool: string,
   logger: BrowserLogger,
 ): Promise<void> {
+  const { Runtime } = client;
   if (isComposerFileRequest(requestedTool)) {
     throw new Error(
       'ChatGPT file upload stays on the attachment path. Use --file with the normal browser attachment flow instead of --browser-composer-tool for files.',
     );
   }
 
-  const result = await selectComposerTool(Runtime, requestedTool);
+  const result = await selectComposerTool(client, requestedTool);
   switch (result.status) {
     case 'already-selected':
       logger(`Composer tool: ${result.label ?? requestedTool} (already selected)`);
@@ -217,7 +222,7 @@ function resolveCurrentComposerToolSelection(
   moreItems: readonly Pick<VisibleMenuInventoryItem, 'label' | 'selected'>[] = [],
 ): Pick<ChatgptComposerToolSelection, 'label' | 'source'> {
   const chipCandidate = typeof chipLabel === 'string' ? chipLabel.trim() : '';
-  if (chipCandidate && scoreComposerToolLabel(chipCandidate, KNOWN_COMPOSER_TOOL_LABELS) > 0) {
+  if (chipCandidate) {
     return { label: chipCandidate, source: 'chip' };
   }
   const topSelection = findSelectedComposerToolItem(topItems, KNOWN_COMPOSER_TOOL_LABELS);
@@ -309,10 +314,26 @@ function buildComposerChipVisibleExpression(toolCandidates: readonly string[]): 
       return rect.width > 0 && rect.height > 0;
     };
     const root =
+      document.querySelector('form[data-type="unified-composer"]') ??
       document.querySelector('[data-testid*="composer"]') ??
       document.querySelector('form') ??
       document.body;
     if (!root) return null;
+    const inlinePills = Array.from(
+      root.querySelectorAll(
+        '#prompt-textarea [data-inline-selection-pill][data-system-hint-type^="plugin:"], ' +
+        '#prompt-textarea [data-inline-selection-pill][data-id^="plugin:"]'
+      ),
+    ).filter(isVisible);
+    const inlineMatch = inlinePills
+      .map((node) => ({
+        label: normalize(node.getAttribute?.('data-keyword') || node.textContent || ''),
+        text: (node.getAttribute?.('data-keyword') || node.textContent || '').trim() || null,
+      }))
+      .find((entry) => toolCandidates.length === 0 || scoreLabel(entry.label) > 0);
+    if (inlineMatch) {
+      return { label: inlineMatch.text || inlineMatch.label };
+    }
     const nodes = Array.from(
       root.querySelectorAll('button, [role="button"], [aria-label*="click to remove" i], [data-testid*="pill"]'),
     ).filter(isVisible);
@@ -342,6 +363,193 @@ async function readMenuEntry(
   return inventory.find((entry) => entry.selector === menuSelector) ?? inventory[0] ?? null;
 }
 
+async function readComposerPopoverEntry(
+  Runtime: ChromeClient['Runtime'],
+): Promise<VisibleMenuInventoryEntry | null> {
+  const result = await Runtime.evaluate({
+    expression: `(() => {
+      const roots = Array.from(document.querySelectorAll(${JSON.stringify(CHATGPT_COMPOSER_POPOVER_SELECTOR)}));
+      const isVisible = (node) => {
+        if (!(node instanceof HTMLElement)) return false;
+        const rect = node.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0;
+      };
+      const normalize = (value) => String(value || '')
+        .replace(/\\s+/g, ' ')
+        .trim()
+        .toLowerCase();
+      const root = roots.filter(isVisible).at(-1);
+      if (!root) return null;
+      root.setAttribute('data-auracall-chatgpt-composer-menu', 'true');
+      const items = Array.from(root.querySelectorAll(${JSON.stringify(CHATGPT_COMPOSER_POPOVER_ITEM_SELECTOR)}))
+        .filter(isVisible)
+        .map((item) => {
+          const primary = item.querySelector('span.max-w-full, span.truncate');
+          const label = normalize(primary?.textContent || (item.textContent || '').split('\\n')[0] || '');
+          return {
+            label,
+            role: item.getAttribute('role'),
+            selected:
+              item.getAttribute('aria-selected') === 'true' ||
+              item.getAttribute('aria-checked') === 'true' ||
+              item.getAttribute('data-selected') === 'true' ||
+              ['checked', 'selected', 'on', 'true'].includes((item.getAttribute('data-state') || '').toLowerCase()),
+          };
+        })
+        .filter((item) => item.label);
+      const rect = root.getBoundingClientRect();
+      return {
+        selector: '[data-auracall-chatgpt-composer-menu="true"]',
+        sourceSelector: ${JSON.stringify(CHATGPT_COMPOSER_POPOVER_SELECTOR)},
+        signature: JSON.stringify({ items: items.map((item) => item.label) }),
+        rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
+        distanceToAnchor: null,
+        items,
+        itemLabels: items.map((item) => item.label),
+      };
+    })()`,
+    returnByValue: true,
+  });
+  return (result.result?.value as VisibleMenuInventoryEntry | null | undefined) ?? null;
+}
+
+async function openComposerPopoverWithCdp(
+  client: ChromeClient,
+): Promise<VisibleMenuInventoryEntry | null> {
+  const existing = await readComposerPopoverEntry(client.Runtime);
+  if (existing) return existing;
+  await client.Input.dispatchKeyEvent({ type: 'keyDown', key: 'Escape', code: 'Escape' }).catch(() => undefined);
+  await client.Input.dispatchKeyEvent({ type: 'keyUp', key: 'Escape', code: 'Escape' }).catch(() => undefined);
+  const trigger = await client.Runtime.evaluate({
+    expression: `(() => {
+      const node = document.querySelector(${JSON.stringify(ATTACHMENT_MENU_SELECTOR)});
+      if (!(node instanceof HTMLElement)) return null;
+      const rect = node.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return null;
+      return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+    })()`,
+    returnByValue: true,
+  });
+  const point = trigger.result?.value as { x?: number; y?: number } | null | undefined;
+  if (typeof point?.x !== 'number' || typeof point.y !== 'number') return null;
+  await client.Page.bringToFront().catch(() => undefined);
+  await client.Input.dispatchMouseEvent({ type: 'mouseMoved', x: point.x, y: point.y });
+  await client.Input.dispatchMouseEvent({
+    type: 'mousePressed',
+    x: point.x,
+    y: point.y,
+    button: 'left',
+    buttons: 1,
+    clickCount: 1,
+  });
+  await client.Input.dispatchMouseEvent({
+    type: 'mouseReleased',
+    x: point.x,
+    y: point.y,
+    button: 'left',
+    buttons: 0,
+    clickCount: 1,
+  });
+  const ready = await waitForPredicate(
+    client.Runtime,
+    `(() => Array.from(document.querySelectorAll(${JSON.stringify(CHATGPT_COMPOSER_POPOVER_SELECTOR)}))
+      .some((node) => {
+        if (!(node instanceof HTMLElement)) return false;
+        const rect = node.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0
+          && Boolean(node.querySelector(${JSON.stringify(CHATGPT_COMPOSER_POPOVER_ITEM_SELECTOR)}));
+      }))()`,
+    { timeoutMs: 5_000, pollMs: 100 },
+  );
+  if (!ready.ok) return null;
+  return readComposerPopoverEntry(client.Runtime);
+}
+
+async function activateComposerPopoverItem(
+  client: ChromeClient,
+  toolCandidates: readonly string[],
+): Promise<string | null> {
+  const result = await client.Runtime.evaluate({
+    expression: `(() => {
+      const candidates = ${JSON.stringify(toolCandidates)};
+      const normalize = (value) => String(value || '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, ' ')
+        .replace(/\\s+/g, ' ')
+        .trim();
+      const score = (label) => {
+        let best = 0;
+        for (const candidate of candidates) {
+          if (!candidate || !label) continue;
+          if (label === candidate) best = Math.max(best, 1000 + candidate.length);
+          else if (candidate.split(' ').filter(Boolean).every((word) => label.includes(word))) {
+            best = Math.max(best, 500 + candidate.length);
+          } else if (label.includes(candidate)) best = Math.max(best, 300 + candidate.length);
+        }
+        return best;
+      };
+      const visible = (node) => {
+        if (!(node instanceof HTMLElement)) return false;
+        const rect = node.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0;
+      };
+      const roots = Array.from(document.querySelectorAll(${JSON.stringify(CHATGPT_COMPOSER_POPOVER_SELECTOR)}))
+        .filter(visible);
+      const root = roots.at(-1);
+      if (!root) return null;
+      const ranked = Array.from(root.querySelectorAll(${JSON.stringify(CHATGPT_COMPOSER_POPOVER_ITEM_SELECTOR)}))
+        .filter(visible)
+        .map((item) => {
+          const primary = item.querySelector('span.max-w-full, span.truncate');
+          const label = normalize(primary?.textContent || (item.textContent || '').split('\\n')[0] || '');
+          return { item, label, score: score(label) };
+        })
+        .filter((entry) => entry.score > 0)
+        .sort((left, right) => right.score - left.score);
+      const match = ranked[0];
+      if (!match) return null;
+      const text = normalize(match.item.textContent || '');
+      const blocked = Boolean(match.item.querySelector(
+        '[data-suggested-plugin-connect], button[aria-label^="Connect " i]'
+      )) || /(?:^|\\s)connect$/.test(text);
+      const rect = match.item.getBoundingClientRect();
+      return {
+        blocked,
+        label: match.label,
+        x: rect.x + rect.width / 2,
+        y: rect.y + rect.height / 2,
+      };
+    })()`,
+    returnByValue: true,
+  });
+  const value = result.result?.value as {
+    blocked?: boolean;
+    label?: string;
+    x?: number;
+    y?: number;
+  } | null | undefined;
+  if (value?.blocked) return null;
+  if (typeof value?.x !== 'number' || typeof value.y !== 'number') return null;
+  await client.Input.dispatchMouseEvent({ type: 'mouseMoved', x: value.x, y: value.y });
+  await client.Input.dispatchMouseEvent({
+    type: 'mousePressed',
+    x: value.x,
+    y: value.y,
+    button: 'left',
+    buttons: 1,
+    clickCount: 1,
+  });
+  await client.Input.dispatchMouseEvent({
+    type: 'mouseReleased',
+    x: value.x,
+    y: value.y,
+    button: 'left',
+    buttons: 0,
+    clickCount: 1,
+  });
+  return typeof value?.label === 'string' && value.label ? value.label : null;
+}
+
 async function openComposerTopMenu(
   Runtime: ChromeClient['Runtime'],
   toolCandidates: readonly string[],
@@ -359,7 +567,8 @@ async function openComposerTopMenu(
     menuSelectors: ['[role="menu"]', '[data-radix-collection-root]'],
     limit: 12,
   });
-  const existing = findVisibleComposerTopMenu(visibleMenus, toolCandidates);
+  const existingPopover = await readComposerPopoverEntry(Runtime);
+  const existing = existingPopover ?? findVisibleComposerTopMenu(visibleMenus, toolCandidates);
   if (existing) {
     return {
       ok: true,
@@ -371,6 +580,25 @@ async function openComposerTopMenu(
   }
 
   await dismissOpenMenus(Runtime, 500);
+  const openedPopover = await openMenu(Runtime, {
+    trigger: buildComposerTriggerOptions(),
+    menuSelector: CHATGPT_COMPOSER_POPOVER_SELECTOR,
+    anchorSelector: ATTACHMENT_MENU_SELECTOR,
+    timeoutMs: 5000,
+  });
+  if (openedPopover.ok) {
+    const popoverEntry = await readComposerPopoverEntry(Runtime);
+    if (popoverEntry) {
+      return {
+        ok: true,
+        menuSelector: popoverEntry.selector,
+        topLevelLabels: popoverEntry.itemLabels,
+        topItems: popoverEntry.items,
+        topMatch: findBestComposerToolItem(popoverEntry.items, toolCandidates),
+      };
+    }
+  }
+
   const opened = await openMenu(Runtime, {
     trigger: buildComposerTriggerOptions(),
     menuSelector: '[role="menu"]',
@@ -452,7 +680,7 @@ export async function readCurrentChatgptComposerTool(
   Runtime: ChromeClient['Runtime'],
 ): Promise<ChatgptComposerToolSelection> {
   await dismissOpenMenus(Runtime).catch(() => false);
-  const chipLabel = await readComposerToolChip(Runtime, KNOWN_COMPOSER_TOOL_LABELS);
+  const chipLabel = await readComposerToolChip(Runtime, []);
   const topOpened = await openComposerTopMenu(Runtime, KNOWN_COMPOSER_TOOL_LABELS);
   if (!topOpened.ok) {
     const current = resolveCurrentComposerToolSelection(chipLabel, [], []);
@@ -499,14 +727,70 @@ async function collectComposerAvailability(
 }
 
 async function selectComposerTool(
-  Runtime: ChromeClient['Runtime'],
+  client: ChromeClient,
   requestedTool: string,
 ): Promise<ComposerToolOutcome> {
+  const { Runtime } = client;
   const toolCandidates = resolveComposerToolCandidates(requestedTool);
   const nonPersistentTool = isNonPersistentComposerTool(toolCandidates);
-  const currentSelection = await readCurrentChatgptComposerTool(Runtime);
+  const currentChipLabel = await readComposerToolChip(Runtime, toolCandidates);
+  const currentSelection: Pick<ChatgptComposerToolSelection, 'label' | 'source'> = {
+    label: currentChipLabel,
+    source: currentChipLabel ? 'chip' : 'none',
+  };
   if (currentSelection.label && scoreComposerToolLabel(currentSelection.label, toolCandidates) > 0) {
     return { status: 'already-selected', label: currentSelection.label };
+  }
+
+  const currentPopover = await openComposerPopoverWithCdp(client);
+  const directMenu = currentPopover
+    ? {
+        ok: true as const,
+        menuSelector: currentPopover.selector,
+        topLevelLabels: currentPopover.itemLabels,
+        topItems: currentPopover.items,
+        topMatch: findBestComposerToolItem(currentPopover.items, toolCandidates),
+      }
+    : await openComposerTopMenu(Runtime, toolCandidates);
+  if (directMenu.ok && directMenu.topMatch) {
+    const activatedLabel = await activateComposerPopoverItem(client, toolCandidates);
+    if (activatedLabel) {
+      for (let attempt = 0; attempt < 10; attempt += 1) {
+        await new Promise((resolve) => setTimeout(resolve, 120));
+        const chipLabel = await readComposerToolChip(Runtime, toolCandidates);
+        if (chipLabel && scoreComposerToolLabel(chipLabel, toolCandidates) > 0) {
+          return {
+            status: 'switched',
+            label: chipLabel,
+            previousLabel: currentSelection.label,
+          };
+        }
+      }
+      if (nonPersistentTool) {
+        return {
+          status: 'switched',
+          label: activatedLabel,
+          previousLabel: currentSelection.label,
+        };
+      }
+      const selectedAfterActivation = await readCurrentChatgptComposerTool(Runtime);
+      if (
+        selectedAfterActivation.label &&
+        scoreComposerToolLabel(selectedAfterActivation.label, toolCandidates) > 0
+      ) {
+        return {
+          status: 'switched',
+          label: selectedAfterActivation.label,
+          previousLabel: currentSelection.label,
+        };
+      }
+      return {
+        status: 'selection-not-confirmed',
+        label: activatedLabel,
+        availableTopLevel: directMenu.topLevelLabels,
+        availableMore: [],
+      };
+    }
   }
 
   const topLevelSelection = await selectAndVerifyNestedMenuPathOption(Runtime, {

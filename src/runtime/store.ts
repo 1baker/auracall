@@ -11,10 +11,12 @@ const RUNS_DIRNAME = 'runs';
 const BUNDLE_FILENAME = 'bundle.json';
 const RECORD_FILENAME = 'record.json';
 const JSON_READ_RETRY_DELAYS_MS = [10, 25, 50];
+const RUNTIME_RECORD_READ_CONCURRENCY = 4;
 
 export interface ListExecutionRunRecordOptions {
   limit?: number;
   status?: ExecutionRunStatus;
+  statuses?: ExecutionRunStatus[];
   sourceKind?: ExecutionRunSourceKind;
   updatedSince?: string;
 }
@@ -97,17 +99,21 @@ export async function listExecutionRunRecordBundles(
     ? await filterRunEntriesUpdatedSince(runEntries, options.updatedSince)
     : runEntries;
 
-  const bundles = (
-    await Promise.all(
-      candidateEntries.map(async (entry) => readExecutionRunRecordBundle(entry.name)),
+  const statuses = options.statuses?.length ? new Set(options.statuses) : null;
+  const filtered = (
+    await mapWithConcurrency(
+      candidateEntries,
+      RUNTIME_RECORD_READ_CONCURRENCY,
+      async (entry): Promise<ExecutionRunRecordBundle | null> => {
+        const bundle = await readExecutionRunRecordBundle(entry.name);
+        if (!bundle) return null;
+        if (options.status && bundle.run.status !== options.status) return null;
+        if (statuses && !statuses.has(bundle.run.status)) return null;
+        if (options.sourceKind && bundle.run.sourceKind !== options.sourceKind) return null;
+        return bundle;
+      },
     )
   ).filter((bundle): bundle is ExecutionRunRecordBundle => bundle !== null);
-
-  const filtered = bundles.filter((bundle) => {
-    if (options.status && bundle.run.status !== options.status) return false;
-    if (options.sourceKind && bundle.run.sourceKind !== options.sourceKind) return false;
-    return true;
-  });
 
   filtered.sort((left, right) => right.run.createdAt.localeCompare(left.run.createdAt));
 
@@ -115,6 +121,35 @@ export async function listExecutionRunRecordBundles(
     return filtered.slice(0, options.limit);
   }
   return filtered;
+}
+
+async function mapWithConcurrency<T, R>(
+  values: T[],
+  concurrency: number,
+  mapper: (value: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  if (values.length === 0) return [];
+  const results = new Array<R>(values.length);
+  let nextIndex = 0;
+  const workerCount = Math.min(values.length, Math.max(1, Math.floor(concurrency)));
+  const workers = Array.from({ length: workerCount }, async () => {
+    for (;;) {
+      const index = nextIndex;
+      nextIndex += 1;
+      if (index >= values.length) return;
+      results[index] = await mapper(values[index] as T, index);
+    }
+  });
+  await Promise.all(workers);
+  return results;
+}
+
+export function mapWithConcurrencyForTest<T, R>(
+  values: T[],
+  concurrency: number,
+  mapper: (value: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  return mapWithConcurrency(values, concurrency, mapper);
 }
 
 async function filterRunEntriesUpdatedSince(entries: Dirent[], updatedSince: string): Promise<Dirent[]> {

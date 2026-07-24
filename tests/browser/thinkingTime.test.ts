@@ -49,7 +49,7 @@ describe('browser thinking-time selection expression', () => {
       } else if (level === 'standard') {
         expect(expression).toContain('"standard","medium"');
       } else {
-        expect(expression).toContain('"pro extended","extended"');
+        expect(expression).toContain('"pro extended","extended","high"');
       }
     }
   });

@@ -43,11 +43,11 @@ describe('mcp account_mirror_status tool', () => {
         entries: [
           {
             provider: 'chatgpt',
-            tenantKey: 'service-account:chatgpt:ecochran76@gmail.com',
+            tenantKey: 'service-account:chatgpt:ecochran76@gmail.com|structure=business',
             bindingKey: 'binding:chatgpt:default:default',
             runtimeProfileId: 'default',
             browserProfileId: 'default',
-            expectedIdentityKey: 'ecochran76@gmail.com',
+            expectedIdentityKey: 'service-account:chatgpt:ecochran76@gmail.com|structure=business',
             accountLevel: 'Business',
             status: 'eligible',
             reason: 'eligible',

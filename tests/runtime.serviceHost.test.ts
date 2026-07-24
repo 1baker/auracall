@@ -830,6 +830,37 @@ describe('runtime service host', () => {
     expect(maxInFlight).toBe(2);
   });
 
+  it('loads only active run statuses for an untargeted drain', async () => {
+    const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), 'auracall-runtime-service-host-'));
+    cleanup.push(homeDir);
+    setAuracallHomeDirOverrideForTest(homeDir);
+
+    const control = createExecutionRuntimeControl();
+    await control.createRun(createDirectBundle('run_host_active_filter', '2026-04-08T15:00:00.000Z'));
+    const listRuns = control.listRuns.bind(control);
+    const listRequests: Array<{ sourceKind?: string; status?: string; statuses?: string[] }> = [];
+    control.listRuns = async (input = {}) => {
+      listRequests.push(input);
+      return listRuns(input);
+    };
+
+    const host = createExecutionServiceHost({
+      control,
+      ownerId: 'host:test-active-filter',
+      now: () => '2026-04-08T15:01:00.000Z',
+    });
+
+    await host.drainRunsOnce({
+      sourceKind: 'direct',
+      candidateStatuses: ['planned', 'running'],
+      maxRuns: 1,
+    });
+
+    expect(listRequests).toEqual([
+      { sourceKind: 'direct', statuses: ['planned', 'running'] },
+    ]);
+  });
+
   it('honors the execution gate before acquiring a run lease', async () => {
     const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), 'auracall-runtime-service-host-'));
     cleanup.push(homeDir);

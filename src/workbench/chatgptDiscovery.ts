@@ -8,6 +8,10 @@ interface ChatgptFeatureObject {
   image_generation?: unknown;
   image?: unknown;
   apps?: unknown;
+  composer_mode?: unknown;
+  composer_apps?: unknown;
+  installed_apps?: unknown;
+  linked_apps?: unknown;
   skills?: unknown;
   model_controls?: unknown;
   detected?: unknown;
@@ -30,6 +34,34 @@ const KNOWN_APP_LABELS: Record<string, string> = {
   google_calendar: 'Google Calendar',
   google_drive: 'Google Drive',
   quickbooks: 'Intuit QuickBooks',
+};
+
+type ChatgptComposerAppSignal = {
+  name: string;
+  appId?: string;
+  pluginId?: string;
+  selectionState?: 'selected' | 'selectable' | 'connect_required' | 'unknown';
+};
+
+type ChatgptInstalledAppSignal = {
+  pluginId: string;
+  name: string;
+  appIds: string[];
+  status?: string;
+  enabled?: boolean;
+  installationPolicy?: string;
+  authenticationPolicy?: string;
+};
+
+type ChatgptLinkedAppSignal = {
+  linkId: string;
+  connectorId: string;
+  name: string;
+  authStatus?: string;
+  connectorStatus?: string;
+  visibility?: string;
+  disableAutoInvocation?: boolean;
+  actionsCount?: number;
 };
 
 export function deriveChatgptWorkbenchCapabilitiesFromFeatureSignature(
@@ -125,29 +157,159 @@ export function deriveChatgptWorkbenchCapabilitiesFromFeatureSignature(
     });
   }
 
+  const structuredAppIds = new Set<string>();
+  for (const installedApp of signals.installedApps) {
+    const app = normalizeAppId(installedApp.name);
+    if (!app) continue;
+    structuredAppIds.add(app);
+    const composerMatches = signals.composerApps.filter((candidate) =>
+      candidate.pluginId === installedApp.pluginId ||
+      (candidate.appId
+        ? installedApp.appIds.some((appId) =>
+            connectorIdentityMatches(appId, candidate.appId as string))
+        : false) ||
+      normalizeAppId(candidate.name) === app
+    );
+    const linkedMatches = signals.linkedApps.filter((candidate) =>
+      installedApp.appIds.some((appId) =>
+        connectorIdentityMatches(appId, candidate.connectorId)) ||
+      normalizeAppId(candidate.name) === app
+    );
+    const composerSelectionStates = Array.from(new Set(
+      composerMatches.map((candidate) => candidate.selectionState).filter(Boolean),
+    ));
+    const authStatuses = Array.from(new Set(
+      linkedMatches.map((candidate) => candidate.authStatus).filter(Boolean),
+    ));
+    const connectorStatuses = Array.from(new Set(
+      linkedMatches.map((candidate) => candidate.connectorStatus).filter(Boolean),
+    ));
+    const explicitlySelectable = composerSelectionStates.some(
+      (state) => state === 'selected' || state === 'selectable',
+    );
+    const activeLink = linkedMatches.some(
+      (link) => link.authStatus === 'ACTIVE' && (!link.connectorStatus || link.connectorStatus === 'ENABLED'),
+    );
+    const connectionRequired =
+      composerSelectionStates.includes('connect_required') ||
+      authStatuses.some((status) => status === 'REAUTH_REQUIRED' || status === 'AUTH_REQUIRED');
+    const disabled =
+      installedApp.enabled === false ||
+      (installedApp.status !== undefined && installedApp.status !== 'ENABLED') ||
+      connectorStatuses.some((status) => status !== 'ENABLED');
+    const availability = disabled
+      ? 'blocked'
+      : connectionRequired
+        ? 'account_gated'
+        : explicitlySelectable || activeLink
+          ? 'available'
+          : 'unknown';
+    const label = installedApp.name || formatAppLabel(app);
+    capabilities.push({
+      id: `chatgpt.apps.${app}`,
+      provider: 'chatgpt',
+      providerLabels: [label],
+      category: 'app',
+      invocationMode: 'composer_mention',
+      surfaces: ['browser_service', 'local_api', 'mcp'],
+      availability,
+      stability: 'observed',
+      requiredInputs: commonPromptInput,
+      output: { artifactTypes: ['generated'] },
+      safety: {
+        requiresUserConsent: availability !== 'available',
+        mayUseExternalAccount: true,
+        notes: [
+          'ChatGPT routes selected apps through an inline ecosystemMention in the submitted user message.',
+          'Do not install, reconnect, or enable apps without user consent.',
+        ],
+      },
+      observedAt,
+      source: 'browser_discovery',
+      metadata: {
+        featureSignatureSignal: 'installed_apps',
+        app,
+        installed: true,
+        pluginId: installedApp.pluginId,
+        appIds: installedApp.appIds,
+        installedStatus: installedApp.status,
+        installedEnabled: installedApp.enabled,
+        installationPolicy: installedApp.installationPolicy,
+        authenticationPolicy: installedApp.authenticationPolicy,
+        composerMode: signals.composerMode,
+        composerSelectionStates,
+        linkAuthStatuses: authStatuses,
+        connectorStatuses,
+        linkedAppCount: linkedMatches.length,
+      },
+    });
+  }
+
+  for (const composerApp of signals.composerApps) {
+    const app = normalizeAppId(composerApp.name);
+    if (!app || structuredAppIds.has(app)) continue;
+    structuredAppIds.add(app);
+    const availability =
+      composerApp.selectionState === 'selected' || composerApp.selectionState === 'selectable'
+        ? 'available'
+        : composerApp.selectionState === 'connect_required'
+          ? 'account_gated'
+          : 'unknown';
+    capabilities.push({
+      id: `chatgpt.apps.${app}`,
+      provider: 'chatgpt',
+      providerLabels: [composerApp.name],
+      category: 'app',
+      invocationMode: 'composer_mention',
+      surfaces: ['browser_service', 'local_api', 'mcp'],
+      availability,
+      stability: 'observed',
+      requiredInputs: commonPromptInput,
+      output: { artifactTypes: ['generated'] },
+      safety: {
+        requiresUserConsent: availability !== 'available',
+        mayUseExternalAccount: true,
+        notes: ['ChatGPT showed this app in the current composer menu; Connect is not treated as selectable.'],
+      },
+      observedAt,
+      source: 'browser_discovery',
+      metadata: {
+        featureSignatureSignal: 'composer_apps',
+        app,
+        installed: false,
+        composerMode: signals.composerMode,
+        composerSelectionState: composerApp.selectionState,
+        appId: composerApp.appId,
+        pluginId: composerApp.pluginId,
+      },
+    });
+  }
+
   for (const app of signals.apps) {
+    if (structuredAppIds.has(app)) continue;
     const label = formatAppLabel(app);
     capabilities.push({
       id: `chatgpt.apps.${app}`,
       provider: 'chatgpt',
       providerLabels: [label],
       category: 'app',
-      invocationMode: 'tool_drawer_selection',
+      invocationMode: 'composer_mention',
       surfaces: ['browser_service', 'local_api', 'mcp'],
-      availability: 'available',
+      availability: 'unknown',
       stability: 'observed',
       requiredInputs: commonPromptInput,
       output: { artifactTypes: ['generated'] },
       safety: {
         requiresUserConsent: true,
         mayUseExternalAccount: true,
-        notes: ['Do not auto-enable apps or connectors without user consent.'],
+        notes: ['Legacy app token visibility does not prove installation, connection, or composer selection.'],
       },
       observedAt,
       source: 'browser_discovery',
       metadata: {
         featureSignatureSignal: 'apps',
         app,
+        installed: false,
       },
     });
   }
@@ -268,6 +430,10 @@ function collectChatgptSignals(root: ChatgptFeatureObject): {
   companyKnowledge: boolean;
   createImage: boolean;
   apps: string[];
+  composerMode?: 'chat' | 'work';
+  composerApps: ChatgptComposerAppSignal[];
+  installedApps: ChatgptInstalledAppSignal[];
+  linkedApps: ChatgptLinkedAppSignal[];
   skills: string[];
   modelControls: {
     visible: boolean;
@@ -288,6 +454,10 @@ function collectChatgptSignals(root: ChatgptFeatureObject): {
     companyKnowledge: false,
     createImage: false,
     apps: new Set<string>(),
+    composerMode: undefined as 'chat' | 'work' | undefined,
+    composerApps: new Map<string, ChatgptComposerAppSignal>(),
+    installedApps: new Map<string, ChatgptInstalledAppSignal>(),
+    linkedApps: new Map<string, ChatgptLinkedAppSignal>(),
     skills: new Set<string>(),
     modelControls: {
       visible: false,
@@ -309,6 +479,13 @@ function collectChatgptSignals(root: ChatgptFeatureObject): {
     companyKnowledge: signals.companyKnowledge,
     createImage: signals.createImage,
     apps: Array.from(signals.apps).sort(),
+    composerMode: signals.composerMode,
+    composerApps: [...signals.composerApps.values()].sort((left, right) => left.name.localeCompare(right.name)),
+    installedApps: [...signals.installedApps.values()].sort((left, right) => left.name.localeCompare(right.name)),
+    linkedApps: [...signals.linkedApps.values()].sort((left, right) => {
+      const byName = left.name.localeCompare(right.name);
+      return byName || left.linkId.localeCompare(right.linkId);
+    }),
     skills: Array.from(signals.skills).sort(),
     modelControls: signals.modelControls,
   };
@@ -322,6 +499,10 @@ function collectFromObject(
     companyKnowledge: boolean;
     createImage: boolean;
     apps: Set<string>;
+    composerMode?: 'chat' | 'work';
+    composerApps: Map<string, ChatgptComposerAppSignal>;
+    installedApps: Map<string, ChatgptInstalledAppSignal>;
+    linkedApps: Map<string, ChatgptLinkedAppSignal>;
     skills: Set<string>;
     modelControls: {
       visible: boolean;
@@ -344,10 +525,109 @@ function collectFromObject(
     signals.createImage = true;
   }
   collectStringArray(source.apps, signals.apps);
+  if (source.composer_mode === 'chat' || source.composer_mode === 'work') {
+    signals.composerMode = source.composer_mode;
+  }
+  collectComposerApps(source.composer_apps, signals.composerApps);
+  collectInstalledApps(source.installed_apps, signals.installedApps);
+  collectLinkedApps(source.linked_apps, signals.linkedApps);
   collectStringArray(source.skills, signals.skills);
   const modelControls = normalizeModelControls(source.model_controls);
   if (modelControls.visible) {
     signals.modelControls = modelControls;
+  }
+}
+
+function normalizeAppId(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+}
+
+function normalizeConnectorIdentity(value: string): string {
+  return value.replace(/^(?:connector_|asdk_app_)/i, '');
+}
+
+function connectorIdentityMatches(left: string, right: string): boolean {
+  return normalizeConnectorIdentity(left) === normalizeConnectorIdentity(right);
+}
+
+function collectComposerApps(
+  value: unknown,
+  target: Map<string, ChatgptComposerAppSignal>,
+): void {
+  if (!Array.isArray(value)) return;
+  for (const entry of value) {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) continue;
+    const record = entry as Record<string, unknown>;
+    const name = normalizeDisplayString(record.name);
+    if (!name) continue;
+    const appId = normalizeDisplayString(record.app_id ?? record.appId);
+    const pluginId = normalizeDisplayString(record.plugin_id ?? record.pluginId);
+    const selectionState =
+      record.selection_state === 'selected' ||
+      record.selection_state === 'selectable' ||
+      record.selection_state === 'connect_required' ||
+      record.selection_state === 'unknown'
+        ? record.selection_state
+        : undefined;
+    const key = pluginId || appId || normalizeAppId(name);
+    target.set(key, { name, appId, pluginId, selectionState });
+  }
+}
+
+function collectInstalledApps(
+  value: unknown,
+  target: Map<string, ChatgptInstalledAppSignal>,
+): void {
+  if (!Array.isArray(value)) return;
+  for (const entry of value) {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) continue;
+    const record = entry as Record<string, unknown>;
+    const pluginId = normalizeDisplayString(record.plugin_id ?? record.pluginId);
+    const name = normalizeDisplayString(record.name);
+    if (!pluginId || !name) continue;
+    target.set(pluginId, {
+      pluginId,
+      name,
+      appIds: normalizeDisplayStringArray(record.app_ids ?? record.appIds),
+      status: normalizeDisplayString(record.status),
+      enabled: typeof record.enabled === 'boolean' ? record.enabled : undefined,
+      installationPolicy: normalizeDisplayString(record.installation_policy ?? record.installationPolicy),
+      authenticationPolicy: normalizeDisplayString(record.authentication_policy ?? record.authenticationPolicy),
+    });
+  }
+}
+
+function collectLinkedApps(
+  value: unknown,
+  target: Map<string, ChatgptLinkedAppSignal>,
+): void {
+  if (!Array.isArray(value)) return;
+  for (const entry of value) {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) continue;
+    const record = entry as Record<string, unknown>;
+    const linkId = normalizeDisplayString(record.link_id ?? record.linkId);
+    const connectorId = normalizeDisplayString(record.connector_id ?? record.connectorId);
+    const name = normalizeDisplayString(record.name);
+    if (!linkId || !connectorId || !name) continue;
+    target.set(linkId, {
+      linkId,
+      connectorId,
+      name,
+      authStatus: normalizeDisplayString(record.auth_status ?? record.authStatus),
+      connectorStatus: normalizeDisplayString(record.connector_status ?? record.connectorStatus),
+      visibility: normalizeDisplayString(record.visibility),
+      disableAutoInvocation:
+        typeof record.disable_auto_invocation === 'boolean'
+          ? record.disable_auto_invocation
+          : (typeof record.disableAutoInvocation === 'boolean' ? record.disableAutoInvocation : undefined),
+      actionsCount:
+        typeof record.actions_count === 'number'
+          ? record.actions_count
+          : (typeof record.actionsCount === 'number' ? record.actionsCount : undefined),
+    });
   }
 }
 

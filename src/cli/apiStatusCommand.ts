@@ -861,6 +861,13 @@ function summarizeLiveFollowTargetAccount(value: unknown) {
 					conversationsAttempted: readNumber(materializationOutcome.conversationsAttempted) ?? 0,
 					materialized: readNumber(materializationOutcome.materialized) ?? 0,
 					checksumCount: readNumber(materializationOutcome.checksumCount) ?? 0,
+					dispositionCounts: isRecord(materializationOutcome.dispositionCounts)
+						? Object.fromEntries(
+								Object.entries(materializationOutcome.dispositionCounts)
+									.map(([key, value]) => [key, readNumber(value) ?? 0] as const)
+									.filter((entry) => entry[1] > 0),
+							)
+						: {},
 				}
 			: null,
 		scrapeBudget: summarizeLiveFollowScrapeBudget(scrapeBudget),

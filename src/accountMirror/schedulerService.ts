@@ -1,9 +1,14 @@
 import {
+	resolveAccountMirrorCollectorSweepMode,
+	resolveAccountMirrorCollectorTimeoutMs,
+} from "./collectorTimeoutPolicy.js";
+import {
 	type AccountMirrorLiveFollowCyclePhase,
 	type AccountMirrorLiveFollowCyclePhaseStatus,
 	chooseLiveFollowCyclePhase,
 } from "./liveFollowCycleDecision.js";
 import type { AccountMirrorProvider } from "./politePolicy.js";
+import type { AccountMirrorProviderWorkCoordinator } from "./providerWorkCoordinator.js";
 import {
 	AccountMirrorRefreshError,
 	type AccountMirrorRefreshResult,
@@ -95,6 +100,7 @@ export function createAccountMirrorSchedulerPassService(input: {
 	now?: () => Date;
 	shouldYieldToForegroundWork?: () => AccountMirrorSchedulerBackpressure | null;
 	readHistory?: () => Promise<AccountMirrorSchedulerPassHistory>;
+	providerWorkCoordinator?: AccountMirrorProviderWorkCoordinator | null;
 }): AccountMirrorSchedulerPassService {
 	const now = input.now ?? (() => new Date());
 	return {
@@ -185,15 +191,36 @@ export function createAccountMirrorSchedulerPassService(input: {
 			}
 			try {
 				const phaseDecision = chooseSchedulerPhase(selected);
-				const refresh = await input.refreshService.requestRefresh({
-					provider: selected.provider,
-					runtimeProfileId: selected.runtimeProfileId,
-					sweepMode: selected.liveFollow.sweepMode ?? "steady_follow",
-					materializationPolicy: selected.liveFollow.materializationPolicy ?? null,
-					requestedPhase: phaseDecision.requestedPhase,
-					explicitRefresh: false,
-					queueTimeoutMs: 0,
-				});
+				const sweepMode = resolveAccountMirrorCollectorSweepMode(
+					selected.liveFollow.sweepMode ?? "steady_follow",
+					phaseDecision.requestedPhase,
+				);
+				const collectorTimeoutMs = resolveAccountMirrorCollectorTimeoutMs(
+					selected.provider,
+					sweepMode,
+				);
+				const providerWorkLease = input.providerWorkCoordinator
+					? await input.providerWorkCoordinator.acquire({
+							provider: selected.provider,
+							ownerId: `account-mirror-scheduler:${selected.provider}:${selected.runtimeProfileId}:${startedAt.toISOString()}`,
+						})
+					: null;
+				let refresh: AccountMirrorRefreshResult;
+				try {
+					refresh = await input.refreshService.requestRefresh({
+						provider: selected.provider,
+						runtimeProfileId: selected.runtimeProfileId,
+						sweepMode,
+						materializationPolicy: selected.liveFollow.materializationPolicy ?? null,
+						requestedPhase: phaseDecision.requestedPhase,
+						explicitRefresh: false,
+						queueTimeoutMs: 0,
+						cleanupManagedBrowserAfterRefresh: true,
+						...(collectorTimeoutMs ? { collectorTimeoutMs } : {}),
+					});
+				} finally {
+					providerWorkLease?.release();
+				}
 				return {
 					object: "account_mirror_scheduler_pass",
 					mode: "execute",
@@ -390,6 +417,7 @@ function chooseSchedulerPhase(entry: AccountMirrorStatusEntry): {
 		evidence: entry.metadataEvidence,
 		remainingDetailSurfaces: entry.mirrorCompleteness.remainingDetailSurfaces?.total ?? null,
 		backfillLedger: entry.backfillLedger,
+		latestSuccessfulRefreshAt: entry.lastSuccessAt,
 	});
 	return {
 		...decision,

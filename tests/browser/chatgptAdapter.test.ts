@@ -1,11 +1,18 @@
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import { describe, expect, test, vi } from "vitest";
 import {
 	beforeChatgptBrowserInteractionForTest,
 	buildChatgptAuthSessionIdentityExpression,
 	buildChatgptCreateProjectDialogStateExpressionForTest,
+	buildChatgptUrlRouteExpressionForTest,
 	classifyChatgptBlockingSurfaceProbe,
+	clickChatgptViewerDownloadButtonWithClientForTest,
 	closeChatgptTabConnectionForTest,
 	createChatgptAdapter,
+	downloadChatgptConversationFilesWithClientForTest,
+	extractChatgptArtifactFileNameFromUriForTest,
 	extractChatgptConversationArtifactsFromPayload,
 	extractChatgptConversationIdFromUrl,
 	extractChatgptConversationSourcesFromPayload,
@@ -15,9 +22,10 @@ import {
 	filterChatgptDeepResearchTargets,
 	findChatgptProjectByName,
 	findChatgptProjectSourceName,
+	isChatgptAccountMirrorHardStopForTest,
 	isChatgptTargetReusableForPreferredUrl,
-	isRetryableConnectionErrorForTest,
 	isRetryableChatgptTransientMessage,
+	isRetryableConnectionErrorForTest,
 	matchesChatgptConversationTitleProbe,
 	matchesChatgptDeleteConfirmationProbe,
 	matchesChatgptDownloadButtonProbe,
@@ -33,11 +41,13 @@ import {
 	normalizeChatgptConversationHistoryLimit,
 	normalizeChatgptConversationId,
 	normalizeChatgptConversationLinkProbes,
+	normalizeChatgptFeatureSignatureForTest,
 	normalizeChatgptLibraryItemProbes,
 	normalizeChatgptProjectId,
 	normalizeChatgptProjectSourceProbes,
 	normalizeChatgptVisibleImageArtifactProbes,
 	readChatgptConversationPayloadWithClient,
+	recordChatgptTargetSessionForTest,
 	recoverVisibleChatgptBlockingSurfaceWithClientForTest,
 	resolveChatgptCanvasArtifactContentText,
 	resolveChatgptConversationUrl,
@@ -49,8 +59,57 @@ import {
 	resolveChatgptProjectUrl,
 	serializeChatgptGridRowsToCsv,
 } from "../../src/browser/providers/chatgptAdapter.js";
+import type { FileRef } from "../../src/browser/providers/domain.js";
 import { normalizeProjectMemoryMode } from "../../src/browser/providers/domain.js";
 import { createBrowserScrapeTelemetryRecorder } from "../../src/browser/providers/scrapeTelemetry.js";
+
+describe("normalizeChatgptFeatureSignature", () => {
+	test("normalizes nullable live model selections before schema validation", () => {
+		const signature = normalizeChatgptFeatureSignatureForTest({
+			detector: "chatgpt-feature-probe-v1",
+			web_search: false,
+			deep_research: true,
+			company_knowledge: false,
+			apps: [],
+			composer_mode: "work",
+			composer_apps: [],
+			model_controls: {
+				visible: true,
+				label: "5.6 Sol Light",
+				aria_label: "",
+				location: "prompt_workbench",
+				selector: "button.__composer-pill",
+				model_options: [],
+				depth_options: [],
+				synthesized_options: [],
+				selected_model: null,
+				selected_depth: null,
+			},
+		});
+
+		expect(JSON.parse(signature ?? "null")).toMatchObject({
+			deep_research: true,
+			composer_mode: "work",
+			model_controls: {
+				visible: true,
+				label: "5.6 Sol Light",
+				location: "prompt_workbench",
+			},
+		});
+	});
+});
+
+describe("buildChatgptUrlRouteExpression", () => {
+	test("uses the requested origin and pathname for non-project navigation", () => {
+		const expression = buildChatgptUrlRouteExpressionForTest(
+			"https://chatgpt.com/plugins#settings/Plugins",
+		);
+
+		expect(expression).toContain('"https://chatgpt.com"');
+		expect(expression).toContain('"/plugins"');
+		expect(expression).not.toContain("/project");
+	});
+});
 
 describe("closeChatgptTabConnection", () => {
 	test("keeps retained scoped provider sessions open for later materialization steps", async () => {
@@ -75,6 +134,77 @@ describe("closeChatgptTabConnection", () => {
 		});
 
 		expect(close).not.toHaveBeenCalled();
+	});
+});
+
+describe("recordChatgptTargetSession", () => {
+	test("records one-way target fingerprints that prove attach, retain, and reuse identity", () => {
+		const scrapeTelemetry = createBrowserScrapeTelemetryRecorder();
+
+		recordChatgptTargetSessionForTest(
+			{ scrapeTelemetry },
+			"attach",
+			"raw-target-id-that-must-not-persist",
+		);
+		recordChatgptTargetSessionForTest(
+			{ scrapeTelemetry },
+			"retain",
+			"raw-target-id-that-must-not-persist",
+		);
+		recordChatgptTargetSessionForTest(
+			{ scrapeTelemetry },
+			"reuse",
+			"raw-target-id-that-must-not-persist",
+		);
+
+		expect(scrapeTelemetry.notes).toHaveLength(3);
+		const fingerprints = scrapeTelemetry.notes.map((note) => note.split(":").at(-1));
+		expect(new Set(fingerprints)).toEqual(new Set([fingerprints[0]]));
+		expect(scrapeTelemetry.notes.join("\n")).not.toContain("raw-target-id-that-must-not-persist");
+		expect(scrapeTelemetry.notes).toEqual([
+			`chatgpt.target.attach:${fingerprints[0]}`,
+			`chatgpt.target.retain:${fingerprints[0]}`,
+			`chatgpt.target.reuse:${fingerprints[0]}`,
+		]);
+	});
+});
+
+describe("clickChatgptViewerDownloadButtonWithClient", () => {
+	test("clicks the viewer pane Download control after artifact activation opens a preview", async () => {
+		const telemetry = createBrowserScrapeTelemetryRecorder();
+		const evaluate = vi.fn(async (input: { expression?: string; returnByValue?: boolean }) => {
+			expect(input.returnByValue).toBe(true);
+			expect(input.expression).toContain("aria-label");
+			expect(input.expression).toContain("Download");
+			expect(input.expression).toContain("data-auracall-chatgpt-download-button");
+			return { result: { value: { ok: true, label: "Download" } } };
+		});
+		const clicked = await clickChatgptViewerDownloadButtonWithClientForTest(
+			{ Runtime: { evaluate } } as never,
+			{ scrapeTelemetry: telemetry },
+		);
+
+		expect(clicked).toBe(true);
+		expect(evaluate).toHaveBeenCalledTimes(1);
+		expect(telemetry.cdpCalls).toMatchObject({ "Runtime.evaluate": 1 });
+		expect(telemetry.providerActions).toMatchObject({
+			"chatgpt.clickArtifactViewerDownload": 1,
+		});
+	});
+});
+
+describe("extractChatgptArtifactFileNameFromUri", () => {
+	test("normalizes sandbox basenames for visible behavior-button matching", () => {
+		expect(
+			extractChatgptArtifactFileNameFromUriForTest(
+				"sandbox:/mnt/data/Delta_Tie_Phase_I_SOW_One_Pager.docx",
+			),
+		).toBe("Delta_Tie_Phase_I_SOW_One_Pager.docx");
+		expect(
+			extractChatgptArtifactFileNameFromUriForTest(
+				"sandbox:/mnt/data/EPSCoR%20Cochran%20Dolgos.docx",
+			),
+		).toBe("EPSCoR Cochran Dolgos.docx");
 	});
 });
 
@@ -143,6 +273,106 @@ describe("fetchChatgptBinaryWithClient", () => {
 			succeeded: 1,
 			failed: 0,
 		});
+	});
+});
+
+describe("downloadChatgptConversationFilesWithClient", () => {
+	test("checks readiness once and sequentially downloads twelve files on one client", async () => {
+		const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-chatgpt-batch-"));
+		const scrapeTelemetry = createBrowserScrapeTelemetryRecorder();
+		const expressions: string[] = [];
+		const evaluate = vi.fn(async (input: { expression?: string }) => {
+			const expression = input.expression ?? "";
+			expressions.push(expression);
+			if (expression.includes("captureDownloadResponse")) {
+				return {
+					result: {
+						value: {
+							ok: true,
+							status: 200,
+							byteLength: 4,
+							base64: Buffer.from("body", "utf8").toString("base64"),
+						},
+					},
+				};
+			}
+			if (expression.includes("hasTurns")) {
+				return {
+					result: { value: { href: "https://chatgpt.com/c/conversation-batch" } },
+				};
+			}
+			return { result: { value: [] } };
+		});
+		const items = Array.from({ length: 12 }, (_, index) => {
+			const file: FileRef = {
+				id: `conversation-batch:turn:${index}:asset-${index}.txt`,
+				name: `asset-${index}.txt`,
+				provider: "chatgpt",
+				source: "conversation",
+				metadata: { providerFileId: `file_${index}` },
+			};
+			return { file, destPath: path.join(tempDir, file.name) };
+		});
+
+		try {
+			const results = await downloadChatgptConversationFilesWithClientForTest(
+				// biome-ignore lint/style/useNamingConvention: CDP client shape uses Runtime.
+				{ Runtime: { evaluate } } as never,
+				"conversation-batch",
+				items,
+				null,
+				undefined,
+				{ scrapeTelemetry, preserveActiveTab: true },
+			);
+
+			expect(results).toEqual(
+				items.map((item) => ({ fileId: item.file.id, status: "materialized" })),
+			);
+			const readinessExpressions = expressions.filter((expression) =>
+				expression.includes("hasTurns"),
+			);
+			const downloadExpressions = expressions.filter((expression) =>
+				expression.includes("captureDownloadResponse"),
+			);
+			expect(readinessExpressions).toHaveLength(1);
+			expect(downloadExpressions).toHaveLength(12);
+			for (const expression of downloadExpressions) {
+				expect(expression.indexOf("target.click();")).toBeLessThan(
+					expression.lastIndexOf("const direct = await tryDirectProviderFileDownload"),
+				);
+				expect(expression.indexOf("HTMLAnchorElement.prototype.click = function")).toBeLessThan(
+					expression.indexOf("target.click();"),
+				);
+				expect(expression).toContain("capturedNavigationUrl = href");
+				expect(expression).toContain("const clickViewerDownload = () =>");
+				expect(expression).toContain("/^Download$/i.test(entry.label)");
+				expect(expression).toContain("viewerDownloadClicked = clickViewerDownload()");
+				expect(expression).toContain(
+					"const response = await originalFetch(navigationUrl, { credentials: 'include' })",
+				);
+				expect(expression).toContain("recordCaptureCandidate(candidate, 'anchor')");
+				expect(expression).toContain("recordCaptureCandidate(candidate, 'fetch')");
+				expect(expression).toContain("recordCaptureCandidate(direct.value, 'direct')");
+				expect(expression).toContain(
+					"const isSignedContent = /\\/backend-api\\/estuary\\/content/.test(text)",
+				);
+				expect(expression).toContain("if (candidate.ok) {");
+				expect(expression).toContain("captureError = candidate");
+				expect(expression).toContain("HTMLAnchorElement.prototype.click = originalAnchorClick");
+				expect(expression).toContain("window.open = originalWindowOpen");
+				expect(expression).toContain("providerErrorShape");
+				expect(expression).toContain("endpointKind");
+				expect(expression).toContain("tileMatched");
+			}
+			expect(scrapeTelemetry.providerActions).toMatchObject({
+				"chatgpt.downloadConversationFile": 12,
+			});
+			for (const item of items) {
+				expect(await fs.readFile(item.destPath, "utf8")).toBe("body");
+			}
+		} finally {
+			await fs.rm(tempDir, { recursive: true, force: true });
+		}
 	});
 });
 
@@ -666,6 +896,26 @@ describe("classifyChatgptBlockingSurfaceProbe", () => {
 	});
 });
 
+describe("isChatgptAccountMirrorHardStop", () => {
+	test("hard-stops account-mirror rate limits without disabling ordinary recovery", () => {
+		const rateLimit = { kind: "rate-limit" as const, summary: "Too many requests." };
+		const connectionFailure = {
+			kind: "connection-failed" as const,
+			summary: "Server connection failed.",
+		};
+
+		expect(isChatgptAccountMirrorHardStopForTest(rateLimit, { accountMirrorInventory: true })).toBe(
+			true,
+		);
+		expect(isChatgptAccountMirrorHardStopForTest(rateLimit, undefined)).toBe(false);
+		expect(
+			isChatgptAccountMirrorHardStopForTest(connectionFailure, {
+				accountMirrorInventory: true,
+			}),
+		).toBe(false);
+	});
+});
+
 describe("isRetryableChatgptTransientMessage", () => {
 	test("treats known transient ChatGPT failures as retryable", () => {
 		expect(isRetryableChatgptTransientMessage("Server connection failed.")).toBe(true);
@@ -683,13 +933,9 @@ describe("isRetryableChatgptTransientMessage", () => {
 describe("isRetryableConnectionError", () => {
 	test("treats closed CDP WebSocket errors as retryable", () => {
 		expect(
-			isRetryableConnectionErrorForTest(
-				new Error("WebSocket is not open: readyState 3 (CLOSED)"),
-			),
+			isRetryableConnectionErrorForTest(new Error("WebSocket is not open: readyState 3 (CLOSED)")),
 		).toBe(true);
-		expect(isRetryableConnectionErrorForTest(new Error("WebSocket connection closed"))).toBe(
-			true,
-		);
+		expect(isRetryableConnectionErrorForTest(new Error("WebSocket connection closed"))).toBe(true);
 	});
 });
 

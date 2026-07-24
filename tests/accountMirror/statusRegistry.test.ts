@@ -59,6 +59,58 @@ const config = {
 };
 
 describe("account mirror status registry", () => {
+	test("namespaces same-email ChatGPT Business accounts without migrating Personal accounts", () => {
+		const status = createAccountMirrorStatusSummary({
+			config: {
+				runtimeProfiles: {
+					business: {
+						browserProfile: "business-browser",
+						services: {
+							chatgpt: {
+								identity: {
+									email: "operator@example.com",
+									accountLevel: "Business",
+									accountPlanType: "team",
+									accountStructure: "workspace",
+								},
+							},
+						},
+					},
+					personal: {
+						browserProfile: "personal-browser",
+						services: {
+							chatgpt: {
+								identity: {
+									email: "operator@example.com",
+									accountLevel: "Personal",
+									accountPlanType: "pro",
+									accountStructure: "personal",
+								},
+							},
+						},
+					},
+				},
+			},
+			now: new Date("2026-07-23T12:00:00.000Z"),
+		});
+
+		expect(status.entries).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({
+					runtimeProfileId: "business",
+					expectedIdentityKey:
+						"service-account:chatgpt:operator@example.com|plan=team|structure=workspace",
+					tenantKey: "service-account:chatgpt:operator@example.com|plan=team|structure=workspace",
+				}),
+				expect.objectContaining({
+					runtimeProfileId: "personal",
+					expectedIdentityKey: "operator@example.com",
+					tenantKey: "service-account:chatgpt:operator@example.com",
+				}),
+			]),
+		);
+	});
+
 	test("derives identity-gated mirror status entries from configured runtime profiles", () => {
 		const status = createAccountMirrorStatusSummary({
 			config,
@@ -79,11 +131,11 @@ describe("account mirror status registry", () => {
 			expect.arrayContaining([
 				expect.objectContaining({
 					provider: "chatgpt",
-					tenantKey: "service-account:chatgpt:ecochran76@gmail.com",
+					tenantKey: "service-account:chatgpt:ecochran76@gmail.com|structure=business",
 					bindingKey: "binding:chatgpt:default:default",
 					runtimeProfileId: "default",
 					browserProfileId: "default",
-					expectedIdentityKey: "ecochran76@gmail.com",
+					expectedIdentityKey: "service-account:chatgpt:ecochran76@gmail.com|structure=business",
 					accountLevel: "Business",
 					status: "eligible",
 					reason: "eligible",
@@ -696,7 +748,8 @@ describe("account mirror status registry", () => {
 				if (
 					target.provider !== "chatgpt" ||
 					target.runtimeProfileId !== "default" ||
-					target.boundIdentityKey !== "ecochran76@gmail.com"
+					target.boundIdentityKey !==
+						"service-account:chatgpt:ecochran76@gmail.com|structure=business"
 				) {
 					return null;
 				}

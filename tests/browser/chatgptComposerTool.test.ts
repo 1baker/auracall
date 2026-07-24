@@ -56,6 +56,12 @@ describe('chatgpt composer tool selection', () => {
     ).toEqual({ label: 'Canvas', source: 'chip' });
   });
 
+  test('accepts a dynamically installed app from its explicit composer pill', () => {
+    expect(
+      resolveCurrentComposerToolSelectionForTest('Custom CRM', [], []),
+    ).toEqual({ label: 'Custom CRM', source: 'chip' });
+  });
+
   test('reads current tool state from selected top-level or More menu rows when chip is absent', () => {
     expect(
       resolveCurrentComposerToolSelectionForTest(null, [

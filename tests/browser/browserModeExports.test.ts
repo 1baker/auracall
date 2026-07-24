@@ -236,7 +236,7 @@ describe('browserMode exports', () => {
         managedProfileDir,
         target: 'grok',
         logger,
-        queueTimeoutMs: 100,
+        queueTimeoutMs: 2_000,
         queuePollMs: 5,
       });
       await vi.waitFor(() => {

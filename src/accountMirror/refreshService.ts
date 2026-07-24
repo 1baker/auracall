@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import path from "node:path";
 import {
+	closeRemoteChromeTarget,
 	connectToChromeTarget,
 	listChromeTargets,
 } from "../../packages/browser-service/src/chromeLifecycle.js";
@@ -15,6 +16,7 @@ import {
 import { listInstancesWithLiveness } from "../../packages/browser-service/src/service/stateRegistry.js";
 import { getAuracallHomeDir } from "../auracallHome.js";
 import {
+	appendChatgptRateLimitDetection,
 	extractChatgptRateLimitSummary,
 	isChatgptRateLimitMessage,
 	readChatgptRateLimitGuardState,
@@ -54,6 +56,7 @@ import type {
 	AccountMirrorProviderGuardState,
 } from "./politePolicy.js";
 import type {
+	AccountMirrorCollectorDiagnosticEvent,
 	AccountMirrorCollectorPhase,
 	AccountMirrorCollectorPhaseProgressEvidence,
 	AccountMirrorMetadataCounts,
@@ -81,6 +84,31 @@ export interface AccountMirrorRefreshRequest {
 	onCollectorProgress?: (
 		progress: AccountMirrorCollectorPhaseProgressEvidence,
 	) => Promise<void> | void;
+	onCollectorDiagnosticEvent?: (
+		event: AccountMirrorCollectorDiagnosticEvent,
+	) => Promise<void> | void;
+	development?: AccountMirrorDevelopmentPolicy | null;
+	abortSignal?: AbortSignal;
+}
+
+export interface AccountMirrorDevelopmentPolicy {
+	enabled: true;
+	maxWallTimeMs: number;
+	maxConversations: number;
+	maxMaterializationCandidates: number;
+	maxPasses: number;
+	providerCallTimeoutMs?: number;
+	maxBrowserInteractionsPerMinute?: number;
+	conversationReadCooldownMs?: number;
+	pageRefreshCooldownMs?: number;
+	renavigationCooldownMs?: number;
+}
+
+export interface AccountMirrorEffectiveDevelopmentPolicy extends AccountMirrorDevelopmentPolicy {
+	mode: "development";
+	provider: AccountMirrorProvider;
+	runtimeProfileId: string;
+	serverCapabilityArmed: true;
 }
 
 export interface AccountMirrorRefreshBrowserLifecycle {
@@ -113,6 +141,7 @@ export interface AccountMirrorRefreshResult {
 	detectedAccountLevel: string | null;
 	mirrorStatus: AccountMirrorStatusSummary;
 	browserLifecycle?: AccountMirrorRefreshBrowserLifecycle | null;
+	development?: AccountMirrorEffectiveDevelopmentPolicy | null;
 }
 
 export class AccountMirrorRefreshError extends Error {
@@ -181,6 +210,7 @@ export function createAccountMirrorRefreshService(input: {
 	}) => Promise<void>;
 	now?: () => Date;
 	generateRequestId?: () => string;
+	developmentControlsEnabled?: boolean;
 }): AccountMirrorRefreshService {
 	const now = input.now ?? (() => new Date());
 	const registry =
@@ -216,6 +246,12 @@ export function createAccountMirrorRefreshService(input: {
 			const runtimeProfileId = request.runtimeProfileId ?? "default";
 			const requestId = generateRequestId();
 			const requestedPhase = normalizeRequestedCollectorPhase(request.requestedPhase);
+			const development = resolveAccountMirrorDevelopmentPolicy({
+				policy: request.development,
+				provider,
+				runtimeProfileId,
+				serverCapabilityArmed: input.developmentControlsEnabled === true,
+			});
 
 			await registry.refreshPersistentState?.();
 			const target = readSingleMirrorTarget({
@@ -223,9 +259,10 @@ export function createAccountMirrorRefreshService(input: {
 				provider,
 				runtimeProfileId,
 				explicitRefresh: request.explicitRefresh ?? true,
-				ignoreMinimumInterval: request.ignoreMinimumInterval === true,
+				ignoreMinimumInterval: development !== null || request.ignoreMinimumInterval === true,
 				ignoreFailureBackoff:
-					request.explicitRefresh === true && request.ignoreFailureBackoff === true,
+					request.explicitRefresh === true &&
+					(development !== null || request.ignoreFailureBackoff === true),
 			});
 			if (!target) {
 				throw new AccountMirrorRefreshError(
@@ -366,8 +403,17 @@ export function createAccountMirrorRefreshService(input: {
 			} = {
 				current: null,
 			};
+			const collectorDiagnostics: AccountMirrorCollectorDiagnosticEvent[] = [];
+			const recordCollectorDiagnostic = (event: AccountMirrorCollectorDiagnosticEvent) => {
+				collectorDiagnostics.push(event);
+				if (collectorDiagnostics.length > 100) collectorDiagnostics.shift();
+				void request.onCollectorDiagnosticEvent?.(event);
+			};
 			let latestYieldCause: AccountMirrorYieldCause | null = null;
 			const collectorAbort = new AbortController();
+			const collectorSignal = request.abortSignal
+				? AbortSignal.any([collectorAbort.signal, request.abortSignal])
+				: collectorAbort.signal;
 			try {
 				const providerGuard = await providerGuardCensus({
 					config: input.config,
@@ -397,6 +443,8 @@ export function createAccountMirrorRefreshService(input: {
 					boundIdentityKey: target.expectedIdentityKey ?? null,
 					catalogFiles: previousCatalog?.files ?? [],
 					conversations: previousCatalog?.conversations ?? [],
+					conversationLimit:
+						development?.maxConversations ?? target.limits.maxConversationRowsPerCycle,
 				});
 				collection = await withTimeout(
 					metadataCollector.collect({
@@ -407,15 +455,26 @@ export function createAccountMirrorRefreshService(input: {
 						materializationPolicy: request.materializationPolicy ?? null,
 						requestedPhase,
 						limits: {
-							maxPageReadsPerCycle: target.limits.maxPageReadsPerCycle,
-							maxConversationRowsPerCycle: target.limits.maxConversationRowsPerCycle,
+							maxPageReadsPerCycle:
+								development?.maxConversations ?? target.limits.maxPageReadsPerCycle,
+							maxConversationRowsPerCycle:
+								development?.maxConversations ?? target.limits.maxConversationRowsPerCycle,
 							maxArtifactRowsPerCycle: target.limits.maxArtifactRowsPerCycle,
 							freshFrontierThreshold: target.limits.freshFrontierThreshold,
-							maxBrowserInteractionsPerMinute: target.limits.maxBrowserInteractionsPerMinute,
-							conversationReadCooldownMs: target.limits.conversationReadCooldownMs,
-							pageRefreshCooldownMs: target.limits.pageRefreshCooldownMs,
-							renavigationCooldownMs: target.limits.renavigationCooldownMs,
+							maxBrowserInteractionsPerMinute:
+								development?.maxBrowserInteractionsPerMinute ??
+								target.limits.maxBrowserInteractionsPerMinute,
+							conversationReadCooldownMs:
+								development?.conversationReadCooldownMs ?? target.limits.conversationReadCooldownMs,
+							pageRefreshCooldownMs:
+								development?.pageRefreshCooldownMs ?? target.limits.pageRefreshCooldownMs,
+							renavigationCooldownMs:
+								development?.renavigationCooldownMs ?? target.limits.renavigationCooldownMs,
 						},
+						...(development?.providerCallTimeoutMs
+							? { providerCallTimeoutMs: development.providerCallTimeoutMs }
+							: {}),
+						...(development ? { detailReadCap: development.maxConversations } : {}),
 						previousEvidence: target.metadataEvidence,
 						previousFiles,
 						previousConversationFreshness,
@@ -426,7 +485,8 @@ export function createAccountMirrorRefreshService(input: {
 							latestCollectorProgressRef.current = progress;
 							void request.onCollectorProgress?.(progress);
 						},
-						abortSignal: collectorAbort.signal,
+						onDiagnosticEvent: recordCollectorDiagnostic,
+						abortSignal: collectorSignal,
 						shouldYield: () => {
 							const cause = getAccountMirrorYieldCause(acquired);
 							if (cause) {
@@ -436,10 +496,24 @@ export function createAccountMirrorRefreshService(input: {
 							return false;
 						},
 					}),
-					normalizePositiveInteger(request.collectorTimeoutMs, 120_000),
+					development?.maxWallTimeMs ??
+						normalizePositiveInteger(request.collectorTimeoutMs, 120_000),
 					`Account mirror metadata collector timed out for ${provider}/${runtimeProfileId}.`,
 					collectorAbort,
+					() =>
+						recordCollectorDiagnostic({
+							stage: "collector",
+							event: "timed_out",
+							observedAt: now().toISOString(),
+							elapsedMs: now().getTime() - startedAt.getTime(),
+							timeoutMs:
+								development?.maxWallTimeMs ??
+								normalizePositiveInteger(request.collectorTimeoutMs, 120_000),
+							detail: `Outer collector deadline reached for ${provider}/${runtimeProfileId}.`,
+							attachmentCursor: latestCollectorProgressRef.current?.attachmentCursor,
+						}),
 				);
+				collection.evidence.collectorDiagnostics = [...collectorDiagnostics];
 				collection = withYieldCause(collection, latestYieldCause);
 				let collectionWithPriorManifests = await mergeCollectionWithPersistedCatalog({
 					persistence,
@@ -614,6 +688,7 @@ export function createAccountMirrorRefreshService(input: {
 					detectedAccountLevel: collectionWithPriorManifests.detectedAccountLevel,
 					mirrorStatus,
 					browserLifecycle,
+					development,
 				};
 			} catch (error) {
 				const completedAt = now();
@@ -640,16 +715,22 @@ export function createAccountMirrorRefreshService(input: {
 							nowMs: completedAt.getTime(),
 						})
 					: null;
-				const failureMetadataEvidence = latestCollectorProgressRef.current
-					? {
-							...(target.metadataEvidence ?? createEmptyMetadataEvidence()),
-							collectorProgress: {
-								...latestCollectorProgressRef.current,
-								event: "failed" as const,
-								observedAt: completedAt.toISOString(),
-							},
-						}
-					: target.metadataEvidence;
+				const failureMetadataEvidence =
+					latestCollectorProgressRef.current || collectorDiagnostics.length > 0
+						? {
+								...(target.metadataEvidence ?? createEmptyMetadataEvidence()),
+								collectorDiagnostics: [...collectorDiagnostics],
+								...(latestCollectorProgressRef.current
+									? {
+											collectorProgress: {
+												...latestCollectorProgressRef.current,
+												event: "failed" as const,
+												observedAt: completedAt.toISOString(),
+											},
+										}
+									: {}),
+							}
+						: target.metadataEvidence;
 				const failureCount = resolveNextConsecutiveFailureCount(target);
 				if (!isIdentityMismatch && !providerGuard && !providerCooldown) {
 					await recordAccountMirrorRefreshDomDriftObservation({
@@ -758,6 +839,15 @@ export function createAccountMirrorRefreshService(input: {
 						metadataEvidence: failureMetadataEvidence,
 						backfillLedger: target.backfillLedger,
 					},
+				});
+				await cleanupManagedBrowserAfterRefresh({
+					request,
+					config: input.config,
+					provider,
+					runtimeProfileId,
+					managedProfileDir,
+					findManagedBrowserPid,
+					terminateManagedBrowserProcess,
 				});
 				if (isIdentityMismatch) {
 					throw new AccountMirrorRefreshError(
@@ -1307,11 +1397,13 @@ function withTimeout<T>(
 	timeoutMs: number,
 	message: string,
 	abortController?: AbortController,
+	onTimeout?: () => void,
 ): Promise<T> {
 	let timeout: NodeJS.Timeout | null = null;
 	return new Promise<T>((resolve, reject) => {
 		timeout = setTimeout(() => {
 			const error = new Error(message);
+			onTimeout?.();
 			abortController?.abort(error);
 			reject(error);
 		}, timeoutMs);
@@ -1517,6 +1609,10 @@ export async function detectProviderGuardWithTargetCensus(
 					detectedAtMs: input.detectedAtMs,
 					reason: rateLimit.reason,
 					url: target.url ?? null,
+					closeTarget: async () => {
+						const logger = Object.assign((_message: string) => {}, { verbose: false });
+						await closeRemoteChromeTarget(host, instance.port, target.id, logger);
+					},
 				});
 			}
 		}
@@ -1563,13 +1659,66 @@ async function writeChatgptRateLimitCensusGuard(input: {
 	detectedAtMs: number;
 	reason: string;
 	url: string | null;
+	closeTarget: () => Promise<void>;
 }): Promise<AccountMirrorProviderGuardState> {
+	const cooldownAction = "account-mirror-refresh:target-census-visible-warning";
+	const persistentWarningAction =
+		"account-mirror-refresh:target-census-persistent-warning-tab-closed";
 	const previousState = await readChatgptRateLimitGuardState({
 		profileName: input.runtimeProfileId,
 	}).catch(() => null);
+	if (
+		previousState?.cooldownAction === cooldownAction ||
+		previousState?.cooldownAction === persistentWarningAction
+	) {
+		const previousDetectedAtMs = previousState.cooldownDetectedAt ?? input.detectedAtMs;
+		const previousCooldownUntilMs = previousState.cooldownUntil ?? input.detectedAtMs;
+		if (previousCooldownUntilMs > input.detectedAtMs) {
+			return {
+				state: "cooldown",
+				kind: "unknown",
+				summary: `ChatGPT rate limit detected: ${input.reason}`,
+				detectedAtMs: previousDetectedAtMs,
+				cooldownUntilMs: previousCooldownUntilMs,
+				url: input.url,
+				action: previousState.cooldownAction,
+			};
+		}
+		await input.closeTarget();
+		const cooldownMs = resolveChatgptRateLimitCooldownMs(previousState, input.detectedAtMs);
+		const cooldownUntilMs = input.detectedAtMs + cooldownMs;
+		await writeChatgptRateLimitGuardState(
+			{
+				provider: "chatgpt",
+				profile: input.runtimeProfileId,
+				updatedAt: input.detectedAtMs,
+				lastMutationAt: previousState.lastMutationAt,
+				recentMutationAts: previousState.recentMutationAts,
+				recentMutations: previousState.recentMutations,
+				recentRateLimitDetectionAts: appendChatgptRateLimitDetection(
+					previousState.recentRateLimitDetectionAts,
+					input.detectedAtMs,
+				),
+				cooldownUntil: cooldownUntilMs,
+				cooldownDetectedAt: input.detectedAtMs,
+				cooldownReason: `${input.reason} Closed the persistent warning tab.`,
+				cooldownAction: persistentWarningAction,
+			},
+			{ profileName: input.runtimeProfileId },
+		);
+		return {
+			state: "cooldown",
+			kind: "unknown",
+			summary:
+				"ChatGPT rate-limit warning remained visible after the automatic cooldown. The warning tab was closed before a bounded retry delay.",
+			detectedAtMs: input.detectedAtMs,
+			cooldownUntilMs,
+			url: input.url,
+			action: persistentWarningAction,
+		};
+	}
 	const cooldownMs = resolveChatgptRateLimitCooldownMs(previousState, input.detectedAtMs);
 	const cooldownUntilMs = input.detectedAtMs + cooldownMs;
-	const action = "account-mirror-refresh:target-census-visible-warning";
 	await writeChatgptRateLimitGuardState(
 		{
 			provider: "chatgpt",
@@ -1578,10 +1727,14 @@ async function writeChatgptRateLimitCensusGuard(input: {
 			lastMutationAt: previousState?.lastMutationAt,
 			recentMutationAts: previousState?.recentMutationAts,
 			recentMutations: previousState?.recentMutations,
+			recentRateLimitDetectionAts: appendChatgptRateLimitDetection(
+				previousState?.recentRateLimitDetectionAts,
+				input.detectedAtMs,
+			),
 			cooldownUntil: cooldownUntilMs,
 			cooldownDetectedAt: input.detectedAtMs,
 			cooldownReason: input.reason,
-			cooldownAction: action,
+			cooldownAction,
 		},
 		{ profileName: input.runtimeProfileId },
 	);
@@ -1592,9 +1745,11 @@ async function writeChatgptRateLimitCensusGuard(input: {
 		detectedAtMs: input.detectedAtMs,
 		cooldownUntilMs,
 		url: input.url,
-		action,
+		action: cooldownAction,
 	};
 }
+
+export const writeChatgptRateLimitCensusGuardForTest = writeChatgptRateLimitCensusGuard;
 
 async function readVisibleChatgptRateLimitCensusProbe(input: {
 	host: string;
@@ -2265,6 +2420,7 @@ async function readPreviousAccountMirrorFiles(input: {
 	boundIdentityKey: string | null;
 	catalogFiles: readonly FileRef[];
 	conversations: readonly Conversation[];
+	conversationLimit: number;
 }): Promise<FileRef[]> {
 	const filesById = new Map<string, FileRef>();
 	for (const file of input.catalogFiles) {
@@ -2276,24 +2432,33 @@ async function readPreviousAccountMirrorFiles(input: {
 	) {
 		return Array.from(filesById.values());
 	}
-	await Promise.all(
-		input.conversations.map(async (conversation) => {
-			const request = {
-				provider: input.provider,
-				boundIdentityKey: input.boundIdentityKey,
-				conversationId: conversation.id,
-			};
-			const [conversationFiles, conversationAttachments] = await Promise.all([
-				input.persistence.readConversationFiles?.(request).catch(() => []),
-				input.persistence.readConversationAttachments?.(request).catch(() => []),
-			]);
-			for (const file of [...(conversationFiles ?? []), ...(conversationAttachments ?? [])]) {
-				filesById.set(file.id, file);
-			}
-		}),
+	const conversations = input.conversations.slice(
+		0,
+		Math.max(1, Math.floor(input.conversationLimit)),
 	);
+	const cacheHydrationConcurrency = 4;
+	for (let offset = 0; offset < conversations.length; offset += cacheHydrationConcurrency) {
+		await Promise.all(
+			conversations.slice(offset, offset + cacheHydrationConcurrency).map(async (conversation) => {
+				const request = {
+					provider: input.provider,
+					boundIdentityKey: input.boundIdentityKey,
+					conversationId: conversation.id,
+				};
+				const [conversationFiles, conversationAttachments] = await Promise.all([
+					input.persistence.readConversationFiles?.(request).catch(() => []),
+					input.persistence.readConversationAttachments?.(request).catch(() => []),
+				]);
+				for (const file of [...(conversationFiles ?? []), ...(conversationAttachments ?? [])]) {
+					filesById.set(file.id, file);
+				}
+			}),
+		);
+	}
 	return Array.from(filesById.values());
 }
+
+export const readPreviousAccountMirrorFilesForTest = readPreviousAccountMirrorFiles;
 
 function estimateMetadataCountsFromConfig(
 	config: Record<string, unknown> | null | undefined,
@@ -2363,6 +2528,100 @@ function normalizeRequestedCollectorPhase(
 	value: AccountMirrorRefreshRequest["requestedPhase"],
 ): AccountMirrorCollectorPhase | null {
 	return isCollectorPhase(value) ? value : null;
+}
+
+export function resolveAccountMirrorDevelopmentPolicy(input: {
+	policy: AccountMirrorDevelopmentPolicy | null | undefined;
+	provider: AccountMirrorProvider;
+	runtimeProfileId: string;
+	serverCapabilityArmed: boolean;
+}): AccountMirrorEffectiveDevelopmentPolicy | null {
+	if (!input.policy) return null;
+	if (!input.serverCapabilityArmed) {
+		throw new AccountMirrorRefreshError(
+			409,
+			"account_mirror_development_controls_not_armed",
+			"Account-mirror development controls are not armed in the installed runtime.",
+			{ provider: input.provider, runtimeProfileId: input.runtimeProfileId },
+		);
+	}
+	const bounded = (name: string, value: number, min: number, max: number): number => {
+		if (!Number.isFinite(value) || value < min || value > max) {
+			throw new AccountMirrorRefreshError(
+				400,
+				"account_mirror_invalid_development_policy",
+				`${name} must be between ${min} and ${max}.`,
+				{ name, value, min, max },
+			);
+		}
+		return Math.floor(value);
+	};
+	return {
+		...input.policy,
+		mode: "development",
+		provider: input.provider,
+		runtimeProfileId: input.runtimeProfileId,
+		serverCapabilityArmed: true,
+		maxWallTimeMs: bounded("maxWallTimeMs", input.policy.maxWallTimeMs, 1_000, 1_800_000),
+		maxConversations: bounded("maxConversations", input.policy.maxConversations, 1, 100),
+		maxMaterializationCandidates: bounded(
+			"maxMaterializationCandidates",
+			input.policy.maxMaterializationCandidates,
+			1,
+			100,
+		),
+		maxPasses: bounded("maxPasses", input.policy.maxPasses, 1, 20),
+		...(input.policy.providerCallTimeoutMs === undefined
+			? {}
+			: {
+					providerCallTimeoutMs: bounded(
+						"providerCallTimeoutMs",
+						input.policy.providerCallTimeoutMs,
+						1_000,
+						120_000,
+					),
+				}),
+		...(input.policy.maxBrowserInteractionsPerMinute === undefined
+			? {}
+			: {
+					maxBrowserInteractionsPerMinute: bounded(
+						"maxBrowserInteractionsPerMinute",
+						input.policy.maxBrowserInteractionsPerMinute,
+						1,
+						120,
+					),
+				}),
+		...(input.policy.conversationReadCooldownMs === undefined
+			? {}
+			: {
+					conversationReadCooldownMs: bounded(
+						"conversationReadCooldownMs",
+						input.policy.conversationReadCooldownMs,
+						0,
+						300_000,
+					),
+				}),
+		...(input.policy.pageRefreshCooldownMs === undefined
+			? {}
+			: {
+					pageRefreshCooldownMs: bounded(
+						"pageRefreshCooldownMs",
+						input.policy.pageRefreshCooldownMs,
+						0,
+						300_000,
+					),
+				}),
+		...(input.policy.renavigationCooldownMs === undefined
+			? {}
+			: {
+					renavigationCooldownMs: bounded(
+						"renavigationCooldownMs",
+						input.policy.renavigationCooldownMs,
+						0,
+						300_000,
+					),
+				}),
+	};
 }
 
 function isCollectorPhase(value: unknown): value is AccountMirrorCollectorPhase {

@@ -129,8 +129,32 @@ describe('config model helpers', () => {
         { id: 'work', browserProfileId: 'consulting', defaultService: 'grok' },
       ],
       agents: [
-        { id: 'analyst', runtimeProfileId: 'work', browserProfileId: 'consulting', defaultService: 'grok' },
-        { id: 'researcher', runtimeProfileId: 'default', browserProfileId: 'default', defaultService: 'chatgpt' },
+        {
+          id: 'analyst',
+          runtimeProfileId: 'work',
+          browserProfileId: 'consulting',
+          defaultService: 'grok',
+          tenantKey: null,
+          bindingKey: 'binding:grok:work:consulting',
+          bindingId: 'binding:grok:work:consulting',
+          projectBinding: {
+            mode: 'none',
+            source: 'none',
+          },
+        },
+        {
+          id: 'researcher',
+          runtimeProfileId: 'default',
+          browserProfileId: 'default',
+          defaultService: 'chatgpt',
+          tenantKey: null,
+          bindingKey: 'binding:chatgpt:default:default',
+          bindingId: 'binding:chatgpt:default:default',
+          projectBinding: {
+            mode: 'none',
+            source: 'none',
+          },
+        },
       ],
       teams: [
         {
@@ -304,6 +328,15 @@ describe('config model helpers', () => {
         projectName: 'Release Research',
         hasKnowledge: true,
         hasPrompting: true,
+        tenantKey: null,
+        bindingKey: 'binding:chatgpt:default:default',
+        bindingId: 'binding:chatgpt:default:default',
+        projectBinding: {
+          mode: 'fixed',
+          source: 'agent',
+          providerProjectId: 'proj_123',
+          label: 'Release Research',
+        },
       },
     ]);
     expect(resolveRuntimeSelection(config, { explicitAgentId: 'researcher' }).defaultService).toBe('chatgpt');

@@ -3,6 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import {
+	type AttachmentInventoryCursor,
 	allocateConversationReadBudgets,
 	buildGeminiRouteProgressEvidence,
 	createChatgptAccountMirrorMetadataCollector,
@@ -19,6 +20,8 @@ import {
 	readBoundedGrokDetailInventory,
 	readBoundedProjectConversations,
 	readBoundedProjects,
+	resolveCollectorDetailCallTimeoutMsForTest,
+	resolveCollectorDiscoveryCallTimeoutMsForTest,
 	selectAttachmentInventoryCursorForProviderSweep,
 	selectAttachmentInventoryCursorForSweep,
 	selectConversationDetailCandidates,
@@ -28,6 +31,7 @@ import {
 	shouldReadProjectConversationsForAccountMirror,
 	shouldResumeChatgptAttachmentInventoryCursor,
 } from "../../src/accountMirror/chatgptMetadataCollector.js";
+import type { AccountMirrorCollectorDiagnosticEvent } from "../../src/accountMirror/statusRegistry.js";
 import { setAuracallHomeDirOverrideForTest } from "../../src/auracallHome.js";
 import { listDomDriftObservations } from "../../src/browser/domDriftObservations.js";
 import {
@@ -41,6 +45,7 @@ describe("ChatGPT account mirror metadata collector", () => {
 	const accountMirrorTabLifecycle = {
 		accountMirrorInventory: true,
 		tabLifecycle: "dispose-new",
+		abortSignal: expect.any(AbortSignal),
 	} as const;
 	const accountMirrorConversationOptions = {
 		projectId: undefined,
@@ -56,6 +61,41 @@ describe("ChatGPT account mirror metadata collector", () => {
 				maxMessages: 24,
 			},
 		},
+	});
+
+	test("allows a slow ChatGPT conversation surface to settle within the outer collector budget", () => {
+		expect(
+			resolveCollectorDetailCallTimeoutMsForTest({
+				provider: "chatgpt",
+				limits: {
+					conversationReadCooldownMs: 60_000,
+					pageRefreshCooldownMs: 60_000,
+					renavigationCooldownMs: 60_000,
+				},
+			}),
+		).toBe(300_000);
+	});
+
+	test("allows cold ChatGPT identity recovery to settle within the outer collector budget", () => {
+		expect(
+			resolveCollectorDiscoveryCallTimeoutMsForTest(
+				{
+					provider: "chatgpt",
+					runtimeProfileId: "wsl-chrome-3",
+					expectedIdentityKey: "operator@example.com",
+					limits: {
+						maxPageReadsPerCycle: 4,
+						maxConversationRowsPerCycle: 30,
+						maxArtifactRowsPerCycle: 24,
+						maxBrowserInteractionsPerMinute: 12,
+						conversationReadCooldownMs: 60_000,
+						pageRefreshCooldownMs: 60_000,
+						renavigationCooldownMs: 60_000,
+					},
+				},
+				"page-refresh",
+			),
+		).toBe(300_000);
 	});
 
 	afterEach(async () => {
@@ -872,6 +912,14 @@ describe("ChatGPT account mirror metadata collector", () => {
 						provider: "chatgpt" as const,
 						conversationId,
 						messages: [],
+						files: [
+							{
+								id: `conversation-file-${conversationId}`,
+								name: "Conversation file.csv",
+								provider: "chatgpt" as const,
+								source: "conversation" as const,
+							},
+						],
 						artifacts: [
 							{
 								id: `artifact-${conversationId}`,
@@ -896,10 +944,8 @@ describe("ChatGPT account mirror metadata collector", () => {
 			},
 		);
 
-		expect(calls).toEqual([
-			"listConversationFiles:conv_artifact",
-			"getConversationContext:conv_artifact",
-		]);
+		expect(calls).toEqual(["getConversationContext:conv_artifact"]);
+		expect(client.listConversationFiles).not.toHaveBeenCalled();
 		expect(client.listAccountFiles).not.toHaveBeenCalled();
 		expect(client.listProjectFiles).not.toHaveBeenCalled();
 		expect(inventory.files.map((file) => file.id)).toEqual(["conversation-file-conv_artifact"]);
@@ -967,6 +1013,14 @@ describe("ChatGPT account mirror metadata collector", () => {
 						provider: "chatgpt" as const,
 						conversationId,
 						messages: [],
+						files: [
+							{
+								id: `conversation-file-${conversationId}`,
+								name: "Conversation file.csv",
+								provider: "chatgpt" as const,
+								source: "conversation" as const,
+							},
+						],
 						artifacts: [
 							{
 								id: `artifact-${conversationId}`,
@@ -1038,10 +1092,18 @@ describe("ChatGPT account mirror metadata collector", () => {
 			},
 		});
 
-		expect(calls).toEqual([
-			"listConversationFiles:conv_target",
-			"getConversationContext:conv_target",
-		]);
+		expect(calls).toEqual(["getConversationContext:conv_target"]);
+		expect(client.getConversationContext).toHaveBeenCalledWith(
+			"conv_target",
+			expect.objectContaining({
+				listOptions: expect.objectContaining({
+					accountMirrorInventory: true,
+					skipFeatureSignature: true,
+					tabLifecycle: "dispose-new",
+				}),
+			}),
+		);
+		expect(client.listConversationFiles).not.toHaveBeenCalled();
 		expect(client.listProjects).not.toHaveBeenCalled();
 		expect(client.listConversations).not.toHaveBeenCalled();
 		expect(client.listProjectFiles).not.toHaveBeenCalled();
@@ -1088,13 +1150,11 @@ describe("ChatGPT account mirror metadata collector", () => {
 				yieldReason: null,
 			},
 			llmServiceRequests: 0,
-			cdpMethodCalls: 2,
+			cdpMethodCalls: 1,
 			cdpMethods: {
-				"Target.attachToTarget": 1,
 				"Runtime.evaluate": 1,
 			},
 			providerActions: {
-				"test.provider.listConversationFiles": 1,
 				"test.provider.getConversationContext": 1,
 			},
 		});
@@ -1214,7 +1274,8 @@ describe("ChatGPT account mirror metadata collector", () => {
 			},
 		});
 
-		expect(calls).toEqual(["listConversationFiles:conv_next", "getConversationContext:conv_next"]);
+		expect(calls).toEqual(["getConversationContext:conv_next"]);
+		expect(client.listConversationFiles).not.toHaveBeenCalled();
 		expect(result.evidence.attachmentInventory).toMatchObject({
 			nextConversationIndex: 2,
 			detailReadLimit: 1,
@@ -1461,12 +1522,12 @@ describe("ChatGPT account mirror metadata collector", () => {
 		});
 
 		expect(result.evidence.scrapeBudget).toMatchObject({
-			classification: "passive_dominant",
+			classification: "active_dominant",
 			passive: {
-				domParses: 1,
+				domParses: 0,
 				appStateReads: 1,
-				downloadLinkEnumerations: 1,
-				total: 3,
+				downloadLinkEnumerations: 0,
+				total: 1,
 			},
 			active: {
 				identityReads: 1,
@@ -1481,9 +1542,8 @@ describe("ChatGPT account mirror metadata collector", () => {
 				remaining: 4,
 			},
 			llmServiceRequests: 0,
-			cdpMethodCalls: 1,
+			cdpMethodCalls: 0,
 			providerActions: {
-				"chatgpt.readVisibleConversationFiles": 1,
 				"llmService.getConversationContext": 1,
 			},
 		});
@@ -1672,11 +1732,9 @@ describe("ChatGPT account mirror metadata collector", () => {
 			"pacer:page-refresh",
 			"provider:listAccountFiles",
 			"pacer:conversation-read",
-			"provider:listConversationFiles",
-			"pacer:conversation-read",
 			"provider:getConversationContext",
 		]);
-		expect(pacer.beforeInteraction).toHaveBeenCalledTimes(3);
+		expect(pacer.beforeInteraction).toHaveBeenCalledTimes(2);
 	});
 
 	test("reserves one ChatGPT conversation detail row when library inventory fills the row budget", async () => {
@@ -1761,6 +1819,14 @@ describe("ChatGPT account mirror metadata collector", () => {
 					provider: "chatgpt" as const,
 					conversationId,
 					messages: [],
+					files: [
+						{
+							id: `conversation-file-${conversationId}`,
+							name: "Conversation source.pdf",
+							provider: "chatgpt" as const,
+							source: "conversation" as const,
+						},
+					],
 					artifacts: [],
 				})),
 			};
@@ -1791,7 +1857,9 @@ describe("ChatGPT account mirror metadata collector", () => {
 
 	test("bounds hung ChatGPT conversation detail reads and advances the cursor", async () => {
 		vi.useFakeTimers();
+		const dateNowSpy = vi.spyOn(Date, "now").mockReturnValue(1_000);
 		try {
+			const diagnostics: AccountMirrorCollectorDiagnosticEvent[] = [];
 			const client = {
 				listAccountFiles: vi.fn(async () => []),
 				listProjectFiles: vi.fn(async () => []),
@@ -1817,9 +1885,11 @@ describe("ChatGPT account mirror metadata collector", () => {
 						scannedConversations: 1,
 					},
 					providerCallTimeoutMs: 1,
+					onDiagnosticEvent: (event) => {
+						diagnostics.push(event);
+					},
 				},
 			);
-			await vi.advanceTimersByTimeAsync(1);
 			await vi.advanceTimersByTimeAsync(1);
 			const inventory = await inventoryPromise;
 
@@ -1830,15 +1900,23 @@ describe("ChatGPT account mirror metadata collector", () => {
 				scannedConversations: 1,
 			});
 			expect(inventory.truncated).toBe(false);
-			expect(client.listConversationFiles).toHaveBeenCalledWith("conv_2", {
-				projectId: undefined,
-				listOptions: accountMirrorTabLifecycle,
-			});
+			expect(client.listConversationFiles).not.toHaveBeenCalled();
 			expect(client.getConversationContext).toHaveBeenCalledWith(
 				"conv_2",
 				accountMirrorContextOptions(),
 			);
+			const contextCall = client.getConversationContext.mock.calls[0] as unknown as [
+				string,
+				{ listOptions?: BrowserProviderListOptions },
+			];
+			expect(contextCall[1].listOptions?.abortSignal?.aborted).toBe(true);
+			expect(
+				diagnostics.find(
+					(event) => event.stage === "conversation-context" && event.event === "timed_out",
+				)?.elapsedMs,
+			).toBeGreaterThan(0);
 		} finally {
+			dateNowSpy.mockRestore();
 			vi.useRealTimers();
 		}
 	});
@@ -2505,6 +2583,7 @@ describe("ChatGPT account mirror metadata collector", () => {
 		expect(client.getConversationContext).toHaveBeenCalledWith("gemini_conv_1", {
 			projectId: "gemini_project_1",
 			refresh: true,
+			listOptions: { abortSignal: expect.any(AbortSignal) },
 		});
 		expect(inventory.artifacts.map((artifact) => artifact.id)).toEqual([
 			"gemini-image-artifact",
@@ -2568,6 +2647,7 @@ describe("ChatGPT account mirror metadata collector", () => {
 		expect(client.getConversationContext).toHaveBeenCalledWith("gemini_conv_1", {
 			projectId: undefined,
 			refresh: true,
+			listOptions: { abortSignal: expect.any(AbortSignal) },
 		});
 		expect(inventory.media).toMatchObject([
 			{
@@ -2658,13 +2738,19 @@ describe("ChatGPT account mirror metadata collector", () => {
 		expect(client.getConversationContext).toHaveBeenNthCalledWith(1, "gemini_conv_1", {
 			projectId: undefined,
 			refresh: true,
+			listOptions: { abortSignal: expect.any(AbortSignal) },
 		});
 		expect(client.getConversationContext).toHaveBeenNthCalledWith(2, "gemini_conv_2", {
 			projectId: undefined,
 			refresh: true,
+			listOptions: { abortSignal: expect.any(AbortSignal) },
 		});
-		expect(client.listProjectFiles).toHaveBeenNthCalledWith(1, "gemini_project_1");
-		expect(client.listProjectFiles).toHaveBeenNthCalledWith(2, "gemini_project_2");
+		expect(client.listProjectFiles).toHaveBeenNthCalledWith(1, "gemini_project_1", {
+			abortSignal: expect.any(AbortSignal),
+		});
+		expect(client.listProjectFiles).toHaveBeenNthCalledWith(2, "gemini_project_2", {
+			abortSignal: expect.any(AbortSignal),
+		});
 		expect(first.media.map((entry) => entry.conversationId)).toEqual(["gemini_conv_1"]);
 		expect(second.media.map((entry) => entry.conversationId)).toEqual(["gemini_conv_2"]);
 		expect(third.files.map((file) => file.id)).toEqual(["project-file-gemini_project_1"]);
@@ -2970,6 +3056,178 @@ describe("ChatGPT account mirror metadata collector", () => {
 			},
 		});
 		expect(client.connectDevTools).toHaveBeenCalledTimes(1);
+	});
+
+	test("fails fast after three consecutive timed-out conversation detail boundaries", async () => {
+		const never = () => new Promise<never>(() => {});
+		const checkpoints: AttachmentInventoryCursor[] = [];
+		const diagnostics: AccountMirrorCollectorDiagnosticEvent[] = [];
+		const conversations = ["conv_1", "conv_2", "conv_3", "conv_4"].map((id) => ({
+			id,
+			title: id,
+			provider: "chatgpt" as const,
+		}));
+
+		await expect(
+			readBoundedAttachmentInventory(
+				{
+					listProjectFiles: vi.fn(async () => []),
+					listConversationFiles: vi.fn(never),
+					getConversationContext: vi.fn(never),
+				},
+				[],
+				conversations,
+				12,
+				{
+					maxDetailReads: 12,
+					detailReadCap: 12,
+					providerCallTimeoutMs: 1,
+					prioritizeConversations: true,
+					onCheckpoint: (cursor) => {
+						checkpoints.push(cursor);
+					},
+					onDiagnosticEvent: (event) => {
+						diagnostics.push(event);
+					},
+				},
+			),
+		).rejects.toThrow(
+			"Detail provider reads timed out for 3 consecutive conversations; last=conv_3.",
+		);
+		expect(checkpoints.at(-1)).toMatchObject({
+			nextConversationIndex: 3,
+			scannedConversations: 3,
+		});
+		expect(diagnostics.filter((event) => event.event === "timed_out")).toHaveLength(6);
+	});
+
+	test("fails fast after three consecutive unresolved conversation detail boundaries", async () => {
+		const checkpoints: AttachmentInventoryCursor[] = [];
+		const diagnostics: AccountMirrorCollectorDiagnosticEvent[] = [];
+		const conversations = ["conv_1", "conv_2", "conv_3", "conv_4"].map((id) => ({
+			id,
+			title: id,
+			provider: "chatgpt" as const,
+		}));
+
+		await expect(
+			readBoundedAttachmentInventory(
+				{
+					listProjectFiles: vi.fn(async () => []),
+					listConversationFiles: vi.fn(async () => {
+						throw new Error("file surface unavailable");
+					}),
+					getConversationContext: vi.fn(async () => {
+						throw new Error("context surface unavailable");
+					}),
+				},
+				[],
+				conversations,
+				12,
+				{
+					maxDetailReads: 12,
+					detailReadCap: 12,
+					prioritizeConversations: true,
+					onCheckpoint: (cursor) => {
+						checkpoints.push(cursor);
+					},
+					onDiagnosticEvent: (event) => {
+						diagnostics.push(event);
+					},
+				},
+			),
+		).rejects.toThrow(
+			"Detail provider reads failed for 3 consecutive conversations; last=conv_3; files=failed:file surface unavailable; context=failed:context surface unavailable.",
+		);
+		expect(checkpoints.at(-1)).toMatchObject({
+			nextConversationIndex: 3,
+			scannedConversations: 3,
+		});
+		expect(diagnostics.at(-1)).toMatchObject({
+			stage: "conversation-context",
+			event: "failed",
+			detail: "context surface unavailable",
+		});
+	});
+
+	test("stops immediately when a conversation detail read reports a provider guard", async () => {
+		const getConversationContext = vi.fn(async () => ({
+			provider: "chatgpt" as const,
+			conversationId: "conv_guard",
+			messages: [],
+			artifacts: [],
+		}));
+		const diagnostics: AccountMirrorCollectorDiagnosticEvent[] = [];
+
+		await expect(
+			readBoundedAttachmentInventory(
+				{
+					listProjectFiles: vi.fn(async () => []),
+					listConversationFiles: vi.fn(async () => {
+						throw new Error("ChatGPT rate limit cooldown active; requests too quickly.");
+					}),
+					getConversationContext,
+				},
+				[],
+				[{ id: "conv_guard", title: "guard", provider: "chatgpt" }],
+				12,
+				{
+					maxDetailReads: 12,
+					detailReadCap: 12,
+					prioritizeConversations: true,
+					onDiagnosticEvent: (event) => {
+						diagnostics.push(event);
+					},
+				},
+			),
+		).rejects.toThrow(
+			"Detail provider read stopped by provider guard for conv_guard: ChatGPT rate limit cooldown active; requests too quickly.",
+		);
+		expect(getConversationContext).not.toHaveBeenCalled();
+		expect(diagnostics.at(-1)).toMatchObject({
+			stage: "conversation-files",
+			event: "failed",
+			detail: "ChatGPT rate limit cooldown active; requests too quickly.",
+		});
+	});
+
+	test("stops after a successful-looking detail read when the provider guard was persisted", async () => {
+		const getConversationContext = vi.fn(async (conversationId: string) => ({
+			provider: "chatgpt" as const,
+			conversationId,
+			messages: [],
+			artifacts: [],
+		}));
+		const readProviderGuard = vi
+			.fn<() => Promise<string | null>>()
+			.mockResolvedValueOnce("ChatGPT rate limit cooldown active; requests too quickly.");
+
+		await expect(
+			readBoundedAttachmentInventory(
+				{
+					listProjectFiles: vi.fn(async () => []),
+					listConversationFiles: vi.fn(async () => []),
+					getConversationContext,
+				},
+				[],
+				[
+					{ id: "conv_guard", title: "guard", provider: "chatgpt" },
+					{ id: "conv_after", title: "must not run", provider: "chatgpt" },
+				],
+				12,
+				{
+					maxDetailReads: 12,
+					detailReadCap: 12,
+					prioritizeConversations: true,
+					coalesceConversationReads: true,
+					readProviderGuard,
+				},
+			),
+		).rejects.toThrow(
+			"Detail provider read stopped by provider guard for conv_guard: ChatGPT rate limit cooldown active; requests too quickly.",
+		);
+		expect(getConversationContext).toHaveBeenCalledTimes(1);
+		expect(getConversationContext).not.toHaveBeenCalledWith("conv_after", expect.anything());
 	});
 
 	test("infers Grok media type from URL and MIME type", () => {

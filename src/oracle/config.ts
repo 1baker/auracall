@@ -110,6 +110,17 @@ export const MODEL_CONFIGS: Record<KnownModelName, ModelConfig> = {
     },
     reasoning: { effort: 'xhigh' },
   },
+  'gpt-5.6-sol': {
+    model: 'gpt-5.6-sol',
+    provider: 'openai',
+    tokenizer: countTokensGpt5 as TokenizerFn,
+    inputLimit: 196000,
+    pricing: {
+      inputPerToken: 5 / 1_000_000,
+      outputPerToken: 30 / 1_000_000,
+    },
+    reasoning: { effort: 'xhigh' },
+  },
   'gemini-3-pro': {
     model: 'gemini-3-pro',
     provider: 'google',

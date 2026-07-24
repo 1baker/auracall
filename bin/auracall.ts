@@ -224,6 +224,12 @@ import {
   normalizeWorkbenchCapabilityProvider,
 } from '../src/cli/workbenchCapabilitiesCommand.js';
 import {
+  formatChatgptDeveloperAppOperationResult,
+  runChatgptDeveloperAppOperationForCli,
+  type ChatgptDeveloperAppAuth,
+  type ChatgptDeveloperAppOperationInput,
+} from '../src/cli/chatgptDeveloperAppsCommand.js';
+import {
   buildProfileIdentitySmokeBatchReport,
   buildProfileIdentitySmokeReport,
   formatProfileIdentitySmokeBatchReport,
@@ -5365,6 +5371,136 @@ program
       console.error('\nSome selectors failed to match. The UI structure may have changed.');
       process.exit(1);
     }
+  });
+
+async function runChatgptDeveloperAppsCliAction(
+  command: Command,
+  buildInput: (options: OptionValues) => ChatgptDeveloperAppOperationInput,
+): Promise<void> {
+  const parentOptions =
+    typeof command.parent?.opts === 'function' ? (command.parent.opts() as OptionValues) : ({} as OptionValues);
+  const ownOptions = typeof command.opts === 'function' ? (command.opts() as OptionValues) : ({} as OptionValues);
+  const commandOptions = {
+    ...(program.opts?.() ?? {}),
+    ...parentOptions,
+    ...ownOptions,
+  } as OptionValues;
+  if (commandOptions.target && commandOptions.target !== 'chatgpt') {
+    throw new Error('Developer app lifecycle currently supports --target chatgpt only.');
+  }
+  const userConfig = await resolveConfig(commandOptions, process.cwd(), process.env);
+  const dispatcher = createFileBackedBrowserOperationDispatcher({
+    lockRoot: path.join(getAuracallHomeDir(), 'browser-operations'),
+  });
+  const input = buildInput(commandOptions);
+  const acquired = await dispatcher.acquire({
+    managedProfileDir: resolveManagedProfileDirForUserConfig(userConfig, 'chatgpt'),
+    serviceTarget: 'chatgpt',
+    kind: 'browser-tools',
+    operationClass: input.action === 'list' || (input.action === 'test' && !input.submit)
+      ? 'exclusive-probe'
+      : 'exclusive-mutating',
+    ownerCommand: `apps:${input.action}`,
+  });
+  if (!acquired.acquired) {
+    throw new Error(formatBrowserOperationBusyResult(acquired));
+  }
+  try {
+    const result = await runChatgptDeveloperAppOperationForCli(userConfig, input);
+    if (commandOptions.json) {
+      console.log(JSON.stringify(result, null, 2));
+      return;
+    }
+    console.log(formatChatgptDeveloperAppOperationResult(result));
+  } finally {
+    await acquired.release();
+  }
+}
+
+const appsCommand = program
+  .command('apps')
+  .description('Inventory and operate guarded ChatGPT developer apps.')
+  .option('--target <chatgpt>', 'Provider target (currently chatgpt only).', 'chatgpt');
+
+appsCommand
+  .command('list')
+  .description('List installed apps, connection state, and Developer mode without mutation.')
+  .option('--json', 'Emit machine-readable JSON output.', false)
+  .action(async function (this: Command) {
+    await runChatgptDeveloperAppsCliAction(this, () => ({ action: 'list' }));
+  });
+
+appsCommand
+  .command('create')
+  .description('Create a ChatGPT developer app from an MCP endpoint.')
+  .requiredOption('--name <name>', 'Developer app display name.')
+  .requiredOption('--server-url <url>', 'MCP server URL.')
+  .requiredOption('--expected-account <email>', 'Exact ChatGPT account expected in the managed browser.')
+  .option('--description <text>', 'Developer app description.')
+  .option('--auth <oauth|none|mixed>', 'Authentication mechanism.', 'oauth')
+  .option('--connection <server-url|tunnel>', 'Connection mode.', 'server-url')
+  .option('--yes', 'Confirm creation and any resulting OAuth handoff.', false)
+  .option('--json', 'Emit machine-readable JSON output.', false)
+  .action(async function (this: Command) {
+    await runChatgptDeveloperAppsCliAction(this, (options) => ({
+      action: 'create',
+      name: String(options.name ?? ''),
+      serverUrl: String(options.serverUrl ?? ''),
+      description: typeof options.description === 'string' ? options.description : null,
+      auth: String(options.auth ?? 'oauth') as ChatgptDeveloperAppAuth,
+      connection: String(options.connection ?? 'server-url') as 'server-url' | 'tunnel',
+      expectedAccount: String(options.expectedAccount ?? ''),
+      confirmed: Boolean(options.yes),
+    }));
+  });
+
+appsCommand
+  .command('refresh <app>')
+  .description('Refresh one exact installed ChatGPT developer app.')
+  .requiredOption('--expected-account <email>', 'Exact ChatGPT account expected in the managed browser.')
+  .option('--yes', 'Confirm refresh.', false)
+  .option('--json', 'Emit machine-readable JSON output.', false)
+  .action(async function (this: Command, app: string) {
+    await runChatgptDeveloperAppsCliAction(this, (options) => ({
+      action: 'refresh',
+      app,
+      expectedAccount: String(options.expectedAccount ?? ''),
+      confirmed: Boolean(options.yes),
+    }));
+  });
+
+appsCommand
+  .command('test <app>')
+  .description('Select-test an app, or submit one explicitly confirmed test prompt.')
+  .requiredOption('--expected-account <email>', 'Exact ChatGPT account expected in the managed browser.')
+  .option('--submit', 'Submit the test prompt after selecting the app.', false)
+  .option('--prompt <text>', 'Prompt to submit when --submit is used.')
+  .option('--yes', 'Confirm prompt submission.', false)
+  .option('--json', 'Emit machine-readable JSON output.', false)
+  .action(async function (this: Command, app: string) {
+    await runChatgptDeveloperAppsCliAction(this, (options) => ({
+      action: 'test',
+      app,
+      submit: Boolean(options.submit),
+      prompt: typeof options.prompt === 'string' ? options.prompt : null,
+      expectedAccount: String(options.expectedAccount ?? ''),
+      confirmed: Boolean(options.yes),
+    }));
+  });
+
+appsCommand
+  .command('uninstall <app>')
+  .description('Uninstall one exact ChatGPT developer app.')
+  .requiredOption('--expected-account <email>', 'Exact ChatGPT account expected in the managed browser.')
+  .option('--yes', 'Confirm uninstall.', false)
+  .option('--json', 'Emit machine-readable JSON output.', false)
+  .action(async function (this: Command, app: string) {
+    await runChatgptDeveloperAppsCliAction(this, (options) => ({
+      action: 'uninstall',
+      app,
+      expectedAccount: String(options.expectedAccount ?? ''),
+      confirmed: Boolean(options.yes),
+    }));
   });
 
 program

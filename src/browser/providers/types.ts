@@ -46,6 +46,7 @@ export interface BrowserProviderListOptions {
 	tabLifecycle?: "retain" | "dispose-new";
 	downloadVariantLabel?: string | null;
 	discoveryAction?: "grok-imagine-video-mode" | null;
+	includeInstalledApps?: boolean;
 	browserService?: import("../service/types.js").BrowserServiceHandle;
 	modelLabel?: string;
 	mutationAudit?: BrowserMutationAuditSink;
@@ -134,6 +135,22 @@ export interface BrowserProviderPromptProgressEvent {
 	phase: BrowserProviderPromptProgressPhase;
 	details?: Record<string, unknown> | null;
 }
+
+export interface BrowserProviderConversationFileDownloadInput {
+	file: FileRef;
+	destPath: string;
+}
+
+export type BrowserProviderConversationFileDownloadResult =
+	| {
+			fileId: string;
+			status: "materialized";
+	  }
+	| {
+			fileId: string;
+			status: "error";
+			error: string;
+	  };
 
 export interface BrowserProvider {
 	id: BrowserProviderConfig["id"];
@@ -278,6 +295,11 @@ export interface BrowserProvider {
 		options?: BrowserProviderListOptions,
 		file?: FileRef,
 	) => Promise<void>;
+	downloadConversationFiles?: (
+		conversationId: string,
+		items: BrowserProviderConversationFileDownloadInput[],
+		options?: BrowserProviderListOptions,
+	) => Promise<BrowserProviderConversationFileDownloadResult[]>;
 	materializeConversationArtifact?: (
 		conversationId: string,
 		artifact: ConversationArtifact,

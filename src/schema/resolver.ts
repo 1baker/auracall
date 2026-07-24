@@ -153,7 +153,7 @@ function resolveModelForChatgptSemanticSelection(selection: { desiredModel: stri
     case 'Pro':
       return DEFAULT_MODEL;
     case 'Thinking':
-      return 'gpt-5.2-thinking';
+      return 'gpt-5.6-sol';
     default:
       return 'gpt-5.2-instant';
   }

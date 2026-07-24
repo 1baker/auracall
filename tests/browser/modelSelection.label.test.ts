@@ -19,4 +19,12 @@ describe('browser model selection arbitrary labels', () => {
     expect(semanticTarget).toBe('thinking');
     expectSome(labelTokens, (t) => t.includes('thinking'));
   });
+
+  it('accepts Sol reasoning labels', () => {
+    const { labelTokens, testIdTokens, semanticTarget } = buildModelMatchersLiteralForTest('Sol High');
+    expect(semanticTarget).toBe('thinking');
+    expectSome(labelTokens, (t) => t.includes('sol'));
+    expectSome(labelTokens, (t) => t.includes('high'));
+    expectSome(testIdTokens, (t) => t.includes('gpt-5-6-sol'));
+  });
 });

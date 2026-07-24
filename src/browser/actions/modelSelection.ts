@@ -114,13 +114,19 @@ function classifyModelPickerOption(normalizedText: string, normalizedTestId = ''
   ) {
     return 'pro';
   }
-  if (startsWith(/^(chatgpt )?thinking\b/) || text === 'thinking') {
+  if (
+    startsWith(/^(chatgpt )?(thinking|medium|high|extra high|gpt [0-9 ]+ sol)\b/) ||
+    text === 'thinking' ||
+    text === 'medium' ||
+    text === 'high' ||
+    text === 'extra high'
+  ) {
     return 'thinking';
   }
   if (text.includes('instant')) {
     return 'instant';
   }
-  if (text.includes('thinking')) {
+  if (text.includes('thinking') || text.includes('gpt 5 6 sol')) {
     return 'thinking';
   }
   if (text.includes(' pro') || text.endsWith('pro')) {
@@ -555,7 +561,10 @@ function buildModelMatchersLiteral(targetModel: string): {
   const semanticTarget =
     base.includes(' pro') || base.endsWith('pro')
       ? 'pro'
-      : base.includes('thinking')
+      : base.includes('thinking') ||
+          base.includes('sol') ||
+          base.includes('medium') ||
+          base.includes('high')
         ? 'thinking'
         : base.includes('instant') || base.startsWith('gpt-') || base.includes('chatgpt')
           ? 'instant'
@@ -589,7 +598,14 @@ function buildModelMatchersLiteral(targetModel: string): {
   }
   if (semanticTarget === 'thinking') {
     push('thinking', labelTokens);
+    push('medium', labelTokens);
+    push('high', labelTokens);
+    push('extra high', labelTokens);
+    push('gpt 5.6 sol', labelTokens);
+    push('gpt 5 6 sol', labelTokens);
     testIdTokens.add('thinking');
+    testIdTokens.add('sol');
+    testIdTokens.add('gpt-5-6-sol');
     testIdTokens.add('model-switcher-gpt-5-4-thinking');
   }
   if (semanticTarget === 'pro') {
@@ -685,6 +701,27 @@ function buildModelMatchersLiteral(targetModel: string): {
     }
     testIdTokens.add('pro');
     testIdTokens.add('proresearch');
+  }
+  // Numeric variations (5.6 Sol ↔ 56 ↔ gpt-5-6-sol)
+  if (base.includes('5.6') || base.includes('5-6') || base.includes('56') || base.includes('sol')) {
+    push('5.6', labelTokens);
+    push('gpt-5.6', labelTokens);
+    push('gpt5.6', labelTokens);
+    push('gpt-5-6', labelTokens);
+    push('gpt5-6', labelTokens);
+    push('gpt56', labelTokens);
+    push('sol', labelTokens);
+    push('gpt-5.6-sol', labelTokens);
+    push('gpt 5.6 sol', labelTokens);
+    push('gpt 5 6 sol', labelTokens);
+    push('chatgpt 5.6 sol', labelTokens);
+    testIdTokens.add('gpt-5-6');
+    testIdTokens.add('gpt5-6');
+    testIdTokens.add('gpt56');
+    testIdTokens.add('gpt-5-6-sol');
+    testIdTokens.add('gpt5-6-sol');
+    testIdTokens.add('gpt56sol');
+    testIdTokens.add('model-switcher-gpt-5-6-sol');
   }
   base
     .split(/\s+/)

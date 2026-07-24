@@ -181,6 +181,7 @@ export interface LiveFollowTargetAccountSummary {
 		conversationsAttempted: number;
 		materialized: number;
 		checksumCount: number;
+		dispositionCounts: Record<string, number>;
 	} | null;
 	scrapeBudget: {
 		classification: string;
@@ -540,6 +541,28 @@ export function deriveLiveFollowSeverity(input: {
 		return "backpressured";
 	}
 	return "healthy";
+}
+
+export function isLiveFollowTargetAttentionNeeded(input: {
+	desiredState: string;
+	actualStatus: string;
+	entryStatus: string;
+	statusReason: string;
+	consecutiveFailureCount: number;
+	recentCompletionStatus?: string | null;
+}): boolean {
+	if (input.desiredState === "missing_identity" || input.desiredState === "unsupported") return true;
+	if (["paused", "blocked", "failed", "cancelled"].includes(input.actualStatus)) return true;
+	if (input.consecutiveFailureCount >= 3) return true;
+	if (["queued", "running", "idle_waiting", "refreshing"].includes(input.actualStatus)) return false;
+	if (
+		input.entryStatus === "blocked" ||
+		input.statusReason === "failure-backoff" ||
+		input.consecutiveFailureCount > 0
+	) {
+		return true;
+	}
+	return ["blocked", "failed", "cancelled"].includes(input.recentCompletionStatus ?? "");
 }
 
 function normalizeLabel(value: string | null | undefined): string {

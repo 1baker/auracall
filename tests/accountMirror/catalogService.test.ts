@@ -72,7 +72,7 @@ describe('account mirror catalog service', () => {
         provider: 'chatgpt',
         runtimeProfileId: 'default',
         browserProfileId: 'default',
-        boundIdentityKey: 'ecochran76@gmail.com',
+        boundIdentityKey: 'service-account:chatgpt:ecochran76@gmail.com|structure=business',
         detectedIdentityKey: 'ecochran76@gmail.com',
         detectedAccountLevel: 'Business',
         requestId: 'acctmirror_test',
@@ -133,7 +133,7 @@ describe('account mirror catalog service', () => {
         provider: 'chatgpt',
         userConfig: config as never,
         listOptions: {},
-        identityKey: 'ecochran76@gmail.com',
+        identityKey: 'service-account:chatgpt:ecochran76@gmail.com|structure=business',
       }, 'conv_1', {
         provider: 'chatgpt',
         conversationId: 'conv_1',
@@ -177,11 +177,11 @@ describe('account mirror catalog service', () => {
         entries: [
           {
             provider: 'chatgpt',
-            tenantKey: 'service-account:chatgpt:ecochran76@gmail.com',
+            tenantKey: 'service-account:chatgpt:ecochran76@gmail.com|structure=business',
             bindingKey: 'binding:chatgpt:default:default',
             runtimeProfileId: 'default',
             browserProfileId: 'default',
-            boundIdentityKey: 'ecochran76@gmail.com',
+            boundIdentityKey: 'service-account:chatgpt:ecochran76@gmail.com|structure=business',
             counts: {
               projects: 2,
               conversations: 2,
@@ -282,7 +282,7 @@ describe('account mirror catalog service', () => {
         generatedAt: '2026-04-29T12:10:00.000Z',
         provider: 'chatgpt',
         runtimeProfileId: 'default',
-        boundIdentityKey: 'ecochran76@gmail.com',
+        boundIdentityKey: 'service-account:chatgpt:ecochran76@gmail.com|structure=business',
         kind: 'files',
         itemId: 'file_1',
         item: {
@@ -302,7 +302,7 @@ describe('account mirror catalog service', () => {
         generatedAt: '2026-04-29T12:10:00.000Z',
         provider: 'chatgpt',
         runtimeProfileId: 'default',
-        boundIdentityKey: 'ecochran76@gmail.com',
+        boundIdentityKey: 'service-account:chatgpt:ecochran76@gmail.com|structure=business',
         kind: 'conversations',
         itemId: 'conv_1',
         item: {
@@ -356,11 +356,11 @@ describe('account mirror catalog service', () => {
       expect(catalog.entries).toHaveLength(1);
       expect(catalog.entries[0]).toMatchObject({
         provider: 'chatgpt',
-        tenantKey: 'service-account:chatgpt:ecochran76@gmail.com',
+        tenantKey: 'service-account:chatgpt:ecochran76@gmail.com|structure=business',
         bindingKey: 'binding:chatgpt:default:stealth-rdp',
         runtimeProfileId: 'default',
         browserProfileId: 'stealth-rdp',
-        boundIdentityKey: 'ecochran76@gmail.com',
+        boundIdentityKey: 'service-account:chatgpt:ecochran76@gmail.com|structure=business',
         status: 'eligible',
         counts: {
           conversations: 1,
@@ -392,7 +392,7 @@ describe('account mirror catalog service', () => {
         provider: 'chatgpt',
         runtimeProfileId: 'default',
         browserProfileId: 'default',
-        boundIdentityKey: 'ecochran76@gmail.com',
+        boundIdentityKey: 'service-account:chatgpt:ecochran76@gmail.com|structure=business',
         updatedAt: '2026-05-25T11:00:00.000Z',
         state: {
           detectedIdentityKey: 'ecochran76@gmail.com',
@@ -414,7 +414,7 @@ describe('account mirror catalog service', () => {
       });
 
       expect(catalog.entries[0]).toMatchObject({
-        tenantKey: 'service-account:chatgpt:ecochran76@gmail.com',
+        tenantKey: 'service-account:chatgpt:ecochran76@gmail.com|structure=business',
         bindingKey: 'binding:chatgpt:default:stealth-rdp',
         status: 'eligible',
         reason: 'eligible',
@@ -439,7 +439,7 @@ describe('account mirror catalog service', () => {
         provider: 'chatgpt',
         runtimeProfileId: 'default',
         browserProfileId: 'default',
-        boundIdentityKey: 'ecochran76@gmail.com',
+        boundIdentityKey: 'service-account:chatgpt:ecochran76@gmail.com|structure=business',
         detectedIdentityKey: 'ecochran76@gmail.com',
         detectedAccountLevel: 'Business',
         requestId: 'acctmirror_manifest_counts',
@@ -546,7 +546,7 @@ describe('account mirror catalog service', () => {
         provider: 'chatgpt',
         runtimeProfileId: 'default',
         browserProfileId: 'default',
-        boundIdentityKey: 'ecochran76@gmail.com',
+        boundIdentityKey: 'service-account:chatgpt:ecochran76@gmail.com|structure=business',
         detectedIdentityKey: 'ecochran76@gmail.com',
         detectedAccountLevel: 'Business',
         requestId: 'acctmirror_materialization_eligibility',
@@ -747,7 +747,7 @@ async function writeSingleConversationSnapshot(
     provider: 'chatgpt',
     runtimeProfileId: 'default',
     browserProfileId,
-    boundIdentityKey: 'ecochran76@gmail.com',
+        boundIdentityKey: 'service-account:chatgpt:ecochran76@gmail.com|structure=business',
     detectedIdentityKey: 'ecochran76@gmail.com',
     detectedAccountLevel: 'Business',
     requestId: 'acctmirror_binding_move',

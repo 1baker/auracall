@@ -47,7 +47,8 @@ export function deriveLiveFollowCycleLedger(input: {
 	const operation = input.operation;
 	if (operation.mode !== "live_follow") return operation.liveFollowCycle ?? null;
 	const previous = operation.liveFollowCycle ?? null;
-	const evidence = operation.lastRefresh?.metadataEvidence ?? null;
+	const evidence =
+		input.statusEntry?.metadataEvidence ?? operation.lastRefresh?.metadataEvidence ?? null;
 	const completeness =
 		input.statusEntry?.mirrorCompleteness ??
 		operation.mirrorCompleteness ??
@@ -58,6 +59,8 @@ export function deriveLiveFollowCycleLedger(input: {
 		evidence,
 		remainingDetailSurfaces: completeness?.remainingDetailSurfaces?.total ?? null,
 		backfillLedger: input.statusEntry?.backfillLedger ?? null,
+		latestSuccessfulRefreshAt:
+			input.statusEntry?.lastSuccessAt ?? operation.lastRefresh?.completedAt ?? null,
 	});
 	const cycleId =
 		previous?.cycleId ?? `lfc_${operation.id}_${Date.parse(operation.startedAt) || 0}`;
@@ -88,11 +91,37 @@ export function chooseLiveFollowCyclePhase(input: {
 	evidence: AccountMirrorMetadataEvidence | null;
 	remainingDetailSurfaces: number | null;
 	backfillLedger?: AccountMirrorBackfillLedger | null;
+	latestSuccessfulRefreshAt?: string | null;
 }): {
 	phase: AccountMirrorLiveFollowCyclePhase;
 	status: AccountMirrorLiveFollowCyclePhaseStatus;
 	reason: string;
 } {
+	const failedCollectorProgress = input.evidence?.collectorProgress;
+	if (
+		failedCollectorProgress?.event === "failed" &&
+		collectorFailureIsUnresolved(
+			failedCollectorProgress.observedAt,
+			input.latestSuccessfulRefreshAt,
+			input.backfillLedger,
+		)
+	) {
+		return {
+			phase: failedCollectorProgress.phase,
+			status: "blocked",
+			reason: `collector failed during ${failedCollectorProgress.phase} at ${failedCollectorProgress.observedAt}`,
+		};
+	}
+	if (
+		input.backfillLedger?.state === "complete" ||
+		input.backfillLedger?.nextEligiblePhase === "complete"
+	) {
+		return {
+			phase: "complete",
+			status: "complete",
+			reason: "durable backfill ledger confirms all collector phases are complete",
+		};
+	}
 	const ledgerDecision = chooseBackfillLedgerPhase(input.backfillLedger ?? null);
 	if (ledgerDecision) return ledgerDecision;
 
@@ -170,6 +199,21 @@ export function chooseLiveFollowCyclePhase(input: {
 		status: "complete",
 		reason: "all required live-follow phases are complete for the current evidence window",
 	};
+}
+
+export function collectorFailureIsUnresolved(
+	observedAt: string,
+	latestSuccessfulRefreshAt: string | null | undefined,
+	ledger: AccountMirrorBackfillLedger | null | undefined,
+): boolean {
+	const failureMs = Date.parse(observedAt);
+	const successMs = Date.parse(latestSuccessfulRefreshAt ?? "");
+	if (Number.isFinite(successMs)) {
+		return Number.isFinite(failureMs) && failureMs > successMs;
+	}
+	if (!ledger) return true;
+	const ledgerMs = Date.parse(ledger.updatedAt);
+	return Number.isFinite(failureMs) && (!Number.isFinite(ledgerMs) || failureMs > ledgerMs);
 }
 
 function chooseBackfillLedgerPhase(ledger: AccountMirrorBackfillLedger | null): {

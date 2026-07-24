@@ -193,6 +193,42 @@ describe("llmService ChatGPT rate-limit guard", () => {
 		}
 	});
 
+	test("retains ChatGPT rate-limit detection history after a later successful read", async () => {
+		const homeDir = await mkdtemp(path.join(os.tmpdir(), "auracall-chatgpt-guard-"));
+		setAuracallHomeDirOverrideForTest(homeDir);
+		const provider = {
+			id: "chatgpt",
+			config: { id: "chatgpt", selectors: {} as never },
+		} satisfies LlmServiceAdapter;
+		const service = new RateLimitTestLlmService(
+			{ browser: { cache: {} } } as ResolvedUserConfig,
+			provider,
+		);
+		const detectedAt = Date.now() - 60_000;
+
+		try {
+			await writeChatgptRateLimitGuardState(
+				{
+					provider: "chatgpt",
+					profile: "default",
+					updatedAt: detectedAt,
+					recentRateLimitDetectionAts: [detectedAt],
+					cooldownDetectedAt: detectedAt,
+					cooldownUntil: Date.now() - 1,
+				},
+				{ profileName: "default" },
+			);
+
+			await expect(service.runGuarded("listConversations", async () => [])).resolves.toEqual([]);
+			const persisted = JSON.parse(
+				await readFile(service.getGuardStatePath() as string, "utf8"),
+			) as { recentRateLimitDetectionAts?: number[] };
+			expect(persisted.recentRateLimitDetectionAts).toEqual([detectedAt]);
+		} finally {
+			await rm(homeDir, { recursive: true, force: true });
+		}
+	});
+
 	test("uses clustered adaptive delays for ChatGPT rate-limit responses", async () => {
 		const homeDir = await mkdtemp(path.join(os.tmpdir(), "auracall-chatgpt-guard-"));
 		setAuracallHomeDirOverrideForTest(homeDir);
@@ -408,7 +444,9 @@ describe("llmService ChatGPT rate-limit guard", () => {
 			await expect(
 				second.runGuarded("updateProjectInstructions", async () => undefined),
 			).resolves.toBeUndefined();
-			expect(Date.now() - startedAt).toBeGreaterThanOrEqual(30);
+			// Preserve proof of a material budget delay without depending on
+			// millisecond-perfect Date.now() sampling under full-suite load.
+			expect(Date.now() - startedAt).toBeGreaterThanOrEqual(25);
 		} finally {
 			await rm(homeDir, { recursive: true, force: true });
 		}

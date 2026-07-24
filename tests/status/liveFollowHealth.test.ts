@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { summarizeLiveFollowMaterializationBacklog } from "../../src/status/liveFollowHealth.js";
+import {
+	isLiveFollowTargetAttentionNeeded,
+	summarizeLiveFollowMaterializationBacklog,
+} from "../../src/status/liveFollowHealth.js";
 
 describe("summarizeLiveFollowMaterializationBacklog", () => {
 	it("reports metadata-current local backlog separately from required materialization", () => {
@@ -52,5 +55,23 @@ describe("summarizeLiveFollowMaterializationBacklog", () => {
 				total: 2,
 			},
 		});
+	});
+});
+
+describe("isLiveFollowTargetAttentionNeeded", () => {
+	it("keeps one retryable active failure healthy but promotes repeated failures", () => {
+		const active = {
+			desiredState: "enabled",
+			actualStatus: "idle_waiting",
+			entryStatus: "delayed",
+			statusReason: "failure-backoff",
+			recentCompletionStatus: "running",
+		};
+		expect(
+			isLiveFollowTargetAttentionNeeded({ ...active, consecutiveFailureCount: 1 }),
+		).toBe(false);
+		expect(
+			isLiveFollowTargetAttentionNeeded({ ...active, consecutiveFailureCount: 3 }),
+		).toBe(true);
 	});
 });

@@ -126,7 +126,9 @@ export async function readApiMirrorCompletionForCli(
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const response = await fetchWithLocalApiAuth(new URL(`http://${host}:${port}/v1/account-mirrors/completions/${encodeURIComponent(id)}`), {
+    const url = new URL(`http://${host}:${port}/v1/account-mirrors/completions/${encodeURIComponent(id)}`);
+    url.searchParams.set('detail', 'summary');
+    const response = await fetchWithLocalApiAuth(url, {
       signal: controller.signal,
     }, fetchImpl);
     if (!response.ok) {
@@ -146,6 +148,7 @@ export async function listApiMirrorCompletionsForCli(
   const port = normalizePort(options.port);
   const timeoutMs = normalizeTimeoutMs(options.timeoutMs);
   const url = new URL(`http://${host}:${port}/v1/account-mirrors/completions`);
+  url.searchParams.set('detail', 'summary');
   appendOptionalSearchParam(url, 'provider', options.provider);
   appendOptionalSearchParam(url, 'runtimeProfile', options.runtimeProfile);
   appendOptionalSearchParam(url, 'status', options.status);

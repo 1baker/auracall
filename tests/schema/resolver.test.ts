@@ -43,6 +43,19 @@ describe('Config Resolver', () => {
     expect(result.model).toBe('gpt-5.1-pro');
   });
 
+  it('should resolve semantic ChatGPT Sol High selector to the Sol compatibility model', async () => {
+    vi.spyOn(configModule, 'loadUserConfig').mockResolvedValue({
+      config: { browser: {} } as any,
+      path: '/tmp/config.json',
+      loaded: false,
+    });
+
+    const result = await resolveConfig({ engine: 'browser', model: 'chatgpt:sol-high' });
+
+    expect(result.engine).toBe('browser');
+    expect(result.model).toBe('gpt-5.6-sol');
+  });
+
   it('should override defaults with file config', async () => {
     vi.spyOn(configModule, 'loadUserConfig').mockResolvedValue({
       config: { model: 'gpt-4', browser: { headless: true } },

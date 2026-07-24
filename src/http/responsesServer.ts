@@ -31,6 +31,7 @@ import {
 	type AccountMirrorCompletionOperation,
 	type AccountMirrorCompletionService,
 	createAccountMirrorCompletionService,
+	projectAccountMirrorCompletionForMonitoring,
 } from "../accountMirror/completionService.js";
 import { createAccountMirrorCompletionStore } from "../accountMirror/completionStore.js";
 import {
@@ -47,6 +48,7 @@ import {
 	clearAccountMirrorProviderGuard,
 	DEFAULT_ACCOUNT_MIRROR_PROVIDER_GUARD_CLEAR_COOLDOWN_MS,
 } from "../accountMirror/providerGuardControl.js";
+import { createAccountMirrorProviderWorkCoordinator } from "../accountMirror/providerWorkCoordinator.js";
 import {
 	type AccountMirrorReconciliationCampaign,
 	type AccountMirrorReconciliationCampaignService,
@@ -55,11 +57,17 @@ import {
 } from "../accountMirror/reconciliationCampaignService.js";
 import { createAccountMirrorReconciliationCampaignStore } from "../accountMirror/reconciliationCampaignStore.js";
 import {
+	type AccountMirrorDevelopmentPolicy,
 	AccountMirrorRefreshError,
 	type AccountMirrorRefreshResult,
 	type AccountMirrorRefreshService,
 	createAccountMirrorRefreshService,
+	resolveAccountMirrorDevelopmentPolicy,
 } from "../accountMirror/refreshService.js";
+import {
+	readAccountMirrorSchedulerControlState,
+	writeAccountMirrorSchedulerControlState,
+} from "../accountMirror/schedulerControlState.js";
 import {
 	type AccountMirrorSchedulerCompactHistory,
 	summarizeAccountMirrorSchedulerHistory,
@@ -75,12 +83,14 @@ import {
 	createAccountMirrorSchedulerPassService,
 } from "../accountMirror/schedulerService.js";
 import {
+	type AccountMirrorCollectorDiagnosticEvent,
 	type AccountMirrorStatusEntry,
 	type AccountMirrorStatusRegistry,
 	type AccountMirrorStatusSummary,
 	createAccountMirrorStatusRegistry,
 } from "../accountMirror/statusRegistry.js";
 import { getAuracallHomeDir } from "../auracallHome.js";
+import { readChatgptRateLimitGuardState } from "../browser/chatgptRateLimitGuard.js";
 import {
 	acceptDomDriftObservation,
 	type DomDriftObservationStatus,
@@ -203,6 +213,7 @@ import {
 	type HistoryMaterializationJobCreateResult,
 	type HistoryMaterializationJobListResult,
 	type HistoryMaterializationService,
+	projectHistoryMaterializationJobForMonitoring,
 } from "../runtime/historyMaterializationService.js";
 import {
 	type InspectRuntimeRunInput,
@@ -272,6 +283,7 @@ import type {
 } from "../runtime/types.js";
 import { resolveConfig } from "../schema/resolver.js";
 import {
+	isLiveFollowTargetAttentionNeeded as isLiveFollowTargetAttentionNeededSummary,
 	type LiveFollowHealthSummary,
 	type LiveFollowTargetAccountSummary,
 	type LiveFollowTargetRollup,
@@ -381,6 +393,7 @@ export interface ResponsesHttpServerDeps {
 	preflightRunner?: LazyLiveFollowPreflightRunner;
 	terminateProcess?: (pid: number, signal: NodeJS.Signals) => void;
 	scheduleApiServiceRestart?: (input: ApiServiceRestartRequest) => void;
+	env?: Record<string, string | undefined>;
 }
 
 export interface ResponsesHttpServerInstance {
@@ -403,6 +416,7 @@ function composeExecutionGates(
 interface ServerOwnedDrainOptions {
 	runId?: string;
 	sourceKind?: ExecutionRunSourceKind;
+	candidateStatuses?: ExecutionRunStatus[];
 	maxRuns?: number;
 }
 
@@ -1042,6 +1056,8 @@ export async function createResponsesHttpServer(
 		? false
 		: (options.reconcileAccountMirrorLiveFollowOnStart ?? true);
 	const configuredRuntimeConfig = deps.config;
+	const accountMirrorDevelopmentControlsArmed =
+		(deps.env ?? process.env).AURACALL_ACCOUNT_MIRROR_DEVELOPMENT_CONTROLS === "1";
 	const tenantExecutionLimitsStatusCache = new Map<
 		string,
 		{
@@ -1121,7 +1137,24 @@ export async function createResponsesHttpServer(
 			registry: accountMirrorStatusRegistry,
 			persistence: accountMirrorPersistence,
 			now,
+			developmentControlsEnabled: accountMirrorDevelopmentControlsArmed,
 		});
+	const accountMirrorDevelopmentRuns = new Map<
+		string,
+		{
+			id: string;
+			status: "running" | "completed" | "failed" | "cancelled";
+			startedAt: string;
+			completedAt: string | null;
+			provider: AccountMirrorProvider;
+			runtimeProfileId: string;
+			policy: AccountMirrorDevelopmentPolicy;
+			diagnostics: AccountMirrorCollectorDiagnosticEvent[];
+			result: AccountMirrorRefreshResult | null;
+			error: { message: string; code: string | null } | null;
+			controller: AbortController;
+		}
+	>();
 	let hasForegroundAuraCallExecutionPressure = () => false;
 	const accountMirrorCatalogService =
 		deps.accountMirrorCatalogService ??
@@ -1152,6 +1185,7 @@ export async function createResponsesHttpServer(
 		createAccountMirrorSchedulerPassLedger({
 			config: configuredRuntimeConfig,
 		});
+	const accountMirrorProviderWorkCoordinator = createAccountMirrorProviderWorkCoordinator();
 	const accountMirrorSchedulerService =
 		deps.accountMirrorSchedulerService ??
 		createAccountMirrorSchedulerPassService({
@@ -1159,6 +1193,7 @@ export async function createResponsesHttpServer(
 			refreshService: accountMirrorRefreshService,
 			now,
 			readHistory: () => accountMirrorSchedulerLedger.readHistory(),
+			providerWorkCoordinator: accountMirrorProviderWorkCoordinator,
 			shouldYieldToForegroundWork: () =>
 				hasForegroundAuraCallExecutionPressure()
 					? {
@@ -1209,6 +1244,7 @@ export async function createResponsesHttpServer(
 					return historyMaterializationService ? historyMaterializationService.readJob(id) : null;
 				},
 			},
+			providerWorkCoordinator: accountMirrorProviderWorkCoordinator,
 			onPersistError: (error, operation) => {
 				logger(
 					`Account mirror completion ${operation.id} persist failed: ${error instanceof Error ? error.message : String(error)}`,
@@ -1311,12 +1347,27 @@ export async function createResponsesHttpServer(
 		lastStartedAt: null,
 		lastCompletedAt: null,
 	};
+	const persistedAccountMirrorSchedulerControl =
+		accountMirrorSchedulerIntervalMs > 0
+			? await readAccountMirrorSchedulerControlState().catch((error) => {
+					logger(
+						`Account mirror scheduler control read failed: ${error instanceof Error ? error.message : String(error)}`,
+					);
+					return null;
+				})
+			: null;
+	const initialAccountMirrorSchedulerPaused =
+		accountMirrorSchedulerIntervalMs > 0 && persistedAccountMirrorSchedulerControl?.paused === true;
 	const accountMirrorSchedulerState: HttpStatusResponse["accountMirrorScheduler"] = {
 		enabled: accountMirrorSchedulerIntervalMs > 0,
 		dryRun: accountMirrorSchedulerDryRun,
 		intervalMs: accountMirrorSchedulerIntervalMs > 0 ? accountMirrorSchedulerIntervalMs : null,
-		state: accountMirrorSchedulerIntervalMs > 0 ? "idle" : "disabled",
-		paused: false,
+		state: initialAccountMirrorSchedulerPaused
+			? "paused"
+			: accountMirrorSchedulerIntervalMs > 0
+				? "idle"
+				: "disabled",
+		paused: initialAccountMirrorSchedulerPaused,
 		lastWakeReason: null,
 		lastWakeAt: null,
 		lastStartedAt: null,
@@ -1330,9 +1381,14 @@ export async function createResponsesHttpServer(
 			backgroundDrainState: backgroundDrainState.state,
 		},
 		operatorStatus: {
-			posture: accountMirrorSchedulerIntervalMs > 0 ? "ready" : "disabled",
-			reason:
-				accountMirrorSchedulerIntervalMs > 0
+			posture: initialAccountMirrorSchedulerPaused
+				? "paused"
+				: accountMirrorSchedulerIntervalMs > 0
+					? "ready"
+					: "disabled",
+			reason: initialAccountMirrorSchedulerPaused
+				? "account mirror scheduler is operator-paused"
+				: accountMirrorSchedulerIntervalMs > 0
 					? "account mirror scheduler is enabled and waiting for its first pass"
 					: "account mirror scheduler is disabled; set --account-mirror-scheduler-interval-ms to enable cadence and live-follow wakes",
 			backpressureReason: null,
@@ -1349,7 +1405,7 @@ export async function createResponsesHttpServer(
 		}),
 	};
 	let backgroundDrainPaused = false;
-	let accountMirrorSchedulerPaused = false;
+	let accountMirrorSchedulerPaused = initialAccountMirrorSchedulerPaused;
 	let accountMirrorFollowUpAfterNextDrain = false;
 	let foregroundAuraCallWorkCount = 0;
 	let foregroundAuraCallDrainReservations = 0;
@@ -1384,6 +1440,40 @@ export async function createResponsesHttpServer(
 			runArchiveService,
 			now,
 			cleanupManagedBrowserAfterProviderWork: true,
+			onProviderGuardObserved: async ({ request }) => {
+				if (request.provider !== "chatgpt" || !request.runtimeProfile) return;
+				const guard = await readChatgptRateLimitGuardState({
+					profileName: request.runtimeProfile,
+				});
+				const cooldownUntilMs = guard?.cooldownUntil ?? null;
+				if (!cooldownUntilMs || cooldownUntilMs <= now().getTime()) return;
+				const state = accountMirrorStatusRegistry.mergeState(
+					{ provider: "chatgpt", runtimeProfileId: request.runtimeProfile },
+					{
+						providerCooldownUntilMs: cooldownUntilMs,
+						providerGuard: {
+							state: "cooldown",
+							kind: "unknown",
+							summary: guard?.cooldownReason?.trim()
+								? `ChatGPT rate limit detected: ${guard.cooldownReason.trim()}`
+								: "ChatGPT rate limit cooldown is active.",
+							detectedAtMs: guard?.cooldownDetectedAt ?? now().getTime(),
+							cooldownUntilMs,
+							action: guard?.cooldownAction?.trim() || "history-materialization",
+						},
+					},
+				);
+				await accountMirrorStatusRegistry
+					.writePersistentState?.(
+						{ provider: "chatgpt", runtimeProfileId: request.runtimeProfile },
+						state,
+					)
+					.catch((error) => {
+						logger(
+							`Account mirror provider guard persist failed for chatgpt/${request.runtimeProfile}: ${error instanceof Error ? error.message : String(error)}`,
+						);
+					});
+			},
 			withForegroundWork: async (work) => {
 				const endForegroundWork = beginForegroundAuraCallWork();
 				try {
@@ -1443,6 +1533,7 @@ export async function createResponsesHttpServer(
 			.drainRunsUntilIdleQueued({
 				runId: drainOptions.runId,
 				sourceKind: drainOptions.sourceKind,
+				candidateStatuses: drainOptions.candidateStatuses,
 				maxRuns: drainOptions.maxRuns,
 				executionGate,
 				onStart: () => {
@@ -1497,6 +1588,7 @@ export async function createResponsesHttpServer(
 				return;
 			}
 			await drainThroughServerHost({
+				candidateStatuses: ["planned", "running"],
 				maxRuns: 1,
 				trigger: "background-timer",
 			}).catch((error) => {
@@ -2095,7 +2187,16 @@ export async function createResponsesHttpServer(
 				const query = parseHistoryMaterializationJobListQuery(url.searchParams);
 				const result: HistoryMaterializationJobListResult =
 					await historyMaterializationService.listJobs(query);
-				sendJson(res, 200, result);
+				sendJson(
+					res,
+					200,
+					url.searchParams.get("detail") === "full"
+						? result
+						: {
+								...result,
+								jobs: result.jobs.map(projectHistoryMaterializationJobForMonitoring),
+							},
+				);
 				return;
 			}
 
@@ -2111,7 +2212,13 @@ export async function createResponsesHttpServer(
 					} satisfies HttpErrorPayload);
 					return;
 				}
-				sendJson(res, 200, result);
+				sendJson(
+					res,
+					200,
+					url.searchParams.get("detail") === "full"
+						? result
+						: projectHistoryMaterializationJobForMonitoring(result),
+				);
 				return;
 			}
 
@@ -2558,12 +2665,15 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-			if (req.method === "GET" && url.pathname === "/v1/account-mirrors/completions") {
-				const query = parseAccountMirrorCompletionListQuery(url.searchParams);
-				const listed = accountMirrorCompletionService.list(query);
-				const data = accountMirrorCompletionService.refreshMaterializationStatuses
-					? await accountMirrorCompletionService.refreshMaterializationStatuses(listed)
-					: listed;
+				if (req.method === "GET" && url.pathname === "/v1/account-mirrors/completions") {
+					const query = parseAccountMirrorCompletionListQuery(url.searchParams);
+					const listed = accountMirrorCompletionService.list(query);
+					const fullDetail = url.searchParams.get("detail") === "full";
+					const data = fullDetail
+						? accountMirrorCompletionService.refreshMaterializationStatuses
+							? await accountMirrorCompletionService.refreshMaterializationStatuses(listed)
+							: listed
+						: listed.map(projectAccountMirrorCompletionForMonitoring);
 				sendJson(res, 200, {
 					object: "list",
 					data,
@@ -2572,13 +2682,16 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-			const accountMirrorCompletionId = matchAccountMirrorCompletionRoute(url.pathname);
-			if (req.method === "GET" && accountMirrorCompletionId) {
-				const result = accountMirrorCompletionService.refreshMaterializationStatus
-					? await accountMirrorCompletionService.refreshMaterializationStatus(
-							accountMirrorCompletionId,
-						)
-					: accountMirrorCompletionService.read(accountMirrorCompletionId);
+				const accountMirrorCompletionId = matchAccountMirrorCompletionRoute(url.pathname);
+				if (req.method === "GET" && accountMirrorCompletionId) {
+					const fullDetail = url.searchParams.get("detail") === "full";
+					const fullResult = fullDetail && accountMirrorCompletionService.refreshMaterializationStatus
+						? await accountMirrorCompletionService.refreshMaterializationStatus(accountMirrorCompletionId)
+						: accountMirrorCompletionService.read(accountMirrorCompletionId);
+					const result =
+						fullDetail || !fullResult
+							? fullResult
+							: projectAccountMirrorCompletionForMonitoring(fullResult);
 				if (!result) {
 					sendJson(res, 404, {
 						error: {
@@ -2614,6 +2727,161 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
+			const developmentRunMatch = /^\/v1\/account-mirrors\/development-runs\/([^/]+)$/.exec(
+				url.pathname,
+			);
+			if (developmentRunMatch) {
+				const developmentRun = accountMirrorDevelopmentRuns.get(
+					decodeURIComponent(developmentRunMatch[1] ?? ""),
+				);
+				if (!developmentRun) {
+					sendJson(res, 404, {
+						error: {
+							message: "Account-mirror development run was not found.",
+							type: "not_found_error",
+						},
+					});
+					return;
+				}
+				if (req.method === "POST") {
+					const body = await readRequestBody(req);
+					const action = z.object({ action: z.literal("cancel") }).parse(JSON.parse(body || "{}"));
+					if (action.action === "cancel" && developmentRun.status === "running") {
+						developmentRun.status = "cancelled";
+						developmentRun.completedAt = now().toISOString();
+						developmentRun.controller.abort(
+							new Error(`Account-mirror development run ${developmentRun.id} was cancelled.`),
+						);
+					}
+				}
+				const { controller: _controller, ...readback } = developmentRun;
+				sendJson(res, 200, { object: "account_mirror_development_run", ...readback });
+				return;
+			}
+
+			if (req.method === "POST" && url.pathname === "/v1/account-mirrors/development-runs") {
+				const body = await readRequestBody(req);
+				const payload = ACCOUNT_MIRROR_REFRESH_REQUEST_SCHEMA.parse(JSON.parse(body || "{}"));
+				if (!payload.development || !payload.provider || !payload.runtimeProfile) {
+					sendJson(res, 400, {
+						error: {
+							message: "Development runs require provider, runtimeProfile, and development bounds.",
+							type: "invalid_request_error",
+						},
+					});
+					return;
+				}
+				resolveAccountMirrorDevelopmentPolicy({
+					policy: payload.development,
+					provider: payload.provider,
+					runtimeProfileId: payload.runtimeProfile,
+					serverCapabilityArmed: accountMirrorDevelopmentControlsArmed,
+				});
+				const id = `amdev_${randomUUID()}`;
+				const run: typeof accountMirrorDevelopmentRuns extends Map<string, infer V> ? V : never = {
+					id,
+					status: "running",
+					startedAt: now().toISOString(),
+					completedAt: null,
+					provider: payload.provider,
+					runtimeProfileId: payload.runtimeProfile,
+					policy: payload.development,
+					diagnostics: [] as AccountMirrorCollectorDiagnosticEvent[],
+					result: null,
+					error: null,
+					controller: new AbortController(),
+				};
+				accountMirrorDevelopmentRuns.set(id, run);
+				void accountMirrorRefreshService
+					.requestRefresh({
+						provider: payload.provider,
+						runtimeProfileId: payload.runtimeProfile,
+						explicitRefresh: true,
+						sweepMode: payload.sweepMode,
+						requestedPhase: payload.requestedPhase,
+						development: payload.development,
+						abortSignal: run.controller.signal,
+						onCollectorDiagnosticEvent: (event) => {
+							run.diagnostics.push(event);
+							if (run.diagnostics.length > 100) run.diagnostics.shift();
+						},
+					})
+					.then((result) => {
+						if (run.status === "cancelled") return;
+						run.status = "completed";
+						run.completedAt = now().toISOString();
+						run.result = result;
+					})
+					.catch((error) => {
+						if (run.status === "cancelled") return;
+						run.status = "failed";
+						run.completedAt = now().toISOString();
+						run.error = {
+							message: error instanceof Error ? error.message : String(error),
+							code: error instanceof AccountMirrorRefreshError ? error.code : null,
+						};
+					});
+				const { controller: _controller, ...readback } = run;
+				sendJson(res, 202, { object: "account_mirror_development_run", ...readback });
+				return;
+			}
+
+			if (url.pathname === "/v1/account-mirrors/development-policy") {
+				if (req.method === "GET") {
+					sendJson(res, 200, {
+						object: "account_mirror_development_capability",
+						armed: accountMirrorDevelopmentControlsArmed,
+						environmentVariable: "AURACALL_ACCOUNT_MIRROR_DEVELOPMENT_CONTROLS",
+					});
+					return;
+				}
+				if (req.method === "POST") {
+					const body = await readRequestBody(req);
+					const payload = ACCOUNT_MIRROR_REFRESH_REQUEST_SCHEMA.parse(JSON.parse(body || "{}"));
+					if (!payload.development || !payload.provider || !payload.runtimeProfile) {
+						sendJson(res, 400, {
+							error: {
+								message:
+									"Development policy preview requires provider, runtimeProfile, and development bounds.",
+								type: "invalid_request_error",
+							},
+						});
+						return;
+					}
+					try {
+						const effective = resolveAccountMirrorDevelopmentPolicy({
+							policy: payload.development as AccountMirrorDevelopmentPolicy,
+							provider: payload.provider,
+							runtimeProfileId: payload.runtimeProfile,
+							serverCapabilityArmed: accountMirrorDevelopmentControlsArmed,
+						});
+						sendJson(res, 200, {
+							object: "account_mirror_development_policy_preview",
+							providerWorkStarted: false,
+							normalPolicy: {
+								collectorTimeoutMs: 120_000,
+								detailReadCap: 6,
+							},
+							effective,
+						});
+						return;
+					} catch (error) {
+						if (error instanceof AccountMirrorRefreshError) {
+							sendJson(res, error.statusCode, {
+								error: {
+									message: error.message,
+									type: "invalid_request_error",
+									code: error.code,
+									details: error.details,
+								},
+							});
+							return;
+						}
+						throw error;
+					}
+				}
+			}
+
 			if (req.method === "POST" && url.pathname === "/v1/account-mirrors/refresh") {
 				const body = await readRequestBody(req);
 				const payload = ACCOUNT_MIRROR_REFRESH_REQUEST_SCHEMA.parse(JSON.parse(body || "{}"));
@@ -2627,6 +2895,9 @@ export async function createResponsesHttpServer(
 						queueTimeoutMs: payload.queueTimeoutMs,
 						queuePollMs: payload.queuePollMs,
 						collectorTimeoutMs: payload.collectorTimeoutMs,
+						sweepMode: payload.sweepMode,
+						requestedPhase: payload.requestedPhase,
+						development: payload.development,
 					});
 					sendJson(res, 202, result satisfies HttpAccountMirrorRefreshResponse);
 					return;
@@ -2793,6 +3064,10 @@ export async function createResponsesHttpServer(
 							return;
 						}
 						if (action === "pause") {
+							await writeAccountMirrorSchedulerControlState({
+								paused: true,
+								updatedAt: now().toISOString(),
+							});
 							accountMirrorSchedulerPaused = true;
 							accountMirrorSchedulerState.paused = true;
 							if (accountMirrorSchedulerTimer) {
@@ -2804,6 +3079,10 @@ export async function createResponsesHttpServer(
 								accountMirrorSchedulerState.state = "paused";
 							}
 						} else {
+							await writeAccountMirrorSchedulerControlState({
+								paused: false,
+								updatedAt: now().toISOString(),
+							});
 							accountMirrorSchedulerPaused = false;
 							accountMirrorSchedulerState.paused = false;
 							if (accountMirrorSchedulerState.state !== "running") {
@@ -3990,11 +4269,13 @@ export async function createResponsesHttpServer(
 			recoverRunsOnStartSourceKind === "all" ? undefined : recoverRunsOnStartSourceKind;
 		const recoveryResult = await drainThroughServerHost({
 			sourceKind,
+			candidateStatuses: ["planned", "running"],
 			maxRuns: recoverRunsOnStartMaxRuns,
 			trigger: "startup-recovery",
 		});
 		const recoverySummary = await host.summarizeRecoveryState({
 			sourceKind,
+			candidateStatuses: ["planned", "running"],
 		});
 		logger(
 			createStartupRecoveryLog(recoveryResult, {
@@ -4703,8 +4984,9 @@ function createHttpStatusResponse(input: {
 			runArchiveMaterializationTemplate: "/v1/archive/materializations/{job_id}",
 			historyMaterializationsCreate: "/v1/account-mirrors/materializations",
 			historyMaterializationsList:
-				"/v1/account-mirrors/materializations[?status=queued|running|succeeded|skipped|failed|cancelled|active|terminal][&provider={chatgpt|gemini|grok}][&runtimeProfile={runtime_profile}][&sourceType=conversation|project_sources|catalog_item|archive_item|reconciliation|account_library_reconciliation][&limit=50]",
-			historyMaterializationTemplate: "/v1/account-mirrors/materializations/{job_id}",
+				"/v1/account-mirrors/materializations[?detail=summary|full][&status=queued|running|succeeded|skipped|failed|cancelled|active|terminal][&provider={chatgpt|gemini|grok}][&runtimeProfile={runtime_profile}][&sourceType=conversation|project_sources|catalog_item|archive_item|reconciliation|account_library_reconciliation][&limit=50]",
+			historyMaterializationTemplate:
+				"/v1/account-mirrors/materializations/{job_id}[?detail=summary|full]",
 			accountMirrorRecoveryCandidates:
 				"/v1/account-mirrors/recovery-candidates[?provider={chatgpt|gemini|grok}][&runtimeProfile={runtime_profile}][&tenant={bound_identity_key}][&status=eligible|needs_detail_refresh|deferred|blocked|unsupported|terminal][&action={action}][&includeSearchRows=true|false][&limit=50]",
 			runStatusTemplate: "/v1/runs/{run_id}/status[?diagnostics=browser-state]",
@@ -4729,8 +5011,9 @@ function createHttpStatusResponse(input: {
 				'POST /v1/account-mirrors/reconciliations/{campaign_id} {"action":"pause|resume|cancel|run_next_pass"}',
 			accountMirrorCompletionsCreate: "/v1/account-mirrors/completions",
 			accountMirrorCompletionsList:
-				"/v1/account-mirrors/completions[?status=active|queued|running|idle_waiting|paused|completed|blocked|failed|cancelled][&provider={chatgpt|gemini|grok}][&runtimeProfile={runtime_profile}][&limit=50]",
-			accountMirrorCompletionsGetTemplate: "/v1/account-mirrors/completions/{completion_id}",
+				"/v1/account-mirrors/completions[?detail=summary|full][&status=active|queued|running|idle_waiting|paused|completed|blocked|failed|cancelled][&provider={chatgpt|gemini|grok}][&runtimeProfile={runtime_profile}][&limit=50]",
+			accountMirrorCompletionsGetTemplate:
+				"/v1/account-mirrors/completions/{completion_id}[?detail=summary|full]",
 			accountMirrorCompletionsControlTemplate:
 				'POST /v1/account-mirrors/completions/{completion_id} {"action":"pause|resume|cancel|run_one_pass"}',
 			accountMirrorSchedulerHistory: "/v1/account-mirrors/scheduler/history[?limit=10]",
@@ -5802,18 +6085,15 @@ async function hydrateAccountMirrorStatusMaterializationEvidence(
 	>();
 	await Promise.all(
 		status.entries.map(async (entry) => {
-			const shouldHydrateArchiveItems = status.entries.length === 1;
 			const [archiveItems, jobs] = await Promise.all([
-				shouldHydrateArchiveItems
-					? (runArchiveService
-							?.listItems({
-								provider: entry.provider,
-								runtimeProfile: entry.runtimeProfileId,
-								assetAvailability: "available",
-								limit: 500,
-							})
-							.catch(() => null) ?? null)
-					: null,
+				runArchiveService
+					?.listItems({
+						provider: entry.provider,
+						runtimeProfile: entry.runtimeProfileId,
+						assetAvailability: "available",
+						limit: 500,
+					})
+					.catch(() => null) ?? null,
 				service
 					?.listJobs({
 						status: "terminal",
@@ -6396,7 +6676,11 @@ function summarizeLiveFollowRoutineDecision(input: {
 	const preemption = summarizeLiveFollowPreemption(entry, scheduler);
 	const accountObservedAt = latestAccountStatusObservedAt(entry);
 	const operationObservedAt =
-		cycle?.updatedAt ?? operation?.lastRefresh?.completedAt ?? operation?.completedAt ?? null;
+			cycle?.updatedAt ??
+			operation?.lastRefresh?.completedAt ??
+			operation?.lifecycleEvents?.at(-1)?.at ??
+			operation?.completedAt ??
+			null;
 	const remainingDetailSurfaces = entry.mirrorCompleteness.remainingDetailSurfaces?.total ?? null;
 	const materializationAssets =
 		materializationBacklog?.remoteKnownMissingLocal.total ??
@@ -6689,6 +6973,7 @@ function summarizeLiveFollowMaterializationOutcome(
 		conversationsAttempted: outcome.conversationsAttempted,
 		materialized: outcome.materialized,
 		checksumCount: outcome.checksumCount,
+		dispositionCounts: outcome.dispositionCounts ?? {},
 	};
 }
 
@@ -6852,30 +7137,16 @@ function isLiveFollowTargetAttentionNeeded(
 	activeOperation: AccountMirrorCompletionOperation | null,
 	recentOperation: AccountMirrorCompletionOperation | null,
 ): boolean {
-	if (entry.liveFollow.state === "missing_identity" || entry.liveFollow.state === "unsupported")
-		return true;
 	const status =
 		activeOperation?.status ?? (entry.mirrorState.running ? "refreshing" : entry.status);
-	if (status === "paused" || status === "blocked" || status === "failed" || status === "cancelled")
-		return true;
-	if (
-		status === "queued" ||
-		status === "running" ||
-		status === "idle_waiting" ||
-		status === "refreshing"
-	)
-		return false;
-	if (
-		entry.status === "blocked" ||
-		entry.reason === "failure-backoff" ||
-		entry.consecutiveFailureCount > 0
-	)
-		return true;
-	return (
-		recentOperation?.status === "blocked" ||
-		recentOperation?.status === "failed" ||
-		recentOperation?.status === "cancelled"
-	);
+	return isLiveFollowTargetAttentionNeededSummary({
+		desiredState: entry.liveFollow.state,
+		actualStatus: status,
+		entryStatus: entry.status,
+		statusReason: entry.reason,
+		consecutiveFailureCount: entry.consecutiveFailureCount,
+		recentCompletionStatus: recentOperation?.status,
+	});
 }
 
 function summarizeCompletionLifecycleEvent(
@@ -6897,12 +7168,8 @@ async function createAccountMirrorCompletionStatusSummary(
 	const all = service.list({ limit: null });
 	const active = service.list({ status: "active", limit: null });
 	const recent = all.slice(0, ACCOUNT_MIRROR_COMPLETION_RECENT_STATUS_LIMIT);
-	const hydratedRecent = service.refreshMaterializationStatuses
-		? await service.refreshMaterializationStatuses(recent)
-		: recent;
-	const hydratedActive = service.refreshMaterializationStatuses
-		? await service.refreshMaterializationStatuses(active)
-		: active;
+	const projectedRecent = recent.map(projectAccountMirrorCompletionForMonitoring);
+	const projectedActive = active.map(projectAccountMirrorCompletionForMonitoring);
 	const metrics = all.reduce<AccountMirrorCompletionStatusSummary["metrics"]>(
 		(acc, operation) => {
 			acc.total += 1;
@@ -6937,11 +7204,11 @@ async function createAccountMirrorCompletionStatusSummary(
 			recent: ACCOUNT_MIRROR_COMPLETION_RECENT_STATUS_LIMIT,
 		},
 		omitted: {
-			recent: Math.max(0, metrics.total - hydratedRecent.length),
+			recent: Math.max(0, metrics.total - projectedRecent.length),
 		},
 		metrics,
-		active: hydratedActive,
-		recent: hydratedRecent,
+		active: projectedActive,
+		recent: projectedRecent,
 	};
 }
 
@@ -7985,18 +8252,55 @@ const TEAM_RUN_CREATE_REQUEST_SCHEMA = COMPACT_TEAM_RUN_CREATE_REQUEST_SCHEMA.ex
 	}
 });
 
-const ACCOUNT_MIRROR_REFRESH_REQUEST_SCHEMA = z.object({
-	provider: z.enum(["chatgpt", "gemini", "grok"]).optional(),
-	runtimeProfile: z.string().trim().min(1).optional(),
-	explicitRefresh: z.boolean().optional(),
-	ignoreMinimumInterval: z.boolean().optional(),
-	ignore_minimum_interval: z.boolean().optional(),
-	ignoreFailureBackoff: z.boolean().optional(),
-	ignore_failure_backoff: z.boolean().optional(),
-	queueTimeoutMs: z.number().int().nonnegative().optional(),
-	queuePollMs: z.number().int().positive().optional(),
-	collectorTimeoutMs: z.number().int().positive().optional(),
+const ACCOUNT_MIRROR_DEVELOPMENT_POLICY_SCHEMA = z.object({
+	enabled: z.literal(true),
+	maxWallTimeMs: z.number().int().min(1_000).max(1_800_000),
+	maxConversations: z.number().int().min(1).max(100),
+	maxMaterializationCandidates: z.number().int().min(1).max(100),
+	maxPasses: z.number().int().min(1).max(20),
+	providerCallTimeoutMs: z.number().int().min(1_000).max(120_000).optional(),
+	maxBrowserInteractionsPerMinute: z.number().int().min(1).max(120).optional(),
+	conversationReadCooldownMs: z.number().int().min(0).max(300_000).optional(),
+	pageRefreshCooldownMs: z.number().int().min(0).max(300_000).optional(),
+	renavigationCooldownMs: z.number().int().min(0).max(300_000).optional(),
 });
+
+const ACCOUNT_MIRROR_REFRESH_REQUEST_SCHEMA = z
+	.object({
+		provider: z.enum(["chatgpt", "gemini", "grok"]).optional(),
+		runtimeProfile: z.string().trim().min(1).optional(),
+		explicitRefresh: z.boolean().optional(),
+		ignoreMinimumInterval: z.boolean().optional(),
+		ignore_minimum_interval: z.boolean().optional(),
+		ignoreFailureBackoff: z.boolean().optional(),
+		ignore_failure_backoff: z.boolean().optional(),
+		queueTimeoutMs: z.number().int().nonnegative().optional(),
+		queuePollMs: z.number().int().positive().optional(),
+		collectorTimeoutMs: z.number().int().positive().optional(),
+		sweepMode: z.enum(["steady_follow", "full_sweep"]).optional(),
+		requestedPhase: z
+			.enum([
+				"identity",
+				"projects",
+				"root-conversations",
+				"project-conversations",
+				"chatgpt-library",
+				"detail-inventory",
+				"merge-persisted-catalog",
+				"complete",
+			])
+			.optional(),
+		development: ACCOUNT_MIRROR_DEVELOPMENT_POLICY_SCHEMA.optional(),
+	})
+	.superRefine((value, ctx) => {
+		if (value.development && (!value.provider || !value.runtimeProfile)) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				message: "Development requests require explicit provider and runtimeProfile.",
+				path: ["development"],
+			});
+		}
+	});
 
 const ACCOUNT_MIRROR_COMPLETION_REQUEST_SCHEMA = z.object({
 	provider: z.enum(["chatgpt", "gemini", "grok"]).optional(),

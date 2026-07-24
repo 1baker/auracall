@@ -12,7 +12,6 @@ import {
 	requireBundledServiceBaseUrl,
 	requireBundledServiceCompatibleHosts,
 	requireBundledServiceRouteTemplate,
-	resolveBundledServiceAppTokens,
 	resolveBundledServiceArtifactContentTypeExtensions,
 	resolveBundledServiceArtifactDefaultTitle,
 	resolveBundledServiceArtifactKindExtensions,
@@ -87,12 +86,20 @@ import {
 	recordBrowserScrapeDownloadAttempt,
 	recordBrowserScrapeDownloadFailure,
 	recordBrowserScrapeDownloadSuccess,
+	recordBrowserScrapeNote,
 	recordBrowserScrapeProviderAction,
 } from "./scrapeTelemetry.js";
-import type { BrowserProvider, BrowserProviderListOptions, ProviderUserIdentity } from "./types.js";
+import type {
+	BrowserProvider,
+	BrowserProviderConversationFileDownloadInput,
+	BrowserProviderConversationFileDownloadResult,
+	BrowserProviderListOptions,
+	ProviderUserIdentity,
+} from "./types.js";
 
 const CHATGPT_HOME_URL = requireBundledServiceBaseUrl("chatgpt");
 const CHATGPT_LIBRARY_URL = requireBundledServiceRouteTemplate("chatgpt", "library");
+const CHATGPT_PLUGINS_URL = new URL("/plugins#settings/Plugins", CHATGPT_HOME_URL).href;
 const CHATGPT_PROJECT_DIALOG_ROOT_SELECTORS = resolveBundledServiceDomSelectorSet(
 	"chatgpt",
 	"project_dialog_roots",
@@ -325,24 +332,6 @@ const CHATGPT_FEATURE_FLAG_TOKENS = resolveBundledServiceFeatureFlagTokens("chat
 	deep_research: ["deep research"],
 	company_knowledge: ["company knowledge"],
 });
-const CHATGPT_APP_TOKENS = resolveBundledServiceAppTokens("chatgpt", {
-	"google drive": ["google drive", "drive"],
-	gmail: ["gmail"],
-	"google calendar": ["google calendar", "calendar"],
-	slack: ["slack"],
-	github: ["github"],
-	dropbox: ["dropbox"],
-	notion: ["notion"],
-	jira: ["jira"],
-	linear: ["linear"],
-	asana: ["asana"],
-	box: ["box"],
-	onedrive: ["onedrive"],
-	sharepoint: ["sharepoint"],
-	"microsoft teams": ["microsoft teams", "teams"],
-	hubspot: ["hubspot"],
-	zapier: ["zapier"],
-});
 const CHATGPT_ARTIFACT_KIND_EXTENSIONS = resolveBundledServiceArtifactKindExtensions("chatgpt", {
 	spreadsheet: ["csv", "tsv", "xls", "xlsx", "ods"],
 });
@@ -556,6 +545,38 @@ type ChatgptBlockingSurfaceMatch = {
 	selector?: string | null;
 	details?: Record<string, unknown> | null;
 };
+
+function isChatgptAccountMirrorHardStop(
+	match: ChatgptBlockingSurfaceMatch | null | undefined,
+	options?: BrowserProviderListOptions,
+): boolean {
+	return options?.accountMirrorInventory === true && match?.kind === "rate-limit";
+}
+
+export const isChatgptAccountMirrorHardStopForTest = isChatgptAccountMirrorHardStop;
+
+function createChatgptBlockingSurfaceError(
+	action: string,
+	match: ChatgptBlockingSurfaceMatch,
+): Error & { blockingSurface: ChatgptBlockingSurfaceMatch } {
+	const error = new Error(`${action}: ${match.summary}`) as Error & {
+		blockingSurface: ChatgptBlockingSurfaceMatch;
+	};
+	error.blockingSurface = match;
+	return error;
+}
+
+async function assertNoChatgptAccountMirrorHardStop(
+	client: ChromeClient,
+	options: BrowserProviderListOptions | undefined,
+	action: string,
+): Promise<void> {
+	if (options?.accountMirrorInventory !== true) return;
+	const match = await readVisibleChatgptBlockingSurfaceMatchWithClient(client);
+	if (match && isChatgptAccountMirrorHardStop(match, options)) {
+		throw createChatgptBlockingSurfaceError(action, match);
+	}
+}
 
 type ChatgptRecoveryDebugContext = {
 	enabled: boolean;
@@ -787,6 +808,10 @@ type ChatgptFeatureProbe = {
 	deep_research?: boolean | null;
 	company_knowledge?: boolean | null;
 	apps?: string[] | null;
+	composer_mode?: "chat" | "work" | null;
+	composer_apps?: ChatgptComposerAppProbe[] | null;
+	installed_apps?: ChatgptInstalledAppProbe[] | null;
+	linked_apps?: ChatgptLinkedAppProbe[] | null;
 	model_controls?: {
 		visible?: boolean | null;
 		label?: string | null;
@@ -799,6 +824,41 @@ type ChatgptFeatureProbe = {
 		selected_model?: string | null;
 		selected_depth?: string | null;
 	} | null;
+};
+
+type ChatgptComposerAppProbe = {
+	name?: string | null;
+	app_id?: string | null;
+	plugin_id?: string | null;
+	selection_state?: "selected" | "selectable" | "connect_required" | "unknown" | null;
+};
+
+export type ChatgptInstalledAppProbe = {
+	plugin_id?: string | null;
+	canonical_app_id?: string | null;
+	provider_name?: string | null;
+	name?: string | null;
+	app_ids?: string[] | null;
+	status?: string | null;
+	enabled?: boolean | null;
+	installation_policy?: string | null;
+	authentication_policy?: string | null;
+	scope?: string | null;
+	discoverability?: string | null;
+	creator_name?: string | null;
+	release_version?: string | null;
+	description?: string | null;
+};
+
+export type ChatgptLinkedAppProbe = {
+	link_id?: string | null;
+	connector_id?: string | null;
+	name?: string | null;
+	auth_status?: string | null;
+	connector_status?: string | null;
+	visibility?: string | null;
+	disable_auto_invocation?: boolean | null;
+	actions_count?: number | null;
 };
 
 export function normalizeChatgptProjectId(value: string | null | undefined): string | null {
@@ -1060,6 +1120,9 @@ async function withChatgptBlockingSurfaceRecovery<T>(
 	};
 	const runRecoverySequence = async (match: ChatgptBlockingSurfaceMatch): Promise<void> => {
 		lastRecoveryActions = [];
+		if (isChatgptAccountMirrorHardStop(match, options?.providerOptions)) {
+			throw createChatgptBlockingSurfaceError(action, match);
+		}
 		await beforeChatgptBrowserInteraction(options?.providerOptions, "provider-recovery");
 		const primary = await recoverVisibleChatgptBlockingSurfaceWithClient(
 			client,
@@ -1711,6 +1774,9 @@ function isRetryableConnectionError(error: unknown): boolean {
 }
 
 export const isRetryableConnectionErrorForTest = isRetryableConnectionError;
+export const clickChatgptViewerDownloadButtonWithClientForTest =
+	clickChatgptViewerDownloadButtonWithClient;
+export const extractChatgptArtifactFileNameFromUriForTest = extractChatgptArtifactFileNameFromUri;
 
 function withChatgptTimeout<T>(
 	operation: Promise<T>,
@@ -2314,6 +2380,17 @@ function ensureChatgptArtifactExtension(name: string, fallbackExt: string): stri
 		return trimmed;
 	}
 	return `${trimmed}${fallbackExt}`;
+}
+
+function extractChatgptArtifactFileNameFromUri(uri: string | null | undefined): string {
+	const normalized = normalizeUiText(uri);
+	if (!normalized) return "";
+	const tail = normalized.split("/").pop() ?? "";
+	try {
+		return normalizeUiText(decodeURIComponent(tail));
+	} catch {
+		return normalizeUiText(tail);
+	}
 }
 
 export function serializeChatgptGridRowsToCsv(rows: ReadonlyArray<ReadonlyArray<string>>): string {
@@ -3698,8 +3775,32 @@ function buildProjectDeleteConfirmationExpression(): string {
       }
     }
     return null;
-  })()`;
+	})()`;
 }
+
+function buildChatgptUrlRouteExpression(url: string): string {
+	const expected = new URL(url);
+	return `(() => {
+		const expectedOrigin = ${JSON.stringify(expected.origin)};
+		const expectedPathname = ${JSON.stringify(expected.pathname)};
+		if (location.origin !== expectedOrigin || location.pathname !== expectedPathname) return null;
+		return { href: location.href, title: document.title };
+	})()`;
+}
+
+export const buildChatgptUrlRouteExpressionForTest = buildChatgptUrlRouteExpression;
+
+function recordChatgptTargetSession(
+	options: BrowserProviderListOptions | undefined,
+	phase: "attach" | "retain" | "reuse",
+	targetId: string | undefined,
+): void {
+	if (!targetId) return;
+	const fingerprint = createHash("sha256").update(targetId).digest("hex").slice(0, 12);
+	recordBrowserScrapeNote(options, `chatgpt.target.${phase}:${fingerprint}`);
+}
+
+export const recordChatgptTargetSessionForTest = recordChatgptTargetSession;
 
 async function connectToChatgptTab(
 	options?: BrowserProviderListOptions,
@@ -3726,6 +3827,7 @@ async function connectToChatgptTab(
 		);
 		if (scopedConnection) {
 			recordBrowserScrapeProviderAction(options, "chatgpt.reuseScopedTarget");
+			recordChatgptTargetSession(options, "reuse", scopedConnection.targetId);
 			return {
 				...scopedConnection,
 				shouldClose: false,
@@ -3756,11 +3858,13 @@ async function connectToChatgptTab(
 				port,
 				usedExisting: true,
 			};
+			recordChatgptTargetSession(options, "attach", connection.targetId);
 			retainChatgptScopedSession(
 				options,
 				buildChatgptScopedSessionKey(host, port, preferredUrl),
 				connection,
 			);
+			recordChatgptTargetSession(options, "retain", connection.targetId);
 			return connection;
 		} catch (error) {
 			if (!providerNavigationAllowed(options)) {
@@ -3819,6 +3923,7 @@ async function connectToChatgptTab(
 	const scopedConnection = readChatgptScopedSession(options, sessionKey);
 	if (scopedConnection) {
 		recordBrowserScrapeProviderAction(options, "chatgpt.reuseScopedTarget");
+		recordChatgptTargetSession(options, "reuse", scopedConnection.targetId);
 		return {
 			...scopedConnection,
 			shouldClose: false,
@@ -3909,7 +4014,9 @@ async function connectToChatgptTab(
 		port: resolvedPort,
 		usedExisting,
 	};
+	recordChatgptTargetSession(options, "attach", connection.targetId);
 	retainChatgptScopedSession(options, sessionKey, connection);
+	recordChatgptTargetSession(options, "retain", connection.targetId);
 	recordBrowserScrapeProviderAction(options, "chatgpt.connectTab.ready");
 	return connection;
 }
@@ -3954,6 +4061,47 @@ async function closeChatgptTabConnection(
 
 export const closeChatgptTabConnectionForTest = closeChatgptTabConnection;
 export const shouldDisposeChatgptTabConnectionForTest = shouldDisposeChatgptTabConnection;
+
+function bindChatgptAbortCleanup(
+	connection: ChatgptTabConnection,
+	options?: BrowserProviderListOptions,
+): (() => void) & { cleanupStarted: () => boolean } {
+	const signal = options?.abortSignal;
+	let cleanupStarted = false;
+	const closeAbortedConnection = () => {
+		if (cleanupStarted) return;
+		cleanupStarted = true;
+		void closeChatgptTabConnection(connection, options);
+	};
+	const unbind = (() => {
+		if (signal) signal.removeEventListener("abort", closeAbortedConnection);
+	}) as (() => void) & { cleanupStarted: () => boolean };
+	unbind.cleanupStarted = () => cleanupStarted;
+	if (!signal) return unbind;
+	signal.addEventListener("abort", closeAbortedConnection, { once: true });
+	if (signal.aborted) closeAbortedConnection();
+	return unbind;
+}
+
+export const bindChatgptAbortCleanupForTest = bindChatgptAbortCleanup;
+
+async function runWithChatgptAbortBoundConnection<T>(
+	connection: ChatgptTabConnection,
+	options: BrowserProviderListOptions | undefined,
+	read: (client: ChromeClient) => Promise<T>,
+): Promise<T> {
+	const unbindAbortCleanup = bindChatgptAbortCleanup(connection, options);
+	try {
+		options?.abortSignal?.throwIfAborted();
+		return await read(connection.client);
+	} finally {
+		const cleanupStarted = unbindAbortCleanup.cleanupStarted();
+		unbindAbortCleanup();
+		if (!cleanupStarted) await closeChatgptTabConnection(connection, options);
+	}
+}
+
+export const runWithChatgptAbortBoundConnectionForTest = runWithChatgptAbortBoundConnection;
 
 function shouldForceNewChatgptTabConnection(options?: BrowserProviderListOptions): boolean {
 	if (options?.tabLifecycle !== "dispose-new") return false;
@@ -4215,7 +4363,9 @@ async function navigateToChatgptUrl(
 	recordBrowserScrapeProviderAction(options, "chatgpt.navigateUrl");
 	const settled = await navigateAndSettle(client, {
 		url,
-		routeExpression: buildProjectRouteExpression(projectId),
+		routeExpression: projectId
+			? buildProjectRouteExpression(projectId)
+			: buildChatgptUrlRouteExpression(url),
 		routeDescription: projectId ? `chatgpt project ${projectId}` : `chatgpt route ${url}`,
 		waitForDocumentReady: true,
 		fallbackToLocationAssign: true,
@@ -4971,7 +5121,6 @@ async function assertChatgptExpectedIdentity(
 function buildChatgptFeatureProbeExpression(): string {
 	const detector = JSON.stringify(CHATGPT_FEATURE_DETECTOR);
 	const flagTokens = JSON.stringify(CHATGPT_FEATURE_FLAG_TOKENS);
-	const appTokens = JSON.stringify(CHATGPT_APP_TOKENS);
 	const modelButtonSelectors = JSON.stringify(CHATGPT_PROVIDER.selectors.modelButton);
 	return `(async () => {
     const normalize = (value) => String(value || '').replace(/\\s+/g, ' ').trim();
@@ -4998,7 +5147,8 @@ function buildChatgptFeatureProbeExpression(): string {
         node.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, cancelable: true, pointerId: 1, pointerType: 'mouse', isPrimary: true }));
       } catch {}
       node.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, view: window }));
-      node.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
+	      if (typeof node.click === 'function') node.click();
+	      else node.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
       return true;
     };
     const escapeOpenSurfaces = async () => {
@@ -5108,18 +5258,101 @@ function buildChatgptFeatureProbeExpression(): string {
           synthesized.push(model + ' ' + depth);
         }
       }
-      return {
-        model_options: normalizedModels,
+	      return {
+	        model_options: normalizedModels,
         depth_options: normalizedDepths,
         synthesized_options: unique(synthesized),
         selected_model: selectedModel,
-        selected_depth: selectedDepth,
-      };
-    };
-    const detector = ${detector};
-    const flagTokens = ${flagTokens};
-    const appTokens = ${appTokens};
-    const modelButtonSelectors = ${modelButtonSelectors};
+	        selected_depth: selectedDepth,
+	      };
+	    };
+	    const collectComposerAppDetails = async () => {
+	      const appMap = new Map();
+	      const composerTools = [];
+	      const modeButton = Array.from(document.querySelectorAll('button[role="radio"]'))
+	        .filter(isVisible)
+	        .find((node) => node.getAttribute('aria-checked') === 'true');
+	      const composer_mode = lower(modeButton?.textContent || '') === 'work'
+	        ? 'work'
+	        : (lower(modeButton?.textContent || '') === 'chat' ? 'chat' : null);
+	      const readPluginId = (node) => {
+	        const href = node?.querySelector?.('a[href*="/plugins/plugin_"]')?.getAttribute?.('href') || '';
+	        const match = href.match(/\\/plugins\\/(plugin_[^/?#]+)/i);
+	        return match?.[1] || null;
+	      };
+	      const addApp = (entry) => {
+	        const name = normalize(entry?.name || '');
+	        if (!name) return;
+	        const key = lower(name);
+	        const previous = appMap.get(key);
+	        const rank = (state) => state === 'selected' ? 4 : state === 'selectable' ? 3 : state === 'connect_required' ? 2 : 1;
+	        if (!previous || rank(entry.selection_state) >= rank(previous.selection_state)) {
+	          appMap.set(key, {
+	            name,
+	            app_id: normalize(entry.app_id || '') || previous?.app_id || null,
+	            plugin_id: normalize(entry.plugin_id || '') || previous?.plugin_id || null,
+	            selection_state: entry.selection_state || previous?.selection_state || 'unknown',
+	          });
+	        }
+	      };
+	      for (const pill of Array.from(document.querySelectorAll(
+	        '#prompt-textarea [data-inline-selection-pill][data-system-hint-type^="plugin:"], #prompt-textarea [data-inline-selection-pill][data-id^="plugin:"]',
+	      )).filter(isVisible)) {
+	        const dataId = normalize(pill.getAttribute('data-id') || pill.getAttribute('data-system-hint-type') || '');
+	        addApp({
+	          name: pill.getAttribute('data-keyword') || pill.textContent || '',
+	          app_id: dataId.replace(/^plugin:/i, ''),
+	          plugin_id: readPluginId(pill),
+	          selection_state: 'selected',
+	        });
+	      }
+	      const trigger = document.querySelector('#composer-plus-btn, button[aria-label*="Add files and more" i]');
+	      if (!(trigger instanceof HTMLElement) || !isVisible(trigger)) {
+	        return {
+	          composer_mode,
+	          composer_apps: Array.from(appMap.values()),
+	          composer_tools: composerTools,
+	          composer_menu_observed: false,
+	        };
+	      }
+	      await escapeOpenSurfaces();
+	      click(trigger);
+	      await wait(500);
+	      const menu = Array.from(document.querySelectorAll(
+	        'form[data-type="unified-composer"] .popover, form .popover',
+	      )).filter(isVisible).at(-1);
+	      if (menu) {
+	        const items = Array.from(menu.querySelectorAll(
+	          '.__menu-item[tabindex], [data-fill][tabindex]',
+	        )).filter(isVisible);
+	        for (const item of items) {
+	          const primary = item.querySelector('span.max-w-full, span.truncate');
+	          const name = normalize(primary?.textContent || (item.textContent || '').split('\\n')[0] || '');
+	          if (name) composerTools.push(name);
+	          const icon = item.querySelector('[data-testid="plugin-icon-wrapper"] img, img[src*="/images/ecosystem/apps/"]');
+	          if (!icon) continue;
+	          const iconSrc = icon.getAttribute('src') || '';
+	          const iconMatch = iconSrc.match(/\\/images\\/ecosystem\\/apps\\/([^/]+)\\//i);
+	          const text = normalize(item.textContent || '');
+	          addApp({
+	            name,
+	            app_id: iconMatch?.[1] || null,
+	            plugin_id: readPluginId(item),
+	            selection_state: /(?:^|\\s)connect$/i.test(text) ? 'connect_required' : 'selectable',
+	          });
+	        }
+	      }
+	      await escapeOpenSurfaces();
+	      return {
+	        composer_mode,
+	        composer_apps: Array.from(appMap.values()),
+	        composer_tools: unique(composerTools),
+	        composer_menu_observed: Boolean(menu),
+	      };
+	    };
+	    const detector = ${detector};
+	    const flagTokens = ${flagTokens};
+	    const modelButtonSelectors = ${modelButtonSelectors};
     const corpus = [];
     addText(corpus, document.body?.innerText || '');
     for (const node of Array.from(document.querySelectorAll('button, [role="button"], a, [aria-label], [title]')).slice(0, 500)) {
@@ -5139,13 +5372,7 @@ function buildChatgptFeatureProbeExpression(): string {
       addText(corpus, (script.textContent || '').slice(0, 40000));
     }
     const haystack = corpus.join('\\n');
-    const apps = [];
-    for (const [name, tokens] of Object.entries(appTokens)) {
-      if (tokens.some((token) => haystack.includes(token))) {
-        apps.push(name);
-      }
-    }
-    const flags = {};
+	    const flags = {};
     for (const [name, tokens] of Object.entries(flagTokens)) {
       flags[name] = tokens.some((token) => haystack.includes(token));
     }
@@ -5166,11 +5393,12 @@ function buildChatgptFeatureProbeExpression(): string {
           modelButtons.push(node);
         }
       }
-    }
-    const modelButton = modelButtons[0] || null;
-    const composerRoot = modelButton?.closest?.('[data-testid*="composer"], form, [contenteditable="true"], .__composer-pill, [class*="composer"]') || null;
-    const modelControlDetails = await collectModelControlDetails(modelButton);
-    const model_controls = modelButton
+	    }
+	    const modelButton = modelButtons[0] || null;
+	    const composerRoot = modelButton?.closest?.('[data-testid*="composer"], form, [contenteditable="true"], .__composer-pill, [class*="composer"]') || null;
+	    const modelControlDetails = await collectModelControlDetails(modelButton);
+	    const composerDetails = await collectComposerAppDetails();
+	    const model_controls = modelButton
       ? {
           visible: true,
           label: normalize(modelButton.textContent || ''),
@@ -5184,29 +5412,190 @@ function buildChatgptFeatureProbeExpression(): string {
       : { visible: false };
     return {
       detector,
-      web_search: Boolean(flags.web_search),
-      deep_research: Boolean(flags.deep_research),
-      company_knowledge: Boolean(flags.company_knowledge),
-      apps,
-      model_controls,
+	      web_search: composerDetails.composer_menu_observed
+	        ? composerDetails.composer_tools.some((label) => lower(label) === 'web search')
+	        : Boolean(flags.web_search),
+	      deep_research: composerDetails.composer_menu_observed
+	        ? composerDetails.composer_tools.some((label) => lower(label) === 'deep research')
+	        : Boolean(flags.deep_research),
+	      company_knowledge: composerDetails.composer_menu_observed
+	        ? composerDetails.composer_tools.some((label) => lower(label) === 'company knowledge')
+	        : Boolean(flags.company_knowledge),
+	      apps: composerDetails.composer_apps
+	        .filter((entry) => entry.selection_state === 'selected' || entry.selection_state === 'selectable')
+	        .map((entry) => lower(entry.name).replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '')),
+	      composer_mode: composerDetails.composer_mode,
+	      composer_apps: composerDetails.composer_apps,
+	      model_controls,
     };
   })()`;
+}
+
+export function buildChatgptFeatureProbeExpressionForTest(): string {
+	return buildChatgptFeatureProbeExpression();
+}
+
+async function readChatgptComposerSurfaceProbe(
+	client: ChromeClient,
+): Promise<{
+	composer_mode?: "chat" | "work";
+	composer_apps: ChatgptComposerAppProbe[];
+	composer_tools: string[];
+} | null> {
+	const dispatchKey = async (key: string, code: string): Promise<void> => {
+		await client.Input.dispatchKeyEvent({ type: "keyDown", key, code });
+		await client.Input.dispatchKeyEvent({ type: "keyUp", key, code });
+	};
+	await dispatchKey("Escape", "Escape").catch(() => undefined);
+	const trigger = await client.Runtime.evaluate({
+		expression: `(() => {
+			const node = document.querySelector(
+				'#composer-plus-btn, button[aria-label*="Add files and more" i]'
+			);
+			if (!(node instanceof HTMLElement)) return null;
+			const rect = node.getBoundingClientRect();
+			if (rect.width <= 0 || rect.height <= 0) return null;
+			return {
+				x: rect.x + rect.width / 2,
+				y: rect.y + rect.height / 2,
+			};
+		})()`,
+		returnByValue: true,
+	});
+	const point = trigger.result?.value as { x?: number; y?: number } | null | undefined;
+	if (typeof point?.x !== "number" || typeof point.y !== "number") return null;
+	await client.Page.bringToFront().catch(() => undefined);
+	await client.Input.dispatchMouseEvent({
+		type: "mouseMoved",
+		x: point.x,
+		y: point.y,
+	});
+	await client.Input.dispatchMouseEvent({
+		type: "mousePressed",
+		x: point.x,
+		y: point.y,
+		button: "left",
+		buttons: 1,
+		clickCount: 1,
+	});
+	await client.Input.dispatchMouseEvent({
+		type: "mouseReleased",
+		x: point.x,
+		y: point.y,
+		button: "left",
+		buttons: 0,
+		clickCount: 1,
+	});
+	const visible = await waitForPredicate(
+		client.Runtime,
+		`(() => Array.from(document.querySelectorAll('.popover')).some((node) => {
+			if (!(node instanceof HTMLElement)) return false;
+			const rect = node.getBoundingClientRect();
+			return rect.width > 0 && rect.height > 0
+				&& Boolean(node.querySelector('.__menu-item[tabindex], [data-fill][tabindex]'));
+		}))()`,
+		{
+			timeoutMs: 5_000,
+			pollMs: 100,
+		},
+	).catch(() => ({ ok: false }));
+	if (!visible.ok) return null;
+	const result = await client.Runtime.evaluate({
+		expression: `(() => {
+			const normalize = (value) => String(value || '').replace(/\\s+/g, ' ').trim();
+			const lower = (value) => normalize(value).toLowerCase();
+			const isVisible = (node) => {
+				if (!(node instanceof HTMLElement)) return false;
+				const rect = node.getBoundingClientRect();
+				return rect.width > 0 && rect.height > 0;
+			};
+			const modeButton = Array.from(document.querySelectorAll('button[role="radio"]'))
+				.filter(isVisible)
+				.find((node) => node.getAttribute('aria-checked') === 'true');
+			const modeText = lower(modeButton?.textContent || '');
+			const composer_mode = modeText === 'work' ? 'work' : (modeText === 'chat' ? 'chat' : null);
+				const menu = Array.from(document.querySelectorAll('.popover'))
+					.filter((node) => isVisible(node)
+						&& Boolean(node.querySelector('.__menu-item[tabindex], [data-fill][tabindex]')))
+					.at(-1);
+			const apps = [];
+			const tools = [];
+			for (const item of Array.from(menu?.querySelectorAll(
+				'.__menu-item[tabindex], [data-fill][tabindex]'
+			) || []).filter(isVisible)) {
+				const primary = item.querySelector('span.max-w-full, span.truncate');
+				const name = normalize(primary?.textContent || (item.textContent || '').split('\\n')[0] || '');
+				if (!name) continue;
+				tools.push(name);
+				const icon = item.querySelector(
+					'[data-testid="plugin-icon-wrapper"] img, img[src*="/images/ecosystem/apps/"]'
+				);
+				if (!icon) continue;
+				const iconMatch = (icon.getAttribute('src') || '').match(
+					/\\/images\\/ecosystem\\/apps\\/([^/]+)\\//i
+				);
+				const href = item.querySelector('a[href*="/plugins/plugin_"]')?.getAttribute('href') || '';
+				const pluginMatch = href.match(/\\/plugins\\/(plugin_[^/?#]+)/i);
+					const text = lower(item.textContent || '');
+					const connectRequired = Boolean(item.querySelector(
+						'[data-suggested-plugin-connect], button[aria-label^="Connect " i]'
+					)) || /(?:^|\\s)connect$/.test(text);
+				apps.push({
+					name,
+					app_id: iconMatch?.[1] || null,
+					plugin_id: pluginMatch?.[1] || null,
+						selection_state: connectRequired ? 'connect_required' : 'selectable',
+				});
+			}
+			for (const pill of Array.from(document.querySelectorAll(
+				'#prompt-textarea [data-inline-selection-pill][data-system-hint-type^="plugin:"], ' +
+				'#prompt-textarea [data-inline-selection-pill][data-id^="plugin:"]'
+			)).filter(isVisible)) {
+				const dataId = normalize(
+					pill.getAttribute('data-id') || pill.getAttribute('data-system-hint-type') || ''
+				);
+				const name = normalize(pill.getAttribute('data-keyword') || pill.textContent || '');
+				const href = pill.querySelector('a[href*="/plugins/plugin_"]')?.getAttribute('href') || '';
+				const pluginMatch = href.match(/\\/plugins\\/(plugin_[^/?#]+)/i);
+				const existing = apps.find((entry) => lower(entry.name) === lower(name));
+				const selected = {
+					name,
+					app_id: dataId.replace(/^plugin:/i, '') || existing?.app_id || null,
+					plugin_id: pluginMatch?.[1] || existing?.plugin_id || null,
+					selection_state: 'selected',
+				};
+				if (existing) Object.assign(existing, selected);
+				else if (name) apps.push(selected);
+			}
+			return {
+				composer_mode,
+				composer_apps: apps,
+				composer_tools: Array.from(new Set(tools)),
+			};
+		})()`,
+		returnByValue: true,
+	});
+	await dispatchKey("Escape", "Escape").catch(() => undefined);
+	const value = result.result?.value as {
+		composer_mode?: "chat" | "work" | null;
+		composer_apps?: ChatgptComposerAppProbe[] | null;
+		composer_tools?: string[] | null;
+	} | null | undefined;
+	if (!value) return null;
+	return {
+		composer_mode:
+			value.composer_mode === "chat" || value.composer_mode === "work"
+				? value.composer_mode
+				: undefined,
+		composer_apps: normalizeChatgptComposerAppProbes(value.composer_apps),
+		composer_tools: normalizeUiTextList(value.composer_tools),
+	};
 }
 
 function normalizeChatgptFeatureSignature(
 	probe: ChatgptFeatureProbe | null | undefined,
 ): string | null {
 	if (!probe || typeof probe !== "object") {
-		return null;
-	}
-	const parsed = ChatgptFeatureSchema.safeParse({
-		web_search: probe.web_search,
-		deep_research: probe.deep_research,
-		company_knowledge: probe.company_knowledge,
-		apps: probe.apps,
-		model_controls: probe.model_controls ?? undefined,
-	});
-	if (!parsed.success) {
 		return null;
 	}
 	const apps = Array.isArray(probe.apps)
@@ -5219,6 +5608,13 @@ function normalizeChatgptFeatureSignature(
 		company_knowledge:
 			typeof probe.company_knowledge === "boolean" ? probe.company_knowledge : undefined,
 		apps,
+		composer_mode:
+			probe.composer_mode === "chat" || probe.composer_mode === "work"
+				? probe.composer_mode
+				: undefined,
+		composer_apps: normalizeChatgptComposerAppProbes(probe.composer_apps),
+		installed_apps: normalizeChatgptInstalledAppProbes(probe.installed_apps),
+		linked_apps: normalizeChatgptLinkedAppProbes(probe.linked_apps),
 		model_controls: normalizeChatgptModelControlProbe(probe.model_controls),
 	};
 	const hasAnySignal =
@@ -5226,11 +5622,131 @@ function normalizeChatgptFeatureSignature(
 		normalized.deep_research !== undefined ||
 		normalized.company_knowledge !== undefined ||
 		normalized.apps.length > 0 ||
+		normalized.composer_mode !== undefined ||
+		normalized.composer_apps.length > 0 ||
+		normalized.installed_apps.length > 0 ||
+		normalized.linked_apps.length > 0 ||
 		normalized.model_controls !== undefined;
 	if (!hasAnySignal) {
 		return null;
 	}
-	return JSON.stringify(normalized);
+	const parsed = ChatgptFeatureSchema.safeParse(normalized);
+	return parsed.success ? JSON.stringify(parsed.data) : null;
+}
+
+export const normalizeChatgptFeatureSignatureForTest = normalizeChatgptFeatureSignature;
+
+function normalizeChatgptComposerAppProbes(value: unknown): ChatgptComposerAppProbe[] {
+	if (!Array.isArray(value)) return [];
+	const apps = new Map<string, ChatgptComposerAppProbe>();
+	for (const entry of value) {
+		if (!isRecord(entry)) continue;
+		const name = normalizeUiText(entry.name as string | null | undefined);
+		if (!name) continue;
+		const appId = normalizeUiText(entry.app_id as string | null | undefined);
+		const pluginId = normalizeUiText(entry.plugin_id as string | null | undefined);
+		const selectionState =
+			entry.selection_state === "selected" ||
+			entry.selection_state === "selectable" ||
+			entry.selection_state === "connect_required" ||
+			entry.selection_state === "unknown"
+				? entry.selection_state
+				: undefined;
+		apps.set(name.toLowerCase(), {
+			name,
+			app_id: appId || undefined,
+			plugin_id: pluginId || undefined,
+			selection_state: selectionState,
+		});
+	}
+	return [...apps.values()].sort((left, right) => (left.name ?? "").localeCompare(right.name ?? ""));
+}
+
+export function normalizeChatgptInstalledAppProbes(value: unknown): ChatgptInstalledAppProbe[] {
+	if (!Array.isArray(value)) return [];
+	const apps = new Map<string, ChatgptInstalledAppProbe>();
+	for (const entry of value) {
+		if (!isRecord(entry)) continue;
+		const pluginId = normalizeUiText(
+			(entry.plugin_id ?? entry.id) as string | null | undefined,
+		);
+		const release = isRecord(entry.release) ? entry.release : null;
+		const name = normalizeUiText(
+			(release?.display_name ?? entry.name) as string | null | undefined,
+		);
+		if (!pluginId || !name) continue;
+		const appIds = normalizeUiTextList(entry.app_ids ?? release?.app_ids);
+			apps.set(pluginId, {
+				plugin_id: pluginId,
+				canonical_app_id:
+					normalizeUiText(entry.canonical_app_id as string | null | undefined) || undefined,
+				provider_name: normalizeUiText(entry.name as string | null | undefined) || undefined,
+				name,
+				app_ids: appIds.length > 0 ? appIds : undefined,
+				status: normalizeUiText(entry.status as string | null | undefined) || undefined,
+			enabled: typeof entry.enabled === "boolean" ? entry.enabled : undefined,
+			installation_policy:
+				normalizeUiText(entry.installation_policy as string | null | undefined) || undefined,
+				authentication_policy:
+					normalizeUiText(entry.authentication_policy as string | null | undefined) || undefined,
+				scope: normalizeUiText(entry.scope as string | null | undefined) || undefined,
+				discoverability:
+					normalizeUiText(entry.discoverability as string | null | undefined) || undefined,
+				creator_name: normalizeUiText(entry.creator_name as string | null | undefined) || undefined,
+				release_version:
+					normalizeUiText(release?.version as string | null | undefined) || undefined,
+				description:
+					normalizeUiText(release?.description as string | null | undefined) || undefined,
+			});
+	}
+	return [...apps.values()].sort((left, right) => (left.name ?? "").localeCompare(right.name ?? ""));
+}
+
+export function normalizeChatgptLinkedAppProbes(value: unknown): ChatgptLinkedAppProbe[] {
+	if (!Array.isArray(value)) return [];
+	const links = new Map<string, ChatgptLinkedAppProbe>();
+	for (const entry of value) {
+		if (!isRecord(entry)) continue;
+		const linkId = normalizeUiText(
+			(entry.link_id ?? entry.id) as string | null | undefined,
+		);
+		const connectorId = normalizeUiText(
+			(entry.connector_id ?? entry.app_id) as string | null | undefined,
+		);
+		const name = normalizeUiText(
+			(entry.name ?? entry.connector_name) as string | null | undefined,
+		);
+		if (!linkId || !connectorId || !name) continue;
+		links.set(linkId, {
+			link_id: linkId,
+			connector_id: connectorId,
+			name,
+			auth_status: normalizeUiText(entry.auth_status as string | null | undefined) || undefined,
+			connector_status:
+				normalizeUiText(entry.connector_status as string | null | undefined) || undefined,
+			visibility: normalizeUiText(entry.visibility as string | null | undefined) || undefined,
+			disable_auto_invocation:
+				typeof entry.disable_auto_invocation === "boolean"
+					? entry.disable_auto_invocation
+					: undefined,
+			actions_count:
+				Array.isArray(entry.actions)
+					? entry.actions.length
+					: (typeof entry.actions_count === "number" ? entry.actions_count : undefined),
+		});
+	}
+	return [...links.values()].sort((left, right) => {
+		const byName = (left.name ?? "").localeCompare(right.name ?? "");
+		return byName || (left.link_id ?? "").localeCompare(right.link_id ?? "");
+	});
+}
+
+export function normalizeChatgptInstalledAppProbesForTest(value: unknown): ChatgptInstalledAppProbe[] {
+	return normalizeChatgptInstalledAppProbes(value);
+}
+
+export function normalizeChatgptLinkedAppProbesForTest(value: unknown): ChatgptLinkedAppProbe[] {
+	return normalizeChatgptLinkedAppProbes(value);
 }
 
 function normalizeChatgptModelControlProbe(
@@ -5290,14 +5806,144 @@ function normalizeUiTextList(value: unknown): string[] {
 	);
 }
 
-async function readChatgptFeatureSignature(client: ChromeClient): Promise<string | null> {
+async function captureChatgptPluginDiscoveryProbes(
+	client: ChromeClient,
+): Promise<Pick<ChatgptFeatureProbe, "installed_apps" | "linked_apps">> {
+	const endpoints = {
+		installed_apps: "/backend-api/ps/plugins/installed",
+		linked_apps: "/backend-api/aip/connectors/links/list_accessible",
+	} as const;
+	await client.Network.enable().catch(() => undefined);
+	await client.Page.enable().catch(() => undefined);
+	const payloadPromise = new Promise<Record<keyof typeof endpoints, unknown | null>>((resolve) => {
+		const requestKinds = new Map<string, keyof typeof endpoints>();
+		const payloads: Record<keyof typeof endpoints, unknown | null> = {
+			installed_apps: null,
+			linked_apps: null,
+		};
+		let settled = false;
+		const finish = () => {
+			if (settled || !Object.values(payloads).every((payload) => payload !== null)) return;
+			settled = true;
+			clearTimeout(timer);
+			resolve(payloads);
+		};
+		const timer = setTimeout(() => {
+			if (settled) return;
+			settled = true;
+			resolve(payloads);
+		}, 10_000);
+		client.Network.responseReceived((params) => {
+			if (settled) return;
+			const url = params.response?.url ?? "";
+			const status = params.response?.status ?? 0;
+			if (status < 200 || status >= 300) return;
+			for (const [kind, endpoint] of Object.entries(endpoints) as Array<
+				[keyof typeof endpoints, string]
+			>) {
+				if (url.includes(endpoint)) {
+					requestKinds.set(params.requestId, kind);
+					break;
+				}
+			}
+		});
+		client.Network.loadingFinished(async (params) => {
+			if (settled) return;
+			const kind = requestKinds.get(params.requestId);
+			if (!kind) return;
+			const response = await client.Network.getResponseBody({ requestId: params.requestId }).catch(
+				() => null,
+			);
+			if (!response?.body) return;
+			try {
+				const body = response.base64Encoded
+					? Buffer.from(response.body, "base64").toString("utf8")
+					: response.body;
+				payloads[kind] = JSON.parse(body) as unknown;
+				finish();
+			} catch {
+				// Keep waiting for another successful response for the same endpoint.
+			}
+		});
+	});
+	await reloadAndSettle(client, {
+		ignoreCache: true,
+		waitForDocumentReady: false,
+		mutationAudit: resolveMutationAudit(client),
+		mutationSource: resolveMutationSource(
+			client,
+			"provider:chatgpt",
+			"discover-installed-plugins-reload",
+		),
+	}).catch(() => undefined);
+	const payloads = await payloadPromise;
+	const installedPayload = isRecord(payloads.installed_apps) ? payloads.installed_apps : null;
+	const linkedPayload = isRecord(payloads.linked_apps) ? payloads.linked_apps : null;
+	return {
+		installed_apps: normalizeChatgptInstalledAppProbes(installedPayload?.plugins),
+		linked_apps: normalizeChatgptLinkedAppProbes(linkedPayload?.links),
+	};
+}
+
+async function readChatgptFeatureSignature(
+	client: ChromeClient,
+	options?: BrowserProviderListOptions,
+): Promise<string | null> {
+	const locationResult = await client.Runtime.evaluate({
+		expression: "location.href",
+		returnByValue: true,
+	});
+	const locationHref =
+		typeof locationResult.result?.value === "string" ? locationResult.result.value : "";
+	let pluginDiscovery = locationHref.includes("/plugins")
+		? await captureChatgptPluginDiscoveryProbes(client)
+		: null;
 	const result = await client.Runtime.evaluate({
 		expression: buildChatgptFeatureProbeExpression(),
 		awaitPromise: true,
 		returnByValue: true,
 	});
+	const probe =
+		(result.result?.value as ChatgptFeatureProbe | null | undefined) ?? null;
+	const composerSurface = !locationHref.includes("/plugins")
+		? await readChatgptComposerSurfaceProbe(client)
+		: null;
+	if (probe && composerSurface) {
+		probe.composer_mode = composerSurface.composer_mode;
+		probe.composer_apps = composerSurface.composer_apps;
+		probe.apps = composerSurface.composer_apps
+			.filter(
+				(entry) =>
+					entry.selection_state === "selected" || entry.selection_state === "selectable",
+			)
+			.map((entry) =>
+				normalizeUiText(entry.name)
+					.toLowerCase()
+					.replace(/[^a-z0-9]+/g, "_")
+					.replace(/^_+|_+$/g, ""),
+			)
+			.filter(Boolean);
+		const composerTools = new Set(
+			composerSurface.composer_tools.map((label) => label.toLowerCase()),
+		);
+		probe.web_search = composerTools.has("web search");
+		probe.deep_research = composerTools.has("deep research");
+		probe.company_knowledge = composerTools.has("company knowledge");
+	}
+	if (!pluginDiscovery && options?.includeInstalledApps === true && locationHref) {
+		try {
+			await navigateToChatgptUrl(client, CHATGPT_PLUGINS_URL, undefined, options);
+			pluginDiscovery = await captureChatgptPluginDiscoveryProbes(client);
+		} finally {
+			await navigateToChatgptUrl(client, locationHref, undefined, options).catch(() => undefined);
+		}
+	}
+	if (probe && pluginDiscovery) {
+		probe.installed_apps = pluginDiscovery.installed_apps ?? [];
+		probe.linked_apps = pluginDiscovery.linked_apps ?? [];
+	}
 	return normalizeChatgptFeatureSignature(
-		(result.result?.value as ChatgptFeatureProbe | null | undefined) ?? null,
+		probe,
 	);
 }
 
@@ -7481,6 +8127,9 @@ async function ensureChatgptConversationSurfaceReadyForRead(
 			{
 				timeoutMs: 10_000,
 				description,
+				interrupt: () =>
+					assertNoChatgptAccountMirrorHardStop(client, options, `${description} wait`),
+				interruptPollMs: 1_000,
 			},
 		);
 	};
@@ -7500,6 +8149,11 @@ async function ensureChatgptConversationSurfaceReadyForRead(
 	if (ready.ok) {
 		return;
 	}
+	await assertNoChatgptAccountMirrorHardStop(
+		client,
+		options,
+		`ChatGPT conversation ${conversationId} readiness`,
+	);
 	await reloadAndSettle(client, {
 		ignoreCache: true,
 		waitForDocumentReady: false,
@@ -7515,11 +8169,21 @@ async function ensureChatgptConversationSurfaceReadyForRead(
 	if (ready.ok) {
 		return;
 	}
+	await assertNoChatgptAccountMirrorHardStop(
+		client,
+		options,
+		`ChatGPT conversation ${conversationId} readiness after reload`,
+	);
 	await navigateToChatgptConversation(client, conversationId, projectId);
 	ready = await waitForReady(`ChatGPT conversation ${conversationId} surface ready after reopen`);
 	if (ready.ok) {
 		return;
 	}
+	await assertNoChatgptAccountMirrorHardStop(
+		client,
+		options,
+		`ChatGPT conversation ${conversationId} readiness after reopen`,
+	);
 	throw new Error(`ChatGPT conversation ${conversationId} content not found`);
 }
 
@@ -7747,6 +8411,13 @@ async function readChatgptConversationContextWithClient(
 				{
 					timeoutMs: 10_000,
 					description: `ChatGPT conversation ${conversationId} surface ready after payload sync`,
+					interrupt: () =>
+						assertNoChatgptAccountMirrorHardStop(
+							client,
+							options,
+							`ChatGPT conversation ${conversationId} payload-sync readiness wait`,
+						),
+					interruptPollMs: 1_000,
 				},
 			);
 			const readMessages = async (): Promise<ChatgptConversationMessageProbe[]> => {
@@ -8959,6 +9630,7 @@ async function downloadChatgptConversationFileWithClient(
 	debugContext?: ChatgptRecoveryDebugContext,
 	options?: BrowserProviderListOptions,
 	file?: FileRef,
+	surfacePrepared = false,
 ): Promise<void> {
 	const targetProviderFileId = resolveChatgptConversationProviderFileId(fileId, file);
 	const targetName =
@@ -8970,20 +9642,19 @@ async function downloadChatgptConversationFileWithClient(
 	}
 	const normalizedProjectId = normalizeChatgptProjectId(projectId);
 	recordBrowserScrapeDownloadAttempt(options);
-	const captured = await withChatgptBlockingSurfaceRecovery(
-		client,
-		`downloadChatgptConversationFile:${conversationId}:${fileId}`,
-		async () => {
+	const downloadFromReadySurface = async (): Promise<Record<string, unknown>> => {
+		if (!surfacePrepared) {
 			await ensureChatgptConversationSurfaceReadyForRead(
 				client,
 				conversationId,
 				normalizedProjectId,
 				options,
 			);
-			recordBrowserScrapeCdpCall(options, "Runtime.evaluate");
-			recordBrowserScrapeProviderAction(options, "chatgpt.downloadConversationFile");
-			const result = await client.Runtime.evaluate({
-				expression: `(async () => {
+		}
+		recordBrowserScrapeCdpCall(options, "Runtime.evaluate");
+		recordBrowserScrapeProviderAction(options, "chatgpt.downloadConversationFile");
+		const result = await client.Runtime.evaluate({
+			expression: `(async () => {
           const targetProviderFileId = ${JSON.stringify(targetProviderFileId)};
           const targetName = ${JSON.stringify(targetName)};
           const conversationId = ${JSON.stringify(conversationId)};
@@ -8998,6 +9669,23 @@ async function downloadChatgptConversationFileWithClient(
               binary += String.fromCharCode(...bytes.subarray(index, index + chunkSize));
             }
             return btoa(binary);
+          };
+          const endpointKind = (url) => {
+            const text = String(url || '');
+            if (/\\/backend-api\\/files\\/download\\//.test(text)) return 'files-download';
+            if (/\\/backend-api\\/estuary\\/content/.test(text)) return 'estuary-content';
+            return 'other';
+          };
+          const providerErrorShape = (json) => {
+            if (!json || typeof json !== 'object' || Array.isArray(json)) return null;
+            const source = json.error && typeof json.error === 'object' ? json.error : json;
+            const summary = {};
+            for (const key of ['code', 'type', 'message', 'detail']) {
+              if (typeof source[key] === 'string' && source[key].trim()) {
+                summary[key] = source[key].replace(/\\s+/g, ' ').trim().slice(0, 160);
+              }
+            }
+            return Object.keys(summary).length > 0 ? summary : null;
           };
           const captureDownloadResponse = async (response, originalUrl, fileName, mimeType) => {
             const clone = response.clone();
@@ -9014,7 +9702,16 @@ async function downloadChatgptConversationFileWithClient(
               const downloadUrl = json && typeof json === 'object' && typeof json.download_url === 'string'
                 ? json.download_url
                 : null;
-              if (!downloadUrl) return null;
+              if (!downloadUrl) {
+                return {
+                  ok: false,
+                  status: response.status,
+                  reason: 'json_missing_download_url',
+                  endpointKind: endpointKind(originalUrl),
+                  contentType,
+                  providerError: providerErrorShape(json),
+                };
+              }
               const followResponse = await originalFetch(downloadUrl, { credentials: 'include' });
               const followClone = followResponse.clone();
               const followBytes = new Uint8Array(await followClone.arrayBuffer());
@@ -9099,95 +9796,300 @@ async function downloadChatgptConversationFileWithClient(
               if (match) break;
             }
           }
-          if (!match) {
-            const direct = await tryDirectProviderFileDownload(targetName || null, null);
-            if (direct.value) return { ok: true, ...direct.value };
-            return {
+	          if (!match) {
+	            const direct = await tryDirectProviderFileDownload(targetName || null, null);
+	            if (direct.value?.ok) return { ok: true, ...direct.value, captureTransport: 'direct' };
+	            return {
               ok: false,
-              reason: direct.attempted && direct.reason
-                ? 'tile_not_found;direct_download_failed:' + direct.reason + (direct.status ? ':status_' + direct.status : '')
-                : 'tile_not_found',
+              reason: direct.value?.reason || direct.reason || 'tile_not_found',
+              tileMatched: false,
+              fallbackAttempted: direct.attempted === true,
+              status: direct.value?.status || direct.status || null,
+              endpointKind: direct.value?.endpointKind || null,
+              contentType: direct.value?.contentType || null,
+              providerError: direct.value?.providerError || null,
             };
           }
-          const target = match.tile.querySelector('button[aria-label], button, [role="button"]');
-          if (!target || typeof target.click !== 'function') {
-            return { ok: false, reason: 'tile_button_not_found' };
-          }
-          let captured = null;
-          let captureError = null;
-          const capturePromises = [];
-          const matchesTargetUrl = (url) => {
-            const text = String(url || '');
-            if (targetProviderFileId && text.includes(targetProviderFileId)) return true;
-            return /\\/backend-api\\/files\\/download\\//.test(text) || /\\/backend-api\\/estuary\\/content/.test(text);
-          };
-          window.fetch = (...args) => {
-            const input = args[0];
-            const url = typeof input === 'string' ? input : input?.url;
+	          const target = match.tile.querySelector('button[aria-label], button, [role="button"]');
+	          if (!target || typeof target.click !== 'function') {
+	            return { ok: false, reason: 'tile_button_not_found' };
+	          }
+	          const isVisible = (node) => {
+	            if (!(node instanceof Element)) return false;
+	            const rect = node.getBoundingClientRect();
+	            if (rect.width <= 0 || rect.height <= 0) return false;
+	            const style = node.ownerDocument.defaultView?.getComputedStyle(node);
+	            return !style || (style.display !== 'none' && style.visibility !== 'hidden');
+	          };
+	          const labelFor = (node) => normalize(
+	            node.getAttribute('aria-label') ||
+	            node.getAttribute('title') ||
+	            node.textContent ||
+	            '',
+	          );
+	          const clickViewerDownload = () => {
+	            const controls = Array.from(document.querySelectorAll('button, [role="button"], a'))
+	              .filter((node) => node !== target && isVisible(node))
+	              .map((node) => ({ node, label: labelFor(node) }));
+	            const download = controls.find((entry) => /^Download$/i.test(entry.label));
+	            if (!download?.node || typeof download.node.click !== 'function') return false;
+	            download.node.click();
+	            return true;
+	          };
+	          let captured = null;
+	          let captureError = null;
+	          let capturedNavigationUrl = null;
+	          let viewerDownloadClicked = false;
+	          const capturePromises = [];
+	          const matchesTargetUrl = (url) => {
+	            const text = String(url || '');
+	            if (/\\/backend-api\\/files\\/[^/]+\\/simple\\b/.test(text)) return false;
+	            const isSignedContent = /\\/backend-api\\/estuary\\/content/.test(text);
+	            const isProviderFileDownload = /\\/backend-api\\/files\\/download\\//.test(text);
+	            if (!isSignedContent && !isProviderFileDownload) return false;
+	            if (isSignedContent) return true;
+	            return !targetProviderFileId || text.includes(targetProviderFileId);
+	          };
+	          const recordCaptureCandidate = (candidate, captureTransport) => {
+	            const next = { ...candidate, captureTransport };
+	            if (candidate.ok) {
+	              captured = next;
+	              return;
+	            }
+	            captureError = candidate;
+	          };
+	          const originalAnchorClick = HTMLAnchorElement.prototype.click;
+	          const originalWindowOpen = window.open;
+	          HTMLAnchorElement.prototype.click = function(...args) {
+	            const href = this.href || '';
+	            if (matchesTargetUrl(href)) {
+	              capturedNavigationUrl = href;
+	              return;
+	            }
+	            return originalAnchorClick.apply(this, args);
+	          };
+	          window.open = function(url, target, features) {
+	            if (matchesTargetUrl(url)) {
+	              capturedNavigationUrl = String(url || '');
+	              return null;
+	            }
+	            return originalWindowOpen.call(this, url, target, features);
+	          };
+	          window.fetch = (...args) => {
+	            const input = args[0];
+	            const url = typeof input === 'string' ? input : input?.url;
             const responsePromise = originalFetch(...args);
             if (matchesTargetUrl(url)) {
-              capturePromises.push(responsePromise.then(async (response) => {
-                if (captured) return;
-                const originalUrl = String(url || '');
-                if (/\\/backend-api\\/files\\/[^/]+\\/simple\\b/.test(originalUrl)) return;
-                captured = await captureDownloadResponse(
-                  response,
-                  originalUrl,
-                  match.metadata?.fileName || targetName || null,
-                  match.metadata?.mimeType || null,
-                );
+	              capturePromises.push(responsePromise.then(async (response) => {
+	                if (captured) return;
+	                const originalUrl = String(url || '');
+	                if (/\\/backend-api\\/files\\/[^/]+\\/simple\\b/.test(originalUrl)) return;
+	                const candidate = await captureDownloadResponse(
+	                    response,
+	                    originalUrl,
+	                    match.metadata?.fileName || targetName || null,
+	                    match.metadata?.mimeType || null,
+	                  );
+	                recordCaptureCandidate(candidate, 'fetch');
               }).catch((error) => {
                 captureError = error && typeof error === 'object' && 'message' in error ? error.message : String(error);
               }));
             }
             return responsePromise;
           };
-          try {
-            const direct = await tryDirectProviderFileDownload(
-              match.metadata?.fileName || targetName || null,
-              match.metadata?.mimeType || null,
-            );
-            if (direct.value) {
-              captured = direct.value;
+	          try {
+	            target.click();
+	            const captureStartedAt = Date.now();
+	            const deadline = Date.now() + 20_000;
+	            while (!captured && Date.now() < deadline) {
+	              await Promise.allSettled(capturePromises);
+	              if (captured) break;
+	              if (capturedNavigationUrl) {
+	                const navigationUrl = capturedNavigationUrl;
+	                capturedNavigationUrl = null;
+	                try {
+	                  const response = await originalFetch(navigationUrl, { credentials: 'include' });
+	                  const candidate = await captureDownloadResponse(
+	                      response,
+	                      navigationUrl,
+	                      match.metadata?.fileName || targetName || null,
+	                      match.metadata?.mimeType || null,
+	                    );
+	                  recordCaptureCandidate(candidate, 'anchor');
+	                } catch (error) {
+	                  captureError = error && typeof error === 'object' && 'message' in error
+	                    ? error.message
+	                    : String(error);
+	                }
+	                if (captured) break;
+	              }
+	              if (!viewerDownloadClicked && Date.now() - captureStartedAt >= 750) {
+	                viewerDownloadClicked = clickViewerDownload();
+	              }
+	              await sleep(250);
+	            }
+            if (!captured) {
+	              const direct = await tryDirectProviderFileDownload(
+	                match.metadata?.fileName || targetName || null,
+	                match.metadata?.mimeType || null,
+	              );
+	              if (direct.value?.ok) {
+	                recordCaptureCandidate(direct.value, 'direct');
+	              } else if (direct.value) {
+	                captureError = direct.value;
+              } else if (direct.attempted && direct.reason) {
+                captureError = direct.reason;
+              }
             }
-            target.click();
-            if (direct.attempted && direct.reason) {
-              captureError = 'direct_download_failed:' + direct.reason + (direct.status ? ':status_' + direct.status : '');
-            }
-            const deadline = Date.now() + 20_000;
-            while (!captured && Date.now() < deadline) {
-              await Promise.allSettled(capturePromises);
-              if (captured) break;
-              await sleep(250);
-            }
-          } finally {
-            window.fetch = originalFetch;
-            for (const button of Array.from(document.querySelectorAll('[role="dialog"] button[aria-label="Close"], button[aria-label="Close"]'))) {
-              try { button.click(); } catch {}
-            }
+	          } finally {
+	            window.fetch = originalFetch;
+	            HTMLAnchorElement.prototype.click = originalAnchorClick;
+	            window.open = originalWindowOpen;
+	            for (const button of Array.from(document.querySelectorAll('[role="dialog"] button[aria-label="Close"], button[aria-label="Close"]'))) {
+	              try { button.click(); } catch {}
+	            }
           }
           if (!captured) {
-            return { ok: false, reason: captureError || 'download_response_not_captured' };
+            const captureFailure = captureError && typeof captureError === 'object'
+              ? captureError
+              : null;
+            return {
+              ok: false,
+              reason: captureFailure?.reason || captureError || 'download_response_not_captured',
+              tileMatched: true,
+              fallbackAttempted: true,
+              status: captureFailure?.status || null,
+              endpointKind: captureFailure?.endpointKind || null,
+              contentType: captureFailure?.contentType || null,
+              captureTransport: captureFailure?.captureTransport || null,
+              providerError: captureFailure?.providerError || null,
+            };
           }
           if (!captured.ok) {
-            return { ok: false, reason: 'download_response_not_ok', status: captured.status, url: captured.url };
+            return {
+              ok: false,
+              reason: captured.reason || 'download_response_not_ok',
+              tileMatched: true,
+              fallbackAttempted: false,
+              status: captured.status,
+              endpointKind: captured.endpointKind || null,
+              contentType: captured.contentType || null,
+              providerError: captured.providerError || null,
+            };
           }
           if (!captured.base64 || captured.byteLength <= 0) {
-            return { ok: false, reason: 'download_response_empty', status: captured.status, url: captured.url };
+            return {
+              ok: false,
+              reason: 'download_response_empty',
+              tileMatched: true,
+              status: captured.status,
+              endpointKind: endpointKind(captured.url),
+              contentType: captured.contentType || null,
+            };
           }
-          return { ok: true, ...captured };
+	          return { ok: true, ...captured, viewerDownloadClicked };
         })()`,
-				awaitPromise: true,
-				returnByValue: true,
-			});
-			const value = isRecord(result.result?.value) ? result.result.value : null;
-			if (!value || value.ok !== true || typeof value.base64 !== "string") {
-				recordBrowserScrapeDownloadFailure(options);
-				const reason = typeof value?.reason === "string" ? value.reason : "unknown";
-				const status = typeof value?.status === "number" ? ` (status ${value.status})` : "";
-				throw new Error(`ChatGPT conversation file fetch failed: ${reason}${status}`);
+			awaitPromise: true,
+			returnByValue: true,
+		});
+		const value = isRecord(result.result?.value) ? result.result.value : null;
+		if (!value || value.ok !== true || typeof value.base64 !== "string") {
+			recordBrowserScrapeDownloadFailure(options);
+			const diagnostics = {
+				reason: typeof value?.reason === "string" ? value.reason : "unknown",
+				...(typeof value?.tileMatched === "boolean" ? { tileMatched: value.tileMatched } : {}),
+				...(typeof value?.fallbackAttempted === "boolean"
+					? { fallbackAttempted: value.fallbackAttempted }
+					: {}),
+				...(typeof value?.status === "number" ? { status: value.status } : {}),
+				...(typeof value?.endpointKind === "string" ? { endpointKind: value.endpointKind } : {}),
+				...(typeof value?.contentType === "string" ? { contentType: value.contentType } : {}),
+				...(typeof value?.captureTransport === "string"
+					? { captureTransport: value.captureTransport }
+					: {}),
+				...(isRecord(value?.providerError) ? { providerError: value.providerError } : {}),
+			};
+			throw new Error(`ChatGPT conversation file fetch failed: ${JSON.stringify(diagnostics)}`);
+		}
+		if (
+			value.captureTransport === "anchor" ||
+			value.captureTransport === "fetch" ||
+			value.captureTransport === "direct"
+		) {
+			recordBrowserScrapeProviderAction(
+				options,
+				`chatgpt.downloadConversationFile.capture.${value.captureTransport}`,
+			);
+		}
+		if (value.viewerDownloadClicked === true) {
+			recordBrowserScrapeProviderAction(options, "chatgpt.downloadConversationFile.viewerDownload");
+		}
+		return value;
+	};
+	const captured = surfacePrepared
+		? await downloadFromReadySurface()
+		: await withChatgptBlockingSurfaceRecovery(
+				client,
+				`downloadChatgptConversationFile:${conversationId}:${fileId}`,
+				downloadFromReadySurface,
+				{
+					debugContext,
+					reopen: buildChatgptConversationReopen(
+						client,
+						conversationId,
+						normalizedProjectId,
+						options,
+					),
+					providerOptions: options,
+				},
+			);
+	await fs.writeFile(destPath, Buffer.from(captured.base64 as string, "base64"));
+	recordBrowserScrapeDownloadSuccess(options);
+}
+
+async function downloadChatgptConversationFilesWithClient(
+	client: ChromeClient,
+	conversationId: string,
+	items: BrowserProviderConversationFileDownloadInput[],
+	projectId?: string | null,
+	debugContext?: ChatgptRecoveryDebugContext,
+	options?: BrowserProviderListOptions,
+): Promise<BrowserProviderConversationFileDownloadResult[]> {
+	const normalizedProjectId = normalizeChatgptProjectId(projectId);
+	return await withChatgptBlockingSurfaceRecovery(
+		client,
+		`downloadChatgptConversationFiles:${conversationId}`,
+		async () => {
+			await ensureChatgptConversationSurfaceReadyForRead(
+				client,
+				conversationId,
+				normalizedProjectId,
+				options,
+			);
+			const results: BrowserProviderConversationFileDownloadResult[] = [];
+			for (const item of items) {
+				try {
+					await downloadChatgptConversationFileWithClient(
+						client,
+						conversationId,
+						item.file.id,
+						item.destPath,
+						normalizedProjectId,
+						debugContext,
+						options,
+						item.file,
+						true,
+					);
+					results.push({ fileId: item.file.id, status: "materialized" });
+				} catch (error) {
+					results.push({
+						fileId: item.file.id,
+						status: "error",
+						error: error instanceof Error ? error.message : String(error),
+					});
+				}
 			}
-			return value;
+			return results;
 		},
 		{
 			debugContext,
@@ -9195,9 +10097,10 @@ async function downloadChatgptConversationFileWithClient(
 			providerOptions: options,
 		},
 	);
-	await fs.writeFile(destPath, Buffer.from(captured.base64 as string, "base64"));
-	recordBrowserScrapeDownloadSuccess(options);
 }
+
+export const downloadChatgptConversationFilesWithClientForTest =
+	downloadChatgptConversationFilesWithClient;
 
 async function downloadChatgptAccountLibraryFileWithClient(
 	client: ChromeClient,
@@ -9644,6 +10547,7 @@ async function tagChatgptArtifactButtonWithClient(
 		Number.isFinite(artifact.metadata.buttonIndex)
 			? artifact.metadata.buttonIndex
 			: null;
+	const uriFileName = extractChatgptArtifactFileNameFromUri(artifact.uri);
 	const spreadsheetCard = Boolean(options?.spreadsheetCard);
 	const deadline = Date.now() + 10_000;
 	while (Date.now() < deadline) {
@@ -9671,6 +10575,7 @@ async function tagChatgptArtifactButtonWithClient(
         const expectedTitle = normalize(${JSON.stringify(artifact.title)}).toLowerCase();
         const expectedMessageId = normalize(${JSON.stringify(artifact.messageId ?? null)});
         const expectedUri = normalize(${JSON.stringify(artifact.uri ?? null)}).toLowerCase();
+        const expectedUriFileName = normalize(${JSON.stringify(uriFileName)}).toLowerCase();
         const expectedTurnId = normalize(${JSON.stringify(turnId)});
         const expectedMessageIndex = ${JSON.stringify(
 					typeof artifact.messageIndex === "number" ? artifact.messageIndex : null,
@@ -9749,7 +10654,10 @@ async function tagChatgptArtifactButtonWithClient(
         };
         const matches = (candidate) => {
           if (!candidate) return false;
-          const titleMatch = Boolean(candidate.title) && (!expectedTitle || titleMatches(candidate.title, expectedTitle));
+          const titleMatch = Boolean(candidate.title) && (
+            (!expectedTitle || titleMatches(candidate.title, expectedTitle)) ||
+            Boolean(expectedUriFileName && titleMatches(candidate.title, expectedUriFileName))
+          );
           const uriMatch = Boolean(expectedUri && candidate.href && candidate.href === expectedUri);
           if (!titleMatch && !uriMatch) return false;
           if (expectedTurnId && candidate.turnId !== expectedTurnId) return false;
@@ -9799,6 +10707,51 @@ async function tagChatgptSpreadsheetCardDownloadButtonWithClient(
 	artifact: ConversationArtifact,
 ): Promise<boolean> {
 	return await tagChatgptArtifactButtonWithClient(client, artifact, { spreadsheetCard: true });
+}
+
+async function clickChatgptViewerDownloadButtonWithClient(
+	client: ChromeClient,
+	options?: BrowserProviderListOptions,
+): Promise<boolean> {
+	const deadline = Date.now() + 5_000;
+	while (Date.now() < deadline) {
+		recordBrowserScrapeCdpCall(options, "Runtime.evaluate");
+		const result = await client.Runtime.evaluate({
+			expression: `(() => {
+        const taggedAttr = ${JSON.stringify(CHATGPT_DOWNLOAD_BUTTON_ATTR)};
+        const normalize = (value) => String(value || '').replace(/\\s+/g, ' ').trim();
+        const isVisible = (node) => {
+          if (!(node instanceof Element)) return false;
+          const rect = node.getBoundingClientRect();
+          if (rect.width <= 0 || rect.height <= 0) return false;
+          const style = node.ownerDocument.defaultView?.getComputedStyle(node);
+          return !style || (style.display !== 'none' && style.visibility !== 'hidden');
+        };
+        const labelFor = (node) => normalize(
+          node.getAttribute('aria-label') ||
+          node.getAttribute('title') ||
+          node.textContent ||
+          '',
+        );
+        const controls = Array.from(document.querySelectorAll('button, [role="button"], a'))
+          .filter((node) => isVisible(node) && node.getAttribute(taggedAttr) !== 'true')
+          .map((node) => ({ node, label: labelFor(node) }));
+        const download = controls.find((entry) => /^Download$/i.test(entry.label));
+        if (!download?.node || typeof download.node.click !== 'function') {
+          return { ok: false, labels: controls.map((entry) => entry.label).filter(Boolean).slice(0, 20) };
+        }
+        download.node.click();
+        return { ok: true, label: download.label };
+      })()`,
+			returnByValue: true,
+		});
+		if (isRecord(result.result?.value) && result.result.value.ok === true) {
+			recordBrowserScrapeProviderAction(options, "chatgpt.clickArtifactViewerDownload");
+			return true;
+		}
+		await sleep(250);
+	}
+	return false;
 }
 
 async function waitForChatgptDownloadedFile(
@@ -10158,8 +11111,23 @@ async function materializeChatgptConversationArtifactWithClient(
 					timeoutMs: 1500,
 					pollMs: 100,
 				});
-				const remoteUrl = normalizeUiText(capture.href);
-				const downloadName = normalizeUiText(capture.downloadName);
+				let remoteUrl = normalizeUiText(capture.href);
+				let downloadName = normalizeUiText(capture.downloadName);
+				if (!remoteUrl && !downloadName) {
+					const clickedViewerDownload = await clickChatgptViewerDownloadButtonWithClient(
+						client,
+						options,
+					);
+					if (clickedViewerDownload) {
+						const viewerCapture = await waitForDownloadCapture(client.Runtime, {
+							stateKey: CHATGPT_DOWNLOAD_CAPTURE_STATE_KEY,
+							timeoutMs: 3_000,
+							pollMs: 100,
+						});
+						remoteUrl = normalizeUiText(viewerCapture.href);
+						downloadName = normalizeUiText(viewerCapture.downloadName);
+					}
+				}
 				recordBrowserScrapeDownloadAttempt(options);
 				const downloadedPath = await waitForChatgptDownloadedFile(
 					destDir,
@@ -10320,6 +11288,7 @@ export function createChatgptAdapter(): Pick<
 	| "downloadAccountFile"
 	| "listConversationFiles"
 	| "downloadConversationFile"
+	| "downloadConversationFiles"
 	| "materializeConversationArtifact"
 	| "renameConversation"
 	| "deleteConversation"
@@ -10339,26 +11308,34 @@ export function createChatgptAdapter(): Pick<
 				options,
 				options?.configuredUrl ?? CHATGPT_HOME_URL,
 			);
-			const { client } = connection;
-			try {
-				return await readChatgptUserIdentity(client);
-			} finally {
-				await closeChatgptTabConnection(connection, options);
-			}
+			return runWithChatgptAbortBoundConnection(connection, options, readChatgptUserIdentity);
 		},
 		async getFeatureSignature(options?: BrowserProviderListOptions): Promise<string | null> {
 			await beforeChatgptBrowserInteraction(options, "page-refresh");
 			const connection = await connectToChatgptTab(
 				options,
 				options?.configuredUrl ?? CHATGPT_HOME_URL,
-			);
-			const { client } = connection;
-			try {
-				await assertChatgptExpectedIdentity(client, options);
-				return await readChatgptFeatureSignature(client);
-			} finally {
-				await closeChatgptTabConnection(connection, options);
-			}
+				);
+				const { client } = connection;
+				const originalUrl = await readChatgptLocationHref(client.Runtime).catch(() => null);
+				const configuredUrl = normalizeUiText(options?.configuredUrl);
+				const shouldNavigate =
+					Boolean(configuredUrl) &&
+					(options?.tabLifecycle === "dispose-new" || originalUrl !== configuredUrl);
+				try {
+					if (shouldNavigate) {
+						await navigateToChatgptUrl(client, configuredUrl, undefined, options);
+					}
+					await assertChatgptExpectedIdentity(client, options);
+					return await readChatgptFeatureSignature(client, options);
+				} finally {
+					if (shouldNavigate && options?.preserveActiveTab === true && originalUrl) {
+						await navigateToChatgptUrl(client, originalUrl, undefined, options).catch(
+							() => undefined,
+						);
+					}
+					await closeChatgptTabConnection(connection, options);
+				}
 		},
 		async listProjects(options?: BrowserProviderListOptions): Promise<Project[]> {
 			const attempt = async (currentOptions?: BrowserProviderListOptions): Promise<Project[]> => {
@@ -10467,7 +11444,9 @@ export function createChatgptAdapter(): Pick<
 				resolveChatgptConversationUrl(conversationId, normalizedProjectId),
 			);
 			const { client, targetId, host, port } = connection;
+			const unbindAbortCleanup = bindChatgptAbortCleanup(connection, options);
 			try {
+				options?.abortSignal?.throwIfAborted();
 				await assertChatgptExpectedIdentity(client, options);
 				await dismissCreateProjectDialogIfOpen(client.Runtime, {
 					strict: true,
@@ -10482,7 +11461,9 @@ export function createChatgptAdapter(): Pick<
 					{ host, port, targetId: targetId ?? null },
 				);
 			} finally {
-				await closeChatgptTabConnection(connection, options);
+				const cleanupStarted = unbindAbortCleanup.cleanupStarted();
+				unbindAbortCleanup();
+				if (!cleanupStarted) await closeChatgptTabConnection(connection, options);
 			}
 		},
 		async readActiveConversationArtifacts(
@@ -10628,6 +11609,42 @@ export function createChatgptAdapter(): Pick<
 					debugContext,
 					options,
 					file,
+				);
+			} finally {
+				await closeChatgptTabConnection(connection, options);
+			}
+		},
+		async downloadConversationFiles(
+			conversationId: string,
+			items: BrowserProviderConversationFileDownloadInput[],
+			options?: BrowserProviderListOptions,
+		): Promise<BrowserProviderConversationFileDownloadResult[]> {
+			if (items.length === 0) return [];
+			await beforeChatgptBrowserInteraction(options, "conversation-read");
+			const normalizedProjectId = normalizeChatgptProjectId(options?.projectId);
+			const debugContext = resolveChatgptRecoveryDebugContext(
+				options,
+				"chatgpt-download-conversation-files",
+				{
+					conversationId,
+					projectId: normalizedProjectId ?? null,
+					fileCount: items.length,
+				},
+			);
+			const connection = await connectToChatgptTab(
+				options,
+				resolveChatgptConversationUrl(conversationId, normalizedProjectId),
+			);
+			const { client } = connection;
+			try {
+				await assertChatgptExpectedIdentity(client, options);
+				return await downloadChatgptConversationFilesWithClient(
+					client,
+					conversationId,
+					items,
+					normalizedProjectId,
+					debugContext,
+					options,
 				);
 			} finally {
 				await closeChatgptTabConnection(connection, options);

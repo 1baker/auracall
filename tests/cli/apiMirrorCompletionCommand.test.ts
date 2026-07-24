@@ -6,7 +6,9 @@ import { afterEach, describe, expect, test } from 'vitest';
 import {
   formatApiMirrorCompletionCliSummary,
   formatApiMirrorReconciliationCliSummary,
+  listApiMirrorCompletionsForCli,
   listApiMirrorReconciliationsForCli,
+  readApiMirrorCompletionForCli,
 } from '../../src/cli/apiMirrorCompletionCommand.js';
 
 const execFileAsync = promisify(execFile);
@@ -22,6 +24,26 @@ afterEach(async () => {
 });
 
 describe('api mirror completion CLI', () => {
+  test('requests bounded completion monitoring projections by default', async () => {
+    const seenUrls: string[] = [];
+    const fetchImpl = async (input: string | URL | Request) => {
+      seenUrls.push(String(input));
+      return new Response(JSON.stringify({ object: 'list', data: [], count: 0 }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      });
+    };
+
+    await listApiMirrorCompletionsForCli({ port: 18095 }, fetchImpl as typeof fetch);
+    await readApiMirrorCompletionForCli(
+      { port: 18095, id: 'acctmirror_completion_cli' },
+      fetchImpl as typeof fetch,
+    );
+
+    expect(new URL(seenUrls[0] ?? '').searchParams.get('detail')).toBe('summary');
+    expect(new URL(seenUrls[1] ?? '').searchParams.get('detail')).toBe('summary');
+  });
+
   test('summarizes terminal completion materialization evidence', () => {
     const summary = formatApiMirrorCompletionCliSummary({
       id: 'acctmirror_completion_cli',
@@ -404,7 +426,7 @@ describe('api mirror completion CLI', () => {
       { env },
     );
     expect(JSON.parse(spaced.stdout)).toMatchObject({ object: 'list', count: 0 });
-    expect(seenUrls.at(-1)).toBe('/v1/account-mirrors/completions?status=active&limit=50');
+    expect(seenUrls.at(-1)).toBe('/v1/account-mirrors/completions?detail=summary&status=active&limit=50');
 
     const equals = await execFileAsync(
       process.execPath,
@@ -412,6 +434,6 @@ describe('api mirror completion CLI', () => {
       { env },
     );
     expect(JSON.parse(equals.stdout)).toMatchObject({ object: 'list', count: 0 });
-    expect(seenUrls.at(-1)).toBe('/v1/account-mirrors/completions?status=paused&limit=50');
+    expect(seenUrls.at(-1)).toBe('/v1/account-mirrors/completions?detail=summary&status=paused&limit=50');
   }, CLI_TIMEOUT);
 });

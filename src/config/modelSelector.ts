@@ -30,6 +30,24 @@ export const SEMANTIC_MODEL_SELECTORS: readonly SemanticModelSelectorDescriptor[
     executionReady: true,
   },
   {
+    id: 'chatgpt:sol-medium',
+    service: 'chatgpt',
+    label: 'ChatGPT Sol Medium',
+    executionReady: true,
+  },
+  {
+    id: 'chatgpt:sol-high',
+    service: 'chatgpt',
+    label: 'ChatGPT Sol High',
+    executionReady: true,
+  },
+  {
+    id: 'chatgpt:sol-extra-high',
+    service: 'chatgpt',
+    label: 'ChatGPT Sol Extra High',
+    executionReady: true,
+  },
+  {
     id: 'chatgpt:pro-standard',
     service: 'chatgpt',
     label: 'ChatGPT Pro Standard',
@@ -39,6 +57,12 @@ export const SEMANTIC_MODEL_SELECTORS: readonly SemanticModelSelectorDescriptor[
     id: 'chatgpt:pro-extended',
     service: 'chatgpt',
     label: 'ChatGPT Pro Extended',
+    executionReady: true,
+  },
+  {
+    id: 'chatgpt:sol-pro',
+    service: 'chatgpt',
+    label: 'ChatGPT Sol Pro',
     executionReady: true,
   },
   { id: 'gemini:auto', service: 'gemini', label: 'Gemini Auto', executionReady: false },
@@ -67,14 +91,25 @@ export function resolveChatgptSemanticModelSelector(
       return { desiredModel: 'Instant' };
     case 'thinking':
     case 'thinking-standard':
+    case 'sol':
+    case 'sol-medium':
+    case 'gpt-5.6-sol':
       return { desiredModel: 'Thinking', thinkingTime: 'standard' };
     case 'thinking-extended':
+    case 'sol-high':
+    case 'gpt-5.6-sol-high':
       return { desiredModel: 'Thinking', thinkingTime: 'extended' };
+    case 'sol-extra-high':
+    case 'gpt-5.6-sol-extra-high':
+      return { desiredModel: 'Thinking', thinkingTime: 'heavy' };
     case 'pro':
     case 'pro-standard':
       return { desiredModel: 'Pro', thinkingTime: 'standard' };
     case 'pro-extended':
       return { desiredModel: 'Pro', thinkingTime: 'extended' };
+    case 'sol-pro':
+    case 'gpt-5.6-sol-pro':
+      return { desiredModel: 'Pro' };
     default:
       return null;
   }

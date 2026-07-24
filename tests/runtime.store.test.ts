@@ -11,6 +11,7 @@ import {
   getExecutionRunRecordPath,
   getExecutionRunsDir,
   listExecutionRunRecordBundles,
+  mapWithConcurrencyForTest,
   readExecutionRunRecordBundle,
   readExecutionRunStoredRecord,
   writeExecutionRunRecordBundle,
@@ -24,6 +25,23 @@ describe('runtime execution store', () => {
   afterEach(async () => {
     setAuracallHomeDirOverrideForTest(null);
     await Promise.all(cleanup.splice(0).map((entry) => fs.rm(entry, { recursive: true, force: true })));
+  });
+
+  it('bounds concurrent runtime-record reads while preserving result order', async () => {
+    let inFlight = 0;
+    let maxInFlight = 0;
+    const values = Array.from({ length: 24 }, (_, index) => index);
+
+    const results = await mapWithConcurrencyForTest(values, 4, async (value) => {
+      inFlight += 1;
+      maxInFlight = Math.max(maxInFlight, inFlight);
+      await new Promise((resolve) => setTimeout(resolve, value % 3));
+      inFlight -= 1;
+      return value * 2;
+    });
+
+    expect(results).toEqual(values.map((value) => value * 2));
+    expect(maxInFlight).toBeLessThanOrEqual(4);
   });
 
   it('persists and reloads execution run bundles under the AuraCall home dir', async () => {

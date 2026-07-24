@@ -6,6 +6,43 @@ import type {
 } from '../src/accountMirror/completionService.js';
 
 describe('mcp account mirror completion tools', () => {
+  it('uses compact side-effect-free monitoring unless full detail is explicit', async () => {
+    const operation = accountMirrorCompletionOperation();
+    operation.lastRefresh = {
+      completedAt: '2026-05-23T15:01:00.000Z',
+      rowEvidence: Array.from({ length: 5_000 }, (_, index) => ({ index })),
+    } as unknown as AccountMirrorCompletionOperation['lastRefresh'];
+    const refreshMaterializationStatus = vi.fn(async () => operation);
+    const tools = new Map<string, (input: unknown) => Promise<unknown>>();
+    registerAccountMirrorCompletionTools({
+      registerTool: vi.fn((name: string, _config: unknown, handler: (input: unknown) => Promise<unknown>) => {
+        tools.set(name, handler);
+      }),
+    } as never, {
+      service: {
+        start: vi.fn(() => operation),
+        list: vi.fn(() => [operation]),
+        read: vi.fn(() => operation),
+        refreshMaterializationStatus,
+        control: vi.fn(),
+      } satisfies AccountMirrorCompletionService,
+    });
+
+    const handler = tools.get('account_mirror_completion_status');
+    if (!handler) throw new Error('Expected account_mirror_completion_status tool.');
+    const compact = await handler({ id: operation.id }) as {
+      structuredContent: AccountMirrorCompletionOperation;
+    };
+    expect(compact.structuredContent.lastRefresh).toBeNull();
+    expect(refreshMaterializationStatus).not.toHaveBeenCalled();
+
+    const full = await handler({ id: operation.id, detail: 'full' }) as {
+      structuredContent: AccountMirrorCompletionOperation;
+    };
+    expect(full.structuredContent.lastRefresh).toHaveProperty('rowEvidence');
+    expect(refreshMaterializationStatus).toHaveBeenCalledWith(operation.id);
+  });
+
   it('passes full-sweep materialization options to the shared completion service', async () => {
     const operation = accountMirrorCompletionOperation();
     const start = vi.fn(() => operation);

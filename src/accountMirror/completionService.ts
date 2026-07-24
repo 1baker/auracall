@@ -3,14 +3,24 @@ import {
 	type AccountMirrorBackfillCursor,
 	updateAccountMirrorBackfillLedgerCursors,
 } from "./backfillLedger.js";
+import {
+	resolveAccountMirrorCollectorSweepMode,
+	resolveAccountMirrorCollectorTimeoutMs,
+} from "./collectorTimeoutPolicy.js";
 import type { AccountMirrorCompletionStore } from "./completionStore.js";
 import {
 	type AccountMirrorLiveFollowCycleLedger,
 	type AccountMirrorLiveFollowCyclePhase,
 	chooseLiveFollowCyclePhase,
+	collectorFailureIsUnresolved,
 	deriveLiveFollowCycleLedger,
 } from "./liveFollowCycleDecision.js";
 import type { AccountMirrorProvider } from "./politePolicy.js";
+import {
+	type AccountMirrorProviderWorkCoordinator,
+	type AccountMirrorProviderWorkLease,
+	createAccountMirrorProviderWorkCoordinator,
+} from "./providerWorkCoordinator.js";
 import {
 	AccountMirrorRefreshError,
 	type AccountMirrorRefreshResult,
@@ -69,8 +79,12 @@ export interface AccountMirrorCompletionLifecycleEvent {
 		| "live_follow_policy_upgraded"
 		| "live_follow_phase_decision"
 		| "foreground_work_deferred"
+		| "provider_work_waiting"
+		| "provider_work_acquired"
+		| "provider_work_released"
 		| "provider_guard_backoff"
 		| "collector_progress"
+		| "materialization_from_complete_ledger"
 		| "account_library_catchup_queued"
 		| "account_library_catchup_skipped";
 	status: AccountMirrorCompletionOperation["status"];
@@ -100,12 +114,17 @@ export interface AccountMirrorCompletionMaterializationCursor {
 	jobStatus: string;
 	reused: boolean;
 	requestedAt: string;
+	providerWorkSettledAt?: string | null;
 	passCount: number;
 	request: {
 		provider: AccountMirrorProvider;
 		runtimeProfile: string;
 		reconcile: true;
 		refreshSnapshot: boolean;
+		reuseSnapshotAfter?: string | null;
+		reuseSnapshotConversationIds?: string[];
+		providerWorkNotBefore?: string | null;
+		interactionPolicy?: AccountMirrorMaterializationInteractionPolicy | null;
 		assetKinds: AccountMirrorCompletionMaterializationAssetKind[];
 		maxItems: number | null;
 		force: boolean;
@@ -120,10 +139,21 @@ type AccountMirrorHistoryMaterializationCreateRequest = {
 	reconcile: true;
 	assetSource?: "account-library" | null;
 	refreshSnapshot: boolean;
+	reuseSnapshotAfter?: string | null;
+	reuseSnapshotConversationIds?: string[] | null;
+	providerWorkNotBefore?: string | null;
+	interactionPolicy?: AccountMirrorMaterializationInteractionPolicy | null;
 	assetKinds: AccountMirrorCompletionMaterializationAssetKind[];
 	maxItems: number | null;
 	providerWorkTimeoutMs?: number | null;
 	force: boolean;
+};
+
+type AccountMirrorMaterializationInteractionPolicy = {
+	maxInteractionsPerMinute: number;
+	conversationReadCooldownMs: number;
+	pageRefreshCooldownMs: number;
+	renavigationCooldownMs: number;
 };
 
 export interface AccountMirrorCompletionAccountLibraryCursor {
@@ -148,6 +178,7 @@ export interface AccountMirrorCompletionMaterializationOutcome {
 	checksumCount: number;
 	manifestPaths: string[];
 	terminalRouteabilityCounts: Record<string, number>;
+	dispositionCounts?: Record<string, number>;
 	message: string | null;
 }
 
@@ -207,6 +238,60 @@ export interface AccountMirrorCompletionService {
 	prepareForShutdown?(): AccountMirrorCompletionOperation[];
 }
 
+export function projectAccountMirrorCompletionForMonitoring(
+	operation: AccountMirrorCompletionOperation,
+): AccountMirrorCompletionOperation {
+	const latestLifecycleEvent = operation.lifecycleEvents?.at(-1);
+	const materializationCursor = operation.materializationCursor
+		? {
+				...operation.materializationCursor,
+				request: {
+					...operation.materializationCursor.request,
+					reuseSnapshotConversationIds: undefined,
+				},
+			}
+		: undefined;
+	const materializationOutcome = operation.materializationOutcome
+		? {
+				...operation.materializationOutcome,
+				manifestPaths: [],
+				message: operation.materializationOutcome.message?.slice(0, 500) ?? null,
+			}
+		: undefined;
+	return {
+		object: operation.object,
+		id: operation.id,
+		provider: operation.provider,
+		runtimeProfileId: operation.runtimeProfileId,
+		mode: operation.mode,
+		sweepMode: operation.sweepMode,
+		phase: operation.phase,
+		status: operation.status,
+		startedAt: operation.startedAt,
+		completedAt: operation.completedAt,
+		nextAttemptAt: operation.nextAttemptAt,
+		maxPasses: operation.maxPasses,
+		passCount: operation.passCount,
+		lastRefresh: null,
+		materializationPolicy: operation.materializationPolicy,
+		materializationAssetKinds: operation.materializationAssetKinds,
+		materializationMaxItems: operation.materializationMaxItems,
+		materializationRefreshSnapshot: operation.materializationRefreshSnapshot,
+		materializationForce: operation.materializationForce,
+		materializationCursor,
+		materializationOutcome,
+		liveFollowCycle: operation.liveFollowCycle,
+		forceRunUntilPassCount: operation.forceRunUntilPassCount,
+		mirrorCompleteness: null,
+		error: operation.error
+			? { ...operation.error, message: operation.error.message.slice(0, 500) }
+			: null,
+		lifecycleEvents: latestLifecycleEvent
+			? [{ ...latestLifecycleEvent, message: latestLifecycleEvent.message.slice(0, 500) }]
+			: [],
+	};
+}
+
 interface AccountMirrorHistoryMaterializationJobCreateResult {
 	generatedAt?: string;
 	reused?: boolean;
@@ -214,6 +299,8 @@ interface AccountMirrorHistoryMaterializationJobCreateResult {
 	job: {
 		id: string;
 		status: string;
+		completedAt?: string | null;
+		updatedAt?: string | null;
 	};
 }
 
@@ -252,6 +339,7 @@ export function createAccountMirrorCompletionService(input: {
 	generateId?: () => string;
 	sleep?: (ms: number) => Promise<void>;
 	historyMaterializationService?: AccountMirrorHistoryMaterializationService | null;
+	providerWorkCoordinator?: AccountMirrorProviderWorkCoordinator | null;
 	shouldYieldToForegroundWork?: () => AccountMirrorCompletionBackpressure | null;
 	foregroundRetryDelayMs?: number;
 	onPersistError?: (error: unknown, operation: AccountMirrorCompletionOperation) => void;
@@ -263,6 +351,10 @@ export function createAccountMirrorCompletionService(input: {
 	const persistQueues = new Map<string, Promise<void>>();
 	const activeRuns = new Set<string>();
 	const sleepWakeups = new Set<() => void>();
+	const providerWorkCoordinator =
+		input.providerWorkCoordinator ?? createAccountMirrorProviderWorkCoordinator();
+	const providerWorkLeases = new Map<string, AccountMirrorProviderWorkLease>();
+	const providerWorkLeaseWatchers = new Set<string>();
 	const waitForShutdownWake = () =>
 		new Promise<void>((resolve) => {
 			const wake = () => {
@@ -336,11 +428,53 @@ export function createAccountMirrorCompletionService(input: {
 				}
 			}
 			for (;;) {
-				const operation = operations.get(id);
+				let operation = operations.get(id);
 				if (!operation) return;
 				let pass = operation.passCount;
 				if (!(operation.maxPasses === null || pass < operation.maxPasses)) break;
 				if (!shouldContinue(id)) return;
+				if (
+					operation.mode === "live_follow" &&
+					operation.materializationCursor &&
+					(!isTerminalMaterializationStatus(operation.materializationCursor.jobStatus) ||
+						!operation.materializationCursor.providerWorkSettledAt)
+				) {
+					if (!(await acquireProviderWorkLease(id))) return;
+					operation = await hydrateMaterializationStatus(operation);
+					if (!isTerminalMaterializationStatus(operation.materializationCursor?.jobStatus ?? "")) {
+						const nextAttemptAt = new Date(now().getTime() + 30_000).toISOString();
+						update(id, { status: "idle_waiting", nextAttemptAt });
+						if (!(await sleepUntilAttempt(id, nextAttemptAt))) return;
+						update(id, { status: "running", nextAttemptAt: null });
+						continue;
+					}
+				}
+				if (
+					operation.mode === "live_follow" &&
+					isTerminalMaterializationStatus(operation.materializationCursor?.jobStatus ?? "") &&
+					operation.materializationCursor?.providerWorkSettledAt
+				) {
+					releaseProviderWorkLease(id, "completion-owned materialization settled");
+					await input.registry.refreshPersistentState?.({
+						provider: operation.provider,
+						runtimeProfileId: operation.runtimeProfileId,
+					});
+					const cadenceEntry = findTargetEntry(
+						input.registry,
+						operation.provider,
+						operation.runtimeProfileId,
+					);
+					const settledAtMs = Date.parse(operation.materializationCursor.providerWorkSettledAt);
+					const quietWindowMs = Math.max(1_000, cadenceEntry?.limits.minIntervalMs ?? 60_000);
+					const nextCollectorAtMs = settledAtMs + quietWindowMs;
+					if (Number.isFinite(settledAtMs) && nextCollectorAtMs > now().getTime()) {
+						const nextAttemptAt = new Date(nextCollectorAtMs).toISOString();
+						update(id, { status: "idle_waiting", nextAttemptAt });
+						if (!(await sleepUntilAttempt(id, nextAttemptAt))) return;
+						update(id, { status: "running", nextAttemptAt: null });
+						continue;
+					}
+				}
 				if (pass > 0) {
 					await input.registry.refreshPersistentState?.();
 					if (!shouldContinue(id)) return;
@@ -430,21 +564,92 @@ export function createAccountMirrorCompletionService(input: {
 								phaseStatusEntry?.mirrorCompleteness ??
 								operations.get(id)?.mirrorCompleteness ??
 								null,
-							error: null,
+							error: {
+								message: providerGuardBackoff.message,
+								code: providerGuardBackoff.code,
+							},
 						});
 						if (!(await sleepUntilAttempt(id, providerGuardBackoff.eligibleAt))) return;
 						update(id, { status: "running", nextAttemptAt: null });
 						continue;
 					}
-					const collectorTimeoutMs = resolveCompletionCollectorTimeoutMs(refreshOperation);
+					if (shouldQueueMaterializationFromCompleteLedger(refreshOperation, phaseStatusEntry)) {
+						if (!(await acquireProviderWorkLease(id))) return;
+						const nextPassCount = pass + 1;
+						pass = nextPassCount;
+						const shortcutBase =
+							update(id, {
+								passCount: nextPassCount,
+								phase: "steady_follow",
+								mirrorCompleteness: phaseStatusEntry?.mirrorCompleteness ?? null,
+								error: null,
+							}) ?? refreshOperation;
+						await queueCompletionMaterialization(shortcutBase);
+						await input.registry.refreshPersistentState?.({
+							provider: refreshOperation.provider,
+							runtimeProfileId: refreshOperation.runtimeProfileId,
+						});
+						const queued = operations.get(id);
+						const queuedStatusEntry = findTargetEntry(
+							input.registry,
+							refreshOperation.provider,
+							refreshOperation.runtimeProfileId,
+						);
+						if (queued) {
+							update(id, {
+								liveFollowCycle: deriveLiveFollowCycleLedger({
+									operation: queued,
+									statusEntry: queuedStatusEntry,
+									now: now().toISOString(),
+								}),
+							});
+						}
+						appendLifecycleEvent(id, {
+							type: "materialization_from_complete_ledger",
+							status: "idle_waiting",
+							previousStatus: refreshOperation.status,
+							message:
+								"Queued materialization from the durable complete metadata ledger without replaying provider discovery.",
+						});
+						if (
+							refreshOperation.forceRunUntilPassCount !== null &&
+							refreshOperation.forceRunUntilPassCount !== undefined &&
+							nextPassCount >= refreshOperation.forceRunUntilPassCount
+						) {
+							update(id, {
+								status: "idle_waiting",
+								nextAttemptAt: null,
+								forceRunUntilPassCount: null,
+							});
+							return;
+						}
+						const nextAttemptAt = new Date(
+							now().getTime() + Math.max(1_000, phaseStatusEntry?.limits.minIntervalMs ?? 60_000),
+						).toISOString();
+						update(id, { status: "idle_waiting", nextAttemptAt });
+						if (!(await sleepUntilAttempt(id, nextAttemptAt))) return;
+						update(id, { status: "running", nextAttemptAt: null });
+						continue;
+					}
+					const requestedPhase = resolveRequestedCollectorPhase(refreshOperation, phaseStatusEntry);
+					const sweepMode = resolveAccountMirrorCollectorSweepMode(
+						refreshOperation.sweepMode ?? "steady_follow",
+						requestedPhase,
+					);
+					const collectorTimeoutMs = resolveAccountMirrorCollectorTimeoutMs(
+						refreshOperation.provider,
+						sweepMode,
+					);
+					if (!(await acquireProviderWorkLease(id))) return;
 					refresh = await input.refreshService.requestRefresh({
 						provider: refreshOperation.provider,
 						runtimeProfileId: refreshOperation.runtimeProfileId,
-						sweepMode: refreshOperation.sweepMode ?? "steady_follow",
+						sweepMode,
 						materializationPolicy: refreshOperation.materializationPolicy ?? null,
-						requestedPhase: resolveRequestedCollectorPhase(refreshOperation, phaseStatusEntry),
+						requestedPhase,
 						explicitRefresh: true,
 						ignoreMinimumInterval: refreshOperation.mode === "bounded",
+						ignoreFailureBackoff: refreshOperation.mode === "bounded",
 						queueTimeoutMs: 0,
 						onCollectorProgress: (progress) => {
 							appendLifecycleEvent(id, {
@@ -473,8 +678,12 @@ export function createAccountMirrorCompletionService(input: {
 							nextAttemptAt: eligibleAt,
 							mirrorCompleteness:
 								entry?.mirrorCompleteness ?? operations.get(id)?.mirrorCompleteness ?? null,
-							error: null,
+							error: {
+								message: error instanceof Error ? error.message : String(error),
+								code: readErrorCode(error),
+							},
 						});
+						releaseProviderWorkLease(id, "provider refresh deferred by eligibility");
 						if (!(await sleepUntilAttempt(id, eligibleAt))) return;
 						update(id, { status: "running", nextAttemptAt: null });
 						continue;
@@ -512,11 +721,26 @@ export function createAccountMirrorCompletionService(input: {
 						message: `Live-follow phase decision: ${refreshed.liveFollowCycle.currentPhase} (${refreshed.liveFollowCycle.decisionReason}).`,
 					});
 				}
-				if (refreshed && shouldQueueMaterialization(refreshed)) {
-					await queueCompletionMaterialization(refreshed);
+				const queuedCompletionMaterialization = Boolean(
+					refreshed && shouldQueueMaterialization(refreshed),
+				);
+				if (refreshed && queuedCompletionMaterialization) {
+					await queueCompletionMaterialization(refreshed, {
+						reuseSnapshotAfter: refresh.startedAt,
+						reuseSnapshotConversationIds:
+							refresh.metadataEvidence?.detailConversationIdsThisPass ?? [],
+						interactionPolicy: materializationInteractionPolicy(refreshedStatusEntry),
+						providerWorkNotBefore: materializationProviderWorkNotBefore(
+							refresh,
+							refreshedStatusEntry,
+						),
+					});
 				}
 				if (refreshed) {
 					await decideAccountLibraryCatchup(refreshed);
+				}
+				if (!queuedCompletionMaterialization) {
+					releaseProviderWorkLease(id, "collector completed without queued materialization");
 				}
 				if (!shouldContinue(id)) return;
 				if (
@@ -589,6 +813,8 @@ export function createAccountMirrorCompletionService(input: {
 					code: readErrorCode(error),
 				},
 			});
+		} finally {
+			releaseProviderWorkLeaseWhenSafe(id);
 		}
 	};
 
@@ -699,6 +925,7 @@ export function createAccountMirrorCompletionService(input: {
 			if (!operation) return null;
 			if (request.action === "pause") {
 				if (!isActiveOperation(operation)) return operation;
+				cancelProviderWorkWait(operation.id);
 				const updated = update(operation.id, {
 					status: "paused",
 					error: null,
@@ -755,6 +982,7 @@ export function createAccountMirrorCompletionService(input: {
 			}
 			if (request.action === "cancel") {
 				if (isTerminalOperation(operation)) return operation;
+				cancelProviderWorkWait(operation.id);
 				const updated = update(operation.id, {
 					status: "cancelled",
 					completedAt: now().toISOString(),
@@ -827,6 +1055,7 @@ export function createAccountMirrorCompletionService(input: {
 		prepareForShutdown() {
 			const parked: AccountMirrorCompletionOperation[] = [];
 			for (const id of Array.from(activeRuns)) {
+				cancelProviderWorkWait(id);
 				const operation = operations.get(id);
 				if (!operation) continue;
 				if (!isRunnableOperation(operation)) continue;
@@ -875,8 +1104,109 @@ export function createAccountMirrorCompletionService(input: {
 		});
 	}
 
+	async function acquireProviderWorkLease(id: string): Promise<boolean> {
+		const operation = operations.get(id);
+		if (!operation || !shouldContinue(id)) return false;
+		if (providerWorkLeases.has(id)) return true;
+		const lease = await providerWorkCoordinator.acquire({
+			provider: operation.provider,
+			ownerId: id,
+			isEligible: () => shouldContinue(id),
+			onWait: (activeOwnerId) => {
+				appendProviderWorkLifecycleEvent(
+					id,
+					"provider_work_waiting",
+					`Waiting behind ${activeOwnerId ?? "active work"} for the ${operation.provider} provider-work serialization lease.`,
+				);
+			},
+		});
+		if (!lease || !shouldContinue(id)) {
+			lease?.release();
+			return false;
+		}
+		providerWorkLeases.set(id, lease);
+		appendProviderWorkLifecycleEvent(
+			id,
+			"provider_work_acquired",
+			`Acquired ${operation.provider} provider-work serialization lease in FIFO order.`,
+		);
+		return true;
+	}
+
+	function releaseProviderWorkLease(id: string, reason: string): void {
+		const operation = operations.get(id);
+		const lease = providerWorkLeases.get(id);
+		if (!operation || !lease) return;
+		providerWorkLeases.delete(id);
+		appendProviderWorkLifecycleEvent(
+			id,
+			"provider_work_released",
+			`Released ${operation.provider} provider-work serialization lease: ${reason}.`,
+		);
+		lease.release();
+	}
+
+	function cancelProviderWorkWait(id: string): void {
+		providerWorkCoordinator.cancel(id);
+	}
+
+	function releaseProviderWorkLeaseWhenSafe(id: string): void {
+		const operation = operations.get(id);
+		if (!operation || !providerWorkLeases.has(id)) return;
+		if (
+			operation.materializationCursor &&
+			!isTerminalMaterializationStatus(operation.materializationCursor.jobStatus)
+		) {
+			watchProviderWorkLeaseUntilMaterializationSettles(id);
+			return;
+		}
+		releaseProviderWorkLease(id, "completion run ended");
+	}
+
+	function watchProviderWorkLeaseUntilMaterializationSettles(id: string): void {
+		if (providerWorkLeaseWatchers.has(id)) return;
+		providerWorkLeaseWatchers.add(id);
+		void (async () => {
+			try {
+				for (;;) {
+					const operation = operations.get(id);
+					if (!operation?.materializationCursor) break;
+					const hydrated = await hydrateMaterializationStatus(operation);
+					if (isTerminalMaterializationStatus(hydrated.materializationCursor?.jobStatus ?? "")) {
+						break;
+					}
+					await sleepImpl(30_000);
+				}
+			} finally {
+				providerWorkLeaseWatchers.delete(id);
+				releaseProviderWorkLease(id, "completion-owned materialization settled after run exit");
+			}
+		})();
+	}
+
+	function appendProviderWorkLifecycleEvent(
+		id: string,
+		type: "provider_work_waiting" | "provider_work_acquired" | "provider_work_released",
+		message: string,
+	): void {
+		const operation = operations.get(id);
+		if (!operation) return;
+		appendLifecycleEvent(id, {
+			type,
+			status: operation.status,
+			previousStatus: operation.status,
+			message,
+		});
+	}
+
 	async function queueCompletionMaterialization(
 		operation: AccountMirrorCompletionOperation,
+		options: {
+			reuseSnapshotAfter?: string | null;
+			reuseSnapshotConversationIds?: string[];
+			providerWorkNotBefore?: string | null;
+			interactionPolicy?: AccountMirrorMaterializationInteractionPolicy | null;
+		} = {},
 	): Promise<void> {
 		if (!input.historyMaterializationService) {
 			throw new Error("Account mirror full-sweep materialization is not configured.");
@@ -886,18 +1216,30 @@ export function createAccountMirrorCompletionService(input: {
 			runtimeProfile: operation.runtimeProfileId,
 			reconcile: true,
 			refreshSnapshot: operation.materializationRefreshSnapshot === true,
+			...(options.reuseSnapshotAfter ? { reuseSnapshotAfter: options.reuseSnapshotAfter } : {}),
+			...(options.reuseSnapshotConversationIds?.length
+				? { reuseSnapshotConversationIds: options.reuseSnapshotConversationIds }
+				: {}),
+			...(options.providerWorkNotBefore
+				? { providerWorkNotBefore: options.providerWorkNotBefore }
+				: {}),
+			...(options.interactionPolicy ? { interactionPolicy: options.interactionPolicy } : {}),
 			assetKinds: operation.materializationAssetKinds ?? ["all"],
 			maxItems: operation.materializationMaxItems ?? null,
 			force: operation.materializationForce === true,
 		} satisfies AccountMirrorCompletionMaterializationCursor["request"];
 		const result = await input.historyMaterializationService.createJob(request);
 		const requestedAt = result.generatedAt ?? now().toISOString();
+		const providerWorkSettledAt = isTerminalMaterializationStatus(result.job.status)
+			? (result.job.completedAt ?? result.job.updatedAt ?? requestedAt)
+			: null;
 		const updated = update(operation.id, {
 			materializationCursor: {
 				jobId: result.job.id,
 				jobStatus: result.job.status,
 				reused: result.reused === true,
 				requestedAt,
+				providerWorkSettledAt,
 				passCount: operation.passCount,
 				request,
 			},
@@ -924,11 +1266,15 @@ export function createAccountMirrorCompletionService(input: {
 		const outcome = isTerminalMaterializationStatus(job.status)
 			? summarizeMaterializationOutcome(job)
 			: null;
+		const providerWorkSettledAt = isTerminalMaterializationStatus(job.status)
+			? (cursor.providerWorkSettledAt ?? job.completedAt ?? now().toISOString())
+			: null;
 		const updated =
 			update(operation.id, {
 				materializationCursor: {
 					...cursor,
 					jobStatus: job.status || cursor.jobStatus,
+					providerWorkSettledAt,
 				},
 				materializationOutcome: outcome,
 			}) ?? operation;
@@ -961,6 +1307,8 @@ export function createAccountMirrorCompletionService(input: {
 		const statusPatch: Partial<AccountMirrorCompletionOperation> = {
 			mirrorCompleteness: entry.mirrorCompleteness,
 		};
+		const statusFailure = resolveStatusEntryFailure(entry);
+		if (statusFailure) statusPatch.error = statusFailure;
 		if (materialized.mode === "live_follow") {
 			statusPatch.liveFollowCycle = deriveLiveFollowCycleLedger({
 				operation: {
@@ -1261,6 +1609,7 @@ function summarizeMaterializationOutcome(
 				)
 			: [],
 		terminalRouteabilityCounts: countRouteabilityStates(snapshotRefreshes),
+		dispositionCounts: countMaterializationDispositions(entries),
 		message:
 			typeof result?.message === "string" && result.message.trim() ? result.message.trim() : null,
 	};
@@ -1275,6 +1624,30 @@ function countRouteabilityStates(entries: unknown[]): Record<string, number> {
 	for (const entry of entries) {
 		const state = readNestedString(entry, ["routeabilityState"]) ?? "unknown";
 		counts[state] = (counts[state] ?? 0) + 1;
+	}
+	return counts;
+}
+
+function countMaterializationDispositions(entries: unknown[]): Record<string, number> {
+	const counts: Record<string, number> = {};
+	for (const entry of entries) {
+		const status = readNestedString(entry, ["status"]) ?? "unknown";
+		const reason = (readNestedString(entry, ["reason"]) ?? "").toLowerCase();
+		const disposition =
+			status === "materialized"
+				? "materialized"
+				: status === "duplicate" || reason.includes("already_materialized")
+					? "duplicate"
+					: reason.includes("conversation-not-found-or-unavailable")
+						? "terminal"
+						: reason.includes("unsupported") && reason.includes("remote")
+							? "unsupported_remote_media"
+							: reason.includes("missing") && (reason.includes("link") || reason.includes("url"))
+								? "missing_provider_link"
+								: /rate limit|cooldown|timed out|timeout|retry/.test(reason)
+									? "retryable"
+									: status;
+		counts[disposition] = (counts[disposition] ?? 0) + 1;
 	}
 	return counts;
 }
@@ -1295,6 +1668,25 @@ function shouldQueueMaterialization(operation: AccountMirrorCompletionOperation)
 	if (operation.materializationCursor?.passCount === operation.passCount) return false;
 	if (operation.provider === "gemini" && isGeminiShellOnlyRouteChurn(operation)) return false;
 	return true;
+}
+
+function shouldQueueMaterializationFromCompleteLedger(
+	operation: AccountMirrorCompletionOperation,
+	statusEntry: AccountMirrorStatusEntry | null | undefined,
+): boolean {
+	if (operation.mode !== "live_follow" || operation.lastRefresh !== null) return false;
+	if (operation.materializationPolicy === "metadata_only") return false;
+	if (!operation.materializationPolicy && operation.sweepMode !== "full_sweep") return false;
+	if (operation.materializationCursor) return false;
+	if (
+		statusEntry?.mirrorCompleteness.state !== "complete" ||
+		(statusEntry.backfillLedger?.state !== "complete" &&
+			statusEntry.backfillLedger?.nextEligiblePhase !== "complete")
+	) {
+		return false;
+	}
+	const missing = statusEntry.mirrorCompleteness.assetInventory?.remoteKnownMissingLocal;
+	return (missing?.artifacts ?? 0) + (missing?.files ?? 0) + (missing?.media ?? 0) > 0;
 }
 
 function deriveAccountLibraryCooldownUntil(entry: AccountMirrorStatusEntry): string | null {
@@ -1433,6 +1825,34 @@ function formatProviderGuardBackoffMessage(
 	return `${summary} Automation is delayed until ${eligibleAt} before ${entry.provider}/${entry.runtimeProfileId} live follow can continue.`;
 }
 
+function resolveStatusEntryFailure(
+	entry: AccountMirrorStatusEntry,
+): AccountMirrorCompletionOperation["error"] {
+	const progress = entry.metadataEvidence?.collectorProgress;
+	if (progress?.event !== "failed") return null;
+	if (
+		!collectorFailureIsUnresolved(progress.observedAt, entry.lastSuccessAt, entry.backfillLedger)
+	) {
+		return null;
+	}
+	const diagnostics = entry.metadataEvidence?.collectorDiagnostics ?? [];
+	const latestFailure = [...diagnostics]
+		.reverse()
+		.find((diagnostic) => ["failed", "timed_out", "aborted"].includes(diagnostic.event));
+	const detail = latestFailure?.detail?.trim();
+	return {
+		message:
+			detail ||
+			`Account mirror collector failed during ${progress.phase} at ${progress.observedAt}.`,
+		code:
+			latestFailure?.event === "timed_out"
+				? "account_mirror_collector_timeout"
+				: latestFailure?.event === "aborted"
+					? "account_mirror_collector_aborted"
+					: "account_mirror_collector_failed",
+	};
+}
+
 function normalizeRuntimeProfile(value: string | null | undefined): string {
 	const trimmed = String(value ?? "default").trim();
 	return trimmed.length > 0 ? trimmed : "default";
@@ -1509,6 +1929,8 @@ function resolveStatusRequestedCollectorPhase(
 			operation.mirrorCompleteness?.remainingDetailSurfaces?.total ??
 			null,
 		backfillLedger: statusEntry.backfillLedger,
+		latestSuccessfulRefreshAt:
+			statusEntry.lastSuccessAt ?? operation.lastRefresh?.completedAt ?? null,
 	});
 	return liveFollowCyclePhaseToCollectorPhase(decision.phase);
 }
@@ -1631,10 +2053,20 @@ function readErrorCode(error: unknown): string | null {
 
 function readEligibleAt(error: unknown): string | null {
 	if (!(error instanceof AccountMirrorRefreshError)) return null;
-	if (error.code !== "account_mirror_not_eligible") return null;
+	if (
+		error.code !== "account_mirror_not_eligible" &&
+		error.code !== "account_mirror_provider_guard" &&
+		error.code !== "account_mirror_provider_cooldown"
+	) {
+		return null;
+	}
 	const eligibleAt = error.details.eligibleAt;
-	return typeof eligibleAt === "string" && !Number.isNaN(Date.parse(eligibleAt))
-		? eligibleAt
+	if (typeof eligibleAt === "string" && !Number.isNaN(Date.parse(eligibleAt))) return eligibleAt;
+	const providerCooldownUntilMs = error.details.providerCooldownUntilMs;
+	return typeof providerCooldownUntilMs === "number" &&
+		Number.isFinite(providerCooldownUntilMs) &&
+		providerCooldownUntilMs > 0
+		? new Date(providerCooldownUntilMs).toISOString()
 		: null;
 }
 
@@ -1642,14 +2074,32 @@ function resolveDelayMs(eligibleAt: string, now: Date): number {
 	return Math.max(0, Date.parse(eligibleAt) - now.getTime());
 }
 
-function resolveCompletionCollectorTimeoutMs(
-	operation: AccountMirrorCompletionOperation,
-): number | undefined {
-	if (operation.provider === "gemini") {
-		return operation.sweepMode === "full_sweep" ? 900_000 : 300_000;
-	}
-	if (operation.provider === "chatgpt") return 900_000;
-	return undefined;
+function materializationInteractionPolicy(
+	entry: AccountMirrorStatusEntry | null | undefined,
+): AccountMirrorMaterializationInteractionPolicy | null {
+	if (!entry) return null;
+	return {
+		maxInteractionsPerMinute: entry.limits.maxBrowserInteractionsPerMinute,
+		conversationReadCooldownMs: entry.limits.conversationReadCooldownMs,
+		pageRefreshCooldownMs: entry.limits.pageRefreshCooldownMs,
+		renavigationCooldownMs: entry.limits.renavigationCooldownMs,
+	};
+}
+
+function materializationProviderWorkNotBefore(
+	refresh: AccountMirrorRefreshResult,
+	entry: AccountMirrorStatusEntry | null | undefined,
+): string | null {
+	if (!refresh.completedAt || !entry) return null;
+	const completedAtMs = Date.parse(refresh.completedAt);
+	if (!Number.isFinite(completedAtMs)) return null;
+	const quietMs = Math.max(
+		entry.limits.conversationReadCooldownMs,
+		entry.limits.pageRefreshCooldownMs,
+		entry.limits.renavigationCooldownMs,
+	);
+	if (quietMs <= 0) return null;
+	return new Date(completedAtMs + quietMs).toISOString();
 }
 
 function shouldCleanupManagedBrowserAfterRefresh(

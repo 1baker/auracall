@@ -10,6 +10,7 @@ import { resolveConfiguredServiceAccountId } from "../../config/serviceAccountId
 import type { ResolvedUserConfig } from "../../config.js";
 import {
 	appendChatgptMutationRecord,
+	appendChatgptRateLimitDetection,
 	CHATGPT_MUTATION_BUDGET_AUTO_WAIT_MAX_MS,
 	CHATGPT_MUTATION_MAX_WEIGHT,
 	CHATGPT_MUTATION_WINDOW_MS,
@@ -22,6 +23,7 @@ import {
 	getChatgptMutationBudgetWaitMs,
 	getChatgptPostCommitQuietWaitMs,
 	isChatgptRateLimitMessage,
+	pruneChatgptRateLimitDetectionHistory,
 	readChatgptRateLimitGuardState,
 	resolveChatgptRateLimitCooldownMs,
 	writeChatgptRateLimitGuardState,
@@ -52,6 +54,8 @@ import {
 } from "../providers/scrapeTelemetry.js";
 import type {
 	BrowserProviderActiveMediaMaterializationInput,
+	BrowserProviderConversationFileDownloadInput,
+	BrowserProviderConversationFileDownloadResult,
 	BrowserProviderListOptions,
 	ProviderUserIdentity,
 } from "../providers/types.js";
@@ -807,6 +811,7 @@ export abstract class LlmService {
 			const { projectId: _projectId, ...rest } = listOptions;
 			return rest;
 		}
+		if (listOptions.projectId === normalizedProjectId) return listOptions;
 		return {
 			...listOptions,
 			projectId: normalizedProjectId,
@@ -1537,6 +1542,7 @@ export abstract class LlmService {
 			listOptions?: BrowserProviderListOptions;
 			refresh?: boolean;
 			maxItems?: number | null;
+			excludeArtifact?: (artifact: ConversationArtifact) => boolean;
 		},
 	): Promise<{ artifacts: ConversationArtifact[]; files: FileRef[]; manifestPath: string | null }> {
 		if (!this.provider.materializeConversationArtifact) {
@@ -1559,7 +1565,7 @@ export abstract class LlmService {
 				selectMaterializableConversationArtifacts(
 					this.providerId,
 					Array.isArray(context.artifacts) ? context.artifacts : [],
-				),
+				).filter((artifact) => options?.excludeArtifact?.(artifact) !== true),
 				options?.maxItems,
 			);
 			if (listOptions.useProviderSession === true) {
@@ -1791,9 +1797,10 @@ export abstract class LlmService {
 			listOptions?: BrowserProviderListOptions;
 			refresh?: boolean;
 			maxItems?: number | null;
+			excludeFile?: (file: FileRef) => boolean;
 		},
 	): Promise<{ conversationFiles: FileRef[]; files: FileRef[]; manifestPath: string | null }> {
-		if (!this.provider.downloadConversationFile) {
+		if (!this.provider.downloadConversationFile && !this.provider.downloadConversationFiles) {
 			throw new Error(`Conversation file fetch is not supported for ${this.providerId}.`);
 		}
 		const listOptions = this.scopeConversationListOptions(
@@ -1805,11 +1812,10 @@ export abstract class LlmService {
 		try {
 			recordBrowserScrapeProviderAction(listOptions, "llmService.materializeConversationFiles");
 			if (listOptions.useProviderSession === true) {
-				listOptions.interactionGovernor = undefined;
 				listOptions.skipFeatureSignature = true;
 				recordBrowserScrapeProviderAction(
 					listOptions,
-					"llmService.scopedFileListingBypassInteractionGovernor",
+					"llmService.scopedFileListingUsesInitialInteractionGovernor",
 				);
 			}
 			let listedConversationFiles: FileRef[] = [];
@@ -1831,7 +1837,10 @@ export abstract class LlmService {
 				);
 				listedConversationFiles = [];
 			}
-			const conversationFiles = limitItems(listedConversationFiles, options?.maxItems);
+			const conversationFiles = limitItems(
+				listedConversationFiles.filter((file) => options?.excludeFile?.(file) !== true),
+				options?.maxItems,
+			);
 			if (listOptions.useProviderSession === true) {
 				listOptions.interactionGovernor = undefined;
 				listOptions.skipFeatureSignature = true;
@@ -1888,6 +1897,7 @@ export abstract class LlmService {
 			const merged = new Map(existing.items.map((item) => [item.id, item]));
 			const materialized: FileRef[] = [];
 			const manifestEntries: ConversationFileFetchManifestEntry[] = [];
+			const pendingTransfers: BrowserProviderConversationFileDownloadInput[] = [];
 			for (const file of conversationFiles) {
 				recordBrowserScrapeProviderAction(
 					listOptions,
@@ -1932,26 +1942,13 @@ export abstract class LlmService {
 						file.name || file.id || `conversation-file-${materialized.length + 1}`,
 					),
 				);
+				pendingTransfers.push({ file, destPath });
+			}
+			const recordMaterializedTransfer = async (
+				transfer: BrowserProviderConversationFileDownloadInput,
+			): Promise<void> => {
+				const { file, destPath } = transfer;
 				try {
-					await this.withRetry(
-						() => {
-							recordBrowserScrapeProviderAction(
-								listOptions,
-								"llmService.materializeConversationFiles.invokeProvider",
-							);
-							return this.provider.downloadConversationFile?.(
-								conversationId,
-								file.id,
-								destPath,
-								listOptions,
-								file,
-							) as Promise<void>;
-						},
-						{
-							action: "downloadConversationFile",
-							skipPostCommitQuiet: listOptions.useProviderSession === true,
-						},
-					);
 					const stat = await fs.stat(destPath);
 					const checksumSha256 = await calculateSha256(destPath);
 					const materializedFile: FileRef = {
@@ -1984,6 +1981,88 @@ export abstract class LlmService {
 						mimeType: file.mimeType,
 						error: normalizeArtifactFetchError(error),
 					});
+				}
+			};
+			const recordFailedTransfer = (
+				transfer: BrowserProviderConversationFileDownloadInput,
+				error: unknown,
+			): void => {
+				manifestEntries.push({
+					fileId: transfer.file.id,
+					fileName: transfer.file.name,
+					status: "error",
+					remoteUrl: transfer.file.remoteUrl ?? null,
+					mimeType: transfer.file.mimeType,
+					error: normalizeArtifactFetchError(error),
+				});
+			};
+			if (pendingTransfers.length > 0 && this.provider.downloadConversationFiles) {
+				recordBrowserScrapeProviderAction(
+					listOptions,
+					"llmService.materializeConversationFiles.invokeProviderBatch",
+				);
+				let batchResults: BrowserProviderConversationFileDownloadResult[];
+				try {
+					batchResults = await this.withRetry(
+						() =>
+							this.provider.downloadConversationFiles?.(
+								conversationId,
+								pendingTransfers,
+								listOptions,
+							) as Promise<BrowserProviderConversationFileDownloadResult[]>,
+						{
+							action: "downloadConversationFiles",
+							retries: 0,
+							skipPostCommitQuiet: listOptions.useProviderSession === true,
+						},
+					);
+				} catch (error) {
+					batchResults = pendingTransfers.map((transfer) => ({
+						fileId: transfer.file.id,
+						status: "error",
+						error: normalizeArtifactFetchError(error),
+					}));
+				}
+				const outcomes = new Map(batchResults.map((result) => [result.fileId, result]));
+				for (const transfer of pendingTransfers) {
+					const outcome = outcomes.get(transfer.file.id);
+					if (outcome?.status === "materialized") {
+						await recordMaterializedTransfer(transfer);
+						continue;
+					}
+					recordFailedTransfer(
+						transfer,
+						outcome?.status === "error"
+							? outcome.error
+							: `Provider batch returned no result for ${transfer.file.id}.`,
+					);
+				}
+			} else {
+				for (const transfer of pendingTransfers) {
+					try {
+						await this.withRetry(
+							() => {
+								recordBrowserScrapeProviderAction(
+									listOptions,
+									"llmService.materializeConversationFiles.invokeProvider",
+								);
+								return this.provider.downloadConversationFile?.(
+									conversationId,
+									transfer.file.id,
+									transfer.destPath,
+									listOptions,
+									transfer.file,
+								) as Promise<void>;
+							},
+							{
+								action: "downloadConversationFile",
+								skipPostCommitQuiet: listOptions.useProviderSession === true,
+							},
+						);
+						await recordMaterializedTransfer(transfer);
+					} catch (error) {
+						recordFailedTransfer(transfer, error);
+					}
 				}
 			}
 			if (materialized.length > 0) {
@@ -2233,7 +2312,10 @@ export abstract class LlmService {
 					ensurePort: !options?.cacheOnly,
 				});
 		recordBrowserScrapeProviderAction(listOptions, "llmService.getConversationContext");
-		const cacheContext = await this.resolveCacheContext(listOptions);
+		const cacheContext = await this.resolveCacheContext(
+			listOptions,
+			listOptions.accountMirrorInventory === true ? { detect: false, prompt: false } : {},
+		);
 		const refresh = options?.refresh !== false;
 		if (!refresh) {
 			const cached = await this.cacheStore.readConversationContext(cacheContext, conversationId);
@@ -2254,7 +2336,13 @@ export abstract class LlmService {
 						options?.projectId,
 						listOptions,
 					) as Promise<unknown>,
-				{ action: "readConversationContext" },
+				{
+					action: "readConversationContext",
+					shouldRetry:
+						listOptions.accountMirrorInventory === true
+							? (error) => !isRateLimitBlockingSurfaceError(error)
+							: undefined,
+				},
 			);
 			let normalized = this.normalizeConversationContext(context, conversationId);
 			if (typeof options?.projectId === "string" && options.projectId.trim().length > 0) {
@@ -3001,6 +3089,7 @@ export abstract class LlmService {
 			retries?: number;
 			skipPostCommitQuiet?: boolean;
 			beforeRetry?: (error: unknown, attempt: number) => Promise<void> | void;
+			shouldRetry?: (error: unknown) => boolean;
 		} = {
 			action: "operation",
 		},
@@ -3015,8 +3104,9 @@ export abstract class LlmService {
 				await this.noteProviderGuardSuccess(options.action);
 				return result;
 			} catch (error) {
+				const shouldRetry = options.shouldRetry?.(error) ?? true;
 				const nextError = await this.handleProviderGuardFailure(options.action, error);
-				if (attempt >= retries || !this.isRetryableError(nextError)) {
+				if (!shouldRetry || attempt >= retries || !this.isRetryableError(nextError)) {
 					throw nextError;
 				}
 				await options.beforeRetry?.(nextError, attempt);
@@ -3230,6 +3320,10 @@ export abstract class LlmService {
 			provider: "chatgpt",
 			profile: this.resolveActiveProfileName() ?? "default",
 			updatedAt: now,
+			recentRateLimitDetectionAts: pruneChatgptRateLimitDetectionHistory(
+				currentChatgpt?.recentRateLimitDetectionAts,
+				now,
+			),
 			lastMutationAt: this.isMutatingProviderAction(action) ? now : currentChatgpt?.lastMutationAt,
 			recentMutations: this.isMutatingProviderAction(action)
 				? appendChatgptMutationRecord(
@@ -3306,6 +3400,10 @@ export abstract class LlmService {
 			provider: "chatgpt",
 			profile: this.resolveActiveProfileName() ?? "default",
 			updatedAt: now,
+			recentRateLimitDetectionAts: appendChatgptRateLimitDetection(
+				currentChatgpt?.recentRateLimitDetectionAts,
+				now,
+			),
 			cooldownDetectedAt: now,
 			cooldownUntil: chatgptCooldownUntil,
 			cooldownReason: reason ?? undefined,
@@ -3533,6 +3631,15 @@ export abstract class LlmService {
 function shouldAttachResolvedServiceTab(overrides: BrowserProviderListOptions): boolean {
 	if (overrides.tabTargetId) return true;
 	return overrides.tabLifecycle !== "dispose-new";
+}
+
+function isRateLimitBlockingSurfaceError(error: unknown): boolean {
+	if (!error || typeof error !== "object" || !("blockingSurface" in error)) {
+		return false;
+	}
+	const blockingSurface = (error as { blockingSurface?: { kind?: unknown } | null })
+		.blockingSurface;
+	return blockingSurface?.kind === "rate-limit";
 }
 
 export const shouldAttachResolvedServiceTabForTest = shouldAttachResolvedServiceTab;

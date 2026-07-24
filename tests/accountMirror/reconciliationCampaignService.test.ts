@@ -121,7 +121,7 @@ describe('account mirror reconciliation campaign service', () => {
       },
     });
     expect(campaign.targets.find((target) => target.key === 'chatgpt:default')).toMatchObject({
-      tenantKey: 'service-account:chatgpt:operator@example.com',
+      tenantKey: 'service-account:chatgpt:operator@example.com|structure=business',
       bindingKey: 'binding:chatgpt:default:default',
       state: 'eligible',
       selected: true,
