@@ -1,5 +1,609 @@
 # RUNBOOK
 
+## Turn 357 | 2026-07-24
+
+- Active plan:
+  `docs/dev/plans/0168-2026-07-24-chatgpt-developer-app-lifecycle.md`
+- Scope transition: Plan 0167 intentionally excluded app installation,
+  connection, OAuth, and removal. The operator requested that lifecycle now be
+  planned and executed, so Plan 0168 is a bounded successor rather than a
+  silent rewrite of 0167.
+- Live authority: the SoyLei `wsl-chrome-3` managed browser profile is
+  authenticated as `eric.cochran@soylei.com`, Developer mode is enabled, and
+  `Corel33t` is installed as a development app using OAuth. Its current UX
+  exposes Manage, Refresh, Try in chat, and Uninstall; the global Plugins
+  surface exposes Create app.
+- Safety: implementation validation will inventory and select-test Corel33t
+  read-only. Create, refresh, OAuth continuation, prompt submission, permission
+  changes, and uninstall remain exact-target confirmed mutations.
+- Delegation receipt: `not_spawned`; the active runtime policy forbids
+  subagents and the dirty ChatGPT adapter/CLI worktree creates unsafe overlap.
+- Source result: `auracall apps` now exposes `list`, `create`, `refresh`,
+  `test`, and `uninstall`. Browser mutations require exact live account
+  matching and `--yes`; app resolution fails closed on duplicate exact names,
+  and OAuth returns an `awaiting-human` continuation.
+- Live proof: source CLI inventory completed with both installed and linked
+  network signals. It reported Developer mode `true` and Corel33t as
+  `USER`/`PRIVATE`, enabled, development-scoped, version `1.0.0`, and OAuth
+  `ACTIVE`. The select-only test matched the canonical app ID, submitted no
+  prompt, and direct CDP readback showed empty composer text and zero app pills.
+- Validation: 13 focused tests, typecheck, production build, scoped Biome lint,
+  plan-library audit, and `git diff --check` pass.
+- Rollout: tarball shasum `2adcf28e6504ecf80e929edb38a8594698d43ce3`
+  first passed in an isolated validation prefix, then the same built package
+  was installed to `~/.auracall/user-runtime` at `2026-07-24T20:45:42.043Z`.
+  The API service was not restarted; PID `1676586` remained active from its
+  09:35:16 CDT start.
+- Installed readback: the default `auracall` wrapper exposes all five app
+  commands. Installed `apps list` again reported the exact SoyLei account,
+  Developer mode enabled, and Corel33t enabled with OAuth `ACTIVE` and
+  development scope. No rate-limit warning appeared.
+
+## Turn 356 | 2026-07-24
+
+- Active plan:
+  `docs/dev/plans/0167-2026-07-24-chatgpt-composer-apps-reinspection.md`
+- Implementation result: current Chat/Work app selection uses trusted CDP
+  pointer input and verifies the inline `ecosystemMention` pill. Capability
+  discovery now separates the installed plugin endpoint, link/auth state, and
+  current composer selectability; legacy body-token matches remain unknown.
+- Live proof: source-built Google Drive selection succeeded without submitting
+  a prompt. Earlier bounded GitHub request evidence showed the selected
+  `plugin:connector_...` identifier in message `system_hints` and custom symbol
+  offsets. Installed inventory returned 15 apps; GitHub was active, Adobe
+  Acrobat required reauthentication, and Atlassian Rovo required connection.
+- Validation: TypeScript, production build, focused tests `136/136`,
+  CLI/HTTP/MCP parity `9/9`, and scoped lint pass. Two existing naming warnings
+  remain.
+- Installed proof: user-runtime installation completed, installed capability
+  discovery returned 17 app rows with 15 installed apps, and installed GitHub
+  selection produced the expected `ecosystemMention` plugin pill. Reload
+  cleared the unsent selection; no prompt or new rate-limit detection occurred.
+- Memory repair: stored runtime-run reads now use bounded concurrency and
+  startup/background recovery requests only planned/running runs. The API is
+  active on port `18095` with `NODE_OPTIONS=--max-old-space-size=1536`.
+- Operational gate: restoring all four persisted live-follow operations drove
+  Node RSS to roughly 5.4 GiB despite provider FIFO selecting only
+  `wsl-chrome-2` for physical work. The scheduler and all four completions were
+  immediately paused. A single-profile forced-pass observation peaked near
+  2.2 GiB, returned near 1.5 GiB, and produced no rate-limit detection, but did
+  not finish before the two-minute diagnostic boundary. Keep routine
+  live-follow paused until multi-operation resume memory fan-out is repaired.
+- Delegation receipt: `not_spawned`; runtime policy forbids subagents and the
+  authenticated browser plus shared composer/manifest surfaces form one
+  integration boundary.
+
+## Turn 355 | 2026-07-23
+
+- Active plan:
+  `docs/dev/plans/0166-2026-07-23-live-follow-provider-fair-serialization.md`
+- Root cause: unbounded completion loops launch independently, and the existing
+  browser dispatcher serializes one managed browser profile rather than one
+  provider. Different ChatGPT profiles can therefore perform collector or
+  materialization work concurrently.
+- Repair target: a FIFO provider lease spanning collector through terminal
+  completion-owned materialization, released before the subsequent quiet
+  window so another tenant can rotate in.
+- Installed result: API PID `3259141` shares one provider coordinator between
+  scheduler and completion services. Scheduler and all four ChatGPT completion
+  loops are resumed; the initial scheduler owner made Business, Consulting,
+  SoyLei, and Personal wait on the same FIFO rather than opening concurrent
+  provider work.
+- Live receipt: the scheduler released, Business returned to cadence waiting,
+  and Consulting became the only active managed ChatGPT browser while SoyLei
+  and Personal remained queued. Guard counts stayed `0,0,3,0`; the three
+  SoyLei observations are unchanged historical evidence.
+- Follow-up: scheduler diagnostics recorded two redundant same-route
+  navigation/reload pairs in the initial owner pass. Remove that bounded
+  per-owner churn before relaxing any interaction/rate settings.
+- Safety posture: leave the routine service active, but immediately pause the
+  scheduler and all ChatGPT completions on any new guard observation.
+
+## Turn 354 | 2026-07-23
+
+- Active plan:
+  `docs/dev/plans/0165-2026-07-23-live-follow-settlement-cadence-and-business-tenants.md`
+- Root cause:
+  - completion hydrated terminal materialization and immediately fell through
+    to the next collector, so long provider work consumed the nominal cadence;
+  - Account Mirror discarded configured ChatGPT Business/workspace qualifiers,
+    causing same-email Personal and Business profiles to share one cache key.
+- Repair:
+  - persist `providerWorkSettledAt` on the materialization cursor and wait
+    `limits.minIntervalMs` from that boundary before another collector;
+  - use the qualified configured service-account ID for ChatGPT
+    Business/workspace targets while retaining Personal email-only keys;
+  - compare qualified keys against the provider-detected email without
+    weakening mismatches to a different email.
+- Safety posture: scheduler remains durably paused during installation and
+  installed readback. Resume tenants only after guard clearance, stage them to
+  avoid burst traffic, and pause all work on any new warning.
+
+## Turn 353 | 2026-07-23
+
+- Active plan:
+  `docs/dev/plans/0164-2026-07-23-chatgpt-single-session-file-materialization.md`
+- Goal: replace per-file ChatGPT browser attachment/recovery with one retained
+  conversation session that sequentially materializes all selected files.
+- Baseline: SIP-1133 selected 12 files from one conversation, recorded 14 tab
+  attachment starts and 12 failed transfers, then incorrectly ended skipped.
+- Safety posture: implementation and provider-free validation do not clear the
+  existing guard or resume scheduler/completion. Any eventual live proof is one
+  bounded batch at a quiet boundary and stops on the first rate warning.
+- Installed result:
+  - one optional provider batch now replaces the 12 singular transfer calls;
+    ChatGPT retains one client/readiness boundary and writes files
+    sequentially with UI-first request capture;
+  - matching signed anchor/window navigation is suppressed and fetched in-page,
+    including the preview viewer's exact Download control, so a file cannot
+    open another tab and transport telemetry reports `anchor|fetch|direct`;
+  - attach, retain, and reuse notes carry one-way target fingerprints so the
+    live receipt can prove one physical target without storing raw target IDs;
+  - all-error manifests now fail the durable job, and batch guard enforcement
+    runs once with retries disabled;
+  - 213 adjacent tests, typecheck, build, lint, plan audit, and diff check pass;
+  - final repaired runtime PID `1028183` is active with 11 tasks, scheduler and
+    completion paused,
+    no CDP 45015 listener, and the existing guard unchanged.
+- Monitoring caveat: a compact `/status` request still timed out at 10 seconds
+  and drove memory to 2.76 GiB current / 4.66 GiB peak. The paused service was
+  restarted to about 1.12 GiB; use bounded persisted guard/control/completion
+  records for the live-proof watch instead of broad status.
+- Live proof gate: the 07:58:10 CDT warning keeps the guard active through
+  13:58:10 CDT. Wake `wake_20260723_133643_eace` is pending for 14:00 CDT and
+  may run only one 12-file batch after a fresh clear-boundary check.
+- Git integration gate: local `main` is two commits ahead of `origin/main` and
+  the worktree contains 64 tracked modifications plus 15 untracked paths
+  spanning Plans 0154-0164. Plan 0164 overlaps predecessor-plan files, so defer
+  dependency-order commit reconciliation until the terminal live receipt;
+  neither a selective non-reproducible commit nor one mixed whole-tree commit
+  is acceptable.
+
+## Turn 352 | 2026-07-22
+
+- Active plan:
+  `docs/dev/plans/0163-2026-07-22-chatgpt-hard-stop-retry-propagation.md`
+- Goal: prevent `LlmService.withRetry` from replaying a distinguished ChatGPT
+  rate-limit blocking-surface error after the adapter interrupt throws.
+- Safety posture: completion and scheduler remain paused; validation is fully
+  provider-free and does not clear the active cooldown.
+- Result:
+  - deterministic red proof showed the generic retry layer invoked one
+    distinguished rate-limit context operation twice;
+  - account-mirror context reads now stop generic retry for the adapter's
+    rate-limit blocking surface while ordinary transient retries remain green;
+  - 185 adjacent tests, TypeScript, production build, scoped Biome, full lint
+    with 203 existing warnings, and diff checks pass;
+  - repaired runtime PID `4037776` is active with 11 tasks, scheduler and
+    successor completion paused at pass 5, prior cooldown intact, and no
+    managed ChatGPT browser or CDP 45015 listener.
+
+## Turn 351 | 2026-07-22
+
+- Goal: check the explicitly overridden successor live-follow completion and
+  contain immediately if a new ChatGPT warning appeared.
+- Result:
+  - successor `acctmirror_completion_af008557-47af-4366-85f1-4f3d44e49bbc`
+    advanced from pass 1 to pass 5 before a new provider warning;
+  - pass 5 completed four detail reads and materialization job
+    `hmj_e693935e631c4f969bfd35b023a74d9f` skipped seven terminal items with
+    zero materialized and zero failed;
+  - the next attempt read one conversation successfully, then spent 237
+    seconds in the second context read while guard detections were recorded at
+    10:00:45 and 10:02:34 CDT; the collector finally failed with one scanned
+    conversation and established cooldown through 16:02:34 CDT;
+  - this disproves the intended single-observation adapter stop: the new
+    readiness interrupt reduced the old churn but the context call still
+    completed with null instead of propagating the first hard-stop;
+  - completion and scheduler are now paused, the API was restarted, managed
+    Chrome/CDP 45015 is closed, and service memory recovered from 6.46 GiB
+    current / 7.52 GiB peak to about 1.24 GiB current.
+
+## Turn 350 | 2026-07-22
+
+- Goal: resume continuous ChatGPT live follow after Plan 0162 installation and
+  pause immediately if a provider guard is present.
+- Safety stop:
+  - `wsl-chrome-3` has two newer rate-limit observations at 04:28:36 and
+    04:30:32 CDT from direct refresh request
+    `acctmirror_66b04d0b-628c-4b42-8100-3b92ff48b8fa`;
+  - the six-hour cooldown remains active through 10:30:32 CDT, so neither the
+    blocked completion nor scheduler was resumed;
+  - scheduler control remains durably paused and the API service remains
+    active.
+- Continuation: durable wake `wake_20260722_122235_6a5c` is pending for 10:31
+  CDT under `~/.local/state/codex-wake/auracall-wakes`. It must re-check the
+  guard first, resume only if no newer detection exists, watch compact status
+  and memory, and pause immediately on any new warning.
+- Operator override result:
+  - the delayed wake was cancelled after explicit authorization to try now;
+  - the built-in guard-clear control timed out, did not clear either guard,
+    and its full `/status` response drove API memory to 6.3 GiB, so the
+    scheduler was re-paused and the service restarted before provider work;
+  - AuraCall persistence helpers then cleared both the account-mirror registry
+    guard and adapter cooldown while retaining all nine detection timestamps;
+  - terminal completion `acctmirror_completion_cb75103d-0b8c-400f-ab76-209421821ec3`
+    correctly refused resume, so successor unbounded live-follow completion
+    `acctmirror_completion_af008557-47af-4366-85f1-4f3d44e49bbc` was created
+    with the same full-sweep/full-missing-assets policy;
+  - pass 1 completed four detail reads without a new warning, then startup
+    recovery adopted the active completion after a restart; pass 2 started
+    automatically at its minimum-interval boundary;
+  - the broad scheduler remains paused. The successor completion is running,
+    guard detection count remains nine with no cooldown, and post-restart API
+    memory is about 1.45 GiB with a 2.10 GiB peak.
+
+## Turn 349 | 2026-07-22
+
+- Closed plan:
+  `docs/dev/plans/0162-2026-07-22-live-follow-status-memory-and-rate-stop.md`
+- Goal: replace unsafe full completion polling with bounded monitoring and
+  stop ChatGPT account-mirror provider work at the first visible rate-limit
+  observation.
+- Safety posture: the durable scheduler remains paused; validation is
+  provider-free and must not clear the persisted guard or open a browser.
+- Result:
+  - completion and history-materialization monitoring now default to bounded
+    summary projections; explicit `detail=full` preserves diagnostics and
+    compact status assembly performs no materialization refresh;
+  - ChatGPT account-mirror readiness waits run a throttled visible-warning
+    interrupt, propagating the existing hard-stop before reload/reopen/retry;
+  - 230 focused and adjacent tests passed, along with typecheck, build, lint,
+    diff check, and plan audit;
+  - installed provider-free proof completed 20 compact read pairs with the
+    scheduler still paused, no AuraCall browser/CDP 45015 listener, fixed PID
+    and restart count, and bounded current memory near 1.14 GiB.
+
+## Turn 348 | 2026-07-21
+
+- Goal: check AuraCall after WSL exhausted memory, contain provider work, and
+  attribute the service, rate-limit, and host-memory evidence.
+- Result:
+  - post-reboot API PID `1524` is active with zero restarts, 11 tasks, local
+    port 18095 bound, and zero service-cgroup OOM events;
+  - no managed ChatGPT browser or CDP 45015 listener remains;
+  - the completion is blocked at pass 31 after a failed detail collector, and
+    the durable scheduler is now explicitly paused;
+  - five rate-limit detections are persisted: four observations during one
+    242.7-second context read and one later target-census observation of the
+    still-visible warning; cooldown runs through 18:26:39 CDT;
+  - pass 31's prior materialization job
+    `hmj_d3874b18f5734ba1907b6788a0424954` skipped seven terminal families with
+    zero downloads or failures, so it produced no materialization progress;
+  - pre-reboot WSL evidence shows AuraCall at roughly 5 GiB including Chrome,
+    but the user app slice near 77 GiB and host `vmmemWSL` near 102-107 GB;
+    no Linux or AuraCall cgroup OOM was recorded;
+  - full completion/materialization status reads reproduced substantial Node
+    heap growth after reboot, reaching 3.3 GiB current / 6.2 GiB peak without
+    browser work; those endpoints must not be used as polling surfaces;
+  - scheduled wake `wake_20260721_140040_8130` failed after reboot because its
+    captured tmux pane no longer existed, so it supplied no containment.
+
+## Turn 347 | 2026-07-21
+
+- Goal: resume normal continuous ChatGPT live follow for
+  `eric.cochran@soylei.com`, watch real progress, and pause for immediate
+  root-cause analysis if a rate-limit warning appears.
+- Result so far:
+  - existing completion
+    `acctmirror_completion_cb75103d-0b8c-400f-ab76-209421821ec3` and the
+    durable scheduler are resumed; this is not a one-pass control action;
+  - pass 27 completed four detail reads with `5/8` provider interactions and
+    no guard, then job `hmj_0905684c3aa64b728957339a0852ad29` skipped seven
+    already-terminal families with zero failures/checksums/download replay;
+  - pass 28 started automatically at `2026-07-21T13:58:13.477Z`;
+  - rate-limit detection history remains empty;
+  - avoid broad `/status` watch polling because its large hydration response
+    raised Node memory pressure; use target-specific completion/job reads and
+    the persisted provider guard;
+  - wake `wake_20260721_140040_8130` is pending under
+    `~/.local/state/codex-wake/auracall-wakes` for the next guard, yield,
+    cleanup, and memory-recovery inspection.
+
+## Turn 346 | 2026-07-20
+
+- Closed plan:
+  `docs/dev/plans/0161-2026-07-20-live-follow-exact-id-materialization-idempotency.md`
+- Goal: obtain the second consecutive completion-owned live proof and close
+  the cross-job replay repair.
+- Result:
+  - pass 26 collector work completed safely with three detail chats, `4/8`
+    active interactions, 32 CDP calls, and no yield/error/provider guard;
+  - job `hmj_9c8b80ccc4544e149d5f93af566b8f2a` completed `skipped` with
+    `materialized=0`, `checksumCount=0`, and zero download attempts;
+  - terminal filtering left zero eligible artifact/file candidates and no
+    prior checksum or archive item was republished;
+  - one bounded visible-file timeout produced a retryable row without a guard
+    or transfer;
+  - passes 25 and 26 are consecutive clean completion-owned jobs, satisfying
+    Plan 0161's final criterion;
+  - scheduler/completion are paused at pass 26, active jobs are zero, guard is
+    absent, browser/CDP cleanup completed, and API tasks returned to 11.
+
+## Turn 345 | 2026-07-20
+
+- Active plan:
+  `docs/dev/plans/0161-2026-07-20-live-follow-exact-id-materialization-idempotency.md`
+- Goal: obtain the first completion-owned live proof of the corrected broad
+  terminal-family exclusion path.
+- Result:
+  - pass 25 collector work completed safely with two detail chats, `3/8`
+    active interactions, and no yield/error/provider guard;
+  - job `hmj_a3a02185a5274f49855d1a1c4af6b398` retained its internal reuse,
+    quiet-boundary, and interaction-policy fields;
+  - the job completed `skipped` with `materialized=0`, zero download attempts,
+    and no checksum/archive replay; telemetry saw zero eligible artifact and
+    file candidates after exclusions;
+  - one bounded visible-file read timed out after 10 seconds without a provider
+    guard or transfer failure;
+  - scheduler/completion remain paused at pass 25, active jobs are zero, guard
+    state is absent, browser/CDP cleanup completed, and API tasks returned to
+    11;
+  - this is the first clean post-repair job; one more consecutive
+    completion-owned proof remains before Plan 0161 can close.
+
+## Turn 344 | 2026-07-20
+
+- Active plan:
+  `docs/dev/plans/0161-2026-07-20-live-follow-exact-id-materialization-idempotency.md`
+- Goal: run one bounded pass and prove the pass-23 replay repair.
+- Result:
+  - pass 24 collector work was safe: three detail chats, 27 passive signals,
+    `4/8` active interactions, 34 CDP calls, and no error/yield/guard;
+  - its child request exposed the real routing seam: `conversationIds=[]` with
+    three `reuseSnapshotConversationIds`, so completion uses broad candidates;
+  - job `hmj_a67a37d3ae8540ffa855235635beeed0` was interrupted 49 seconds before
+    its provider boundary, preventing a knowingly unprotected replay;
+  - the broad-candidate regression failed with an empty exclusion list, then
+    passed after forwarding the full scoped terminal-family set; the touched
+    surface passes `100/100` plus TypeScript/build;
+  - a public-endpoint retry stripped internal pacing/reuse fields, entered
+    running before cancellation, and was immediately interrupted with no
+    scrape telemetry or result;
+  - installed API PID `38319` is active at 11 tasks, scheduler/completion are
+    paused at pass 24, active jobs are zero, guard state is clear, and no
+    managed browser/CDP listener exists.
+
+## Turn 343 | 2026-07-20
+
+- Active plan:
+  `docs/dev/plans/0161-2026-07-20-live-follow-exact-id-materialization-idempotency.md`
+- Goal: validate pass-22 durability repair with one bounded quiet-interval pass
+  and eliminate any remaining replay without changing provider pacing.
+- Result:
+  - pass 23 collector behavior stayed safe at four reused chats, `5/8` logical
+    interactions, 45 CDP calls, and no provider guard;
+  - job `hmj_763186250d4a481c8dccbf52b4b3b946` replayed five prior families because
+    no-manifest rows reduced terminal exclusions to
+    an empty intersection before provider discovery;
+  - a provider-free regression failed with the same empty exclusion list, then
+    initially passed after exact-ID reconciliation forwarded the full scoped
+    terminal-family set;
+  - history-materialization and provider-file suites pass `100/100`, TypeScript
+    and production build pass, and full lint retains 203 known warnings;
+  - installed API PID `57255` is active at 11 tasks, completion is paused at
+    pass 23, the provider guard is clear, and no managed browser/CDP listener
+    exists;
+  - no second live pass was run; pacing remains `8/min` with 120-second
+    cooldowns pending a later quiet-interval acceptance.
+
+## Turn 342 | 2026-07-20
+
+- Active plan:
+  `docs/dev/plans/0161-2026-07-20-live-follow-exact-id-materialization-idempotency.md`
+- Goal: validate the mixed-family repair with one bounded pass, attribute any
+  replay from live receipts, and repair it without relaxing pacing.
+- Result so far:
+  - pass 22 stayed guard-clear with four detail chats, `5/8` logical
+    interactions, and 43 CDP calls, but materialization
+    `hmj_81ca38cbd6194f7eb3a6a5451a45a81c` replayed four existing families;
+  - live catalog/archive reads disproved target omission and the 500-item
+    archive-limit hypothesis;
+  - download families now canonicalize to filename across catalog, archive,
+    and prior-job evidence;
+  - successful/duplicate prior-job entries now suppress replay only while the
+    recorded local output still exists, preserving repair of deleted files;
+  - red regressions are green and the touched surface passes `157/157` with
+    TypeScript, production build, scoped Biome, full lint retaining 203 known
+    warnings, diff check, and a zero-error plan audit;
+  - installed API PID `58127` is active at 11 tasks with the scheduler and
+    completion paused at pass 22, zero active jobs, clear guard history, and no
+    managed browser or CDP listener;
+  - scheduler and completion remain paused at pass 22, and pacing remains
+    `8/min` with 120-second cooldowns.
+
+## Turn 341 | 2026-07-20
+
+- Repair plan:
+  `docs/dev/plans/0161-2026-07-20-live-follow-exact-id-materialization-idempotency.md`
+- Goal: eliminate the pass-21 cross-job replay without increasing live traffic
+  or weakening rate-limit controls.
+- Result so far:
+  - deterministic tests reproduced a mixed conversation where archive evidence
+    admitted the conversation for one pending family but did not prevent the
+    already-terminal family from consuming the first transfer slot;
+  - reconciliation now carries candidate-specific terminal family signatures
+    through provider-work context;
+  - artifact and file materializers apply those exclusions before `maxItems`
+    and before provider transfer, preserving pending-family budget;
+  - runtime, LLM materialization, and completion tests pass `152/152` alongside
+    TypeScript, production build, scoped Biome, full lint with the existing 203
+    warnings, diff check, and a zero-error plan audit;
+  - the repaired runtime is installed as API PID `8318`; installed code contains
+    the pre-budget artifact/file exclusion path;
+  - scheduler and completion remain paused at pass 21, the provider guard is
+    clear, active materialization jobs are zero, and the stale managed Chrome
+    from pass 21 was closed before install; no live browser request was made.
+
+## Turn 340 | 2026-07-20
+
+- Reopened plan:
+  `docs/dev/plans/0161-2026-07-20-live-follow-exact-id-materialization-idempotency.md`
+- Goal: run a second bounded guard-clear pass before changing pacing.
+- Result:
+  - preflight had roughly two hours of quiet time, scheduler/completion paused
+    at pass 20, zero active jobs, no managed browser, and no rate-limit history;
+  - pass 21 completed three detail chats with `4/8` logical interactions, four
+    target lifecycles, 36 CDP calls, no yield, error, or provider guard;
+  - materialization `hmj_28e768323dc04d8589860fcffb6ec821`
+    honored the two-minute handoff and launched no new managed browser, but
+    repeated three pass-20 checksums under the same archive IDs for refreshed
+    conversation `6a5d4332-f814-83ea-8b12-e9dfbdbf6571`;
+  - one previously failed PDF produced genuinely new checksum `9023eb78...`,
+    the paired sandbox/`download-dom` alias still collapsed correctly, and a
+    different PDF retained a terminal tile-missing/403 failure;
+  - this disproves cross-job idempotency despite clean provider pacing, so rate
+    settings remain `8/min` with 120-second cooldowns and Plan 0161 is open;
+  - completion/scheduler are paused at pass 21, active jobs and guard history
+    are clear, browser/CDP are closed, and the service is active at 11 tasks.
+
+## Turn 339 | 2026-07-20
+
+- Acceptance plan:
+  `docs/dev/plans/0161-2026-07-20-live-follow-exact-id-materialization-idempotency.md`
+- Goal: run one bounded post-repair `chatgpt/wsl-chrome-3` pass and verify
+  terminal-family suppression, new-asset yield, provider guard state, and
+  cleanup without enabling unattended cadence.
+- Result:
+  - preflight found scheduler and completion paused at pass 19, no active job
+    or managed browser, and an empty persisted rate-limit detection history;
+  - pass 20 completed two detail chats with `6/8` logical interactions, 39 CDP
+    calls, no yield, no failure, and no provider guard;
+  - materialization job `hmj_26d34691f4af41afbada26934c24d60a`
+    honored the two-minute handoff boundary, archived four checksum-backed
+    assets, classified one `download-dom` row as a duplicate alias of its
+    sandbox asset, skipped one unmatched media row, and retained one clean
+    provider-file 403/tile-missing failure;
+  - no earlier materialization job contains the four new checksums, so this was
+    new yield rather than the pass-18/pass-19 replay;
+  - completion and scheduler are re-paused at pass 20, active jobs are zero,
+    the rate-limit detection history remains empty, the managed browser and
+    CDP 45015 listener are closed, and the service is active at 11 tasks.
+
+## Turn 338 | 2026-07-20
+
+- Completed plan:
+  `docs/dev/plans/0161-2026-07-20-live-follow-exact-id-materialization-idempotency.md`
+- Goal: stop live-follow jobs from repeating already terminal asset families
+  across catalog/archive aliases without weakening selected-row fallback or
+  force semantics.
+- Result:
+  - deterministic public service-seam tests reproduced both the exact-ID
+    suppression asymmetry and the live sandbox-label/download-dom/archive
+    filename mismatch;
+  - live receipt inspection proved completion uses
+    `reuseSnapshotConversationIds`; the repeated PDF came from the general
+    backlog candidate branch, correcting the initial diagnosis from Turn 337;
+  - reconciliation now builds one terminal asset-family signature set and
+    applies it to selected-ID and general candidate selection;
+  - download signatures now prefer decoded URI filenames and canonicalize
+    `download-dom` with archived source `download`;
+  - the first installed direct `conversationId` smoke exposed a remaining
+    singular-request bypass and was stopped by service restart; the repaired
+    direct path now runs the same terminal-family preflight;
+  - `115/115` focused tests, TypeScript, build, scoped Biome, full lint, diff
+    check, and plan audit pass;
+  - installed job `hmj_ea1faa9513f64594b393c4803eaa8425` skipped the known
+    duplicate without opening the managed browser. Scheduler and completion
+    remain paused at pass 19 with zero active materialization jobs.
+
+## Turn 337 | 2026-07-20
+
+- Acceptance plan:
+  `docs/dev/plans/0160-2026-07-19-live-follow-cross-phase-churn-and-pacing.md`
+- Goal: run one repeat bounded `chatgpt/wsl-chrome-3` pass after an observed
+  quiet interval, then distinguish remaining provider churn from conservative
+  pacing.
+- Result:
+  - pass 19 scanned three exact conversation IDs with `4/8` logical
+    interactions, four target lifecycles, 34 CDP calls, no yield, no failure,
+    and no provider guard;
+  - materialization job `hmj_09d75f08428c4173b5d407547937eeaa`
+    observed the two-minute quiet boundary and succeeded with two assets, six
+    skips, and zero failures;
+  - the two materialized routes were the same checksum-backed PDF already
+    materialized by pass 18, exposing a separate idempotency gap rather than
+    excess browser target churn;
+  - initial structural tracing found a real exact-ID suppression asymmetry;
+    Turn 338 later corrected the live attribution after receipt inspection
+    showed the repeat came through general backlog alias mismatch instead;
+  - the completion was explicitly re-paused after pass 19. The service remains
+    active as PID `77443`, no materialization job is active, and no managed
+    ChatGPT browser or CDP 45015 listener remains.
+- Remaining scope: repair terminal asset-family suppression across live
+  catalog/archive aliases before another live pass or pacing increase.
+
+## Turn 336 | 2026-07-20
+
+- Acceptance plan:
+  `docs/dev/plans/0160-2026-07-19-live-follow-cross-phase-churn-and-pacing.md`
+- Goal: run one bounded `chatgpt/wsl-chrome-3` pass against the repaired
+  collector-to-materialization pacing path while keeping unattended cadence
+  disabled.
+- Result:
+  - preflight showed roughly 12 hours of quiet time, scheduler and completion
+    paused, guard clear, and no active browser or materialization job;
+  - pass 18 scanned four conversations with `5/8` logical interactions,
+    five target lifecycles, 40 CDP calls, no yield, and no failure, versus the
+    prior three-chat baseline of 10 target lifecycles and 55 CDP calls;
+  - the queued materialization request carried all four exact fresh IDs, the
+    collector freshness timestamp, a two-minute provider-work boundary, and
+    the installed `8/min` plus 120-second action policy;
+  - job `hmj_732024ed753643998945b78f5e9145f3` succeeded across four
+    older backlog conversations with two checksum-backed PDF routes, six
+    skips, and zero failures;
+  - the completion was explicitly re-paused after pass 18. Final readback has
+    scheduler paused, provider guard clear, no active materialization jobs,
+    and no managed ChatGPT process or CDP 45015 listener.
+
+## Turn 335 | 2026-07-19
+
+- Completed plan:
+  `docs/dev/plans/0160-2026-07-19-live-follow-cross-phase-churn-and-pacing.md`
+- Goal: remove unnecessary physical browser work across the collector-to-
+  materialization handoff before increasing per-cycle materialization yield.
+- Result:
+  - traced 4 logical provider interactions expanding into 10 fresh target
+    lifecycles because each conversation context read opened nested cache
+    identity and feature-signature probes;
+  - account-mirror cache routing now reuses verified identity, collector-fresh
+    conversation snapshots are handed to materialization, duplicate live
+    refresh is skipped, and one job governor spans remaining provider work
+    after the collector quiet boundary;
+  - installed `wsl-chrome-3` pacing is `8/min` with 120-second action cooldowns
+    while the six-candidate materialization cap is retained;
+  - restarted `auracall-api.service` as PID `77443`; scheduler and completion
+    remain paused, and no managed ChatGPT process or CDP 45015 listener exists.
+- Validation: `210/210` focused tests, TypeScript, production build, full lint
+  with 203 warning-level diagnostics, scoped Biome, `git diff --check`, plan
+  audit, installed code/config/control/completion/service/process readbacks.
+
+## Turn 334 | 2026-07-19
+
+- Active plan:
+  `docs/dev/plans/0159-2026-07-18-live-follow-restart-pause-and-rate-limit-backoff.md`
+- Goal: run one bounded `chatgpt/wsl-chrome-3` recovery pass against the
+  installed Plan 0159 runtime while keeping unattended cadence disabled.
+- Result:
+  - preflight confirmed service PID `10191`, durable scheduler pause,
+    completion pause at pass 16, expired prior cooldown, empty rate-limit
+    history, and no managed browser/CDP 45015 lane;
+  - `run-one-pass` advanced completion
+    `acctmirror_completion_cb75103d-0b8c-400f-ab76-209421821ec3` to pass 17,
+    scanned 3 conversations, and reduced remaining detail surfaces from 15 to
+    12 using 4 of 12 provider interactions with no yield, guard, or failure;
+  - a bounded diagnostic screenshot during the first slow conversation read
+    showed the normal ChatGPT shell/composer and no visible rate-limit or
+    challenge surface;
+  - materialization job `hmj_7949d6095b0a441b969e5297a9230798`
+    succeeded with 2 assets from 4 conversations, 5 skipped, and 0 failed;
+  - the completion was explicitly re-paused, the scheduler stayed paused, the
+    guard history remained empty, and AuraCall closed Chrome/CDP 45015 after
+    materialization reached terminal state.
+- Remaining scope: 12 conversation detail surfaces remain. Run another bounded
+  pass only after an observed quiet interval; do not broadly resume the
+  scheduler from this proof alone.
+
 ## Turn 325 | 2026-07-07
 
 - Active plan:
@@ -13374,3 +13978,336 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   - `systemctl --user restart auracall-api.service`;
   - installed `/status`, `mirror-completion-status`, and
     `history-materialization-status` readbacks.
+## Turn 327 | 2026-07-14
+
+- Active supporting plan:
+  `docs/dev/plans/0154-2026-07-14-live-follow-development-mode-rca-and-repair.md`
+- Goal:
+  - define a bounded development-mode RCA and repair path for the repeated
+    `chatgpt/wsl-chrome-3` collector timeouts and low materialization yield.
+- Result:
+  - opened Plan 0154 and wired it into the P01 execution board;
+  - separated request-scoped developer controls from production 24/7 safety
+    defaults;
+  - traced the 120-second outer collector deadline, sequential paced provider
+    reads, failure/status projection disagreement, stale detail phase, and
+    materialization candidate quality as distinct hypotheses;
+  - defined staged reproduction, instrumentation, experiment, repair,
+    installed-runtime proof, cleanup, and unattended-mode restoration gates.
+- Validation:
+  - CodeGraph index healthy: 839 files, 14,822 nodes, 45,952 edges;
+  - `pnpm run plans:audit -- --keep 154` returned validation errors `0`;
+  - `git diff --check` passed for the plan and governance-doc slice.
+
+## Turn 328 | 2026-07-15
+
+- Active supporting plan:
+  `docs/dev/plans/0155-2026-07-15-chatgpt-identity-timeout-follow-up.md`
+- Goal:
+  - repair the fresh ChatGPT identity timeout that appeared after Plan 0154
+    closed, without changing provider pacing or safety gates.
+- Root-cause evidence:
+  - three attempts timed out at the 90-second identity bound;
+  - Chrome BrowserMetrics continued for roughly 2 minutes 49 seconds after
+    each caller timeout;
+  - the deterministic resolver test reproduces the mismatch as expected
+    `300000`, received `90000`;
+  - provider guard is clear and no active completion/materialization job owns
+    the browser.
+- Corrected ownership:
+  - installed completion code already supplied the 900-second ChatGPT
+    collector envelope;
+  - the failing refresh had no matching completion lifecycle event and came
+    from the routine scheduler, whose request omitted `collectorTimeoutMs` and
+    retained `full_sweep` for pending detail continuation.
+  - installed restart proof resumed the persisted completion with the wide
+    deadline but showed that completion-owned detail continuation also retained
+    `full_sweep` and replayed identity/projects before detail.
+- Planned repair:
+  - use the proven 240-second ChatGPT browser-work allowance plus governor wait
+    for discovery/identity;
+  - bind identity abort to disposable CDP connection/target cleanup;
+  - install and run one bounded production proof before closeout.
+- Result:
+  - ChatGPT discovery now uses the 240-second browser-work allowance plus the
+    configured governor wait, producing a 300-second effective bound without
+    changing request frequency or provider guards;
+  - identity now binds abort cleanup to its disposable CDP connection/target;
+  - the first installed proof correctly reached the new bound but exposed a
+    separate host failure: WSLg had no X11 or Wayland socket, and repo-native
+    `browser-tools start` failed with `ECONNREFUSED`;
+  - a temporary `Xvfb :0` display launched the same managed browser profile;
+    a direct CDP screenshot showed the normal authenticated ChatGPT Pro home
+    surface with projects/chats visible and no sign-in, CAPTCHA, or guard;
+  - the bounded production refresh then returned HTTP `202`, completed identity
+    in `2888ms` under `providerCallTimeoutMs=300000`, completed four context
+    reads, and advanced the catalog to 116 conversations, 277 artifacts, and
+    247 files;
+  - final installed readback reset consecutive failures to `0`, cleared
+    `lastFailureAt`, kept the guard clear, left no active target/materialization
+    work, and closed the CDP listener; temporary Xvfb was stopped.
+- Validation:
+  - `351/351` focused account-mirror and ChatGPT tests;
+  - TypeScript, production build, scoped Biome, `git diff --check`, and plan
+    audit with zero errors;
+  - installed `/status`, refresh receipt, direct CDP tabs/screenshot, service
+    state, CDP listener, and materialization-job readbacks.
+
+## Turn 329 | 2026-07-15
+
+- Active supporting plan:
+  `docs/dev/plans/0156-2026-07-15-live-follow-detail-continuation-timeout.md`
+- Goal:
+  - repair the post-reboot detail continuation that advanced one frontier row
+    and then blocked after two outer collector deadlines.
+- Root-cause evidence:
+  - latest attempt completed identity, project index, root rail, and project
+    conversations before timing out in detail inventory;
+  - the request retained `sweepMode=full_sweep` despite the phase ledger
+    selecting `detail-inventory`;
+  - the outer deadline was 120 seconds instead of the 900-second ChatGPT
+    completion envelope;
+  - provider guard remained clear.
+- Planned repair:
+  - make phase-ledger detail continuation temporarily own the request as
+    `steady_follow` plus `requestedPhase=detail-inventory` while preserving the
+    operation's configured full-sweep policy;
+  - lock the request shape with deterministic scheduler- and
+    completion-service tests;
+  - install, resume, and verify frontier advancement plus cleanup.
+- Result:
+  - scheduler- and completion-owned detail continuation now preserve configured
+    `full_sweep` as policy while executing selected detail work as
+    `steady_follow` with the shared 900-second ChatGPT collector envelope;
+  - final installed PID `15528` completed identity in 4.8 seconds and moved
+    directly to detail inventory without project/root discovery replay;
+  - one cycle scanned 4 conversations, reduced remaining detail surfaces from
+    22 to 18, advanced pass count from 1 to 2, and kept consecutive failures at
+    0 with no provider guard;
+  - materialization job `hmj_45d14dac265441c699260fec02c16ac7`
+    succeeded with 2 assets from 4 conversations and 0 failures;
+  - final browser readback was idle with no live process or CDP listener, and
+    the service returned to 11 tasks.
+- Validation:
+  - `66/66` scheduler/completion tests;
+  - TypeScript, production build, scoped Biome, diff check, and Plan 0156 audit
+    with zero errors;
+  - installed completion lifecycle, `/status`, materialization-job, socket, and
+    systemd resource readbacks.
+
+## Turn 330 | 2026-07-15
+
+- Active supporting plan:
+  `docs/dev/plans/0157-2026-07-15-chatgpt-rate-limit-propagation-and-cycle-stop.md`
+- Goal:
+  - stop `chatgpt/wsl-chrome-3` immediately on the first rate-limit signal and
+    propagate materialization cooldown into live-follow status/cadence.
+- Initial evidence:
+  - materialization job `hmj_97e81afa730c4e9c9152dce07a1791c7`
+    recorded `Too many requests` and a 15-minute cooldown while `/status`
+    remained guard-clear and scheduled a pass 10 minutes before expiry;
+  - a later collector projected a guard but continued two additional detail
+    reads after detection;
+  - the target is now operator-paused with no next attempt, and the last
+    materialization job is terminal with cooldown evidence through 16:33:55
+    CDT.
+- Result:
+  - history materialization now reports provider-guard results before terminal
+    job publication, and the API projects/persists the authoritative ChatGPT
+    cooldown onto the matching Account Mirror runtime;
+  - ChatGPT detail inventory rechecks the persisted guard after every provider
+    interaction, including successful-looking context reads, and stops before
+    another read;
+  - one installed post-cooldown attempt re-entered guard during
+    `listConversations`, stopped before detail/materialization, and projected
+    cooldown through 16:54:11 CDT; the completion was re-paused;
+  - bounded refresh failure now performs the same managed-browser cleanup as
+    success, closing the cleanup gap exposed by the proof;
+  - final installed PID `44066` is active with 11 tasks, no CDP listener, the
+    latest materialization terminal, and the target paused at pass 15.
+- Validation:
+  - `140/140` focused tests, TypeScript, production build, scoped Biome,
+    `git diff --check`, and Plan 0157 audit with zero validation errors;
+  - installed runtime source, completion/status, provider guard, systemd task,
+    socket, and materialization readbacks.
+
+## Turn 331 | 2026-07-16
+
+- Active supporting plan:
+  `docs/dev/plans/0158-2026-07-16-chatgpt-persistent-warning-census-stop.md`
+- Goal:
+  - stop target census from renewing the same visible ChatGPT rate-limit
+    warning indefinitely.
+- Initial evidence:
+  - scheduler history alternates five `refresh-blocked` census probes with five
+    `provider-guard` skips in the latest ten passes;
+  - each census probe rewrites the browser guard detection timestamp and adds a
+    new 15-minute cooldown without entering the collector;
+  - the target has 45 consecutive failures and no successful refresh since
+    2026-07-15T23:37:20.828Z;
+  - the routine scheduler is now operator-paused;
+  - the first deterministic guard-transition regression proved the renewal
+    loop; operator feedback then exposed that manual clearance is impossible
+    once managed-browser cleanup has already removed the visible browser.
+- Result:
+  - first census detection retains the existing bounded cooldown, observations
+    inside that window reuse the original timestamps, and a warning still
+    visible after expiry closes its ChatGPT tab before a new bounded cooldown;
+  - installed PID `5903` contains the persistent-warning tab-close branch and
+    is healthy at 11 tasks with CDP port 45015 closed;
+  - persisted target state remains cooldown-only with
+    `providerHardStopAtMs=null`, so no impossible manual-clear blocker remains;
+  - the routine scheduler was re-paused immediately after restart and its
+    ledger remains at `2026-07-16T22:50:50.848Z`, so installation caused no new
+    scheduler/provider attempt.
+  - one bounded recovery pass then advanced pass count 15 to 16, reduced
+    remaining detail surfaces 15 to 12, and stayed guard-clear;
+  - materialization job `hmj_45b9a036dc5144efa1b7038280e6f6c4`
+    succeeded with 2 assets from 4 conversations and 0 failures; the completion
+    was re-paused and the managed browser/CDP listener cleaned up.
+- Validation:
+  - `28/28` refresh-service tests;
+  - TypeScript, production build, scoped Biome, `git diff --check`, and Plan
+    0158 audit with zero validation errors.
+
+## Turn 332 | 2026-07-18
+
+- Goal:
+  - diagnose new operator-visible ChatGPT rate-limit warnings without adding
+    provider traffic.
+- Evidence:
+  - the latest `wsl-chrome-3` guard came from `readConversationContext` at
+    08:34:51 CDT, not target census, and was active through 08:49:51;
+  - the latest 50 scheduler rows contain 23 blocked same-day attempts, while
+    the completion stayed paused at pass 16 and all other ChatGPT lanes stayed
+    disabled/guard-clear;
+  - scheduler state was unpaused after the July 17 service restart because its
+    operator pause is initialized in memory as false and startup cadence is
+    unconditional;
+  - current policy remains `maxBrowserInteractionsPerMinute=12`, 60-second
+    action cooldowns, and a 15-minute detected rate-limit cooldown.
+- Mitigation:
+  - paused the routine scheduler before the next eligibility boundary;
+  - closed the sole ChatGPT page through CDP; managed Chrome exited and port
+    45015 closed;
+  - left the paused completion and other ChatGPT lanes unchanged.
+- Repair boundary:
+  - persist scheduler operator pause across service restarts and introduce
+    failure-streak-aware cooldown escalation before unattended resume.
+
+## Turn 333 | 2026-07-18
+
+- Active supporting plan:
+  `docs/dev/plans/0159-2026-07-18-live-follow-restart-pause-and-rate-limit-backoff.md`
+- Goal:
+  - make scheduler pause durable across API restarts and stop recurring real
+    ChatGPT limits from recycling on a fixed 15-minute boundary.
+- Starting boundary:
+  - the scheduler and completion remain paused;
+  - the ChatGPT managed browser is closed and CDP port 45015 is not listening;
+  - implementation and restart verification must not contact ChatGPT.
+- Acceptance boundary:
+  - deterministic restart persistence, bounded escalating cooldown history,
+    scheduler-owned browser cleanup, full validation, and installed restart
+    readback with no scheduler-ledger advance.
+- Result:
+  - scheduler pause/resume now persists under the AuraCall home cache and is
+    hydrated before startup cadence;
+  - real ChatGPT rate-limit detections retain a 24-hour per-browser-profile
+    history and escalate 5, 15, and 45 minutes up to a six-hour cap;
+  - successful guard writes preserve the streak, and routine scheduler
+    refreshes request managed-browser cleanup;
+  - installed PID `10191` restarted with `state=paused`, `paused=true`, no
+    scheduler wake timestamps, no ledger advance beyond
+    `2026-07-18T13:34:51.673Z`, and the completion still paused at pass 16;
+  - no managed ChatGPT browser or CDP listener exists.
+- Validation:
+  - `64/64` focused service tests plus three HTTP scheduler-control tests;
+  - TypeScript, production build, repository lint, scoped Biome, diff check,
+    and plan audit passed; lint retained 203 warning-level diagnostics.
+
+## Turn 334 | 2026-07-23
+
+- Active supporting plan:
+  `docs/dev/plans/0164-2026-07-23-chatgpt-single-session-file-materialization.md`
+- Operator override receipt:
+  - cancelled wake `wake_20260723_133643_eace`;
+  - backed up runtime state under
+    `~/.auracall/backups/plan0164-operator-override-20260723T162015Z`;
+  - ran only job `hmj_62f30819e97540819f2999495f3f0af8`;
+  - observed one physical ChatGPT page, three attachments to the same target,
+    12 identical 403 JSON failures, and no new rate-limit detection.
+- Repair:
+  - retain the already-scoped provider-session object across file listing and
+    batch transfer;
+  - use files-only materialization as the snapshot-refresh evidence surface;
+  - keep non-OK captures for diagnostics while waiting for the signed viewer
+    download;
+  - accept signed `estuary/content` URLs without requiring the provider file ID
+    in the URL.
+- Installed readback:
+  - `215/215` adjacent tests, TypeScript, production build, and scoped Biome
+    pass;
+  - API PID `821902` is active with 11 tasks;
+  - scheduler and completion pass 32 remain paused;
+  - CDP port 45015 is closed and the current guard has no active cooldown.
+- Stop condition:
+  - do not run another provider batch in this slice; the next exact 12-file
+    proof requires separate operator authorization.
+
+## Turn 335 | 2026-07-23
+
+- Authorized exact proof:
+  - job `hmj_9e4ae83892c1482e9b737b69955fe568`
+  - one physical page, one `Target.attachToTarget`, one retain, two reuses
+  - one provider batch and 12 sequential file attempts
+  - no new rate-limit detection
+- Terminal result:
+  - `status=failed`, `materialized=0`, `failed=12`
+  - all 12 tiles matched
+  - no successful signed URL capture
+  - all bounded direct fallbacks returned 403 JSON `Forbidden`
+- Cleanup:
+  - CDP 45015 closed
+  - API tasks returned to 11
+  - scheduler and completion pass 32 remain paused
+- Stop:
+  - do not issue another provider attempt; diagnose the viewer
+    interaction/capture boundary provider-free.
+
+## Turn 336 | 2026-07-23
+
+- Operator correction:
+  - the same SIP-1133 files return `Forbidden` through ChatGPT's native web UX
+  - the provider error therefore reproduces without AuraCall
+- Attribution:
+  - AuraCall's one-page, one-attachment, one-batch behavior is accepted
+  - the remaining zero-binary outcome is provider-side file authorization or
+    availability, not an AuraCall viewer-capture defect
+- Stop:
+  - do not retry or further modify AuraCall for these inaccessible files
+  - use an authorized original-source export or wait for provider access repair
+
+## Turn 337 | 2026-07-23
+
+- Resumed the persisted account-mirror scheduler for
+  `chatgpt/wsl-chrome-3`.
+- First pass receipt:
+  - `startedAt=2026-07-23T22:05:08.328Z`
+  - `completedAt=2026-07-23T22:11:44.251Z`
+  - action `refresh-completed`
+  - four conversation details read
+  - five of eight provider interactions used
+  - detail cursor advanced from five to nine
+  - no provider guard or rate-limit detection
+  - managed browser terminated
+- Stale completions `acctmirror_completion_84872086-...` and
+  `acctmirror_completion_af008557-...` were rejected as `already-running`;
+  neither created duplicate provider work.
+- Sole active lane owner is
+  `acctmirror_completion_fb93ed6c-c57b-40cd-b5dc-ba6322f75446`, status
+  `idle_waiting`, under the configured minimum interval.
+- Restarted the API once to reclaim retained status/pass heap. PID `1234375`
+  recovered from about 6.1 GiB to 741 MiB with 11 tasks; scheduler resume
+  persisted, the same completion emitted `resumed_after_restart`, and CDP
+  45015 remains closed.

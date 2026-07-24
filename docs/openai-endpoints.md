@@ -427,9 +427,18 @@ Current limits:
   `materializationCursor`. `GET /v1/account-mirrors/completions`,
   `GET /v1/account-mirrors/completions/{completion_id}`, and
   `POST /v1/account-mirrors/completions/{completion_id}` remain the list,
-  status, and pause/resume/cancel surfaces. Full-sweep completion refreshes
+  status, and pause/resume/cancel surfaces. GET list/status defaults to a
+  bounded, side-effect-free monitoring projection that omits the full refresh
+  receipt, prior lifecycle history, manifest paths, and snapshot conversation
+  id arrays. Append `detail=full` only for a one-off diagnostic read; full
+  detail refreshes materialization status and is not a polling contract.
+  Full-sweep completion refreshes
   use an extended collector timeout for conservative provider pacing; Gemini
   steady-follow completions also use a wider provider-specific timeout.
+  After a successful refresh, history materialization inherits the effective
+  interaction policy, waits the collector cooldown boundary, and reuses the
+  exact conversation snapshots just observed instead of refreshing those chats
+  again. One job-scoped governor covers subsequent snapshot and asset work.
   Refresh failures persist target status state so failure-backoff survives API
   restarts and isolated proof-server shutdowns. Gemini explicit refresh
   politeness defaults are intentionally practical for operator proof loops:
@@ -450,6 +459,8 @@ Current limits:
     `reconcile: true`
   - accepts `assetKinds` (`artifacts`, `files`, `media`, or `all`),
     `maxItems`, `providerWorkTimeoutMs`, `force`, and `refreshSnapshot`
+  - `force` bypasses only job reuse and freshness/idempotency skips; it never
+    bypasses an active provider rate-limit guard
   - returns `object = "history_materialization_job_create_result"` with a
     durable `history_materialization_job`
   - account-mirror catalog and catalog-item reads remain cache-only; this route
@@ -482,6 +493,18 @@ Current limits:
     existing conversation artifact/file materializers, stores manifests in the
     conversation attachment cache, and upserts successful files as
     `account_mirror` run-archive rows
+  - ChatGPT conversation-file materialization retains one browser tab/client
+    session and processes the selected file destinations sequentially; a
+    visible file tile's UI-generated request is preferred before one bounded
+    provider-id fallback. When the tile opens a preview whose Download control
+    synthesizes signed anchor/window navigation, that navigation is suppressed,
+    captured, and fetched in-page on the retained client; sanitized telemetry
+    reports `anchor`, `fetch`, or `direct` without persisting the signed URL.
+    Attach, retain, and reuse notes carry a one-way target fingerprint so one
+    physical target can be verified without exposing the raw target id
+  - when every selected transfer fails, the durable job is `failed` and keeps
+    its per-file manifest diagnostics; `skipped` is reserved for a genuinely
+    empty or terminally ineligible materialization
   - reconciliation with `assetKinds: ["media"]` scans unavailable
     media-generation archive artifacts and can resume Gemini media
     materialization when cached account history has a matching provider
@@ -501,6 +524,10 @@ Current limits:
   - poll one job with
     `GET /v1/account-mirrors/materializations/{job_id}` or list jobs with
     `GET /v1/account-mirrors/materializations?status=active|terminal|queued|running|succeeded|skipped|failed|cancelled&provider=<provider>&runtimeProfile=<runtime_profile>&sourceType=conversation|catalog_item|archive_item|reconciliation&limit=50`
+    Both reads default to a bounded metrics/target projection that omits
+    manifest entries, archive items, snapshot refreshes, scrape telemetry, and
+    request conversation-id batches. Append `detail=full` only for a one-off
+    forensic read; the CLI polling helpers always request `detail=summary`.
   - cancel a queued job with
     `POST /v1/account-mirrors/materializations/{job_id}` and body
     `{"action":"cancel"}`; running jobs are not cooperatively abortable yet
@@ -804,15 +831,17 @@ Current limits:
   - raw `model` remains the provider-version escape hatch
   - `modelSelector` is the stable semantic intent field, e.g.
     `chatgpt:auto`, `chatgpt:instant`, `chatgpt:thinking-standard`,
-    `chatgpt:thinking-extended`, `chatgpt:pro-standard`,
-    `chatgpt:pro-extended`, `grok:auto`, `grok:thinking`, or
-    `gemini:thinking`
+    `chatgpt:thinking-extended`, `chatgpt:sol-medium`,
+    `chatgpt:sol-high`, `chatgpt:sol-extra-high`, `chatgpt:sol-pro`,
+    `chatgpt:pro-standard`, `chatgpt:pro-extended`, `grok:auto`,
+    `grok:thinking`, or `gemini:thinking`
   - provider adapters should resolve semantic selectors against the current
     workbench UI; older exact version selectors are non-urgent compatibility
     pins, not the default config posture
   - ChatGPT browser-backed execution currently resolves those ChatGPT selectors
-    into the model picker plus Standard/Extended thinking controls; Grok and
-    Gemini semantic execution remain follow-up work
+    into the model picker plus Medium/High/Extra High or legacy
+    Standard/Extended depth controls; Grok and Gemini semantic execution remain
+    follow-up work
 - MCP exposes the same trusted local agent/team config surface through
   `config_entities_list`, `config_agent_upsert`, `config_agent_delete`,
   `config_team_upsert`, and `config_team_delete`; list responses include
@@ -1031,10 +1060,15 @@ Or via `config.json`:
 Oracle keeps a stable CLI-facing model set, but some names are aliases for the concrete API model ids it sends:
 
 - `gpt-5.1-pro` → `gpt-5.2-pro` (API)
+- `gpt-5.6-sol` is a concrete OpenAI API model and ChatGPT browser selector
+  target for Sol reasoning
 - generic `pro` labels/defaults resolve to `gpt-5.1-pro` first, so operator-facing config does not need to pin a dated concrete Pro id
 
 Notes:
 - `gpt-5.1-pro` is a **CLI alias** for “the current Pro API model” — OpenAI’s API uses `gpt-5.2-pro`.
+- In ChatGPT, `chatgpt:sol-medium`, `chatgpt:sol-high`, and
+  `chatgpt:sol-extra-high` target the GPT-5.6 Sol reasoning lane; `chatgpt:sol-pro`
+  targets the Pro lane.
 - If you want the classic Pro tier explicitly, use `gpt-5-pro`.
 
 ### Browser engine vs API base URLs

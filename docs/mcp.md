@@ -430,13 +430,17 @@ log-tail checks as one release gate before live dogfood.
   `materializationPolicy = metadata_only|recent_missing_assets|full_missing_assets`,
   `materializationAssetKinds`, `materializationMaxItems`,
   `materializationRefreshSnapshot`, and `materializationForce`; list accepts
-  optional `provider`, `runtimeProfile`, `status`, `activeOnly`, and `limit`;
-  status accepts a completion `id`; control accepts `id` plus
+  optional `provider`, `runtimeProfile`, `status`, `activeOnly`, `limit`, and
+  `detail = summary|full`; status accepts a completion `id` plus the same
+  optional detail selector; control accepts `id` plus
   `action = pause|resume|cancel`.
 - Behavior: start returns an `account_mirror_completion` operation immediately.
   Without `maxPasses`, the operation runs as `mode = live_follow`: backfill
   history until no more history is detected, then stay in `steady_follow` and
-  periodically crawl for new content. Status reports
+  periodically crawl for new content. List/status default to a bounded,
+  side-effect-free summary suitable for monitoring. `detail = full` is an
+  explicit one-off diagnostic mode that refreshes materialization status and
+  returns the complete persisted receipt; it must not be polled. Status reports
   queued/running/idle_waiting/paused/completed/blocked/failed/cancelled, mode,
   sweep mode, phase, pass count, next eligible attempt, latest refresh, mirror
   completeness, materialization policy, and the latest
@@ -537,7 +541,7 @@ log-tail checks as one release gate before live dogfood.
 ### `workbench_capabilities`
 - Inputs: optional `provider: "chatgpt" | "gemini" | "grok"`, optional `category: "research" | "media" | "canvas" | "connector" | "skill" | "app" | "search" | "file" | "other"`, optional `runtimeProfile`, optional `includeUnavailable`, optional `diagnostics: "browser-state"`, optional `entrypoint: "grok-imagine"`, and optional `discoveryAction: "grok-imagine-video-mode"`.
 - Behavior: returns `object = "workbench_capability_report"` with known or discovered provider workbench capabilities, provider labels, invocation modes, surfaces, availability, stability, required inputs, output expectations, and safety flags. This is read-only discovery and does not invoke provider tools. `diagnostics = "browser-state"` adds bounded target/document/provider evidence and a stored PNG screenshot path for the selected provider. `entrypoint = "grok-imagine"` opens or reuses Grok `/imagine` through browser-service control-plane attribution before inspection. `discoveryAction = "grok-imagine-video-mode"` may click the Grok Imagine Video radio for an explicit mode audit, records before/after controls plus bounded `videoModeAudit` evidence, and restores the original Image/Video mode without typing or submitting a prompt. Grok `/imagine` provider evidence can include `run_state`, pending, terminal image/video, media URL, materialization-control signals, controls, and discovery-action evidence when visible.
-- Volatility: static catalog entries use conservative `unknown` or `account_gated` availability until browser/provider discovery confirms the current account state. ChatGPT feature-signature discovery can report visible Web Search, Deep Research, Company Knowledge, apps/connectors, and skills without invoking or enabling them. Grok discovery can report visible Imagine image/video evidence without submitting a generation request.
+- Volatility: static catalog entries use conservative `unknown` or `account_gated` availability until browser/provider discovery confirms the current account state. ChatGPT feature-signature discovery separates installed plugin inventory, linked/authentication state, and current composer visibility. Installed inventory alone does not prove current selection; `Connect`, `AUTH_REQUIRED`, and `REAUTH_REQUIRED` remain account-gated, and legacy page-token matches remain `unknown`. Discovery does not install, reconnect, enable, or invoke an app. Selectable apps report `invocationMode = composer_mention`. Grok discovery can report visible Imagine image/video evidence without submitting a generation request.
 
 ## Resources
 - `auracall-session://{id}/{metadata|log|request}` — read-only resources that surface stored session artifacts via MCP resource reads.

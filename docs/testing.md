@@ -1,6 +1,17 @@
 # Testing quickstart
 
 - Unit/type tests: `pnpm test` (Vitest) and `pnpm run check` (typecheck).
+- ChatGPT developer-app lifecycle:
+  - provider-free contract tests:
+    `pnpm vitest run tests/browser/chatgptDeveloperApps.test.ts tests/cli/chatgptDeveloperAppsCommand.test.ts`
+  - read-only installed smoke:
+    `pnpm tsx bin/auracall.ts --profile <runtime> apps --target chatgpt list --json`
+  - non-submitting app-selection smoke:
+    `pnpm tsx bin/auracall.ts --profile <runtime> apps --target chatgpt test <exact-app> --expected-account <email> --json`
+  - do not use `--submit`, `create`, `refresh`, or `uninstall` as routine live
+    tests; they require exact authorization and `--yes`
+  - stop immediately on a provider rate-limit, CAPTCHA, or human-verification
+    surface
 - Live-suite posture:
   - stable baseline:
     - keep small, repeatable, and operationally useful

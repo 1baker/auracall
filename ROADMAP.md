@@ -7,8 +7,56 @@
 Status: active
 Lane: P01
 
+- ChatGPT composer/apps implementation and installed proof complete; live
+  follow remains blocked:
+  [docs/dev/plans/0167-2026-07-24-chatgpt-composer-apps-reinspection.md](docs/dev/plans/0167-2026-07-24-chatgpt-composer-apps-reinspection.md)
+  Current selection, prompt association, and installed/link discovery are
+  repaired, installed, and live-validated. The API is active, but routine
+  live-follow restoration remains paused after all-operation resume reproduced
+  unsafe Node memory growth; a single-profile bounded observation stayed
+  guard-clear and below the diagnostic stop threshold.
+- Completed ChatGPT developer-app lifecycle:
+  [docs/dev/plans/0168-2026-07-24-chatgpt-developer-app-lifecycle.md](docs/dev/plans/0168-2026-07-24-chatgpt-developer-app-lifecycle.md)
+  Source CLI and live SoyLei proof now cover guarded inventory,
+  creation/OAuth gating, refresh, non-submitting/submitted test separation,
+  and exact-target uninstall semantics. The validated package is installed in
+  the user runtime; Corel33t remained installed, active, and
+  development-scoped after installed readback.
+- Completed live-follow provider fair-serialization plan:
+  [docs/dev/plans/0166-2026-07-23-live-follow-provider-fair-serialization.md](docs/dev/plans/0166-2026-07-23-live-follow-provider-fair-serialization.md)
+  One FIFO provider-work lease now spans scheduler and independent completion
+  loops; routine multi-tenant scheduling is live under guard observation.
+- Completed live-follow settlement cadence and Business tenant isolation plan:
+  [docs/dev/plans/0165-2026-07-23-live-follow-settlement-cadence-and-business-tenants.md](docs/dev/plans/0165-2026-07-23-live-follow-settlement-cadence-and-business-tenants.md)
+  Terminal materialization now establishes the next collector quiet boundary;
+  same-email ChatGPT Business and Personal targets use distinct cache keys.
+- Active ChatGPT single-session file materialization repair:
+  [docs/dev/plans/0164-2026-07-23-chatgpt-single-session-file-materialization.md](docs/dev/plans/0164-2026-07-23-chatgpt-single-session-file-materialization.md)
+  Provider-free implementation now also captures and suppresses synthesized
+  signed anchor/window downloads inside the retained page, including the
+  preview viewer Download step; one guard-safe live 12-file proof remains.
 - Active plan:
   [docs/dev/plans/0114-2026-06-05-end-to-end-cross-service-handoff.md](docs/dev/plans/0114-2026-06-05-end-to-end-cross-service-handoff.md)
+- Completed ChatGPT hard-stop retry-propagation repair plan:
+  [docs/dev/plans/0163-2026-07-22-chatgpt-hard-stop-retry-propagation.md](docs/dev/plans/0163-2026-07-22-chatgpt-hard-stop-retry-propagation.md)
+- Completed live-follow status-memory and immediate-rate-stop repair plan:
+  [docs/dev/plans/0162-2026-07-22-live-follow-status-memory-and-rate-stop.md](docs/dev/plans/0162-2026-07-22-live-follow-status-memory-and-rate-stop.md)
+- Completed live-follow materialization asset-family idempotency plan:
+  [docs/dev/plans/0161-2026-07-20-live-follow-exact-id-materialization-idempotency.md](docs/dev/plans/0161-2026-07-20-live-follow-exact-id-materialization-idempotency.md)
+- Completed live-follow cross-phase churn/pacing repair plan:
+  [docs/dev/plans/0160-2026-07-19-live-follow-cross-phase-churn-and-pacing.md](docs/dev/plans/0160-2026-07-19-live-follow-cross-phase-churn-and-pacing.md)
+- Completed live-follow restart/backoff repair plan:
+  [docs/dev/plans/0159-2026-07-18-live-follow-restart-pause-and-rate-limit-backoff.md](docs/dev/plans/0159-2026-07-18-live-follow-restart-pause-and-rate-limit-backoff.md)
+- Completed live-follow detail-continuation repair plan:
+  [docs/dev/plans/0156-2026-07-15-live-follow-detail-continuation-timeout.md](docs/dev/plans/0156-2026-07-15-live-follow-detail-continuation-timeout.md)
+- Completed ChatGPT rate-limit propagation/cycle-stop plan:
+  [docs/dev/plans/0157-2026-07-15-chatgpt-rate-limit-propagation-and-cycle-stop.md](docs/dev/plans/0157-2026-07-15-chatgpt-rate-limit-propagation-and-cycle-stop.md)
+- Completed ChatGPT persistent-warning census-stop plan:
+  [docs/dev/plans/0158-2026-07-16-chatgpt-persistent-warning-census-stop.md](docs/dev/plans/0158-2026-07-16-chatgpt-persistent-warning-census-stop.md)
+- Completed live-follow identity-timeout follow-up plan:
+  [docs/dev/plans/0155-2026-07-15-chatgpt-identity-timeout-follow-up.md](docs/dev/plans/0155-2026-07-15-chatgpt-identity-timeout-follow-up.md)
+- Completed live-follow diagnostic/repair plan:
+  [docs/dev/plans/0154-2026-07-14-live-follow-development-mode-rca-and-repair.md](docs/dev/plans/0154-2026-07-14-live-follow-development-mode-rca-and-repair.md)
 - Completed live-follow follow-up plan:
   [docs/dev/plans/0153-2026-07-06-live-follow-target-resume-readiness.md](docs/dev/plans/0153-2026-07-06-live-follow-target-resume-readiness.md)
 - Completed live-follow operating model plan:
@@ -2564,3 +2612,21 @@ Historical focused reliability slices:
 
 ### Browser Automation Drift Repairs
 See [docs/dev/browser-service-upgrade-backlog.md](docs/dev/browser-service-upgrade-backlog.md).
+
+- 2026-07-23 Plan 0164 provider-free repair: one operator-overridden SIP-1133
+  diagnostic pass proved that 12 files used one physical page but still created
+  three client attachments and prematurely accepted a 403 JSON response. The
+  installed repair now retains one client across files-only snapshot, listing,
+  and batch transfer and waits for a successful signed download capture.
+  `215/215` adjacent tests pass; the final exact live batch remains a separately
+  authorized acceptance gate.
+- 2026-07-23 Plan 0164 live receipt: the separately authorized exact batch
+  proved one page and one CDP attachment with no rate-limit warning, closing the
+  tab/client-churn question. All 12 transfers still failed because the viewer
+  path produced no successful signed capture and the direct fallback remained
+  403. The operator reproduced `Forbidden` in ChatGPT's native web UX, so the
+  remaining blocker is provider-side file access, not AuraCall.
+- 2026-07-23 installed operations: `chatgpt/wsl-chrome-3` live follow resumed
+  successfully. The first pass advanced four detail conversations with no
+  provider guard and handed off to one `idle_waiting` completion under normal
+  cadence.

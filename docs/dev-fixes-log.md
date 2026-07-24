@@ -1,3 +1,106 @@
+- 2026-07-24: ChatGPT developer-app inventory must collect installed-app and
+  linked-auth network signals from the surfaces that actually emit them:
+  `/plugins` for installed metadata and the blank composer route for accessible
+  links. Waiting for both on one route adds latency and silently loses
+  connection state. A stale empty `New App` dialog can also mask the Developer
+  mode settings route; dismiss only that exact empty form, never a populated
+  draft. For select-only app tests, clear persisted ProseMirror drafts with
+  actual keyboard input, type the `@App` mention, verify the canonical app ID,
+  and clear again without submitting.
+
+- 2026-07-23: A scoped browser target is not enough to prevent browser churn
+  when the provider contract itself is singular. SIP-1133 selected 12 files
+  from one ChatGPT conversation, invoked 12 singular downloads, recorded 14
+  tab-connection starts, and then mislabeled 12 failures as skipped. Route
+  uncached destinations through one optional provider batch contract, enforce
+  the provider guard once with retries disabled, retain one ChatGPT client
+  across the sequential file loop, and keep the singular method only as a
+  compatibility fallback. Prefer the matched tile's UI-generated request
+  before a bounded provider-id endpoint; persist only sanitized endpoint,
+  status, content-type, tile-match, fallback, and provider-error fields.
+
+- 2026-07-22: A warning interrupt inside ChatGPT readiness polling is not
+  sufficient if a surrounding context/recovery boundary converts the
+  hard-stop into a null completion. Installed successor proof recorded the
+  first warning at 10:00:45 CDT, retained the same context call for another
+  109 seconds, recorded a second warning at 10:02:34, and only then returned
+  null after 237 seconds. Require the first adapter hard-stop to remain a
+  distinguished exception through every recovery wrapper and context fallback;
+  test that it cannot be caught as ordinary readiness failure or converted to
+  null.
+
+- 2026-07-22: Provider-guard operator clearance has two authorities for
+  ChatGPT: the account-mirror status registry and the adapter-level
+  `rate-limit-<browser-profile>.json` state used by browser enforcement.
+  Clearing only the registry does not override the adapter cooldown. Also,
+  compact response projection is insufficient when `/status` and mutation
+  controls first deserialize thousands of full completion records: one
+  guard-clear/resume sequence still raised installed API memory to 6.3 GiB.
+  Future repair must clear both guard authorities through one bounded control
+  and bound storage reads before hydration, not only project the response
+  afterward.
+
+- 2026-07-22: Polling completion and history-materialization state must use an
+  explicitly bounded projection. The default HTTP, CLI, and MCP monitoring
+  paths now omit nested refresh evidence, bulk materialization entries,
+  archive items, scrape telemetry, and unbounded lifecycle history; full
+  diagnostic payloads require `detail=full`. Compact reads must also avoid
+  materialization refresh work. During ChatGPT account-mirror reads, readiness
+  waits now run a throttled visible-warning interrupt probe so a rate-limit
+  surface throws the existing hard-stop before reload, reopen, retry, or
+  follow-on extraction. Keep provider execution paused while proving these
+  contracts with repeated provider-free compact reads.
+
+- 2026-07-21: Do not treat a target-specific completion or materialization
+  readback as automatically safe for monitoring merely because broad
+  `/status` is avoided. On the installed runtime, a small number of those full
+  payload reads raised the Node service from roughly 1.4 GiB to 3.3 GiB with a
+  6.2 GiB peak and no browser work. Monitor compact persisted guard/control
+  fields until the API exposes a bounded projection, and test heap recovery as
+  part of that repair. Continuous live follow also showed that an inner
+  `getConversationContext` recovery can observe one visible rate-limit warning
+  repeatedly for 242 seconds before the outer collector stops; guard detection
+  must abort the owning inner browser operation, not only prevent the next
+  conversation. Finally, delayed wakes tied to a tmux pane do not survive a WSL
+  restart when that pane disappears; a daemon and pending record are not
+  delivery proof.
+
+- 2026-07-18: Closing a persistent warning tab does not address fresh
+  `readConversationContext` rate limits when scheduler pause is process-local.
+  A service restart initializes the routine scheduler with `paused=false` and
+  schedules startup cadence; on `chatgpt/wsl-chrome-3`, a 15-minute cooldown
+  then allowed 23 blocked attempts in the latest 50 same-day scheduler rows and
+  accumulated 16 consecutive failures. Keep the lane paused after mitigation.
+  The next repair must persist scheduler operator state across restarts and use
+  failure-streak-aware cooldown escalation so a real provider limit cannot
+  become an unattended 20-25 minute retry loop.
+  Plan 0159 repairs both control failures: scheduler pause/resume is persisted
+  and hydrated before startup cadence, while per-browser-profile ChatGPT
+  detection history escalates cooldowns from 5 to 15 and 45 minutes up to a
+  six-hour cap and survives successful reads until its 24-hour expiry.
+  Installed restart proof retained the pre-install scheduler ledger boundary,
+  kept the completion paused at pass 16, and opened no ChatGPT browser/CDP
+  listener. For readiness checks, use one bounded `/status` request: repeated
+  short-timeout polls can leave concurrent server-side status assembly running
+  after the clients disconnect and manufacture memory pressure.
+
+- 2026-07-16: A target-census warning that remains visible after its first
+  automatic cooldown is not a new rate-limit event. Reusing it as a fresh
+  detection rewrites `cooldownDetectedAt`, extends eligibility, and creates an
+  autonomous census/skip loop without entering the collector. Preserve the
+  original boundary while it is active; after it expires, close the still-
+  visible warning tab and start one new bounded cooldown. Do not create a
+  manual-clear guard for a browser surface that cleanup may already have
+  removed, and do not click or dismiss the provider warning.
+
+- 2026-07-15: Routine scheduler and resumed completion requests must share the
+  same phase-continuation and provider-timeout policy. When a configured
+  ChatGPT `full_sweep` target has pending `detail-inventory`, send a
+  phase-directed `steady_follow` request with the 900-second collector envelope
+  so neither caller replays discovery and the scheduler does not fall back to
+  `refreshService`'s generic 120-second deadline. Preserve `full_sweep` as
+  configured state for future discovery cycles.
+
 - 2026-07-07: Gemini detail inventory must be capped by the remaining active
   interaction budget, not only by `maxPageReadsPerCycle`. A cycle that has
   already spent identity, project index, root rail, project-conversation, or
@@ -19171,3 +19274,350 @@ browser-stage lifecycle observability, not transcript truncation.
   bounded terminal job reads per target so successful Gemini downloads advance
   `localMaterialized` and reduce false missing-local backlog instead of
   requeueing the same chat forever.
+- 2026-07-09: Broad `/status` terminal history-materialization hydration can
+  still undercount ChatGPT reconciliation downloads when the job request has no
+  `boundIdentityKey`. Job `hmj_16d60089a5064d1d85a4da0b4024ebfb` on
+  `chatgpt/wsl-chrome-3` materialized 2 assets, and filtered
+  `/status?provider=chatgpt&runtimeProfile=wsl-chrome-3` used archive-item
+  evidence to report `remoteMissing=347`, `localMaterialized=96`; broad
+  `/status` reported `431`, `12` because terminal job counts keyed as
+  `chatgpt:wsl-chrome-3:` do not match the account row keyed with
+  `eric.cochran@soylei.com`, while archive-item hydration is single-entry
+  gated.
+- 2026-07-09: Broad `/status` must hydrate account-mirror archive items for
+  all account rows, not just filtered single-target reads. Terminal
+  history-materialization jobs are not necessarily a cumulative local asset
+  index and reconciliation requests may omit `boundIdentityKey`; archive items
+  carry the provider, runtime profile, and identity key needed to reconcile
+  `localMaterialized` and `remoteKnownMissingLocal` accurately across
+  multi-target status readbacks.
+- 2026-07-09: ChatGPT in-chat document artifacts can open a viewer pane instead
+  of downloading directly from the artifact button. After clicking a
+  `chatgpt://download-button/...` artifact, if no anchor/window-open capture is
+  observed, the ChatGPT adapter must click the visible viewer
+  `aria-label="Download"` control before waiting for the browser download or
+  captured-anchor fallback. Current behavior-button labels may also be raw
+  filenames like `Delta_Tie_Phase_I_SOW_One_Pager.docx` while payload titles
+  remain prose like `Download the one-page DOCX`, so tag matching must accept
+  the basename from `sandbox:/mnt/data/...` artifact URIs.
+- 2026-07-09: GPT-5.6 Sol should be modeled as a ChatGPT reasoning lane, not
+  as a brittle exact picker label. Keep `gpt-5.6-sol` as a provider/API model
+  and browser alias, but route ChatGPT browser selection through semantic
+  Medium/High/Extra High handling (`chatgpt:sol-medium`,
+  `chatgpt:sol-high`, `chatgpt:sol-extra-high`) and keep Sol Pro on the
+  existing Pro picker lane (`chatgpt:sol-pro`).
+- 2026-07-12: Live-follow throughput tuning must account for the full effective
+  politeness policy, not only `maxBrowserInteractionsPerMinute`. The installed
+  ChatGPT target inherited up to 20 minutes of jitter and a 10-minute explicit
+  refresh floor, which kept a higher interaction budget idle. A bounded tuning
+  step set 5-minute routine/explicit intervals, at most 1 minute of jitter, 12
+  browser interactions per minute, 60-second browser-action cooldowns, and 6
+  materialization candidates. Installed pass 80 then scanned 4 conversations
+  with 8/12 interactions, no budget yield, no provider guard, and no failure.
+- 2026-07-14: Do not treat tolerated account-mirror provider-call timeouts as
+  successful detail collection. Persist stage timing plus a checkpoint after
+  every confirmed conversation boundary, fail fast after three consecutive
+  conversation-file and conversation-context timeout pairs, and retain the
+  last cursor for restart-safe diagnosis. A larger outer deadline alone only
+  converted a 120-second failure into a 225-second false success.
+- 2026-07-14: History reconciliation must stop selecting additional chats as
+  soon as any candidate result reports a provider rate-limit/cooldown guard.
+  Keep already materialized assets and exact per-entry dispositions, but do not
+  turn the remaining batch into repeated cooldown failures. Installed job
+  `hmj_1227e0397b8946e1b9f93d065b206a12` proved three real assets could be
+  recovered before the guard and also exposed the need for this batch stop.
+- 2026-07-14: Account-mirror `requestedPhase=detail-inventory` is a continuation
+  optimization only in `steady_follow`. A `full_sweep` request intentionally
+  refreshes project and root-rail discovery first, so using it for a supposedly
+  isolated detail experiment can consume provider budget before the target
+  phase. Development-mode docs and evidence must state the sweep mode alongside
+  the requested phase.
+- 2026-07-14: Tolerated detail failures need the same bounded-stop semantics as
+  timeouts. Preserve the provider error string in collector diagnostics, stop
+  immediately on rate-limit/cooldown/guard/CAPTCHA/sign-in signatures, and fail
+  after three consecutive conversations where neither file nor context detail
+  completed. Otherwise a guard detected inside `readConversationContext` can be
+  hidden behind generic `failed` outcomes while later conversations continue.
+- 2026-07-14: Account-mirror refresh preparation must be bounded by the cycle,
+  not the entire retained catalog. Hydrating conversation file/attachment
+  caches with an unbounded `Promise.all` can consume gigabytes and stall before
+  collector diagnostics or deadlines begin. Keep the catalog file manifest as
+  the complete baseline, hydrate only the current conversation-row limit, and
+  cap cache-read concurrency.
+- 2026-07-14: A provider timeout is not a safety boundary unless it aborts the
+  underlying browser action. Pass a child abort signal into every timed
+  provider call, abort it when the deadline fires, and apply the same deadline
+  to identity discovery. Otherwise rejected wrappers leave browser work alive,
+  later calls overlap it, and an apparently bounded collector can create its
+  own provider-rate guard. Live-follow completions must also translate a
+  refresh-time provider cooldown timestamp into `idle_waiting`, reserving
+  `blocked` for guards that have no automatic retry boundary.
+- 2026-07-14: Do not inventory ChatGPT conversation files and conversation
+  context as separate provider interactions during account-mirror detail
+  collection. The context payload already carries `files` and `artifacts`, so
+  the second read doubles navigation churn, consumes two governor windows per
+  chat, and makes a four-chat production cap take roughly eight minutes before
+  materialization starts. Use one context read, reuse its embedded assets, and
+  budget the provider deadline as governor cooldown plus a realistic work
+  window; the governor allowance alone is not execution time.
+- 2026-07-14: Deadline diagnostics must measure elapsed duration with the same
+  monotonic clock class used by timeout scheduling. Wall-clock slew can make a
+  correctly fired 90-second Node timer appear to last only ~82 seconds when
+  elapsed fields use `Date.now()`. Keep ISO timestamps on wall time, but use
+  `performance.now()` for duration attribution.
+- 2026-07-14: Generic ChatGPT blocking-surface recovery must not handle an
+  account-mirror rate-limit as a dismiss/reload/reopen opportunity. Treat it as
+  a provider hard stop before recovery and recheck the blocking surface after
+  each failed readiness wait, while retaining recovery for connection and
+  transient-error surfaces.
+- 2026-07-14: Treat a durable complete metadata ledger as phase authority, not
+  permission to replay provider discovery before materialization. When the
+  ledger and asset inventory already prove remote-known-missing-local assets,
+  queue materialization directly and let its nonterminal cursor own the cycle.
+  Conversely, a collector failure observed after the ledger timestamp must
+  supersede the old complete projection and remain visible in completion
+  `error`; otherwise status and completion surfaces disagree about the same
+  live failure.
+- 2026-07-14: Aborting a provider-call wrapper is insufficient when the
+  ChatGPT adapter ignores the signal while waiting and recovering. A retained
+  failed pass showed a disposable conversation target navigating for roughly
+  three minutes after its 90-second caller deadline, then writing context
+  cache after completion failure. Bind the abort signal to CDP connection/tab
+  cleanup, and size ChatGPT detail work for observed blank-surface recovery:
+  240 seconds of provider work plus governor allowance. This increases wait
+  tolerance without increasing request frequency or weakening provider guards.
+- 2026-07-14: A backfill ledger write is not evidence of collector recovery.
+  Resolve failed-phase and completion-error authority against the last
+  successful refresh timestamp; otherwise late persistence can falsely
+  project a currently failed cycle as `complete`.
+- 2026-07-14: Validate slow ChatGPT detail repair with consecutive unattended
+  cycles, not one bounded retry. Plan 0154's repaired production path completed
+  context reads at 132.3, 140.5, and 114.3 seconds without a provider guard,
+  proving the former 90-second effective deadline was below normal
+  blank-surface recovery time. After each follow-on materialization, require
+  CDP port/target disposal and service task-count recovery in addition to a
+  successful job receipt.
+- 2026-07-15: ChatGPT identity discovery needs the same realistic browser-work
+  envelope and abort ownership as ChatGPT detail reads. A generic 30-second
+  discovery budget plus a 60-second governor wait caused three false
+  90-second identity failures while browser work outlived the caller. Use 240
+  seconds of ChatGPT browser work plus governor allowance and bind abort to
+  exact-once disposable CDP cleanup. Also distinguish this from host display
+  failure: when WSLg exposes no X11/Wayland socket, managed Chrome cannot
+  launch and a larger collector timeout is not a repair. Installed proof under
+  a temporary Xvfb display completed identity in 2.9 seconds, completed four
+  119-129 second context reads, reset failures to zero, and kept the provider
+  guard clear; the temporary display and CDP listener were removed afterward.
+- 2026-07-15: A successful-looking ChatGPT detail response is not proof that
+  provider work may continue. The adapter can persist a rate-limit cooldown
+  while returning cached or partially recovered context, so detail inventory
+  must re-read the authoritative guard after every provider interaction and
+  stop before the next one. Terminal history materialization guards must also
+  project and persist onto the matching Account Mirror runtime before the job
+  becomes terminal; otherwise completion cadence can schedule against stale
+  guard-clear status.
+- 2026-07-15: Bounded managed-browser cleanup is required after failed refreshes
+  as well as successful ones. A provider-guard stop can otherwise leave Chrome
+  and its CDP listener owned by the API service even though the completion has
+  entered cooldown. Run the same best-effort termination helper after failure
+  state persistence and preserve the original refresh/guard error.
+- 2026-07-19: Provider-rate tuning must count physical browser work across the
+  collector-to-materialization boundary, not only logical collector actions.
+  An account-mirror context read must reuse its already verified identity for
+  cache routing and skip feature-signature probing. Hand the exact freshly
+  observed conversation IDs, effective pacing policy, and maximum cooldown
+  boundary to materialization; try those snapshots from cache without another
+  live refresh, and use one job-scoped governor for remaining provider work.
+  Keep disposable targets as the cleanup boundary rather than trading fewer
+  tabs for unsafe cross-conversation session reuse.
+- 2026-07-20: Exact conversation IDs are a freshness handoff, not permission to
+  replay terminal assets, but verify which request field the live caller uses
+  before attributing a repeat to that branch. The pass-19 receipt used
+  `reuseSnapshotConversationIds`; its repeated PDF came through general
+  backlog selection because sandbox action text, percent-encoded filenames,
+  `download-dom`, and archived `download` produced different family
+  signatures. Prefer decoded download URI filenames, canonicalize those source
+  aliases, and build terminal signatures once for both exact-ID and general
+  paths when `force` is false. Preserve signature-less fallback and explicit
+  `force: true` replay semantics.
+- 2026-07-20: Test singular `conversationId` independently from selected
+  `conversationIds`; they are separate dispatch paths. A provider-free batch
+  harness can pass while a direct installed smoke still opens Chrome. Run the
+  terminal-family preflight on the singular path before provider work, retain
+  its direct result shape, and abort/restart immediately if a browser-free
+  smoke unexpectedly launches the managed browser.
+- 2026-07-20: Judge materialization idempotency by checksum history and alias
+  dispositions, not by a nonzero materialized count alone. The first bounded
+  post-repair pass legitimately produced four checksums absent from earlier
+  job receipts while marking the paired `download-dom` row as a duplicate of
+  its sandbox artifact. That is new yield plus correct within-pass alias
+  collapse, unlike the identical checksum replay that opened Plan 0161.
+- 2026-07-20: One new-yield pass is insufficient proof of cross-job
+  idempotency. Pass 21 repeated three pass-20 checksums under identical archive
+  item IDs after the same conversation was refreshed, even though the
+  within-pass sandbox/`download-dom` alias collapsed correctly and no new
+  materialization browser opened. Compare consecutive receipts by checksum,
+  archive ID, and conversation ID before closing the repair or relaxing rate
+  controls; changed file availability can coexist with unchanged terminal
+  families.
+- 2026-07-20: Conversation-level terminal gating is insufficient when a chat
+  mixes archived and pending asset families. Selecting the chat for the
+  pending family and then materializing its full asset list repeats provider
+  transfers and spends `maxItems` on already-terminal work. Carry the matched
+  terminal signatures into provider work and filter artifact/file candidates
+  before transfer limiting; post-result deduplication alone does not reduce
+  browser churn or rate-limit exposure.
+- 2026-07-20: Archive-index evidence alone is not a durable replay boundary.
+  Preserve successful materialization receipts as terminal family evidence
+  while their recorded local files still exist, and fall back to provider work
+  if those files disappear. For download assets, canonicalize catalog URI,
+  archive filename, and prior-job provider URI to the same filename before
+  comparing families; descriptive UI labels are not stable identities.
+- 2026-07-20: Reconciliation candidates cannot derive provider-work
+  exclusions only by intersecting terminal evidence with cached catalog asset
+  manifests. Fresh collector rows may identify the chat before publishing any
+  artifact/file rows, producing an empty intersection and replaying terminal
+  downloads discovered from the live DOM. Forward the full
+  provider/runtime/identity-scoped terminal-family set for exact-ID and broad
+  discovery,
+  then filter before transfer limiting. A no-manifest row is a discovery gap,
+  not evidence that prior terminal families are irrelevant.
+- 2026-07-20: `reuseSnapshotConversationIds` controls snapshot reuse; it does
+  not select reconciliation scope. Completion-owned jobs can populate it while
+  leaving `conversationIds` empty, routing through broad candidate selection.
+  Preserve that exact internal request shape in regression tests. Do not retry
+  it through the public create endpoint, whose schema omits internal pacing and
+  reuse fields.
+- 2026-07-20: Prove replay suppression at the provider transfer seam, not only
+  from the terminal job count. A clean idempotent pass should show zero eligible
+  artifact/file candidates after exclusions, `downloads.attempted=0`,
+  `materialized=0`, and no repeated checksum/archive publication. A bounded
+  snapshot-refresh timeout can still emit one failed manifest row without
+  disproving transfer idempotency when no download was attempted and the guard
+  stays clear.
+- 2026-07-20: Close cross-job idempotency only after two consecutive
+  completion-owned receipts agree at the job and transfer seams. Passes 25 and
+  26 each produced `materialized=0`, `checksumCount=0`, zero eligible
+  artifact/file transfer candidates, zero download attempts, and no repeated
+  archive publication while remaining provider-guard-clear.
+- 2026-07-22: A provider adapter hard-stop can still be duplicated by an outer
+  generic retry layer even when the adapter itself interrupts promptly. Decide
+  retry eligibility from the original structured error before guard wrapping:
+  account-mirror context reads must not replay a
+  `blockingSurface.kind=rate-limit` error, while ordinary transient failures
+  retain their bounded retry. Prove both branches at the real
+  `getConversationContext` seam and keep installed verification provider-free
+  under the persisted cooldown.
+# 2026-07-23 — ChatGPT conversation-file batches now capture signed anchor downloads without opening tabs
+
+- Symptom: SIP-1133 found ten of twelve upload tiles, but every transfer still
+  fell through to `/backend-api/files/download/<file>?inline=true` and failed
+  403. The retained-client repair alone could therefore remove attachment churn
+  without resolving the binary authorization path.
+- Cause: the conversation-file click path intercepted `window.fetch` only.
+  ChatGPT file tiles can open a preview whose `Download` control synthesizes an
+  anchor click or `window.open` to a signed `backend-api/estuary/content` URL.
+- Fix: within the one retained page, suppress matching anchor/window
+  navigation, capture the signed URL, click the exact visible viewer Download
+  control when required, fetch the binary in-page, restore patched primitives,
+  and record sanitized `anchor|fetch|direct` transport telemetry. Attach,
+  retain, and reuse events share a one-way target fingerprint so physical
+  target reuse is provable without persisting raw IDs. The direct provider-ID
+  endpoint remains a bounded fallback.
+- Verification: 213 adjacent tests, typecheck, scoped Biome, and production
+  build pass. Live provider proof remains guard-gated to one 12-file batch.
+
+# 2026-07-23 — Retain one ChatGPT client across files-only snapshot and transfer
+
+- Symptom: the operator-overridden SIP-1133 pass showed one physical page but
+  three CDP attachments to the same target, then failed all 12 transfers after
+  accepting a 403 JSON response as the download result.
+- Cause: project scoping cloned the list-options object that owned the retained
+  provider session; direct files-only snapshot refresh also used a separate
+  LLM client; and the capture loop stopped on any intercepted response rather
+  than only a successful binary/signed response.
+- Fix: preserve already-scoped list options by identity, use the retained
+  files-only materialization session as snapshot-refresh evidence, keep failed
+  capture candidates only for diagnostics, and continue to the signed viewer
+  download path. Signed `estuary/content` URLs no longer need to repeat the
+  provider file ID.
+- Verification: the new red/green regressions and all adjacent suites pass
+  `215/215`; TypeScript, production build, scoped Biome, installed bundle
+  inspection, and paused-service restart readback pass. No second live batch
+  was attempted.
+
+## 2026-07-23 live receipt
+
+- Exact job `hmj_9e4ae83892c1482e9b737b69955fe568` live-proved the churn fix:
+  one page, one CDP attachment, one retain, two reuses, one batch, and 12
+  sequential attempts with no new rate-limit detection.
+- All 12 visible tiles matched and the direct fallback returned 403 JSON
+  `Forbidden` for every file. The operator then reproduced `Forbidden` through
+  ChatGPT's native web UX, proving the remaining failure is provider-side file
+  access rather than an AuraCall capture defect. The AuraCall single-session
+  repair is accepted; do not retry these provider-inaccessible files.
+- 2026-07-23: A live-follow minimum interval measured from collector progress
+  is not a sufficient cross-phase quiet boundary when a completion-owned
+  materialization job outlives that interval. Record the latest physical
+  provider-work settlement across both collector and materialization, and make
+  the next collector attempt wait from that timestamp. Otherwise a long
+  materialization can consume the entire nominal cooldown and the next detail
+  read can begin immediately, triggering a provider guard even when the prior
+  collector stayed below its logical interaction budget.
+- 2026-07-23: Treat terminal completion-owned materialization as a new physical
+  provider-work settlement boundary. Persist that timestamp in the completion
+  cursor and schedule the next collector from settlement plus the target
+  minimum interval; otherwise a long materialization consumes the entire
+  nominal quiet window.
+- 2026-07-23: Do not reduce ChatGPT Business/workspace bindings to email in
+  Account Mirror. Use configured plan/structure qualifiers for the Business
+  tenant/cache key, keep Personal on its legacy email key, and compare only the
+  primary identity portion against the provider-detected email. Do not add a
+  presentation-only `accountLevel` to the shared service execution affinity:
+  doing so breaks existing same-email bindings. If Business has no stronger
+  qualifier, add `structure=business` only at the Account Mirror tenant-key
+  boundary.
+- 2026-07-23: Managed-browser dispatcher locks are profile-scoped and therefore
+  cannot serialize one provider across several account-mirror runtime
+  profiles. Give the routine scheduler and completion loops one shared FIFO
+  lease per provider, retain it from collector entry through terminal
+  completion-owned materialization, and release before the cadence wait.
+  Removing a paused/cancelled waiter must not release an owner's still-running
+  physical work; unrelated providers keep independent queues. A
+  completion-local lock is insufficient because the routine scheduler issues a
+  direct refresh before reconciliation.
+- 2026-07-24: Treat ChatGPT app state as three independent truth surfaces:
+  installed plugin inventory, linked/authentication state, and current composer
+  selectability. Do not infer one from another, do not click `Connect`, and do
+  not present page-wide label matches as installed truth. Current app selection
+  is an inline `ecosystemMention` pill whose `plugin:...` identifier is carried
+  in prompt `system_hints` and custom symbol offsets.
+- 2026-07-24: ChatGPT's current composer menu requires trusted CDP pointer
+  input; synthetic DOM clicks can silently leave the popover closed. Use a
+  generic origin/path predicate for ordinary ChatGPT URLs rather than the
+  project-route predicate, and collect composer plus installed/link evidence
+  inside one exclusive feature operation to avoid self-blocking the managed
+  browser dispatcher.
+- 2026-07-24: Do not use a Node old-space limit below the API service's measured
+  retained idle footprint. Bound stored runtime-run reads and filter
+  startup/background recovery to active statuses first, then size the heap
+  guard from installed-runtime evidence. A heap cap can prevent workstation
+  exhaustion, but an undersized cap turns ordinary control-plane work into an
+  immediate V8 OOM.
+- 2026-07-24: Scheduler pause and provider FIFO do not prove that restoring
+  several persisted completion loops is memory-safe. Completion startup/resume
+  can retain substantial control-plane state even while only one profile owns
+  physical provider work. Validate all-operation resume separately from a
+  single-profile collector, stop on process/cgroup growth, and leave every
+  completion paused until the fan-out path is bounded.
+- 2026-07-24: Browser-provider feature modules must use the shared
+  settle-aware navigation/reload helpers instead of issuing raw
+  `Page.navigate` or `Page.reload` calls. This preserves mutation-source
+  attribution, document readiness handling, and the diagnostics used to
+  explain browser churn.
+- 2026-07-24: HTTP scheduler tests must override AuraCall home with a fresh
+  temporary directory when their behavior depends on default scheduler state.
+  Reading the operator's persisted pause/control state makes otherwise isolated
+  tests machine-dependent. For elapsed-time concurrency tests, assert a
+  material lower bound with small timer-granularity tolerance rather than an
+  exact millisecond boundary under full-suite load.

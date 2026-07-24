@@ -238,6 +238,39 @@ Agent and team layers:
 - `teams`
   - group agents without redefining browser or runtime-profile state
 
+## ChatGPT developer apps
+
+The `apps` CLI namespace uses the managed ChatGPT browser selected by the
+current AuraCall runtime profile. It does not add a second browser credential
+or app registry to configuration.
+
+- `auracall --profile <runtime> apps --target chatgpt list --json` is
+  read-only. It reports the live account, Developer mode, installed app IDs,
+  development scope, enablement, and linked authentication state.
+- `create`, `refresh`, submitted `test`, and `uninstall` require both
+  `--expected-account <email>` and `--yes`. Exact app IDs are preferred;
+  duplicate exact names fail closed.
+- `test <app>` without `--submit` selects the app in a blank composer, verifies
+  the resulting ecosystem-mention app ID, sends nothing, and clears the
+  composer.
+- OAuth sign-in, MFA, consent, CAPTCHA, and other human-verification surfaces
+  are returned as operator gates. Aura-Call does not enter credentials or
+  override those surfaces.
+- The commands share the browser-operation dispatcher and current ChatGPT
+  blocking-surface guards. They do not relax live-follow rate limits.
+
+Use the account-bound runtime profile deliberately. For example:
+
+```bash
+auracall --profile wsl-chrome-3 apps --target chatgpt create \
+  --name "LitScout Dev" \
+  --server-url "https://example.test/mcp" \
+  --auth oauth \
+  --connection server-url \
+  --expected-account eric.cochran@soylei.com \
+  --yes --json
+```
+
 Target-model note:
 - the preferred public shape is documented in
   [config-model-target-shape.md](/home/ecochran76/workspace.local/auracall/docs/dev/config-model-target-shape.md)
@@ -593,6 +626,9 @@ Within each file, later CLI flags still override config, and environment variabl
     a placeholder seam, not a live override surface.
   - Account identity stays on
     `runtimeProfiles.<name>.services.<service>.identity`, not agent metadata.
+    ChatGPT Business/workspace identities should include `accountLevel`,
+    `accountPlanType`, and `accountStructure`; Account Mirror uses those
+    qualifiers to keep a same-email Business cache distinct from Personal.
   - If both `--profile` and `--agent` are passed, `--profile` wins.
 - Use `--team <name>` only for planning and inspection surfaces today.
   - It does not change the active runtime selection.
@@ -677,7 +713,7 @@ Within each file, later CLI flags still override config, and environment variabl
   - `gemini`: `search`, `grounding`, `apps`
 - Headless/headful settings belong to the browser layer; keep using `browser.headless` and `browser.hideWindow` until the rename lands.
 - `browser.hideWindow: true` is now the recommended default for headful browser automation. Aura-Call launches Chrome with `--start-minimized`, suppresses `Page.bringToFront()` on reuse paths, and only auto-hides windows it just launched itself. On WSL/X11, treat this as a no-focus-steal guarantee first and a literal minimized-state guarantee second, because Chrome's DevTools window-bounds API can still report `windowState: normal` while `_NET_ACTIVE_WINDOW` stays unchanged.
-- `services.<service>.thinkingTime` can set a per-service default for ChatGPT Thinking/Pro depth selection (overrides `profiles.<name>.browser.thinkingTime` when set). It does not select Pro by itself; Pro still has to be requested through the ChatGPT model picker via the service model, for example `model: "gpt-5.2-pro"`.
+- `services.<service>.thinkingTime` can set a per-service default for ChatGPT Sol/Thinking/Pro depth selection (overrides `profiles.<name>.browser.thinkingTime` when set). It does not select Pro by itself; Pro still has to be requested through the ChatGPT model picker via the service model, for example `model: "gpt-5.2-pro"` or `model: "chatgpt:sol-pro"`.
 - `runtimeProfiles.<name>.services.<service>.identity` sets the username/email used for cache identity; auto-scraping is disabled unless `runtimeProfiles.<name>.cache.useDetectedIdentity` is set.
 - `runtimeProfiles.<name>.browser.profilePath` + `profileName` define the source browser profile; `cookiePath` overrides the derived Cookies DB location. `profileName` accepts either the on-disk Chromium directory (for example `Profile 1`) or the friendly UI label.
 - when both exist, active resolution now prefers the referenced browser profile
@@ -725,11 +761,30 @@ Within each file, later CLI flags still override config, and environment variabl
   - provider hard stops such as CAPTCHA, `sorry`, account challenge, rate
     limit, or sign-in required states impose long cooldowns instead of retry
     storms
+  - ChatGPT rate-limit detections retain a bounded per-browser-profile history
+    and escalate cooldowns up to six hours; successful reads do not erase the
+    recent detection streak
+  - account-mirror scheduler pause/resume is durable across API service
+    restarts and is hydrated before startup cadence is scheduled
+  - terminal completion-owned materialization starts a fresh collector minimum
+    interval from its provider-work settlement; elapsed time while
+    materialization was still active does not satisfy that quiet window
   - each mirror pass has page/read budgets and should prefer metadata before
     full content or binary artifact retrieval
   - `liveFollow.freshFrontierThreshold` optionally controls how many contiguous
     cached-fresh reverse-mtime conversation rows stop steady-follow detail
     scanning; the default is `3`
+  - account-mirror development controls require the installed service capability
+    `AURACALL_ACCOUNT_MIRROR_DEVELOPMENT_CONTROLS=1` and an explicit,
+    target-bound `development` request with wall-time, conversation,
+    materialization-candidate, and pass limits; ordinary requests cannot infer
+    development mode from `NODE_ENV` or a runtime-profile name
+  - development overrides may relax deadlines, interaction rates, and cooldowns,
+    but never bypass provider guards, CAPTCHA/sign-in stops, identity checks,
+    foreground preemption, or browser-operation ownership
+  - a phase-isolated `detail-inventory` development run uses `steady_follow`;
+    `full_sweep` intentionally refreshes project/root discovery before detail
+    work even when `requestedPhase` is supplied
 - `runtimeProfiles.<name>.cache.store` controls cache backend: `json` keeps legacy JSON files only, `sqlite` uses SQLite only (`cache.sqlite` per provider+identity), and `dual` reads/writes SQLite plus the JSON mirror (recommended migration mode).
 - `dev.browserPortRange` sets the fallback DevTools port range used when spawning new Chrome instances (profile/browser overrides still win).
 - `browser.*` legacy keys are still accepted and override profile defaults when present (CLI flags still win).

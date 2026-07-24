@@ -73,6 +73,17 @@ decisions can be audited without inferring from completion status alone:
 operator classification layer, not a provider-safety bypass; provider guards,
 foreground preemption, and cadence checks still apply before provider work.
 
+## Scheduler Operator Authority
+
+Scheduler pause/resume is operator control state, not transient process state.
+The API persists that posture under the AuraCall home cache and hydrates it
+before startup cadence. A paused scheduler therefore remains paused after a
+service restart; only an explicit resume restores automatic scheduling.
+
+ChatGPT rate-limit detection history is scoped to the browser profile. Recent
+detections escalate the cooldown from 5 to 15 and 45 minutes up to a six-hour
+cap, remain present across later successful reads, and age out after 24 hours.
+
 ## Materialization Backlog States
 
 - `none`: no known remote assets are missing local materialization.
@@ -86,3 +97,89 @@ foreground preemption, and cadence checks still apply before provider work.
 `metadata_current_backlog` must not reselect a chat for detail scraping by
 itself. Policies that require local bytes should expose or queue
 `materialization_required` work instead.
+
+## Provider Deadlines And Failure Authority
+
+ChatGPT discovery/identity and detail inventory budget browser settling
+separately from interaction pacing. The production provider window is 240
+seconds, with the configured conversation/page/renavigation governor allowance
+added to form the effective per-call deadline. Reaching that deadline aborts
+the provider request and closes an account-mirror disposable tab; timed-out
+work must not continue navigating, overlap the next chat, or write late cache
+state. Browser-launch failure remains a host/runtime readiness failure; a wider
+collector deadline must not be treated as a substitute for a working display
+and reachable configured CDP endpoint.
+
+A failed collector phase remains authoritative until a later successful
+refresh. Persisting or reconciling the backfill ledger after the failure does
+not convert the live-follow cycle to `complete` and does not clear the exact
+completion error.
+
+## Collector-To-Materialization Pacing
+
+A successful collector refresh hands materialization the exact conversation IDs
+whose detail snapshots were observed, the refresh freshness boundary, and the
+effective browser-interaction policy. Materialization waits until the maximum
+configured conversation-read, page-refresh, or renavigation cooldown has
+elapsed before provider work begins. Its snapshot and asset operations then
+share one job-scoped interaction governor.
+
+When completion-owned materialization becomes terminal, its `completedAt`
+provider-work boundary starts a fresh collector minimum interval. The
+completion cursor persists that settlement timestamp across restarts, and the
+next collector remains `idle_waiting` until
+`providerWorkSettledAt + limits.minIntervalMs`. Time spent inside the
+materialization job does not count as post-provider quiet time.
+
+## Provider-Wide Fair Serialization
+
+The routine account-mirror scheduler and all completion loops in one API
+runtime share a FIFO provider-work lease keyed by provider. A direct scheduler
+pass or completion must own that lease before collector refresh; completions
+also require it before complete-ledger materialization begins. When collector
+work queues completion-owned materialization, ownership continues until the
+materialization job reaches a terminal provider-work settlement; it is not
+released merely because a bounded completion run returns.
+
+The lease is released before the owning completion enters its subsequent
+minimum-interval wait. This permits the next same-provider tenant to rotate in
+without allowing two managed browser profiles to touch the same provider
+concurrently. Pause and cancel remove queued waiters, while in-flight owners
+retain the lease until physical materialization settles. Providers use
+independent queues, so ChatGPT serialization does not block Gemini or Grok.
+
+For a conversation refreshed by the immediately preceding collector pass,
+materialization must try the new cache first and must not issue another live
+snapshot refresh merely because no local asset was produced. Account-mirror
+context cache routing reuses the collector's already verified identity and
+skips feature-signature probing. Disposable browser targets remain required;
+this contract removes nested and duplicate reads rather than retaining one tab
+across unrelated conversation URLs.
+
+Configured ChatGPT Business/workspace targets use qualified service-account
+identity (`plan`, `structure`, and configured organization/account ID when
+present). When a target exposes only a Business account-level label, Account
+Mirror adds `structure=business` as its cache-isolation fallback. Personal
+targets retain the legacy email-only Account Mirror tenant key, and
+presentation-only account-level labels do not alter shared execution affinity.
+Provider identity verification compares the primary email portion, so
+qualifiers isolate caches without masking a login to a different email.
+
+Exact collector-ID handoff does not override terminal asset-family evidence.
+Unless `force: true` is explicit, materialization must suppress a selected
+conversation when all of its usable catalog asset-family signatures are
+already terminal through available run-archive assets, recorded volatile
+dispositions, or complete catalog evidence. A selected conversation with no
+usable catalog signature remains eligible so stale or newly refreshed rows do
+not lose the existing provider-work fallback.
+
+The same rule applies to operator/API requests that use singular
+`conversationId`: local catalog and terminal evidence must be checked before
+opening the provider browser. The direct request keeps its direct source and
+target result shape, and `force: true` remains the explicit replay override.
+
+Download-family identity is provider-surface neutral. Percent-encoded URI
+filenames, sandbox action labels, `download-dom` rows, and archived `download`
+items must converge on the same decoded filename/source family before candidate
+selection. UI action wording such as `Open the ... PDF` must not make an
+already archived download look new.
