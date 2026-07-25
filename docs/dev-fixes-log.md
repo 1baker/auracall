@@ -19666,3 +19666,21 @@ browser-stage lifecycle observability, not transcript truncation.
   ChatGPT developer-app refresh, also bind readiness to the exact plugin route,
   exact app heading, one dialog, and one enabled Refresh control before
   mutation.
+- 2026-07-25: An operator provider-guard clear must update every guard truth
+  surface consumed by that runtime profile. Clearing only account-mirror
+  registry state can report success while one-shot and developer-app browser
+  submissions remain blocked by the persisted rate-limit file. The HTTP
+  control now updates both scheduler state and the provider browser guard;
+  zero cooldown removes active cooldown fields while preserving mutation and
+  rate-limit history, and positive quiet cooldowns remain aligned.
+- 2026-07-25: Do not classify a ChatGPT page as Cloudflare-blocked merely
+  because it loads a `/challenge-platform/` script. Current healthy, signed-in
+  ChatGPT composers retain that script. Require the `Just a moment...` title
+  or a positive challenge surface such as Cloudflare challenge containers,
+  Turnstile response input, or challenge iframe. Preserve the hard stop for
+  those positive signals.
+- 2026-07-25: A user-runtime installer must execute the newly installed CLI
+  before reporting success. A package install can return zero while its runtime
+  dependency closure is unusable by Node. Run the installed `auracall`
+  entrypoint with `--version` after wrapper creation and fail the promotion if
+  that startup smoke fails.

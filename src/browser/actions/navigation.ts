@@ -1,6 +1,6 @@
 import type { ChromeClient, BrowserLogger } from '../types.js';
 import {
-  CLOUDFLARE_SCRIPT_SELECTOR,
+  CLOUDFLARE_CHALLENGE_SELECTOR,
   CLOUDFLARE_TITLE,
   INPUT_SELECTORS,
 } from '../constants.js';
@@ -443,7 +443,7 @@ async function isCloudflareInterstitial(Runtime: ChromeClient['Runtime']): Promi
   }
 
   const { result } = await Runtime.evaluate({
-    expression: `Boolean(document.querySelector('${CLOUDFLARE_SCRIPT_SELECTOR}'))`,
+    expression: `Boolean(document.querySelector(${JSON.stringify(CLOUDFLARE_CHALLENGE_SELECTOR)}))`,
     returnByValue: true,
   });
   return Boolean(result.value);

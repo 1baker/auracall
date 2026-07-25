@@ -15,6 +15,10 @@
     pointer click, not synthetic DOM-event dispatch
   - stop immediately on a provider rate-limit, CAPTCHA, or human-verification
     surface
+  - a loaded Cloudflare `/challenge-platform/` script is not by itself a
+    human-verification surface; current healthy ChatGPT composers retain that
+    script, so challenge detection must require the `Just a moment...` title
+    or a positive challenge UI marker
 - Live-suite posture:
   - stable baseline:
     - keep small, repeatable, and operationally useful
@@ -250,7 +254,10 @@
         routeability counts
       - provider guard clearance is available with
         `auracall api mirror-provider-guard-clear --port 8080 --provider gemini --runtime-profile default`
-        and MCP `account_mirror_provider_guard_clear`
+        and MCP `account_mirror_provider_guard_clear`; the control updates both
+        account-mirror scheduling state and the selected runtime profile's
+        persisted browser guard, so a successful clear cannot leave browser
+        submission blocked by stale cooldown data
       - omitted `--max-passes` means unbounded live follow; `--max-passes`
         is only a debug/test cap
       - full-sweep backfill is explicit with

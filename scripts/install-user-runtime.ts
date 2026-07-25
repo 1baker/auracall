@@ -153,10 +153,20 @@ async function main(): Promise<void> {
       { cwd: repoRoot, dryRun: options.dryRun },
     );
 
+    const installedBinaryPaths = new Map<(typeof BINARIES)[number], string>();
     for (const binary of BINARIES) {
       const installedBinPath = path.join(options.prefix, 'node_modules', PACKAGE_NAME, 'dist', 'bin', `${binary}.js`);
+      installedBinaryPaths.set(binary, installedBinPath);
       writeWrapper(options.binDir, binary, installedBinPath, options.dryRun);
     }
+    const installedAuracallPath = installedBinaryPaths.get('auracall');
+    if (!installedAuracallPath) {
+      throw new Error('Installed Aura-Call CLI path was not recorded.');
+    }
+    run('node', [installedAuracallPath, '--version'], {
+      cwd: repoRoot,
+      dryRun: options.dryRun,
+    });
 
     const metadata = {
       packageName: PACKAGE_NAME,
