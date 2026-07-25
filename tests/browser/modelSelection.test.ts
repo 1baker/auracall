@@ -18,6 +18,13 @@ describe('browser model selection matchers', () => {
     expect(expression).toContain('button[aria-label*=\\"Model\\"]');
   });
 
+  it('waits for the current model picker to mount before failing closed', () => {
+    const expression = buildModelSelectionExpressionForTest('Pro');
+    expect(expression).toContain('const BUTTON_WAIT_MS = 12000');
+    expect(expression).toContain('while (!button && performance.now() - buttonWaitStartedAt <= BUTTON_WAIT_MS)');
+    expect(expression).toContain('await new Promise((resolve) => setTimeout(resolve, REOPEN_INTERVAL_MS / 2))');
+  });
+
   it('includes rich tokens for gpt-5.1 base selection', () => {
     const { labelTokens, testIdTokens, semanticTarget } = buildModelMatchersLiteralForTest('gpt-5.1');
     expect(semanticTarget).toBe('instant');

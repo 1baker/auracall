@@ -2,6 +2,16 @@ import { describe, expect, test, vi } from 'vitest';
 import { __test__ as promptComposer } from '../../src/browser/actions/promptComposer.js';
 
 describe('promptComposer', () => {
+  test('does not mistake a selected app pill label for the requested prompt', () => {
+    expect(promptComposer.composerContainsPrompt('Corel33t', 'Review the existing project')).toBe(false);
+    expect(
+      promptComposer.composerContainsPrompt(
+        'Corel33t Review the existing project',
+        'Review the existing project',
+      ),
+    ).toBe(true);
+  });
+
   test('does not treat cleared composer + stop button as committed without a new turn', async () => {
     vi.useFakeTimers();
     try {

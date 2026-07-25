@@ -1,5 +1,57 @@
 # RUNBOOK
 
+## Turn 365 | 2026-07-25
+
+- Main's refreshed-materialization work was checkpointed as implementation
+  commit `9a5e43d4` and documentation commit `cc7b5c35`.
+- `fix/chatgpt-app-refresh` was reconciled into main with both Plan 0170 and
+  Plan 0171 histories preserved. The only content conflicts were the runbook,
+  fixes log, and dev journal.
+- Integration validation passes 178 focused tests, typecheck, production
+  build, full lint at the unchanged 203-warning baseline, the 171-plan audit,
+  and diff checks.
+- The browser-service `openSurface` regression now keys readiness to the
+  completed trigger stage instead of consuming a wall-clock-sensitive mock
+  queue. New CDP-domain test fixtures carry narrow naming-rule explanations.
+- No provider action, service restart, install, or guard clearance was part of
+  the merge.
+
+## Turn 364 | 2026-07-25
+
+- The literature scenario was never submitted. AuraCall's persisted ChatGPT
+  provider guard rejected locally before browser interaction and extended the
+  cooldown through `2026-07-25T20:29:21.846Z`; it was not bypassed.
+- LitScout's bounded proof cleanup disconnected `Corel33t` without deleting or
+  uninstalling it and revoked the nonce connector binding. A later live
+  prompt-preservation proof requires the separate LitScout H4/R1 authority.
+- `auracall-api.service` is active again as PID `3677920` with zero restarts.
+  The account-mirror scheduler is enabled but operator-paused; the earlier
+  intentionally-stopped note is historical, not current runtime state.
+- Plan 0171 remains open because the prompt-preservation repair has not yet
+  produced one valid live app-selected submission.
+
+## Turn 363 | 2026-07-25
+
+- Plan 0171's corrected trusted-pointer refresh succeeded exactly once against
+  existing app `Corel33t`; no duplicate or uninstall occurred, and fresh
+  ChatGPT readback showed LitScout's exact 16-action catalog.
+- The nonce OAuth reconnect completed and remained bound to the existing app.
+- ChatGPT UI drift required two more bounded repairs:
+  - commit `aab7b538` waits for the late-mounted model picker;
+  - commit `bc649615` searches the dynamic composer popover for the exact app.
+- The first actual office-action test submission exposed a prompt-composer
+  defect: inline app-pill text masked failed prompt insertion, and AuraCall
+  submitted one blank app turn. That scenario is consumed and must not retry.
+- Commit `6a98516f` verifies prompt text independently of app pills, preserves
+  the pill during fallback insertion, and refuses Send if the prompt is absent.
+  Focused validation passes 46 tests plus TypeScript and production build.
+- The literature scenario remains unsubmitted because ChatGPT raised its
+  provider rate-limit modal before app selection. Do not bypass the persisted
+  provider guard.
+- `auracall-api.service` was intentionally stopped during the two isolated CLI
+  tests because its startup account-mirror refresh held the foreground
+  operation lock, then restored after bounded connector cleanup.
+
 ## Turn 362 | 2026-07-25
 
 - Organic job `hmj_0346175923de4538af0ab7a8bcea2409` reached the refined
@@ -14479,3 +14531,26 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   completion loops. Post-restart service memory is near 1.3-1.4 GiB with a
   1.67 GiB peak, host available memory exceeds 32 GiB, and all ChatGPT
   provider guards are clear.
+
+## Turn 339 | 2026-07-25
+
+- Active supporting plan:
+  `docs/dev/plans/0171-2026-07-25-chatgpt-developer-app-trusted-refresh.md`
+- Goal:
+  - repair the exact existing-app Refresh operation without creating,
+    uninstalling, reconnecting, or submitting through the app.
+- Reproduced mismatch:
+  - AuraCall's existing `pointer` strategy emitted synthetic DOM events;
+  - the exact enabled `Corel33t` Refresh control was more than 7,000 pixels
+    below the current viewport inside the settings dialog;
+  - the prior approved attempt failed before activating the control.
+- Source repair:
+  - browser-service now scrolls and hit-tests the exact target, sends trusted
+    CDP mouse input, and requires the exact control to observe a trusted click;
+  - ChatGPT refresh now requires the exact plugin route, exact app heading,
+    one matching dialog, and one enabled Refresh control before activation.
+- Current gate:
+  - `65/65` focused tests, TypeScript, production build, source-built read-only
+    app inventory, and `git diff --check` pass;
+  - the one approved corrected installed-runtime refresh remains unconsumed
+    until the repair is committed and installed.

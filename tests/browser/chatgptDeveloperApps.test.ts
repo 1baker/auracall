@@ -1,8 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { normalizeChatgptInstalledAppProbesForTest } from "../../src/browser/providers/chatgptAdapter.js";
 import {
 	chatgptDeveloperAppSelectionMatchesForTest,
 	deriveChatgptDeveloperAppState,
+	waitForChatgptDeveloperAppRefreshControlForTest,
 } from "../../src/browser/providers/chatgptDeveloperApps.js";
 
 describe("deriveChatgptDeveloperAppState", () => {
@@ -120,5 +121,38 @@ describe("deriveChatgptDeveloperAppState", () => {
 				name: "Corel33t",
 			}),
 		).toBe(true);
+	});
+
+	it("requires one exact app dialog and enabled Refresh control on the exact plugin route", async () => {
+		const evaluate = vi.fn(async (_options: { expression: string }) => ({
+			result: {
+				value: {
+					appName: "Corel33t",
+					hash: "#settings/Plugins/plugin_asdk_app_corel33t",
+					dialogCount: 1,
+					refreshCount: 1,
+				},
+			},
+		}));
+
+		const result = await waitForChatgptDeveloperAppRefreshControlForTest(
+			// biome-ignore lint/style/useNamingConvention: CDP protocol domains use canonical capitalized names.
+			{ Runtime: { evaluate } as never },
+			{
+				pluginId: "plugin_asdk_app_corel33t",
+				appIds: ["asdk_app_corel33t"],
+				name: "Corel33t",
+			},
+		);
+
+		expect(result.ok).toBe(true);
+		const expression = evaluate.mock.calls[0]?.[0]?.expression as string;
+		expect(expression).toContain('"Corel33t"');
+		expect(expression).toContain(
+			'"#settings/Plugins/plugin_asdk_app_corel33t"',
+		);
+		expect(expression).toContain("dialogs.length !== 1");
+		expect(expression).toContain("refreshButtons.length !== 1");
+		expect(expression).toContain("button.disabled");
 	});
 });

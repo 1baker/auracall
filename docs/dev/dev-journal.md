@@ -41805,3 +41805,57 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   `Too many requests`, set cooldown through `2026-07-25T20:29:21.846Z`, and
   was operator-paused. Scheduler and all four ChatGPT completions remain
   paused under the hard-stop policy.
+
+## 2026-07-25 | Plan 0171 ChatGPT Developer App Trusted Refresh
+
+- The existing `Corel33t` refresh attempt exposed a concrete provider drift:
+  the control was present and enabled but far below the viewport, while the
+  shared `pointer` strategy emitted only synthetic DOM events.
+- Read-only agent-browser inspection attached to AuraCall's existing
+  `wsl-chrome-3` Chrome session and proved the exact route, exact app heading,
+  one dialog, one Refresh button, and zero diagnostic clicks.
+- The bounded repair adds a browser-service trusted-pointer primitive with
+  scroll, hit-test, CDP mouse input, and trusted-event verification. The
+  provider adapter adds exact app/route readiness and bounded failure
+  diagnostics.
+- Provider-free validation passes `65/65`, TypeScript, production build, and
+  diff checks. The separately approved exact live attempt remains gated on a
+  committed, installed source state.
+
+## 2026-07-25 | Plan 0171 Live Refresh And App-Prompt Follow-Up
+
+- Installed commit `37edc8c0` consumed the one corrected refresh successfully;
+  a fresh app dialog exposed LitScout's exact 16 current actions.
+- The existing app was reconnected to the nonce LitScout account. No app
+  recreation, uninstall, or permission widening occurred.
+- ChatGPT's model control now mounts after the initial ready surface, and its
+  add-ons popover filters installed apps by typing into the composer. Commits
+  `aab7b538` and `bc649615` cover those current UI contracts.
+- The first submitted office-action test was a blank app-only turn. Root cause:
+  prompt verification treated the inline `Corel33t` pill as composer content
+  after `Input.insertText` failed.
+- Commit `6a98516f` removes app-pill nodes from prompt verification, performs a
+  pill-preserving tail insertion fallback, and throws
+  `prompt-not-in-composer` before Send if the full prompt is absent.
+- The office scenario is not retryable. The literature scenario remains
+  unsubmitted behind ChatGPT's provider cooldown.
+
+## 2026-07-25 | Plan 0171 Provider Gate And Cleanup Closeout
+
+- The literature prompt was never submitted. After the first cooldown expired,
+  the persisted ChatGPT provider guard rejected locally before browser
+  interaction and extended through `2026-07-25T20:29:21.846Z`.
+- The owning LitScout proof disconnected `Corel33t` without delete or
+  uninstall and revoked its nonce connector binding during exact cleanup.
+- The API service is active again; its account-mirror scheduler is enabled but
+  operator-paused.
+- Plan 0171 remains open until a separately authorized live app-selected
+  submission proves the installed prompt-preservation repair or stops
+  fail-closed at the prompt guard.
+- Integration closeout: main first checkpointed the independent
+  refreshed-materialization slice as `9a5e43d4` plus `cc7b5c35`, then
+  reconciled `fix/chatgpt-app-refresh`. Both plan histories were preserved.
+  Combined validation passes 178 focused tests, typecheck, production build,
+  full lint at the unchanged 203-warning baseline, the 171-plan audit, and
+  diff checks. One timing-sensitive `openSurface` test fixture was made
+  trigger-state-driven during reconciliation.

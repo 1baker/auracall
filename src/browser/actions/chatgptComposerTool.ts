@@ -550,6 +550,47 @@ async function activateComposerPopoverItem(
   return typeof value?.label === 'string' && value.label ? value.label : null;
 }
 
+async function searchComposerPopover(
+  client: ChromeClient,
+  requestedTool: string,
+  toolCandidates: readonly string[],
+): Promise<VisibleMenuInventoryEntry | null> {
+  await client.Input.insertText({ text: requestedTool });
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    const entry = await readComposerPopoverEntry(client.Runtime);
+    if (entry && findBestComposerToolItem(entry.items, toolCandidates)) {
+      return entry;
+    }
+  }
+  return null;
+}
+
+async function clearComposerPopoverSearch(client: ChromeClient): Promise<void> {
+  await client.Input.dispatchKeyEvent({
+    type: 'keyDown',
+    key: 'a',
+    code: 'KeyA',
+    modifiers: 2,
+  });
+  await client.Input.dispatchKeyEvent({
+    type: 'keyUp',
+    key: 'a',
+    code: 'KeyA',
+    modifiers: 2,
+  });
+  await client.Input.dispatchKeyEvent({
+    type: 'keyDown',
+    key: 'Backspace',
+    code: 'Backspace',
+  });
+  await client.Input.dispatchKeyEvent({
+    type: 'keyUp',
+    key: 'Backspace',
+    code: 'Backspace',
+  });
+}
+
 async function openComposerTopMenu(
   Runtime: ChromeClient['Runtime'],
   toolCandidates: readonly string[],
@@ -743,7 +784,7 @@ async function selectComposerTool(
   }
 
   const currentPopover = await openComposerPopoverWithCdp(client);
-  const directMenu = currentPopover
+  let directMenu = currentPopover
     ? {
         ok: true as const,
         menuSelector: currentPopover.selector,
@@ -752,9 +793,26 @@ async function selectComposerTool(
         topMatch: findBestComposerToolItem(currentPopover.items, toolCandidates),
       }
     : await openComposerTopMenu(Runtime, toolCandidates);
+  let searchedComposerPopover = false;
+  if (currentPopover && directMenu.ok && !directMenu.topMatch) {
+    const searched = await searchComposerPopover(client, requestedTool, toolCandidates);
+    searchedComposerPopover = true;
+    if (searched) {
+      directMenu = {
+        ok: true as const,
+        menuSelector: searched.selector,
+        topLevelLabels: searched.itemLabels,
+        topItems: searched.items,
+        topMatch: findBestComposerToolItem(searched.items, toolCandidates),
+      };
+    }
+  }
   if (directMenu.ok && directMenu.topMatch) {
     const activatedLabel = await activateComposerPopoverItem(client, toolCandidates);
     if (activatedLabel) {
+      if (searchedComposerPopover) {
+        await clearComposerPopoverSearch(client);
+      }
       for (let attempt = 0; attempt < 10; attempt += 1) {
         await new Promise((resolve) => setTimeout(resolve, 120));
         const chipLabel = await readComposerToolChip(Runtime, toolCandidates);
@@ -791,6 +849,10 @@ async function selectComposerTool(
         availableMore: [],
       };
     }
+  }
+  if (searchedComposerPopover) {
+    await clearComposerPopoverSearch(client);
+    await dismissOpenMenus(Runtime).catch(() => false);
   }
 
   const topLevelSelection = await selectAndVerifyNestedMenuPathOption(Runtime, {

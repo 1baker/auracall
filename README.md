@@ -78,6 +78,9 @@ auracall --profile wsl-chrome-3 apps --target chatgpt test Corel33t \
 # plus --yes. OAuth, MFA, consent, CAPTCHA, and verification remain human gates.
 auracall --profile wsl-chrome-3 apps --target chatgpt refresh Corel33t \
   --expected-account eric.cochran@soylei.com --yes
+# Refresh resolves the exact plugin route and app heading, then scrolls,
+# hit-tests, and browser-clicks exactly one enabled Refresh control. It fails
+# closed unless that control receives a trusted click.
 
 # Shared durable media-generation contract from the CLI
 auracall media generate --provider chatgpt --type image -p "Generate an image of an asphalt secret agent" --json

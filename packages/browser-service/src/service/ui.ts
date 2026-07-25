@@ -51,6 +51,14 @@ export type PressButtonOptions = {
   logCandidatesOnMiss?: boolean;
 };
 
+export type TrustedPointerPressButtonResult = {
+  ok: boolean;
+  reason?: string;
+  matchedLabel?: string;
+  rootSelectorUsed?: string | null;
+  trusted?: boolean;
+};
+
 export type SetInputValueOptions = {
   selector?: string;
   match?: LabelMatchOptions;
@@ -2918,6 +2926,221 @@ export async function pressButton(
   }
 
   return { ok: false, reason: lastReason };
+}
+
+export async function pressButtonWithTrustedPointer(
+  client: Pick<ChromeClient, 'Runtime' | 'Input'>,
+  options: Omit<PressButtonOptions, 'interactionStrategies'>,
+): Promise<TrustedPointerPressButtonResult> {
+  const timeoutMs = options.timeoutMs ?? 5000;
+  const stateKey = `__browserServiceTrustedPointer_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+  const prepared = await waitForPredicate(
+    client.Runtime,
+    `(() => {
+      const selector = ${JSON.stringify(options.selector ?? null)};
+      const rootSelectors = ${JSON.stringify(options.rootSelectors ?? [])};
+      const requireVisible = ${JSON.stringify(options.requireVisible ?? true)};
+      const includeAny = ${JSON.stringify(options.match?.includeAny ?? [])};
+      const includeAll = ${JSON.stringify(options.match?.includeAll ?? [])};
+      const startsWith = ${JSON.stringify(options.match?.startsWith ?? [])};
+      const exact = ${JSON.stringify(options.match?.exact ?? [])};
+      const stateKey = ${JSON.stringify(stateKey)};
+      const logCandidatesOnMiss = ${JSON.stringify(options.logCandidatesOnMiss ?? false)};
+      const normalize = (value) => String(value || '').toLowerCase().replace(/\\s+/g, ' ').trim();
+      const isVisible = (el) => {
+        const rect = el.getBoundingClientRect();
+        const style = getComputedStyle(el);
+        return rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden' && style.display !== 'none';
+      };
+      const matchesLabel = (label) => {
+        if (!label) return false;
+        if (exact.length && exact.includes(label)) return true;
+        if (startsWith.length && startsWith.some((token) => label.startsWith(token))) return true;
+        if (includeAll.length && includeAll.every((token) => label.includes(token))) return true;
+        if (includeAny.length && includeAny.some((token) => label.includes(token))) return true;
+        return false;
+      };
+      const roots = rootSelectors.length
+        ? rootSelectors.map((rootSelector) => ({
+            rootSelector,
+            root: document.querySelector(rootSelector),
+          })).filter((entry) => entry.root)
+        : [{ rootSelector: 'document', root: document }];
+      const candidateLabels = [];
+      for (const entry of roots) {
+        const candidates = selector
+          ? Array.from(entry.root.querySelectorAll(selector))
+          : Array.from(entry.root.querySelectorAll(
+              'button,[role="button"],a,[role="link"],[role="menuitem"],[role="menuitemradio"],[role="option"]',
+            ));
+        const visibleCandidates = requireVisible ? candidates.filter(isVisible) : candidates;
+        const match = selector
+          ? visibleCandidates[0] || null
+          : visibleCandidates.find((element) => {
+              const label = normalize(element.getAttribute?.('aria-label') || element.textContent || '');
+              return matchesLabel(label);
+            }) || null;
+        if (!match) {
+          if (logCandidatesOnMiss) {
+            candidateLabels.push(
+              ...visibleCandidates
+                .map((element) => normalize(element.getAttribute?.('aria-label') || element.textContent || ''))
+                .filter(Boolean)
+                .slice(0, 12 - candidateLabels.length),
+            );
+          }
+          continue;
+        }
+        const label = normalize(match.getAttribute?.('aria-label') || match.textContent || '');
+        if (match.disabled || match.getAttribute?.('aria-disabled') === 'true') {
+          return null;
+        }
+        match.scrollIntoView({ block: 'center', inline: 'center' });
+        const rect = match.getBoundingClientRect();
+        if (
+          rect.width <= 0 ||
+          rect.height <= 0 ||
+          rect.bottom <= 0 ||
+          rect.right <= 0 ||
+          rect.top >= window.innerHeight ||
+          rect.left >= window.innerWidth
+        ) {
+          return null;
+        }
+        const center = {
+          x: rect.left + rect.width / 2,
+          y: rect.top + rect.height / 2,
+        };
+        const hit = document.elementFromPoint(center.x, center.y);
+        if (!hit || !(hit === match || match.contains(hit))) {
+          return null;
+        }
+        const controller = new AbortController();
+        window[stateKey] = { controller, result: null };
+        match.addEventListener('click', (event) => {
+          const state = window[stateKey];
+          if (state) {
+            state.result = {
+              trusted: event.isTrusted === true,
+              matchedLabel: label,
+              rootSelectorUsed: entry.rootSelector,
+            };
+          }
+        }, { capture: true, once: true, signal: controller.signal });
+        return {
+          ok: true,
+          center,
+          matchedLabel: label,
+          rootSelectorUsed: entry.rootSelector,
+        };
+      }
+      return null;
+    })()`,
+    {
+      timeoutMs,
+      description: 'trusted pointer button target',
+    },
+  );
+  const target = prepared.value as
+    | {
+        ok?: boolean;
+        reason?: string;
+        center?: { x: number; y: number };
+        matchedLabel?: string;
+        rootSelectorUsed?: string | null;
+      }
+    | undefined;
+  if (!prepared.ok || !target?.ok || !target.center) {
+    return {
+      ok: false,
+      reason: target?.reason || 'Trusted pointer button target not found',
+      matchedLabel: target?.matchedLabel,
+      rootSelectorUsed: target?.rootSelectorUsed ?? null,
+    };
+  }
+
+  const x = Math.round(target.center.x);
+  const y = Math.round(target.center.y);
+  await client.Input.dispatchMouseEvent({ type: 'mouseMoved', x, y, button: 'none' });
+  await client.Input.dispatchMouseEvent({
+    type: 'mousePressed',
+    x,
+    y,
+    button: 'left',
+    clickCount: 1,
+  });
+  await client.Input.dispatchMouseEvent({
+    type: 'mouseReleased',
+    x,
+    y,
+    button: 'left',
+    clickCount: 1,
+  });
+
+  const activation = await waitForPredicate(
+    client.Runtime,
+    `window[${JSON.stringify(stateKey)}]?.result || null`,
+    {
+      timeoutMs: Math.min(timeoutMs, 1500),
+      pollMs: 50,
+      description: 'trusted pointer click activation',
+    },
+  );
+  await client.Runtime.evaluate({
+    expression: `(() => {
+      const state = window[${JSON.stringify(stateKey)}];
+      state?.controller?.abort?.();
+      delete window[${JSON.stringify(stateKey)}];
+      return true;
+    })()`,
+    returnByValue: true,
+  });
+  const activationResult = activation.value as
+    | { trusted?: boolean; matchedLabel?: string; rootSelectorUsed?: string | null }
+    | undefined;
+  if (!activation.ok || activationResult?.trusted !== true) {
+    return {
+      ok: false,
+      reason: activationResult
+        ? 'Matched control did not receive a trusted click'
+        : 'Matched control did not receive a click',
+      matchedLabel: activationResult?.matchedLabel ?? target.matchedLabel,
+      rootSelectorUsed: activationResult?.rootSelectorUsed ?? target.rootSelectorUsed ?? null,
+      trusted: activationResult?.trusted ?? false,
+    };
+  }
+
+  if (options.postSelector) {
+    const ok = await waitForSelector(client.Runtime, options.postSelector, timeoutMs);
+    if (!ok) {
+      return {
+        ok: false,
+        reason: `Post selector not found: ${options.postSelector}`,
+        matchedLabel: activationResult.matchedLabel,
+        rootSelectorUsed: activationResult.rootSelectorUsed ?? null,
+        trusted: true,
+      };
+    }
+  }
+  if (options.postGoneSelector) {
+    const ok = await waitForNotSelector(client.Runtime, options.postGoneSelector, timeoutMs);
+    if (!ok) {
+      return {
+        ok: false,
+        reason: `Post-gone selector still present: ${options.postGoneSelector}`,
+        matchedLabel: activationResult.matchedLabel,
+        rootSelectorUsed: activationResult.rootSelectorUsed ?? null,
+        trusted: true,
+      };
+    }
+  }
+
+  return {
+    ok: true,
+    matchedLabel: activationResult.matchedLabel ?? target.matchedLabel,
+    rootSelectorUsed: activationResult.rootSelectorUsed ?? target.rootSelectorUsed ?? null,
+    trusted: true,
+  };
 }
 
 export async function openSurface(

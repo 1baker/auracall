@@ -230,7 +230,7 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
   const menuContainerLiteral = JSON.stringify(MENU_CONTAINER_SELECTOR);
   const menuItemLiteral = JSON.stringify(MENU_ITEM_SELECTOR);
   const buttonSelectorsLiteral = JSON.stringify(MODEL_BUTTON_SELECTORS);
-  return `(() => {
+  return `(async () => {
     ${buildClickDispatcher()}
     // Capture the selectors and matcher literals up front so the browser expression stays pure.
     const BUTTON_SELECTORS = ${buttonSelectorsLiteral};
@@ -242,6 +242,7 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
     const INITIAL_WAIT_MS = 150;
     const REOPEN_INTERVAL_MS = 400;
     const MAX_WAIT_MS = 20000;
+    const BUTTON_WAIT_MS = 12000;
     const normalizeText = (value) => {
       if (!value) {
         return '';
@@ -259,9 +260,16 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
       .filter(Boolean);
     const targetWords = normalizedTarget.split(' ').filter(Boolean);
 
-    const button = BUTTON_SELECTORS
-      .map((selector) => document.querySelector(selector))
-      .find((node) => node);
+    let button = null;
+    const buttonWaitStartedAt = performance.now();
+    while (!button && performance.now() - buttonWaitStartedAt <= BUTTON_WAIT_MS) {
+      button = BUTTON_SELECTORS
+        .map((selector) => document.querySelector(selector))
+        .find((node) => node) ?? null;
+      if (!button) {
+        await new Promise((resolve) => setTimeout(resolve, REOPEN_INTERVAL_MS / 2));
+      }
+    }
     if (!button) {
       return { status: 'button-missing' };
     }
