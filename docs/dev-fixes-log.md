@@ -19651,3 +19651,10 @@ browser-stage lifecycle observability, not transcript truncation.
   ChatGPT developer-app refresh, also bind readiness to the exact plugin route,
   exact app heading, one dialog, and one enabled Refresh control before
   mutation.
+- 2026-07-25: An operator provider-guard clear must update every guard truth
+  surface consumed by that runtime profile. Clearing only account-mirror
+  registry state can report success while one-shot and developer-app browser
+  submissions remain blocked by the persisted rate-limit file. The HTTP
+  control now updates both scheduler state and the provider browser guard;
+  zero cooldown removes active cooldown fields while preserving mutation and
+  rate-limit history, and positive quiet cooldowns remain aligned.

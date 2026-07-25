@@ -24,6 +24,10 @@ import {
 	createAccountMirrorStatusSummary,
 } from "../src/accountMirror/statusRegistry.js";
 import { setAuracallHomeDirOverrideForTest } from "../src/auracallHome.js";
+import {
+	readChatgptRateLimitGuardState,
+	writeChatgptRateLimitGuardState,
+} from "../src/browser/chatgptRateLimitGuard.js";
 import { recordDomDriftObservation } from "../src/browser/domDriftObservations.js";
 import { createAgentRegistryStore } from "../src/config/agentRegistryStore.js";
 import {
@@ -8739,6 +8743,86 @@ describe("http responses adapter", () => {
 					action: "operator-clear",
 				}),
 			});
+		} finally {
+			await server.close();
+		}
+	});
+
+	it("clears the persisted ChatGPT browser guard through POST /status", async () => {
+		const now = new Date("2026-07-25T19:30:00.000Z");
+		await writeChatgptRateLimitGuardState(
+			{
+				provider: "chatgpt",
+				profile: "wsl-chrome-3",
+				updatedAt: now.getTime() - 60_000,
+				lastMutationAt: now.getTime() - 120_000,
+				recentRateLimitDetectionAts: [now.getTime() - 90_000],
+				cooldownUntil: now.getTime() + 60 * 60_000,
+				cooldownDetectedAt: now.getTime() - 60_000,
+				cooldownReason: "Too many requests.",
+				cooldownAction: "submitTest",
+			},
+			{ profileName: "wsl-chrome-3" },
+		);
+		const registry = createAccountMirrorStatusRegistry({
+			config: {
+				runtimeProfiles: {
+					"wsl-chrome-3": {
+						browserProfile: "wsl-chrome-3",
+						defaultService: "chatgpt",
+						services: {
+							chatgpt: {
+								identity: { email: "operator@example.com" },
+								liveFollow: { enabled: true },
+							},
+						},
+					},
+				},
+			},
+			now: () => now,
+		});
+		const server = await createResponsesHttpServer(
+			{
+				host: "127.0.0.1",
+				port: 0,
+				accountMirrorSchedulerIntervalMs: 0,
+				accountMirrorSchedulerDryRun: true,
+			},
+			{
+				now: () => now,
+				accountMirrorStatusRegistry: registry,
+			},
+		);
+
+		try {
+			const response = await fetch(`http://127.0.0.1:${server.port}/status`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					accountMirrorProviderGuard: {
+						action: "clear",
+						provider: "chatgpt",
+						runtimeProfile: "wsl-chrome-3",
+						cooldownMs: 0,
+					},
+				}),
+			});
+			expect(response.status).toBe(200);
+			const payload = (await response.json()) as {
+				controlResult: { cooldownUntil: string | null };
+			};
+			expect(payload.controlResult.cooldownUntil).toBeNull();
+			const persisted = await readChatgptRateLimitGuardState({
+				profileName: "wsl-chrome-3",
+			});
+			expect(persisted).toMatchObject({
+				provider: "chatgpt",
+				profile: "wsl-chrome-3",
+				lastMutationAt: now.getTime() - 120_000,
+				recentRateLimitDetectionAts: [now.getTime() - 90_000],
+			});
+			expect(persisted?.cooldownUntil).toBeUndefined();
+			expect(persisted?.cooldownReason).toBeUndefined();
 		} finally {
 			await server.close();
 		}

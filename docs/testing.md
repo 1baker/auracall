@@ -250,7 +250,10 @@
         routeability counts
       - provider guard clearance is available with
         `auracall api mirror-provider-guard-clear --port 8080 --provider gemini --runtime-profile default`
-        and MCP `account_mirror_provider_guard_clear`
+        and MCP `account_mirror_provider_guard_clear`; the control updates both
+        account-mirror scheduling state and the selected runtime profile's
+        persisted browser guard, so a successful clear cannot leave browser
+        submission blocked by stale cooldown data
       - omitted `--max-passes` means unbounded live follow; `--max-passes`
         is only a debug/test cap
       - full-sweep backfill is explicit with

@@ -41789,3 +41789,19 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Plan 0171 remains open until a separately authorized live app-selected
   submission proves the installed prompt-preservation repair or stops
   fail-closed at the prompt guard.
+
+## 2026-07-25 | Plan 0171 Provider Guard Control Parity
+
+- A separately authorized operator clear returned `cooldownUntil: null` and
+  removed the account-mirror scheduler guard, but the next app-selected
+  submission was still rejected locally from
+  `rate-limit-wsl-chrome-3.json` before browser interaction.
+- The minimized HTTP regression proved the control route did not update the
+  browser guard consumed by one-shot and developer-app submissions.
+- The control now updates both account-mirror status and the selected AuraCall
+  runtime profile's persisted browser guard. Zero cooldown removes only active
+  cooldown fields while preserving mutation and rate-limit history; a positive
+  cooldown is written consistently to both paths.
+- The rejected pre-browser command did not consume the authorized ChatGPT
+  evidence turn. Focused validation covers the exact HTTP seam before the
+  installed runtime is refreshed.

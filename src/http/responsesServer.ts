@@ -91,6 +91,7 @@ import {
 } from "../accountMirror/statusRegistry.js";
 import { getAuracallHomeDir } from "../auracallHome.js";
 import { readChatgptRateLimitGuardState } from "../browser/chatgptRateLimitGuard.js";
+import { clearPersistedBrowserProviderGuard } from "../browser/providerGuardControl.js";
 import {
 	acceptDomDriftObservation,
 	type DomDriftObservationStatus,
@@ -3132,13 +3133,20 @@ export async function createResponsesHttpServer(
 						};
 					}
 				} else if ("accountMirrorProviderGuard" in payload) {
+					const cooldownMs =
+						payload.accountMirrorProviderGuard.cooldownMs ??
+						DEFAULT_ACCOUNT_MIRROR_PROVIDER_GUARD_CLEAR_COOLDOWN_MS;
+					await clearPersistedBrowserProviderGuard({
+						provider: payload.accountMirrorProviderGuard.provider,
+						runtimeProfileId: payload.accountMirrorProviderGuard.runtimeProfile,
+						cooldownMs,
+						now,
+					});
 					const guardClear = clearAccountMirrorProviderGuard({
 						registry: accountMirrorStatusRegistry,
 						provider: payload.accountMirrorProviderGuard.provider,
 						runtimeProfileId: payload.accountMirrorProviderGuard.runtimeProfile,
-						cooldownMs:
-							payload.accountMirrorProviderGuard.cooldownMs ??
-							DEFAULT_ACCOUNT_MIRROR_PROVIDER_GUARD_CLEAR_COOLDOWN_MS,
+						cooldownMs,
 						now,
 					});
 					controlResult = {
