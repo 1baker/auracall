@@ -21,6 +21,15 @@ const ENTER_KEY_EVENT = {
 } as const;
 const ENTER_KEY_TEXT = '\r';
 
+function normalizedComposerText(value: string): string {
+  return value.replace(/\s+/g, ' ').trim();
+}
+
+function composerContainsPrompt(value: string, prompt: string): boolean {
+  const normalizedPrompt = normalizedComposerText(prompt);
+  return Boolean(normalizedPrompt) && normalizedComposerText(value).includes(normalizedPrompt);
+}
+
 export async function submitPrompt(
   deps: {
     runtime: ChromeClient['Runtime'];
@@ -94,6 +103,16 @@ export async function submitPrompt(
       return {
         editorText: editor?.innerText ?? '',
         fallbackValue: fallback?.value ?? '',
+        editorUserText: (() => {
+          if (!editor) return '';
+          const clone = editor.cloneNode(true);
+          clone
+            .querySelectorAll(
+              '[data-inline-selection-pill], [data-system-hint-type^="plugin:"], [data-id^="plugin:"]',
+            )
+            .forEach((node) => node.remove());
+          return clone.innerText ?? clone.textContent ?? '';
+        })(),
       };
     })()`,
     returnByValue: true,
@@ -101,6 +120,7 @@ export async function submitPrompt(
 
   const editorTextRaw = verification.result?.value?.editorText ?? '';
   const fallbackValueRaw = verification.result?.value?.fallbackValue ?? '';
+  const editorUserTextRaw = verification.result?.value?.editorUserText ?? '';
   const editorTextTrimmed = editorTextRaw?.trim?.() ?? '';
   const fallbackValueTrimmed = fallbackValueRaw?.trim?.() ?? '';
   if (!editorTextTrimmed && !fallbackValueTrimmed) {
@@ -121,6 +141,43 @@ export async function submitPrompt(
         }
       })()`,
     });
+  } else if (
+    !composerContainsPrompt(editorUserTextRaw, prompt) &&
+    !composerContainsPrompt(fallbackValueRaw, prompt)
+  ) {
+    // A selected ChatGPT app is rendered as an inline pill inside #prompt-textarea.
+    // That pill makes the composer look non-empty even when Input.insertText did
+    // not land, so append at the editable tail without replacing the app pill.
+    await runtime.evaluate({
+      expression: `(() => {
+        const editor = document.querySelector(${primarySelectorLiteral});
+        if (!editor) return { inserted: false };
+        if (typeof editor.focus === 'function') editor.focus();
+        const selection = editor.ownerDocument?.getSelection?.();
+        if (selection) {
+          const range = editor.ownerDocument.createRange();
+          range.selectNodeContents(editor);
+          range.collapse(false);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+        const inserted =
+          typeof document.execCommand === 'function' &&
+          document.execCommand('insertText', false, ${encodedPrompt});
+        if (!inserted) {
+          const target = editor.querySelector('p:last-child') || editor;
+          target.appendChild(editor.ownerDocument.createTextNode(${encodedPrompt}));
+          editor.dispatchEvent(
+            new InputEvent('input', {
+              bubbles: true,
+              data: ${encodedPrompt},
+              inputType: 'insertText',
+            }),
+          );
+        }
+        return { inserted: true };
+      })()`,
+    });
   }
 
   const promptLength = prompt.length;
@@ -131,12 +188,34 @@ export async function submitPrompt(
       return {
         editorText: editor?.innerText ?? '',
         fallbackValue: fallback?.value ?? '',
+        editorUserText: (() => {
+          if (!editor) return '';
+          const clone = editor.cloneNode(true);
+          clone
+            .querySelectorAll(
+              '[data-inline-selection-pill], [data-system-hint-type^="plugin:"], [data-id^="plugin:"]',
+            )
+            .forEach((node) => node.remove());
+          return clone.innerText ?? clone.textContent ?? '';
+        })(),
       };
     })()`,
     returnByValue: true,
   });
   const observedEditor = postVerification.result?.value?.editorText ?? '';
   const observedFallback = postVerification.result?.value?.fallbackValue ?? '';
+  const observedEditorUserText = postVerification.result?.value?.editorUserText ?? '';
+  if (
+    !composerContainsPrompt(observedEditorUserText, prompt) &&
+    !composerContainsPrompt(observedFallback, prompt)
+  ) {
+    await logDomFailure(runtime, logger, 'prompt-not-in-composer');
+    throw new BrowserAutomationError('Prompt text did not appear in the composer; refusing to submit.', {
+      stage: 'submit-prompt',
+      code: 'prompt-not-in-composer',
+      promptLength,
+    });
+  }
   const observedLength = Math.max(observedEditor.length, observedFallback.length);
   if (promptLength >= 50_000 && observedLength > 0 && observedLength < promptLength - 2_000) {
     // Learned: very large prompts can truncate silently; fail fast so we can fall back to file uploads.
@@ -512,6 +591,7 @@ async function verifyPromptCommitted(
 }
 
 export const __test__ = {
+  composerContainsPrompt,
   verifyPromptCommitted,
   waitForComposerReadyToSubmit,
 };
