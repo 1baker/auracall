@@ -19621,3 +19621,24 @@ browser-stage lifecycle observability, not transcript truncation.
   tests machine-dependent. For elapsed-time concurrency tests, assert a
   material lower bound with small timer-granularity tolerance rather than an
   exact millisecond boundary under full-suite load.
+- 2026-07-24: A file-backed control plane must bound reads before it retains
+  parsed records. Limiting the returned list after an unbounded `Promise.all`
+  still creates one read and JSON expansion per file; use a fixed worker pool
+  and prove maximum concurrent reads.
+- 2026-07-24: Status aggregation over several tenants must not reread a shared
+  archive or job index once per tenant. Take one snapshot, apply each tenant's
+  filter/limit against it, and retain a sequential compatibility fallback for
+  injected implementations without the batch seam.
+- 2026-07-24: Live memory gates must distinguish an experimental threshold from
+  the actual cgroup and host safety boundaries. Include managed Chrome in the
+  service envelope, require a host-available floor, and keep provider-warning
+  stop conditions independent of memory calibration.
+- 2026-07-24: Test isolation for a file-backed user runtime must be global, not
+  opt-in per test file. Set a disposable `AURACALL_HOME_DIR` for every worker
+  before modules import; otherwise full-suite service construction can hydrate
+  and mutate the operator's persisted completion registry even when the test
+  never intended to exercise live state.
+- 2026-07-24: Do not make port-selection unit tests race the host network by
+  binding adjacent ports and assuming their availability remains stable.
+  Inject availability and ephemeral-port dependencies so selection order and
+  fallback semantics are deterministic.

@@ -1,5 +1,68 @@
 # RUNBOOK
 
+## Turn 359 | 2026-07-24
+
+- Plan 0169 is closed. Provider ownership now covers startup hydration,
+  completion-store reads use 16 workers, and multi-tenant status reads each
+  shared archive/job index once per request.
+- Final validation passed 302 files and 2,634 tests; typecheck, build, lint,
+  plan audit, and diff checks pass.
+- The hash-identical installed runtime restarted as PID `4015989`. All four
+  ChatGPT completions and the scheduler are active and guard-clear at passes
+  `17`, `15`, `20`, and `18` for `default`, `wsl-chrome-2`,
+  `wsl-chrome-3`, and `wsl-chrome-4`.
+- Two post-resume samples stayed near 1.3-1.4 GiB current / 1.67 GiB peak with
+  more than 32 GiB host memory available. Pause immediately on a new provider
+  warning or on two consecutive samples above 5 GiB service memory / below
+  10 GiB host available.
+- Materialization is not complete. SoyLei has 600 known missing-local assets
+  but advanced from 25 to 21 remaining detail surfaces during the final
+  window; the other missing-local totals are 64, 234, and 253.
+
+## Turn 358 | 2026-07-24
+
+- Active plan:
+  `docs/dev/plans/0169-2026-07-24-live-follow-startup-memory-fanout-repair.md`
+- Live authority: API PID `1676586` is healthy on port `18095` with roughly
+  1.04 GiB current/1.19 GiB peak service memory. The scheduler and all four
+  ChatGPT completions are operator-paused; 1,151 known remote assets remain
+  missing locally.
+- Guard authority: all current ChatGPT provider guards are clear. SoyLei keeps
+  two historical July 23 detections; no new rate-limit/CAPTCHA/cooldown log
+  entry appeared after the current service start.
+- Reproduction: a focused provider-free test starts two restored same-provider
+  completions with delayed registry hydration. It fails deterministically with
+  `maxConcurrentHydrations=2`, proving both loops allocate/control-plane hydrate
+  before either acquires the shared provider-work FIFO.
+- Repair target: acquire provider ownership before persistent registry
+  hydration and retain existing release semantics for cadence, foreground,
+  pause/cancel, failure, and shutdown.
+- Runtime gate: do not resume until focused/full validation and installed
+  restart pass. During the live watch, pause everything on any new guard signal
+  or two consecutive API-memory samples above 2.5 GiB or twice the
+  post-restart steady baseline.
+- Delegation receipt: `not_spawned`; runtime policy forbids subagents and the
+  shared completion/service-host boundary is one serialized critical path.
+- Source checkpoint: the red regression is green at
+  `maxConcurrentHydrations=1`; the widened integration suite passed `388/388`,
+  the full suite passed 302 files and 2,631 tests, and type/build/lint/plan/diff
+  gates pass.
+- Browser attribution finding: `default` carries a stale failed fixture owner
+  `hmj_guard_projection_1`, and `wsl-chrome-2` has no owner or operation lease.
+  The recent SoyLei root has no lease but remains ambiguous and will be
+  preserved. Cleanup will close only the first two after stopping the API.
+- Runtime-gate stop: the stale `default` and `wsl-chrome-2` roots were closed;
+  service shutdown had already ended the SoyLei root without an explicit close.
+  Doctor pruned three dead registry entries. The first repaired install started
+  as PID `2726054`, but a provider-free completion-list read raised memory from
+  roughly 0.9 GiB to a 5.4 GiB peak before any live-follow resume.
+- Second root cause: 4,796 completion JSON records were read and parsed through
+  one unbounded `Promise.all` before filtering/sorting/limiting. The service was
+  stopped with all controls still paused. A red/green regression changed
+  concurrent history reads from 40 to at most 16; 347 impacted tests plus
+  type/build/lint pass. Reinstall and repeat the exact readback memory gate
+  before provider work.
+
 ## Turn 357 | 2026-07-24
 
 - Active plan:
@@ -14311,3 +14374,25 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   recovered from about 6.1 GiB to 741 MiB with 11 tasks; scheduler resume
   persisted, the same completion emitted `resumed_after_restart`, and CDP
   45015 remains closed.
+
+## Turn 338 | 2026-07-24
+
+- Plan 0169 repaired three independent live-follow memory fan-outs:
+  provider-lease acquisition now precedes completion registry hydration,
+  persisted completion reads use at most 16 workers, and broad status batches
+  shared archive/materialization-job index reads across enabled tenants.
+- Installed provider-free proof reduced broad-status peak memory from about
+  5.8 GiB to 1.32 GiB.
+- The first activation advanced ChatGPT `default` from pass 15 to 16 and proved
+  FIFO handoff to `wsl-chrome-4`; no provider guard appeared. Its
+  materialization job attempted two conversations but produced zero local
+  assets, so pass progress must not be reported as materialization completion.
+- The old 2.5 GiB experimental threshold was below normal Node-plus-managed-
+  Chrome handoff residency. The current gate is 5 GiB service memory with at
+  least 10 GiB host available memory, while any rate-limit, CAPTCHA,
+  human-verification, or provider-guard observation still requires immediate
+  pause.
+- Final installed PID `4015989` resumed the scheduler and all four ChatGPT
+  completion loops. Post-restart service memory is near 1.3-1.4 GiB with a
+  1.67 GiB peak, host available memory exceeds 32 GiB, and all ChatGPT
+  provider guards are clear.

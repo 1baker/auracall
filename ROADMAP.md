@@ -15,6 +15,13 @@ Lane: P01
   live-follow restoration remains paused after all-operation resume reproduced
   unsafe Node memory growth; a single-profile bounded observation stayed
   guard-clear and below the diagnostic stop threshold.
+- Completed live-follow startup memory fan-out repair:
+  [docs/dev/plans/0169-2026-07-24-live-follow-startup-memory-fanout-repair.md](docs/dev/plans/0169-2026-07-24-live-follow-startup-memory-fanout-repair.md)
+  Same-provider startup hydration is inside provider ownership, completion
+  reads are capped at 16, and broad status uses one archive/job snapshot per
+  request. The final installed PID keeps all four ChatGPT lanes active and
+  guard-clear; memory remained near 1.3-1.4 GiB after restart with more than
+  32 GiB host memory available.
 - Completed ChatGPT developer-app lifecycle:
   [docs/dev/plans/0168-2026-07-24-chatgpt-developer-app-lifecycle.md](docs/dev/plans/0168-2026-07-24-chatgpt-developer-app-lifecycle.md)
   Source CLI and live SoyLei proof now cover guarded inventory,

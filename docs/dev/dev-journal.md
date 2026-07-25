@@ -1,3 +1,37 @@
+## 2026-07-24 | Live-Follow Startup Memory Fan-Out Repair
+
+- Focus: safely restore all four ChatGPT live-follow tenants under one provider
+  FIFO without startup or status-read memory fan-out.
+- Active authority:
+  `docs/dev/plans/0169-2026-07-24-live-follow-startup-memory-fanout-repair.md`.
+- First repair: restored same-provider completions now acquire provider
+  ownership before persistent registry hydration and release it before
+  foreground/provider-guard sleeps. The focused regression changed maximum
+  concurrent hydration from two to one.
+- Test isolation: the history-materialization guard fixture now uses a temporary
+  AuraCall home instead of writing fixture browser ownership into live state.
+- Runtime gate: the installed hash matched source and the API restarted as PID
+  `2726054`. No live-follow control was resumed, but listing persisted
+  completion state raised service memory from about 0.9 GiB to a 5.4 GiB peak.
+  The API was stopped with the scheduler and four completions still paused.
+- Second root cause: the completion store contains 4,796 JSON records and
+  `listOperations()` launched an unbounded read/parse promise for every record
+  before applying filters and limits. Bounded workers now cap reads at 16.
+- Validation: a deterministic regression changed simultaneous reads from 40 to
+  at most 16 while preserving newest-first limited output. The impacted
+  completion/HTTP/service-host suites passed 347 tests; typecheck, production
+  build, and lint pass with 203 existing warnings.
+- Closeout: the bounded-worker full suite passed 302 files and 2,634 tests;
+  typecheck, build, lint, plan audit, and diff checks passed. The hash-identical
+  installed runtime restarted as PID `4015989`, and all four ChatGPT lanes plus
+  the scheduler resumed guard-clear.
+- Two installed samples remained near 1.3-1.4 GiB current / 1.67 GiB peak with
+  more than 32 GiB host memory available. Final pass counts are 17, 15, 20,
+  and 18; SoyLei remaining detail surfaces advanced from 25 to 21. Local asset
+  materialization remains incomplete.
+- Delegation receipt: `not_spawned`; runtime policy forbids subagents and both
+  defects share the completion persistence/runtime critical path.
+
 ## 2026-07-24 | ChatGPT Developer App Lifecycle
 
 - Focus: expose guarded inventory, create/connect, refresh, select/submit test,
@@ -41658,3 +41692,52 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Local raw live-follow RCA evidence remains untracked and excluded through
   `.git/info/exclude` because it contains provider DOM/account data and signed
   URLs.
+
+## 2026-07-24 | Plan 0169 Startup Memory Fan-Out
+
+- The installed paused service is stable near 1.04 GiB, but the earlier
+  all-completion resume reached roughly 5.4 GiB.
+- A deterministic regression proved two restored same-provider completions
+  overlap `refreshPersistentState` before provider FIFO acquisition
+  (`maxConcurrentHydrations=2`).
+- The repair will move completion-owned hydration inside provider ownership,
+  validate release behavior, install, restart, clean only attributable stale
+  managed browser roots, and resume under explicit memory/guard stop gates.
+- Source result: hydration is inside provider ownership; the regression is
+  green at maximum concurrency one. Integration passed `388/388`, the full
+  suite passed 302 files and 2,631 tests, and static/build/plan gates pass.
+- Browser attribution also exposed a test-isolation defect: fixture
+  `hmj_guard_projection_1` contaminated the live browser registry. The test now
+  uses a temporary AuraCall home.
+- The installed provider-free gates exposed two additional fan-out defects.
+  Completion history parsed 4,796 records concurrently, and broad status
+  reread the same archive/job indexes once per enabled tenant. Completion reads
+  now use 16 workers; archive and job status evidence now share one batch
+  snapshot per request.
+- Provider-free broad-status memory fell from a 5.8 GiB peak to 1.32 GiB. A
+  first activation advanced `default` from pass 15 to 16 and handed the
+  provider FIFO to `wsl-chrome-4`; the associated materialization job yielded
+  zero local assets and six retryable failures, so materialization remains
+  incomplete.
+- The first activation was conservatively paused at the plan's old 2.5 GiB
+  threshold despite clear provider guards. The gate is now calibrated to the
+  observed Node-plus-Chrome envelope: 5 GiB service memory and a 10 GiB
+  host-available floor, still with an immediate pause on any provider warning.
+- Fresh installed PID `3449491` is active. Cold service memory was about
+  0.99 GiB, post-status residency 1.38 GiB, and resumed live-follow monitoring
+  advanced `wsl-chrome-4` 17 to 18, `wsl-chrome-2` 14 to 15, and `default`
+  16 to 17 through serialized FIFO handoffs. The managed-Chrome envelope
+  peaked at 4.07 GiB, returned near 2 GiB, and retained more than 31 GiB host
+  memory available. All four ChatGPT lanes remain active and guard-clear.
+- The consulting materialization job refreshed one 24-message snapshot, then
+  skipped seven non-downloadable entries and produced zero local assets.
+  SoyLei remains active at pass 19 with 25 detail surfaces and 600 missing-local
+  assets. Pass and metadata progress are real; materialization is not complete.
+- Full-suite diagnosis found that tests without an explicit temp home could
+  load and mutate the operator completion registry. The global test setup now
+  assigns every worker a disposable `AURACALL_HOME_DIR`; subsequent full runs
+  left the live registry count unchanged at 4,797. Port selection tests now
+  inject deterministic availability seams, and host-load-sensitive unrelated
+  tests use explicit bounded timeouts. The standard high-concurrency run passes
+  2,631 tests but still exposes unrelated wall-clock timeouts under simultaneous
+  live-browser load; bounded-worker full validation is in progress.
