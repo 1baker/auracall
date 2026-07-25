@@ -41741,3 +41741,19 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   tests use explicit bounded timeouts. The standard high-concurrency run passes
   2,631 tests but still exposes unrelated wall-clock timeouts under simultaneous
   live-browser load; bounded-worker full validation is in progress.
+
+## 2026-07-25 | Plan 0171 ChatGPT Developer App Trusted Refresh
+
+- The existing `Corel33t` refresh attempt exposed a concrete provider drift:
+  the control was present and enabled but far below the viewport, while the
+  shared `pointer` strategy emitted only synthetic DOM events.
+- Read-only agent-browser inspection attached to AuraCall's existing
+  `wsl-chrome-3` Chrome session and proved the exact route, exact app heading,
+  one dialog, one Refresh button, and zero diagnostic clicks.
+- The bounded repair adds a browser-service trusted-pointer primitive with
+  scroll, hit-test, CDP mouse input, and trusted-event verification. The
+  provider adapter adds exact app/route readiness and bounded failure
+  diagnostics.
+- Provider-free validation passes `65/65`, TypeScript, production build, and
+  diff checks. The separately approved exact live attempt remains gated on a
+  committed, installed source state.

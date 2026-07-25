@@ -14396,3 +14396,26 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   completion loops. Post-restart service memory is near 1.3-1.4 GiB with a
   1.67 GiB peak, host available memory exceeds 32 GiB, and all ChatGPT
   provider guards are clear.
+
+## Turn 339 | 2026-07-25
+
+- Active supporting plan:
+  `docs/dev/plans/0171-2026-07-25-chatgpt-developer-app-trusted-refresh.md`
+- Goal:
+  - repair the exact existing-app Refresh operation without creating,
+    uninstalling, reconnecting, or submitting through the app.
+- Reproduced mismatch:
+  - AuraCall's existing `pointer` strategy emitted synthetic DOM events;
+  - the exact enabled `Corel33t` Refresh control was more than 7,000 pixels
+    below the current viewport inside the settings dialog;
+  - the prior approved attempt failed before activating the control.
+- Source repair:
+  - browser-service now scrolls and hit-tests the exact target, sends trusted
+    CDP mouse input, and requires the exact control to observe a trusted click;
+  - ChatGPT refresh now requires the exact plugin route, exact app heading,
+    one matching dialog, and one enabled Refresh control before activation.
+- Current gate:
+  - `65/65` focused tests, TypeScript, production build, source-built read-only
+    app inventory, and `git diff --check` pass;
+  - the one approved corrected installed-runtime refresh remains unconsumed
+    until the repair is committed and installed.

@@ -19642,3 +19642,12 @@ browser-stage lifecycle observability, not transcript truncation.
   binding adjacent ports and assuming their availability remains stable.
   Inject availability and ephemeral-port dependencies so selection order and
   fallback semantics are deterministic.
+- 2026-07-25: A provider control can be present and dimensionally visible
+  while still being outside the scrollable viewport, and synthetic
+  `PointerEvent` dispatch is not equivalent to a trusted browser click.
+  Browser-service actions that require trusted activation should scroll the
+  exact scoped target, verify `elementFromPoint(...)`, dispatch CDP mouse
+  input, and fail closed unless that target observes `event.isTrusted`. For
+  ChatGPT developer-app refresh, also bind readiness to the exact plugin route,
+  exact app heading, one dialog, and one enabled Refresh control before
+  mutation.

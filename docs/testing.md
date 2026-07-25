@@ -10,6 +10,9 @@
     `pnpm tsx bin/auracall.ts --profile <runtime> apps --target chatgpt test <exact-app> --expected-account <email> --json`
   - do not use `--submit`, `create`, `refresh`, or `uninstall` as routine live
     tests; they require exact authorization and `--yes`
+  - an authorized refresh must resolve the exact plugin route/app heading and
+    exactly one enabled Refresh control; success requires a browser-trusted
+    pointer click, not synthetic DOM-event dispatch
   - stop immediately on a provider rate-limit, CAPTCHA, or human-verification
     surface
 - Live-suite posture:

@@ -2620,6 +2620,11 @@ Historical focused reliability slices:
 ### Browser Automation Drift Repairs
 See [docs/dev/browser-service-upgrade-backlog.md](docs/dev/browser-service-upgrade-backlog.md).
 
+- [docs/dev/plans/0171-2026-07-25-chatgpt-developer-app-trusted-refresh.md](docs/dev/plans/0171-2026-07-25-chatgpt-developer-app-trusted-refresh.md)
+  is the active bounded maintenance exception for exact-app refresh. It adds a
+  browser-trusted, scroll-and-hit-test activation seam and retains the existing
+  explicit account/confirmation gates; duplicate creation, uninstall, OAuth
+  automation, and prompt submission remain out of scope.
 - 2026-07-23 Plan 0164 provider-free repair: one operator-overridden SIP-1133
   diagnostic pass proved that 12 files used one physical page but still created
   three client attachments and prematurely accepted a 403 JSON response. The

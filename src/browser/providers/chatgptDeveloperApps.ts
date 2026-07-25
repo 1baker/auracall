@@ -4,6 +4,7 @@ import {
 	navigateAndSettle,
 	openAndSelectMenuItem,
 	pressButton,
+	pressButtonWithTrustedPointer,
 	reloadAndSettle,
 	setInputValue,
 	waitForPredicate,
@@ -229,23 +230,34 @@ export class ChatgptDeveloperAppBrowserAdapter {
 		await navigateChatgpt(
 			client,
 			`https://chatgpt.com/plugins#settings/Plugins/${encodeURIComponent(app.pluginId)}`,
-		);
-		await assertNoChatgptBlockingSurface(client, `refresh ${app.name}`);
-		const refreshed = await pressButton(client.Runtime, {
-			rootSelectors: ['[role="dialog"]'],
-			match: { exact: ["refresh"] },
-			interactionStrategies: ["pointer"],
-			requireVisible: true,
-			timeoutMs: 8_000,
-		});
-		if (!refreshed.ok) {
-			throw new Error(`Unable to refresh ChatGPT developer app ${app.name}.`);
-		}
-		return {
-			status: "completed",
-			message: `${app.name} refresh requested.`,
-			currentUrl: await readCurrentUrl(client),
-			app,
+			);
+			await assertNoChatgptBlockingSurface(client, `refresh ${app.name}`);
+			const ready = await waitForChatgptDeveloperAppRefreshControl(client, app);
+			if (!ready.ok) {
+				const diagnostic = await readChatgptDeveloperAppRefreshDiagnostic(client);
+				throw new Error(
+					`ChatGPT developer app ${app.name} did not expose one exact enabled Refresh control: ${diagnostic}.`,
+				);
+			}
+			const refreshed = await pressButtonWithTrustedPointer(client, {
+				rootSelectors: ['[role="dialog"]'],
+				match: { exact: ["refresh"] },
+				requireVisible: true,
+				timeoutMs: 15_000,
+				logCandidatesOnMiss: true,
+			});
+			if (!refreshed.ok) {
+				throw new Error(
+					`Unable to refresh ChatGPT developer app ${app.name}: ${refreshed.reason ?? "trusted pointer activation failed"}.`,
+				);
+			}
+			await wait(750);
+			await assertNoChatgptBlockingSurface(client, `complete refresh ${app.name}`);
+			return {
+				status: "completed",
+				message: `${app.name} refresh requested with a trusted pointer click.`,
+				currentUrl: await readCurrentUrl(client),
+				app,
 		};
 	}
 
@@ -645,6 +657,75 @@ async function readDeveloperModeDiagnostic(client: ChromeClient): Promise<string
 	});
 	return readString(result.result?.value) ?? "no DOM diagnostic available";
 }
+
+async function waitForChatgptDeveloperAppRefreshControl(
+	client: Pick<ChromeClient, "Runtime">,
+	app: ChatgptDeveloperAppBrowserTarget,
+): Promise<Awaited<ReturnType<typeof waitForPredicate>>> {
+	return waitForPredicate(
+		client.Runtime,
+		`(() => {
+      const normalize = (value) => String(value || '').replace(/\\s+/g, ' ').trim();
+      const expectedName = ${JSON.stringify(app.name)};
+      const expectedHash = ${JSON.stringify(
+				`#settings/Plugins/${encodeURIComponent(app.pluginId)}`,
+			)};
+      if (location.origin !== 'https://chatgpt.com' || location.pathname !== '/plugins' || location.hash !== expectedHash) {
+        return null;
+      }
+      const dialogs = Array.from(document.querySelectorAll('[role="dialog"]')).filter((dialog) => {
+        const heading = Array.from(dialog.querySelectorAll('h1,h2,h3,h4,h5,h6,[role="heading"]'))
+          .find((candidate) => normalize(candidate.textContent) === expectedName);
+        return Boolean(heading);
+      });
+      if (dialogs.length !== 1) return null;
+      const refreshButtons = Array.from(dialogs[0].querySelectorAll('button,[role="button"]')).filter((button) => {
+        const label = normalize(button.getAttribute?.('aria-label') || button.textContent || '');
+        const rect = button.getBoundingClientRect();
+        return label === 'Refresh' && rect.width > 0 && rect.height > 0;
+      });
+      if (refreshButtons.length !== 1) return null;
+      const button = refreshButtons[0];
+      if (button.disabled || button.getAttribute?.('aria-disabled') === 'true') return null;
+      return {
+        appName: expectedName,
+        hash: location.hash,
+        dialogCount: dialogs.length,
+        refreshCount: refreshButtons.length,
+      };
+    })()`,
+		{
+			timeoutMs: 15_000,
+			pollMs: 200,
+			description: `exact enabled Refresh control for ${app.name}`,
+		},
+	);
+}
+
+async function readChatgptDeveloperAppRefreshDiagnostic(
+	client: Pick<ChromeClient, "Runtime">,
+): Promise<string> {
+	const result = await client.Runtime.evaluate({
+		expression: `JSON.stringify({
+      url: location.href,
+      dialogs: Array.from(document.querySelectorAll('[role="dialog"]')).map((dialog) => ({
+        headings: Array.from(dialog.querySelectorAll('h1,h2,h3,h4,h5,h6,[role="heading"]'))
+          .map((heading) => String(heading.textContent || '').replace(/\\s+/g, ' ').trim())
+          .filter(Boolean)
+          .slice(0, 8),
+        buttons: Array.from(dialog.querySelectorAll('button,[role="button"]'))
+          .map((button) => String(button.getAttribute?.('aria-label') || button.textContent || '').replace(/\\s+/g, ' ').trim())
+          .filter(Boolean)
+          .slice(0, 20),
+      })),
+    })`,
+		returnByValue: true,
+	});
+	return readString(result.result?.value) ?? "no refresh DOM diagnostic available";
+}
+
+export const waitForChatgptDeveloperAppRefreshControlForTest =
+	waitForChatgptDeveloperAppRefreshControl;
 
 async function navigateChatgpt(client: ChromeClient, url: string): Promise<void> {
 	const settled = await navigateAndSettle(client, {

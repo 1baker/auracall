@@ -23,6 +23,7 @@ import {
   openSubmenu,
   openSurface,
   pressButton,
+  pressButtonWithTrustedPointer,
   reloadAndSettle,
   selectNestedMenuPath,
   selectMenuItem,
@@ -302,6 +303,103 @@ describe('browser-service ui wait helpers', () => {
     const expression = runtime.evaluate.mock.calls[0]?.[0]?.expression as string;
     expect(expression).toContain('[role="menuitemradio"]');
     expect(expression).toContain('[role="option"]');
+  });
+
+  test('pressButtonWithTrustedPointer scrolls, hit-tests, and requires a trusted CDP click', async () => {
+    const runtime = createRuntime([
+      {
+        ok: true,
+        center: { x: 42.4, y: 81.6 },
+        matchedLabel: 'refresh',
+        rootSelectorUsed: '[role="dialog"]',
+      },
+      {
+        trusted: true,
+        matchedLabel: 'refresh',
+        rootSelectorUsed: '[role="dialog"]',
+      },
+      true,
+    ]);
+    const input = {
+      dispatchMouseEvent: vi.fn(async () => undefined),
+    };
+
+    const result = await pressButtonWithTrustedPointer(
+      { Runtime: runtime as never, Input: input as never },
+      {
+        rootSelectors: ['[role="dialog"]'],
+        match: { exact: ['refresh'] },
+        requireVisible: true,
+        timeoutMs: 50,
+      },
+    );
+
+    expect(result).toEqual({
+      ok: true,
+      matchedLabel: 'refresh',
+      rootSelectorUsed: '[role="dialog"]',
+      trusted: true,
+    });
+    expect(input.dispatchMouseEvent).toHaveBeenNthCalledWith(1, {
+      type: 'mouseMoved',
+      x: 42,
+      y: 82,
+      button: 'none',
+    });
+    expect(input.dispatchMouseEvent).toHaveBeenNthCalledWith(2, {
+      type: 'mousePressed',
+      x: 42,
+      y: 82,
+      button: 'left',
+      clickCount: 1,
+    });
+    expect(input.dispatchMouseEvent).toHaveBeenNthCalledWith(3, {
+      type: 'mouseReleased',
+      x: 42,
+      y: 82,
+      button: 'left',
+      clickCount: 1,
+    });
+    const prepareExpression = runtime.evaluate.mock.calls[0]?.[0]?.expression as string;
+    expect(prepareExpression).toContain("scrollIntoView({ block: 'center', inline: 'center' })");
+    expect(prepareExpression).toContain('document.elementFromPoint');
+    expect(prepareExpression).toContain('event.isTrusted === true');
+  });
+
+  test('pressButtonWithTrustedPointer fails closed when activation is not trusted', async () => {
+    const runtime = createRuntime([
+      {
+        ok: true,
+        center: { x: 10, y: 20 },
+        matchedLabel: 'refresh',
+        rootSelectorUsed: '[role="dialog"]',
+      },
+      {
+        trusted: false,
+        matchedLabel: 'refresh',
+        rootSelectorUsed: '[role="dialog"]',
+      },
+      true,
+    ]);
+    const input = {
+      dispatchMouseEvent: vi.fn(async () => undefined),
+    };
+
+    const result = await pressButtonWithTrustedPointer(
+      { Runtime: runtime as never, Input: input as never },
+      {
+        match: { exact: ['refresh'] },
+        timeoutMs: 50,
+      },
+    );
+
+    expect(result).toEqual({
+      ok: false,
+      reason: 'Matched control did not receive a trusted click',
+      matchedLabel: 'refresh',
+      rootSelectorUsed: '[role="dialog"]',
+      trusted: false,
+    });
   });
 
   test('selectMenuItem includes menuitemradio and option selectors', async () => {
