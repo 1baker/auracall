@@ -24,8 +24,9 @@ Lane: P03
 - provider-free implementation and targeted validation are complete across
   refresh, model-picker readiness, installed-app search, and app-pill prompt
   preservation
-- the existing `Corel33t` app remains installed, enabled, OAuth-active,
-  private, user-scoped, and in development
+- the existing `Corel33t` app remains installed, enabled, private,
+  user-scoped, and in development; the bounded LitScout proof cleanup has
+  disconnected its nonce OAuth binding
 - read-only agent-browser inspection of the existing
   `eric.cochran@soylei.com` managed Chrome session proved:
   - one exact `Corel33t` settings dialog
@@ -42,8 +43,11 @@ Lane: P03
 - commit `6a98516f` now excludes app-pill text from prompt verification, appends
   at the editable tail without replacing the pill, and fails closed before
   Send unless the full prompt is observed
-- the remaining live literature test is provider-cooldown gated; its prompt
-  has not been submitted
+- the remaining live literature test was not submitted: the persisted provider
+  guard extended through `2026-07-25T20:29:21.846Z` before browser interaction
+- Plan 0171 remains open because the installed prompt-preservation repair has
+  not yet received a valid app-selected live submission; any replacement proof
+  belongs to LitScout's separately approved H4/R1 packet
 
 ## Non-Goals
 
@@ -108,9 +112,10 @@ Lane: P03
 
 - the source-built and installed-runtime gates pass
 - the single approved live refresh is consumed successfully
-- the existing exact app remains installed and connected
+- the existing exact app remains installed; its connector binding may be
+  disconnected by the owning workflow's exact cleanup
 - current app-catalog readback is recorded
-- the one remaining non-office live app submission either proves prompt
-  preservation or stops fail-closed before dispatch
+- a separately authorized live app submission proves prompt preservation, or
+  the provider/prompt guard stops fail-closed before browser dispatch
 - roadmap, runbook, journal, fixes log, and operator testing guidance match the
   shipped behavior

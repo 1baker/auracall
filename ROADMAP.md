@@ -2624,7 +2624,11 @@ See [docs/dev/browser-service-upgrade-backlog.md](docs/dev/browser-service-upgra
   is the active bounded maintenance exception for exact-app refresh. It adds a
   browser-trusted, scroll-and-hit-test activation seam and retains the existing
   explicit account/confirmation gates; duplicate creation, uninstall, OAuth
-  automation, and prompt submission remain out of scope.
+  automation, and prompt submission remain out of scope. The exact refresh
+  passed and prompt-preservation now fails closed, but the only office live
+  submission was invalid and literature remained unsubmitted behind the
+  persisted provider guard. The owning LitScout cleanup disconnected the app;
+  one valid live submission remains separately approval-gated.
 - 2026-07-23 Plan 0164 provider-free repair: one operator-overridden SIP-1133
   diagnostic pass proved that 12 files used one physical page but still created
   three client attachments and prematurely accepted a 403 JSON response. The

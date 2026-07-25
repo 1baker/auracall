@@ -1,5 +1,21 @@
 # RUNBOOK
 
+## Turn 361 | 2026-07-25
+
+- The literature scenario was never submitted. AuraCall's persisted ChatGPT
+  provider guard rejected locally before browser interaction and extended the
+  cooldown through `2026-07-25T20:29:21.846Z`; it was not bypassed.
+- LitScout's bounded proof cleanup disconnected `Corel33t` without deleting or
+  uninstalling it and revoked the nonce connector binding. A later live
+  prompt-preservation proof requires the separate LitScout H4/R1 authority.
+- `auracall-api.service` is active again as PID `3677920` with zero restarts.
+  The account-mirror scheduler is enabled but operator-paused; the earlier
+  intentionally-stopped note is historical, not current runtime state.
+- Plan 0171 remains open because the prompt-preservation repair has not yet
+  produced one valid live app-selected submission. The isolated branch remains
+  `fix/chatgpt-app-refresh`; do not merge it mechanically into the unrelated
+  dirty main worktree.
+
 ## Turn 360 | 2026-07-25
 
 - Plan 0171's corrected trusted-pointer refresh succeeded exactly once against

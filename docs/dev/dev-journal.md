@@ -41775,3 +41775,17 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   `prompt-not-in-composer` before Send if the full prompt is absent.
 - The office scenario is not retryable. The literature scenario remains
   unsubmitted behind ChatGPT's provider cooldown.
+
+## 2026-07-25 | Plan 0171 Provider Gate And Cleanup Closeout
+
+- The literature prompt was never submitted. After the first cooldown expired,
+  the persisted ChatGPT provider guard rejected locally before browser
+  interaction and extended through `2026-07-25T20:29:21.846Z`.
+- The owning LitScout proof disconnected `Corel33t` without delete or
+  uninstall and revoked its nonce connector binding during exact cleanup.
+- The API service is active again; its account-mirror scheduler is enabled but
+  operator-paused. The isolated Plan 0171 branch remains unmerged from the
+  unrelated dirty main worktree.
+- Plan 0171 remains open until a separately authorized live app-selected
+  submission proves the installed prompt-preservation repair or stops
+  fail-closed at the prompt guard.
