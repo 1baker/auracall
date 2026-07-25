@@ -1,5 +1,88 @@
 # RUNBOOK
 
+## Turn 362 | 2026-07-25
+
+- Organic job `hmj_0346175923de4538af0ab7a8bcea2409` reached the refined
+  refreshed-context fallback. The exact one-file conversation still reported
+  `no-materializable-file`, but cache and manifest evidence proved this was a
+  receipt-classification defect, not a failed transfer.
+- `ISU Renewal Policy.pdf` is already terminal-local at 18,452,735 bytes with
+  SHA-256
+  `0ae9adee205910dbb3f0d8247d3b41a430e2317d32510eea4a617aa62b985eed`.
+  The file correctly remained excluded from repeat transfer.
+- Receipt repair: `materializeConversationFiles` now reports the known file
+  count before terminal/bounded exclusions. History results emit
+  `known-files-excluded` when that count is nonzero and preserve
+  `no-materializable-file` only when the refreshed inventory is actually
+  empty.
+- Focused tests pass `107/107`; scoped Biome, typecheck, and production build
+  pass. Installed history-service and LlmService bundles are hash-identical to
+  source.
+- Runtime stop: the prior API had failed with systemd `Result=timeout` while
+  stopping. The repaired install restarted as PID `3677920`. Startup restored
+  the previously active wsl-chrome-3 completion, which immediately detected
+  ChatGPT `Too many requests` and set cooldown through
+  `2026-07-25T20:29:21.846Z`; it was operator-paused.
+- Safety posture: scheduler and all four ChatGPT completions remain paused.
+  Do not clear the guard or resume provider work for Plan 0170 proof.
+
+## Turn 361 | 2026-07-25
+
+- Plan 0170 remains open after the first installed receipt exposed a narrower
+  cache-dataset mismatch.
+- Installed job `hmj_2074a079f641437aa0e10ab708a6790d` organically refreshed
+  `6a568ccb-3938-83ea-a635-02dde7634d3f` with `fileCount=1`, then still emitted
+  `no-materializable-file`.
+- Root cause: snapshot refresh writes `files[]` into the cached conversation
+  context, while the first repair read only the separate conversation-file
+  cache. `refresh=false` was propagated correctly.
+- Refined repair: read the dedicated file cache first, fall back to refreshed
+  context `files[]`, retain exclusions and bounds, and record
+  `reuseRefreshedContext`.
+- All four ChatGPT completions and future scheduler dispatch are paused at a
+  provider-idle boundary while the refined source is validated and installed.
+- Refined focused validation passes `107/107`, scoped Biome, typecheck,
+  production build, full lint with 203 existing warnings, the 170-plan audit,
+  and diff check.
+- Installed PID `1078144` is active. Source and installed `llmService.js`
+  hashes match; provider-guard files were unchanged across restart.
+- wsl-chrome-3 alone is running the next organic completion pass. Scheduler
+  dispatch and the other three ChatGPT completions remain paused until its
+  terminal materialization receipt.
+- Delegation receipt: `not_spawned`; this is one bounded cache-authority seam
+  and current agent policy does not authorize subagents.
+
+## Turn 360 | 2026-07-25
+
+- Active plan:
+  `docs/dev/plans/0170-2026-07-25-refreshed-snapshot-file-materialization.md`.
+- Installed `chatgpt/wsl-chrome-3` live follow is running at pass 34 with one
+  active completion, no current provider guard, and 600 known remote assets
+  still missing locally.
+- Latest job `hmj_fe91e8b54fed40a08588fdc6643d28e6` refreshed three
+  conversation snapshots. One snapshot contained a file, but the subsequent
+  materializer ignored that cached inventory, repeated scoped file listing,
+  timed out after 15 seconds, and selected zero file candidates.
+- Repair boundary: reuse the refreshed cached conversation-file inventory when
+  materialization receives `refresh=false`; preserve default live listing,
+  exclusions, transfer behavior, pacing, and guards.
+- Plan 0164 is reconciled closed: its live acceptance proved one retained page,
+  one CDP attachment, one batch, and no new rate warning. The terminal 403s
+  reproduced in native ChatGPT and remain provider-side.
+- Delegation receipt: `not_spawned`; the repair is one serialized
+  LlmService/history-materialization seam and current agent policy does not
+  authorize subagents.
+- Source checkpoint: the red regression observed one forbidden repeated
+  provider listing. The repaired path uses cached refreshed file inventory,
+  applies exclusion plus `maxItems`, transfers one selected file, and records
+  `reuseRefreshedCache=1` with zero provider list calls.
+- Validation: focused tests pass `107/107`; typecheck, production build, full
+  lint with 203 existing warnings, scoped Biome, 170-plan audit, and diff check
+  pass.
+- Runtime gate: PID `4015989` remains live with an open ChatGPT browser and a
+  scheduler foreground pass. Do not restart until physical provider work
+  settles.
+
 ## Turn 359 | 2026-07-24
 
 - Plan 0169 is closed. Provider ownership now covers startup hydration,

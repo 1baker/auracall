@@ -1,6 +1,6 @@
 # ChatGPT Single-Session File Materialization | 0164-2026-07-23
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 1
 
@@ -136,7 +136,7 @@ Each checkpoint records `plan_version`, `state_transition`,
   and plan audit pass.
 - [x] Installed provider-free verification leaves scheduler/completion paused,
   browser closed, and the existing guard unchanged.
-- [ ] One bounded live SIP-1133 batch, when guard-safe, produces no rate-limit
+- [x] One bounded live SIP-1133 batch, when guard-safe, produces no rate-limit
   warning and demonstrates one retained ChatGPT session for all 12 files.
 
 ## Definition Of Done

@@ -1817,7 +1817,11 @@
   reconciliation, freshness-aware bulk reconciliation candidate selection,
   explicit `refreshSnapshot` provider-context phases, selected
   `conversationIds` batches that can refresh stale cached rows, terminal
-  snapshot skips before artifact materialization, ChatGPT
+  snapshot skips before artifact materialization, refreshed cached
+  conversation-file reuse without a redundant provider listing (including
+  fallback to `files[]` from the refreshed conversation-context dataset), the
+  pre-exclusion known-file count used to distinguish terminal/bounded
+  `known-files-excluded` outcomes from genuinely empty inventory, ChatGPT
   library-plus-conversation detail inventory,
   Gemini conversation-artifact media manifest mapping, Gemini unavailable
   media-generation reconciliation by timestamp-backed cached conversation

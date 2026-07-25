@@ -1,3 +1,10 @@
+- 2026-07-25: A zero-candidate materialization selection does not prove the
+  refreshed file inventory was empty. Known files may all be correctly
+  excluded because terminal local evidence already exists or because they fall
+  outside `maxItems`. Carry the pre-exclusion known-file count through the
+  LlmService/history boundary and report `known-files-excluded`; reserve
+  `no-materializable-file` for a genuinely empty refreshed inventory.
+
 - 2026-07-24: ChatGPT developer-app inventory must collect installed-app and
   linked-auth network signals from the surfaces that actually emit them:
   `/plugins` for installed metadata and the blank composer route for accessible
@@ -19642,3 +19649,11 @@ browser-stage lifecycle observability, not transcript truncation.
   binding adjacent ports and assuming their availability remains stable.
   Inject availability and ephemeral-port dependencies so selection order and
   fallback semantics are deterministic.
+- 2026-07-25: A successful history snapshot refresh must remain the authority
+  for its immediately following file-materialization selection. Repeating a
+  provider file listing can time out and collapse a known non-empty cached
+  inventory to zero candidates. When the caller passes `refresh=false`, reuse
+  the dedicated cached conversation-file inventory first, then fall back to
+  `files[]` in the cached conversation context because snapshot refresh writes
+  that dataset directly. Apply terminal exclusions and item bounds to the
+  recovered list, and retain live listing only for ordinary/default calls.

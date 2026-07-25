@@ -41741,3 +41741,67 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   tests use explicit bounded timeouts. The standard high-concurrency run passes
   2,631 tests but still exposes unrelated wall-clock timeouts under simultaneous
   live-browser load; bounded-worker full validation is in progress.
+
+## 2026-07-25 | Plan 0170 Refreshed Snapshot File Materialization
+
+- Current focus: preserve a successful completion-owned snapshot refresh as
+  the file-selection authority for its immediately following materialization
+  phase.
+- Installed evidence: job `hmj_fe91e8b54fed40a08588fdc6643d28e6`
+  refreshed conversation `6a568ccb-3938-83ea-a635-02dde7634d3f` with one
+  file, then repeated scoped file listing, timed out after 15 seconds, recorded
+  zero candidates, and emitted `no-materializable-file`.
+- Live boundary: `chatgpt/wsl-chrome-3` is running at pass 34 with no current
+  provider guard. Work remains provider-free until source validation passes,
+  and installation must wait for a provider-idle boundary.
+- Next: add a red regression for cached refreshed inventory, repair the
+  `refresh=false` selection path, and verify the next organic materialization
+  receipt without forcing provider work.
+- Source result: the new regression was red with one repeated provider listing,
+  then green with zero provider list calls, one selected cached file after
+  terminal exclusion and `maxItems`, one batch transfer, and explicit
+  `reuseRefreshedCache` telemetry.
+- Validation passes `107/107` focused tests, typecheck, production build, full
+  lint with 203 pre-existing warnings, scoped Biome, plan audit, and diff
+  check. Installation is waiting on the live provider-idle boundary.
+- First rollout was safely installed under PID `4091681`, with scheduler,
+  completion, and guard controls preserved. Organic jobs resumed through the
+  provider FIFO.
+- Job `hmj_2074a079f641437aa0e10ab708a6790d` reproduced the exact failure after
+  install: snapshot refresh reported one file for
+  `6a568ccb-3938-83ea-a635-02dde7634d3f`, followed by
+  `no-materializable-file`.
+- Structural follow-up showed `refresh=false` was already propagated. Snapshot
+  refresh writes the file list into the conversation-context cache, while the
+  first repair read only the dedicated conversation-file cache.
+- The refined regression seeds only refreshed context `files[]`; the repaired
+  path falls back to that dataset, preserves exclusion and `maxItems`, records
+  `reuseRefreshedContext`, and passes the focused `107/107`, scoped Biome,
+  typecheck, and production build gates.
+- Scheduler and all four ChatGPT completions are paused again at a
+  provider-idle boundary for the refined reinstall.
+- Refined rollout is installed under PID `1078144`. Source and installed
+  `llmService.js` share SHA-256
+  `acefefaafffe05b4cb58ba2ed427a6836dc3ad7a1a317758ecc0fecffccc6c2f`;
+  provider-guard files remained unchanged.
+- wsl-chrome-3 is isolated as the sole resumed completion for the next organic
+  receipt. Scheduler dispatch and the other three ChatGPT completions remain
+  paused; Plan 0170 stays open until the terminal receipt proves file
+  selection.
+- Organic job `hmj_0346175923de4538af0ab7a8bcea2409` completed after the
+  refined rollout. The target conversation had one cached file in both cache
+  datasets, but it was correctly removed by terminal-family evidence:
+  `ISU Renewal Policy.pdf` is already local at 18,452,735 bytes with SHA-256
+  `0ae9adee205910dbb3f0d8247d3b41a430e2317d32510eea4a617aa62b985eed`.
+- The remaining `no-materializable-file` result was therefore observability
+  drift. The file selector now returns `knownConversationFileCount` before
+  exclusions; history results use `known-files-excluded` for terminal/bounded
+  removals and reserve `no-materializable-file` for genuinely empty inventory.
+- Focused tests remain green at `107/107`; scoped Biome, typecheck, and
+  production build pass. The installed bundles are hash-identical to source.
+- The previous API service was found failed with systemd `Result=timeout`.
+  Reinstall/restart succeeded as PID `3677920`, but startup restored the
+  previously active wsl-chrome-3 completion. It immediately detected ChatGPT
+  `Too many requests`, set cooldown through `2026-07-25T20:29:21.846Z`, and
+  was operator-paused. Scheduler and all four ChatGPT completions remain
+  paused under the hard-stop policy.

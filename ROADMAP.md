@@ -7,6 +7,14 @@
 Status: active
 Lane: P01
 
+- Active refreshed-snapshot file materialization repair:
+  [docs/dev/plans/0170-2026-07-25-refreshed-snapshot-file-materialization.md](docs/dev/plans/0170-2026-07-25-refreshed-snapshot-file-materialization.md)
+  Completion-owned materialization must consume `files[]` from its
+  already-refreshed conversation context, with the dedicated conversation-file
+  cache as the first read, instead of losing known candidates to a redundant
+  scoped listing timeout. The installed selection path is repaired; final
+  organic receipt proof is guard-blocked after ChatGPT set a cooldown through
+  `2026-07-25T20:29:21.846Z`.
 - ChatGPT composer/apps implementation and installed proof complete; live
   follow remains blocked:
   [docs/dev/plans/0167-2026-07-24-chatgpt-composer-apps-reinspection.md](docs/dev/plans/0167-2026-07-24-chatgpt-composer-apps-reinspection.md)
@@ -37,11 +45,13 @@ Lane: P01
   [docs/dev/plans/0165-2026-07-23-live-follow-settlement-cadence-and-business-tenants.md](docs/dev/plans/0165-2026-07-23-live-follow-settlement-cadence-and-business-tenants.md)
   Terminal materialization now establishes the next collector quiet boundary;
   same-email ChatGPT Business and Personal targets use distinct cache keys.
-- Active ChatGPT single-session file materialization repair:
+- Completed ChatGPT single-session file materialization repair:
   [docs/dev/plans/0164-2026-07-23-chatgpt-single-session-file-materialization.md](docs/dev/plans/0164-2026-07-23-chatgpt-single-session-file-materialization.md)
   Provider-free implementation now also captures and suppresses synthesized
   signed anchor/window downloads inside the retained page, including the
-  preview viewer Download step; one guard-safe live 12-file proof remains.
+  preview viewer Download step. The live 12-file proof used one page and one
+  attachment with no new rate warning; the remaining 403 responses reproduced
+  in ChatGPT's native UX and are provider-side.
 - Active plan:
   [docs/dev/plans/0114-2026-06-05-end-to-end-cross-service-handoff.md](docs/dev/plans/0114-2026-06-05-end-to-end-cross-service-handoff.md)
 - Completed ChatGPT hard-stop retry-propagation repair plan:

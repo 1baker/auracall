@@ -599,6 +599,17 @@ Terminology note:
   actual provider/browser transfer count. ChatGPT files-only requests with
   snapshot refresh reuse that same retained materialization session for file
   inventory evidence; they do not open a separate snapshot-refresh client.
+  Completion-owned materialization also treats the successfully refreshed
+  cached inventory as authoritative, so it does not repeat scoped file listing
+  and lose known candidates to a second listing timeout. It first reads the
+  dedicated conversation-file cache and then falls back to `files[]` in the
+  refreshed conversation-context cache, which is the dataset written by
+  snapshot refresh. Scrape telemetry records these boundaries as
+  `llmService.materializeConversationFiles.reuseRefreshedCache` and
+  `llmService.materializeConversationFiles.reuseRefreshedContext`.
+  If every known cached file is already terminal-local or outside the bounded
+  selection, the history receipt reports `known-files-excluded`; it reserves
+  `no-materializable-file` for a genuinely empty refreshed file inventory.
   Example:
   `auracall api history-materialization-create --provider chatgpt --runtime-profile wsl-chrome-3 --bound-identity-key <email> --conversation-id <id> --asset-kind files --max-items 1 --provider-work-timeout-ms 300000 --force --json`.
   React Search conversation rows and the cache-only Account Mirror catalog page
