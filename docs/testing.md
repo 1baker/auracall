@@ -15,6 +15,10 @@
     pointer click, not synthetic DOM-event dispatch
   - stop immediately on a provider rate-limit, CAPTCHA, or human-verification
     surface
+  - a loaded Cloudflare `/challenge-platform/` script is not by itself a
+    human-verification surface; current healthy ChatGPT composers retain that
+    script, so challenge detection must require the `Just a moment...` title
+    or a positive challenge UI marker
 - Live-suite posture:
   - stable baseline:
     - keep small, repeatable, and operationally useful

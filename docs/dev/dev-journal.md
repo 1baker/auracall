@@ -41805,3 +41805,18 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - The rejected pre-browser command did not consume the authorized ChatGPT
   evidence turn. Focused validation covers the exact HTTP seam before the
   installed runtime is refreshed.
+
+## 2026-07-25 | ChatGPT Cloudflare False-Positive Repair
+
+- Operator-visible and CDP readback showed two healthy `https://chatgpt.com/`
+  tabs with enabled composers after AuraCall reported a Cloudflare challenge.
+- The minimized live probe proved each healthy page retained one
+  `/challenge-platform/` script but had no challenge containers, Turnstile
+  input, challenge iframe, challenge text, or `Just a moment...` title.
+- The red regression reproduced the false hard stop from script presence
+  alone. Challenge detection now requires the challenge title or a positive
+  challenge UI marker; the script alone is ignored.
+- Provider-free validation passes the focused three Cloudflare cases, the
+  adjacent developer-app/browser suites `70` with one skip, and TypeScript.
+- Installed-runtime promotion and a non-submitting exact-app smoke remain the
+  next bounded verification.

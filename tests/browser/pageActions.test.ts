@@ -163,6 +163,40 @@ describe('ensureNotBlocked', () => {
     } as unknown as ChromeClient['Runtime'];
     await expect(ensureNotBlocked(runtime, false, logger)).resolves.toBeUndefined();
   });
+
+  test('passes through when a prompt-ready ChatGPT page retains the Cloudflare platform script', async () => {
+    const runtime = {
+      evaluate: vi.fn().mockImplementation(({ expression }: { expression: string }) => {
+        if (expression === 'document.title') {
+          return Promise.resolve({ result: { value: 'ChatGPT' } });
+        }
+        if (expression.includes('script[src*="/challenge-platform/"]')) {
+          return Promise.resolve({ result: { value: true } });
+        }
+        return Promise.resolve({ result: { value: false } });
+      }),
+    } as unknown as ChromeClient['Runtime'];
+
+    await expect(ensureNotBlocked(runtime, false, logger)).resolves.toBeUndefined();
+  });
+
+  test('throws when a visible Cloudflare challenge surface is present under a clean title', async () => {
+    const runtime = {
+      evaluate: vi.fn().mockImplementation(({ expression }: { expression: string }) => {
+        if (expression === 'document.title') {
+          return Promise.resolve({ result: { value: 'ChatGPT' } });
+        }
+        return Promise.resolve({ result: { value: expression.includes('#challenge-running') } });
+      }),
+    } as unknown as ChromeClient['Runtime'];
+
+    await expect(ensureNotBlocked(runtime, false, logger)).rejects.toMatchObject({
+      details: {
+        stage: 'cloudflare-challenge',
+        headless: false,
+      },
+    });
+  });
 });
 
 describe('ensureLoggedIn', () => {

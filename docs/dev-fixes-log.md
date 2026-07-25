@@ -19658,3 +19658,9 @@ browser-stage lifecycle observability, not transcript truncation.
   control now updates both scheduler state and the provider browser guard;
   zero cooldown removes active cooldown fields while preserving mutation and
   rate-limit history, and positive quiet cooldowns remain aligned.
+- 2026-07-25: Do not classify a ChatGPT page as Cloudflare-blocked merely
+  because it loads a `/challenge-platform/` script. Current healthy, signed-in
+  ChatGPT composers retain that script. Require the `Just a moment...` title
+  or a positive challenge surface such as Cloudflare challenge containers,
+  Turnstile response input, or challenge iframe. Preserve the hard stop for
+  those positive signals.
