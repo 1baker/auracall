@@ -41,6 +41,51 @@ describe("history materialization service", () => {
 		);
 	});
 
+	it("batches filtered job lists through one store snapshot", async () => {
+		const store = createInMemoryHistoryMaterializationJobStore([
+			buildHistoryMaterializationJob({
+				id: "hmj_batch_chatgpt",
+				status: "succeeded",
+			}),
+			buildHistoryMaterializationJob({
+				id: "hmj_batch_gemini",
+				status: "failed",
+				source: {
+					type: "conversation",
+					provider: "gemini",
+					conversationId: "gemini-conversation",
+				},
+				request: {
+					provider: "gemini",
+					runtimeProfile: "gemini-pro",
+					conversationId: "gemini-conversation",
+				},
+			}),
+		]);
+		const listJobs = vi.spyOn(store, "listJobs");
+		const service = createHistoryMaterializationService({
+			config: {},
+			catalogService: {
+				readCatalog: vi.fn(),
+				readItem: vi.fn(),
+			},
+			store,
+			schedule: () => undefined,
+			materializeConversation: vi.fn(),
+		});
+
+		const results = await service.listJobsBatch?.([
+			{ status: "terminal", provider: "chatgpt", runtimeProfile: "default", limit: 500 },
+			{ status: "terminal", provider: "gemini", runtimeProfile: "gemini-pro", limit: 500 },
+		]);
+
+		expect(listJobs).toHaveBeenCalledTimes(1);
+		expect(results?.map((result) => result.jobs.map((job) => job.id))).toEqual([
+			["hmj_batch_chatgpt"],
+			["hmj_batch_gemini"],
+		]);
+	});
+
 	it("classifies Gemini bare app fallback as a non-routeable conversation id", () => {
 		const reason = formatHistoryMaterializationFailureReason({
 			target: {
@@ -5869,6 +5914,10 @@ describe("history materialization service", () => {
 	});
 
 	it("reports a terminal materialization provider guard before publishing the job", async () => {
+		const homeDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), "auracall-history-materialize-guard-projection-"),
+		);
+		setAuracallHomeDirOverrideForTest(homeDir);
 		let scheduled: (() => Promise<void>) | undefined;
 		const onProviderGuardObserved = vi.fn(async () => undefined);
 		const guardedResult: HistoryMaterializationResult = {
@@ -5936,6 +5985,7 @@ describe("history materialization service", () => {
 		await expect(service.readJob("hmj_guard_projection_1")).resolves.toMatchObject({
 			status: "skipped",
 		});
+		await fs.rm(homeDir, { recursive: true, force: true });
 	});
 
 	it("honors selected conversation id order so terminal misses do not hide behind cached matches", async () => {

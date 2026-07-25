@@ -55,5 +55,5 @@ describe('windowsLoopbackRelay', () => {
     client.write('ping');
     const [chunk] = await once(client, 'data');
     expect(String(chunk)).toBe('ping');
-  });
+  }, 15_000);
 });

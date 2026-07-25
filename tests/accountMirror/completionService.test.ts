@@ -839,6 +839,70 @@ describe("account mirror completion service", () => {
 		}
 	});
 
+	test("bounds concurrent reads when listing a large persisted completion history", async () => {
+		const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-completion-store-concurrency-"));
+		const store = createAccountMirrorCompletionStore({
+			config: {
+				browser: {
+					cache: {
+						rootDir: tmp,
+					},
+				},
+			},
+		});
+		const template: AccountMirrorCompletionOperation = {
+			object: "account_mirror_completion",
+			id: "acctmirror_list_concurrency_0",
+			provider: "chatgpt",
+			runtimeProfileId: "default",
+			mode: "bounded",
+			sweepMode: "steady_follow",
+			phase: "steady_follow",
+			status: "completed",
+			startedAt: "2026-04-30T12:00:00.000Z",
+			completedAt: "2026-04-30T12:00:01.000Z",
+			nextAttemptAt: null,
+			maxPasses: 1,
+			passCount: 1,
+			lastRefresh: createRefreshResult(),
+			mirrorCompleteness: completeMirror,
+			error: null,
+			lifecycleEvents: [],
+		};
+		let readFileSpy: ReturnType<typeof vi.spyOn> | null = null;
+		try {
+			for (let index = 0; index < 40; index += 1) {
+				await store.writeOperation({
+					...template,
+					id: `acctmirror_list_concurrency_${index}`,
+					startedAt: new Date(Date.parse(template.startedAt) + index * 1000).toISOString(),
+				});
+			}
+			const originalReadFile = fs.readFile.bind(fs);
+			let activeReads = 0;
+			let maxActiveReads = 0;
+			readFileSpy = vi.spyOn(fs, "readFile").mockImplementation(async (...args) => {
+				activeReads += 1;
+				maxActiveReads = Math.max(maxActiveReads, activeReads);
+				try {
+					await new Promise((resolve) => setTimeout(resolve, 5));
+					return await originalReadFile(...args);
+				} finally {
+					activeReads -= 1;
+				}
+			});
+
+			const operations = await store.listOperations({ activeOnly: false, limit: 10 });
+
+			expect(operations).toHaveLength(10);
+			expect(operations[0]?.id).toBe("acctmirror_list_concurrency_39");
+			expect(maxActiveReads).toBeLessThanOrEqual(16);
+		} finally {
+			readFileSpy?.mockRestore();
+			await fs.rm(tmp, { recursive: true, force: true });
+		}
+	});
+
 	test("reconciles stale loaded live-follow cycle from completed refresh evidence", () => {
 		const refresh = createRefreshResult();
 		refresh.metadataEvidence = {
@@ -3633,6 +3697,67 @@ describe("account mirror completion service", () => {
 			nextAttemptAt: null,
 			passCount: 2,
 		});
+	});
+
+	test("serializes restored same-provider registry hydration behind the provider-work lease", async () => {
+		const baseRegistry = createAccountMirrorStatusRegistry({
+			config,
+			now: () => new Date("2026-04-30T12:00:00.000Z"),
+		});
+		let activeHydrations = 0;
+		let maxConcurrentHydrations = 0;
+		const refreshPersistentState = vi.fn(async () => {
+			activeHydrations += 1;
+			maxConcurrentHydrations = Math.max(maxConcurrentHydrations, activeHydrations);
+			await new Promise((resolve) => setTimeout(resolve, 20));
+			activeHydrations -= 1;
+		});
+		const registry = {
+			...baseRegistry,
+			refreshPersistentState,
+		};
+		const first = {
+			object: "account_mirror_completion" as const,
+			id: "acctmirror_restore_default",
+			provider: "chatgpt" as const,
+			runtimeProfileId: "default",
+			mode: "bounded" as const,
+			phase: "backfill_history" as const,
+			status: "running" as const,
+			startedAt: "2026-04-30T11:58:00.000Z",
+			completedAt: null,
+			nextAttemptAt: null,
+			maxPasses: 2,
+			passCount: 1,
+			lastRefresh: createRefreshResult(),
+			mirrorCompleteness: completeMirror,
+			error: null,
+		};
+		const second = {
+			...first,
+			id: "acctmirror_restore_consulting",
+			runtimeProfileId: "wsl-chrome-2",
+			startedAt: "2026-04-30T11:59:00.000Z",
+		};
+		const requestRefresh = vi.fn(async () => createRefreshResult());
+		const service = createAccountMirrorCompletionService({
+			registry,
+			refreshService: {
+				requestRefresh,
+			},
+			initialOperations: [first, second],
+			resumeActiveOperations: true,
+			now: () => new Date("2026-04-30T12:00:00.000Z"),
+		});
+
+		await waitFor(
+			() =>
+				service.read(first.id)?.status === "completed" &&
+				service.read(second.id)?.status === "completed",
+		);
+
+		expect(requestRefresh).toHaveBeenCalledTimes(2);
+		expect(maxConcurrentHydrations).toBe(1);
 	});
 
 	test("parks runnable operations for restart instead of cancelling them", async () => {

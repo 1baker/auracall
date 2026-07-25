@@ -6083,36 +6083,56 @@ async function hydrateAccountMirrorStatusMaterializationEvidence(
 		string,
 		Pick<AccountMirrorStatusEntry["metadataCounts"], "artifacts" | "files" | "media">
 	>();
-	await Promise.all(
-		status.entries.map(async (entry) => {
-			const [archiveItems, jobs] = await Promise.all([
-				runArchiveService
-					?.listItems({
-						provider: entry.provider,
-						runtimeProfile: entry.runtimeProfileId,
-						assetAvailability: "available",
-						limit: 500,
-					})
-					.catch(() => null) ?? null,
-				service
-					?.listJobs({
-						status: "terminal",
-						provider: entry.provider,
-						runtimeProfile: entry.runtimeProfileId,
-						limit: 500,
-					})
-					.catch(() => null) ?? null,
-			]);
-			mergeAccountMirrorLocalCountMap(
-				localMaterialized,
-				summarizeRunArchiveLocalCounts(archiveItems?.items ?? []),
-			);
-			mergeAccountMirrorLocalCountMap(
-				localMaterialized,
-				summarizeTerminalHistoryMaterializationLocalCounts(jobs?.jobs ?? []),
-			);
-		}),
-	);
+	const archiveRequests = status.entries.map((entry) => ({
+		provider: entry.provider,
+		runtimeProfile: entry.runtimeProfileId,
+		assetAvailability: "available" as const,
+		limit: 500,
+	}));
+	const jobRequests = status.entries.map((entry) => ({
+		status: "terminal" as const,
+		provider: entry.provider,
+		runtimeProfile: entry.runtimeProfileId,
+		limit: 500,
+	}));
+	const [archiveResults, jobResults] = await Promise.all([
+		(async () => {
+			if (!runArchiveService) return archiveRequests.map(() => null);
+			if (runArchiveService.listItemsBatch) {
+				return runArchiveService.listItemsBatch(archiveRequests).catch(() =>
+					archiveRequests.map(() => null),
+				);
+			}
+			const results = [];
+			for (const request of archiveRequests) {
+				results.push(await runArchiveService.listItems(request).catch(() => null));
+			}
+			return results;
+		})(),
+		(async () => {
+			if (!service) return jobRequests.map(() => null);
+			if (service.listJobsBatch) {
+				return service.listJobsBatch(jobRequests).catch(() => jobRequests.map(() => null));
+			}
+			const results = [];
+			for (const request of jobRequests) {
+				results.push(await service.listJobs(request).catch(() => null));
+			}
+			return results;
+		})(),
+	]);
+	for (const [index] of status.entries.entries()) {
+		const archiveItems = archiveResults[index] ?? null;
+		const jobs = jobResults[index] ?? null;
+		mergeAccountMirrorLocalCountMap(
+			localMaterialized,
+			summarizeRunArchiveLocalCounts(archiveItems?.items ?? []),
+		);
+		mergeAccountMirrorLocalCountMap(
+			localMaterialized,
+			summarizeTerminalHistoryMaterializationLocalCounts(jobs?.jobs ?? []),
+		);
+	}
 	if (localMaterialized.size === 0) return status;
 	let changed = false;
 	const entries = status.entries.map((entry) => {

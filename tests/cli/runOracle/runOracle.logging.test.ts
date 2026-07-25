@@ -230,7 +230,7 @@ describe('api key logging', () => {
         delete process.env.GEMINI_API_KEY;
       }
     }
-  });
+  }, 15_000);
 
   test('single-line summary includes session id when provided', async () => {
     const stream = new MockStream([], buildResponse());

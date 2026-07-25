@@ -1,10 +1,14 @@
 import os from 'node:os';
 import path from 'node:path';
 import { mkdir, mkdtemp, writeFile } from 'node:fs/promises';
-import { afterEach, describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import { setAuracallHomeDirOverrideForTest } from '../src/auracallHome.js';
 import { createRunArchiveService, type RunArchiveItem } from '../src/runtime/archiveService.js';
-import { readRunArchiveIndex, writeRunArchiveIndex } from '../src/runtime/archiveIndexStore.js';
+import {
+  readRunArchiveIndex,
+  type RunArchiveIndexStore,
+  writeRunArchiveIndex,
+} from '../src/runtime/archiveIndexStore.js';
 import { createExecutionRunRecordStore } from '../src/runtime/store.js';
 import { createExecutionResponsesService } from '../src/runtime/responsesService.js';
 import {
@@ -21,6 +25,49 @@ import { createMediaGenerationService } from '../src/media/service.js';
 describe('run archive service', () => {
   afterEach(() => {
     setAuracallHomeDirOverrideForTest(null);
+  });
+
+  test('batches filtered archive lists through one index snapshot', async () => {
+    const readIndex = vi.fn(async () => ({
+      object: 'run_archive_index' as const,
+      version: 1,
+      updatedAt: '2026-07-25T01:00:00.000Z',
+      itemCount: 2,
+      items: [
+        createArchiveItemFixture({
+          id: 'chatgpt-item',
+          provider: 'chatgpt',
+          runtimeProfile: 'default',
+        }),
+        createArchiveItemFixture({
+          id: 'gemini-item',
+          provider: 'gemini',
+          runtimeProfile: 'gemini-pro',
+        }),
+      ],
+    }));
+    const indexStore = {
+      readIndex,
+      writeIndex: vi.fn(),
+      upsertItems: vi.fn(),
+      readItem: vi.fn(),
+      listItems: vi.fn(),
+    } as unknown as RunArchiveIndexStore;
+    const service = createRunArchiveService({
+      indexStore,
+      now: () => new Date('2026-07-25T01:00:00.000Z'),
+    });
+
+    const results = await service.listItemsBatch?.([
+      { provider: 'chatgpt', runtimeProfile: 'default', limit: 500 },
+      { provider: 'gemini', runtimeProfile: 'gemini-pro', limit: 500 },
+    ]);
+
+    expect(readIndex).toHaveBeenCalledTimes(1);
+    expect(results?.map((result) => result.items.map((item) => item.id))).toEqual([
+      ['chatgpt-item'],
+      ['gemini-item'],
+    ]);
   });
 
   test('projects existing runtime, batch, media, upload, artifact, and provider conversation records', async () => {

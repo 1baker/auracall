@@ -206,6 +206,7 @@ export interface RunArchiveEvidenceResult {
 
 export interface RunArchiveService {
   listItems(request?: RunArchiveListRequest): Promise<RunArchiveListResult>;
+  listItemsBatch?(requests: RunArchiveListRequest[]): Promise<RunArchiveListResult[]>;
   readItem(id: string): Promise<RunArchiveItemResult | null>;
   readAsset(id: string): Promise<RunArchiveAssetResult | null>;
   lookupAsset(request: RunArchiveAssetLookupRequest): Promise<RunArchiveAssetLookupResult>;
@@ -270,23 +271,12 @@ export function createRunArchiveService(deps: RunArchiveServiceDeps = {}): RunAr
   }
   return {
     async listItems(request = {}) {
-      const kind = normalizeKind(request.kind);
-      const limit = normalizeLimit(request.limit);
-      const items = (await readIndexedItems())
-        .filter((item) => matchesRequest(item, { ...request, kind }))
-        .sort((left, right) => right.createdAt.localeCompare(left.createdAt));
-      const limited = items.slice(0, limit);
-      return {
-        object: 'run_archive',
-        generatedAt: now().toISOString(),
-        kind,
-        limit,
-        items: limited,
-        metrics: {
-          total: items.length,
-          byKind: countByKind(items),
-        },
-      };
+      return createRunArchiveListResult(await readIndexedItems(), request, now().toISOString());
+    },
+    async listItemsBatch(requests) {
+      const items = await readIndexedItems();
+      const generatedAt = now().toISOString();
+      return requests.map((request) => createRunArchiveListResult(items, request, generatedAt));
     },
     async readItem(id) {
       const item = (await readIndexedItems()).find((entry) => entry.id === id) ?? null;
@@ -1483,6 +1473,29 @@ function normalizeKind(value: RunArchiveListRequest['kind']): RunArchiveItemKind
     return value;
   }
   return 'all';
+}
+
+function createRunArchiveListResult(
+	indexedItems: RunArchiveItem[],
+	request: RunArchiveListRequest,
+	generatedAt: string,
+): RunArchiveListResult {
+	const kind = normalizeKind(request.kind);
+	const limit = normalizeLimit(request.limit);
+	const items = indexedItems
+		.filter((item) => matchesRequest(item, { ...request, kind }))
+		.sort((left, right) => right.createdAt.localeCompare(left.createdAt));
+	return {
+		object: 'run_archive',
+		generatedAt,
+		kind,
+		limit,
+		items: items.slice(0, limit),
+		metrics: {
+			total: items.length,
+			byKind: countByKind(items),
+		},
+	};
 }
 
 function normalizeLimit(value: number | null | undefined): number {

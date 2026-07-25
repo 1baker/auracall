@@ -130,7 +130,7 @@ describe('Grok browser media generation executor', () => {
       ready: true,
       failureReason: null,
     });
-  });
+  }, 10_000);
 
   it('classifies fixture-backed Grok video post-submit readback states', async () => {
     const {

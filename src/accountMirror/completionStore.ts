@@ -21,6 +21,7 @@ import {
 } from "./liveFollowOperatingModel.js";
 
 const COMPLETIONS_DIRNAME = "completions";
+const COMPLETION_LIST_READ_CONCURRENCY = 16;
 
 export interface AccountMirrorCompletionStoredRecord {
 	object: "account_mirror_completion_record";
@@ -86,13 +87,12 @@ export function createAccountMirrorCompletionStore(input: {
 				if (isMissingFileError(error)) return [];
 				throw error;
 			}
-			const records = (
-				await Promise.all(
-					entries
-						.filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
-						.map(async (entry) => readStoredRecordFile(path.join(rootDir, entry.name))),
-				)
-			).filter((record): record is AccountMirrorCompletionStoredRecord => record !== null);
+				const recordPaths = entries
+					.filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
+					.map((entry) => path.join(rootDir, entry.name));
+				const records = (await readStoredRecordsBounded(recordPaths)).filter(
+					(record): record is AccountMirrorCompletionStoredRecord => record !== null,
+				);
 			const operations = records
 				.map((record) => record.operation)
 				.filter((operation) => !options.activeOnly || isActiveOperation(operation))
@@ -101,6 +101,26 @@ export function createAccountMirrorCompletionStore(input: {
 			return limit === null ? operations : operations.slice(0, limit);
 		},
 	};
+}
+
+async function readStoredRecordsBounded(
+	recordPaths: string[],
+): Promise<Array<AccountMirrorCompletionStoredRecord | null>> {
+	const records = new Array<AccountMirrorCompletionStoredRecord | null>(recordPaths.length);
+	let nextIndex = 0;
+	const workers = Array.from(
+		{ length: Math.min(COMPLETION_LIST_READ_CONCURRENCY, recordPaths.length) },
+		async () => {
+			while (nextIndex < recordPaths.length) {
+				const currentIndex = nextIndex;
+				nextIndex += 1;
+				const recordPath = recordPaths[currentIndex];
+				records[currentIndex] = recordPath ? await readStoredRecordFile(recordPath) : null;
+			}
+		},
+	);
+	await Promise.all(workers);
+	return records;
 }
 
 function resolveAccountMirrorCompletionsDir(

@@ -383,6 +383,9 @@ export interface HistoryMaterializationService {
 	listJobs(
 		request?: HistoryMaterializationJobListRequest,
 	): Promise<HistoryMaterializationJobListResult>;
+	listJobsBatch?(
+		requests: HistoryMaterializationJobListRequest[],
+	): Promise<HistoryMaterializationJobListResult[]>;
 	readJob(id: string): Promise<HistoryMaterializationJob | null>;
 	cancelJob(id: string): Promise<HistoryMaterializationJob>;
 	runJob(id: string): Promise<HistoryMaterializationJob>;
@@ -627,6 +630,35 @@ export function createHistoryMaterializationService(
 				request,
 			}));
 
+	const createJobListResult = (
+		allJobs: HistoryMaterializationJob[],
+		request: HistoryMaterializationJobListRequest = {},
+	): HistoryMaterializationJobListResult => {
+		const status = request.status ?? null;
+		const provider = request.provider ?? null;
+		const runtimeProfile = normalizeOptionalString(request.runtimeProfile);
+		const sourceType = request.sourceType ?? null;
+		const limit = normalizeListLimit(request.limit);
+		const filtered = allJobs.filter(
+			(job) =>
+				matchesStatusFilter(job, status) &&
+				(!provider || job.request.provider === provider) &&
+				(!runtimeProfile || job.request.runtimeProfile === runtimeProfile) &&
+				(!sourceType || job.source.type === sourceType),
+		);
+		return {
+			object: "history_materialization_jobs",
+			generatedAt: now().toISOString(),
+			status,
+			provider,
+			runtimeProfile,
+			sourceType,
+			limit,
+			jobs: filtered.slice(0, limit).map((job) => withSchedulerDiagnostics(job)),
+			metrics: summarizeJobs(filtered),
+		};
+	};
+
 	const service: HistoryMaterializationService = {
 		async createJob(request) {
 			const normalized = normalizeCreateRequest(request);
@@ -674,31 +706,13 @@ export function createHistoryMaterializationService(
 		},
 
 		async listJobs(request = {}) {
-			const status = request.status ?? null;
-			const provider = request.provider ?? null;
-			const runtimeProfile = normalizeOptionalString(request.runtimeProfile);
-			const sourceType = request.sourceType ?? null;
-			const limit = normalizeListLimit(request.limit);
 			const allJobs = await recoverStaleRunningJobs(await store.listJobs());
-			const filtered = allJobs.filter(
-				(job) =>
-					matchesStatusFilter(job, status) &&
-					(!provider || job.request.provider === provider) &&
-					(!runtimeProfile || job.request.runtimeProfile === runtimeProfile) &&
-					(!sourceType || job.source.type === sourceType),
-			);
-			const jobs = filtered.slice(0, limit).map((job) => withSchedulerDiagnostics(job));
-			return {
-				object: "history_materialization_jobs",
-				generatedAt: now().toISOString(),
-				status,
-				provider,
-				runtimeProfile,
-				sourceType,
-				limit,
-				jobs,
-				metrics: summarizeJobs(filtered),
-			};
+			return createJobListResult(allJobs, request);
+		},
+
+		async listJobsBatch(requests) {
+			const allJobs = await recoverStaleRunningJobs(await store.listJobs());
+			return requests.map((request) => createJobListResult(allJobs, request));
 		},
 
 		async readJob(id) {

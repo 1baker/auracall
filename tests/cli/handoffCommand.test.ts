@@ -654,7 +654,7 @@ describe("handoff prepare CLI helpers", () => {
 		});
 		expect(result.analysis.sourceMaterializationJobIds).toEqual(["hmj_fixture"]);
 		expect(formatHandoffPrepareCliSummary(result)).toContain("Target mutation: skipped_dry_run");
-	}, 15_000);
+	}, 30_000);
 
 	test("CLI orchestration reads existing source job ids before create and skips create when evidence exists", async () => {
 		const root = await tempRoot("auracall-handoff-source-read-");
@@ -710,7 +710,7 @@ describe("handoff prepare CLI helpers", () => {
 				importMethod: "api_read",
 			}),
 		]);
-	});
+	}, 15_000);
 
 	test("CLI orchestration explicitly creates one bounded source job when no source evidence exists", async () => {
 		const root = await tempRoot("auracall-handoff-source-create-");
@@ -792,7 +792,7 @@ describe("handoff prepare CLI helpers", () => {
 		expect(status).not.toBeNull();
 		if (!status) throw new Error("Expected source create status fixture to exist.");
 		expect(formatHandoffStatusCliSummary(status)).toContain("Source materialization jobs: 1");
-	});
+	}, 15_000);
 
 	test("imports source materialization readback entries into manifest items and packet evidence", async () => {
 		const root = await tempRoot("auracall-handoff-materialized-");

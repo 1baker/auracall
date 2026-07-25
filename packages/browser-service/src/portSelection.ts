@@ -4,13 +4,21 @@ import type { BrowserLogger } from './types.js';
 export const DEFAULT_DEBUG_PORT = 9222;
 export const DEFAULT_DEBUG_PORT_RANGE: [number, number] = [45000, 45100];
 
+export interface DebugPortSelectionDependencies {
+  isPortAvailable?: (port: number) => Promise<boolean>;
+  findEphemeralPort?: () => Promise<number>;
+}
+
 export async function pickAvailableDebugPort(
   preferredPort: number,
   logger: BrowserLogger,
   range: [number, number] | null,
+  deps: DebugPortSelectionDependencies = {},
 ): Promise<number> {
+  const probePort = deps.isPortAvailable ?? isPortAvailable;
+  const pickEphemeralPort = deps.findEphemeralPort ?? findEphemeralPort;
   const hasPreferredPort = Number.isFinite(preferredPort) && preferredPort > 0 && preferredPort <= 65535;
-  if (hasPreferredPort && await isPortAvailable(preferredPort)) {
+  if (hasPreferredPort && await probePort(preferredPort)) {
     return preferredPort;
   }
 
@@ -20,22 +28,22 @@ export async function pickAvailableDebugPort(
       if (hasPreferredPort && port === preferredPort) {
         continue;
       }
-      if (await isPortAvailable(port)) {
+      if (await probePort(port)) {
         return port;
       }
     }
-    const fallback = await findEphemeralPort();
+    const fallback = await pickEphemeralPort();
     logger(`DevTools ports ${start}-${end} are occupied; falling back to ${fallback}.`);
     return fallback;
   }
   const start = Number.isFinite(preferredPort) && preferredPort > 0 ? preferredPort : DEFAULT_DEBUG_PORT;
   for (let offset = 0; offset < 10; offset++) {
     const candidate = start + offset;
-    if (await isPortAvailable(candidate)) {
+    if (await probePort(candidate)) {
       return candidate;
     }
   }
-  const fallback = await findEphemeralPort();
+  const fallback = await pickEphemeralPort();
   logger(`DevTools ports ${start}-${start + 9} are occupied; falling back to ${fallback}.`);
   return fallback;
 }

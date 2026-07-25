@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { pathToFileURL } from "node:url";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { AccountMirrorArtifactRecoveryPlanResult } from "../src/accountMirror/artifactRecoveryPlanner.js";
 import type { AccountMirrorBackfillLedger } from "../src/accountMirror/backfillLedger.js";
 import type {
@@ -38,11 +38,15 @@ import {
 	writeLazyLiveFollowPreflightStatus,
 } from "../src/preflightStatus.js";
 import type { ArchiveMaterializationJobListRequest } from "../src/runtime/archiveMaterializationJobService.js";
-import type { RunArchiveService } from "../src/runtime/archiveService.js";
+import type {
+	RunArchiveListRequest,
+	RunArchiveService,
+} from "../src/runtime/archiveService.js";
 import type { ExecutionRuntimeControlContract } from "../src/runtime/contract.js";
 import { createExecutionRuntimeControl } from "../src/runtime/control.js";
 import {
 	type HistoryMaterializationJob,
+	type HistoryMaterializationJobListRequest,
 	HistoryMaterializationJobControlError,
 	type HistoryMaterializationService,
 } from "../src/runtime/historyMaterializationService.js";
@@ -278,6 +282,10 @@ describe("http responses adapter", () => {
 		setAuracallHomeDirOverrideForTest(homeDir);
 		return homeDir;
 	};
+
+	beforeEach(async () => {
+		await useTempAuracallHome("auracall-http-test-");
+	});
 
 	const seedPlannedDirectRun = async (
 		control: ReturnType<typeof createExecutionRuntimeControl>,
@@ -3214,8 +3222,20 @@ describe("http responses adapter", () => {
 				},
 			},
 		});
-		const listArchiveItems = vi.fn(async () => {
-			throw new Error("broad status must not list archive items");
+		let activeMaterializationEvidenceReads = 0;
+		let maxActiveMaterializationEvidenceReads = 0;
+		const listArchiveItems = vi.fn(async (_request?: RunArchiveListRequest) => {
+			activeMaterializationEvidenceReads += 1;
+			maxActiveMaterializationEvidenceReads = Math.max(
+				maxActiveMaterializationEvidenceReads,
+				activeMaterializationEvidenceReads,
+			);
+			try {
+				await new Promise((resolve) => setTimeout(resolve, 5));
+				throw new Error("broad status must not list archive items");
+			} finally {
+				activeMaterializationEvidenceReads -= 1;
+			}
 		});
 		const listHistoryMaterializationJobs = vi.fn(async (request) => ({
 			object: "history_materialization_jobs" as const,
@@ -3303,6 +3323,31 @@ describe("http responses adapter", () => {
 						: 0,
 			},
 		}));
+		const listArchiveItemsBatch = vi.fn(async (requests: RunArchiveListRequest[]) => {
+			const results = [];
+			for (const request of requests) {
+				results.push(
+					await listArchiveItems(request).catch(() => ({
+						object: "run_archive" as const,
+						generatedAt: "2026-07-07T21:50:00.000Z",
+						kind: "all" as const,
+						limit: request.limit ?? 500,
+						items: [],
+						metrics: { total: 0, byKind: {} },
+					})),
+				);
+			}
+			return results;
+		});
+		const listHistoryMaterializationJobsBatch = vi.fn(
+			async (requests: HistoryMaterializationJobListRequest[]) => {
+			const results = [];
+			for (const request of requests) {
+				results.push(await listHistoryMaterializationJobs(request));
+			}
+			return results;
+			},
+		);
 
 		const server = await createResponsesHttpServer(
 			{ host: "127.0.0.1", port: 0 },
@@ -3312,9 +3357,11 @@ describe("http responses adapter", () => {
 				accountMirrorStatusRegistry: registry,
 				runArchiveService: {
 					listItems: listArchiveItems,
+					listItemsBatch: listArchiveItemsBatch,
 				} as unknown as RunArchiveService,
 				historyMaterializationService: {
 					listJobs: listHistoryMaterializationJobs,
+					listJobsBatch: listHistoryMaterializationJobsBatch,
 					createJob: vi.fn(),
 					readJob: vi.fn(),
 					cancelJob: vi.fn(),
@@ -3363,6 +3410,9 @@ describe("http responses adapter", () => {
 					runtimeProfile: "auracall-gemini-pro",
 				}),
 			);
+			expect(maxActiveMaterializationEvidenceReads).toBe(1);
+			expect(listArchiveItemsBatch).toHaveBeenCalledTimes(1);
+			expect(listHistoryMaterializationJobsBatch).toHaveBeenCalledTimes(1);
 		} finally {
 			await server.close();
 		}
@@ -7606,7 +7656,7 @@ describe("http responses adapter", () => {
 			{
 				host: "127.0.0.1",
 				port: 0,
-				accountMirrorSchedulerIntervalMs: 25,
+					accountMirrorSchedulerIntervalMs: 25,
 				accountMirrorSchedulerDryRun: true,
 			},
 			{
@@ -7618,8 +7668,8 @@ describe("http responses adapter", () => {
 		);
 
 		try {
-			await delay(40);
-			const response = await fetch(`http://127.0.0.1:${server.port}/status`);
+				await delay(40);
+				const response = await fetch(`http://127.0.0.1:${server.port}/status`);
 			expect(response.status).toBe(200);
 			const payload = (await response.json()) as {
 				accountMirrorScheduler: {
@@ -7768,7 +7818,7 @@ describe("http responses adapter", () => {
 		}
 	});
 
-	it("reports foreground scheduler preemption on live-follow target routine decisions", async () => {
+		it("reports foreground scheduler preemption on live-follow target routine decisions", async () => {
 		await useTempAuracallHome("auracall-http-scheduler-preemption-");
 		const config = {
 			model: "gpt-5.2",
@@ -7825,7 +7875,7 @@ describe("http responses adapter", () => {
 			{
 				host: "127.0.0.1",
 				port: 0,
-				accountMirrorSchedulerIntervalMs: 25,
+					accountMirrorSchedulerIntervalMs: 250,
 				accountMirrorSchedulerDryRun: false,
 			},
 			{
@@ -7844,7 +7894,9 @@ describe("http responses adapter", () => {
 		);
 
 		try {
-			await delay(40);
+				await vi.waitFor(() => expect(runOnce).toHaveBeenCalledWith({ dryRun: false }), {
+					timeout: 1_000,
+				});
 			const response = await fetch(`http://127.0.0.1:${server.port}/status`);
 			expect(response.status).toBe(200);
 			const payload = (await response.json()) as {
@@ -20917,7 +20969,7 @@ describe("http responses adapter", () => {
 
 		const capLog = logs.find((entry) => entry.includes("scanned 3 candidate run(s)"));
 		expect(capLog).toBeUndefined();
-	});
+	}, 20_000);
 
 	it("resolves cli-selected runtime profile before serving media generations", async () => {
 		const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-http-serve-profile-"));

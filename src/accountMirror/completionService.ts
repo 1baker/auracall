@@ -449,9 +449,9 @@ export function createAccountMirrorCompletionService(input: {
 						continue;
 					}
 				}
-				if (
-					operation.mode === "live_follow" &&
-					isTerminalMaterializationStatus(operation.materializationCursor?.jobStatus ?? "") &&
+					if (
+						operation.mode === "live_follow" &&
+						isTerminalMaterializationStatus(operation.materializationCursor?.jobStatus ?? "") &&
 					operation.materializationCursor?.providerWorkSettledAt
 				) {
 					releaseProviderWorkLease(id, "completion-owned materialization settled");
@@ -472,12 +472,13 @@ export function createAccountMirrorCompletionService(input: {
 						update(id, { status: "idle_waiting", nextAttemptAt });
 						if (!(await sleepUntilAttempt(id, nextAttemptAt))) return;
 						update(id, { status: "running", nextAttemptAt: null });
-						continue;
+							continue;
+						}
 					}
-				}
-				if (pass > 0) {
-					await input.registry.refreshPersistentState?.();
-					if (!shouldContinue(id)) return;
+					if (!(await acquireProviderWorkLease(id))) return;
+					if (pass > 0) {
+						await input.registry.refreshPersistentState?.();
+						if (!shouldContinue(id)) return;
 					const entry = findTargetEntry(
 						input.registry,
 						operation.provider,
@@ -502,10 +503,11 @@ export function createAccountMirrorCompletionService(input: {
 				const refreshOperation = operations.get(id);
 				if (!refreshOperation) return;
 				if (refreshOperation.mode === "live_follow") {
-					const foregroundBackpressure = input.shouldYieldToForegroundWork?.() ?? null;
-					if (foregroundBackpressure) {
-						const nextAttemptAt = new Date(now().getTime() + foregroundRetryDelayMs).toISOString();
-						update(id, {
+						const foregroundBackpressure = input.shouldYieldToForegroundWork?.() ?? null;
+						if (foregroundBackpressure) {
+							releaseProviderWorkLease(id, "foreground work deferred completion");
+							const nextAttemptAt = new Date(now().getTime() + foregroundRetryDelayMs).toISOString();
+							update(id, {
 							status: "idle_waiting",
 							nextAttemptAt,
 							error: null,
@@ -533,9 +535,10 @@ export function createAccountMirrorCompletionService(input: {
 						refreshOperation.provider,
 						refreshOperation.runtimeProfileId,
 					);
-					const providerGuardBackoff = resolveProviderGuardBackoff(phaseStatusEntry, now());
-					if (providerGuardBackoff) {
-						appendLifecycleEvent(id, {
+						const providerGuardBackoff = resolveProviderGuardBackoff(phaseStatusEntry, now());
+						if (providerGuardBackoff) {
+							releaseProviderWorkLease(id, "provider guard backoff");
+							appendLifecycleEvent(id, {
 							type: "provider_guard_backoff",
 							status: operations.get(id)?.status ?? refreshOperation.status,
 							previousStatus: refreshOperation.status,
