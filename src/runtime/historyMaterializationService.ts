@@ -3606,6 +3606,7 @@ async function materializeConversationTarget(input: {
 		} | null = null;
 		let fileFetch: {
 			conversationFiles: FileRef[];
+			knownConversationFileCount: number;
 			files: FileRef[];
 			manifestPath: string | null;
 		} | null = null;
@@ -3677,7 +3678,11 @@ async function materializeConversationTarget(input: {
 						)),
 					);
 					if (fileFetch.conversationFiles.length === 0 && manifestEntries.length === 0) {
-						entries.push(noMaterializableEntry("file", input.target));
+						entries.push(
+							fileFetch.knownConversationFileCount > 0
+								? excludedKnownFilesEntry(input.target, fileFetch.knownConversationFileCount)
+								: noMaterializableEntry("file", input.target),
+						);
 					}
 					for (const file of fileFetch.files) {
 						const manifestEntry = findFileManifestForFile(manifestEntries, file);
@@ -5111,6 +5116,28 @@ function noMaterializableEntry(
 		size: null,
 		materializationMethod: null,
 		reason: `no-materializable-${kind}: provider detail exposed no downloadable ${kind} assets for conversation ${target.conversationId}`,
+		archiveItemId: null,
+		assetRoute: null,
+	};
+}
+
+function excludedKnownFilesEntry(
+	target: HistoryMaterializationTarget,
+	knownFileCount: number,
+): HistoryMaterializationManifestEntry {
+	return {
+		kind: "file",
+		providerId: null,
+		title: null,
+		status: "skipped",
+		localPath: null,
+		remoteUrl: null,
+		cacheKey: null,
+		checksumSha256: null,
+		mimeType: null,
+		size: null,
+		materializationMethod: null,
+		reason: `known-files-excluded: ${knownFileCount} known file asset${knownFileCount === 1 ? "" : "s"} already had terminal materialization evidence or fell outside the bounded selection for conversation ${target.conversationId}`,
 		archiveItemId: null,
 		assetRoute: null,
 	};

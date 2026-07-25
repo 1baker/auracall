@@ -1388,6 +1388,97 @@ describe("llmService project file cache writes", () => {
 		}
 	});
 
+	test("materializeConversationFiles reuses file inventory from an already-refreshed context", async () => {
+		const homeDir = await mkdtemp(path.join(os.tmpdir(), "auracall-llm-files-refreshed-cache-"));
+		setAuracallHomeDirOverrideForTest(homeDir);
+		const conversationId = "conversation-refreshed-cache";
+		const cacheContext: ProviderCacheContext = {
+			provider: "chatgpt",
+			userConfig: {} as ProviderCacheContext["userConfig"],
+			listOptions: {},
+			identityKey: "cache-test@example.com",
+		};
+		const store = new JsonCacheStore();
+		const cachedFiles: FileRef[] = [
+			{
+				id: "conversation-refreshed-cache:file-1",
+				name: "terminal-file.txt",
+				provider: "chatgpt",
+				source: "conversation",
+				mimeType: "text/plain",
+				remoteUrl: "chatgpt://file/file-terminal-cache",
+			},
+			{
+				id: "conversation-refreshed-cache:file-2",
+				name: "refreshed-file.txt",
+				provider: "chatgpt",
+				source: "conversation",
+				mimeType: "text/plain",
+				remoteUrl: "chatgpt://file/file-refreshed-cache",
+			},
+			{
+				id: "conversation-refreshed-cache:file-3",
+				name: "over-budget-file.txt",
+				provider: "chatgpt",
+				source: "conversation",
+				mimeType: "text/plain",
+				remoteUrl: "chatgpt://file/file-over-budget-cache",
+			},
+		];
+		await store.writeConversationContext(cacheContext, conversationId, {
+			provider: "chatgpt",
+			conversationId,
+			messages: [],
+			files: cachedFiles,
+		});
+		const provider = {
+			id: "chatgpt",
+			config: { id: "chatgpt", selectors: {} as never },
+			listConversationFiles: vi.fn(async () => {
+				throw new Error("provider listing must not repeat after snapshot refresh");
+			}),
+			downloadConversationFiles: vi.fn(
+				async (_conversationId: string, items: Array<{ file: FileRef; destPath: string }>) => {
+					for (const item of items)
+						await fs.writeFile(item.destPath, "cached snapshot body", "utf8");
+					return items.map((item) => ({
+						fileId: item.file.id,
+						status: "materialized" as const,
+					}));
+				},
+			),
+		};
+		const service = new TestLlmService(provider as never, store, cacheContext);
+		const scrapeTelemetry = createBrowserScrapeTelemetryRecorder();
+
+		try {
+			const result = await service.materializeConversationFiles(conversationId, {
+				listOptions: { scrapeTelemetry },
+				refresh: false,
+				maxItems: 1,
+				excludeFile: (file) => file.id === "conversation-refreshed-cache:file-1",
+			});
+
+			expect(provider.listConversationFiles).not.toHaveBeenCalled();
+			expect(provider.downloadConversationFiles).toHaveBeenCalledTimes(1);
+			expect(result.conversationFiles.map((file) => file.id)).toEqual([
+				"conversation-refreshed-cache:file-2",
+			]);
+			expect(result.knownConversationFileCount).toBe(3);
+			expect(result.files).toHaveLength(1);
+			expect(scrapeTelemetry.providerActions).toMatchObject({
+				"llmService.materializeConversationFiles.reuseRefreshedCache": 1,
+				"llmService.materializeConversationFiles.reuseRefreshedContext": 1,
+			});
+			expect(
+				scrapeTelemetry.providerActions["llmService.materializeConversationFiles.listTimedOut"],
+			).toBeUndefined();
+			expect(scrapeTelemetry.providerActions["llmService.listConversationFiles"]).toBeUndefined();
+		} finally {
+			await rm(homeDir, { recursive: true, force: true });
+		}
+	});
+
 	test("materializeConversationFiles preserves one scoped session across project file listing and batch transfer", async () => {
 		const homeDir = await mkdtemp(path.join(os.tmpdir(), "auracall-llm-files-session-"));
 		setAuracallHomeDirOverrideForTest(homeDir);

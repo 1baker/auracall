@@ -1799,7 +1799,12 @@ export abstract class LlmService {
 			maxItems?: number | null;
 			excludeFile?: (file: FileRef) => boolean;
 		},
-	): Promise<{ conversationFiles: FileRef[]; files: FileRef[]; manifestPath: string | null }> {
+	): Promise<{
+		conversationFiles: FileRef[];
+		knownConversationFileCount: number;
+		files: FileRef[];
+		manifestPath: string | null;
+	}> {
 		if (!this.provider.downloadConversationFile && !this.provider.downloadConversationFiles) {
 			throw new Error(`Conversation file fetch is not supported for ${this.providerId}.`);
 		}
@@ -1819,28 +1824,62 @@ export abstract class LlmService {
 				);
 			}
 			let listedConversationFiles: FileRef[] = [];
-			try {
-				listedConversationFiles = await Promise.race([
-					this.listConversationFiles(conversationId, {
-						projectId: options?.projectId,
-						listOptions,
-					}),
-					timeoutAfter<FileRef[]>(
-						SCOPED_CONVERSATION_FILE_LIST_TIMEOUT_MS,
-						`Timed out listing scoped conversation files after ${SCOPED_CONVERSATION_FILE_LIST_TIMEOUT_MS}ms.`,
-					),
-				]);
-			} catch {
+			if (options?.refresh === false) {
 				recordBrowserScrapeProviderAction(
 					listOptions,
-					"llmService.materializeConversationFiles.listTimedOut",
+					"llmService.materializeConversationFiles.reuseRefreshedCache",
 				);
-				listedConversationFiles = [];
+				const cacheContext = await this.resolveCacheContext(listOptions, {
+					detect: false,
+					prompt: false,
+				});
+				const cachedConversationFiles = await this.cacheStore.readConversationFiles(
+					cacheContext,
+					conversationId,
+				);
+				listedConversationFiles = Array.isArray(cachedConversationFiles.items)
+					? cachedConversationFiles.items
+					: [];
+				if (listedConversationFiles.length === 0) {
+					const cachedConversationContext = await this.cacheStore.readConversationContext(
+						cacheContext,
+						conversationId,
+					);
+					listedConversationFiles = Array.isArray(cachedConversationContext.items.files)
+						? cachedConversationContext.items.files
+						: [];
+					if (listedConversationFiles.length > 0) {
+						recordBrowserScrapeProviderAction(
+							listOptions,
+							"llmService.materializeConversationFiles.reuseRefreshedContext",
+						);
+					}
+				}
+			} else {
+				try {
+					listedConversationFiles = await Promise.race([
+						this.listConversationFiles(conversationId, {
+							projectId: options?.projectId,
+							listOptions,
+						}),
+						timeoutAfter<FileRef[]>(
+							SCOPED_CONVERSATION_FILE_LIST_TIMEOUT_MS,
+							`Timed out listing scoped conversation files after ${SCOPED_CONVERSATION_FILE_LIST_TIMEOUT_MS}ms.`,
+						),
+					]);
+				} catch {
+					recordBrowserScrapeProviderAction(
+						listOptions,
+						"llmService.materializeConversationFiles.listTimedOut",
+					);
+					listedConversationFiles = [];
+				}
 			}
 			const conversationFiles = limitItems(
 				listedConversationFiles.filter((file) => options?.excludeFile?.(file) !== true),
 				options?.maxItems,
 			);
+			const knownConversationFileCount = listedConversationFiles.length;
 			if (listOptions.useProviderSession === true) {
 				listOptions.interactionGovernor = undefined;
 				listOptions.skipFeatureSignature = true;
@@ -1855,7 +1894,12 @@ export abstract class LlmService {
 				conversationFiles.length,
 			);
 			if (conversationFiles.length === 0) {
-				return { conversationFiles: [], files: [], manifestPath: null };
+				return {
+					conversationFiles: [],
+					knownConversationFileCount,
+					files: [],
+					manifestPath: null,
+				};
 			}
 			recordBrowserScrapeProviderAction(
 				listOptions,
@@ -2083,7 +2127,12 @@ export abstract class LlmService {
 				entries: manifestEntries,
 			};
 			await fs.writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
-			return { conversationFiles, files: materialized, manifestPath };
+			return {
+				conversationFiles,
+				knownConversationFileCount,
+				files: materialized,
+				manifestPath,
+			};
 		} finally {
 			if (shouldCloseProviderSession) {
 				await closeScopedProviderSession(listOptions);
