@@ -19664,3 +19664,8 @@ browser-stage lifecycle observability, not transcript truncation.
   or a positive challenge surface such as Cloudflare challenge containers,
   Turnstile response input, or challenge iframe. Preserve the hard stop for
   those positive signals.
+- 2026-07-25: A user-runtime installer must execute the newly installed CLI
+  before reporting success. A package install can return zero while its runtime
+  dependency closure is unusable by Node. Run the installed `auracall`
+  entrypoint with `--version` after wrapper creation and fail the promotion if
+  that startup smoke fails.

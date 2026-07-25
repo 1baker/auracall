@@ -41820,3 +41820,7 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   adjacent developer-app/browser suites `70` with one skip, and TypeScript.
 - Installed-runtime promotion and a non-submitting exact-app smoke remain the
   next bounded verification.
+- The first subsequent submission process exposed a transient broken installed
+  dependency closure (`growly` missing beneath `toasted-notifier`) before app
+  logic loaded. The dependency now resolves; the installer adds a post-install
+  `auracall --version` startup smoke so it cannot report success in that state.
