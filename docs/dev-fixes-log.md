@@ -19684,3 +19684,10 @@ browser-stage lifecycle observability, not transcript truncation.
   dependency closure is unusable by Node. Run the installed `auracall`
   entrypoint with `--version` after wrapper creation and fail the promotion if
   that startup smoke fails.
+- 2026-07-25: A stale local browser plan must not be treated as authority to
+  consume another provider turn when an owning cross-repo workflow controls the
+  live proof. Reconcile against that workflow's current plan, runbook, and
+  committed redacted receipt first. A completed action-bearing submission can
+  close the local acceptance gate without replaying the provider operation;
+  an exhausted no-retry packet remains exhausted even if the local plan still
+  says a live submission is pending.

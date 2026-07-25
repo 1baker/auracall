@@ -1,5 +1,26 @@
 # RUNBOOK
 
+## Turn 367 | 2026-07-25
+
+- Reconciled Plan 0171 against LitScout's newer canonical H4/R1 authority
+  instead of treating AuraCall's stale open status as permission for another
+  ChatGPT turn.
+- LitScout revision `0267-m6-v39` and redacted receipt
+  `0267-m6-p3d-r1-connector-proof.json` prove two ordered submissions through
+  exact app `Corel33t`, zero retries, and a literature scenario that selected
+  seven LitScout actions and returned `PASS`.
+- The receipt is committed at LitScout `cbed19fb` with SHA-256
+  `bd735aad2beab09071aa5769442fb23a9b55c848e454ea128119e5414582c3be`.
+  Exact cleanup disconnected the app without delete/uninstall and removed the
+  nonce connector state.
+- LitScout revision `0267-m6-v40` exhausts R1 at `REFRAME_OR_SPLIT` and forbids
+  another connector turn without a new bounded plan plus human gate. No
+  browser, provider, OAuth, account, service, or runtime mutation was performed
+  during this reconciliation.
+- Plan 0171 is closed: the separately authorized literature turn proves the
+  installed prompt-preservation repair dispatched a real prompt rather than a
+  chip-only blank turn.
+
 ## Turn 366 | 2026-07-25
 
 - Integrated the post-refresh branch advances into `main` as `c20b9a66`:

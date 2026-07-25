@@ -1,6 +1,6 @@
 # ChatGPT Developer App Trusted Refresh | Plan 0171
 
-State: OPEN
+State: CLOSED
 Lane: P03
 
 ## Scope
@@ -43,14 +43,26 @@ Lane: P03
 - commit `6a98516f` now excludes app-pill text from prompt verification, appends
   at the editable tail without replacing the pill, and fails closed before
   Send unless the full prompt is observed
-- the remaining live literature test was not submitted: the persisted provider
-  guard extended through `2026-07-25T20:29:21.846Z` before browser interaction
 - the validated `fix/chatgpt-app-refresh` commit stack is integrated into main;
   combined validation passes 178 focused tests, typecheck, production build,
   lint at the unchanged 203-warning baseline, plan audit, and diff checks
-- Plan 0171 remains open because the installed prompt-preservation repair has
-  not yet received a valid app-selected live submission; any replacement proof
-  belongs to LitScout's separately approved H4/R1 packet
+- the earlier LitScout P3D cleanup left the literature test unsubmitted behind
+  the persisted provider guard; that state was historical, not authority for an
+  AuraCall-owned retry
+- LitScout subsequently accepted H4 and consumed bounded successor R1:
+  office-action and literature-review turns were submitted exactly once each
+  through the existing `Corel33t` app, with no retry
+- the literature turn selected the expected app and reported seven LitScout
+  actions, including `project_continue`; LitScout recorded that scenario
+  `PASS`, proving the repaired composer dispatched a real prompt rather than an
+  app-pill-only blank turn
+- the redacted owning-workflow receipt is
+  `litscout:docs/dev/validation/0267-m6-p3d-r1-connector-proof.json`, committed
+  at `cbed19fb`, with SHA-256
+  `bd735aad2beab09071aa5769442fb23a9b55c848e454ea128119e5414582c3be`
+- R1 cleanup disconnected the exact app without delete or uninstall, revoked
+  only the nonce connector state, and left no further connector turn
+  authorized; Plan 0171 is closed without another provider action
 
 ## Non-Goals
 
@@ -98,6 +110,9 @@ Lane: P03
 - source-built read-only `apps list` against `wsl-chrome-3`
 - installed-runtime exact refresh against `Corel33t`, only under the existing
   explicit operator approval
+- source-grounded verification of LitScout's redacted H4/R1 connector receipt,
+  including exact app/account/runtime identity, two ordered submissions, zero
+  retries, literature `PASS`, protected-effect stops, and exact cleanup
 
 ## Acceptance Criteria
 
