@@ -7,14 +7,13 @@
 Status: active
 Lane: P01
 
-- Active refreshed-snapshot file materialization repair:
+- Completed refreshed-snapshot file materialization repair:
   [docs/dev/plans/0170-2026-07-25-refreshed-snapshot-file-materialization.md](docs/dev/plans/0170-2026-07-25-refreshed-snapshot-file-materialization.md)
-  Completion-owned materialization must consume `files[]` from its
-  already-refreshed conversation context, with the dedicated conversation-file
-  cache as the first read, instead of losing known candidates to a redundant
-  scoped listing timeout. The installed selection path is repaired; final
-  organic receipt proof is guard-blocked after ChatGPT set a cooldown through
-  `2026-07-25T20:29:21.846Z`.
+  Completion-owned materialization consumes the already-refreshed file
+  inventory without a redundant scoped listing. Bounded pass 38 and organic
+  job `hmj_a65695afe9704af6b6716bb4c9f063b4` proved a refreshed one-file
+  conversation is classified as `known-files-excluded` when terminal-local,
+  with zero failures and no provider guard.
 - ChatGPT composer/apps implementation and installed proof complete; live
   follow remains blocked:
   [docs/dev/plans/0167-2026-07-24-chatgpt-composer-apps-reinspection.md](docs/dev/plans/0167-2026-07-24-chatgpt-composer-apps-reinspection.md)

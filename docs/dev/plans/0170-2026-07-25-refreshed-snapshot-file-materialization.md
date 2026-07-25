@@ -1,6 +1,6 @@
 # Refreshed Snapshot File Materialization | 0170-2026-07-25
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 1
 
@@ -13,21 +13,19 @@ before transfer selection.
 
 ## Current State
 
-- Installed ChatGPT live follow is active and guard-clear for
-  `wsl-chrome-3` at pass 34.
-- The current target reports 390 artifacts and 210 files known remotely but
-  missing locally.
-- Latest job `hmj_fe91e8b54fed40a08588fdc6643d28e6` refreshed conversation
-  `6a568ccb-3938-83ea-a635-02dde7634d3f` with `fileCount=1`, then
-  `materializeConversationFiles` ran another provider listing, hit its
-  15-second scoped timeout, recorded zero file candidates, and emitted
+- The repair is merged and pushed on `main` at `c20b9a66`, installed from the
+  canonical checkout, and byte-identical across the complete `dist` tree.
+- An operator-authorized zero-cooldown clear removed both the account-mirror
+  guard and the persisted `wsl-chrome-3` browser guard while preserving rate
+  history.
+- Bounded completion pass 38 queued organic job
+  `hmj_a65695afe9704af6b6716bb4c9f063b4`. The job refreshed conversation
+  `6a568ccb-3938-83ea-a635-02dde7634d3f` with `fileCount=1`, then emitted
+  `known-files-excluded` for that known terminal-local file instead of
   `no-materializable-file`.
-- The same file family already has terminal local evidence, so terminal-family
-  exclusion remains correct; the defect is that the refreshed cached inventory
-  is not the authoritative input to file selection.
-- Plan 0164 already proved one retained ChatGPT session for sequential file
-  transfer. This plan is a bounded successor for snapshot-to-selection
-  continuity, not a rework of that accepted provider-session repair.
+- The receipt completed with four conversations, seven skips, zero failures,
+  zero duplicate aliases, and no provider guard. The scheduler and all four
+  ChatGPT completions are operator-paused; `wsl-chrome-3` is paused at pass 38.
 
 ## Scope
 
@@ -69,7 +67,7 @@ before transfer selection.
   the scheduler/completion/provider guard state preserved.
 - [x] A known cached file excluded by terminal-family evidence is reported as
   `known-files-excluded`, not `no-materializable-file`.
-- [ ] The next organic materialization receipt shows refreshed-cache reuse and
+- [x] The next organic materialization receipt shows refreshed-cache reuse and
   does not classify a known cached file as missing solely because a redundant
   list timed out.
 
@@ -177,3 +175,20 @@ provider listing.
   requests` and set cooldown through `2026-07-25T20:29:21.846Z`. The
   completion was operator-paused; scheduler and all four ChatGPT completions
   remain paused. Do not issue another provider pass until the guard clears.
+
+## Checkpoint 6
+
+- `plan_version`: 1
+- `state_transition`: guard-blocked-validation -> closed
+- `progress_classification`: complete
+- `evidence`: operator-authorized guard clearance removed both account-mirror
+  and browser guard cooldown state. Bounded pass 38 queued organic job
+  `hmj_a65695afe9704af6b6716bb4c9f063b4`; its full durable receipt refreshed
+  conversation `6a568ccb-3938-83ea-a635-02dde7634d3f` with one file and then
+  classified that file as `known-files-excluded`. The job ended with four
+  conversations, seven skips, zero failures, no duplicate aliases, and no
+  provider guard.
+- `subagent_status`: not_spawned
+- `next_action_or_stop_reason`: Plan 0170 is complete. Scheduler and all four
+  ChatGPT completions are paused; no further provider proof belongs to this
+  plan.

@@ -1,5 +1,29 @@
 # RUNBOOK
 
+## Turn 366 | 2026-07-25
+
+- Integrated the post-refresh branch advances into `main` as `c20b9a66`:
+  provider-guard control parity, healthy ChatGPT Cloudflare-script handling,
+  and the installed-runtime startup smoke. The commit is pushed to
+  `origin/main`.
+- Combined validation passes 421 focused tests with one intentional skip,
+  typecheck, production build, full lint at the unchanged 203-warning
+  baseline, the 171-plan audit, and diff checks.
+- The canonical user runtime passed its new installed CLI startup smoke and
+  has zero differences from the source `dist`; `auracall-api.service` is
+  active as PID `1568901` with zero restarts.
+- The operator-authorized zero-cooldown clear removed both account-mirror and
+  persisted `wsl-chrome-3` browser guard state. Bounded completion pass 38 used
+  five of eight provider interactions and remained guard-clear.
+- Organic materialization job `hmj_a65695afe9704af6b6716bb4c9f063b4`
+  refreshed conversation `6a568ccb-3938-83ea-a635-02dde7634d3f` with one
+  file and emitted `known-files-excluded` for the terminal-local file instead
+  of `no-materializable-file`. The terminal receipt has four conversations,
+  seven skips, zero failures, and zero duplicate aliases.
+- Plan 0170 is closed. The scheduler and all four ChatGPT completions are
+  operator-paused; `wsl-chrome-3` is paused at pass 38 with no provider guard.
+  No Plan 0171 app-selected submission was attempted.
+
 ## Turn 365 | 2026-07-25
 
 - Main's refreshed-materialization work was checkpointed as implementation

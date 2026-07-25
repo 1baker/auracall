@@ -41894,3 +41894,22 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   dependency closure (`growly` missing beneath `toasted-notifier`) before app
   logic loaded. The dependency now resolves; the installer adds a post-install
   `auracall --version` startup smoke so it cannot report success in that state.
+
+## 2026-07-25 | Plan 0170 Organic Receipt Closeout
+
+- Post-refresh branch advances were integrated and pushed on `main` at
+  `c20b9a66`. The canonical user runtime passed its installed CLI startup smoke,
+  matched the complete source `dist`, and started as API PID `1568901` with
+  zero restarts.
+- An operator-authorized zero-cooldown clear removed both account-mirror and
+  persisted browser guard state for `chatgpt/wsl-chrome-3`.
+- One bounded completion pass advanced the lane from pass 37 to 38 with five
+  of eight provider interactions, 43 CDP calls, no error, and no guard.
+- Organic job `hmj_a65695afe9704af6b6716bb4c9f063b4` refreshed conversation
+  `6a568ccb-3938-83ea-a635-02dde7634d3f` with `fileCount=1`. Its durable file
+  receipt is `known-files-excluded`, proving the refreshed non-empty inventory
+  survived selection and was correctly removed by terminal evidence rather
+  than misreported as `no-materializable-file`.
+- The job settled with four conversations, seven skips, zero materialized
+  assets, zero failures, zero duplicate aliases, and no provider guard. Plan
+  0170 is closed; the scheduler and all four ChatGPT completions are paused.
