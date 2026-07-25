@@ -1,5 +1,29 @@
 # RUNBOOK
 
+## Turn 360 | 2026-07-25
+
+- Plan 0171's corrected trusted-pointer refresh succeeded exactly once against
+  existing app `Corel33t`; no duplicate or uninstall occurred, and fresh
+  ChatGPT readback showed LitScout's exact 16-action catalog.
+- The nonce OAuth reconnect completed and remained bound to the existing app.
+- ChatGPT UI drift required two more bounded repairs:
+  - commit `aab7b538` waits for the late-mounted model picker;
+  - commit `bc649615` searches the dynamic composer popover for the exact app.
+- The first actual office-action test submission exposed a prompt-composer
+  defect: inline app-pill text masked failed prompt insertion, and AuraCall
+  submitted one blank app turn. That scenario is consumed and must not retry.
+- Commit `6a98516f` verifies prompt text independently of app pills, preserves
+  the pill during fallback insertion, and refuses Send if the prompt is absent.
+  Focused validation passes 46 tests plus TypeScript and production build.
+- The literature scenario remains unsubmitted because ChatGPT raised its
+  provider rate-limit modal before app selection. Cooldown authority is
+  `2026-07-25T18:24:14.834Z`; do not bypass it.
+- `auracall-api.service` is intentionally stopped during the two isolated CLI
+  tests because its startup account-mirror refresh held the foreground
+  operation lock. Restore the service after the bounded connector proof and
+  record the scheduler issue separately; do not absorb unrelated dirty-main
+  work into this branch.
+
 ## Turn 359 | 2026-07-24
 
 - Plan 0169 is closed. Provider ownership now covers startup hydration,

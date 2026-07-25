@@ -13,12 +13,17 @@ Lane: P03
   and exactly one enabled Refresh control before mutation
 - preserve existing account confirmation, `--yes`, managed-profile ownership,
   and browser-operation dispatcher gates
+- tolerate ChatGPT's late-mounted model picker, search dynamically filtered
+  installed apps through the current composer popover, and refuse submission
+  unless the requested prompt is present beside the selected app pill
 - install the validated checkout into the user-scoped runtime and consume only
   the separately approved exact refresh attempt
 
 ## Current State
 
-- provider-free implementation and targeted validation are complete
+- provider-free implementation and targeted validation are complete across
+  refresh, model-picker readiness, installed-app search, and app-pill prompt
+  preservation
 - the existing `Corel33t` app remains installed, enabled, OAuth-active,
   private, user-scoped, and in development
 - read-only agent-browser inspection of the existing
@@ -27,7 +32,18 @@ Lane: P03
   - one enabled exact Refresh button
   - the button was more than 7,000 pixels below the viewport before scrolling
   - no Refresh click was issued during diagnosis
-- the live corrected refresh remains the sole open acceptance gate
+- installed commit `37edc8c0` consumed the single corrected refresh with a
+  trusted click; fresh ChatGPT readback showed the current exact 16 LitScout
+  actions
+- nonce OAuth reconnect succeeded without app recreation or permission change
+- first submitted app test exposed a second live defect: the selected app pill
+  made the composer look non-empty after prompt insertion failed, so AuraCall
+  sent one blank office-action turn
+- commit `6a98516f` now excludes app-pill text from prompt verification, appends
+  at the editable tail without replacing the pill, and fails closed before
+  Send unless the full prompt is observed
+- the remaining live literature test is provider-cooldown gated; its prompt
+  has not been submitted
 
 ## Non-Goals
 
@@ -35,6 +51,7 @@ Lane: P03
   ChatGPT app
 - do not automate OAuth, MFA, consent, CAPTCHA, or verification
 - do not submit a prompt as part of refresh validation
+- do not retry the consumed blank office-action scenario
 - do not generalize every existing synthetic interaction strategy in this
   slice
 - do not restart the AuraCall API service merely to validate the standalone
@@ -56,6 +73,12 @@ Lane: P03
   - use the trusted-pointer helper
   - report bounded DOM diagnostics on readiness failure
   - recheck provider blocking surfaces after activation
+- poll for the late-mounted ChatGPT model picker instead of failing on the
+  first empty render
+- search the open composer popover for an exact installed app and clear only
+  the temporary search text
+- verify the requested prompt independently of inline app-pill text before
+  dispatch
 
 ## Validation
 
@@ -77,15 +100,17 @@ Lane: P03
 - the installed runtime is attributable to a committed source state
 - exactly one corrected live refresh attempt reports trusted activation
 - post-refresh ChatGPT app readback shows the current LitScout tool catalog
+- an app-selected prompt cannot dispatch as a chip-only blank turn
 - no prompt, duplicate app, uninstall, reconnect, permission change, or
-  human-gate automation occurs
+  human-gate automation occurs during refresh itself
 
 ## Definition Of Done
 
 - the source-built and installed-runtime gates pass
-- the single approved live refresh is consumed
+- the single approved live refresh is consumed successfully
 - the existing exact app remains installed and connected
 - current app-catalog readback is recorded
+- the one remaining non-office live app submission either proves prompt
+  preservation or stops fail-closed before dispatch
 - roadmap, runbook, journal, fixes log, and operator testing guidance match the
   shipped behavior
-

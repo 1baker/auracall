@@ -41757,3 +41757,21 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Provider-free validation passes `65/65`, TypeScript, production build, and
   diff checks. The separately approved exact live attempt remains gated on a
   committed, installed source state.
+
+## 2026-07-25 | Plan 0171 Live Refresh And App-Prompt Follow-Up
+
+- Installed commit `37edc8c0` consumed the one corrected refresh successfully;
+  a fresh app dialog exposed LitScout's exact 16 current actions.
+- The existing app was reconnected to the nonce LitScout account. No app
+  recreation, uninstall, or permission widening occurred.
+- ChatGPT's model control now mounts after the initial ready surface, and its
+  add-ons popover filters installed apps by typing into the composer. Commits
+  `aab7b538` and `bc649615` cover those current UI contracts.
+- The first submitted office-action test was a blank app-only turn. Root cause:
+  prompt verification treated the inline `Corel33t` pill as composer content
+  after `Input.insertText` failed.
+- Commit `6a98516f` removes app-pill nodes from prompt verification, performs a
+  pill-preserving tail insertion fallback, and throws
+  `prompt-not-in-composer` before Send if the full prompt is absent.
+- The office scenario is not retryable. The literature scenario remains
+  unsubmitted behind ChatGPT's provider cooldown.
