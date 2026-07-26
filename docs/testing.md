@@ -20,6 +20,9 @@
   - if deletion succeeds but recreation fails, verify the old app remains
     absent and resume with guarded `apps create`; rerunning `apps refresh`
     cannot resolve an already-deleted target and must not be used as recovery
+  - the current ChatGPT Connection control is a Radix radio: selection uses
+    exact focus plus trusted CDP Space input and must reach
+    `aria-checked="true"` before the named server URL input is addressed
   - `inventoryComplete: false` is a hard mutation stop; a timed-out installed
     apps response must never be interpreted as proof that zero apps exist
   - stop immediately on a provider rate-limit, CAPTCHA, or human-verification

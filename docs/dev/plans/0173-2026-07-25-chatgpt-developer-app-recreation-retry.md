@@ -1,6 +1,6 @@
 # ChatGPT Developer App Recreation Retry | 0173-2026-07-25
 
-State: OPEN
+State: CLOSED
 Lane: P03
 Plan version: 1
 
@@ -54,7 +54,7 @@ recreation-only retry for the already-deleted `Corel33t` app.
       trusted-pointer behavior.
 - [x] Focused/adjacent tests, typecheck, build, plan audit, and diff check pass.
 - [x] Fresh independent review returns `ACCEPT`.
-- [ ] Committed source installs byte-identically and passes startup.
+- [x] Committed source installs byte-identically and passes startup.
 - [ ] One create submission produces exactly one new private development app
       named `Corel33t`, or stops truthfully at a human/provider gate.
 - [ ] Fresh inventory records the new plugin/app IDs and proves the old IDs
@@ -77,3 +77,11 @@ recreation-only retry for the already-deleted `Corel33t` app.
 Plan 0173 closes when the corrected committed runtime either recreates exactly
 one `Corel33t` and records its new identity/catalog, or stops at a named
 human/provider gate with no duplicate or unrelated mutation.
+
+Terminal outcome: commit `52217fcc` installed byte-identically and passed
+startup. Its one live create attempt stopped before submission because trusted
+CDP mouse input did not change the current Radix connection radio. A
+non-submitting diagnostic then proved focus plus Space selects `Server URL`.
+No app, OAuth flow, connector prompt, delete, or unrelated mutation occurred.
+Successor Plan 0174 owns the keyboard-semantic repair and one final exact
+create submission.

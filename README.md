@@ -86,6 +86,9 @@ auracall --profile wsl-chrome-3 apps --target chatgpt refresh Corel33t \
 # If deletion completed but recreation failed, do not rerun refresh: use the
 # guarded `apps create` command with the same frozen inputs after confirming
 # the old app remains absent.
+# Current ChatGPT connection radios are keyboard-semantic Radix controls;
+# AuraCall focuses the exact requested radio and sends trusted CDP Space input
+# before filling the mounted server URL field.
 # Machine-readable `recreate-pending` output includes that validated create
 # input. An incomplete installed-app inventory always stops mutation.
 

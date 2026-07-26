@@ -6,6 +6,7 @@ import {
 	deriveChatgptDeveloperAppState,
 	isCompleteChatgptInstalledAppsPayloadForTest,
 	markExactChatgptDeveloperAppDeleteMenuForTest,
+	selectChatgptDeveloperAppConnectionModeForTest,
 	waitForChatgptDeveloperAppSettingsForDeleteForTest,
 } from "../../src/browser/providers/chatgptDeveloperApps.js";
 
@@ -13,6 +14,34 @@ describe("deriveChatgptDeveloperAppState", () => {
 	it("targets the current named server URL input rather than a volatile input type", () => {
 		expect(CHATGPT_DEVELOPER_APP_SERVER_URL_SELECTOR).toBe(
 			'[role="dialog"] input[name="custom-connector-url"]',
+		);
+	});
+
+	it("selects the current Radix connection radio with trusted CDP Space input", async () => {
+		const evaluate = vi.fn(async (_options: { expression: string }) => ({
+			result: { value: { found: true, selected: false } },
+		}));
+		const dispatchKeyEvent = vi.fn(async () => undefined);
+
+		const selected = await selectChatgptDeveloperAppConnectionModeForTest(
+			{
+				// biome-ignore lint/style/useNamingConvention: CDP protocol domains use canonical capitalized names.
+				Runtime: { evaluate } as never,
+				// biome-ignore lint/style/useNamingConvention: CDP protocol domains use canonical capitalized names.
+				Input: { dispatchKeyEvent } as never,
+			},
+			'[role="dialog"] button[role="radio"][aria-label="Server URL"]',
+		);
+
+		expect(selected).toBe(true);
+		expect(evaluate.mock.calls[0]?.[0]?.expression).toContain("radio.focus()");
+		expect(dispatchKeyEvent).toHaveBeenNthCalledWith(
+			1,
+			expect.objectContaining({ type: "rawKeyDown", key: " ", code: "Space" }),
+		);
+		expect(dispatchKeyEvent).toHaveBeenNthCalledWith(
+			2,
+			expect.objectContaining({ type: "keyUp", key: " ", code: "Space" }),
 		);
 	});
 

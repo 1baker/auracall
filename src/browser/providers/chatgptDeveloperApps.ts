@@ -155,12 +155,11 @@ export class ChatgptDeveloperAppBrowserAdapter {
 		}
 		const connectionLabel = input.connection === "tunnel" ? "Tunnel" : "Server URL";
 		const connectionSelector = `[role="dialog"] button[role="radio"][aria-label="${connectionLabel}"]`;
-		const connectionSelected = await pressButtonWithTrustedPointer(client, {
-			selector: connectionSelector,
-			requireVisible: true,
-			timeoutMs: 3_000,
-		});
-		if (!connectionSelected.ok) {
+		const connectionSelected = await selectChatgptDeveloperAppConnectionMode(
+			client,
+			connectionSelector,
+		);
+		if (!connectionSelected) {
 			throw new Error(`Unable to select ChatGPT app connection mode ${connectionLabel}.`);
 		}
 		const connectionReady = await waitForPredicate(
@@ -778,6 +777,46 @@ async function markExactChatgptDeveloperAppDeleteMenu(
 export const waitForChatgptDeveloperAppSettingsForDeleteForTest =
 	waitForChatgptDeveloperAppSettingsForDelete;
 export const markExactChatgptDeveloperAppDeleteMenuForTest = markExactChatgptDeveloperAppDeleteMenu;
+export const selectChatgptDeveloperAppConnectionModeForTest =
+	selectChatgptDeveloperAppConnectionMode;
+
+async function selectChatgptDeveloperAppConnectionMode(
+	client: Pick<ChromeClient, "Runtime" | "Input">,
+	selector: string,
+): Promise<boolean> {
+	const focused = await client.Runtime.evaluate({
+		expression: `(() => {
+      const radio = document.querySelector(${JSON.stringify(selector)});
+      if (!(radio instanceof HTMLElement)) return { found: false, selected: false };
+      const rect = radio.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return { found: false, selected: false };
+      if (radio.getAttribute('aria-checked') === 'true') {
+        return { found: true, selected: true };
+      }
+      radio.focus();
+      return { found: true, selected: false };
+    })()`,
+		returnByValue: true,
+	});
+	const state = isRecord(focused.result?.value) ? focused.result.value : null;
+	if (state?.found !== true) return false;
+	if (state.selected === true) return true;
+	await client.Input.dispatchKeyEvent({
+		type: "rawKeyDown",
+		key: " ",
+		code: "Space",
+		windowsVirtualKeyCode: 32,
+		nativeVirtualKeyCode: 32,
+	});
+	await client.Input.dispatchKeyEvent({
+		type: "keyUp",
+		key: " ",
+		code: "Space",
+		windowsVirtualKeyCode: 32,
+		nativeVirtualKeyCode: 32,
+	});
+	return true;
+}
 
 async function navigateChatgpt(client: ChromeClient, url: string): Promise<void> {
 	const settled = await navigateAndSettle(client, {

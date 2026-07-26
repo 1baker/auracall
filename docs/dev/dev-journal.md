@@ -41972,3 +41972,18 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Provider-free validation passes 75 focused/adjacent tests, typecheck,
   production build, plan audit, and diff hygiene. Fresh independent review
   returned `ACCEPT`.
+
+## 2026-07-25 | Plan 0174 Radix Keyboard Recreation
+
+- Installed Plan 0173 reached the exact Server URL radio with a trusted CDP
+  mouse press, but the provider retained Tunnel and the create stopped before
+  submission.
+- A non-submitting live diagnostic proved the current control contract:
+  focusing `button[role="radio"][aria-label="Server URL"]` and pressing Space
+  changed it to `aria-checked=true` and mounted the server URL path.
+- Plan 0173 is closed without an app or OAuth flow. Plan 0174 is the final
+  recreation-only packet and permits no delete, refresh, prompt, or unrelated
+  app mutation.
+- Provider-free validation passes 76 focused/adjacent tests, typecheck,
+  production build, focused Biome, plan audit, and diff hygiene. Fresh
+  independent review returned `ACCEPT`.

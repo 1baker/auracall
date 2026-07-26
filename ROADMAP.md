@@ -7,17 +7,22 @@
 Status: active
 Lane: P01
 
-- Active ChatGPT developer-app recreation retry:
+- Active ChatGPT developer-app keyboard recreation:
+  [docs/dev/plans/0174-2026-07-25-chatgpt-developer-app-keyboard-recreation.md](docs/dev/plans/0174-2026-07-25-chatgpt-developer-app-keyboard-recreation.md)
+  Live non-submitting evidence proved the current Radix connection radio
+  requires focus plus Space rather than AuraCall's trusted mouse activation.
+  This final recreation-only successor permits one exact `Corel33t` create;
+  no delete or connector prompt is authorized.
+- Completed ChatGPT developer-app recreation retry:
   [docs/dev/plans/0173-2026-07-25-chatgpt-developer-app-recreation-retry.md](docs/dev/plans/0173-2026-07-25-chatgpt-developer-app-recreation-retry.md)
-  Plan 0172's safe deletion is complete and its first create stopped before
-  submission on connection-radio drift. This recreation-only successor fixes
-  the current Server URL form and permits one exact `Corel33t` create; no
-  further delete or connector prompt is authorized.
+  Its corrected trusted-pointer attempt also stopped before submission. A
+  non-submitting keyboard diagnostic isolated the provider contract; Plan 0174
+  owns the final exact recreation.
 - Active ChatGPT developer-app replacement refresh:
   [docs/dev/plans/0172-2026-07-25-chatgpt-developer-app-replacement-refresh.md](docs/dev/plans/0172-2026-07-25-chatgpt-developer-app-replacement-refresh.md)
   The safe replacement contract is accepted, committed, installed, and the old
   exact identity is deleted. Its sole create attempt stopped pre-submit on
-  ChatGPT connection-radio drift; Plan 0173 owns the recreation-only retry.
+  ChatGPT connection-radio drift; Plan 0174 owns the recreation-only retry.
 - Completed refreshed-snapshot file materialization repair:
   [docs/dev/plans/0170-2026-07-25-refreshed-snapshot-file-materialization.md](docs/dev/plans/0170-2026-07-25-refreshed-snapshot-file-materialization.md)
   Completion-owned materialization consumes the already-refreshed file

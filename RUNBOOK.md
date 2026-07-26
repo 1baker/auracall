@@ -1,5 +1,26 @@
 # RUNBOOK
 
+## Turn 370 | 2026-07-25
+
+- Closed Plan 0173 after its one installed create attempt stopped before
+  submission: trusted CDP mouse input reached the exact Server URL radio but
+  did not change the current Radix state.
+- A non-submitting live diagnostic focused that exact radio and pressed Space;
+  provider readback changed Server URL from `aria-checked=false` /
+  `data-state=off` to `aria-checked=true` / `data-state=on`, and Tunnel changed
+  off.
+- No app, OAuth flow, connector prompt, delete, or unrelated mutation occurred.
+- Active successor:
+  `docs/dev/plans/0174-2026-07-25-chatgpt-developer-app-keyboard-recreation.md`
+- Plan 0174 replaces only the connection-radio interaction with trusted CDP
+  Space input and permits one exact `Corel33t` create submission after
+  provider-free validation, fresh independent review, commit, and install.
+- Provider-free validation passes 76 focused/adjacent tests, typecheck,
+  production build, focused Biome, plan audit with zero errors, and diff
+  hygiene. Fresh independent review returned `ACCEPT`.
+- Hard stops remain: no delete/refresh, no duplicate, no connector prompt, and
+  no automation through OAuth, consent, MFA, CAPTCHA, or verification.
+
 ## Turn 369 | 2026-07-25
 
 - Active supporting plan:

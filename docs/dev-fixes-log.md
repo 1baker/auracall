@@ -19706,3 +19706,13 @@ browser-stage lifecycle observability, not transcript truncation.
   require `aria-checked=true`, then address
   `input[name="custom-connector-url"]`. Use trusted activation for the risk
   checkbox and Create submission as well.
+## 2026-07-25 | ChatGPT Developer-App Connection Radios Require Trusted Keyboard Input
+
+- Symptom: trusted CDP mouse input reached the exact visible Server URL Radix
+  radio but left Tunnel selected, so the named MCP URL input never mounted.
+- Live proof: focusing the exact Server URL radio and sending Space changed
+  `aria-checked` and `data-state` to the selected values without submitting
+  the form.
+- Durable rule: use focus plus trusted CDP Space keydown/keyup for this
+  provider-specific connection radio, then verify `aria-checked=true` before
+  addressing `input[name="custom-connector-url"]`.
