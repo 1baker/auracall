@@ -7,12 +7,13 @@
 Status: active
 Lane: P01
 
-- Active ChatGPT developer-app keyboard recreation:
+- Completed ChatGPT developer-app keyboard recreation:
   [docs/dev/plans/0174-2026-07-25-chatgpt-developer-app-keyboard-recreation.md](docs/dev/plans/0174-2026-07-25-chatgpt-developer-app-keyboard-recreation.md)
   Live non-submitting evidence proved the current Radix connection radio
   requires focus plus Space rather than AuraCall's trusted mouse activation.
-  This final recreation-only successor permits one exact `Corel33t` create;
-  no delete or connector prompt is authorized.
+  Accepted commit `b116b902` recreated exactly one private `Corel33t` with new
+  identity `asdk_app_6a658c7c4c8c81918f6ddd378d5ebf16` and stopped at the
+  visible OAuth sign-in gate. No delete or connector prompt occurred.
 - Completed ChatGPT developer-app recreation retry:
   [docs/dev/plans/0173-2026-07-25-chatgpt-developer-app-recreation-retry.md](docs/dev/plans/0173-2026-07-25-chatgpt-developer-app-recreation-retry.md)
   Its corrected trusted-pointer attempt also stopped before submission. A

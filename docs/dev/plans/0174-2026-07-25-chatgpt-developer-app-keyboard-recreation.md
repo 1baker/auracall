@@ -1,6 +1,6 @@
 # ChatGPT Developer App Keyboard Recreation | 0174-2026-07-25
 
-State: OPEN
+State: CLOSED
 Lane: P03
 Plan version: 1
 
@@ -54,12 +54,12 @@ deleted.
 - [x] Provider-free tests lock focus plus trusted CDP Space activation.
 - [x] Focused/adjacent tests, typecheck, build, plan audit, and diff pass.
 - [x] Fresh independent review returns `ACCEPT`.
-- [ ] Committed source installs byte-identically and passes startup.
-- [ ] One create submission produces exactly one new private development app
+- [x] Committed source installs byte-identically and passes startup.
+- [x] One create submission produces exactly one new private development app
       named `Corel33t`, or stops truthfully at a human/provider gate.
-- [ ] Fresh inventory records the new plugin/app IDs and proves the old IDs
+- [x] Fresh inventory records the new plugin/app IDs and proves the old IDs
       remain absent.
-- [ ] No connector prompt or unrelated app mutation occurs.
+- [x] No connector prompt or unrelated app mutation occurs.
 
 ## Hard Bounds And Stop Conditions
 
@@ -77,3 +77,17 @@ deleted.
 Plan 0174 closes when the committed keyboard-semantic runtime either recreates
 exactly one `Corel33t` and records its new identity/app surface, or stops at a
 named human/provider gate with no duplicate or unrelated mutation.
+
+Terminal outcome: accepted commit `b116b902` installed byte-identically and
+passed startup. One create submission produced exactly one private development
+app:
+
+- plugin ID: `plugin_asdk_app_6a658c7c4c8c81918f6ddd378d5ebf16`
+- app ID: `asdk_app_6a658c7c4c8c81918f6ddd378d5ebf16`
+- name/description: `Corel33t` / `LitScout`
+- state: enabled, private, development-scoped
+
+Fresh complete inventory proves both old IDs remain absent. ChatGPT stopped on
+the visible `Add Corel33t to ChatGPT` / `Sign in with Corel33t` OAuth gate.
+No OAuth consent, connector prompt, delete, duplicate, or unrelated app
+mutation was automated.

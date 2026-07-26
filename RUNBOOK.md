@@ -20,6 +20,15 @@
   hygiene. Fresh independent review returned `ACCEPT`.
 - Hard stops remain: no delete/refresh, no duplicate, no connector prompt, and
   no automation through OAuth, consent, MFA, CAPTCHA, or verification.
+- Accepted commit `b116b902` installed byte-identically and passed startup.
+  The one exact create submission succeeded and fresh complete inventory shows
+  exactly one private development `Corel33t`:
+  `plugin_asdk_app_6a658c7c4c8c81918f6ddd378d5ebf16` /
+  `asdk_app_6a658c7c4c8c81918f6ddd378d5ebf16`.
+- Both old IDs remain absent. ChatGPT is stopped on `Add Corel33t to ChatGPT`
+  with the user-visible `Sign in with Corel33t` OAuth action. No consent,
+  connector prompt, duplicate, delete, or unrelated app mutation occurred.
+- Plan 0174 is closed at its named human OAuth gate.
 
 ## Turn 369 | 2026-07-25
 

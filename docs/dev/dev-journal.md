@@ -41987,3 +41987,10 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Provider-free validation passes 76 focused/adjacent tests, typecheck,
   production build, focused Biome, plan audit, and diff hygiene. Fresh
   independent review returned `ACCEPT`.
+- Commit `b116b902` installed byte-identically and passed startup. Its one
+  exact create submission produced new private development identity
+  `plugin_asdk_app_6a658c7c4c8c81918f6ddd378d5ebf16` /
+  `asdk_app_6a658c7c4c8c81918f6ddd378d5ebf16`.
+- Fresh complete inventory proves both old IDs absent and exactly one
+  `Corel33t`. Execution stopped at the visible OAuth sign-in gate without
+  consent automation or a connector prompt.
