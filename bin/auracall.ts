@@ -5456,14 +5456,22 @@ appsCommand
 
 appsCommand
   .command('refresh <app>')
-  .description('Refresh one exact installed ChatGPT developer app.')
+  .description('Delete and recreate one exact ChatGPT developer app from an MCP endpoint.')
+  .requiredOption('--server-url <url>', 'Replacement MCP server URL.')
   .requiredOption('--expected-account <email>', 'Exact ChatGPT account expected in the managed browser.')
-  .option('--yes', 'Confirm refresh.', false)
+  .option('--description <text>', 'Replacement developer app description.')
+  .option('--auth <oauth|none|mixed>', 'Replacement authentication mechanism.', 'oauth')
+  .option('--connection <server-url|tunnel>', 'Replacement connection mode.', 'server-url')
+  .option('--yes', 'Confirm exact deletion and recreation.', false)
   .option('--json', 'Emit machine-readable JSON output.', false)
   .action(async function (this: Command, app: string) {
     await runChatgptDeveloperAppsCliAction(this, (options) => ({
       action: 'refresh',
       app,
+      serverUrl: String(options.serverUrl ?? ''),
+      description: typeof options.description === 'string' ? options.description : null,
+      auth: String(options.auth ?? 'oauth') as ChatgptDeveloperAppAuth,
+      connection: String(options.connection ?? 'server-url') as 'server-url' | 'tunnel',
       expectedAccount: String(options.expectedAccount ?? ''),
       confirmed: Boolean(options.yes),
     }));

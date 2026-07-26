@@ -19691,3 +19691,11 @@ browser-stage lifecycle observability, not transcript truncation.
   close the local acceptance gate without replaying the provider operation;
   an exhausted no-retry packet remains exhausted even if the local plan still
   says a live submission is pending.
+- 2026-07-25: Treat ChatGPT private developer-app refresh as replacement when
+  the provider exposes no usable in-place Refresh control. Validate the full
+  recreation input before mutation, bind the exact account/app management
+  route and heading, use trusted browser pointer input for the action menu and
+  `Delete`, then prove the old plugin ID, app ID, and normalized name absent
+  before one recreate. ChatGPT `Delete` may execute immediately without a
+  second confirmation; if recreation fails afterward, verify absence and
+  recover with guarded `apps create`, not another refresh.

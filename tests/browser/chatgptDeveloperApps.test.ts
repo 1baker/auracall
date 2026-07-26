@@ -3,7 +3,9 @@ import { normalizeChatgptInstalledAppProbesForTest } from "../../src/browser/pro
 import {
 	chatgptDeveloperAppSelectionMatchesForTest,
 	deriveChatgptDeveloperAppState,
-	waitForChatgptDeveloperAppRefreshControlForTest,
+	isCompleteChatgptInstalledAppsPayloadForTest,
+	markExactChatgptDeveloperAppDeleteMenuForTest,
+	waitForChatgptDeveloperAppSettingsForDeleteForTest,
 } from "../../src/browser/providers/chatgptDeveloperApps.js";
 
 describe("deriveChatgptDeveloperAppState", () => {
@@ -16,6 +18,7 @@ describe("deriveChatgptDeveloperAppState", () => {
 			developerMode: true,
 			observedAt: "2026-07-24T12:00:00.000Z",
 			featureSignature: JSON.stringify({
+				inventory_complete: true,
 				installed_apps: [
 					{
 						plugin_id: "plugin_asdk_app_corel33t",
@@ -50,6 +53,7 @@ describe("deriveChatgptDeveloperAppState", () => {
 				plan: "Pro",
 			},
 			developerMode: true,
+			inventoryComplete: true,
 			observedAt: "2026-07-24T12:00:00.000Z",
 			apps: [
 				{
@@ -70,6 +74,36 @@ describe("deriveChatgptDeveloperAppState", () => {
 				},
 			],
 		});
+	});
+
+	it("does not treat a missing installed-app response as a complete empty inventory", () => {
+		const state = deriveChatgptDeveloperAppState({
+			identity: {
+				email: "eric.cochran@soylei.com",
+			},
+			developerMode: true,
+			observedAt: "2026-07-25T12:00:00.000Z",
+			featureSignature: JSON.stringify({
+				inventory_complete: false,
+				installed_apps: [],
+				linked_apps: [],
+			}),
+		});
+
+		expect(state.inventoryComplete).toBe(false);
+		expect(state.apps).toEqual([]);
+	});
+
+	it("requires the installed-app plugins array before treating a 2xx payload as complete", () => {
+		expect(isCompleteChatgptInstalledAppsPayloadForTest(null)).toBe(false);
+		expect(isCompleteChatgptInstalledAppsPayloadForTest([])).toBe(false);
+		expect(isCompleteChatgptInstalledAppsPayloadForTest({})).toBe(false);
+		expect(
+			isCompleteChatgptInstalledAppsPayloadForTest({
+				error: "temporarily unavailable",
+			}),
+		).toBe(false);
+		expect(isCompleteChatgptInstalledAppsPayloadForTest({ plugins: [] })).toBe(true);
 	});
 
 	it("preserves provider metadata needed to distinguish a private development app", () => {
@@ -123,19 +157,19 @@ describe("deriveChatgptDeveloperAppState", () => {
 		).toBe(true);
 	});
 
-	it("requires one exact app dialog and enabled Refresh control on the exact plugin route", async () => {
+	it("binds replacement deletion readiness to the exact app management route and heading", async () => {
 		const evaluate = vi.fn(async (_options: { expression: string }) => ({
 			result: {
 				value: {
 					appName: "Corel33t",
 					hash: "#settings/Plugins/plugin_asdk_app_corel33t",
 					dialogCount: 1,
-					refreshCount: 1,
+					actionButtonCount: 1,
 				},
 			},
 		}));
 
-		const result = await waitForChatgptDeveloperAppRefreshControlForTest(
+		const result = await waitForChatgptDeveloperAppSettingsForDeleteForTest(
 			// biome-ignore lint/style/useNamingConvention: CDP protocol domains use canonical capitalized names.
 			{ Runtime: { evaluate } as never },
 			{
@@ -148,11 +182,35 @@ describe("deriveChatgptDeveloperAppState", () => {
 		expect(result.ok).toBe(true);
 		const expression = evaluate.mock.calls[0]?.[0]?.expression as string;
 		expect(expression).toContain('"Corel33t"');
-		expect(expression).toContain(
-			'"#settings/Plugins/plugin_asdk_app_corel33t"',
-		);
+		expect(expression).toContain('"#settings/Plugins/plugin_asdk_app_corel33t"');
 		expect(expression).toContain("dialogs.length !== 1");
-		expect(expression).toContain("refreshButtons.length !== 1");
-		expect(expression).toContain("button.disabled");
+		expect(expression).toContain("actionButtons.length !== 1");
+		expect(expression).toContain("data-auracall-delete-dialog");
+		expect(expression).toContain("data-auracall-delete-trigger");
+	});
+
+	it("requires one visible menu with one exact Delete item before marking the trusted target", async () => {
+		const evaluate = vi.fn(async (_options: { expression: string }) => ({
+			result: {
+				value: {
+					menuCount: 1,
+					deleteItemCount: 1,
+				},
+			},
+		}));
+
+		const result = await markExactChatgptDeveloperAppDeleteMenuForTest(
+			// biome-ignore lint/style/useNamingConvention: CDP protocol domains use canonical capitalized names.
+			{ Runtime: { evaluate } as never },
+			"fixed-delete-marker",
+		);
+
+		expect(result.ok).toBe(true);
+		const expression = evaluate.mock.calls[0]?.[0]?.expression as string;
+		expect(expression).toContain("candidates.length !== 1");
+		expect(expression).toContain("deleteItems.length !== 1");
+		expect(expression).toContain("data-auracall-delete-menu");
+		expect(expression).toContain("data-auracall-delete-item");
+		expect(expression).toContain('"fixed-delete-marker"');
 	});
 });

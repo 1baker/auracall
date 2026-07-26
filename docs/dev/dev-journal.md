@@ -41929,3 +41929,27 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - LitScout v40 explicitly exhausts R1 and permits no additional connector turn
   without a new bounded plan and human gate. Plan 0171 is therefore closed from
   existing source-grounded evidence; no provider action was taken.
+
+## 2026-07-25 | Plan 0172 Developer-App Replacement Refresh
+
+- The provider no longer offers a dependable in-place Refresh contract for the
+  exact LitScout development app. Live management inspection instead found
+  distinct `Uninstall` and `Delete` actions.
+- `Delete` executes immediately without a second confirmation dialog. The
+  exact old `Corel33t` identity was deleted during that inspection under the
+  operator's explicit delete/re-add approval; fresh installed inventory proves
+  the old plugin ID, app ID, and normalized name absent.
+- `apps refresh` now means guarded replacement: validate the complete
+  recreation input, resolve one exact app on the expected account, open the
+  exact Developer mode management surface, activate `Delete` with trusted CDP
+  pointer input, prove absence in fresh inventory, and recreate once.
+- The separate `apps uninstall` command retains its existing semantics.
+- The sole live delete is consumed. The remaining live packet is one guarded
+  `apps create` from `https://litscout.ecochran.dyndns.org/mcp`, followed by
+  exact identity/catalog readback; no second refresh/delete cycle or connector
+  prompt is authorized.
+- Provider-free validation passes 74 focused and adjacent tests, typecheck,
+  production build, focused Biome, the 172-plan audit, and diff hygiene.
+- Fresh independent review returned `ACCEPT` after one bounded rework cycle
+  added schema-valid inventory completeness, exact marked trusted-pointer
+  targets, pre-delete same-name refusal, and structured recreation recovery.

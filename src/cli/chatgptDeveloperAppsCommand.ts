@@ -27,6 +27,7 @@ export interface ChatgptDeveloperApp {
 export interface ChatgptDeveloperAppState {
 	account: ChatgptDeveloperAppAccount;
 	developerMode: boolean;
+	inventoryComplete: boolean;
 	apps: ChatgptDeveloperApp[];
 	observedAt: string;
 }
@@ -34,7 +35,7 @@ export interface ChatgptDeveloperAppState {
 export interface ChatgptDeveloperAppAdapter {
 	readState(): Promise<ChatgptDeveloperAppState>;
 	create(input: ChatgptDeveloperAppCreateInput): Promise<ChatgptDeveloperAppMutationOutcome>;
-	refresh(app: ChatgptDeveloperApp): Promise<ChatgptDeveloperAppMutationOutcome>;
+	delete(app: ChatgptDeveloperApp): Promise<ChatgptDeveloperAppMutationOutcome>;
 	selectForTest(app: ChatgptDeveloperApp): Promise<ChatgptDeveloperAppMutationOutcome>;
 	submitTest(app: ChatgptDeveloperApp, prompt: string): Promise<ChatgptDeveloperAppMutationOutcome>;
 	uninstall(app: ChatgptDeveloperApp): Promise<ChatgptDeveloperAppMutationOutcome>;
@@ -51,10 +52,15 @@ export interface ChatgptDeveloperAppCreateInput {
 }
 
 export interface ChatgptDeveloperAppMutationOutcome {
-	status: "completed" | "awaiting-human";
+	status: "completed" | "awaiting-human" | "recreate-pending";
 	message: string;
 	currentUrl?: string | null;
 	app?: ChatgptDeveloperApp | null;
+	recovery?: {
+		action: "create";
+		input: ChatgptDeveloperAppCreateInput;
+		reason: string;
+	};
 }
 
 export type ChatgptDeveloperAppOperationInput =
@@ -67,6 +73,10 @@ export type ChatgptDeveloperAppOperationInput =
 	| {
 			action: "refresh";
 			app: string;
+			serverUrl: string;
+			description?: string | null;
+			auth: ChatgptDeveloperAppAuth;
+			connection: "server-url" | "tunnel";
 			confirmed: boolean;
 			expectedAccount: string;
 	  }
@@ -121,6 +131,11 @@ export async function executeChatgptDeveloperAppOperation(
 			`Expected ChatGPT account ${input.expectedAccount}, but the managed browser is ${state.account.email ?? "unknown"}.`,
 		);
 	}
+	if (!state.inventoryComplete) {
+		throw new Error(
+			`ChatGPT developer-app ${input.action} requires a complete installed-app inventory; the provider inventory response was incomplete.`,
+		);
+	}
 	if (input.action === "create") {
 		if (!state.developerMode) {
 			throw new Error("ChatGPT Developer mode must be enabled before creating an app.");
@@ -135,8 +150,77 @@ export async function executeChatgptDeveloperAppOperation(
 		};
 	}
 	if (input.action === "refresh") {
+		if (!state.developerMode) {
+			throw new Error("ChatGPT Developer mode must be enabled before replacing an app.");
+		}
 		const app = resolveExactApp(state.apps, input.app);
-		const outcome = await adapter.refresh(app);
+		assertUniqueReplacementName(state.apps, app);
+		const replacementInput = normalizeDeveloperAppCreateInput({
+			name: app.name,
+			serverUrl: input.serverUrl,
+			description: input.description ?? app.description ?? null,
+			auth: input.auth,
+			connection: input.connection,
+		});
+		const deleteOutcome = await adapter.delete(app);
+		if (deleteOutcome.status === "awaiting-human") {
+			return {
+				action: "refresh",
+				status: deleteOutcome.status,
+				state,
+				outcome: deleteOutcome,
+			};
+		}
+		let postDeleteState: ChatgptDeveloperAppState;
+		try {
+			postDeleteState = await adapter.readState();
+		} catch (error) {
+			const outcome = buildRecreatePendingOutcome(
+				app,
+				replacementInput,
+				`post-delete inventory failed: ${readErrorMessage(error)}`,
+			);
+			return { action: "refresh", status: outcome.status, state, outcome };
+		}
+		if (!postDeleteState.inventoryComplete) {
+			const outcome = buildRecreatePendingOutcome(
+				app,
+				replacementInput,
+				"post-delete installed-app inventory was incomplete, so absence was not proven",
+			);
+			return { action: "refresh", status: outcome.status, state, outcome };
+		}
+		if (replacementTargetRemains(postDeleteState.apps, app)) {
+			throw new Error(
+				`ChatGPT developer app ${app.name} is still present after delete; refusing to create a duplicate.`,
+			);
+		}
+		let createOutcome: ChatgptDeveloperAppMutationOutcome;
+		try {
+			createOutcome = await adapter.create(replacementInput);
+		} catch (error) {
+			const outcome = buildRecreatePendingOutcome(app, replacementInput, readErrorMessage(error));
+			return { action: "refresh", status: outcome.status, state, outcome };
+		}
+		let replacementApp: ChatgptDeveloperApp | null = null;
+		try {
+			const postCreateState = await adapter.readState();
+			if (postCreateState.inventoryComplete) {
+				const candidates = postCreateState.apps.filter(
+					(candidate) =>
+						normalizeAccount(candidate.name) === normalizeAccount(app.name) &&
+						!appIdentityOverlaps(candidate, app),
+				);
+				if (candidates.length === 1) replacementApp = candidates[0];
+			}
+		} catch {
+			// Creation was submitted already; later read-only inventory must verify its identity.
+		}
+		const outcome: ChatgptDeveloperAppMutationOutcome = {
+			...createOutcome,
+			message: `${app.name} old app deleted. ${createOutcome.message}`,
+			app: replacementApp ?? createOutcome.app ?? null,
+		};
 		return {
 			action: "refresh",
 			status: outcome.status,
@@ -193,6 +277,7 @@ export function formatChatgptDeveloperAppOperationResult(
 	const header = [
 		`ChatGPT developer apps (${account})`,
 		`Developer mode: ${result.state.developerMode ? "enabled" : "disabled"}`,
+		`Inventory complete: ${result.state.inventoryComplete ? "yes" : "no"}`,
 	];
 	if (result.action !== "list") {
 		return [
@@ -249,6 +334,12 @@ function resolveExactApp(
 function normalizeCreateInput(
 	input: Extract<ChatgptDeveloperAppOperationInput, { action: "create" }>,
 ): ChatgptDeveloperAppCreateInput {
+	return normalizeDeveloperAppCreateInput(input);
+}
+
+function normalizeDeveloperAppCreateInput(
+	input: ChatgptDeveloperAppCreateInput,
+): ChatgptDeveloperAppCreateInput {
 	const name = input.name.trim();
 	if (!name) {
 		throw new Error("ChatGPT developer-app create requires --name.");
@@ -275,6 +366,64 @@ function normalizeCreateInput(
 		auth: input.auth,
 		connection: input.connection,
 	};
+}
+
+function replacementTargetRemains(
+	apps: readonly ChatgptDeveloperApp[],
+	target: ChatgptDeveloperApp,
+): boolean {
+	const targetIds = new Set(
+		[target.pluginId, ...target.appIds].map(normalizeAccount).filter(Boolean),
+	);
+	const targetName = normalizeAccount(target.name);
+	return apps.some((app) => {
+		if (normalizeAccount(app.name) === targetName) return true;
+		return [app.pluginId, ...app.appIds]
+			.map(normalizeAccount)
+			.some((candidate) => targetIds.has(candidate));
+	});
+}
+
+function assertUniqueReplacementName(
+	apps: readonly ChatgptDeveloperApp[],
+	target: ChatgptDeveloperApp,
+): void {
+	const sameName = apps.filter(
+		(app) => normalizeAccount(app.name) === normalizeAccount(target.name),
+	);
+	if (sameName.length !== 1 || sameName[0].pluginId !== target.pluginId) {
+		throw new Error(
+			`ChatGPT developer app ${target.name} cannot be replaced because more than one installed app has the same normalized name.`,
+		);
+	}
+}
+
+function appIdentityOverlaps(left: ChatgptDeveloperApp, right: ChatgptDeveloperApp): boolean {
+	const rightIds = new Set([right.pluginId, ...right.appIds].map(normalizeAccount).filter(Boolean));
+	return [left.pluginId, ...left.appIds]
+		.map(normalizeAccount)
+		.some((candidate) => rightIds.has(candidate));
+}
+
+function buildRecreatePendingOutcome(
+	app: ChatgptDeveloperApp,
+	input: ChatgptDeveloperAppCreateInput,
+	reason: string,
+): ChatgptDeveloperAppMutationOutcome {
+	return {
+		status: "recreate-pending",
+		message: `${app.name} was deleted, but recreation is pending: ${reason}. Verify the old app remains absent, then resume with guarded apps create using the returned input.`,
+		app,
+		recovery: {
+			action: "create",
+			input,
+			reason,
+		},
+	};
+}
+
+function readErrorMessage(error: unknown): string {
+	return error instanceof Error ? error.message : String(error);
 }
 
 function normalizeTestPrompt(value: string | null | undefined): string {

@@ -1,5 +1,46 @@
 # RUNBOOK
 
+## Turn 368 | 2026-07-25
+
+- Active supporting plan:
+  `docs/dev/plans/0172-2026-07-25-chatgpt-developer-app-replacement-refresh.md`
+- Operator correction:
+  - current ChatGPT UX cannot be relied on to expose an in-place developer-app
+    Refresh control;
+  - the intended lifecycle is full removal and re-add of the exact app.
+- Read-only installed-runtime baseline:
+  - profile `wsl-chrome-3`;
+  - account `eric.cochran@soylei.com`;
+  - Developer mode enabled;
+  - exactly one private development app `Corel33t`;
+  - old plugin/app identity
+    `plugin_asdk_app_6a5d3be168248191b76ed22889b57366` /
+    `asdk_app_6a5d3be168248191b76ed22889b57366`;
+  - app enabled and currently disconnected.
+- Frozen replacement input:
+  `https://litscout.ecochran.dyndns.org/mcp`, OAuth, server URL connection,
+  description `LitScout`.
+- Read-only menu inspection established that Developer mode exposes separate
+  `Uninstall` and `Delete` actions. Selecting `Delete` to inspect the expected
+  confirmation immediately deleted `Corel33t`; ChatGPT exposed no second
+  confirmation dialog.
+- Fresh installed-runtime inventory proves the old plugin ID, app ID, and
+  normalized name are absent. That consumes the sole exact delete allowance;
+  the remaining live packet is one recreation and verification only.
+- Execution order:
+  provider-free contract repair and validation, independent review, committed
+  user-runtime install, then the single approved recreation and exact
+  identity/catalog verification. No further delete is authorized.
+- Hard stops:
+  no duplicate creation, no unrelated app mutation, no connector prompt, no
+  provider-guard bypass, and no automation of OAuth credentials, MFA, CAPTCHA,
+  or human verification.
+- Provider-free gate:
+  - 74 focused/adjacent tests, typecheck, production build, focused Biome,
+    172-plan audit, and diff hygiene pass;
+  - independent review returned `ACCEPT` after the one allowed rework cycle;
+  - source-built inventory is schema-complete and proves `Corel33t` absent.
+
 ## Turn 367 | 2026-07-25
 
 - Reconciled Plan 0171 against LitScout's newer canonical H4/R1 authority

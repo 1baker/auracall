@@ -14,6 +14,7 @@ function createAdapter(
 				plan: "Pro",
 			},
 			developerMode: true,
+			inventoryComplete: true,
 			apps: [
 				{
 					pluginId: "plugin_asdk_app_corel33t",
@@ -30,8 +31,8 @@ function createAdapter(
 		create: async () => {
 			throw new Error("unexpected create");
 		},
-		refresh: async () => {
-			throw new Error("unexpected refresh");
+		delete: async () => {
+			throw new Error("unexpected delete");
 		},
 		selectForTest: async () => {
 			throw new Error("unexpected select");
@@ -64,6 +65,7 @@ describe("executeChatgptDeveloperAppOperation", () => {
 					plan: "Pro",
 				},
 				developerMode: true,
+				inventoryComplete: true,
 				apps: [
 					{
 						pluginId: "plugin_asdk_app_corel33t",
@@ -112,6 +114,9 @@ describe("executeChatgptDeveloperAppOperation", () => {
 				{
 					action: "refresh",
 					app: "Corel33t",
+					serverUrl: "https://litscout.ecochran.dyndns.org/mcp",
+					auth: "oauth",
+					connection: "server-url",
 					confirmed: true,
 					expectedAccount: "other@example.com",
 				},
@@ -122,33 +127,277 @@ describe("executeChatgptDeveloperAppOperation", () => {
 		);
 	});
 
-	it("refreshes one exact app after confirmation and account verification", async () => {
-		const refreshed: string[] = [];
+	it("replaces one exact app after confirmation, account verification, and absence proof", async () => {
+		const events: string[] = [];
+		let inventoryReads = 0;
+		const baseAdapter = createAdapter();
 		const result = await executeChatgptDeveloperAppOperation(
 			{
 				action: "refresh",
 				app: "plugin_asdk_app_corel33t",
+				serverUrl: "https://litscout.ecochran.dyndns.org/mcp",
+				description: "LitScout",
+				auth: "oauth",
+				connection: "server-url",
 				confirmed: true,
 				expectedAccount: "ERIC.COCHRAN@SOYLEI.COM",
 			},
 			createAdapter({
-				refresh: async (app) => {
-					refreshed.push(app.pluginId);
+				readState: async () => {
+					inventoryReads += 1;
+					const state = await baseAdapter.readState();
+					if (inventoryReads === 1) return state;
+					if (inventoryReads === 2) return { ...state, apps: [] };
+					return {
+						...state,
+						apps: [
+							{
+								...state.apps[0],
+								pluginId: "plugin_asdk_app_corel33t_replacement",
+								appIds: ["asdk_app_corel33t_replacement"],
+								authStatus: null,
+							},
+						],
+					};
+				},
+				delete: async (app) => {
+					events.push(`delete:${app.pluginId}`);
 					return {
 						status: "completed",
-						message: "Corel33t refreshed.",
+						message: "Corel33t Delete action selected.",
 						app,
+					};
+				},
+				create: async (input) => {
+					events.push(`create:${input.name}:${input.serverUrl}`);
+					return {
+						status: "awaiting-human",
+						message: "Corel33t replacement submitted; complete OAuth.",
 					};
 				},
 			}),
 		);
 
-		expect(refreshed).toEqual(["plugin_asdk_app_corel33t"]);
+		expect(events).toEqual([
+			"delete:plugin_asdk_app_corel33t",
+			"create:Corel33t:https://litscout.ecochran.dyndns.org/mcp",
+		]);
+		expect(inventoryReads).toBe(3);
 		expect(result).toMatchObject({
 			action: "refresh",
-			status: "completed",
+			status: "awaiting-human",
 			outcome: {
-				message: "Corel33t refreshed.",
+				message: "Corel33t old app deleted. Corel33t replacement submitted; complete OAuth.",
+				app: {
+					pluginId: "plugin_asdk_app_corel33t_replacement",
+				},
+			},
+		});
+	});
+
+	it("validates replacement inputs before deleting the exact app", async () => {
+		let deleteCalled = false;
+		await expect(
+			executeChatgptDeveloperAppOperation(
+				{
+					action: "refresh",
+					app: "Corel33t",
+					serverUrl: "http://litscout.example.test/mcp",
+					auth: "oauth",
+					connection: "server-url",
+					confirmed: true,
+					expectedAccount: "eric.cochran@soylei.com",
+				},
+				createAdapter({
+					delete: async () => {
+						deleteCalled = true;
+						throw new Error("should not delete");
+					},
+				}),
+			),
+		).rejects.toThrow("must use HTTPS");
+		expect(deleteCalled).toBe(false);
+	});
+
+	it("refuses to recreate while the old app identity or name remains installed", async () => {
+		let createCalled = false;
+		await expect(
+			executeChatgptDeveloperAppOperation(
+				{
+					action: "refresh",
+					app: "Corel33t",
+					serverUrl: "https://litscout.ecochran.dyndns.org/mcp",
+					auth: "oauth",
+					connection: "server-url",
+					confirmed: true,
+					expectedAccount: "eric.cochran@soylei.com",
+				},
+				createAdapter({
+					delete: async (app) => ({
+						status: "completed",
+						message: `${app.name} Delete action selected.`,
+						app,
+					}),
+					create: async () => {
+						createCalled = true;
+						throw new Error("should not create");
+					},
+				}),
+			),
+		).rejects.toThrow("still present after delete; refusing to create a duplicate");
+		expect(createCalled).toBe(false);
+	});
+
+	it("does not recreate when exact-app deletion fails", async () => {
+		let createCalled = false;
+		await expect(
+			executeChatgptDeveloperAppOperation(
+				{
+					action: "refresh",
+					app: "Corel33t",
+					serverUrl: "https://litscout.ecochran.dyndns.org/mcp",
+					auth: "oauth",
+					connection: "server-url",
+					confirmed: true,
+					expectedAccount: "eric.cochran@soylei.com",
+				},
+				createAdapter({
+					delete: async () => {
+						throw new Error("provider refused delete");
+					},
+					create: async () => {
+						createCalled = true;
+						throw new Error("should not create");
+					},
+				}),
+			),
+		).rejects.toThrow("provider refused delete");
+		expect(createCalled).toBe(false);
+	});
+
+	it("fails before delete when a same-name sibling already makes replacement unsafe", async () => {
+		const base = await createAdapter().readState();
+		let deleteCalled = false;
+		await expect(
+			executeChatgptDeveloperAppOperation(
+				{
+					action: "refresh",
+					app: "plugin_asdk_app_corel33t",
+					serverUrl: "https://litscout.ecochran.dyndns.org/mcp",
+					auth: "oauth",
+					connection: "server-url",
+					confirmed: true,
+					expectedAccount: "eric.cochran@soylei.com",
+				},
+				createAdapter({
+					readState: async () => ({
+						...base,
+						apps: [
+							...base.apps,
+							{
+								...base.apps[0],
+								pluginId: "plugin_asdk_app_corel33t_sibling",
+								appIds: ["asdk_app_corel33t_sibling"],
+							},
+						],
+					}),
+					delete: async () => {
+						deleteCalled = true;
+						throw new Error("should not delete");
+					},
+				}),
+			),
+		).rejects.toThrow("same normalized name");
+		expect(deleteCalled).toBe(false);
+	});
+
+	it("returns structured create recovery when post-delete inventory is incomplete", async () => {
+		const baseAdapter = createAdapter();
+		let inventoryReads = 0;
+		let createCalled = false;
+		const result = await executeChatgptDeveloperAppOperation(
+			{
+				action: "refresh",
+				app: "Corel33t",
+				serverUrl: "https://litscout.ecochran.dyndns.org/mcp",
+				description: "LitScout",
+				auth: "oauth",
+				connection: "server-url",
+				confirmed: true,
+				expectedAccount: "eric.cochran@soylei.com",
+			},
+			createAdapter({
+				readState: async () => {
+					inventoryReads += 1;
+					const state = await baseAdapter.readState();
+					return inventoryReads === 1 ? state : { ...state, inventoryComplete: false, apps: [] };
+				},
+				delete: async (app) => ({
+					status: "completed",
+					message: `${app.name} Delete action selected.`,
+					app,
+				}),
+				create: async () => {
+					createCalled = true;
+					throw new Error("should not create without absence proof");
+				},
+			}),
+		);
+
+		expect(result).toMatchObject({
+			action: "refresh",
+			status: "recreate-pending",
+			outcome: {
+				recovery: {
+					action: "create",
+					reason: expect.stringContaining("inventory was incomplete"),
+					input: {
+						name: "Corel33t",
+						serverUrl: "https://litscout.ecochran.dyndns.org/mcp",
+					},
+				},
+			},
+		});
+		expect(createCalled).toBe(false);
+	});
+
+	it("returns structured create recovery when recreation throws after verified deletion", async () => {
+		const baseAdapter = createAdapter();
+		let inventoryReads = 0;
+		const result = await executeChatgptDeveloperAppOperation(
+			{
+				action: "refresh",
+				app: "Corel33t",
+				serverUrl: "https://litscout.ecochran.dyndns.org/mcp",
+				auth: "oauth",
+				connection: "server-url",
+				confirmed: true,
+				expectedAccount: "eric.cochran@soylei.com",
+			},
+			createAdapter({
+				readState: async () => {
+					inventoryReads += 1;
+					const state = await baseAdapter.readState();
+					return inventoryReads === 1 ? state : { ...state, apps: [] };
+				},
+				delete: async (app) => ({
+					status: "completed",
+					message: `${app.name} Delete action selected.`,
+					app,
+				}),
+				create: async () => {
+					throw new Error("create form changed");
+				},
+			}),
+		);
+
+		expect(result).toMatchObject({
+			status: "recreate-pending",
+			outcome: {
+				recovery: {
+					action: "create",
+					reason: "create form changed",
+				},
 			},
 		});
 	});

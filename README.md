@@ -77,10 +77,17 @@ auracall --profile wsl-chrome-3 apps --target chatgpt test Corel33t \
 # Create, refresh, submitted tests, and uninstall require --expected-account
 # plus --yes. OAuth, MFA, consent, CAPTCHA, and verification remain human gates.
 auracall --profile wsl-chrome-3 apps --target chatgpt refresh Corel33t \
+  --server-url https://litscout.example.test/mcp \
   --expected-account eric.cochran@soylei.com --yes
-# Refresh resolves the exact plugin route and app heading, then scrolls,
-# hit-tests, and browser-clicks exactly one enabled Refresh control. It fails
-# closed unless that control receives a trusted click.
+# Refresh is replacement semantics: validate the full recreation input, delete
+# the exact private development app, prove its old identity/name absent, then
+# recreate it once. ChatGPT Delete may execute without a second confirmation.
+# Stop at OAuth, MFA, CAPTCHA, verification, or other human gates.
+# If deletion completed but recreation failed, do not rerun refresh: use the
+# guarded `apps create` command with the same frozen inputs after confirming
+# the old app remains absent.
+# Machine-readable `recreate-pending` output includes that validated create
+# input. An incomplete installed-app inventory always stops mutation.
 
 # Shared durable media-generation contract from the CLI
 auracall media generate --provider chatgpt --type image -p "Generate an image of an asphalt secret agent" --json

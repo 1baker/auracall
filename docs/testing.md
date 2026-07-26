@@ -10,9 +10,18 @@
     `pnpm tsx bin/auracall.ts --profile <runtime> apps --target chatgpt test <exact-app> --expected-account <email> --json`
   - do not use `--submit`, `create`, `refresh`, or `uninstall` as routine live
     tests; they require exact authorization and `--yes`
-  - an authorized refresh must resolve the exact plugin route/app heading and
-    exactly one enabled Refresh control; success requires a browser-trusted
-    pointer click, not synthetic DOM-event dispatch
+  - an authorized refresh uses replacement semantics and requires a complete
+    recreation input, including `--server-url`; it resolves the exact private
+    development app, selects its Developer mode `Delete` action, proves the old
+    identity and normalized name absent in fresh inventory, and recreates once
+  - ChatGPT's developer-app `Delete` action can execute immediately without a
+    second confirmation dialog; treat `--yes` as approval for that deletion and
+    preserve the exact account/app gates
+  - if deletion succeeds but recreation fails, verify the old app remains
+    absent and resume with guarded `apps create`; rerunning `apps refresh`
+    cannot resolve an already-deleted target and must not be used as recovery
+  - `inventoryComplete: false` is a hard mutation stop; a timed-out installed
+    apps response must never be interpreted as proof that zero apps exist
   - stop immediately on a provider rate-limit, CAPTCHA, or human-verification
     surface
   - a loaded Cloudflare `/challenge-platform/` script is not by itself a

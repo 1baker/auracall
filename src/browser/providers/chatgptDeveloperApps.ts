@@ -30,6 +30,7 @@ export interface ChatgptDeveloperAppBrowserState {
 		plan: string | null;
 	};
 	developerMode: boolean;
+	inventoryComplete: boolean;
 	apps: ChatgptDeveloperAppBrowserEntry[];
 	observedAt: string;
 }
@@ -223,44 +224,6 @@ export class ChatgptDeveloperAppBrowserAdapter {
 		};
 	}
 
-	async refresh(
-		app: ChatgptDeveloperAppBrowserTarget,
-	): Promise<ChatgptDeveloperAppBrowserMutationOutcome> {
-		const client = await this.ensureClient();
-		await navigateChatgpt(
-			client,
-			`https://chatgpt.com/plugins#settings/Plugins/${encodeURIComponent(app.pluginId)}`,
-			);
-			await assertNoChatgptBlockingSurface(client, `refresh ${app.name}`);
-			const ready = await waitForChatgptDeveloperAppRefreshControl(client, app);
-			if (!ready.ok) {
-				const diagnostic = await readChatgptDeveloperAppRefreshDiagnostic(client);
-				throw new Error(
-					`ChatGPT developer app ${app.name} did not expose one exact enabled Refresh control: ${diagnostic}.`,
-				);
-			}
-			const refreshed = await pressButtonWithTrustedPointer(client, {
-				rootSelectors: ['[role="dialog"]'],
-				match: { exact: ["refresh"] },
-				requireVisible: true,
-				timeoutMs: 15_000,
-				logCandidatesOnMiss: true,
-			});
-			if (!refreshed.ok) {
-				throw new Error(
-					`Unable to refresh ChatGPT developer app ${app.name}: ${refreshed.reason ?? "trusted pointer activation failed"}.`,
-				);
-			}
-			await wait(750);
-			await assertNoChatgptBlockingSurface(client, `complete refresh ${app.name}`);
-			return {
-				status: "completed",
-				message: `${app.name} refresh requested with a trusted pointer click.`,
-				currentUrl: await readCurrentUrl(client),
-				app,
-		};
-	}
-
 	async selectForTest(
 		app: ChatgptDeveloperAppBrowserTarget,
 	): Promise<ChatgptDeveloperAppBrowserMutationOutcome> {
@@ -306,6 +269,55 @@ export class ChatgptDeveloperAppBrowserAdapter {
 			status: "completed",
 			message: `${app.name} test prompt submitted${result.conversationId ? ` in conversation ${result.conversationId}` : ""}.`,
 			currentUrl: result.url ?? null,
+			app,
+		};
+	}
+
+	async delete(
+		app: ChatgptDeveloperAppBrowserTarget,
+	): Promise<ChatgptDeveloperAppBrowserMutationOutcome> {
+		const client = await this.ensureClient();
+		await navigateChatgpt(
+			client,
+			`https://chatgpt.com/plugins#settings/Plugins/${encodeURIComponent(app.pluginId)}`,
+		);
+		await assertNoChatgptBlockingSurface(client, `delete ${app.name}`);
+		const targetMarker = `auracall-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+		const ready = await waitForChatgptDeveloperAppSettingsForDelete(client, app, targetMarker);
+		if (!ready.ok) {
+			throw new Error(
+				`ChatGPT developer app ${app.name} did not expose its exact Developer mode management surface.`,
+			);
+		}
+		const opened = await pressButtonWithTrustedPointer(client, {
+			selector: `button[data-auracall-delete-trigger="${targetMarker}"]`,
+			requireVisible: true,
+			postSelector: '[role="menu"]',
+			timeoutMs: 8_000,
+		});
+		if (!opened.ok) {
+			throw new Error(`Unable to open the exact Developer mode actions for ${app.name}.`);
+		}
+		const exactMenuReady = await markExactChatgptDeveloperAppDeleteMenu(client, targetMarker);
+		if (!exactMenuReady.ok) {
+			throw new Error(`Unable to isolate one exact Delete menu item for ${app.name}.`);
+		}
+		const selected = await pressButtonWithTrustedPointer(client, {
+			selector: `[data-auracall-delete-item="${targetMarker}"]`,
+			requireVisible: true,
+			timeoutMs: 8_000,
+		});
+		if (!selected.ok) {
+			throw new Error(
+				`Unable to select the exact Delete action for ${app.name}: ${selected.reason ?? "trusted pointer activation failed"}.`,
+			);
+		}
+		await wait(750);
+		await assertNoChatgptBlockingSurface(client, `complete delete ${app.name}`);
+		return {
+			status: "completed",
+			message: `${app.name} Delete action selected.`,
+			currentUrl: await readCurrentUrl(client),
 			app,
 		};
 	}
@@ -425,6 +437,7 @@ export function deriveChatgptDeveloperAppState(
 			plan: readString(input.identity?.accountPlanType ?? input.identity?.accountLevel),
 		},
 		developerMode: input.developerMode,
+		inventoryComplete: signature?.inventory_complete === true,
 		apps,
 		observedAt: input.observedAt,
 	};
@@ -576,10 +589,17 @@ async function captureChatgptDeveloperAppFeatureSignature(client: ChromeClient):
 		`installed payload keys=${Object.keys(installedPayload).join(",") || "none"}; linked payload keys=${Object.keys(linkedPayload).join(",") || "none"}`,
 	);
 	return JSON.stringify({
+		inventory_complete: isCompleteChatgptInstalledAppsPayload(payloads.installed),
 		installed_apps: normalizeChatgptInstalledAppProbes(installedPayload.plugins),
 		linked_apps: normalizeChatgptLinkedAppProbes(linkedPayload.links),
 	});
 }
+
+function isCompleteChatgptInstalledAppsPayload(value: unknown): boolean {
+	return isRecord(value) && Array.isArray(value.plugins);
+}
+
+export const isCompleteChatgptInstalledAppsPayloadForTest = isCompleteChatgptInstalledAppsPayload;
 
 async function readChatgptDeveloperMode(client: ChromeClient): Promise<boolean> {
 	const originalUrl = await readCurrentUrl(client);
@@ -658,15 +678,17 @@ async function readDeveloperModeDiagnostic(client: ChromeClient): Promise<string
 	return readString(result.result?.value) ?? "no DOM diagnostic available";
 }
 
-async function waitForChatgptDeveloperAppRefreshControl(
+async function waitForChatgptDeveloperAppSettingsForDelete(
 	client: Pick<ChromeClient, "Runtime">,
 	app: ChatgptDeveloperAppBrowserTarget,
+	targetMarker = "auracall-delete-target",
 ): Promise<Awaited<ReturnType<typeof waitForPredicate>>> {
 	return waitForPredicate(
 		client.Runtime,
 		`(() => {
       const normalize = (value) => String(value || '').replace(/\\s+/g, ' ').trim();
       const expectedName = ${JSON.stringify(app.name)};
+      const targetMarker = ${JSON.stringify(targetMarker)};
       const expectedHash = ${JSON.stringify(
 				`#settings/Plugins/${encodeURIComponent(app.pluginId)}`,
 			)};
@@ -679,53 +701,71 @@ async function waitForChatgptDeveloperAppRefreshControl(
         return Boolean(heading);
       });
       if (dialogs.length !== 1) return null;
-      const refreshButtons = Array.from(dialogs[0].querySelectorAll('button,[role="button"]')).filter((button) => {
-        const label = normalize(button.getAttribute?.('aria-label') || button.textContent || '');
+      const actionButtons = Array.from(dialogs[0].querySelectorAll('button')).filter((button) => {
+        const label = normalize(button.getAttribute('aria-label'));
         const rect = button.getBoundingClientRect();
-        return label === 'Refresh' && rect.width > 0 && rect.height > 0;
+        return label === 'Plugin actions' && rect.width > 0 && rect.height > 0;
       });
-      if (refreshButtons.length !== 1) return null;
-      const button = refreshButtons[0];
-      if (button.disabled || button.getAttribute?.('aria-disabled') === 'true') return null;
+      if (actionButtons.length !== 1) return null;
+      const button = actionButtons[0];
+      if (button.disabled || button.getAttribute('aria-disabled') === 'true') return null;
+      dialogs[0].setAttribute('data-auracall-delete-dialog', targetMarker);
+      button.setAttribute('data-auracall-delete-trigger', targetMarker);
       return {
         appName: expectedName,
         hash: location.hash,
         dialogCount: dialogs.length,
-        refreshCount: refreshButtons.length,
+        actionButtonCount: actionButtons.length,
       };
     })()`,
 		{
 			timeoutMs: 15_000,
 			pollMs: 200,
-			description: `exact enabled Refresh control for ${app.name}`,
+			description: `exact Developer mode management surface for ${app.name}`,
 		},
 	);
 }
 
-async function readChatgptDeveloperAppRefreshDiagnostic(
+async function markExactChatgptDeveloperAppDeleteMenu(
 	client: Pick<ChromeClient, "Runtime">,
-): Promise<string> {
-	const result = await client.Runtime.evaluate({
-		expression: `JSON.stringify({
-      url: location.href,
-      dialogs: Array.from(document.querySelectorAll('[role="dialog"]')).map((dialog) => ({
-        headings: Array.from(dialog.querySelectorAll('h1,h2,h3,h4,h5,h6,[role="heading"]'))
-          .map((heading) => String(heading.textContent || '').replace(/\\s+/g, ' ').trim())
-          .filter(Boolean)
-          .slice(0, 8),
-        buttons: Array.from(dialog.querySelectorAll('button,[role="button"]'))
-          .map((button) => String(button.getAttribute?.('aria-label') || button.textContent || '').replace(/\\s+/g, ' ').trim())
-          .filter(Boolean)
-          .slice(0, 20),
-      })),
-    })`,
-		returnByValue: true,
-	});
-	return readString(result.result?.value) ?? "no refresh DOM diagnostic available";
+	targetMarker: string,
+): Promise<Awaited<ReturnType<typeof waitForPredicate>>> {
+	return waitForPredicate(
+		client.Runtime,
+		`(() => {
+      const normalize = (value) => String(value || '').replace(/\\s+/g, ' ').trim().toLowerCase();
+      const targetMarker = ${JSON.stringify(targetMarker)};
+      const visible = (element) => {
+        const rect = element.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0;
+      };
+      const candidates = Array.from(document.querySelectorAll('[role="menu"]'))
+        .filter(visible)
+        .map((menu) => ({
+          menu,
+          deleteItems: Array.from(menu.querySelectorAll('[role="menuitem"],button,[role="button"]'))
+            .filter((item) => visible(item) && normalize(item.getAttribute('aria-label') || item.textContent) === 'delete'),
+        }))
+        .filter((entry) => entry.deleteItems.length > 0);
+      if (candidates.length !== 1 || candidates[0].deleteItems.length !== 1) return null;
+      candidates[0].menu.setAttribute('data-auracall-delete-menu', targetMarker);
+      candidates[0].deleteItems[0].setAttribute('data-auracall-delete-item', targetMarker);
+      return {
+        menuCount: candidates.length,
+        deleteItemCount: candidates[0].deleteItems.length,
+      };
+    })()`,
+		{
+			timeoutMs: 5_000,
+			pollMs: 100,
+			description: "one exact ChatGPT developer-app Delete menu item",
+		},
+	);
 }
 
-export const waitForChatgptDeveloperAppRefreshControlForTest =
-	waitForChatgptDeveloperAppRefreshControl;
+export const waitForChatgptDeveloperAppSettingsForDeleteForTest =
+	waitForChatgptDeveloperAppSettingsForDelete;
+export const markExactChatgptDeveloperAppDeleteMenuForTest = markExactChatgptDeveloperAppDeleteMenu;
 
 async function navigateChatgpt(client: ChromeClient, url: string): Promise<void> {
 	const settled = await navigateAndSettle(client, {
