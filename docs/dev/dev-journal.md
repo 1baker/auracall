@@ -41953,3 +41953,22 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Fresh independent review returned `ACCEPT` after one bounded rework cycle
   added schema-valid inventory completeness, exact marked trusted-pointer
   targets, pre-delete same-name refusal, and structured recreation recovery.
+
+## 2026-07-25 | Plan 0173 Recreation-Only Form Drift
+
+- Installed commit `2d186920` proved the old app remained absent, then the sole
+  create stopped before submission at the MCP URL field.
+- The still-open New Plugin form showed ChatGPT now defaults Connection to
+  `Tunnel`. AuraCall's synthetic pointer event did not select `Server URL`, so
+  the URL field was correctly absent rather than merely renamed.
+- Current DOM authority uses a radio button with
+  `aria-label="Server URL"` / `aria-checked`, and the mounted endpoint input is
+  named `custom-connector-url`.
+- The corrected create path uses trusted CDP pointer activation and verifies
+  the radio state before addressing the exact named URL input. The same trusted
+  activation is used for the risk checkbox and final Create control.
+- Plan 0172 is closed with its create allowance consumed. Plan 0173 owns one
+  recreation-only retry and forbids another delete.
+- Provider-free validation passes 75 focused/adjacent tests, typecheck,
+  production build, plan audit, and diff hygiene. Fresh independent review
+  returned `ACCEPT`.

@@ -73,6 +73,9 @@ export interface ChatgptDeveloperAppBrowserCreateInput {
 	connection: "server-url" | "tunnel";
 }
 
+export const CHATGPT_DEVELOPER_APP_SERVER_URL_SELECTOR =
+	'[role="dialog"] input[name="custom-connector-url"]';
+
 export interface ChatgptDeveloperAppBrowserClient {
 	readonly userConfig: ResolvedUserConfig;
 	getUserIdentity(): Promise<ProviderUserIdentity | null>;
@@ -130,9 +133,8 @@ export class ChatgptDeveloperAppBrowserAdapter {
 		const client = await this.ensureClient();
 		await navigateChatgpt(client, "https://chatgpt.com/plugins");
 		await assertNoChatgptBlockingSurface(client, "create developer app");
-		const opened = await pressButton(client.Runtime, {
+		const opened = await pressButtonWithTrustedPointer(client, {
 			selector: 'button[aria-label="Create app"]',
-			interactionStrategies: ["pointer"],
 			requireVisible: true,
 			postSelector: '[role="dialog"]',
 			timeoutMs: 8_000,
@@ -152,19 +154,31 @@ export class ChatgptDeveloperAppBrowserAdapter {
 			);
 		}
 		const connectionLabel = input.connection === "tunnel" ? "Tunnel" : "Server URL";
-		const connectionSelected = await pressButton(client.Runtime, {
-			rootSelectors: ['[role="dialog"]'],
-			match: { exact: [connectionLabel.toLowerCase()] },
-			interactionStrategies: ["pointer"],
+		const connectionSelector = `[role="dialog"] button[role="radio"][aria-label="${connectionLabel}"]`;
+		const connectionSelected = await pressButtonWithTrustedPointer(client, {
+			selector: connectionSelector,
 			requireVisible: true,
 			timeoutMs: 3_000,
 		});
 		if (!connectionSelected.ok) {
 			throw new Error(`Unable to select ChatGPT app connection mode ${connectionLabel}.`);
 		}
+		const connectionReady = await waitForPredicate(
+			client.Runtime,
+			`document.querySelector(${JSON.stringify(
+				connectionSelector,
+			)})?.getAttribute('aria-checked') === 'true'`,
+			{
+				timeoutMs: 3_000,
+				description: `selected ChatGPT app connection mode ${connectionLabel}`,
+			},
+		);
+		if (!connectionReady.ok) {
+			throw new Error(`ChatGPT app connection mode ${connectionLabel} did not become selected.`);
+		}
 		await setRequiredInput(
 			client,
-			'[role="dialog"] input[placeholder*="https://"], [role="dialog"] input[type="url"]',
+			CHATGPT_DEVELOPER_APP_SERVER_URL_SELECTOR,
 			input.serverUrl,
 			"MCP server URL",
 		);
@@ -173,9 +187,8 @@ export class ChatgptDeveloperAppBrowserAdapter {
 			'[role="dialog"] select',
 			input.auth === "none" ? "No Auth" : input.auth === "mixed" ? "Mixed" : "OAuth",
 		);
-		const acknowledged = await pressButton(client.Runtime, {
-			selector: '[role="dialog"] input[type="checkbox"]',
-			interactionStrategies: ["pointer"],
+		const acknowledged = await pressButtonWithTrustedPointer(client, {
+			selector: '[role="dialog"] input#trust-checkbox',
 			requireVisible: true,
 			timeoutMs: 5_000,
 		});
@@ -194,10 +207,9 @@ export class ChatgptDeveloperAppBrowserAdapter {
 		if (!createReady.ok) {
 			throw new Error("ChatGPT Create app did not become enabled after form validation.");
 		}
-		const submitted = await pressButton(client.Runtime, {
+		const submitted = await pressButtonWithTrustedPointer(client, {
 			rootSelectors: ['[role="dialog"]'],
 			match: { exact: ["create"] },
-			interactionStrategies: ["pointer"],
 			requireVisible: true,
 			timeoutMs: 5_000,
 		});

@@ -1,6 +1,6 @@
 # ChatGPT Developer App Replacement Refresh | 0172-2026-07-25
 
-State: OPEN
+State: CLOSED
 Lane: P03
 Plan version: 1
 
@@ -28,6 +28,14 @@ provider exposes no usable in-place Refresh control.
 - That exact deletion consumes this plan's sole live delete allowance. Live
   execution may only recreate and verify the frozen target; it must not run a
   second delete/recreate cycle.
+- Accepted implementation commit `2d186920` was installed byte-identically and
+  passed its startup smoke. The sole create attempt stopped before submission:
+  ChatGPT now defaults the connection radio to `Tunnel`, AuraCall's synthetic
+  selection did not change it to `Server URL`, and the URL input therefore
+  never mounted.
+- No replacement app or OAuth flow was created. This plan's live create
+  allowance is exhausted; bounded successor Plan 0173 owns the corrected
+  recreation-only retry and does not authorize another delete.
 - The installed app inventory does not disclose its MCP endpoint, so replacement
   must require an explicit validated server URL before uninstall.
 - The approved replacement target is:
@@ -142,7 +150,7 @@ provider exposes no usable in-place Refresh control.
       check pass.
 - [x] Independent review reports `ACCEPT`, or one bounded rework cycle resolves
       its material findings.
-- [ ] Installed runtime is attributable to committed source and passes startup.
+- [x] Installed runtime is attributable to committed source and passes startup.
 - [ ] The one approved live replacement leaves exactly one `Corel33t` on the
       expected account, with the old identity absent and the current LitScout
       app surface available.
@@ -169,3 +177,8 @@ Plan 0172 closes only when the replacement contract is provider-free green,
 independently accepted, committed, installed, and the single approved live
 `Corel33t` replacement is either verified end to end or stopped truthfully at
 an explicit human/provider gate with no duplicate or unrelated mutation.
+
+Terminal outcome: the safe replacement contract shipped, the exact deletion
+was proved, and the first recreation stopped pre-submit on provider form drift.
+Plan 0173 is the only active live authority for the corrected recreation; Plan
+0172 authorizes no further browser mutation.

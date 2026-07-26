@@ -1,5 +1,31 @@
 # RUNBOOK
 
+## Turn 369 | 2026-07-25
+
+- Active supporting plan:
+  `docs/dev/plans/0173-2026-07-25-chatgpt-developer-app-recreation-retry.md`
+- Plan 0172 implementation commit `2d186920` passed 74 focused/adjacent tests,
+  typecheck, production build, plan audit, independent `ACCEPT`, installed
+  startup, and byte-identical runtime comparison.
+- Its sole recreation stopped before submission:
+  - ChatGPT New Plugin defaulted to `Tunnel`;
+  - AuraCall's synthetic radio activation did not change it;
+  - the Server URL input never mounted;
+  - setting the endpoint failed before checkbox/Create/OAuth.
+- Read-only DOM evidence identifies the current controls:
+  - Server URL:
+    `button[role="radio"][aria-label="Server URL"]`;
+  - selected state: `aria-checked="true"`;
+  - URL input: `input[name="custom-connector-url"]`;
+  - risk checkbox: `input#trust-checkbox`.
+- No app was created. Schema-complete inventory still shows zero `Corel33t`
+  entries and 12 unrelated apps.
+- Plan 0173 permits one corrected recreation only. No delete, refresh,
+  connector prompt, guard bypass, or human-gate automation is authorized.
+- Provider-free gate passes 75 focused/adjacent tests, typecheck, production
+  build, plan audit, and diff hygiene; fresh independent review returned
+  `ACCEPT`.
+
 ## Turn 368 | 2026-07-25
 
 - Active supporting plan:

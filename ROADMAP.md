@@ -7,13 +7,17 @@
 Status: active
 Lane: P01
 
+- Active ChatGPT developer-app recreation retry:
+  [docs/dev/plans/0173-2026-07-25-chatgpt-developer-app-recreation-retry.md](docs/dev/plans/0173-2026-07-25-chatgpt-developer-app-recreation-retry.md)
+  Plan 0172's safe deletion is complete and its first create stopped before
+  submission on connection-radio drift. This recreation-only successor fixes
+  the current Server URL form and permits one exact `Corel33t` create; no
+  further delete or connector prompt is authorized.
 - Active ChatGPT developer-app replacement refresh:
   [docs/dev/plans/0172-2026-07-25-chatgpt-developer-app-replacement-refresh.md](docs/dev/plans/0172-2026-07-25-chatgpt-developer-app-replacement-refresh.md)
-  AuraCall will replace one exact private development app by validating its
-  recreation inputs, deleting it, proving the old identity/name absent,
-  and recreating it once. The live packet is frozen to `Corel33t` on
-  `eric.cochran@soylei.com`; no connector prompt or unrelated app mutation is
-  authorized.
+  The safe replacement contract is accepted, committed, installed, and the old
+  exact identity is deleted. Its sole create attempt stopped pre-submit on
+  ChatGPT connection-radio drift; Plan 0173 owns the recreation-only retry.
 - Completed refreshed-snapshot file materialization repair:
   [docs/dev/plans/0170-2026-07-25-refreshed-snapshot-file-materialization.md](docs/dev/plans/0170-2026-07-25-refreshed-snapshot-file-materialization.md)
   Completion-owned materialization consumes the already-refreshed file

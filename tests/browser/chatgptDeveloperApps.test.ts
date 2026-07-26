@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { normalizeChatgptInstalledAppProbesForTest } from "../../src/browser/providers/chatgptAdapter.js";
 import {
+	CHATGPT_DEVELOPER_APP_SERVER_URL_SELECTOR,
 	chatgptDeveloperAppSelectionMatchesForTest,
 	deriveChatgptDeveloperAppState,
 	isCompleteChatgptInstalledAppsPayloadForTest,
@@ -9,6 +10,12 @@ import {
 } from "../../src/browser/providers/chatgptDeveloperApps.js";
 
 describe("deriveChatgptDeveloperAppState", () => {
+	it("targets the current named server URL input rather than a volatile input type", () => {
+		expect(CHATGPT_DEVELOPER_APP_SERVER_URL_SELECTOR).toBe(
+			'[role="dialog"] input[name="custom-connector-url"]',
+		);
+	});
+
 	it("maps private user-owned installed metadata and active OAuth link state", () => {
 		const state = deriveChatgptDeveloperAppState({
 			identity: {

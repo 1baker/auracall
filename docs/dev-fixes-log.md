@@ -19699,3 +19699,10 @@ browser-stage lifecycle observability, not transcript truncation.
   before one recreate. ChatGPT `Delete` may execute immediately without a
   second confirmation; if recreation fails afterward, verify absence and
   recover with guarded `apps create`, not another refresh.
+- 2026-07-25: ChatGPT New Plugin can default Connection to `Tunnel`; synthetic
+  radio events may report dispatch while leaving that selection unchanged and
+  the Server URL input unmounted. Activate the exact
+  `button[role=radio][aria-label="Server URL"]` with trusted browser input,
+  require `aria-checked=true`, then address
+  `input[name="custom-connector-url"]`. Use trusted activation for the risk
+  checkbox and Create submission as well.
