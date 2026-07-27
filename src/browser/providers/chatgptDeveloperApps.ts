@@ -306,10 +306,12 @@ export class ChatgptDeveloperAppBrowserAdapter {
 			postSelector: '[role="menu"]',
 			timeoutMs: 8_000,
 		});
-		if (!opened.ok) {
-			throw new Error(`Unable to open the exact Developer mode actions for ${app.name}.`);
-		}
 		const exactMenuReady = await markExactChatgptDeveloperAppDeleteMenu(client, targetMarker);
+		if (!opened.ok && !exactMenuReady.ok) {
+			throw new Error(
+				`Unable to open the exact Developer mode actions for ${app.name}: ${opened.reason ?? "trusted pointer activation failed"}.`,
+			);
+		}
 		if (!exactMenuReady.ok) {
 			throw new Error(`Unable to isolate one exact Delete menu item for ${app.name}.`);
 		}

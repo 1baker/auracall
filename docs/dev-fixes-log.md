@@ -19716,3 +19716,13 @@ browser-stage lifecycle observability, not transcript truncation.
 - Durable rule: use focus plus trusted CDP Space keydown/keyup for this
   provider-specific connection radio, then verify `aria-checked=true` before
   addressing `input[name="custom-connector-url"]`.
+
+## 2026-07-26 | Exact Delete-Menu Proof Outranks a Raced Generic Postcondition
+
+- Symptom: trusted CDP input opened the exact ChatGPT development-app actions
+  menu, but the trigger helper returned failure while the live DOM already
+  exposed one visible menu with one exact `Delete` item.
+- Durable rule: after binding the exact app route, heading, dialog, and trigger,
+  evaluate the exact scoped Delete-menu proof even when the generic trigger
+  postcondition reports failure. Proceed only when exactly one visible menu
+  contains exactly one exact Delete item; otherwise preserve the hard stop.

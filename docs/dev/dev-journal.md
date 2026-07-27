@@ -41994,3 +41994,16 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Fresh complete inventory proves both old IDs absent and exactly one
   `Corel33t`. Execution stopped at the visible OAuth sign-in gate without
   consent automation or a connector prompt.
+
+## 2026-07-26 | ChatGPT Developer-App Delete Menu Race
+
+- An operator-authorized `apps refresh Corel33t` reached the exact private app
+  management dialog and trusted-clicked its exact `Plugin actions` trigger,
+  but AuraCall reported that the menu had not opened.
+- Read-only live DOM inspection proved the trigger was open and exactly one
+  visible `Delete` menu item existed in one visible menu. No Delete or Create
+  action had yet been selected.
+- The adapter now accepts the stronger exact scoped Delete-menu proof when the
+  generic trigger postcondition races that live DOM state. It still fails
+  closed unless exactly one visible menu contains exactly one exact Delete
+  item, and Delete itself still requires trusted pointer activation.
