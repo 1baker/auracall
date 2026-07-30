@@ -1,7 +1,9 @@
 import os from 'node:os';
+import path from 'node:path';
 import { describe, expect, test, afterEach } from 'vitest';
 import {
   buildChromeFlags,
+  resolveChromeLauncherTempPrefix,
   resolveUserDataBaseDir,
   resolveUserDataDirFlag,
   resolveWslHost,
@@ -29,6 +31,16 @@ describe('chromeLifecycle (package)', () => {
   test('resolveUserDataBaseDir keeps WSL Chrome on the Linux temp root', async () => {
     process.env.WSL_DISTRO_NAME = 'Ubuntu';
     await expect(resolveUserDataBaseDir('/usr/bin/google-chrome')).resolves.toBe(os.tmpdir());
+  });
+
+  test('resolveChromeLauncherTempPrefix keeps WSL launcher bookkeeping out of the working tree', () => {
+    process.env.WSL_DISTRO_NAME = 'Ubuntu';
+    expect(resolveChromeLauncherTempPrefix('/usr/bin/google-chrome')).toBe(
+      path.join(os.tmpdir(), 'auracall-chrome-launcher-'),
+    );
+    expect(
+      resolveChromeLauncherTempPrefix('/mnt/c/Program Files/Google/Chrome/Application/chrome.exe'),
+    ).toBeNull();
   });
 
   test('resolveUserDataDirFlag wraps Windows WSL paths in quotes for chrome.exe', () => {

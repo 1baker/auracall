@@ -1,3 +1,28 @@
+## 2026-07-29 | WSL Chrome Launcher Temp-Path Repair
+
+- Focus: stop Chrome-launcher from creating malformed
+  `undefined:/Users/undefined/AppData/Local/lighthouse.*` bookkeeping trees in
+  the caller's working directory under WSL.
+- Root cause: Chrome-launcher 1.2.1 derives a Windows temp path from `PATH`
+  whenever its own temporary user-data directory is enabled under WSL. A
+  Linux-only `PATH` does not contain the assumed Windows AppData segment, so
+  the dependency interpolates undefined drive and user captures.
+- Repair: all Linux Chrome launches now use AuraCall's direct `Launcher`
+  boundary. When AuraCall deliberately passes `userDataDir: false` to protect
+  its persistent managed profile, it overrides only the launcher's temporary
+  directory allocator with a Linux `os.tmpdir()` prefix.
+- Safety: the actual managed profile remains supplied by AuraCall's explicit
+  `--user-data-dir` flag and is not transferred to Chrome-launcher cleanup
+  ownership.
+- Validation: the focused Chrome lifecycle suite passes 8 tests; full
+  TypeScript typecheck, production build, scoped Biome lint, and plan audit
+  pass. The installed runtime then launched ChatGPT from the LitScout worktree
+  with bookkeeping under `/tmp/auracall-chrome-launcher-svNmub`, created no
+  replacement `undefined:/` entry, returned a read-only app inventory, and
+  stopped cleanly. The temporary proof directory was moved to trash afterward.
+- Delegation receipt: `not_spawned`; the repair has one narrow runtime seam and
+  the active instruction set did not authorize parallel agent work.
+
 ## 2026-07-24 | Live-Follow Startup Memory Fan-Out Repair
 
 - Focus: safely restore all four ChatGPT live-follow tenants under one provider

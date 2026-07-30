@@ -1,11 +1,11 @@
 import { rm, mkdir } from 'node:fs/promises';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, mkdtempSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import CDP from 'chrome-remote-interface';
-import { launch, Launcher, type LaunchedChrome } from 'chrome-launcher';
+import { Launcher, type LaunchedChrome } from 'chrome-launcher';
 import type { BrowserLogger, ResolvedBrowserConfig, ChromeClient } from './types.js';
 import { cleanupStaleProfileState, readDevToolsPort, readChromePid, writeDevToolsActivePort } from './profileState.js';
 import {
@@ -279,23 +279,14 @@ export async function launchChrome(
             requestedPort: requestedLaunchPort,
             logger,
           })
-        : usePatchedLauncher
-          ? await launchWithCustomHost({
-              chromeFlags: effectiveChromeFlags,
-              chromePath: config.chromePath ?? undefined,
-              userDataDir: launcherUserDataDir,
-              host: probeHost ?? '127.0.0.1',
-              requestedPort: debugPort ?? undefined,
-              ignoreDefaultFlags: minimalFlags,
-            })
-          : await launch({
-              chromePath: config.chromePath ?? undefined,
-              chromeFlags: effectiveChromeFlags,
-              userDataDir: launcherUserDataDir,
-              handleSIGINT: false,
-              port: debugPort ?? undefined,
-              ignoreDefaultFlags: minimalFlags,
-            });
+        : await launchWithCustomHost({
+            chromeFlags: effectiveChromeFlags,
+            chromePath: config.chromePath ?? undefined,
+            userDataDir: launcherUserDataDir,
+            host: usePatchedLauncher ? probeHost ?? '127.0.0.1' : null,
+            requestedPort: debugPort ?? undefined,
+            ignoreDefaultFlags: minimalFlags,
+          });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       logger(`Failed to launch Chrome: ${message}`);
@@ -1715,6 +1706,13 @@ async function launchWithCustomHost({
     ignoreDefaultFlags: Boolean(ignoreDefaultFlags),
   });
 
+  const launcherTempPrefix =
+    userDataDir === false ? resolveChromeLauncherTempPrefix(chromePath) : null;
+  if (launcherTempPrefix) {
+    const patched = launcher as unknown as { makeTmpDir: () => string };
+    patched.makeTmpDir = () => mkdtempSync(launcherTempPrefix);
+  }
+
   if (host) {
     const patched = launcher as unknown as { isDebuggerReady?: () => Promise<void>; port?: number };
     patched.isDebuggerReady = function patchedIsDebuggerReady(this: Launcher & { port?: number }): Promise<void> {
@@ -1749,6 +1747,13 @@ async function launchWithCustomHost({
 
 function shouldBypassLauncherUserDataDir(_chromePath?: string): boolean {
   return isWsl();
+}
+
+export function resolveChromeLauncherTempPrefix(chromePath?: string | null): string | null {
+  if (!isWsl() || isWindowsPath(chromePath ?? null)) {
+    return null;
+  }
+  return path.join(os.tmpdir(), 'auracall-chrome-launcher-');
 }
 
 export function resolveUserDataDirFlag(userDataDir: string, chromePath?: string): string {

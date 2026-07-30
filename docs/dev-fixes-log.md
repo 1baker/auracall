@@ -1,3 +1,14 @@
+- 2026-07-29: Chrome-launcher 1.2.1 assumes a WSL `PATH` contains a mounted
+  Windows `Users/<name>/AppData` segment when it allocates its own temporary
+  profile. On a Linux-only path it constructs
+  `undefined:/Users/undefined/AppData/Local/lighthouse.*` relative to the
+  caller's working directory. AuraCall must keep passing `userDataDir: false`
+  under WSL so dependency cleanup cannot delete its persistent managed
+  profile, but it must also instantiate `Launcher` itself and override
+  `makeTmpDir()` with a directory prefixed by
+  `${os.tmpdir()}/auracall-chrome-launcher-`. Keep the real managed profile in
+  AuraCall's explicit final `--user-data-dir` flag.
+
 - 2026-07-25: A zero-candidate materialization selection does not prove the
   refreshed file inventory was empty. Known files may all be correctly
   excluded because terminal local evidence already exists or because they fall

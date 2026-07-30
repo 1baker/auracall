@@ -16,6 +16,10 @@ Terminology for this runbook:
 - Aura-Call uses `--password-store=basic` and `--use-mock-keychain` for WSL
   Chrome managed-browser launches, including visible auth-mode launches, so
   managed browser profiles do not block behind a Linux desktop keyring prompt.
+- Chrome-launcher bookkeeping uses Linux temporary directories named
+  `/tmp/auracall-chrome-launcher-*` (or the active `os.tmpdir()` equivalent).
+  It must never create `undefined:/.../lighthouse.*` inside the directory where
+  AuraCall was invoked.
 
 ## Recommended setup
 0) Quick bootstrap (installs Node 22 + Chrome + repo deps):
