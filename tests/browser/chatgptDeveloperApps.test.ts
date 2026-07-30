@@ -8,6 +8,7 @@ import {
 	isCompleteChatgptInstalledAppsPayloadForTest,
 	markExactChatgptDeveloperAppDeleteMenuForTest,
 	selectChatgptDeveloperAppConnectionModeForTest,
+	summarizeChatgptDeveloperAppCreateSurfaceProbeForTest,
 	waitForChatgptDeveloperAppSettingsForDeleteForTest,
 } from "../../src/browser/providers/chatgptDeveloperApps.js";
 
@@ -101,6 +102,41 @@ describe("deriveChatgptDeveloperAppState", () => {
 			app,
 			handoffUrl: null,
 		});
+	});
+
+	it("preserves a bounded provider alert when create remains on the form", () => {
+		expect(
+			summarizeChatgptDeveloperAppCreateSurfaceProbeForTest({
+				url: "https://chatgpt.com/plugins",
+				createDialogVisible: true,
+				dialogText: "Create app",
+				alertTexts: ["  Unable   to connect to the MCP server.  "],
+			}),
+		).toBe("provider alert remained visible (Unable to connect to the MCP server.)");
+	});
+
+	it("reports a still-open create dialog even without a recognized generic error phrase", () => {
+		expect(
+			summarizeChatgptDeveloperAppCreateSurfaceProbeForTest({
+				url: "https://chatgpt.com/plugins",
+				createDialogVisible: true,
+				dialogText: "Create app Name Connection Authentication Cancel Create",
+				alertTexts: [],
+			}),
+		).toBe(
+			"Create app dialog remained open (Create app Name Connection Authentication Cancel Create)",
+		);
+	});
+
+	it("does not treat a closed post-submit surface as provider rejection evidence", () => {
+		expect(
+			summarizeChatgptDeveloperAppCreateSurfaceProbeForTest({
+				url: "https://chatgpt.com/plugins",
+				createDialogVisible: false,
+				dialogText: null,
+				alertTexts: [],
+			}),
+		).toBeNull();
 	});
 
 	it("targets the current named server URL input rather than a volatile input type", () => {

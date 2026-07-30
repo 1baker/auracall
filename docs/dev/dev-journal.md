@@ -42053,3 +42053,17 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   generic trigger postcondition races that live DOM state. It still fails
   closed unless exactly one visible menu contains exactly one exact Delete
   item, and Delete itself still requires trusted pointer activation.
+
+## 2026-07-29 | ChatGPT Developer-App Create Evidence Repair
+
+- A LitScout-owned disposable office-action packet consumed one trusted Create
+  submission and stopped correctly when no OAuth target or exact installed app
+  appeared. Cleanup restored Developer mode and removed the isolated runtime.
+- Provider-free inspection found an observability gap: the create adapter
+  delayed target observation and retained only the last target census, then
+  navigated away without preserving the current Create dialog or alert.
+- The adapter now starts observing immediately after the trusted submission,
+  accumulates target ID/URL transitions for five seconds, and retains a bounded
+  provider-alert or still-open-dialog explanation before inventory navigation.
+- Focused provider/CLI tests pass (32 tests) and `pnpm run check` passes. No
+  second provider submission was made in this repair slice.

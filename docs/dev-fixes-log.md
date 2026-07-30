@@ -19745,3 +19745,14 @@ browser-stage lifecycle observability, not transcript truncation.
   evaluate the exact scoped Delete-menu proof even when the generic trigger
   postcondition reports failure. Proceed only when exactly one visible menu
   contains exactly one exact Delete item; otherwise preserve the hard stop.
+
+## 2026-07-29 | Developer-App Create Must Preserve Post-Submit Evidence
+
+- Symptom: one trusted ChatGPT Create submission returned no durable OAuth
+  handoff and no installed app, while the adapter waited before its first
+  target observation and navigated away without retaining the Create dialog.
+- Durable rule: begin post-submit observation immediately, accumulate target
+  ID/URL transitions across the bounded window, and preserve a capped visible
+  provider alert or still-open Create dialog before fresh inventory
+  navigation. Continue to fail closed unless a fresh human-action surface or
+  one exact fresh installed app proves the outcome.

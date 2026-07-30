@@ -79,6 +79,13 @@ export interface ChatgptDeveloperAppTargetSnapshot {
 	url: string;
 }
 
+export interface ChatgptDeveloperAppCreateSurfaceProbe {
+	url: string | null;
+	createDialogVisible: boolean;
+	dialogText: string | null;
+	alertTexts: string[];
+}
+
 export interface ChatgptDeveloperAppCreatePostconditionInput {
 	auth: ChatgptDeveloperAppBrowserCreateInput["auth"];
 	appName: string;
@@ -250,13 +257,13 @@ export class ChatgptDeveloperAppBrowserAdapter {
 				`Unable to submit ChatGPT Create app: ${submitted.reason ?? "button unavailable"}.`,
 			);
 		}
-		await wait(750);
-		await assertNoChatgptBlockingSurface(client, "create developer app");
-		const postSubmitTargets = await waitForChatgptDeveloperAppPostSubmitTargets(
+		const postSubmitObservation = await waitForChatgptDeveloperAppPostSubmitObservation(
 			client,
 			input,
 			preSubmitTargets,
 		);
+		await assertNoChatgptBlockingSurface(client, "create developer app");
+		const postSubmitTargets = postSubmitObservation.targets;
 		const navigationPostcondition = classifyChatgptDeveloperAppCreatePostcondition({
 			auth: input.auth,
 			appName: input.name,
@@ -272,6 +279,14 @@ export class ChatgptDeveloperAppBrowserAdapter {
 					"App creation opened a fresh OAuth or human-action surface. Complete only the visible sign-in, MFA, or consent in the managed browser, then rerun apps list.",
 				currentUrl: navigationPostcondition.handoffUrl,
 			};
+		}
+		const rejectedSurface = summarizeChatgptDeveloperAppCreateSurfaceProbe(
+			postSubmitObservation.surface,
+		);
+		if (rejectedSurface) {
+			throw new Error(
+				`ChatGPT developer app ${input.name} submission was not accepted: ${rejectedSurface}.`,
+			);
 		}
 
 		await navigateChatgpt(client, "https://chatgpt.com/plugins");
@@ -528,6 +543,36 @@ export function classifyChatgptDeveloperAppCreatePostconditionForTest(
 	input: ChatgptDeveloperAppCreatePostconditionInput,
 ): ChatgptDeveloperAppCreatePostcondition {
 	return classifyChatgptDeveloperAppCreatePostcondition(input);
+}
+
+export function summarizeChatgptDeveloperAppCreateSurfaceProbeForTest(
+	probe: ChatgptDeveloperAppCreateSurfaceProbe,
+): string | null {
+	return summarizeChatgptDeveloperAppCreateSurfaceProbe(probe);
+}
+
+function summarizeChatgptDeveloperAppCreateSurfaceProbe(
+	probe: ChatgptDeveloperAppCreateSurfaceProbe,
+): string | null {
+	const alerts = probe.alertTexts
+		.map((value) => compactDiagnosticText(value))
+		.filter(Boolean)
+		.slice(0, 3);
+	if (alerts.length > 0) {
+		return `provider alert remained visible (${alerts.join(" | ")})`;
+	}
+	if (!probe.createDialogVisible) return null;
+	const dialogText = compactDiagnosticText(probe.dialogText);
+	return dialogText
+		? `Create app dialog remained open (${dialogText})`
+		: "Create app dialog remained open without a visible provider explanation";
+}
+
+function compactDiagnosticText(value: string | null | undefined): string {
+	return String(value ?? "")
+		.replace(/\s+/g, " ")
+		.trim()
+		.slice(0, 480);
 }
 
 function classifyChatgptDeveloperAppCreatePostcondition(
@@ -1220,27 +1265,80 @@ async function readChatgptDeveloperAppTargetSnapshots(
 	}
 }
 
-async function waitForChatgptDeveloperAppPostSubmitTargets(
+async function readChatgptDeveloperAppCreateSurfaceProbe(
+	client: ChromeClient,
+): Promise<ChatgptDeveloperAppCreateSurfaceProbe> {
+	const result = await client.Runtime.evaluate({
+		expression: `(() => {
+      const visible = (element) => {
+        const rect = element.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0;
+      };
+      const dialog = Array.from(document.querySelectorAll('[role="dialog"]')).find((candidate) => {
+        if (!visible(candidate)) return false;
+        const nameInput = candidate.querySelector('input[aria-label="Name"]');
+        const createButton = Array.from(candidate.querySelectorAll('button')).find(
+          (button) => String(button.textContent || '').trim() === 'Create',
+        );
+        return Boolean(nameInput && createButton);
+      }) || null;
+      const alerts = Array.from(document.querySelectorAll('[role="alert"],[aria-live="assertive"]'))
+        .filter(visible)
+        .map((element) => String(element.textContent || '').replace(/\\s+/g, ' ').trim())
+        .filter(Boolean)
+        .slice(0, 8);
+      return {
+        url: location.href,
+        createDialogVisible: Boolean(dialog),
+        dialogText: dialog
+          ? String(dialog.textContent || '').replace(/\\s+/g, ' ').trim().slice(0, 1200)
+          : null,
+        alertTexts: alerts,
+      };
+    })()`,
+		returnByValue: true,
+	});
+	const probe = isRecord(result.result?.value) ? result.result.value : {};
+	return {
+		url: readString(probe.url),
+		createDialogVisible: readBoolean(probe.createDialogVisible) === true,
+		dialogText: readString(probe.dialogText),
+		alertTexts: readStringArray(probe.alertTexts),
+	};
+}
+
+async function waitForChatgptDeveloperAppPostSubmitObservation(
 	client: ChromeClient,
 	input: ChatgptDeveloperAppBrowserCreateInput,
 	preSubmitTargets: ChatgptDeveloperAppTargetSnapshot[],
-): Promise<ChatgptDeveloperAppTargetSnapshot[]> {
+): Promise<{
+	targets: ChatgptDeveloperAppTargetSnapshot[];
+	surface: ChatgptDeveloperAppCreateSurfaceProbe;
+}> {
 	const deadline = Date.now() + 5_000;
-	let latest: ChatgptDeveloperAppTargetSnapshot[] = [];
+	const observedTargets = new Map(
+		preSubmitTargets.map((target) => [`${target.targetId}\u0000${target.url}`, target]),
+	);
+	let surface = await readChatgptDeveloperAppCreateSurfaceProbe(client);
 	while (Date.now() < deadline) {
-		latest = await readChatgptDeveloperAppTargetSnapshots(client);
+		const latest = await readChatgptDeveloperAppTargetSnapshots(client);
+		for (const target of latest) {
+			observedTargets.set(`${target.targetId}\u0000${target.url}`, target);
+		}
+		surface = await readChatgptDeveloperAppCreateSurfaceProbe(client);
+		const targets = [...observedTargets.values()];
 		const postcondition = classifyChatgptDeveloperAppCreatePostcondition({
 			auth: input.auth,
 			appName: input.name,
 			apps: [],
 			inventoryComplete: false,
 			preSubmitTargets,
-			postSubmitTargets: latest,
+			postSubmitTargets: targets,
 		});
-		if (postcondition.status === "awaiting-human") return latest;
-		await wait(250);
+		if (postcondition.status === "awaiting-human") return { targets, surface };
+		await wait(100);
 	}
-	return latest;
+	return { targets: [...observedTargets.values()], surface };
 }
 
 function wait(ms: number): Promise<void> {

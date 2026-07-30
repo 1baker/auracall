@@ -28,9 +28,13 @@
   - stop immediately on a provider rate-limit, CAPTCHA, or human-verification
     surface
   - OAuth create may report `awaiting-human` only when the post-submit target
-    set contains a fresh OAuth/human-action navigation; without that signal,
-    fresh complete inventory must contain exactly one exact app or create
-    fails closed
+    observation contains a fresh OAuth/human-action navigation; the observer
+    starts immediately after trusted submission, accumulates target URL
+    transitions rather than retaining only its latest poll, and preserves a
+    bounded visible provider alert or still-open Create dialog before
+    navigating away; without a handoff or explicit rejection surface, fresh
+    complete inventory must contain exactly one exact app or create fails
+    closed
   - guarded create refuses an already-installed normalized app name so an old
     app cannot satisfy the post-submit inventory proof
   - a loaded Cloudflare `/challenge-platform/` script is not by itself a

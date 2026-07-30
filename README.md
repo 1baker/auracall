@@ -79,6 +79,9 @@ auracall --profile wsl-chrome-3 apps --target chatgpt test Corel33t \
 # `awaiting-human` is emitted only after AuraCall observes a fresh OAuth or
 # human-action navigation. If no fresh handoff appears, create must be proved
 # by one exact fresh installed-app inventory entry or the command fails closed.
+# The post-submit observer begins immediately, accumulates every target URL it
+# sees, and preserves a bounded visible alert/Create-dialog explanation before
+# navigating away for inventory proof.
 auracall --profile wsl-chrome-3 apps --target chatgpt refresh Corel33t \
   --server-url https://litscout.example.test/mcp \
   --expected-account eric.cochran@soylei.com --yes
