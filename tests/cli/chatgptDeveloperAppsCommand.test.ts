@@ -108,6 +108,83 @@ describe("executeChatgptDeveloperAppOperation", () => {
 		expect(createCalled).toBe(false);
 	});
 
+	it("confirms a false Developer mode observation once before guarded create", async () => {
+		const baseAdapter = createAdapter();
+		let reads = 0;
+		let createCalled = false;
+		const result = await executeChatgptDeveloperAppOperation(
+			{
+				action: "create",
+				name: "LitScout OA exact test",
+				serverUrl: "https://litscout.example.test/mcp",
+				auth: "oauth",
+				connection: "server-url",
+				confirmed: true,
+				expectedAccount: "eric.cochran@soylei.com",
+			},
+			createAdapter({
+				readState: async () => {
+					reads += 1;
+					const state = await baseAdapter.readState();
+					return reads === 1 ? { ...state, developerMode: false } : state;
+				},
+				create: async () => {
+					createCalled = true;
+					return {
+						status: "completed",
+						message: "created",
+					};
+				},
+			}),
+		);
+
+		expect(reads).toBe(2);
+		expect(createCalled).toBe(true);
+		expect(result).toMatchObject({
+			action: "create",
+			status: "completed",
+			state: {
+				developerMode: true,
+				inventoryComplete: true,
+			},
+		});
+	});
+
+	it("fails closed when two Developer mode observations remain false", async () => {
+		const baseAdapter = createAdapter();
+		let reads = 0;
+		let createCalled = false;
+
+		await expect(
+			executeChatgptDeveloperAppOperation(
+				{
+					action: "create",
+					name: "LitScout OA exact test",
+					serverUrl: "https://litscout.example.test/mcp",
+					auth: "oauth",
+					connection: "server-url",
+					confirmed: true,
+					expectedAccount: "eric.cochran@soylei.com",
+				},
+				createAdapter({
+					readState: async () => {
+						reads += 1;
+						return {
+							...(await baseAdapter.readState()),
+							developerMode: false,
+						};
+					},
+					create: async () => {
+						createCalled = true;
+						throw new Error("should not create");
+					},
+				}),
+			),
+		).rejects.toThrow("Developer mode must be enabled");
+		expect(reads).toBe(2);
+		expect(createCalled).toBe(false);
+	});
+
 	it("rejects create when the exact normalized app name already exists", async () => {
 		let createCalled = false;
 		await expect(

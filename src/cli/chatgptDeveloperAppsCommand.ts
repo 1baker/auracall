@@ -112,7 +112,7 @@ export async function executeChatgptDeveloperAppOperation(
 	input: ChatgptDeveloperAppOperationInput,
 	adapter: ChatgptDeveloperAppAdapter,
 ): Promise<ChatgptDeveloperAppOperationResult> {
-	const state = await adapter.readState();
+	let state = await adapter.readState();
 	if (input.action === "list") {
 		return {
 			action: "list",
@@ -123,6 +123,12 @@ export async function executeChatgptDeveloperAppOperation(
 	const requiresConfirmation = input.action !== "test" || input.submit;
 	if (requiresConfirmation && !input.confirmed) {
 		throw new Error(`ChatGPT developer-app ${input.action} requires --yes.`);
+	}
+	if (input.action === "create" && !state.developerMode) {
+		// Settings navigation can briefly expose a stale switch value. Confirm
+		// once through the same complete account/inventory read before either
+		// rejecting or opening the provider create surface.
+		state = await adapter.readState();
 	}
 	const expectedAccount = normalizeAccount(input.expectedAccount);
 	const actualAccount = normalizeAccount(state.account.email);
