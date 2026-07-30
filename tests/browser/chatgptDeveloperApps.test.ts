@@ -3,6 +3,7 @@ import { normalizeChatgptInstalledAppProbesForTest } from "../../src/browser/pro
 import {
 	CHATGPT_DEVELOPER_APP_SERVER_URL_SELECTOR,
 	chatgptDeveloperAppSelectionMatchesForTest,
+	classifyChatgptDeveloperAppCreatePostconditionForTest,
 	deriveChatgptDeveloperAppState,
 	isCompleteChatgptInstalledAppsPayloadForTest,
 	markExactChatgptDeveloperAppDeleteMenuForTest,
@@ -11,6 +12,97 @@ import {
 } from "../../src/browser/providers/chatgptDeveloperApps.js";
 
 describe("deriveChatgptDeveloperAppState", () => {
+	it("does not claim an OAuth human gate when no app or fresh handoff exists", () => {
+		expect(
+			classifyChatgptDeveloperAppCreatePostconditionForTest({
+				auth: "oauth",
+				appName: "LitScout OA exact test",
+				apps: [],
+				inventoryComplete: true,
+				preSubmitTargets: [
+					{
+						targetId: "chatgpt-apps",
+						type: "page",
+						url: "https://chatgpt.com/plugins",
+					},
+				],
+				postSubmitTargets: [
+					{
+						targetId: "chatgpt-apps",
+						type: "page",
+						url: "https://chatgpt.com/plugins",
+					},
+				],
+			}),
+		).toEqual({
+			status: "unconfirmed",
+			app: null,
+			handoffUrl: null,
+		});
+	});
+
+	it("reports awaiting-human only for a fresh OAuth navigation target", () => {
+		expect(
+			classifyChatgptDeveloperAppCreatePostconditionForTest({
+				auth: "oauth",
+				appName: "LitScout OA exact test",
+				apps: [],
+				inventoryComplete: false,
+				preSubmitTargets: [
+					{
+						targetId: "chatgpt-apps",
+						type: "page",
+						url: "https://chatgpt.com/plugins",
+					},
+				],
+				postSubmitTargets: [
+					{
+						targetId: "chatgpt-apps",
+						type: "page",
+						url: "https://isolated-litscout.example.test/oauth/authorize",
+					},
+				],
+			}),
+		).toEqual({
+			status: "awaiting-human",
+			app: null,
+			handoffUrl: "https://isolated-litscout.example.test/oauth/authorize",
+		});
+	});
+
+	it("reports completion only for one exact app in fresh complete inventory", () => {
+		const app = {
+			pluginId: "plugin_asdk_app_litscout_oa",
+			appIds: ["asdk_app_litscout_oa"],
+			name: "LitScout OA exact test",
+			status: "ENABLED",
+			enabled: true,
+			authStatus: null,
+			reviewStatus: "development",
+			authorization: "ON_INSTALL",
+			endpoint: null,
+			versionId: "1.0.0",
+			scope: "USER",
+			discoverability: "PRIVATE",
+			creatorName: "Eric Cochran",
+			description: "Disposable LitScout proof",
+		};
+		expect(
+			classifyChatgptDeveloperAppCreatePostconditionForTest({
+				auth: "oauth",
+				appName: app.name,
+				apps: [app],
+				inventoryComplete: true,
+				preSubmitTargets: [],
+				postSubmitTargets: [],
+			}),
+		).toEqual({
+			status: "completed",
+			app,
+			handoffUrl: null,
+		});
+	});
+
 	it("targets the current named server URL input rather than a volatile input type", () => {
 		expect(CHATGPT_DEVELOPER_APP_SERVER_URL_SELECTOR).toBe(
 			'[role="dialog"] input[name="custom-connector-url"]',

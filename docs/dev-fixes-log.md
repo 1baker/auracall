@@ -1,3 +1,11 @@
+- 2026-07-29: ChatGPT developer-app OAuth create cannot infer a human gate from
+  the requested auth mode alone. Snapshot page targets before the trusted
+  Create click, require a fresh changed/new OAuth or human-action navigation
+  for `awaiting-human`, and otherwise require one exact app in fresh complete
+  inventory. If neither postcondition exists, fail closed. Reject a
+  same-normalized-name create before mutation so an old app cannot masquerade
+  as the new inventory result.
+
 - 2026-07-29: Chrome-launcher 1.2.1 assumes a WSL `PATH` contains a mounted
   Windows `Users/<name>/AppData` segment when it allocates its own temporary
   profile. On a Linux-only path it constructs

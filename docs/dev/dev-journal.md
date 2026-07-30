@@ -1,3 +1,24 @@
+## 2026-07-29 | ChatGPT Developer-App Create Postcondition Repair
+
+- Focus: remove the false `awaiting-human` terminal state observed by LitScout
+  Plan 0286 when no temporary app or OAuth surface existed.
+- Root cause: the browser adapter returned `awaiting-human` for every OAuth
+  create immediately after the trusted Create click, without a post-submit app
+  or navigation readback.
+- Repair: snapshot page targets before submission. A fresh changed/new external
+  or ChatGPT auth-path target proves the human-action handoff. Otherwise reload
+  installed-app inventory and require one exact app; neither outcome throws a
+  fail-closed diagnostic. Create also rejects an already-installed normalized
+  name before mutation.
+- Safety: provider-free development only; no create, refresh, delete,
+  uninstall, OAuth, connector prompt, or LitScout canonical/private effect.
+- Validation: focused browser and CLI suites pass 29 tests; `pnpm run check`,
+  `pnpm run build`, scoped Biome checks, `pnpm run plans:audit`, and
+  `git diff --check` pass. The full non-live suite passes 2,659 tests across
+  302 files with 65 opt-in tests skipped.
+- Delegation receipt: `not_spawned`; proactive subagents are disabled and this
+  cross-repo repair shares one critical path.
+
 ## 2026-07-29 | WSL Chrome Launcher Temp-Path Repair
 
 - Focus: stop Chrome-launcher from creating malformed

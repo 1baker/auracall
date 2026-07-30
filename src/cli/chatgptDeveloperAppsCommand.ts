@@ -141,6 +141,7 @@ export async function executeChatgptDeveloperAppOperation(
 			throw new Error("ChatGPT Developer mode must be enabled before creating an app.");
 		}
 		const createInput = normalizeCreateInput(input);
+		assertNoExistingAppName(state.apps, createInput.name);
 		const outcome = await adapter.create(createInput);
 		return {
 			action: "create",
@@ -394,6 +395,15 @@ function assertUniqueReplacementName(
 	if (sameName.length !== 1 || sameName[0].pluginId !== target.pluginId) {
 		throw new Error(
 			`ChatGPT developer app ${target.name} cannot be replaced because more than one installed app has the same normalized name.`,
+		);
+	}
+}
+
+function assertNoExistingAppName(apps: readonly ChatgptDeveloperApp[], name: string): void {
+	const existing = apps.find((app) => normalizeAccount(app.name) === normalizeAccount(name));
+	if (existing) {
+		throw new Error(
+			`ChatGPT already has one installed app named ${existing.name}; refusing to create a duplicate.`,
 		);
 	}
 }

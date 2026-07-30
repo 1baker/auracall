@@ -27,6 +27,12 @@
     apps response must never be interpreted as proof that zero apps exist
   - stop immediately on a provider rate-limit, CAPTCHA, or human-verification
     surface
+  - OAuth create may report `awaiting-human` only when the post-submit target
+    set contains a fresh OAuth/human-action navigation; without that signal,
+    fresh complete inventory must contain exactly one exact app or create
+    fails closed
+  - guarded create refuses an already-installed normalized app name so an old
+    app cannot satisfy the post-submit inventory proof
   - a loaded Cloudflare `/challenge-platform/` script is not by itself a
     human-verification surface; current healthy ChatGPT composers retain that
     script, so challenge detection must require the `Just a moment...` title

@@ -73,6 +73,38 @@ export interface ChatgptDeveloperAppBrowserCreateInput {
 	connection: "server-url" | "tunnel";
 }
 
+export interface ChatgptDeveloperAppTargetSnapshot {
+	targetId: string;
+	type: string;
+	url: string;
+}
+
+export interface ChatgptDeveloperAppCreatePostconditionInput {
+	auth: ChatgptDeveloperAppBrowserCreateInput["auth"];
+	appName: string;
+	apps: ChatgptDeveloperAppBrowserEntry[];
+	inventoryComplete: boolean;
+	preSubmitTargets: ChatgptDeveloperAppTargetSnapshot[];
+	postSubmitTargets: ChatgptDeveloperAppTargetSnapshot[];
+}
+
+export type ChatgptDeveloperAppCreatePostcondition =
+	| {
+			status: "awaiting-human";
+			app: ChatgptDeveloperAppBrowserEntry | null;
+			handoffUrl: string;
+	  }
+	| {
+			status: "completed";
+			app: ChatgptDeveloperAppBrowserEntry;
+			handoffUrl: null;
+	  }
+	| {
+			status: "unconfirmed";
+			app: null;
+			handoffUrl: null;
+	  };
+
 export const CHATGPT_DEVELOPER_APP_SERVER_URL_SELECTOR =
 	'[role="dialog"] input[name="custom-connector-url"]';
 
@@ -206,6 +238,7 @@ export class ChatgptDeveloperAppBrowserAdapter {
 		if (!createReady.ok) {
 			throw new Error("ChatGPT Create app did not become enabled after form validation.");
 		}
+		const preSubmitTargets = await readChatgptDeveloperAppTargetSnapshots(client);
 		const submitted = await pressButtonWithTrustedPointer(client, {
 			rootSelectors: ['[role="dialog"]'],
 			match: { exact: ["create"] },
@@ -219,19 +252,54 @@ export class ChatgptDeveloperAppBrowserAdapter {
 		}
 		await wait(750);
 		await assertNoChatgptBlockingSurface(client, "create developer app");
-		const currentUrl = await readCurrentUrl(client);
-		if (input.auth === "oauth") {
+		const postSubmitTargets = await waitForChatgptDeveloperAppPostSubmitTargets(
+			client,
+			input,
+			preSubmitTargets,
+		);
+		const navigationPostcondition = classifyChatgptDeveloperAppCreatePostcondition({
+			auth: input.auth,
+			appName: input.name,
+			apps: [],
+			inventoryComplete: false,
+			preSubmitTargets,
+			postSubmitTargets,
+		});
+		if (navigationPostcondition.status === "awaiting-human") {
 			return {
 				status: "awaiting-human",
 				message:
-					"App creation was submitted. Complete any OAuth sign-in, MFA, or consent shown in the managed browser, then rerun apps list.",
-				currentUrl,
+					"App creation opened a fresh OAuth or human-action surface. Complete only the visible sign-in, MFA, or consent in the managed browser, then rerun apps list.",
+				currentUrl: navigationPostcondition.handoffUrl,
 			};
+		}
+
+		await navigateChatgpt(client, "https://chatgpt.com/plugins");
+		const featureSignature = await captureChatgptDeveloperAppFeatureSignature(client);
+		const postCreateState = deriveChatgptDeveloperAppState({
+			identity: null,
+			developerMode: true,
+			featureSignature,
+			observedAt: new Date().toISOString(),
+		});
+		const inventoryPostcondition = classifyChatgptDeveloperAppCreatePostcondition({
+			auth: input.auth,
+			appName: input.name,
+			apps: postCreateState.apps,
+			inventoryComplete: postCreateState.inventoryComplete,
+			preSubmitTargets,
+			postSubmitTargets,
+		});
+		if (inventoryPostcondition.status !== "completed") {
+			throw new Error(
+				`ChatGPT developer app ${input.name} creation is unconfirmed: no fresh OAuth or human-action surface appeared and fresh complete inventory did not contain exactly one exact app.`,
+			);
 		}
 		return {
 			status: "completed",
-			message: `${input.name} creation submitted.`,
-			currentUrl,
+			message: `${input.name} creation confirmed by fresh installed-app inventory.`,
+			currentUrl: await readCurrentUrl(client),
+			app: inventoryPostcondition.app,
 		};
 	}
 
@@ -454,6 +522,63 @@ export function deriveChatgptDeveloperAppState(
 		apps,
 		observedAt: input.observedAt,
 	};
+}
+
+export function classifyChatgptDeveloperAppCreatePostconditionForTest(
+	input: ChatgptDeveloperAppCreatePostconditionInput,
+): ChatgptDeveloperAppCreatePostcondition {
+	return classifyChatgptDeveloperAppCreatePostcondition(input);
+}
+
+function classifyChatgptDeveloperAppCreatePostcondition(
+	input: ChatgptDeveloperAppCreatePostconditionInput,
+): ChatgptDeveloperAppCreatePostcondition {
+	const exactApps = input.inventoryComplete
+		? input.apps.filter((app) => normalize(app.name) === normalize(input.appName))
+		: [];
+	const exactApp = exactApps.length === 1 ? exactApps[0] : null;
+	if (input.auth === "oauth") {
+		const baseline = new Map(input.preSubmitTargets.map((target) => [target.targetId, target.url]));
+		const handoff = input.postSubmitTargets.find((target) => {
+			if (target.type !== "page" || !isHttpUrl(target.url)) return false;
+			if (baseline.get(target.targetId) === target.url) return false;
+			return isChatgptDeveloperAppHumanActionUrl(target.url);
+		});
+		if (handoff) {
+			return {
+				status: "awaiting-human",
+				app: exactApp,
+				handoffUrl: handoff.url,
+			};
+		}
+	}
+	if (exactApp) {
+		return {
+			status: "completed",
+			app: exactApp,
+			handoffUrl: null,
+		};
+	}
+	return {
+		status: "unconfirmed",
+		app: null,
+		handoffUrl: null,
+	};
+}
+
+function isHttpUrl(value: string): boolean {
+	try {
+		const url = new URL(value);
+		return url.protocol === "http:" || url.protocol === "https:";
+	} catch {
+		return false;
+	}
+}
+
+function isChatgptDeveloperAppHumanActionUrl(value: string): boolean {
+	const url = new URL(value);
+	if (url.hostname !== "chatgpt.com") return true;
+	return /(?:oauth|authorize|consent|login|signin|mfa|verify)/i.test(url.pathname);
 }
 
 function parseRecord(value: string | null | undefined): Record<string, unknown> | null {
@@ -1075,6 +1200,47 @@ async function readCurrentUrl(client: ChromeClient): Promise<string | null> {
 		returnByValue: true,
 	});
 	return readString(result.result?.value);
+}
+
+async function readChatgptDeveloperAppTargetSnapshots(
+	client: ChromeClient,
+): Promise<ChatgptDeveloperAppTargetSnapshot[]> {
+	try {
+		const result = await client.Target.getTargets();
+		return result.targetInfos
+			.filter((target) => target.type === "page")
+			.map((target) => ({
+				targetId: target.targetId,
+				type: target.type,
+				url: target.url,
+			}));
+	} catch {
+		const currentUrl = await readCurrentUrl(client);
+		return currentUrl ? [{ targetId: "current-page", type: "page", url: currentUrl }] : [];
+	}
+}
+
+async function waitForChatgptDeveloperAppPostSubmitTargets(
+	client: ChromeClient,
+	input: ChatgptDeveloperAppBrowserCreateInput,
+	preSubmitTargets: ChatgptDeveloperAppTargetSnapshot[],
+): Promise<ChatgptDeveloperAppTargetSnapshot[]> {
+	const deadline = Date.now() + 5_000;
+	let latest: ChatgptDeveloperAppTargetSnapshot[] = [];
+	while (Date.now() < deadline) {
+		latest = await readChatgptDeveloperAppTargetSnapshots(client);
+		const postcondition = classifyChatgptDeveloperAppCreatePostcondition({
+			auth: input.auth,
+			appName: input.name,
+			apps: [],
+			inventoryComplete: false,
+			preSubmitTargets,
+			postSubmitTargets: latest,
+		});
+		if (postcondition.status === "awaiting-human") return latest;
+		await wait(250);
+	}
+	return latest;
 }
 
 function wait(ms: number): Promise<void> {

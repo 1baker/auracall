@@ -108,6 +108,30 @@ describe("executeChatgptDeveloperAppOperation", () => {
 		expect(createCalled).toBe(false);
 	});
 
+	it("rejects create when the exact normalized app name already exists", async () => {
+		let createCalled = false;
+		await expect(
+			executeChatgptDeveloperAppOperation(
+				{
+					action: "create",
+					name: " corel33t ",
+					serverUrl: "https://litscout.example.test/mcp",
+					auth: "oauth",
+					connection: "server-url",
+					confirmed: true,
+					expectedAccount: "eric.cochran@soylei.com",
+				},
+				createAdapter({
+					create: async () => {
+						createCalled = true;
+						throw new Error("should not create");
+					},
+				}),
+			),
+		).rejects.toThrow("already has one installed app named Corel33t");
+		expect(createCalled).toBe(false);
+	});
+
 	it("fails closed when the live ChatGPT account does not match the expected account", async () => {
 		await expect(
 			executeChatgptDeveloperAppOperation(

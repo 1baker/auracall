@@ -76,6 +76,9 @@ auracall --profile wsl-chrome-3 apps --target chatgpt test Corel33t \
   --expected-account eric.cochran@soylei.com --json
 # Create, refresh, submitted tests, and uninstall require --expected-account
 # plus --yes. OAuth, MFA, consent, CAPTCHA, and verification remain human gates.
+# `awaiting-human` is emitted only after AuraCall observes a fresh OAuth or
+# human-action navigation. If no fresh handoff appears, create must be proved
+# by one exact fresh installed-app inventory entry or the command fails closed.
 auracall --profile wsl-chrome-3 apps --target chatgpt refresh Corel33t \
   --server-url https://litscout.example.test/mcp \
   --expected-account eric.cochran@soylei.com --yes
