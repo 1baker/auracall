@@ -2,17 +2,25 @@
 
 ## Turn 374 | 2026-07-31
 
-- Active Plan 0178:
+- Closed Plan 0178 with follow-up required:
   `docs/dev/plans/0178-2026-07-31-repaired-default-live-follow-single-pass-proof.md`.
-- Operator authorized exactly one installed `run_one_pass` on default ChatGPT
-  completion `acctmirror_completion_7c207690-de8a-40a4-82b8-61edd830a25c`.
+- Exactly one installed `run_one_pass` ran on default ChatGPT completion
+  `acctmirror_completion_7c207690-de8a-40a4-82b8-61edd830a25c`.
 - Baseline: API PID `1032`; installed/source repaired bundles byte-identical;
   scheduler and all six completions paused; default pass 36 with null force
   marker and provider guard.
-- Pass ceiling is 37. No scheduler resume, second pass, browser probe, guard
-  clear, config change, or retry is authorized. Any provider guard,
-  rate-limit, verification page, unexpected lane work, or second collection is
-  a hard stop followed by preservation/restoration of paused posture.
+- The collector advanced 36 -> 37, completed identity plus four paced detail
+  reads, used 5/8 active interactions, and produced no guard/rate-limit signal.
+- Job `hmj_6323dddba5f34adc9f6871b404920456` truthfully settled failed with
+  `materialized=0 skipped=1 failed=6`. The repaired forced lifecycle retained
+  its marker through terminal, cleared it, blocked with
+  `account_mirror_materialization_failed`, and released ownership without a
+  second collector pass.
+- All six failed entries still report `chatgpt_account_session_drift` from the
+  separate materialization browser-auth preflight despite successful collector
+  identity. Scheduler and the five unrelated completions remain paused; the
+  default is terminal-blocked at pass 37. Do not retry before a provider-free
+  repair of that distinct materialization identity input path.
 
 ## Turn 373 | 2026-07-31
 

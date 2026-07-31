@@ -42164,3 +42164,22 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - The packet permits one `run_one_pass` with pass ceiling 37, durable status
   observation, and at most one terminal safety pause. It forbids a second
   pass, scheduler resume, browser probe, guard clear, config change, or retry.
+- The sole pass ran from `17:24:47Z` to collector completion at `17:32:43Z`,
+  advanced 36 -> 37, completed identity plus four paced detail reads, used 5/8
+  active interactions, and recorded no rate-limit or provider guard.
+- Materialization job `hmj_6323dddba5f34adc9f6871b404920456`
+  settled failed with 0 materialized, 1 skipped, and 6 failed. The repaired
+  completion lifecycle retained force ceiling 37 while the job was active,
+  then cleared it, blocked with `account_mirror_materialization_failed`, and
+  released provider work without another collection.
+- The full receipt shows the remaining fault is still identity-related but in
+  a distinct seam: every transfer's materialization browser-auth preflight
+  rejects qualified service account
+  `ecochran76@gmail.com|plan=team|structure=workspace` against the same detected
+  email, although collector identity succeeded minutes earlier.
+- CodeGraph routes the materialization seam through
+  `materializeConversationTarget`, provider list-option construction, LLM
+  service transfer methods, and ChatGPT expected-identity assertion. No retry
+  is authorized until that exact input shape is reproduced and repaired
+  provider-free. Scheduler and five unrelated completions remain paused; the
+  default is safely blocked at pass 37.

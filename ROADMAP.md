@@ -15,11 +15,13 @@ Lane: P01
   success or failure. Commit `6d8fddcb` is pushed and installed byte-identically;
   all live provider work remains paused.
 
-- Active repaired default live-follow single-pass proof:
+- Completed repaired default live-follow single-pass proof, with follow-up required:
   [docs/dev/plans/0178-2026-07-31-repaired-default-live-follow-single-pass-proof.md](docs/dev/plans/0178-2026-07-31-repaired-default-live-follow-single-pass-proof.md)
-  Exactly one installed default-ChatGPT pass may advance 36 -> 37 to prove
-  qualifier omission and forced materialization settlement under the live path.
-  Scheduler and all unrelated completions remain paused; no retry is allowed.
+  One installed default-ChatGPT pass advanced 36 -> 37 with 5/8 interactions
+  and no guard. Forced materialization ownership now works live: the failed job
+  blocked the completion before another pass. The distinct materialization
+  browser-auth preflight still rejects the same-email qualified binding, so
+  provider work remains stopped pending a provider-free follow-up.
 
 - Completed default live-follow single-pass proof, with follow-up required:
   [docs/dev/plans/0176-2026-07-31-default-live-follow-single-pass-proof.md](docs/dev/plans/0176-2026-07-31-default-live-follow-single-pass-proof.md)
