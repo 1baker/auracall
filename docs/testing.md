@@ -590,8 +590,11 @@
         `{"action":"pause|resume|run_one_pass|cancel"}`; paused operations stay
         discoverable in active readback, resume relaunches the service-owned
         loop, `run_one_pass` wakes one bounded live-follow pass while preserving
-        safety gates, and cancel records terminal `cancelled` without touching
-        provider browsers
+        safety gates, retains ownership through any completion-owned
+        materialization terminal, and blocks on an all-failed result before
+        returning; successful/skipped materialization settles before the forced
+        pass returns idle, and cancel records terminal `cancelled` without
+        touching provider browsers
       - the regular status preflight path accepts
         `POST /status` body
         `{"accountMirrorCompletion":{"id":"<completion_id>","action":"pause|resume|run_one_pass|cancel"}}`

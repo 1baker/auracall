@@ -51,17 +51,17 @@ completion-owned materialization failure before returning idle.
 
 ## Acceptance Criteria
 
-- [ ] A deterministic public identity-preflight regression fails before the
+- [x] A deterministic public identity-preflight regression fails before the
   repair for same-email identity with absent detected qualifiers.
-- [ ] Same-email identity with absent detected qualifiers passes after the
+- [x] Same-email identity with absent detected qualifiers passes after the
   repair, while explicit plan/structure conflict remains drift.
-- [ ] A deterministic completion-service regression fails before the repair
+- [x] A deterministic completion-service regression fails before the repair
   because `run_one_pass` returns idle before its owned failed materialization
   is applied.
-- [ ] The forced pass waits for the owned materialization terminal and returns
+- [x] The forced pass waits for the owned materialization terminal and returns
   `blocked` with `account_mirror_materialization_failed`, without a second
   collector refresh.
-- [ ] Focused tests, adjacent tests, typecheck, production build, scoped lint,
+- [x] Focused tests, adjacent tests, typecheck, production build, scoped lint,
   plan audit, and diff hygiene pass.
 - [ ] Installed runtime is promoted only while scheduler and all completion
   lanes remain paused; installed/source hashes and post-restart paused status
@@ -96,3 +96,23 @@ provider lanes remain paused.
 - `next_action_or_stop_reason`: commit the provider-free authority packet,
   create one public regression at a time, record red evidence, and make the
   minimum green repair without touching live provider state.
+
+## Checkpoint 2
+
+- `plan_version`: 1
+- `state_transition`: regression-ready -> integrated-validation
+- `progress_classification`: substantive
+- `evidence`: identity regression failed 1/12 before repair and passes 12/12;
+  forced-pass failure regression timed out before repair and passes after the
+  completion retains ownership through terminal materialization. Combined
+  identity/completion suites pass 74/74; adjacent ChatGPT service and HTTP
+  response-server suites pass 218/218. Integrated relevant tests pass 292/292;
+  typecheck, production build, four-file scoped Biome lint, 177-plan audit with
+  zero errors, and diff hygiene pass. Biome formatter output remains excluded
+  because two touched legacy files intentionally retain their existing
+  single-quote/space style; lint is clean and no formatting-only rewrite was
+  mixed into this repair.
+- `subagent_status`: not_spawned
+- `next_action_or_stop_reason`: run typecheck, production build, scoped lint,
+  full relevant tests, plan audit, and diff hygiene; then commit/push before a
+  paused-only installed-runtime promotion.

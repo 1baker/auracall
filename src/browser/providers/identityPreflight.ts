@@ -133,7 +133,9 @@ function serviceAccountQualifiersMatch(
             : key === 'structure'
               ? actual.accountStructure
               : null;
-    if (normalizeIdentityComparable(actualValue) !== expected) return false;
+    const actualComparable = normalizeIdentityComparable(actualValue);
+    if ((key === 'plan' || key === 'structure') && !actualComparable) continue;
+    if (actualComparable !== expected) return false;
   }
   return true;
 }
@@ -164,11 +166,13 @@ function identitiesMatch(expected: ProviderUserIdentity, actual: ProviderUserIde
   const expectedAccountLevel = normalizeIdentityComparable(expected.accountLevel);
   if (expectedAccountLevel && expectedAccountLevel !== normalizeIdentityComparable(actual.accountLevel)) return false;
   const expectedAccountPlanType = normalizeIdentityComparable(expected.accountPlanType);
-  if (expectedAccountPlanType && expectedAccountPlanType !== normalizeIdentityComparable(actual.accountPlanType)) {
+  const actualAccountPlanType = normalizeIdentityComparable(actual.accountPlanType);
+  if (expectedAccountPlanType && actualAccountPlanType && expectedAccountPlanType !== actualAccountPlanType) {
     return false;
   }
   const expectedAccountStructure = normalizeIdentityComparable(expected.accountStructure);
-  if (expectedAccountStructure && expectedAccountStructure !== normalizeIdentityComparable(actual.accountStructure)) {
+  const actualAccountStructure = normalizeIdentityComparable(actual.accountStructure);
+  if (expectedAccountStructure && actualAccountStructure && expectedAccountStructure !== actualAccountStructure) {
     return false;
   }
   return Boolean(

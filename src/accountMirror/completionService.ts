@@ -457,6 +457,7 @@ export function createAccountMirrorCompletionService(input: {
 							status: "blocked",
 							completedAt: now().toISOString(),
 							nextAttemptAt: null,
+							forceRunUntilPassCount: null,
 							error: {
 								message,
 								code: "account_mirror_materialization_failed",
@@ -470,6 +471,23 @@ export function createAccountMirrorCompletionService(input: {
 						});
 						return blocked;
 					}
+				}
+				if (
+					operation.mode === "live_follow" &&
+					isTerminalMaterializationStatus(operation.materializationCursor?.jobStatus ?? "") &&
+					operation.materializationCursor?.providerWorkSettledAt &&
+					operation.forceRunUntilPassCount !== null &&
+					operation.forceRunUntilPassCount !== undefined &&
+					operation.passCount >= operation.forceRunUntilPassCount
+				) {
+					releaseProviderWorkLease(id, "forced-pass materialization settled");
+					update(id, {
+						status: "idle_waiting",
+						nextAttemptAt: null,
+						forceRunUntilPassCount: null,
+						error: null,
+					});
+					return;
 				}
 				if (
 					operation.mode === "live_follow" &&
@@ -641,12 +659,7 @@ export function createAccountMirrorCompletionService(input: {
 							refreshOperation.forceRunUntilPassCount !== undefined &&
 							nextPassCount >= refreshOperation.forceRunUntilPassCount
 						) {
-							update(id, {
-								status: "idle_waiting",
-								nextAttemptAt: null,
-								forceRunUntilPassCount: null,
-							});
-							return;
+							continue;
 						}
 						const nextAttemptAt = new Date(
 							now().getTime() + Math.max(1_000, phaseStatusEntry?.limits.minIntervalMs ?? 60_000),
@@ -774,6 +787,7 @@ export function createAccountMirrorCompletionService(input: {
 					refreshOperation.forceRunUntilPassCount !== undefined &&
 					nextPassCount >= refreshOperation.forceRunUntilPassCount
 				) {
+					if (queuedCompletionMaterialization) continue;
 					await input.registry.refreshPersistentState?.({
 						provider: refreshOperation.provider,
 						runtimeProfileId: refreshOperation.runtimeProfileId,

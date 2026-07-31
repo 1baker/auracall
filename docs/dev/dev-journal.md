@@ -42128,3 +42128,14 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   through terminal failed materialization without another collector refresh.
 - Scheduler and all six completions remain paused; this implementation slice
   permits no browser/provider work or runtime account/config mutation.
+- Two public-seam tracer bullets reproduced the defects provider-free. Identity
+  preflight returned `chatgpt_account_session_drift` for a same-email session
+  with omitted plan/structure values; forced completion control timed out
+  waiting for `blocked` because its queued job was never read.
+- Identity comparison now treats only absent detected `plan`/`structure` as
+  unknown while preserving explicit conflicts and strict primary account keys.
+  Forced passes retain their force marker through completion-owned
+  materialization settlement, clear it on terminal success/failure, and never
+  issue a second collector refresh.
+- Focused identity/completion suites pass 74/74. Adjacent ChatGPT service and
+  HTTP response-server suites pass 218/218.

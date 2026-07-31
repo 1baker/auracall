@@ -19789,3 +19789,10 @@ browser-stage lifecycle observability, not transcript truncation.
   qualifier evidence distinctly from a contradictory qualifier before
   declaring `account_session_drift`; retain strict mismatch behavior when both
   sides provide conflicting values.
+- Repair: provider identity preflight now treats omitted detected `plan` and
+  `structure` as unknown only after the primary account key matches; explicit
+  detected conflicts still fail. Completion `run_one_pass` keeps its force
+  marker while an owned materialization is queued/running, hydrates terminal
+  state inside the same lifecycle, and either returns idle after success/skip
+  or blocks with `account_mirror_materialization_failed` after failure without
+  another collector refresh.

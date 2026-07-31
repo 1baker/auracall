@@ -144,6 +144,22 @@ describe('provider identity preflight', () => {
     });
   });
 
+  test('accepts a same-email ChatGPT account when detected qualifier evidence is absent', () => {
+    expect(checkProviderIdentityPreflight({
+      providerId: 'chatgpt',
+      actualIdentity: {
+        email: 'operator@example.com',
+        source: 'provider-app',
+      },
+      expectedIdentity: {
+        email: 'operator@example.com',
+        accountPlanType: 'team',
+        accountStructure: 'workspace',
+      },
+      expectedServiceAccountId: 'service-account:chatgpt:operator@example.com|plan=team|structure=workspace',
+    })).toMatchObject({ ok: true, reason: null });
+  });
+
   test('checks account-id service-account bindings when account id is the configured key', () => {
     expect(checkProviderIdentityPreflight({
       providerId: 'chatgpt',

@@ -2223,7 +2223,7 @@ describe("account mirror completion service", () => {
 		service.control({ id: "acctmirror_complete_ledger_shortcut", action: "cancel" });
 	});
 
-	test("ends a forced pass after complete-ledger materialization is queued", async () => {
+	test("settles complete-ledger materialization before ending a forced pass", async () => {
 		const createJob = vi.fn(async () => ({
 			object: "history_materialization_job_create_result" as const,
 			generatedAt: "2026-04-30T12:00:02.000Z",
@@ -2235,6 +2235,16 @@ describe("account mirror completion service", () => {
 			},
 		}));
 		const requestRefresh = vi.fn(async () => createRefreshResult());
+		const readJob = vi.fn(async () => ({
+			id: "hmj_forced_complete_ledger_1",
+			status: "succeeded",
+			completedAt: "2026-04-30T12:00:03.000Z",
+			result: {
+				metrics: { conversations: 1, materialized: 1, skipped: 0, failed: 0 },
+				entries: [{ status: "materialized", checksumSha256: "abc123" }],
+				message: "History reconciliation materialized 1 asset from 1 conversation.",
+			},
+		}));
 		const registry = createAccountMirrorStatusRegistry({
 			config,
 			now: () => new Date("2026-04-30T12:00:00.000Z"),
@@ -2261,7 +2271,7 @@ describe("account mirror completion service", () => {
 		const service = createAccountMirrorCompletionService({
 			registry,
 			refreshService: { requestRefresh },
-			historyMaterializationService: { createJob },
+			historyMaterializationService: { createJob, readJob },
 			initialOperations: [
 				{
 					object: "account_mirror_completion",
@@ -2288,9 +2298,14 @@ describe("account mirror completion service", () => {
 		});
 
 		service.control({ id: "acctmirror_forced_complete_ledger", action: "run_one_pass" });
-		await waitFor(() => createJob.mock.calls.length === 1);
+		await waitFor(
+			() =>
+				service.read("acctmirror_forced_complete_ledger")?.materializationCursor?.jobStatus ===
+				"succeeded",
+		);
 
 		expect(requestRefresh).not.toHaveBeenCalled();
+		expect(readJob).toHaveBeenCalledTimes(1);
 		expect(service.read("acctmirror_forced_complete_ledger")).toMatchObject({
 			status: "idle_waiting",
 			passCount: 1,
@@ -2298,7 +2313,106 @@ describe("account mirror completion service", () => {
 			nextAttemptAt: null,
 			materializationCursor: {
 				jobId: "hmj_forced_complete_ledger_1",
-				jobStatus: "queued",
+				jobStatus: "succeeded",
+				providerWorkSettledAt: "2026-04-30T12:00:03.000Z",
+			},
+			materializationOutcome: {
+				materialized: 1,
+				failed: 0,
+			},
+		});
+	});
+
+	test("blocks a forced pass when its asynchronous materialization fails", async () => {
+		const requestRefresh = vi.fn(async () => ({
+			...createRefreshResult(),
+			metadataEvidence: {
+				identitySource: "provider-app",
+				projectSampleIds: [],
+				conversationSampleIds: ["conversation_1"],
+				detailConversationIdsThisPass: ["conversation_1"],
+				truncated: { projects: false, conversations: false, artifacts: false },
+			},
+		}));
+		const createJob = vi.fn(async () => ({
+			object: "history_materialization_job_create_result" as const,
+			generatedAt: "2026-07-31T12:00:01.000Z",
+			reused: false,
+			job: {
+				object: "history_materialization_job" as const,
+				id: "hmj_forced_async_failure",
+				status: "queued",
+			},
+		}));
+		const readJob = vi.fn(async () => ({
+			id: "hmj_forced_async_failure",
+			status: "failed",
+			completedAt: "2026-07-31T12:00:02.000Z",
+			result: {
+				metrics: { conversations: 2, materialized: 0, skipped: 1, failed: 6 },
+				entries: [{ status: "failed", reason: "account_session_drift" }],
+				message: "History reconciliation failed to materialize 6 assets from 2 conversations.",
+			},
+		}));
+		const initial: AccountMirrorCompletionOperation = {
+			object: "account_mirror_completion",
+			id: "acctmirror_forced_async_failure",
+			provider: "chatgpt",
+			runtimeProfileId: "default",
+			mode: "live_follow",
+			sweepMode: "full_sweep",
+			phase: "backfill_history",
+			status: "paused",
+			startedAt: "2026-07-31T11:55:00.000Z",
+			completedAt: null,
+			nextAttemptAt: null,
+			maxPasses: null,
+			passCount: 0,
+			lastRefresh: null,
+			materializationPolicy: "full_missing_assets",
+			materializationAssetKinds: ["all"],
+			materializationMaxItems: 6,
+			materializationRefreshSnapshot: true,
+			materializationForce: false,
+			materializationCursor: null,
+			materializationOutcome: null,
+			mirrorCompleteness: null,
+			error: null,
+			lifecycleEvents: [],
+		};
+		const service = createAccountMirrorCompletionService({
+			registry: createAccountMirrorStatusRegistry({
+				config,
+				now: () => new Date("2026-07-31T12:00:00.000Z"),
+			}),
+			refreshService: { requestRefresh },
+			historyMaterializationService: { createJob, readJob },
+			initialOperations: [initial],
+			now: () => new Date("2026-07-31T12:00:00.000Z"),
+		});
+
+		service.control({ id: initial.id, action: "run_one_pass" });
+
+		await waitFor(() => service.read(initial.id)?.status === "blocked");
+		expect(requestRefresh).toHaveBeenCalledTimes(1);
+		expect(createJob).toHaveBeenCalledTimes(1);
+		expect(readJob).toHaveBeenCalledTimes(1);
+		expect(service.read(initial.id)).toMatchObject({
+			status: "blocked",
+			passCount: 1,
+			forceRunUntilPassCount: null,
+			nextAttemptAt: null,
+			materializationCursor: {
+				jobId: "hmj_forced_async_failure",
+				jobStatus: "failed",
+				providerWorkSettledAt: "2026-07-31T12:00:02.000Z",
+			},
+			materializationOutcome: {
+				materialized: 0,
+				failed: 6,
+			},
+			error: {
+				code: "account_mirror_materialization_failed",
 			},
 		});
 	});
