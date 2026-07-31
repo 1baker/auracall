@@ -19756,3 +19756,18 @@ browser-stage lifecycle observability, not transcript truncation.
   provider alert or still-open Create dialog before fresh inventory
   navigation. Continue to fail closed unless a fresh human-action surface or
   one exact fresh installed app proves the outcome.
+
+## 2026-07-31 | Failed Materialization Must Not Reenter Live-Follow Cadence
+
+- Symptom: reconciliation could persist `status=skipped` while its aggregate
+  metrics contained failed transfers. The default ChatGPT lane consequently
+  retried the same six identity-drift failures 35 times across successive
+  live-follow passes.
+- Durable rule: derive aggregate result and phase status through
+  `resolveHistoryMaterializationResultStatus`; when materialized is zero and
+  failed is positive, persist `failed` and a failure-specific message.
+- Durable rule: completion-owned all-failed materialization is a fail-closed
+  live-follow stop, not ordinary cadence. Block the completion with
+  `account_mirror_materialization_failed` before another provider pass;
+  preserve normal quiet-window behavior for succeeded and genuinely skipped
+  jobs.

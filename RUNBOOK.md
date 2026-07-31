@@ -1,5 +1,22 @@
 # RUNBOOK
 
+## Turn 371 | 2026-07-31
+
+- Active Plan 0175:
+  `docs/dev/plans/0175-2026-07-31-live-follow-materialization-truth-and-churn-repair.md`.
+- Durable evidence proves job `hmj_acbb3da47a0f45afae1bf9255c29e95c`
+  contained six failed transfers but persisted as skipped. The default lane
+  repeated that identity-drift shape in 35 jobs across July 24-25.
+- Provider-free regressions repair failed-result truth for ordinary
+  reconciliation, project sources, and account-library reconciliation.
+- An all-failed completion-owned materialization job now blocks live follow
+  with `account_mirror_materialization_failed` before another provider pass;
+  successful/skipped terminal jobs retain the quiet-window cadence.
+- Qualified same-email ChatGPT identity matching is green and tenant
+  qualifiers remain strict; no identity relaxation was made.
+- Scheduler and all four ChatGPT completion lanes remain operator-paused. No
+  live browser/provider proof is authorized in this plan.
+
 ## Turn 370 | 2026-07-25
 
 - Closed Plan 0173 after its one installed create attempt stopped before

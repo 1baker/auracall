@@ -559,6 +559,12 @@ Terminology note:
   reCAPTCHA, or visible human-verification pages surface as
   `provider_guard_required` job failures with HTTP 409 semantics; operators
   must clear the managed browser profile before retrying.
+  Aggregate result status is derived from the manifest entries: when nothing
+  materializes and at least one selected transfer fails, the result and durable
+  job are `failed`, not `skipped`. A completion-owned all-failed job blocks its
+  live-follow operation before another provider pass; inspect and correct the
+  materialization or account/browser condition, then start a fresh bounded
+  operation rather than relying on automatic retry.
   Gemini reconciliation uses the loaded app/rail surface as its first
   conversation-opening path: direct `/app/<conversationId>` navigation is only a
   fallback when the conversation cannot be found/opened from the rail, or when

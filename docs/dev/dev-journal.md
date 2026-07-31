@@ -42067,3 +42067,27 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   provider-alert or still-open-dialog explanation before inventory navigation.
 - Focused provider/CLI tests pass (32 tests) and `pnpm run check` passes. No
   second provider submission was made in this repair slice.
+
+## 2026-07-31 | Plan 0175 Materialization Truth And Live-Follow Fail-Closed Stop
+
+- Persisted job `hmj_acbb3da47a0f45afae1bf9255c29e95c` records six failed
+  transfers plus one skip but was classified `skipped`; the same invariant
+  failed twice against durable state.
+- The default ChatGPT lane repeated the same six `account_session_drift`
+  failures in 35 materialization jobs across July 24-25. The terminal-job
+  cadence treated each false skip as eligible for another collector/provider
+  pass.
+- Provider-free red regressions reproduced failed-as-skipped behavior in
+  ordinary reconciliation, project-source materialization, and
+  account-library reconciliation. All now derive job/result/phase status from
+  the canonical aggregate metrics resolver and publish failure-specific
+  messages.
+- Live-follow now becomes `blocked` with
+  `account_mirror_materialization_failed` after an all-failed completion-owned
+  materialization job, before any next-pass sleep or refresh. Successful and
+  genuinely skipped terminal jobs keep their existing quiet-window cadence.
+- Current qualified ChatGPT identity matching remains provider-free green for
+  same-email `plan`/`structure` bindings, and current default config carries a
+  real email plus `team/workspace`; no identity-matcher relaxation was made.
+- Scheduler and all four ChatGPT completion lanes remain operator-paused. No
+  provider or browser action was issued in this repair.

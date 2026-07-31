@@ -14,6 +14,11 @@ Lane: P01
   Accepted commit `b116b902` recreated exactly one private `Corel33t` with new
   identity `asdk_app_6a658c7c4c8c81918f6ddd378d5ebf16` and stopped at the
   visible OAuth sign-in gate. No delete or connector prompt occurred.
+- Active live-follow materialization truth and churn repair:
+  [docs/dev/plans/0175-2026-07-31-live-follow-materialization-truth-and-churn-repair.md](docs/dev/plans/0175-2026-07-31-live-follow-materialization-truth-and-churn-repair.md)
+  Provider work remains paused while provider-free regressions repair a
+  confirmed failed-as-skipped reconciliation result and test identity/replay
+  paths that may amplify browser churn.
 - Completed ChatGPT developer-app recreation retry:
   [docs/dev/plans/0173-2026-07-25-chatgpt-developer-app-recreation-retry.md](docs/dev/plans/0173-2026-07-25-chatgpt-developer-app-recreation-retry.md)
   Its corrected trusted-pointer attempt also stopped before submission. A

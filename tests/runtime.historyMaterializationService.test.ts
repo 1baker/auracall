@@ -744,6 +744,72 @@ describe("history materialization service", () => {
 		});
 	});
 
+	it("fails a project-source job when its manifest contains only failed transfers", async () => {
+		const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-project-source-failed-job-"));
+		setAuracallHomeDirOverrideForTest(homeDir);
+		const manifestPath = path.join(homeDir, "project-file-fetch-manifest.json");
+		await fs.writeFile(
+			manifestPath,
+			JSON.stringify({
+				provider: "chatgpt",
+				projectId: "g-p-failed",
+				generatedAt: "2026-07-31T12:10:01.000Z",
+				fileCount: 1,
+				materializedCount: 0,
+				entries: [
+					{
+						fileId: "failed-project-file.pdf",
+						fileName: "failed-project-file.pdf",
+						status: "error",
+						error: "project_source_download_failed",
+						materializationMethod: "chatgpt-project-source-row",
+					},
+				],
+			}),
+			"utf8",
+		);
+		let scheduled: (() => Promise<void>) | undefined;
+		const service = createHistoryMaterializationService({
+			config: {},
+			catalogService: { readCatalog: vi.fn(), readItem: vi.fn() },
+			runArchiveService: {
+				listItems: vi.fn(async () => ({ items: [] })),
+			} as unknown as RunArchiveService,
+			generateId: () => "hmj_project_sources_failed",
+			now: sequenceNow([
+				"2026-07-31T12:10:00.000Z",
+				"2026-07-31T12:10:01.000Z",
+				"2026-07-31T12:10:02.000Z",
+			]),
+			schedule: (work) => {
+				scheduled = work;
+			},
+			materializeProjectSources: vi.fn(async () => ({
+				projectFiles: [],
+				files: [],
+				manifestPath,
+			})),
+		});
+
+		await service.createJob({
+			provider: "chatgpt",
+			runtimeProfile: "default",
+			projectId: "g-p-failed",
+			assetKinds: ["files"],
+		});
+		if (!scheduled) throw new Error("Expected project source job to be scheduled.");
+		await scheduled();
+
+		await expect(service.readJob("hmj_project_sources_failed")).resolves.toMatchObject({
+			status: "failed",
+			result: {
+				status: "failed",
+				metrics: { materialized: 0, failed: 1 },
+				phases: { materialization: { status: "failed" } },
+			},
+		});
+	});
+
 	it("materializes a selected ChatGPT account-library file catalog item with archive links", async () => {
 		const homeDir = await fs.mkdtemp(
 			path.join(os.tmpdir(), "auracall-account-library-materialize-"),
@@ -1491,6 +1557,134 @@ describe("history materialization service", () => {
 						assetRoute: "/v1/archive/items/b64/account-library-reconcile/asset",
 					},
 				],
+			},
+		});
+	});
+
+	it("fails account-library reconciliation when every selected file transfer fails", async () => {
+		const homeDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), "auracall-account-library-reconcile-failed-"),
+		);
+		setAuracallHomeDirOverrideForTest(homeDir);
+		const manifestPath = path.join(homeDir, "account-files-manifest.json");
+		await fs.writeFile(
+			manifestPath,
+			JSON.stringify({
+				entries: [
+					{
+						fileId: "file_reconcile_failed",
+						fileName: "failed-library.pdf",
+						status: "error",
+						error: "account_library_download_failed",
+						materializationMethod: "chatgpt-library-file-row-click",
+					},
+				],
+			}),
+			"utf8",
+		);
+		let scheduled: (() => Promise<void>) | undefined;
+		const catalogFile = {
+			id: "file_reconcile_failed",
+			name: "failed-library.pdf",
+			provider: "chatgpt",
+			source: "account",
+			remoteUrl: "chatgpt://file/file_reconcile_failed",
+			mimeType: "application/pdf",
+			metadata: {
+				source: "chatgpt-library",
+				providerFileId: "file_reconcile_failed",
+			},
+		};
+		const service = createHistoryMaterializationService({
+			config: {},
+			catalogService: {
+				readCatalog: vi.fn(async () => ({
+					object: "account_mirror_catalog" as const,
+					generatedAt: "2026-07-31T12:20:00.000Z",
+					kind: "files" as const,
+					limit: 50,
+					entries: [
+						{
+							provider: "chatgpt" as const,
+							runtimeProfileId: "default",
+							browserProfileId: "default",
+							boundIdentityKey: "user@example.com",
+							status: "eligible" as const,
+							reason: "eligible" as const,
+							mirrorCompleteness: {
+								state: "complete" as const,
+								summary: "Complete.",
+								remainingDetailSurfaces: { projects: 0, conversations: 0, total: 0 },
+								signals: {
+									projectsTruncated: false,
+									conversationsTruncated: false,
+									attachmentInventoryTruncated: false,
+									attachmentCursorPresent: false,
+								},
+							},
+							manifests: {
+								projects: [],
+								conversations: [],
+								artifacts: [],
+								files: [catalogFile],
+								media: [],
+							},
+							counts: {
+								projects: 0,
+								conversations: 0,
+								artifacts: 0,
+								files: 1,
+								media: 0,
+							},
+						},
+					],
+					metrics: {
+						targets: 1,
+						projects: 0,
+						conversations: 0,
+						artifacts: 0,
+						files: 1,
+						media: 0,
+					},
+				})),
+				readItem: vi.fn(),
+			},
+			runArchiveService: {
+				listItems: vi.fn(async () => ({ items: [] })),
+			} as unknown as RunArchiveService,
+			generateId: () => "hmj_account_library_reconcile_failed",
+			now: sequenceNow([
+				"2026-07-31T12:20:00.000Z",
+				"2026-07-31T12:20:01.000Z",
+				"2026-07-31T12:20:02.000Z",
+			]),
+			schedule: (work) => {
+				scheduled = work;
+			},
+			materializeAccountLibraryFiles: vi.fn(async (input) => ({
+				accountFiles: [input.file],
+				files: [],
+				manifestPath,
+			})),
+		});
+
+		await service.createJob({
+			provider: "chatgpt",
+			runtimeProfile: "default",
+			reconcile: true,
+			assetSource: "account-library",
+			assetKinds: ["files"],
+			maxItems: 1,
+		});
+		if (!scheduled) throw new Error("Expected account-library reconciliation job.");
+		await scheduled();
+
+		await expect(service.readJob("hmj_account_library_reconcile_failed")).resolves.toMatchObject({
+			status: "failed",
+			result: {
+				status: "failed",
+				metrics: { materialized: 0, failed: 1 },
+				phases: { materialization: { status: "failed" } },
 			},
 		});
 	});
@@ -3767,6 +3961,142 @@ describe("history materialization service", () => {
 				metrics: {
 					conversations: 2,
 					materialized: 2,
+				},
+			},
+		});
+	});
+
+	it("fails reconciliation when every attempted asset transfer fails", async () => {
+		const homeDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), "auracall-history-materialize-reconcile-failed-"),
+		);
+		setAuracallHomeDirOverrideForTest(homeDir);
+		let scheduled: (() => Promise<void>) | undefined;
+		const readCatalog = vi.fn(async () => ({
+			object: "account_mirror_catalog" as const,
+			generatedAt: "2026-07-31T12:00:00.000Z",
+			kind: "conversations" as const,
+			limit: 10,
+			entries: [
+				{
+					provider: "chatgpt" as const,
+					runtimeProfileId: "default",
+					browserProfileId: "default",
+					boundIdentityKey: "user@example.com",
+					status: "eligible" as const,
+					reason: "eligible" as const,
+					mirrorCompleteness: {
+						state: "complete" as const,
+						summary: "Complete.",
+						remainingDetailSurfaces: { projects: 0, conversations: 0, total: 0 },
+						signals: {
+							projectsTruncated: false,
+							conversationsTruncated: false,
+							attachmentInventoryTruncated: false,
+							attachmentCursorPresent: false,
+						},
+					},
+					counts: {
+						projects: 0,
+						conversations: 1,
+						artifacts: 0,
+						files: 0,
+						media: 0,
+					},
+					manifests: {
+						projects: [],
+						conversations: [
+							{
+								id: "conv_reconcile_failed",
+								title: "Failed artifact transfer",
+								provider: "chatgpt" as const,
+								cachedArtifactCount: 1,
+								cachedFileCount: 0,
+							},
+						],
+						artifacts: [],
+						files: [],
+						media: [],
+					},
+				},
+			],
+			metrics: {
+				targets: 1,
+				projects: 0,
+				conversations: 1,
+				artifacts: 0,
+				files: 0,
+				media: 0,
+			},
+		}));
+		const materializeConversation = vi.fn(
+			async (target): Promise<HistoryMaterializationResult> => ({
+				object: "history_materialization_result",
+				generatedAt: "2026-07-31T12:00:01.000Z",
+				status: "failed",
+				target,
+				source: { type: "reconciliation", provider: "chatgpt" },
+				manifestPaths: [],
+				entries: [
+					{
+						kind: "artifact",
+						providerId: "artifact_failed",
+						title: "Unavailable export",
+						status: "failed",
+						localPath: null,
+						remoteUrl: null,
+						cacheKey: null,
+						checksumSha256: null,
+						mimeType: null,
+						size: null,
+						materializationMethod: null,
+						reason: "Transfer failed.",
+						archiveItemId: null,
+						assetRoute: null,
+					},
+				],
+				archiveItems: [],
+				metrics: { conversations: 1, materialized: 0, skipped: 0, failed: 1 },
+				message: "Transfer failed.",
+			}),
+		);
+		const service = createHistoryMaterializationService({
+			config: {},
+			catalogService: {
+				readCatalog,
+				readItem: vi.fn(),
+			},
+			generateId: () => "hmj_reconcile_failed",
+			now: sequenceNow([
+				"2026-07-31T12:00:00.000Z",
+				"2026-07-31T12:00:01.000Z",
+				"2026-07-31T12:00:02.000Z",
+				"2026-07-31T12:00:03.000Z",
+			]),
+			schedule: (work) => {
+				scheduled = work;
+			},
+			materializeConversation,
+		});
+
+		await service.createJob({
+			provider: "chatgpt",
+			runtimeProfile: "default",
+			reconcile: true,
+			maxItems: 1,
+		});
+		if (!scheduled) throw new Error("Expected job to be scheduled.");
+		await scheduled();
+
+		const completed = await service.readJob("hmj_reconcile_failed");
+		expect(completed).toMatchObject({
+			status: "failed",
+			result: {
+				status: "failed",
+				metrics: {
+					conversations: 1,
+					materialized: 0,
+					failed: 1,
 				},
 			},
 		});

@@ -1384,10 +1384,11 @@ async function materializeProjectSources(input: {
 	applyArchiveLinks(entries, archiveItems);
 	const generatedAt = input.now().toISOString();
 	const metrics = summarizeEntries(entries, 1);
+	const status = resolveHistoryMaterializationResultStatus(metrics);
 	return {
 		object: "history_materialization_result",
 		generatedAt,
-		status: metrics.materialized > 0 ? "materialized" : "skipped",
+		status,
 		target: archiveTarget,
 		source: sourceFromCreateRequest(input.request),
 		manifestPaths: materialized.manifestPath ? [materialized.manifestPath] : [],
@@ -1397,7 +1398,7 @@ async function materializeProjectSources(input: {
 		phases: {
 			snapshotRefresh: null,
 			materialization: {
-				status: metrics.materialized > 0 ? "materialized" : "skipped",
+				status,
 				generatedAt,
 				manifestPaths: materialized.manifestPath ? [materialized.manifestPath] : [],
 				entries: entries.length,
@@ -1408,7 +1409,9 @@ async function materializeProjectSources(input: {
 		message:
 			metrics.materialized > 0
 				? `Project source materialization downloaded ${metrics.materialized} file${metrics.materialized === 1 ? "" : "s"} for project ${projectId}.`
-				: `Project source materialization found no downloadable files for project ${projectId}.`,
+				: metrics.failed > 0
+					? `Project source materialization failed to download ${metrics.failed} file${metrics.failed === 1 ? "" : "s"} for project ${projectId}.`
+					: `Project source materialization found no downloadable files for project ${projectId}.`,
 	};
 }
 
@@ -1458,10 +1461,11 @@ async function materializeAccountLibraryReconciliation(input: {
 	const archiveItems = results.flatMap((result) => result.archiveItems);
 	const manifestPaths = Array.from(new Set(results.flatMap((result) => result.manifestPaths)));
 	const metrics = summarizeEntries(entries, 0);
+	const status = resolveHistoryMaterializationResultStatus(metrics);
 	return {
 		object: "history_materialization_result",
 		generatedAt,
-		status: metrics.materialized > 0 ? "materialized" : "skipped",
+		status,
 		target: null,
 		source: sourceFromCreateRequest(input.request),
 		manifestPaths,
@@ -1471,7 +1475,7 @@ async function materializeAccountLibraryReconciliation(input: {
 		phases: {
 			snapshotRefresh: null,
 			materialization: {
-				status: metrics.materialized > 0 ? "materialized" : "skipped",
+				status,
 				generatedAt,
 				manifestPaths,
 				entries: entries.length,
@@ -1482,7 +1486,9 @@ async function materializeAccountLibraryReconciliation(input: {
 		message:
 			metrics.materialized > 0
 				? `Account-library reconciliation materialized ${metrics.materialized} file${metrics.materialized === 1 ? "" : "s"} from ${results.length} candidate${results.length === 1 ? "" : "s"}.`
-				: "Account-library reconciliation did not find downloadable files to materialize.",
+				: metrics.failed > 0
+					? `Account-library reconciliation failed to materialize ${metrics.failed} file${metrics.failed === 1 ? "" : "s"} from ${results.length} candidate${results.length === 1 ? "" : "s"}.`
+					: "Account-library reconciliation did not find downloadable files to materialize.",
 	};
 }
 
@@ -1675,10 +1681,11 @@ async function materializeAccountLibraryCatalogItem(input: {
 	applyArchiveLinks(entries, archiveItems);
 	const generatedAt = input.now().toISOString();
 	const metrics = summarizeEntries(entries, 0);
+	const status = resolveHistoryMaterializationResultStatus(metrics);
 	return {
 		object: "history_materialization_result",
 		generatedAt,
-		status: metrics.materialized > 0 ? "materialized" : "skipped",
+		status,
 		target: null,
 		source: sourceFromCreateRequest(input.request),
 		manifestPaths,
@@ -1688,7 +1695,9 @@ async function materializeAccountLibraryCatalogItem(input: {
 		message:
 			metrics.materialized > 0
 				? `Account-library materialization downloaded ${metrics.materialized} asset${metrics.materialized === 1 ? "" : "s"} for catalog item ${input.detail.itemId}.`
-				: `Account-library materialization found no downloadable assets for catalog item ${input.detail.itemId}.`,
+				: metrics.failed > 0
+					? `Account-library materialization failed to download ${metrics.failed} asset${metrics.failed === 1 ? "" : "s"} for catalog item ${input.detail.itemId}.`
+					: `Account-library materialization found no downloadable assets for catalog item ${input.detail.itemId}.`,
 	};
 }
 
@@ -2373,10 +2382,11 @@ async function materializeReconciliation(input: {
 	const manifestPaths = Array.from(new Set(results.flatMap((result) => result.manifestPaths)));
 	const snapshotRefreshes = results.flatMap((result) => snapshotRefreshesFromResult(result));
 	const metrics = summarizeEntries(entries, results.length);
+	const status = resolveHistoryMaterializationResultStatus(metrics);
 	return {
 		object: "history_materialization_result",
 		generatedAt,
-		status: metrics.materialized > 0 ? "materialized" : "skipped",
+		status,
 		target: null,
 		source: sourceFromCreateRequest(input.request),
 		manifestPaths,
@@ -2387,7 +2397,7 @@ async function materializeReconciliation(input: {
 		phases: {
 			snapshotRefresh: snapshotRefreshes.length === 1 ? snapshotRefreshes[0] : null,
 			materialization: {
-				status: metrics.materialized > 0 ? "materialized" : "skipped",
+				status,
 				generatedAt,
 				manifestPaths,
 				entries: entries.length,
@@ -2398,7 +2408,9 @@ async function materializeReconciliation(input: {
 		message:
 			metrics.materialized > 0
 				? `History reconciliation materialized ${metrics.materialized} asset${metrics.materialized === 1 ? "" : "s"} from ${results.length} conversation${results.length === 1 ? "" : "s"}.`
-				: "History reconciliation did not find downloadable assets to materialize.",
+				: metrics.failed > 0
+					? `History reconciliation failed to materialize ${metrics.failed} asset${metrics.failed === 1 ? "" : "s"} from ${results.length} conversation${results.length === 1 ? "" : "s"}.`
+					: "History reconciliation did not find downloadable assets to materialize.",
 	};
 }
 

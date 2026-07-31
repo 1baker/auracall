@@ -85,6 +85,7 @@ export interface AccountMirrorCompletionLifecycleEvent {
 		| "provider_guard_backoff"
 		| "collector_progress"
 		| "materialization_from_complete_ledger"
+		| "materialization_failure_blocked"
 		| "account_library_catchup_queued"
 		| "account_library_catchup_skipped";
 	status: AccountMirrorCompletionOperation["status"];
@@ -448,10 +449,31 @@ export function createAccountMirrorCompletionService(input: {
 						update(id, { status: "running", nextAttemptAt: null });
 						continue;
 					}
+					if (operation.materializationCursor?.jobStatus === "failed") {
+						const message =
+							operation.materializationOutcome?.message ??
+							`History materialization job ${operation.materializationCursor.jobId} failed.`;
+						const blocked = update(id, {
+							status: "blocked",
+							completedAt: now().toISOString(),
+							nextAttemptAt: null,
+							error: {
+								message,
+								code: "account_mirror_materialization_failed",
+							},
+						});
+						appendLifecycleEvent(id, {
+							type: "materialization_failure_blocked",
+							status: "blocked",
+							previousStatus: operation.status,
+							message: `${message} Live follow stopped before another provider pass.`,
+						});
+						return blocked;
+					}
 				}
-					if (
-						operation.mode === "live_follow" &&
-						isTerminalMaterializationStatus(operation.materializationCursor?.jobStatus ?? "") &&
+				if (
+					operation.mode === "live_follow" &&
+					isTerminalMaterializationStatus(operation.materializationCursor?.jobStatus ?? "") &&
 					operation.materializationCursor?.providerWorkSettledAt
 				) {
 					releaseProviderWorkLease(id, "completion-owned materialization settled");
@@ -472,13 +494,13 @@ export function createAccountMirrorCompletionService(input: {
 						update(id, { status: "idle_waiting", nextAttemptAt });
 						if (!(await sleepUntilAttempt(id, nextAttemptAt))) return;
 						update(id, { status: "running", nextAttemptAt: null });
-							continue;
-						}
+						continue;
 					}
-					if (!(await acquireProviderWorkLease(id))) return;
-					if (pass > 0) {
-						await input.registry.refreshPersistentState?.();
-						if (!shouldContinue(id)) return;
+				}
+				if (!(await acquireProviderWorkLease(id))) return;
+				if (pass > 0) {
+					await input.registry.refreshPersistentState?.();
+					if (!shouldContinue(id)) return;
 					const entry = findTargetEntry(
 						input.registry,
 						operation.provider,
@@ -503,11 +525,11 @@ export function createAccountMirrorCompletionService(input: {
 				const refreshOperation = operations.get(id);
 				if (!refreshOperation) return;
 				if (refreshOperation.mode === "live_follow") {
-						const foregroundBackpressure = input.shouldYieldToForegroundWork?.() ?? null;
-						if (foregroundBackpressure) {
-							releaseProviderWorkLease(id, "foreground work deferred completion");
-							const nextAttemptAt = new Date(now().getTime() + foregroundRetryDelayMs).toISOString();
-							update(id, {
+					const foregroundBackpressure = input.shouldYieldToForegroundWork?.() ?? null;
+					if (foregroundBackpressure) {
+						releaseProviderWorkLease(id, "foreground work deferred completion");
+						const nextAttemptAt = new Date(now().getTime() + foregroundRetryDelayMs).toISOString();
+						update(id, {
 							status: "idle_waiting",
 							nextAttemptAt,
 							error: null,
@@ -535,10 +557,10 @@ export function createAccountMirrorCompletionService(input: {
 						refreshOperation.provider,
 						refreshOperation.runtimeProfileId,
 					);
-						const providerGuardBackoff = resolveProviderGuardBackoff(phaseStatusEntry, now());
-						if (providerGuardBackoff) {
-							releaseProviderWorkLease(id, "provider guard backoff");
-							appendLifecycleEvent(id, {
+					const providerGuardBackoff = resolveProviderGuardBackoff(phaseStatusEntry, now());
+					if (providerGuardBackoff) {
+						releaseProviderWorkLease(id, "provider guard backoff");
+						appendLifecycleEvent(id, {
 							type: "provider_guard_backoff",
 							status: operations.get(id)?.status ?? refreshOperation.status,
 							previousStatus: refreshOperation.status,

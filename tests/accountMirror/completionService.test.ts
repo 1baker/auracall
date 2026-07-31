@@ -3000,6 +3000,98 @@ describe("account mirror completion service", () => {
 		expect(sleep).toHaveBeenCalledWith(60_000);
 	});
 
+	test("blocks live follow after an all-failed materialization job instead of retrying next pass", async () => {
+		const initial: AccountMirrorCompletionOperation = {
+			object: "account_mirror_completion",
+			id: "acctmirror_failed_materialization_stop",
+			provider: "chatgpt",
+			runtimeProfileId: "default",
+			mode: "live_follow",
+			sweepMode: "full_sweep",
+			phase: "backfill_history",
+			status: "running",
+			startedAt: "2026-07-31T12:00:00.000Z",
+			completedAt: null,
+			nextAttemptAt: null,
+			maxPasses: null,
+			passCount: 35,
+			lastRefresh: createRefreshResult(),
+			materializationPolicy: "full_missing_assets",
+			materializationAssetKinds: ["all"],
+			materializationMaxItems: 6,
+			materializationRefreshSnapshot: true,
+			materializationForce: false,
+			materializationCursor: {
+				jobId: "hmj_failed_materialization_stop",
+				jobStatus: "running",
+				reused: false,
+				requestedAt: "2026-07-31T12:44:00.000Z",
+				passCount: 35,
+				request: {
+					provider: "chatgpt",
+					runtimeProfile: "default",
+					reconcile: true,
+					refreshSnapshot: true,
+					assetKinds: ["all"],
+					maxItems: 6,
+					force: false,
+				},
+			},
+			materializationOutcome: null,
+			mirrorCompleteness: completeMirror,
+			error: null,
+			lifecycleEvents: [],
+		};
+		const requestRefresh = vi.fn(async () => createRefreshResult());
+		const sleep = vi.fn(() => new Promise<void>(() => {}));
+		const service = createAccountMirrorCompletionService({
+			registry: createAccountMirrorStatusRegistry({
+				config,
+				now: () => new Date("2026-07-31T12:45:00.000Z"),
+			}),
+			refreshService: { requestRefresh },
+			historyMaterializationService: {
+				createJob: vi.fn(),
+				readJob: vi.fn(async () => ({
+					id: "hmj_failed_materialization_stop",
+					status: "failed",
+					completedAt: "2026-07-31T12:44:30.000Z",
+					result: {
+						metrics: { conversations: 1, materialized: 0, skipped: 0, failed: 6 },
+						entries: [{ status: "failed", reason: "account_session_drift" }],
+						message: "History reconciliation failed to materialize 6 assets.",
+					},
+				})),
+			},
+			initialOperations: [initial],
+			resumeActiveOperations: true,
+			now: () => new Date("2026-07-31T12:45:00.000Z"),
+			sleep,
+		});
+
+		await waitFor(() => service.read(initial.id)?.status === "blocked");
+
+		expect(requestRefresh).not.toHaveBeenCalled();
+		expect(sleep).not.toHaveBeenCalled();
+		expect(service.read(initial.id)).toMatchObject({
+			status: "blocked",
+			completedAt: "2026-07-31T12:45:00.000Z",
+			nextAttemptAt: null,
+			materializationCursor: {
+				jobStatus: "failed",
+				providerWorkSettledAt: "2026-07-31T12:44:30.000Z",
+			},
+			materializationOutcome: {
+				failed: 6,
+				materialized: 0,
+			},
+			error: {
+				code: "account_mirror_materialization_failed",
+				message: "History reconciliation failed to materialize 6 assets.",
+			},
+		});
+	});
+
 	test("upgrades idle live-follow completion into bounded full-sweep materialization", async () => {
 		const initial = {
 			object: "account_mirror_completion" as const,
