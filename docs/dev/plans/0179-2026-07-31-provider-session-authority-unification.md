@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 2
+Plan version: 3
 
 ## Stable Objective
 
@@ -304,3 +304,21 @@ live-follow remains stopped for the affected default ChatGPT target.
   checkpoint, commit and push, re-prove the paused/blocked runtime posture,
   install and verify source/runtime parity plus a new API PID, then stop for the
   separately explicit one-pass ChatGPT authorization required by M5.
+
+## Checkpoint 3
+
+- `plan_version`: 3
+- `state_transition`: provider-free-implemented -> package-parity-repaired
+- `progress_classification`: substantive
+- `evidence`: commit `a1f96ded` is pushed and aligned, but the first install
+  package manifest exposed deleted `identityPreflight.js` retained in `dist`.
+  Closeout stopped without restarting the API. Production builds now clean the
+  generated output tree before compilation, structural coverage enforces that
+  prebuild lifecycle, and dry pack proves the canonical authority present with
+  the obsolete module absent. Focused validation is green at 156/156 plus
+  typecheck/build/lint and diff hygiene. API PID remains `1032`; containment
+  has not changed and no provider/browser work occurred.
+- `subagent_status`: not_spawned
+- `next_action_or_stop_reason`: commit and push the build-output repair,
+  recheck containment, reinstall, verify new PID and source/installed parity,
+  then stop at the separate explicit one-pass authorization gate.

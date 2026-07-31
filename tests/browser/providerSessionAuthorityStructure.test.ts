@@ -15,6 +15,15 @@ async function listTypeScriptFiles(root: string): Promise<string[]> {
 }
 
 describe("provider-session authority structure", () => {
+	test("production builds clean deleted authorization modules from dist", async () => {
+		const packageJson = JSON.parse(
+			await fs.readFile(path.join(repositoryRoot, "package.json"), "utf8"),
+		) as { scripts?: Record<string, string> };
+		const prebuild = packageJson.scripts?.prebuild ?? "";
+
+		expect(prebuild).toContain("clean-build-output");
+	});
+
 	test("removes the distributed expected-identity authorization vocabulary", async () => {
 		const files = [
 			...await listTypeScriptFiles(path.join(repositoryRoot, "src")),

@@ -19813,3 +19813,8 @@ browser-stage lifecycle observability, not transcript truncation.
   bound to browser process plus target. Collector/materializer receipts persist
   redacted summaries. Chrome Google sign-in remains visible to operators but is
   never provider-account authorization evidence.
+- Packaging rule: deleting TypeScript source does not remove its previously
+  emitted JavaScript from `dist`. Clean the complete generated output tree
+  before every production build, and inspect the dry package manifest when a
+  security/authority module is replaced; otherwise an obsolete authorization
+  implementation can remain installed even with clean source tests.

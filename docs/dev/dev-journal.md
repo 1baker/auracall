@@ -42221,3 +42221,9 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   null force marker/guard, and zero queued/running completion or
   history-materialization work. M5 commit/push, install/parity, and the
   separately authorized one-pass proof remain.
+- The first package inspection found a stale generated
+  `dist/src/browser/providers/identityPreflight.js` even though its source was
+  deleted. Installation closeout stopped. A new prebuild clean removes the
+  generated tree before every production build, and structural coverage keeps
+  that lifecycle durable. Rebuild and dry pack now include the canonical
+  authority and exclude the obsolete module; focused checks pass 156/156.

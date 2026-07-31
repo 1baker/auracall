@@ -24,6 +24,11 @@
   paused; five active completions are paused; default ChatGPT remains blocked
   at pass 37 with a null force marker/guard; queued/running completion and
   history-materialization counts are zero.
+- First package inspection correctly stopped installation closeout: TypeScript
+  had left deleted `identityPreflight.js` in `dist`. Builds now remove the whole
+  generated output tree before compilation; a structural regression enforces
+  that lifecycle. Dry package inspection contains `providerSessionAuthority.js`
+  and no obsolete preflight module. PID and containment remain unchanged.
 - Remaining M5 order: commit and push, recheck containment, install with
   source/runtime parity and a new PID, then
   stop for a separate explicit authorization for exactly one default ChatGPT
