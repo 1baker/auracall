@@ -15,8 +15,9 @@ Lane: P01
   exactly one collection and materialized 3 assets with no guard or retry, but
   exposed a receipt-only defect: reconciliation dropped the canonical proof
   callback while composing per-conversation exclusions. Provider-free repair
-  and paused installation are in progress; the consumed packet does not
-  authorize another live pass.
+  commit `1392bc1b` is pushed and installed byte-identically under the paused
+  scheduler. The consumed packet does not authorize the final receipt-parity
+  pass.
 
 - Completed forced-pass failure and identity-evidence repair:
   [docs/dev/plans/0177-2026-07-31-forced-pass-failure-and-identity-evidence-repair.md](docs/dev/plans/0177-2026-07-31-forced-pass-failure-and-identity-evidence-repair.md)

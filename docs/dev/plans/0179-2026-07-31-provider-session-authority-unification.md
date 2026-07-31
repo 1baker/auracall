@@ -471,3 +471,27 @@ live-follow remains stopped for the affected default ChatGPT target.
   Preserve the callback in that merge, validate and install under the paused
   posture, then stop. The live packet is consumed; proving persisted
   collector/materializer parity still requires a fresh separate authorization.
+
+## Checkpoint 11
+
+- `plan_version`: 8
+- `state_transition`: live-proof-receipt-repair-required -> installed-fresh-gate-required
+- `progress_classification`: substantive
+- `evidence`: red/green regression proves reconciliation exclusion context now
+  preserves the canonical job proof callback. Focused materializer, completion,
+  ChatGPT adapter, and HTTP validation passes 462/462. The complete suite passes
+  2678 tests with 69 live/TTY skips after rerunning four stdio MCP assertions
+  through `/usr/bin/node`; their first launcher used a removed Homebrew Node 24
+  path. Typecheck, production build, lint with zero errors, plan audit, and diff
+  hygiene pass. Commit `1392bc1b` is pushed and installed at API PID `63017`;
+  source/installed history-materializer hash matches at
+  `6e10fd279c80080b2ae3966943063ecabaae47304d8e796c1a77dd641b547cb8`.
+  Readback preserves scheduler pause, five paused active completions, zero
+  queued/running/foreground work, and no provider guard. The managed ChatGPT
+  browser process remains alive but idle with no active completion.
+- `subagent_status`: not_spawned
+- `next_action_or_stop_reason`: stop. The provider-free receipt repair is live,
+  but the consumed job cannot retroactively acquire its omitted persisted proof.
+  Require a fresh explicit gate for exactly one bounded default ChatGPT pass to
+  close collector/materializer receipt parity; do not resume the scheduler or
+  infer authorization from this installation.

@@ -20,9 +20,16 @@
   the canonical job context and discarded `onProviderSessionProof`.
 - Provider-free repair composes the partial reconciliation context with the
   canonical callback. Focused materializer, completion, ChatGPT adapter, and
-  HTTP suites pass 462/462. Do not rerun provider work: this authorization is
-  consumed. Finish provider-free gates, commit/push, install under pause, and
-  require a fresh explicit gate for receipt-level parity proof.
+  HTTP suites pass 462/462; full-suite effective result is 2678 passed / 69
+  skipped after rerunning four stdio assertions through `/usr/bin/node` around
+  a removed Homebrew Node 24 launcher. Commit `1392bc1b` is pushed and installed
+  at PID `63017`; source/installed materializer hash matches at
+  `6e10fd279c80080b2ae3966943063ecabaae47304d8e796c1a77dd641b547cb8`.
+- Post-install readback preserves scheduler pause, five paused completions, zero
+  queued/running/foreground work, and no provider guard. The managed ChatGPT
+  browser listener remains alive but idle with no active completion. Do not
+  rerun provider work: this authorization is consumed; require a fresh explicit
+  gate for receipt-level parity proof.
 
 ## Turn 377 | 2026-07-31
 

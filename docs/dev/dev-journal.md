@@ -42305,3 +42305,11 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   reproduced the loss; composing the canonical callback into the partial
   context is green across 462 focused materializer/completion/adapter/HTTP
   tests. The live packet is consumed and will not be rerun.
+- Receipt repair commit `1392bc1b` is pushed and installed at API PID `63017`.
+  Source/installed history-materializer hash matches at `6e10fd27...b547cb8`.
+  Full-suite effective result is 2678 passed / 69 skipped after the four stdio
+  assertions were rerun through `/usr/bin/node` around a stale removed
+  Homebrew-Node launcher; typecheck, build, lint with zero errors, plan audit,
+  and diff hygiene pass. Scheduler and five completions remain paused with zero
+  queued/running/foreground work and no provider guard. The managed ChatGPT
+  browser remains alive but idle; no further live pass is authorized.
