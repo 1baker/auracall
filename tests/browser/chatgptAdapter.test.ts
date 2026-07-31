@@ -4,6 +4,7 @@ import path from "node:path";
 import { describe, expect, test, vi } from "vitest";
 import {
 	beforeChatgptBrowserInteractionForTest,
+	bindChatgptProviderSessionConnectionForTest,
 	buildChatgptAuthSessionIdentityExpression,
 	buildChatgptCreateProjectDialogStateExpressionForTest,
 	buildChatgptUrlRouteExpressionForTest,
@@ -62,6 +63,55 @@ import {
 import type { FileRef } from "../../src/browser/providers/domain.js";
 import { normalizeProjectMemoryMode } from "../../src/browser/providers/domain.js";
 import { createBrowserScrapeTelemetryRecorder } from "../../src/browser/providers/scrapeTelemetry.js";
+import { createProviderSessionAuthority } from "../../src/browser/providers/providerSessionAuthority.js";
+
+describe("ChatGPT provider-session connection provenance", () => {
+	test("binds a disposable connection target before provider identity authorization", () => {
+		const authority = createProviderSessionAuthority({
+			runtimeProfiles: {
+				default: {
+					services: {
+						chatgpt: { identity: { email: "operator@example.com" } },
+					},
+				},
+			},
+		});
+		const context = {
+			providerId: "chatgpt" as const,
+			auracallRuntimeProfile: "default",
+			browserProfile: "default",
+			managedBrowserProfile: "/managed/default/chatgpt",
+			browserProcessId: 1234,
+			browserTargetId: null,
+			devtoolsHost: "127.0.0.1",
+			devtoolsPort: 45015,
+		};
+		const authorization = {
+			authority,
+			context,
+			expectation: authority.resolveExpectation(context),
+		};
+
+		bindChatgptProviderSessionConnectionForTest(
+			{ providerSessionAuthorization: authorization },
+			{ targetId: "disposable-target", host: "127.0.0.1", port: 45015 },
+		);
+
+		expect(authorization.context).toMatchObject({
+			browserProcessId: 1234,
+			browserTargetId: "disposable-target",
+			devtoolsHost: "127.0.0.1",
+			devtoolsPort: 45015,
+		});
+		expect(
+			authority.verify({
+				context: authorization.context,
+				expectation: authorization.expectation,
+				observation: { email: "operator@example.com", source: "auth-session" },
+			}).verdict,
+		).toBe("match");
+	});
+});
 
 describe("normalizeChatgptFeatureSignature", () => {
 	test("normalizes nullable live model selections before schema validation", () => {

@@ -42267,3 +42267,21 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   reports scheduler paused, five unrelated completions paused, original default
   blocked at pass 37, zero queued/running completions, and no managed-browser
   CDP listener.
+- Installed control repair commit `09c34644` under PID `12815` preserved the
+  paused baseline. Exactly one authorized `run_one_pass` was accepted with
+  ceiling 38, then stopped fail-closed before collection at pass 37 with
+  `provider_session_provenance_missing`. The provider guard stayed clear, no
+  materialization job or second pass appeared, the provider lease released,
+  and no managed-browser CDP listener remained.
+- Root cause is now provider-free and concrete: account-mirror collection uses
+  `tabLifecycle=dispose-new`, so initial list options correctly have no target
+  ID. `connectToChatgptTab` then attaches the real disposable target but failed
+  to bind it back into the canonical provider-session context. A focused
+  regression now proves new/reused connection provenance retains the browser
+  process, binds the actual target/DevTools endpoint, and permits the unchanged
+  strict account comparison to reach `match`. The consumed live packet will not
+  be retried.
+- Provenance-repair validation is green: 258/258 focused adapter, authority,
+  collector, LLM-identity, and materializer tests; 303 full-suite files with
+  2678 passed and 65 live/TTY skips; typecheck, clean build, and lint with zero
+  errors. No provider/browser work occurred during the repair or validation.

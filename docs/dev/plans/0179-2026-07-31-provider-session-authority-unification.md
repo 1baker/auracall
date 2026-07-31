@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 6
+Plan version: 7
 
 ## Stable Objective
 
@@ -21,7 +21,8 @@ bounded installed-runtime proof demonstrates collector/materializer parity.
 - Scheduler remains paused. Five unrelated completions are paused; default
   ChatGPT completion
   `acctmirror_completion_7c207690-de8a-40a4-82b8-61edd830a25c` is safely
-  blocked at pass 37 with no provider guard.
+  failed at pass 37 with no provider guard after the one authorized pass
+  stopped before collection on missing disposable-target provenance.
 - The separately authorized control request was provider-free in effect: the
   installed service returned the unchanged blocked pass-37 record because
   `run_one_pass` rejected blocked live-follow operations before launch. The
@@ -392,3 +393,42 @@ live-follow remains stopped for the affected default ChatGPT target.
   reinstall while scheduler and every completion remain paused or blocked,
   prove installed parity and the zero-work baseline, then consume the still
   unused authorization with exactly one real default ChatGPT pass and no retry.
+
+## Checkpoint 7
+
+- `plan_version`: 7
+- `state_transition`: blocked-control-repair -> live-proof-failed-closed
+- `progress_classification`: substantive
+- `evidence`: pushed commit `09c34644` installed byte-identically under API
+  PID `12815`; scheduler and unrelated completions remained paused. Exactly one
+  `run_one_pass` was accepted at `2026-07-31T22:22:11.715Z`, set ceiling 38,
+  and then failed at `22:22:12.803Z` before pass increment with
+  `provider_session_provenance_missing`. The diagnostic proved configured and
+  observed account evidence reached the authority, managed browser process
+  `56684` was known, but the newly connected disposable browser target remained
+  `unknown`. No materialization job, provider guard, rate-limit, CAPTCHA, or
+  second collection occurred; the provider lease was released and queued/running
+  counts returned to zero.
+- `subagent_status`: not_spawned
+- `next_action_or_stop_reason`: the single live packet is exhausted; never
+  retry it. Repair disposable/reused/retained ChatGPT connection target binding
+  into canonical provider-session provenance provider-free, validate and
+  install under the pause, then stop for a fresh separate one-pass authorization.
+
+## Checkpoint 8
+
+- `plan_version`: 7
+- `state_transition`: live-proof-failed-closed -> provenance-repair-validated
+- `progress_classification`: substantive
+- `evidence`: `connectToChatgptTab` now binds the actual new, reused, retained,
+  or explicit target and DevTools endpoint into the canonical provider-session
+  context before identity authorization. Browser process plus target remain
+  mandatory; no matcher or provenance requirement was weakened. Focused
+  adapter/authority/collector/LLM/materializer validation passes 258/258; the
+  complete provider-free suite passes 303 files and 2678 tests with 65 live/TTY
+  skips; typecheck, clean build, and lint with zero errors pass.
+- `subagent_status`: not_spawned
+- `next_action_or_stop_reason`: commit/push and install the provenance repair
+  under the persisted scheduler pause, prove source/installed parity and zero
+  active provider work, then stop. A new live pass requires a fresh separate
+  operator authorization because Checkpoint 7 consumed the prior packet.

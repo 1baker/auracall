@@ -19837,3 +19837,19 @@ browser-stage lifecycle observability, not transcript truncation.
 - Regression: the pass-37 blocked shape must transition to queued with ceiling
   38, perform exactly one mocked refresh, clear the force marker, and return to
   idle. HTTP readiness and browser-ops controls must expose the same contract.
+
+## 2026-07-31 | Disposable Browser Targets Must Bind Session Provenance
+
+- Symptom: a canonical provider-session check knew the AuraCall runtime,
+  browser profile, managed browser profile, browser process, configured account,
+  and observed provider identity, but failed `provider_session_provenance_missing`
+  because the browser target remained `unknown`.
+- Cause: `tabLifecycle=dispose-new` intentionally prevents list-option setup
+  from pre-binding a service tab. `connectToChatgptTab` later selected or created
+  the real target but did not write that connection back to the canonical
+  provider-session context before identity authorization.
+- Durable rule: every ChatGPT connection boundary must bind its actual target
+  ID and DevTools endpoint into provider-session provenance, including new,
+  reused, retained, and explicitly attached targets. Keep browser process plus
+  target mandatory for the session fingerprint; do not weaken the authority to
+  accept process-only or browser-profile-only evidence.

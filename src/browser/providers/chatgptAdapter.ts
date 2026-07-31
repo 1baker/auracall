@@ -3799,6 +3799,25 @@ function recordChatgptTargetSession(
 
 export const recordChatgptTargetSessionForTest = recordChatgptTargetSession;
 
+function bindChatgptProviderSessionConnection<T extends {
+	targetId?: string;
+	host: string;
+	port: number;
+}>(options: BrowserProviderListOptions | undefined, connection: T): T {
+	const authorization = options?.providerSessionAuthorization;
+	if (!authorization || !connection.targetId) return connection;
+	authorization.context = {
+		...authorization.context,
+		browserTargetId: connection.targetId,
+		devtoolsHost: connection.host,
+		devtoolsPort: connection.port,
+	};
+	return connection;
+}
+
+export const bindChatgptProviderSessionConnectionForTest =
+	bindChatgptProviderSessionConnection;
+
 async function connectToChatgptTab(
 	options?: BrowserProviderListOptions,
 	urlOverride?: string,
@@ -3825,12 +3844,12 @@ async function connectToChatgptTab(
 		if (scopedConnection) {
 			recordBrowserScrapeProviderAction(options, "chatgpt.reuseScopedTarget");
 			recordChatgptTargetSession(options, "reuse", scopedConnection.targetId);
-			return {
+			return bindChatgptProviderSessionConnection(options, {
 				...scopedConnection,
 				shouldClose: false,
 				usedExisting: true,
 				borrowedFromSession: true,
-			};
+			});
 		}
 	}
 	if (options?.tabTargetId && port) {
@@ -3862,7 +3881,7 @@ async function connectToChatgptTab(
 				connection,
 			);
 			recordChatgptTargetSession(options, "retain", connection.targetId);
-			return connection;
+			return bindChatgptProviderSessionConnection(options, connection);
 		} catch (error) {
 			if (!providerNavigationAllowed(options)) {
 				throw error;
@@ -3921,12 +3940,12 @@ async function connectToChatgptTab(
 	if (scopedConnection) {
 		recordBrowserScrapeProviderAction(options, "chatgpt.reuseScopedTarget");
 		recordChatgptTargetSession(options, "reuse", scopedConnection.targetId);
-		return {
+		return bindChatgptProviderSessionConnection(options, {
 			...scopedConnection,
 			shouldClose: false,
 			usedExisting: true,
 			borrowedFromSession: true,
-		};
+		});
 	}
 	const targets = await listChatgptChromeTargets(host, resolvedPort);
 	const candidates = forceNewDisposableTab
@@ -4015,7 +4034,7 @@ async function connectToChatgptTab(
 	retainChatgptScopedSession(options, sessionKey, connection);
 	recordChatgptTargetSession(options, "retain", connection.targetId);
 	recordBrowserScrapeProviderAction(options, "chatgpt.connectTab.ready");
-	return connection;
+	return bindChatgptProviderSessionConnection(options, connection);
 }
 
 type ChatgptTabConnection = Awaited<ReturnType<typeof connectToChatgptTab>>;
