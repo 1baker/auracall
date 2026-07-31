@@ -45,6 +45,22 @@
   2675 tests pass / 65 live-or-TTY tests skip, HTTP is 215/215, and typecheck,
   clean production build, lint with zero errors, plan audit, and diff hygiene
   pass.
+- Final installed acceptance is green at commit `1a19eb9d`: source/installed
+  hashes match for CLI
+  `49a98190e973cc0b64e59800d47ac8890ddf99e18af0513ee8f143d8138aba8b`,
+  provider authority
+  `92e33e5c35d2c26f0a8af47fe399817410f486fdfaee4cb4353ec1c8a9ed4fa1`,
+  response server
+  `4f09914a15525bd000d4f5827f6a205988806c504d6497b29052bf0f6df19625`,
+  and history materializer
+  `93990c26c152d66bc83c59efc9bbf83852eed14afa3959e2356e4b27474eba21`;
+  obsolete `identityPreflight.js` is absent. API PID changed `68064 -> 47446`.
+  Immediate and delayed readbacks both preserve scheduler pause, five paused
+  active completions, original default blocked at pass 37, cancelled accidental
+  pass-0 record, zero queued/running work, and no CDP listener.
+- Stop condition: Plan 0179 remains OPEN only for the separately explicit M5
+  authorization and exactly one default ChatGPT pass. Do not infer that gate
+  from implementation, installation, or earlier live-pass authorizations.
 - Remaining M5 order: commit and push, recheck containment, install with
   source/runtime parity and a new PID, then
   stop for a separate explicit authorization for exactly one default ChatGPT

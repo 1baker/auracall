@@ -42243,3 +42243,11 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Final provider-free validation after this repair: 303 test files pass, 2675
   tests pass with 65 live/TTY skips, HTTP is 215/215, and typecheck, clean
   build, lint with zero errors, plan audit, and diff hygiene pass.
+- Final install at pushed commit `1a19eb9d` is byte-identical for CLI,
+  provider-session authority, response server, and history materializer;
+  obsolete `identityPreflight.js` is absent. API PID changed `68064 -> 47446`.
+  Immediate and delayed readbacks both preserve scheduler pause, five paused
+  active completions, original default blocked at pass 37, cancelled accidental
+  record at pass 0, zero queued/running work, and no CDP listener.
+- Plan 0179 remains OPEN solely for its separately explicit authorization and
+  exactly one default ChatGPT pass; installation does not supply that gate.

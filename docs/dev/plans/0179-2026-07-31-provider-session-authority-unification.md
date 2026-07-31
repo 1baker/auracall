@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 4
+Plan version: 5
 
 ## Stable Objective
 
@@ -228,7 +228,7 @@ Expected write surface: validation receipts and plan closeout only.
   browser selection failures from provider-session conflicts.
 - [x] Structural audit, focused/adjacent tests, typecheck, build, lint, plan
   audit, and diff hygiene pass.
-- [ ] Installed/source parity and paused runtime posture are proved before any
+- [x] Installed/source parity and paused runtime posture are proved before any
   live gate.
 - [ ] A separately authorized one-pass proof demonstrates collector and
   materializer parity without a second pass or new provider guard.
@@ -346,3 +346,23 @@ live-follow remains stopped for the affected default ChatGPT target.
   packet, commit/push, re-prove containment, reinstall/restart once, and require
   zero startup completions plus source/runtime parity before stopping at the
   separate explicit one-pass gate.
+
+## Checkpoint 5
+
+- `plan_version`: 5
+- `state_transition`: startup-containment-repaired -> installed-gate-ready
+- `progress_classification`: substantive
+- `evidence`: commits `a1f96ded`, `ff781acb`, and `1a19eb9d` are pushed and
+  aligned. Final source/installed hashes match for CLI (`49a98190...aba8b`),
+  provider authority (`92e33e5c...4fa1`), response server
+  (`4f09914a...9625`), and history materializer (`93990c26...a21`); obsolete
+  `identityPreflight.js` is absent. API PID changed `68064 -> 47446`.
+  Immediate and delayed installed readbacks both show scheduler posture/state
+  paused, five active completions paused, original default blocked at pass 37,
+  accidental pass-0 record cancelled, zero queued/running completion or
+  materialization work, and no managed-browser CDP listener. No new completion
+  or provider work appeared after the repaired restart.
+- `subagent_status`: not_spawned
+- `next_action_or_stop_reason`: hard stop at the separate explicit operator
+  authorization required for exactly one default ChatGPT pass. Scheduler must
+  remain paused; no retry is permitted.
