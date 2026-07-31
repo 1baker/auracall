@@ -7,6 +7,12 @@
 Status: active
 Lane: P01
 
+- Active default live-follow single-pass proof:
+  [docs/dev/plans/0176-2026-07-31-default-live-follow-single-pass-proof.md](docs/dev/plans/0176-2026-07-31-default-live-follow-single-pass-proof.md)
+  One authorized `run_one_pass` on the previously affected default ChatGPT
+  completion will validate installed Plan 0175 while the scheduler and every
+  other completion remain paused; no retry is permitted.
+
 - Completed ChatGPT developer-app keyboard recreation:
   [docs/dev/plans/0174-2026-07-25-chatgpt-developer-app-keyboard-recreation.md](docs/dev/plans/0174-2026-07-25-chatgpt-developer-app-keyboard-recreation.md)
   Live non-submitting evidence proved the current Radix connection radio

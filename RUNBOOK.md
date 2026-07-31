@@ -1,5 +1,19 @@
 # RUNBOOK
 
+## Turn 372 | 2026-07-31
+
+- Active Plan 0176:
+  `docs/dev/plans/0176-2026-07-31-default-live-follow-single-pass-proof.md`.
+- Operator authorized one bounded pass on default ChatGPT completion
+  `acctmirror_completion_7c207690-de8a-40a4-82b8-61edd830a25c`.
+- Baseline: installed PID `2827422`; scheduler paused; all six completions
+  paused; default pass count 35; provider guard null; limits remain 8 browser
+  interactions/minute with 120-second conversation/page/navigation cooldowns.
+- Exactly one `run_one_pass` is allowed. A terminal safety `pause` is allowed
+  only to restore the default lane if it ends idle/runnable. All other lanes
+  remain paused; no retry, direct browser probe, guard clear, or config change
+  is authorized.
+
 ## Turn 371 | 2026-07-31
 
 - Closed Plan 0175:
