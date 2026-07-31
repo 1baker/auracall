@@ -27,6 +27,10 @@ import type {
 	BrowserProviderListOptions,
 	ProviderUserIdentity,
 } from "../browser/providers/types.js";
+import {
+	summarizeProviderSessionProof,
+	type ProviderSessionProof,
+} from "../browser/providers/providerSessionAuthority.js";
 import { resolveRuntimeProfileUserConfig as resolveBrowserRuntimeProfileUserConfig } from "../browser/service/profileConfig.js";
 import type { ResolvedUserConfig } from "../config.js";
 import type { AccountMirrorConversationMaterializationPolicy } from "./conversationFreshness.js";
@@ -49,10 +53,6 @@ import type {
 	AccountMirrorRouteProgressEvidence,
 	AccountMirrorScrapeBudgetEvidence,
 } from "./statusRegistry.js";
-import {
-	accountMirrorIdentityKeysMismatch,
-	normalizeAccountMirrorProviderIdentityKey,
-} from "./tenantBinding.js";
 
 const MAX_DOM_DRIFT_SCREENSHOTS_PER_PROCESS = 3;
 const CHATGPT_DETAIL_READ_TIMEOUT_MS = 240_000;
@@ -138,6 +138,7 @@ export interface AccountMirrorVerifiedIdentityEvidence {
 	detectedIdentityObservedAtMs: number;
 	detectedIdentityConfidence: AccountMirrorIdentityEvidenceConfidence;
 	detectedAccountLevel: string | null;
+	providerSessionProof?: ProviderSessionProof;
 }
 
 export interface AttachmentInventoryCursor {
@@ -183,6 +184,7 @@ export interface AccountMirrorMetadataCollectorResult {
 	detectedIdentityObservedAtMs?: number | null;
 	detectedIdentityConfidence?: AccountMirrorIdentityEvidenceConfidence | string | null;
 	detectedAccountLevel: string | null;
+	providerSessionProof?: ProviderSessionProof;
 	metadataCounts: AccountMirrorMetadataCounts;
 	manifests: {
 		projects: Project[];
@@ -388,38 +390,26 @@ export function createChatgptAccountMirrorMetadataCollector(
 				input,
 				"page-refresh",
 			);
-			const identity = await runCollectorDiagnosticStage(
-				input,
-				"identity",
-				() =>
-					withProviderCallTimeout(
-						(abortSignal) => client.getUserIdentity({ ...listOptions, abortSignal }),
+				const providerSessionProof = await runCollectorDiagnosticStage(
+					input,
+					"identity",
+					() =>
+						withProviderCallTimeout(
+							(abortSignal) => client.getProviderSessionProof({ ...listOptions, abortSignal }),
 						identityProviderCallTimeoutMs,
 						`Identity discovery timed out for ${input.provider}/${input.runtimeProfileId}.`,
 						input.abortSignal,
 					),
 				{ providerCallTimeoutMs: identityProviderCallTimeoutMs },
-			);
-			throwIfCollectionAborted(input.abortSignal);
-			const detectedIdentityKey = readProviderIdentityKey(input.provider, identity);
-			const expectedIdentityKey = normalizeAccountMirrorProviderIdentityKey(
-				input.provider,
-				input.expectedIdentityKey,
-			);
-			if (
-				!expectedIdentityKey ||
-				!detectedIdentityKey ||
-				(detectedIdentityKey &&
-					accountMirrorIdentityKeysMismatch({
-						provider: input.provider,
-						expectedIdentityKey,
+				);
+				throwIfCollectionAborted(input.abortSignal);
+				const identity = providerSessionProof.observation;
+				const detectedIdentityKey = readProviderIdentityKey(input.provider, identity);
+				if (!detectedIdentityKey) {
+					throw new AccountMirrorIdentityMismatchError(
+						input.provider,
+						providerSessionProof.expectation.configuredServiceAccountId ?? input.expectedIdentityKey,
 						detectedIdentityKey,
-					}))
-			) {
-				throw new AccountMirrorIdentityMismatchError(
-					input.provider,
-					expectedIdentityKey ?? "",
-					detectedIdentityKey,
 				);
 			}
 			const verifiedIdentity: AccountMirrorVerifiedIdentityEvidence = {
@@ -427,7 +417,8 @@ export function createChatgptAccountMirrorMetadataCollector(
 				detectedIdentitySource: "provider-app",
 				detectedIdentityObservedAtMs: Date.now(),
 				detectedIdentityConfidence: "authoritative",
-				detectedAccountLevel: readAccountLevel(identity),
+					detectedAccountLevel: readAccountLevel(identity),
+					providerSessionProof,
 			};
 			await input.onIdentityVerified?.(verifiedIdentity);
 			await reportCollectorProgress(input, { phase: "identity", event: "completed" });
@@ -703,7 +694,8 @@ export function createChatgptAccountMirrorMetadataCollector(
 				detectedIdentitySource: verifiedIdentity.detectedIdentitySource,
 				detectedIdentityObservedAtMs: verifiedIdentity.detectedIdentityObservedAtMs,
 				detectedIdentityConfidence: verifiedIdentity.detectedIdentityConfidence,
-				detectedAccountLevel: verifiedIdentity.detectedAccountLevel,
+					detectedAccountLevel: verifiedIdentity.detectedAccountLevel,
+					providerSessionProof,
 				metadataCounts: {
 					projects: projects.items.length,
 					conversations: conversations.length,
@@ -720,6 +712,7 @@ export function createChatgptAccountMirrorMetadataCollector(
 				},
 				evidence: {
 					identitySource: identity?.source ?? null,
+					providerSessionProof: summarizeProviderSessionProof(providerSessionProof),
 					projectSampleIds: projects.items.slice(0, 8).map((project) => project.id),
 					conversationSampleIds: conversations.slice(0, 8).map((conversation) => conversation.id),
 					detailConversationIdsThisPass: uniqueStrings(

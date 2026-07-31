@@ -102,10 +102,6 @@ export class GrokService extends LlmService {
   async getUserIdentity(
     options?: BrowserProviderListOptions,
   ): Promise<ProviderUserIdentity | null> {
-    if (!this.provider.getUserIdentity) {
-      return null;
-    }
-    const listOptions = await this.buildListOptions(options, { ensurePort: true });
-    return this.provider.getUserIdentity(listOptions);
+    return (await this.getProviderSessionProof(options)).observation;
   }
 }

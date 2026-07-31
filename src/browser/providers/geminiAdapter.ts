@@ -47,10 +47,9 @@ import {
 	type GeminiActivityEvidence,
 } from "./geminiEvidence.js";
 import {
-	assertProviderIdentityPreflight,
-	checkProviderIdentityPreflight,
-	providerIdentityPreflightRequested,
-} from "./identityPreflight.js";
+	assertProviderSessionAuthorization,
+	recordProviderSessionProof,
+} from "./providerSessionAuthority.js";
 import {
 	annotateClientMutationContext,
 	resolveMutationAudit,
@@ -1518,14 +1517,19 @@ async function assertGeminiExpectedIdentity(
 	client: ChromeClient,
 	options?: BrowserProviderListOptions,
 ): Promise<void> {
-	if (!providerIdentityPreflightRequested(options)) return;
-	assertProviderIdentityPreflight({
-		providerId: "gemini",
-		actualIdentity: await readGeminiUserIdentity(client),
-		fallbackIdentity: options?.identityPreflightFallbackIdentity,
-		expectedIdentity: options?.expectedUserIdentity,
-		expectedServiceAccountId: options?.expectedServiceAccountId,
-	});
+	if (!options?.providerSessionAuthorization) {
+		throw new Error("Gemini provider-session authorization context is missing.");
+	}
+	assertProviderSessionAuthorization(
+		options.providerSessionAuthorization,
+		await readGeminiUserIdentity(client),
+		{
+			browserTargetId:
+				options.tabTargetId ?? options.providerSessionAuthorization.context.browserTargetId ?? null,
+			devtoolsHost: options.host ?? options.providerSessionAuthorization.context.devtoolsHost ?? null,
+			devtoolsPort: options.port ?? options.providerSessionAuthorization.context.devtoolsPort ?? null,
+		},
+	);
 }
 
 async function clickGeminiFeatureProbeTarget(
@@ -7504,34 +7508,28 @@ export function createGeminiAdapter(): Pick<
 						targetUrl,
 					},
 				});
-				const authPreflight = providerIdentityPreflightRequested(options)
-					? checkProviderIdentityPreflight({
-							providerId: "gemini",
-							actualIdentity: await readGeminiUserIdentity(client),
-							fallbackIdentity: options?.identityPreflightFallbackIdentity,
-							expectedIdentity: options?.expectedUserIdentity,
-							expectedServiceAccountId: options?.expectedServiceAccountId,
+				const authorization = options?.providerSessionAuthorization;
+				const providerSessionProof = authorization
+					? authorization.authority.verify({
+							context: {
+								...authorization.context,
+								browserTargetId: targetId ?? authorization.context.browserTargetId ?? null,
+								devtoolsHost: host,
+								devtoolsPort: port,
+							},
+							expectation: authorization.expectation,
+							observation: await readGeminiUserIdentity(client),
 						})
 					: null;
-				if (authPreflight) {
+				if (authorization && providerSessionProof) {
+					recordProviderSessionProof(authorization, providerSessionProof);
 					await emitProgress({
 						phase: "provider_auth_preflight",
 						details: {
-							ok: authPreflight.ok,
-							reason: authPreflight.reason,
-							expectedServiceAccountId: authPreflight.expectedServiceAccountId,
-							expectedIdentity: authPreflight.expectedIdentity,
-							actualIdentity: authPreflight.actualIdentity,
+							providerSessionProof,
 						},
 					});
-					if (!authPreflight.ok) {
-						assertProviderIdentityPreflight({
-							providerId: "gemini",
-							actualIdentity: authPreflight.actualIdentity,
-							expectedIdentity: authPreflight.expectedIdentity,
-							expectedServiceAccountId: authPreflight.expectedServiceAccountId,
-						});
-					}
+					authorization.authority.assertProof(providerSessionProof);
 				}
 				await navigateToGeminiConversationSurface(client, targetUrl);
 				await emitProgress({

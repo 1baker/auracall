@@ -19796,3 +19796,20 @@ browser-stage lifecycle observability, not transcript truncation.
   state inside the same lifecycle, and either returns idle after success/skip
   or blocks with `account_mirror_materialization_failed` after failure without
   another collector refresh.
+
+## 2026-07-31 | Browser Provenance Must Never Authorize Provider Login
+
+- Symptom: one live-follow collector accepted the provider account, then the
+  same cycle's materializer rejected six transfers because expected provider
+  identity had been reconstructed independently from runtime, browser, and
+  cache-binding inputs.
+- Durable rule: AuraCall runtime profile, browser profile, source browser
+  profile, managed browser directory/process, configured provider account, and
+  observed provider session are non-interchangeable facts. Only provider
+  service config supplies expectation; only provider-app adapter evidence
+  supplies observation.
+- Repair: one deep provider-session authority owns expectation resolution,
+  normalization, dimensional comparison, actionable errors, and proof lifetime
+  bound to browser process plus target. Collector/materializer receipts persist
+  redacted summaries. Chrome Google sign-in remains visible to operators but is
+  never provider-account authorization evidence.

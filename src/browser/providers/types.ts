@@ -2,6 +2,10 @@ import type { BrowserInteractionGovernor } from "../../../packages/browser-servi
 import type { BrowserMutationAuditSink } from "../../../packages/browser-service/src/service/mutationDispatcher.js";
 import type { ConversationArtifact, FileRef, Project, ProjectMemoryMode } from "./domain.js";
 import type { BrowserScrapeTelemetryRecorder } from "./scrapeTelemetry.js";
+import type {
+	ProviderSessionAuthorization,
+	ProviderSessionProof,
+} from "./providerSessionAuthority.js";
 
 export type SelectorList = readonly string[];
 
@@ -52,9 +56,8 @@ export interface BrowserProviderListOptions {
 	mutationAudit?: BrowserMutationAuditSink;
 	mutationSourcePrefix?: string;
 	interactionGovernor?: BrowserInteractionGovernor;
-	expectedUserIdentity?: ProviderUserIdentity | null;
-	expectedServiceAccountId?: string | null;
-	identityPreflightFallbackIdentity?: ProviderUserIdentity | null;
+	providerSessionAuthorization?: ProviderSessionAuthorization;
+	onProviderSessionProof?: (proof: ProviderSessionProof) => void;
 	skipFeatureSignature?: boolean;
 	disableProjectClickFallback?: boolean;
 	abortSignal?: AbortSignal;

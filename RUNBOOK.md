@@ -1,5 +1,34 @@
 # RUNBOOK
 
+## Turn 376 | 2026-07-31
+
+- Plan 0179 M1-M4 implementation is provider-free green. One deep
+  `providerSessionAuthority` now resolves configured provider-account
+  expectations, normalizes provider observations, compares dimension evidence,
+  and binds proofs to browser process plus target fingerprints.
+- Removed the distributed `expectedUserIdentity` / `expectedServiceAccountId`
+  paths, materialization derivation from `boundIdentityKey`, Gemini managed-
+  Chrome Google-account fallback authorization, and browser-doctor account
+  comparisons. Chrome sign-in remains visible only as informational browser
+  provenance.
+- Collector, conversation/account/project/media materialization, prompt,
+  identity-smoke, and doctor paths use the same seam. Mirror evidence and
+  materialization job/results persist redacted proof summaries with verdict,
+  dimensions, evidence sources/time, session fingerprint, provenance, and
+  invalidation reason.
+- Provider-free validation: full suite 2673 passed / 65 skipped; focused
+  structural and authority checks, typecheck, production build, lint with zero
+  errors, plan audit, and diff hygiene pass. Scheduler/completions have not been
+  resumed and no browser/provider work occurred.
+- Pre-install readback: API PID `1032` is active; scheduler posture/state are
+  paused; five active completions are paused; default ChatGPT remains blocked
+  at pass 37 with a null force marker/guard; queued/running completion and
+  history-materialization counts are zero.
+- Remaining M5 order: commit and push, recheck containment, install with
+  source/runtime parity and a new PID, then
+  stop for a separate explicit authorization for exactly one default ChatGPT
+  pass. The current execution request does not authorize that pass.
+
 ## Turn 375 | 2026-07-31
 
 - Opened Plan 0179:

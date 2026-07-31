@@ -1,16 +1,15 @@
-import { getPreferredRuntimeProfile, getPreferredRuntimeProfileName } from '../config/model.js';
-import { resolveConfiguredServiceAccountId } from '../config/serviceAccountIdentity.js';
+import { getPreferredRuntimeProfileName } from '../config/model.js';
 import {
-  checkProviderIdentityPreflight,
-  describeProviderIdentity,
-  type ProviderIdentityPreflightResult,
-} from '../browser/providers/identityPreflight.js';
+  createProviderSessionAuthority,
+  type ProviderSessionContext,
+  type ProviderSessionProof,
+} from '../browser/providers/providerSessionAuthority.js';
 import type { BrowserProviderConfig, ProviderUserIdentity } from '../browser/providers/types.js';
 
 type MutableRecord = Record<string, unknown>;
 
 export const PROFILE_IDENTITY_SMOKE_CONTRACT = 'auracall.profile-identity-smoke';
-export const PROFILE_IDENTITY_SMOKE_CONTRACT_VERSION = 1;
+export const PROFILE_IDENTITY_SMOKE_CONTRACT_VERSION = 2;
 export const PROFILE_IDENTITY_SMOKE_BATCH_CONTRACT = 'auracall.profile-identity-smoke.batch';
 
 export type ProfileIdentitySmokeProvider = BrowserProviderConfig['id'];
@@ -30,7 +29,7 @@ export interface ProfileIdentitySmokeNegativeCheck {
   requested: boolean;
   ok: boolean;
   expectedReason: string;
-  preflight: ProviderIdentityPreflightResult | null;
+  proof: ProviderSessionProof | null;
 }
 
 export interface ProfileIdentitySmokeReport {
@@ -44,7 +43,7 @@ export interface ProfileIdentitySmokeReport {
   actualIdentity: ProviderUserIdentity | null;
   identityStatus: unknown;
   localReport: unknown;
-  preflight: ProviderIdentityPreflightResult;
+  providerSessionProof: ProviderSessionProof;
   negative: ProfileIdentitySmokeNegativeCheck;
 }
 
@@ -59,42 +58,12 @@ export interface ProfileIdentitySmokeBatchReport {
   ok: boolean;
 }
 
-function isRecord(value: unknown): value is MutableRecord {
-  return Boolean(value && typeof value === 'object' && !Array.isArray(value));
-}
-
-function normalizeProviderIdentity(identity: unknown, source: 'profile' | 'config'): ProviderUserIdentity | null {
-  if (!isRecord(identity)) return null;
-  const normalized: ProviderUserIdentity = { source };
-  if (typeof identity.name === 'string' && identity.name.trim()) normalized.name = identity.name.trim();
-  if (typeof identity.handle === 'string' && identity.handle.trim()) normalized.handle = identity.handle.trim();
-  if (typeof identity.email === 'string' && identity.email.trim()) normalized.email = identity.email.trim();
-  if (typeof identity.id === 'string' && identity.id.trim()) normalized.id = identity.id.trim();
-  if (typeof identity.accountId === 'string' && identity.accountId.trim()) {
-    normalized.accountId = identity.accountId.trim();
+function describeProviderIdentity(identity: ProviderUserIdentity | null | undefined): string | null {
+  if (!identity) return null;
+  for (const candidate of [identity.email, identity.handle, identity.name, identity.id, identity.accountId]) {
+    if (typeof candidate === 'string' && candidate.trim()) return candidate.trim();
   }
-  if (typeof identity.accountLevel === 'string' && identity.accountLevel.trim()) {
-    normalized.accountLevel = identity.accountLevel.trim();
-  }
-  if (typeof identity.accountPlanType === 'string' && identity.accountPlanType.trim()) {
-    normalized.accountPlanType = identity.accountPlanType.trim();
-  }
-  if (typeof identity.accountStructure === 'string' && identity.accountStructure.trim()) {
-    normalized.accountStructure = identity.accountStructure.trim();
-  }
-  if (typeof identity.organizationId === 'string' && identity.organizationId.trim()) {
-    normalized.organizationId = identity.organizationId.trim();
-  }
-  if (typeof identity.capabilityProfile === 'string' && identity.capabilityProfile.trim()) {
-    normalized.capabilityProfile = identity.capabilityProfile.trim();
-  }
-  if (typeof identity.proAccess === 'string' && identity.proAccess.trim()) {
-    normalized.proAccess = identity.proAccess.trim();
-  }
-  if (typeof identity.deepResearchAccess === 'string' && identity.deepResearchAccess.trim()) {
-    normalized.deepResearchAccess = identity.deepResearchAccess.trim();
-  }
-  return Object.keys(normalized).some((key) => key !== 'source') ? normalized : null;
+  return null;
 }
 
 export function normalizeProfileIdentitySmokeProvider(value: unknown): ProfileIdentitySmokeProvider {
@@ -151,26 +120,17 @@ export function resolveConfiguredProviderIdentity(
     getPreferredRuntimeProfileName(config, {
       explicitAgentId: input.explicitAgentId ?? null,
     });
-  const runtimeProfile = getPreferredRuntimeProfile(config, {
-    explicitProfileName: runtimeProfileId,
-    explicitAgentId: input.explicitAgentId ?? null,
+  const authority = createProviderSessionAuthority(config);
+  const expectation = authority.resolveExpectation({
+    providerId: input.providerId,
+    auracallRuntimeProfile: runtimeProfileId,
+    browserProfile: null,
+    managedBrowserProfile: null,
   });
-  const profileServices = isRecord(runtimeProfile?.services) ? runtimeProfile.services : null;
-  const profileServiceValue = profileServices?.[input.providerId];
-  const profileService = isRecord(profileServiceValue) ? profileServiceValue : null;
-  const profileIdentity = normalizeProviderIdentity(profileService?.identity, 'profile');
-  const globalServices = isRecord(config.services) ? config.services : null;
-  const globalServiceValue = globalServices?.[input.providerId];
-  const globalService = isRecord(globalServiceValue) ? globalServiceValue : null;
-  const globalIdentity = normalizeProviderIdentity(globalService?.identity, 'config');
-  const identity = profileIdentity ?? globalIdentity;
   return {
-    identity,
-    serviceAccountId: resolveConfiguredServiceAccountId(config, {
-      serviceId: input.providerId,
-      runtimeProfileId,
-    }),
-    source: identity?.source === 'profile' || identity?.source === 'config' ? identity.source : null,
+    identity: expectation.configuredIdentity,
+    serviceAccountId: expectation.configuredServiceAccountId,
+    source: expectation.source === 'runtime-profile' ? 'profile' : expectation.source === 'global-config' ? 'config' : null,
   };
 }
 
@@ -180,6 +140,7 @@ export function buildProfileIdentitySmokeReport(input: {
   runtimeProfileId?: string | null;
   explicitAgentId?: string | null;
   actualIdentity: ProviderUserIdentity | null;
+  providerSessionProof?: ProviderSessionProof | null;
   identityStatus: unknown;
   localReport: unknown;
   launchedBrowser?: boolean;
@@ -196,19 +157,25 @@ export function buildProfileIdentitySmokeReport(input: {
     runtimeProfileId: runtimeProfile,
     explicitAgentId: input.explicitAgentId ?? null,
   });
-  const preflight = checkProviderIdentityPreflight({
+  const authority = createProviderSessionAuthority(input.config);
+  const context: ProviderSessionContext = input.providerSessionProof?.provenance ?? {
     providerId: input.target,
-    actualIdentity: input.actualIdentity,
-    expectedIdentity: expected.identity,
-    expectedServiceAccountId: expected.serviceAccountId,
+    auracallRuntimeProfile: runtimeProfile,
+    browserProfile: null,
+    managedBrowserProfile: null,
+  };
+  const providerSessionProof = authority.verify({
+    context,
+    expectation: authority.resolveExpectation(context),
+    observation: input.actualIdentity,
   });
-  const expectedReason = `${input.target}_expected_identity_missing`;
-  const negativePreflight = input.includeNegative
-    ? checkProviderIdentityPreflight({
-        providerId: input.target,
-        actualIdentity: input.actualIdentity,
-        expectedIdentity: null,
-        expectedServiceAccountId: null,
+  const expectedReason = 'provider_session_expectation_missing';
+  const emptyAuthority = createProviderSessionAuthority({});
+  const negativeProof = input.includeNegative
+    ? emptyAuthority.verify({
+        context,
+        expectation: emptyAuthority.resolveExpectation(context),
+        observation: input.actualIdentity,
       })
     : null;
   return {
@@ -219,23 +186,23 @@ export function buildProfileIdentitySmokeReport(input: {
     target: input.target,
     launchedBrowser: Boolean(input.launchedBrowser),
     expected,
-    actualIdentity: preflight.actualIdentity,
+    actualIdentity: providerSessionProof.observation,
     identityStatus: input.identityStatus,
     localReport: input.localReport,
-    preflight,
+    providerSessionProof,
     negative: {
       requested: Boolean(input.includeNegative),
       ok: input.includeNegative
-        ? Boolean(!negativePreflight?.ok && negativePreflight?.reason === expectedReason)
+        ? negativeProof?.failureReason === expectedReason
         : true,
       expectedReason,
-      preflight: negativePreflight,
+      proof: negativeProof,
     },
   };
 }
 
 export function resolveProfileIdentitySmokeExitCode(report: ProfileIdentitySmokeReport): number {
-  return report.preflight.ok && report.negative.ok ? 0 : 1;
+  return report.providerSessionProof.verdict === 'match' && report.negative.ok ? 0 : 1;
 }
 
 export function buildProfileIdentitySmokeBatchReport(input: {
@@ -268,7 +235,9 @@ export function formatProfileIdentitySmokeReport(report: ProfileIdentitySmokeRep
   const actual = describeProviderIdentity(report.actualIdentity) ?? '(identity not detected)';
   const expectedAccountLevel = report.expected.identity?.accountLevel ?? null;
   const actualAccountLevel = report.actualIdentity?.accountLevel ?? null;
-  const status = report.preflight.ok ? 'PASS' : `FAIL ${report.preflight.reason ?? 'unknown'}`;
+  const status = report.providerSessionProof.verdict === 'match'
+    ? 'PASS'
+    : `FAIL ${report.providerSessionProof.failureReason ?? report.providerSessionProof.verdict}`;
   const negative =
     report.negative.requested
       ? `\nNegative missing-identity check: ${report.negative.ok ? 'PASS' : 'FAIL'} (${report.negative.expectedReason})`
@@ -306,7 +275,9 @@ export function formatProfileIdentitySmokeBatchReport(report: ProfileIdentitySmo
         expectedAccountLevel || actualAccountLevel
           ? `; account level expected ${expectedAccountLevel ?? '(not configured)'}, actual ${actualAccountLevel ?? '(not detected)'}`
           : '';
-      const status = single.preflight.ok && single.negative.ok ? 'PASS' : `FAIL ${single.preflight.reason ?? 'unknown'}`;
+      const status = single.providerSessionProof.verdict === 'match' && single.negative.ok
+        ? 'PASS'
+        : `FAIL ${single.providerSessionProof.failureReason ?? single.providerSessionProof.verdict}`;
       return `- ${single.target}: ${status}; expected ${expected}; actual ${actual}${accountLevel}; launched ${
         single.launchedBrowser ? 'yes' : 'no'
       }`;

@@ -331,6 +331,10 @@ Terminology note:
 - source browser profile = Chromium profile used for cookie/bootstrap sourcing, such as `Default`
 - managed browser profile = Aura-Call-owned automation profile directory
 - AuraCall runtime profile = top-level `runtimeProfiles.<name>` config entry selected by `defaultRuntimeProfile` / `--profile`
+- configured provider account = expected logical account read only from the selected provider service configuration
+- observed provider account session = account evidence read only from the provider application or auth session
+- provider-session proof = the sole provider-login authorization result; it compares configured and observed provider-account dimensions and binds that verdict to one concrete browser process and target
+- Chrome/browser sign-in is bootstrap and browser provenance only. A Chrome Google account, browser profile name, source browser profile, managed-profile directory, DevTools port, or process never proves which ChatGPT, Gemini, or Grok account is signed in.
 - account-mirror tenant key = `service-account:<provider>:<boundIdentityKey>`; this owns cached provider projects, conversations, artifacts, files, media, search rows, archive rows, and checksums. ChatGPT Business/workspace bindings add configured account qualifiers (for example `|plan=team|structure=workspace`) so a Business workspace never shares the Personal cache merely because both sessions expose the same email. When only a Business account-level label is configured, Account Mirror adds the stable fallback `|structure=business`; display-only account-level labels do not otherwise change shared execution affinity.
 - account-mirror binding key = `binding:<provider>:<runtimeProfileId>:<browserProfileId>`; this identifies the current execution binding and status/backoff provenance
 - moving a tenant to another browser is a user-scoped binding edit plus managed-browser login/cookie seeding and `auracall profile identity-smoke --target <provider> --include-negative --json`; no account-mirror DB/cache migration is required when the provider plus bound identity stays the same

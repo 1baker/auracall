@@ -97,7 +97,7 @@ describe('createAuracallBrowserSetupContract', () => {
         target: 'grok',
         initialDoctor: {
           contract: 'auracall.browser-doctor',
-          version: 1,
+          version: 2,
           generatedAt: '2026-03-25T23:00:00.000Z',
           target: 'grok',
           localReport: {
@@ -164,7 +164,7 @@ describe('createAuracallBrowserSetupContract', () => {
       status: 'completed',
       initialDoctor: {
         contract: 'auracall.browser-doctor',
-        version: 1,
+        version: 2,
         generatedAt: '2026-03-25T23:00:00.000Z',
         target: 'grok',
         localReport: {
@@ -227,7 +227,7 @@ describe('createAuracallBrowserSetupContract', () => {
       target: 'chatgpt',
       initialDoctor: {
         contract: 'auracall.browser-doctor',
-        version: 1,
+        version: 2,
         generatedAt: '2026-03-25T23:00:00.000Z',
         target: 'chatgpt',
         localReport: {

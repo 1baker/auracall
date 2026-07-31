@@ -3,7 +3,6 @@ import { readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import type { DiagnosisReport } from '../inspector/doctor.js';
 import type { ResolvedUserConfig } from '../config.js';
-import { getPreferredRuntimeProfile } from '../config/model.js';
 import { getAuracallHomeDir } from '../auracallHome.js';
 import { BrowserAutomationClient } from './client.js';
 import {
@@ -16,6 +15,7 @@ import {
   resolveUserBrowserLaunchContext,
 } from './service/profileResolution.js';
 import type { ProviderUserIdentity } from './providers/types.js';
+import type { ProviderSessionProof } from './providers/providerSessionAuthority.js';
 import {
   findBrowserCookieFile,
   inferSourceProfileFromCookiePath,
@@ -100,6 +100,7 @@ export interface BrowserDoctorIdentityReport {
   supported: boolean;
   attempted: boolean;
   identity: ProviderUserIdentity | null;
+  providerSessionProof?: ProviderSessionProof | null;
   error: string | null;
   reason: string | null;
 }
@@ -115,23 +116,21 @@ export interface BrowserDoctorFeatureReport {
 }
 
 export type BrowserDoctorIdentityReconciliationStatus =
-  | 'provider_app_verified'
-  | 'provider_app_session_drift'
-  | 'provider_app_identity_unavailable'
-  | 'expected_identity_missing';
+  | 'provider_session_verified'
+  | 'provider_session_conflict'
+  | 'provider_session_missing'
+  | 'provider_session_stale';
 
 export interface BrowserDoctorIdentityReconciliation {
   target: BrowserDoctorTarget;
-  authority: 'provider-app-session';
+  authority: 'provider-session-proof';
   ok: boolean;
   status: BrowserDoctorIdentityReconciliationStatus;
   expectedIdentity: ProviderUserIdentity | null;
   providerAppIdentity: ProviderUserIdentity | null;
   chromeGoogleIdentity: ProviderUserIdentity | null;
-  providerMatchesExpected: boolean | null;
-  chromeMatchesExpected: boolean | null;
-  chromeMatchesProvider: boolean | null;
-  browserProfileMismatchIsInformational: boolean;
+  providerSessionProof: ProviderSessionProof | null;
+  chromeGoogleAccountIsInformational: true;
   summary: string;
 }
 
@@ -149,7 +148,7 @@ export function deriveProviderIdentityFromChromeGoogleAccount(
   };
 }
 
-export const AURACALL_BROWSER_DOCTOR_CONTRACT_VERSION = 1 as const;
+export const AURACALL_BROWSER_DOCTOR_CONTRACT_VERSION = 2 as const;
 
 export const AURACALL_BROWSER_FEATURES_CONTRACT_VERSION = 1 as const;
 
@@ -228,28 +227,6 @@ export function createAuracallBrowserDoctorContract(
   };
 }
 
-function normalizeIdentityComparable(value: unknown): string | null {
-  if (typeof value !== 'string') return null;
-  const normalized = value.trim().toLowerCase();
-  return normalized.length > 0 ? normalized : null;
-}
-
-function identitiesMatchForDoctor(
-  expected: ProviderUserIdentity | null | undefined,
-  actual: ProviderUserIdentity | null | undefined,
-): boolean | null {
-  if (!expected || !actual) return null;
-  const expectedEmail = normalizeIdentityComparable(expected.email);
-  if (expectedEmail) return expectedEmail === normalizeIdentityComparable(actual.email);
-  const expectedHandle = normalizeIdentityComparable(expected.handle);
-  if (expectedHandle) return expectedHandle === normalizeIdentityComparable(actual.handle);
-  const expectedName = normalizeIdentityComparable(expected.name);
-  if (expectedName) return expectedName === normalizeIdentityComparable(actual.name);
-  const expectedId = normalizeIdentityComparable(expected.id);
-  if (expectedId) return expectedId === normalizeIdentityComparable(actual.id);
-  return null;
-}
-
 function describeDoctorIdentity(identity: ProviderUserIdentity | null | undefined): string | null {
   if (!identity) return null;
   return asNonEmptyString(identity.email) ??
@@ -258,126 +235,41 @@ function describeDoctorIdentity(identity: ProviderUserIdentity | null | undefine
     asNonEmptyString(identity.id);
 }
 
-function resolveExpectedProviderIdentityFromConfig(
-  userConfig: ResolvedUserConfig,
-  target: BrowserDoctorTarget,
-): ProviderUserIdentity | null {
-  const configRecord = userConfig as unknown as Record<string, unknown>;
-  const runtimeProfile = getPreferredRuntimeProfile(configRecord, {
-    explicitProfileName: asNonEmptyString(userConfig.auracallProfile),
-  });
-  const profileServices = runtimeProfile && isRecord(runtimeProfile.services) ? runtimeProfile.services : null;
-  const globalServices = isRecord(configRecord.services) ? configRecord.services : {};
-  const profileService = profileServices && isRecord(profileServices[target]) ? profileServices[target] : null;
-  const globalService = isRecord(globalServices[target]) ? globalServices[target] : null;
-  const profileIdentity = isRecord(profileService?.identity) ? profileService.identity : null;
-  const globalIdentity = isRecord(globalService?.identity) ? globalService.identity : null;
-  const identity = profileIdentity ?? globalIdentity;
-  if (!identity) return null;
-  const resolved: ProviderUserIdentity = {
-    id: asNonEmptyString(identity.id) ?? undefined,
-    name: asNonEmptyString(identity.name) ?? undefined,
-    handle: asNonEmptyString(identity.handle) ?? undefined,
-    email: asNonEmptyString(identity.email) ?? undefined,
-    accountLevel: asNonEmptyString(identity.accountLevel) ?? undefined,
-    accountPlanType: asNonEmptyString(identity.accountPlanType) ?? undefined,
-    accountStructure: asNonEmptyString(identity.accountStructure) ?? undefined,
-    capabilityProfile: asNonEmptyString(identity.capabilityProfile) ?? undefined,
-    proAccess: asNonEmptyString(identity.proAccess) ?? undefined,
-    deepResearchAccess: asNonEmptyString(identity.deepResearchAccess) ?? undefined,
-    source: profileIdentity ? 'profile' : 'config',
-  };
-  return Object.values(resolved).some((value) => typeof value === 'string' && value.trim().length > 0)
-    ? resolved
-    : null;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value && typeof value === 'object' && !Array.isArray(value));
-}
-
 export function reconcileBrowserDoctorIdentities(
-  userConfig: ResolvedUserConfig,
+  _userConfig: ResolvedUserConfig,
   target: BrowserDoctorTarget,
   localReport: BrowserDoctorReport,
   identityStatus: BrowserDoctorIdentityReport | null | undefined,
 ): BrowserDoctorIdentityReconciliation {
-  const expectedIdentity = resolveExpectedProviderIdentityFromConfig(userConfig, target);
-  const providerAppIdentity = identityStatus?.identity ?? null;
+  const providerSessionProof = identityStatus?.providerSessionProof ?? null;
+  const expectedIdentity = providerSessionProof?.expectation.configuredIdentity ?? null;
+  const providerAppIdentity = providerSessionProof?.observation ?? identityStatus?.identity ?? null;
   const chromeGoogleIdentity = deriveProviderIdentityFromChromeGoogleAccount(localReport.chromeGoogleAccount);
-  const providerMatchesExpected = identitiesMatchForDoctor(expectedIdentity, providerAppIdentity);
-  const chromeMatchesExpected = identitiesMatchForDoctor(expectedIdentity, chromeGoogleIdentity);
-  const chromeMatchesProvider = identitiesMatchForDoctor(providerAppIdentity, chromeGoogleIdentity);
   const expectedLabel = describeDoctorIdentity(expectedIdentity) ?? 'unconfigured account';
   const providerLabel = describeDoctorIdentity(providerAppIdentity) ?? 'not detected';
   const chromeLabel = describeDoctorIdentity(chromeGoogleIdentity) ?? 'not detected';
-
-  if (!expectedIdentity) {
-    return {
-      target,
-      authority: 'provider-app-session',
-      ok: false,
-      status: 'expected_identity_missing',
-      expectedIdentity,
-      providerAppIdentity,
-      chromeGoogleIdentity,
-      providerMatchesExpected,
-      chromeMatchesExpected,
-      chromeMatchesProvider,
-      browserProfileMismatchIsInformational: false,
-      summary: `No expected ${target} account is configured; provider app session is ${providerLabel}, Chrome/Google profile is ${chromeLabel}.`,
-    };
-  }
-
-  if (!providerAppIdentity) {
-    return {
-      target,
-      authority: 'provider-app-session',
-      ok: false,
-      status: 'provider_app_identity_unavailable',
-      expectedIdentity,
-      providerAppIdentity,
-      chromeGoogleIdentity,
-      providerMatchesExpected,
-      chromeMatchesExpected,
-      chromeMatchesProvider,
-      browserProfileMismatchIsInformational: false,
-      summary: `Provider app session was not verified for expected ${expectedLabel}; Chrome/Google profile is ${chromeLabel}.`,
-    };
-  }
-
-  if (providerMatchesExpected === false) {
-    return {
-      target,
-      authority: 'provider-app-session',
-      ok: false,
-      status: 'provider_app_session_drift',
-      expectedIdentity,
-      providerAppIdentity,
-      chromeGoogleIdentity,
-      providerMatchesExpected,
-      chromeMatchesExpected,
-      chromeMatchesProvider,
-      browserProfileMismatchIsInformational: false,
-      summary: `Provider app session is ${providerLabel}, expected ${expectedLabel}; Chrome/Google profile is ${chromeLabel}.`,
-    };
-  }
-
+  const status: BrowserDoctorIdentityReconciliationStatus =
+    providerSessionProof?.verdict === 'match'
+      ? 'provider_session_verified'
+      : providerSessionProof?.verdict === 'conflict'
+        ? 'provider_session_conflict'
+        : providerSessionProof?.verdict === 'stale'
+          ? 'provider_session_stale'
+          : 'provider_session_missing';
+  const ok = status === 'provider_session_verified';
   return {
     target,
-    authority: 'provider-app-session',
-    ok: true,
-    status: 'provider_app_verified',
+    authority: 'provider-session-proof',
+    ok,
+    status,
     expectedIdentity,
     providerAppIdentity,
     chromeGoogleIdentity,
-    providerMatchesExpected,
-    chromeMatchesExpected,
-    chromeMatchesProvider,
-    browserProfileMismatchIsInformational: chromeMatchesProvider === false,
-    summary: chromeMatchesProvider === false
-      ? `Provider app session is verified as ${providerLabel}; Chrome/Google profile differs (${chromeLabel}) and is informational only.`
-      : `Provider app session is verified as ${providerLabel}.`,
+    providerSessionProof,
+    chromeGoogleAccountIsInformational: true,
+    summary: ok
+      ? `Provider-session proof verified configured ${target} account ${expectedLabel} against provider-app session ${providerLabel}. Chrome browser sign-in (${chromeLabel}) is separate informational provenance and was not used for authorization.`
+      : `Provider-session proof is ${providerSessionProof?.verdict ?? 'missing'} for configured ${target} account ${expectedLabel} and provider-app session ${providerLabel} (${providerSessionProof?.failureReason ?? 'provider_session_proof_missing'}). Chrome browser sign-in (${chromeLabel}) is separate informational provenance and was not used for authorization.`,
   };
 }
 
@@ -691,6 +583,7 @@ export async function inspectBrowserDoctorIdentity(
       supported: true,
       attempted: false,
       identity: null,
+      providerSessionProof: null,
       error: null,
       reason: null,
     };
@@ -698,12 +591,13 @@ export async function inspectBrowserDoctorIdentity(
 
   try {
     const client = await BrowserAutomationClient.fromConfig(userConfig, { target });
-    const identity = await client.getUserIdentity();
+    const providerSessionProof = await client.getProviderSessionProof();
     return {
       target,
       supported: true,
       attempted: true,
-      identity,
+      identity: providerSessionProof.observation,
+      providerSessionProof,
       error: null,
       reason: null,
     };
@@ -713,6 +607,7 @@ export async function inspectBrowserDoctorIdentity(
       supported: true,
       attempted: true,
       identity: null,
+      providerSessionProof: null,
       error: error instanceof Error ? error.message : String(error),
       reason: null,
     };

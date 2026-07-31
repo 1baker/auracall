@@ -42203,3 +42203,21 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   characterization, deep module, caller migration/old-path removal,
   diagnostics/docs, then installed validation behind a separate one-pass live
   authorization. No provider work is authorized by the planning slice.
+- M1-M4 are now implemented provider-free. The canonical authority owns
+  configured expectation lookup, provider vocabulary normalization,
+  dimensional evidence, actionable errors, and process/target proof lifetime.
+- Collector, prompt, all history materialization families, identity smoke, and
+  doctor paths share the authority seam. Redacted proof summaries persist in
+  account-mirror evidence and history-materialization job/result receipts.
+- Removed the old expected-identity option pair, history expectation derivation
+  from `boundIdentityKey`, Gemini Chrome-Google fallback authorization, and
+  doctor-local configured/provider/Chrome comparisons. Chrome sign-in is
+  diagnostic browser provenance only.
+- Full provider-free suite passes 2673 tests with 65 live/TTY tests skipped;
+  typecheck, build, lint with zero errors, plan audit, diff hygiene, and the
+  structural audit pass. No provider/browser work has run.
+- Pre-install readback proves API PID `1032`, paused scheduler posture/state,
+  five active paused completions, default ChatGPT terminal-blocked at pass 37,
+  null force marker/guard, and zero queued/running completion or
+  history-materialization work. M5 commit/push, install/parity, and the
+  separately authorized one-pass proof remain.

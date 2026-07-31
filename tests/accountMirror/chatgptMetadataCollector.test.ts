@@ -39,6 +39,29 @@ import {
 	recordBrowserScrapeProviderAction,
 } from "../../src/browser/providers/scrapeTelemetry.js";
 import type { BrowserProviderListOptions } from "../../src/browser/providers/types.js";
+import { createProviderSessionAuthority } from "../../src/browser/providers/providerSessionAuthority.js";
+
+function createCollectorProviderSessionProof(
+	providerId: "chatgpt" | "gemini" | "grok",
+	identity: { email: string; accountLevel?: string; source: string },
+) {
+	const authority = createProviderSessionAuthority({
+		profiles: { default: { services: { [providerId]: { identity } } } },
+	});
+	const context = {
+		providerId,
+		auracallRuntimeProfile: "default",
+		browserProfile: "default",
+		managedBrowserProfile: `/tmp/managed/${providerId}`,
+		browserProcessId: 1234,
+		browserTargetId: `${providerId}-target`,
+	};
+	return authority.verify({
+		context,
+		expectation: authority.resolveExpectation(context),
+		observation: identity,
+	});
+}
 
 describe("ChatGPT account mirror metadata collector", () => {
 	const cleanup: string[] = [];
@@ -962,7 +985,7 @@ describe("ChatGPT account mirror metadata collector", () => {
 	test("honors requested detail-inventory phase without root or project rail reads", async () => {
 		const calls: string[] = [];
 		const client = {
-			getUserIdentity: vi.fn(async () => ({
+			getProviderSessionProof: vi.fn(async () => createCollectorProviderSessionProof("chatgpt", {
 				email: "ecochran76@gmail.com",
 				accountLevel: "Business",
 				source: "auth-session",
@@ -1108,6 +1131,20 @@ describe("ChatGPT account mirror metadata collector", () => {
 		expect(client.listConversations).not.toHaveBeenCalled();
 		expect(client.listProjectFiles).not.toHaveBeenCalled();
 		expect(client.listAccountFiles).not.toHaveBeenCalled();
+		expect(result.evidence.providerSessionProof).toMatchObject({
+			providerId: "chatgpt",
+			verdict: "match",
+			failureReason: null,
+			sessionFingerprint: expect.any(String),
+			dimensions: expect.arrayContaining([
+				expect.objectContaining({
+					dimension: "email",
+					state: "match",
+					expectedFingerprint: expect.stringMatching(/^sha256:/),
+					observedFingerprint: expect.stringMatching(/^sha256:/),
+				}),
+			]),
+		});
 		expect(result.evidence.collectorProgress).toMatchObject({
 			phase: "complete",
 			attachmentCursor: expect.objectContaining({
@@ -1172,7 +1209,7 @@ describe("ChatGPT account mirror metadata collector", () => {
 	test("continues requested detail-inventory from the persisted selected-row cursor", async () => {
 		const calls: string[] = [];
 		const client = {
-			getUserIdentity: vi.fn(async () => ({
+			getProviderSessionProof: vi.fn(async () => createCollectorProviderSessionProof("chatgpt", {
 				email: "ecochran76@gmail.com",
 				accountLevel: "Business",
 				source: "auth-session",
@@ -1314,7 +1351,7 @@ describe("ChatGPT account mirror metadata collector", () => {
 			},
 		];
 		const client = {
-			getUserIdentity: vi.fn(async () => ({
+			getProviderSessionProof: vi.fn(async () => createCollectorProviderSessionProof("chatgpt", {
 				email: "ecochran76@gmail.com",
 				accountLevel: "Business",
 				source: "auth-session",
@@ -1428,7 +1465,7 @@ describe("ChatGPT account mirror metadata collector", () => {
 
 	test("counts passive telemetry for empty requested detail-inventory parses", async () => {
 		const client = {
-			getUserIdentity: vi.fn(async () => ({
+			getProviderSessionProof: vi.fn(async () => createCollectorProviderSessionProof("chatgpt", {
 				email: "ecochran76@gmail.com",
 				accountLevel: "Business",
 				source: "auth-session",
@@ -1555,7 +1592,7 @@ describe("ChatGPT account mirror metadata collector", () => {
 	test("honors requested project-conversations phase without root rail reads", async () => {
 		const calls: string[] = [];
 		const client = {
-			getUserIdentity: vi.fn(async () => ({
+			getProviderSessionProof: vi.fn(async () => createCollectorProviderSessionProof("chatgpt", {
 				email: "ecochran76@gmail.com",
 				accountLevel: "Business",
 				source: "auth-session",
@@ -2765,7 +2802,7 @@ describe("ChatGPT account mirror metadata collector", () => {
 			provider: "gemini" as const,
 		}));
 		const client = {
-			getUserIdentity: vi.fn(async () => ({
+			getProviderSessionProof: vi.fn(async () => createCollectorProviderSessionProof("gemini", {
 				email: "operator@example.com",
 				source: "google-account-label",
 			})),

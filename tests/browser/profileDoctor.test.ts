@@ -21,6 +21,31 @@ import {
   inspectBrowserDoctorState,
   reconcileBrowserDoctorIdentities,
 } from '../../src/browser/profileDoctor.js';
+import { createProviderSessionAuthority } from '../../src/browser/providers/providerSessionAuthority.js';
+
+function createDoctorProviderSessionProof(
+  providerId: 'chatgpt' | 'gemini' | 'grok',
+  identity: { email?: string; name?: string; handle?: string; accountLevel?: string; source?: string },
+) {
+  const authority = createProviderSessionAuthority({
+    profiles: {
+      default: { services: { [providerId]: { identity: { ...identity, source: undefined } } } },
+    },
+  });
+  const context = {
+    providerId,
+    auracallRuntimeProfile: 'default',
+    browserProfile: 'default',
+    managedBrowserProfile: `/tmp/managed/default/${providerId}`,
+    browserProcessId: 1234,
+    browserTargetId: `${providerId}-target`,
+  };
+  return authority.verify({
+    context,
+    expectation: authority.resolveExpectation(context),
+    observation: identity,
+  });
+}
 
 type ChromeProfileInfo = {
   name: string;
@@ -546,7 +571,7 @@ describe('profileDoctor', () => {
 
   it('reports the signed-in managed account identity when a supported browser instance is alive', async () => {
     browserAutomationClientMocks.fromConfig.mockResolvedValue({
-      getUserIdentity: vi.fn(async () => ({
+      getProviderSessionProof: vi.fn(async () => createDoctorProviderSessionProof('grok', {
         name: 'Eric C',
         handle: '@SwantonDoug',
         email: 'ez86944@gmail.com',
@@ -611,6 +636,7 @@ describe('profileDoctor', () => {
         email: 'ez86944@gmail.com',
         source: 'next-flight',
       },
+      providerSessionProof: expect.objectContaining({ verdict: 'match', providerId: 'grok' }),
       error: null,
       reason: null,
     });
@@ -656,6 +682,7 @@ describe('profileDoctor', () => {
       supported: true,
       attempted: false,
       identity: null,
+      providerSessionProof: null,
       error: null,
       reason: null,
     });
@@ -664,7 +691,7 @@ describe('profileDoctor', () => {
 
   it('probes Gemini account identity when a managed session is alive', async () => {
     browserAutomationClientMocks.fromConfig.mockResolvedValue({
-      getUserIdentity: vi.fn(async () => ({
+      getProviderSessionProof: vi.fn(async () => createDoctorProviderSessionProof('gemini', {
         name: 'Eric Cochran',
         email: 'ecochran76@gmail.com',
         source: 'google-account-label',
@@ -726,6 +753,7 @@ describe('profileDoctor', () => {
         email: 'ecochran76@gmail.com',
         source: 'google-account-label',
       },
+      providerSessionProof: expect.objectContaining({ verdict: 'match', providerId: 'gemini' }),
       error: null,
       reason: null,
     });
@@ -834,7 +862,7 @@ describe('profileDoctor', () => {
 
     expect(contract).toEqual({
       contract: 'auracall.browser-doctor',
-      version: 1,
+      version: 2,
       generatedAt: '2026-03-25T22:00:05.000Z',
       target: 'grok',
       localReport: {
@@ -1085,6 +1113,11 @@ describe('profileDoctor', () => {
           accountLevel: 'Pro',
           source: 'auth-session',
         },
+        providerSessionProof: createDoctorProviderSessionProof('chatgpt', {
+          email: 'eric.cochran@soylei.com',
+          accountLevel: 'Pro',
+          source: 'auth-session',
+        }),
         error: null,
         reason: null,
       },
@@ -1092,12 +1125,10 @@ describe('profileDoctor', () => {
 
     expect(reconciliation).toMatchObject({
       ok: true,
-      status: 'provider_app_verified',
-      providerMatchesExpected: true,
-      chromeMatchesExpected: false,
-      chromeMatchesProvider: false,
-      browserProfileMismatchIsInformational: true,
+      status: 'provider_session_verified',
+      chromeGoogleAccountIsInformational: true,
+      providerSessionProof: expect.objectContaining({ verdict: 'match' }),
     });
-    expect(reconciliation.summary).toContain('informational only');
+    expect(reconciliation.summary).toContain('separate informational provenance');
   });
 });

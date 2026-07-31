@@ -12,6 +12,10 @@ import type {
   ProviderUserIdentity,
 } from './types.js';
 import type { ChromeClient } from '../types.js';
+import {
+  recordProviderSessionProof,
+  type ProviderSessionProof,
+} from './providerSessionAuthority.js';
 import { providerNavigationAllowed } from './navigationPolicy.js';
 import { annotateClientMutationContext, resolveMutationAudit, resolveMutationSource } from './mutationAudit.js';
 import { connectToChromeTarget, openOrReuseChromeTarget } from '../../../packages/browser-service/src/chromeLifecycle.js';
@@ -1062,20 +1066,18 @@ type GrokBrowserAuthPreflightResult = {
   reason: string | null;
   href: string | null;
   title: string | null;
-  expectedServiceAccountId: string | null;
-  expectedIdentity: ProviderUserIdentity | null;
   actualIdentity: ProviderUserIdentity | null;
+  providerSessionProof: ProviderSessionProof | null;
   guestAuthCta: boolean;
   bodyText: string | null;
 };
 
 export async function checkGrokBrowserAuthPreflight(
   Runtime: ChromeClient['Runtime'],
-  options: Pick<BrowserProviderListOptions, 'expectedUserIdentity' | 'expectedServiceAccountId'> = {},
+  options: BrowserProviderListOptions = {},
 ): Promise<GrokBrowserAuthPreflightResult> {
   let page = await readGrokAuthPageState(Runtime);
-  const expectedIdentity = normalizeExpectedProviderIdentity(options.expectedUserIdentity);
-  const expectedServiceAccountId = normalizeStringOrNull(options.expectedServiceAccountId);
+	const authorization = options.providerSessionAuthorization;
   let authChallengeReason = classifyGrokAuthChallenge(page);
   if (authChallengeReason && isHardGrokAuthChallenge(authChallengeReason)) {
     return {
@@ -1083,9 +1085,8 @@ export async function checkGrokBrowserAuthPreflight(
       reason: authChallengeReason,
       href: page.href,
       title: page.title,
-      expectedServiceAccountId,
-      expectedIdentity,
       actualIdentity: null,
+      providerSessionProof: null,
       guestAuthCta: page.guestAuthCta,
       bodyText: page.bodyText,
     };
@@ -1107,9 +1108,8 @@ export async function checkGrokBrowserAuthPreflight(
       reason: authChallengeReason,
       href: page.href,
       title: page.title,
-      expectedServiceAccountId,
-      expectedIdentity,
       actualIdentity,
+      providerSessionProof: null,
       guestAuthCta: detected.guestAuthCta || page.guestAuthCta,
       bodyText: page.bodyText,
     };
@@ -1120,50 +1120,40 @@ export async function checkGrokBrowserAuthPreflight(
       reason: detected.guestAuthCta || page.guestAuthCta ? 'grok_sign_in_required' : 'grok_identity_not_detected',
       href: page.href,
       title: page.title,
-      expectedServiceAccountId,
-      expectedIdentity,
       actualIdentity,
+      providerSessionProof: null,
       guestAuthCta: detected.guestAuthCta || page.guestAuthCta,
       bodyText: page.bodyText,
     };
   }
 
-  if (!expectedIdentity && !expectedServiceAccountId) {
+  if (!authorization) {
     return {
       ok: false,
-      reason: 'grok_expected_identity_missing',
+      reason: 'provider_session_authorization_missing',
       href: page.href,
       title: page.title,
-      expectedServiceAccountId,
-      expectedIdentity,
       actualIdentity,
+      providerSessionProof: null,
       guestAuthCta: detected.guestAuthCta || page.guestAuthCta,
       bodyText: page.bodyText,
     };
   }
 
-  if (expectedIdentity && !providerIdentitiesMatch(expectedIdentity, actualIdentity)) {
-    return {
-      ok: false,
-      reason: 'grok_account_mismatch',
-      href: page.href,
-      title: page.title,
-      expectedServiceAccountId,
-      expectedIdentity,
-      actualIdentity,
-      guestAuthCta: detected.guestAuthCta || page.guestAuthCta,
-      bodyText: page.bodyText,
-    };
-  }
+	const providerSessionProof = authorization.authority.verify({
+		context: authorization.context,
+		expectation: authorization.expectation,
+		observation: actualIdentity,
+	});
+	recordProviderSessionProof(authorization, providerSessionProof);
 
   return {
-    ok: true,
-    reason: null,
+    ok: providerSessionProof.verdict === 'match',
+    reason: providerSessionProof.failureReason,
     href: page.href,
     title: page.title,
-    expectedServiceAccountId,
-    expectedIdentity,
     actualIdentity,
+    providerSessionProof,
     guestAuthCta: detected.guestAuthCta || page.guestAuthCta,
     bodyText: page.bodyText,
   };
@@ -1203,19 +1193,13 @@ async function assertGrokBrowserAuthPreflight(
   if (preflight.ok) {
     return preflight;
   }
-  if (preflight.reason === 'grok_expected_identity_missing') {
-    const actual = describeProviderIdentity(preflight.actualIdentity) ?? 'detected signed-in account';
-    const location = preflight.href ? ` at ${preflight.href}` : '';
-    throw new Error(
-      `Grok browser auth preflight failed (${preflight.reason}${location}); no expected Grok account is configured, found ${actual}. ` +
-        'Bind the detected account to this AuraCall runtime profile before retrying.',
-    );
-  }
-  const expected = describeProviderIdentity(preflight.expectedIdentity) ?? preflight.expectedServiceAccountId ?? 'configured Grok account';
-  const actual = describeProviderIdentity(preflight.actualIdentity) ?? (preflight.guestAuthCta ? 'signed out' : 'unknown account');
+	if (preflight.providerSessionProof && options?.providerSessionAuthorization) {
+		options.providerSessionAuthorization.authority.assertProof(preflight.providerSessionProof);
+	}
+	const actual = describeProviderIdentity(preflight.actualIdentity) ?? (preflight.guestAuthCta ? 'signed out' : 'unknown account');
   const location = preflight.href ? ` at ${preflight.href}` : '';
   throw new Error(
-    `Grok browser auth preflight failed (${preflight.reason ?? 'unknown'}${location}); expected ${expected}, found ${actual}. ` +
+		`Grok browser auth preflight failed (${preflight.reason ?? 'unknown'}${location}); found ${actual}. ` +
       'Switch/sign into the expected account for this AuraCall runtime profile or update the binding before retrying. ' +
       'Do not clear, reset, or quarantine the managed browser profile unless an operator explicitly approves that repair.',
   );
@@ -1281,42 +1265,6 @@ function classifyGrokAuthChallenge(page: { href: string | null; title: string | 
     return 'grok_sign_in_required';
   }
   return null;
-}
-
-function normalizeExpectedProviderIdentity(identity: ProviderUserIdentity | null | undefined): ProviderUserIdentity | null {
-  if (!identity) return null;
-  const normalized: ProviderUserIdentity = {};
-  if (normalizeStringOrNull(identity.id)) normalized.id = normalizeStringOrNull(identity.id) ?? undefined;
-  if (normalizeStringOrNull(identity.email)) normalized.email = normalizeStringOrNull(identity.email) ?? undefined;
-  if (normalizeIdentityComparable(identity.handle)) normalized.handle = identity.handle?.trim();
-  if (normalizeStringOrNull(identity.name)) normalized.name = normalizeStringOrNull(identity.name) ?? undefined;
-  if (!normalized.id && !normalized.email && !normalized.handle && !normalized.name) return null;
-  normalized.source = identity.source;
-  return normalized;
-}
-
-function providerIdentitiesMatch(expected: ProviderUserIdentity, actual: ProviderUserIdentity): boolean {
-  const comparablePairs: Array<[unknown, unknown]> = [
-    [expected.id, actual.id],
-    [expected.email, actual.email],
-    [expected.handle, actual.handle],
-    [expected.name, actual.name],
-  ];
-  let hadComparableExpected = false;
-  for (const [left, right] of comparablePairs) {
-    const expectedValue = normalizeIdentityComparable(left);
-    if (!expectedValue) continue;
-    hadComparableExpected = true;
-    const actualValue = normalizeIdentityComparable(right);
-    if (actualValue && actualValue === expectedValue) return true;
-  }
-  return !hadComparableExpected;
-}
-
-function normalizeIdentityComparable(value: unknown): string | null {
-  if (typeof value !== 'string') return null;
-  const normalized = value.trim().replace(/^@+/, '').replace(/\s+/g, ' ').toLowerCase();
-  return normalized || null;
 }
 
 function normalizeStringOrNull(value: unknown): string | null {
@@ -3521,8 +3469,7 @@ export function createGrokAdapter(): Pick<
             ok: true,
             href: authPreflight.href,
             title: authPreflight.title,
-            expectedServiceAccountId: authPreflight.expectedServiceAccountId,
-            expectedIdentity: authPreflight.expectedIdentity,
+            providerSessionProof: authPreflight.providerSessionProof,
             actualIdentity: authPreflight.actualIdentity,
             guestAuthCta: authPreflight.guestAuthCta,
           },

@@ -950,11 +950,15 @@ describe('configured stored-step executor', () => {
           manualLoginWaitForSession: false,
           composerTool: 'deep-research',
           deepResearchPlanAction: 'edit',
-          expectedUserIdentity: expect.objectContaining({
-            email: 'consult@polymerconsultinggroup.com',
-            accountLevel: 'Pro',
+          providerSessionAuthorization: expect.objectContaining({
+            expectation: expect.objectContaining({
+              configuredIdentity: expect.objectContaining({
+                email: 'consult@polymerconsultinggroup.com',
+                accountLevel: 'Pro',
+              }),
+              configuredServiceAccountId: 'service-account:chatgpt:consult@polymerconsultinggroup.com',
+            }),
           }),
-          expectedServiceAccountId: 'service-account:chatgpt:consult@polymerconsultinggroup.com',
         }),
       }),
     );
@@ -1689,8 +1693,6 @@ describe('configured stored-step executor', () => {
         tabTargetId: 'target-artifact',
         chromeHost: '127.0.0.1',
         chromePort: 45011,
-        expectedUserIdentity: { email: 'researcher@example.com', accountLevel: 'Pro' },
-        expectedServiceAccountId: 'service-account:chatgpt:researcher@example.com',
       }),
     );
     expect(runBrowserModeImpl).toHaveBeenCalledWith(

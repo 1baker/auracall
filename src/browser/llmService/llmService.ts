@@ -59,6 +59,13 @@ import type {
 	BrowserProviderListOptions,
 	ProviderUserIdentity,
 } from "../providers/types.js";
+import {
+	assertProviderSessionAuthorization,
+	createProviderSessionAuthority,
+	type ProviderSessionAuthority,
+	type ProviderSessionContext,
+	type ProviderSessionProof,
+} from "../providers/providerSessionAuthority.js";
 import type { BrowserService } from "../service/browserService.js";
 import {
 	readSimpleProviderGuardState,
@@ -538,6 +545,8 @@ export abstract class LlmService {
 	protected readonly cacheStore: CacheStore;
 	private readonly identityPrompt?: IdentityPrompt;
 	private readonly browserInteractionGovernors = new Map<string, BrowserInteractionGovernor>();
+	private readonly providerSessionAuthority: ProviderSessionAuthority;
+	private latestProviderSessionProof: ProviderSessionProof | null = null;
 
 	protected constructor(
 		private readonly userConfig: ResolvedUserConfig,
@@ -549,6 +558,9 @@ export abstract class LlmService {
 		this.providerId = provider.id;
 		this.browserService = browserService;
 		this.identityPrompt = options?.identityPrompt;
+		this.providerSessionAuthority = createProviderSessionAuthority(
+			this.userConfig as unknown as Record<string, unknown>,
+		);
 		const configuredStore = this.userConfig.browser?.cache?.store;
 		this.cacheStore =
 			options?.cacheStore ?? createCacheStore(resolveCacheStoreKind(configuredStore));
@@ -567,6 +579,10 @@ export abstract class LlmService {
 			),
 			models: true,
 		};
+	}
+
+	getLatestProviderSessionProof(): ProviderSessionProof | null {
+		return this.latestProviderSessionProof;
 	}
 
 	getConfiguredUrl(): string | null {
@@ -726,6 +742,20 @@ export abstract class LlmService {
 		const host = target?.host ?? overrides.host;
 		const port = target?.port ?? overrides.port;
 		const attachResolvedServiceTab = shouldAttachResolvedServiceTab(overrides);
+		const providerSessionContext: ProviderSessionContext = {
+				providerId: this.providerId,
+				auracallRuntimeProfile: this.resolveActiveProfileName(),
+				browserProfile: target?.browserProfile ?? null,
+				sourceBrowserProfile: target?.sourceBrowserProfile ?? null,
+				managedBrowserProfile: target?.managedBrowserProfile ?? null,
+				browserProcessId: target?.browserProcessId ?? null,
+				browserTargetId:
+					overrides.tabTargetId ?? (attachResolvedServiceTab ? target?.tab?.targetId : null) ?? null,
+				devtoolsHost: target?.host ?? overrides.host ?? null,
+				devtoolsPort: target?.port ?? overrides.port ?? null,
+		};
+		const providerSessionExpectation =
+			this.providerSessionAuthority.resolveExpectation(providerSessionContext);
 		return {
 			...overrides,
 			port,
@@ -739,15 +769,31 @@ export abstract class LlmService {
 			mutationSourcePrefix: overrides.mutationSourcePrefix ?? `provider:${this.providerId}`,
 			interactionGovernor:
 				overrides.interactionGovernor ?? this.resolveBrowserInteractionGovernor(overrides),
-			expectedUserIdentity:
-				overrides.expectedUserIdentity ?? this.resolveProfileServiceIdentity(this.providerId),
-			expectedServiceAccountId:
-				overrides.expectedServiceAccountId ??
-				resolveConfiguredServiceAccountId(this.userConfig as unknown as Record<string, unknown>, {
-					serviceId: this.providerId,
-					runtimeProfileId: this.resolveActiveProfileName(),
-				}),
+			providerSessionAuthorization: {
+				authority: this.providerSessionAuthority,
+				context: providerSessionContext,
+				expectation: providerSessionExpectation,
+				onProof: (proof) => {
+					this.latestProviderSessionProof = proof;
+					overrides.onProviderSessionProof?.(proof);
+					overrides.providerSessionAuthorization?.onProof?.(proof);
+				},
+			},
 		};
+	}
+
+	async getProviderSessionProof(
+		overrides: BrowserProviderListOptions = {},
+	): Promise<ProviderSessionProof> {
+		if (!this.provider.getUserIdentity) {
+			throw new Error(`Provider-session observation is not supported for ${this.providerId}.`);
+		}
+		const listOptions = await this.buildListOptions(overrides, { ensurePort: true });
+		const observation = await this.provider.getUserIdentity(listOptions);
+		return assertProviderSessionAuthorization(
+			listOptions.providerSessionAuthorization,
+			observation,
+		);
 	}
 
 	private resolveBrowserInteractionGovernor(

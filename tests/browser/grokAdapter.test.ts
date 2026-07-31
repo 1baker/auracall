@@ -48,7 +48,40 @@ import {
   resolveGrokProjectSourcesUrl,
   resolveGrokProjectUrl,
 } from '../../src/browser/providers/grokAdapter.js';
+import { createProviderSessionAuthority } from '../../src/browser/providers/providerSessionAuthority.js';
 import type { ChromeClient } from '../../src/browser/types.js';
+
+function createGrokProviderSessionAuthorization(email: string | null = 'ez86944@gmail.com') {
+  const config = email
+    ? {
+        activeProfile: 'default',
+        profiles: {
+          default: {
+            services: {
+              grok: { identity: { email } },
+            },
+          },
+        },
+      }
+    : {};
+  const authority = createProviderSessionAuthority(config);
+  const context = {
+    providerId: 'grok' as const,
+    auracallRuntimeProfile: 'default',
+    browserProfile: 'default',
+    sourceBrowserProfile: 'Default',
+    managedBrowserProfile: '/tmp/auracall/grok',
+    browserProcessId: 1234,
+    browserTargetId: 'grok-tab-1',
+    devtoolsHost: '127.0.0.1',
+    devtoolsPort: 9222,
+  };
+  return {
+    authority,
+    context,
+    expectation: authority.resolveExpectation(context),
+  };
+}
 
 function createFakeAuthRuntime(values: unknown[]): ChromeClient['Runtime'] {
   const queue = [...values];
@@ -115,15 +148,10 @@ describe('checkGrokBrowserAuthPreflight', () => {
     ]);
 
     await expect(checkGrokBrowserAuthPreflight(RUNTIME, {
-      expectedUserIdentity: {
-        email: 'operator@example.com',
-        source: 'profile',
-      },
-      expectedServiceAccountId: 'service-account:grok:operator@example.com',
+      providerSessionAuthorization: createGrokProviderSessionAuthorization('operator@example.com'),
     })).resolves.toMatchObject({
       ok: false,
-      reason: 'grok_account_mismatch',
-      expectedServiceAccountId: 'service-account:grok:operator@example.com',
+      reason: 'provider_session_dimension_conflict',
       actualIdentity: {
         email: 'other@example.com',
       },
@@ -163,11 +191,7 @@ describe('checkGrokBrowserAuthPreflight', () => {
     ]);
 
     await expect(checkGrokBrowserAuthPreflight(RUNTIME, {
-      expectedUserIdentity: {
-        email: 'ez86944@gmail.com',
-        source: 'profile',
-      },
-      expectedServiceAccountId: 'service-account:grok:ez86944@gmail.com',
+      providerSessionAuthorization: createGrokProviderSessionAuthorization(),
     })).resolves.toMatchObject({
       ok: true,
       reason: null,
@@ -195,11 +219,11 @@ describe('checkGrokBrowserAuthPreflight', () => {
       },
     ]);
 
-    await expect(checkGrokBrowserAuthPreflight(RUNTIME)).resolves.toMatchObject({
+    await expect(checkGrokBrowserAuthPreflight(RUNTIME, {
+      providerSessionAuthorization: createGrokProviderSessionAuthorization(null),
+    })).resolves.toMatchObject({
       ok: false,
-      reason: 'grok_expected_identity_missing',
-      expectedIdentity: null,
-      expectedServiceAccountId: null,
+      reason: 'provider_session_expectation_missing',
       actualIdentity: {
         email: 'ez86944@gmail.com',
       },
@@ -995,11 +1019,7 @@ describe('Grok Imagine materialization', () => {
           host: '127.0.0.1',
           port: 9222,
           configuredUrl: 'https://grok.com/imagine',
-          expectedUserIdentity: {
-            email: 'ez86944@gmail.com',
-            source: 'profile',
-          },
-          expectedServiceAccountId: 'service-account:grok:ez86944@gmail.com',
+          providerSessionAuthorization: createGrokProviderSessionAuthorization(),
         },
       );
 
@@ -1132,11 +1152,7 @@ describe('Grok Imagine materialization', () => {
           configuredUrl: 'https://grok.com/imagine',
           tabTargetId: 'submitted-imagine-tab',
           preserveActiveTab: true,
-          expectedUserIdentity: {
-            email: 'ez86944@gmail.com',
-            source: 'profile',
-          },
-          expectedServiceAccountId: 'service-account:grok:ez86944@gmail.com',
+          providerSessionAuthorization: createGrokProviderSessionAuthorization(),
         },
       );
 
@@ -1180,11 +1196,7 @@ describe('Grok Imagine materialization', () => {
           host: '127.0.0.1',
           port: 9222,
           configuredUrl: 'https://grok.com/imagine',
-          expectedUserIdentity: {
-            email: 'ez86944@gmail.com',
-            source: 'profile',
-          },
-          expectedServiceAccountId: 'service-account:grok:ez86944@gmail.com',
+          providerSessionAuthorization: createGrokProviderSessionAuthorization(),
         },
       );
 
@@ -1246,11 +1258,7 @@ describe('Grok Imagine materialization', () => {
           host: '127.0.0.1',
           port: 9222,
           configuredUrl: 'https://grok.com/imagine',
-          expectedUserIdentity: {
-            email: 'ez86944@gmail.com',
-            source: 'profile',
-          },
-          expectedServiceAccountId: 'service-account:grok:ez86944@gmail.com',
+          providerSessionAuthorization: createGrokProviderSessionAuthorization(),
         },
       );
 
@@ -1315,11 +1323,7 @@ describe('Grok Imagine materialization', () => {
           host: '127.0.0.1',
           port: 9222,
           configuredUrl: 'https://grok.com/imagine',
-          expectedUserIdentity: {
-            email: 'ez86944@gmail.com',
-            source: 'profile',
-          },
-          expectedServiceAccountId: 'service-account:grok:ez86944@gmail.com',
+          providerSessionAuthorization: createGrokProviderSessionAuthorization(),
         },
       );
 
@@ -1379,11 +1383,7 @@ describe('Grok Imagine materialization', () => {
           host: '127.0.0.1',
           port: 9222,
           configuredUrl: 'https://grok.com/imagine',
-          expectedUserIdentity: {
-            email: 'ez86944@gmail.com',
-            source: 'profile',
-          },
-          expectedServiceAccountId: 'service-account:grok:ez86944@gmail.com',
+          providerSessionAuthorization: createGrokProviderSessionAuthorization(),
         },
       );
 
@@ -1443,11 +1443,7 @@ describe('Grok Imagine materialization', () => {
           host: '127.0.0.1',
           port: 9222,
           configuredUrl: 'https://grok.com/imagine',
-          expectedUserIdentity: {
-            email: 'ez86944@gmail.com',
-            source: 'profile',
-          },
-          expectedServiceAccountId: 'service-account:grok:ez86944@gmail.com',
+          providerSessionAuthorization: createGrokProviderSessionAuthorization(),
         },
       );
 
@@ -1510,11 +1506,7 @@ async function runGrokImaginePromptModeSelectionTest(input: {
       host: '127.0.0.1',
       port: 9222,
       configuredUrl: 'https://grok.com/imagine',
-      expectedUserIdentity: {
-        email: 'ez86944@gmail.com',
-        source: 'profile',
-      },
-      expectedServiceAccountId: 'service-account:grok:ez86944@gmail.com',
+          providerSessionAuthorization: createGrokProviderSessionAuthorization(),
     },
   );
 

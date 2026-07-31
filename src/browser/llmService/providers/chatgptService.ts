@@ -98,9 +98,7 @@ export class ChatgptService extends LlmService {
         modelStrategy: isChatgptImageGeneration ? 'ignore' : input.modelStrategy ?? browserConfig.modelStrategy,
         thinkingTime: input.thinkingTime ?? browserModelConfig.thinkingTime,
         composerTool: isChatgptImageGeneration ? 'create image' : (browserConfig.composerTool ?? null),
-        expectedUserIdentity: listOptions.expectedUserIdentity,
-        expectedServiceAccountId: listOptions.expectedServiceAccountId,
-        identityPreflightFallbackIdentity: listOptions.identityPreflightFallbackIdentity,
+		providerSessionAuthorization: listOptions.providerSessionAuthorization,
       },
       log: this.createProgressLogger(input.onProgress),
     });
@@ -162,10 +160,6 @@ export class ChatgptService extends LlmService {
   async getUserIdentity(
     options?: BrowserProviderListOptions,
   ): Promise<ProviderUserIdentity | null> {
-    if (!this.provider.getUserIdentity) {
-      return null;
-    }
-    const listOptions = await this.buildListOptions(options, { ensurePort: true });
-    return this.provider.getUserIdentity(listOptions);
+    return (await this.getProviderSessionProof(options)).observation;
   }
 }

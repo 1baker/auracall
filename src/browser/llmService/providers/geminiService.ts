@@ -7,12 +7,7 @@ import {
 } from '../../service/browserService.js';
 import { LlmService } from '../llmService.js';
 import type { BrowserProviderListOptions, ProviderUserIdentity } from '../../providers/types.js';
-import { providerIdentityPreflightRequested } from '../../providers/identityPreflight.js';
 import type { Conversation, Project } from '../../providers/domain.js';
-import {
-  deriveProviderIdentityFromChromeGoogleAccount,
-  inspectBrowserDoctorState,
-} from '../../profileDoctor.js';
 
 export class GeminiService extends LlmService {
   private constructor(
@@ -37,21 +32,6 @@ export class GeminiService extends LlmService {
       browserProcessOwner: options?.browserProcessOwner,
     });
     return new GeminiService(userConfig, provider, browserService, options);
-  }
-
-  override async buildListOptions(
-    overrides: BrowserProviderListOptions = {},
-    options: { ensurePort?: boolean } = {},
-  ): Promise<BrowserProviderListOptions> {
-    const listOptions = await super.buildListOptions(overrides, options);
-    if (!providerIdentityPreflightRequested(listOptions) || listOptions.identityPreflightFallbackIdentity) {
-      return listOptions;
-    }
-    const localReport = await inspectBrowserDoctorState(this.getResolvedUserConfig(), { target: 'gemini' });
-    const fallbackIdentity = deriveProviderIdentityFromChromeGoogleAccount(localReport.chromeGoogleAccount);
-    return fallbackIdentity
-      ? { ...listOptions, identityPreflightFallbackIdentity: fallbackIdentity }
-      : listOptions;
   }
 
   async listProjects(options?: BrowserProviderListOptions): Promise<Project[]> {
@@ -122,14 +102,6 @@ export class GeminiService extends LlmService {
   async getUserIdentity(
     options?: BrowserProviderListOptions,
   ): Promise<ProviderUserIdentity | null> {
-    const listOptions = await this.buildListOptions(options, { ensurePort: true });
-    if (this.provider.getUserIdentity) {
-      const detected = await this.provider.getUserIdentity(listOptions);
-      if (detected) {
-        return detected;
-      }
-    }
-    const localReport = await inspectBrowserDoctorState(this.getResolvedUserConfig(), { target: 'gemini' });
-    return deriveProviderIdentityFromChromeGoogleAccount(localReport.chromeGoogleAccount);
+    return (await this.getProviderSessionProof(options)).observation;
   }
 }

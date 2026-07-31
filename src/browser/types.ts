@@ -1,5 +1,5 @@
 import type * as BaseTypes from '../../packages/browser-service/src/types.js';
-import type { ProviderUserIdentity } from './providers/types.js';
+import type { ProviderSessionAuthorization } from './providers/providerSessionAuthority.js';
 
 export type {
   ChromeClient,
@@ -50,9 +50,7 @@ type LlmBrowserFields = {
   thinkingTime?: ThinkingTimeLevel;
   composerTool?: string | null;
   deepResearchPlanAction?: ChatgptDeepResearchPlanAction;
-  expectedUserIdentity?: ProviderUserIdentity | null;
-  expectedServiceAccountId?: string | null;
-  identityPreflightFallbackIdentity?: ProviderUserIdentity | null;
+  providerSessionAuthorization?: ProviderSessionAuthorization;
 };
 
 export type BrowserRuntimeMetadata = BaseTypes.BrowserRuntimeMetadata & {

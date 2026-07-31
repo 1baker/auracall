@@ -14,6 +14,7 @@ import { createLlmService } from './llmService/index.js';
 import type { LlmService } from './llmService/llmService.js';
 import { BrowserAutomationClientCore } from '../../packages/browser-service/src/client.js';
 import type { PromptInput, PromptResult } from './llmService/types.js';
+import type { ProviderSessionProof } from './providers/providerSessionAuthority.js';
 import type { ConversationArtifact, ConversationContext, FileRef } from './providers/domain.js';
 
 export class BrowserAutomationClient {
@@ -77,6 +78,12 @@ export class BrowserAutomationClient {
     options?: BrowserProviderListOptions,
   ): Promise<import('./providers/types.js').ProviderUserIdentity | null> {
     return this.llmService.getUserIdentity(options);
+  }
+
+  async getProviderSessionProof(
+    options?: BrowserProviderListOptions,
+  ): Promise<ProviderSessionProof> {
+    return this.llmService.getProviderSessionProof(options);
   }
 
   async getFeatureSignature(

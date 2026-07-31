@@ -148,7 +148,6 @@ describe("history materialization service", () => {
 			projectId: undefined,
 			allowNavigation: true,
 			accountMirrorInventory: true,
-			expectedUserIdentity: { email: "user@example.com" },
 			skipFeatureSignature: true,
 		});
 
@@ -168,7 +167,6 @@ describe("history materialization service", () => {
 			projectId: "project-one",
 			allowNavigation: true,
 			accountMirrorInventory: true,
-			expectedUserIdentity: { email: "user@example.com" },
 			skipFeatureSignature: true,
 		});
 
@@ -6284,6 +6282,29 @@ describe("history materialization service", () => {
 				},
 			],
 			archiveItems: [],
+			providerSessionProof: {
+				providerId: "chatgpt",
+				verdict: "match",
+				failureReason: null,
+				observedAt: "2026-05-24T02:20:00.000Z",
+				sessionFingerprint: "session-fingerprint",
+				dimensions: [{
+					dimension: "email",
+					state: "match",
+					expectedFingerprint: "sha256:expected",
+					observedFingerprint: "sha256:observed",
+					expectationSource: "runtime-profile",
+					observationSource: "auth-session",
+				}],
+				provenance: {
+					providerId: "chatgpt",
+					auracallRuntimeProfile: "wsl-chrome-3",
+					browserProfile: "default",
+					managedBrowserProfile: "/tmp/managed/chatgpt",
+					browserProcessId: 1234,
+					browserTargetId: "target-1",
+				},
+			},
 			metrics: { conversations: 1, materialized: 0, skipped: 0, failed: 1 },
 			message: "Provider guard stopped materialization.",
 		};
@@ -6310,10 +6331,15 @@ describe("history materialization service", () => {
 				provider: "chatgpt",
 				runtimeProfile: "wsl-chrome-3",
 			}),
-			result: guardedResult,
+			result: expect.objectContaining(guardedResult),
 		});
 		await expect(service.readJob("hmj_guard_projection_1")).resolves.toMatchObject({
 			status: "skipped",
+			providerSessionProof: {
+				providerId: "chatgpt",
+				verdict: "match",
+				sessionFingerprint: "session-fingerprint",
+			},
 		});
 		await fs.rm(homeDir, { recursive: true, force: true });
 	});

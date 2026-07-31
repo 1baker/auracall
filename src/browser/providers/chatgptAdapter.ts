@@ -70,10 +70,7 @@ import type {
 	Project,
 	ProjectMemoryMode,
 } from "./domain.js";
-import {
-	assertProviderIdentityPreflight,
-	providerIdentityPreflightRequested,
-} from "./identityPreflight.js";
+import { assertProviderSessionAuthorization } from "./providerSessionAuthority.js";
 import {
 	annotateClientMutationContext,
 	resolveMutationAudit,
@@ -5108,14 +5105,19 @@ async function assertChatgptExpectedIdentity(
 	client: ChromeClient,
 	options?: BrowserProviderListOptions,
 ): Promise<void> {
-	if (!providerIdentityPreflightRequested(options)) return;
-	assertProviderIdentityPreflight({
-		providerId: "chatgpt",
-		actualIdentity: await readChatgptUserIdentity(client),
-		fallbackIdentity: options?.identityPreflightFallbackIdentity,
-		expectedIdentity: options?.expectedUserIdentity,
-		expectedServiceAccountId: options?.expectedServiceAccountId,
-	});
+	if (!options?.providerSessionAuthorization) {
+		throw new Error("ChatGPT provider-session authorization context is missing.");
+	}
+	assertProviderSessionAuthorization(
+		options.providerSessionAuthorization,
+		await readChatgptUserIdentity(client),
+		{
+			browserTargetId:
+				options.tabTargetId ?? options.providerSessionAuthorization.context.browserTargetId ?? null,
+			devtoolsHost: options.host ?? options.providerSessionAuthorization.context.devtoolsHost ?? null,
+			devtoolsPort: options.port ?? options.providerSessionAuthorization.context.devtoolsPort ?? null,
+		},
+	);
 }
 
 function buildChatgptFeatureProbeExpression(): string {

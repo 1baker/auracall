@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 1
+Plan version: 2
 
 ## Stable Objective
 
@@ -212,21 +212,21 @@ Expected write surface: validation receipts and plan closeout only.
 
 ## Acceptance Criteria
 
-- [ ] Canonical terminology and typed identity/provenance models make runtime,
+- [x] Canonical terminology and typed identity/provenance models make runtime,
   browser, managed Chrome, configured provider account, and observed provider
   session impossible to substitute accidentally.
-- [ ] One deep provider-session authority interface owns expectation lookup,
+- [x] One deep provider-session authority interface owns expectation lookup,
   normalization, comparison, proof lifetime, and diagnostics.
-- [ ] Collector and every materialization family use that interface; no caller
+- [x] Collector and every materialization family use that interface; no caller
   independently compares or constructs competing expected identities.
-- [ ] Provider-free tests cover profile/account cross-products, missing versus
+- [x] Provider-free tests cover profile/account cross-products, missing versus
   conflicting qualifiers, provider vocabulary equivalence, and session
   invalidation.
-- [ ] Explicit primary-account and authoritative qualifier conflicts remain
+- [x] Explicit primary-account and authoritative qualifier conflicts remain
   fail-closed.
-- [ ] Receipts/status identify the exact failing dimension and clearly separate
+- [x] Receipts/status identify the exact failing dimension and clearly separate
   browser selection failures from provider-session conflicts.
-- [ ] Structural audit, focused/adjacent tests, typecheck, build, lint, plan
+- [x] Structural audit, focused/adjacent tests, typecheck, build, lint, plan
   audit, and diff hygiene pass.
 - [ ] Installed/source parity and paused runtime posture are proved before any
   live gate.
@@ -280,3 +280,27 @@ live-follow remains stopped for the affected default ChatGPT target.
 - `next_action_or_stop_reason`: await implementation authorization; then execute
   M1 only, freezing the authority interface and red characterization before
   product-code migration. No provider work is authorized.
+
+## Checkpoint 2
+
+- `plan_version`: 2
+- `state_transition`: architecture-planned -> provider-free-implemented
+- `progress_classification`: substantive
+- `evidence`: M1-M4 now converge on
+  `src/browser/providers/providerSessionAuthority.ts`; the obsolete
+  `identityPreflight` contract and caller-owned `expectedUserIdentity` /
+  `expectedServiceAccountId` authorization paths are deleted. Collector,
+  conversation/snapshot, account-library, project-source, and media
+  materialization record redacted proof summaries. Focused regression is green
+  at 155/155 tests, the full provider-free suite is green at 2673 passed and 65
+  skipped, typecheck/build/lint are green with zero lint errors, the plan audit
+  reports 179 keep / 0 errors, and `git diff --check` is clean. No provider or
+  browser work occurred in M1-M4. Pre-install readback proves API PID `1032`,
+  scheduler posture/state paused, five active completions paused, default
+  ChatGPT blocked at pass 37 with null force marker/guard, and zero queued or
+  running completion/history-materialization work.
+- `subagent_status`: not_spawned
+- `next_action_or_stop_reason`: rerun the final provider-free packet after this
+  checkpoint, commit and push, re-prove the paused/blocked runtime posture,
+  install and verify source/runtime parity plus a new API PID, then stop for the
+  separately explicit one-pass ChatGPT authorization required by M5.

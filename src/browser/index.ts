@@ -128,10 +128,7 @@ import {
 	sanitizeChatgptThinkingText,
 } from "./providers/chatgptEvidence.js";
 import { resolveGrokConversationUrl, resolveGrokProjectUrl } from "./providers/grokAdapter.js";
-import {
-	assertProviderIdentityPreflight,
-	providerIdentityPreflightRequested,
-} from "./providers/identityPreflight.js";
+import { assertProviderSessionAuthorization } from "./providers/providerSessionAuthority.js";
 import type { ProviderUserIdentity } from "./providers/types.js";
 import { alignPromptEchoPair, buildPromptEchoMatcher } from "./reattachHelpers.js";
 import { resolveManagedBrowserLaunchContextFromResolvedConfig } from "./service/profileResolution.js";
@@ -553,9 +550,12 @@ async function assertChatgptAccountSessionPreflight(
 	Runtime: ChromeClient["Runtime"],
 	config: ReturnType<typeof resolveBrowserConfig>,
 	logger: BrowserLogger,
+	provenance: { browserProcessId?: number | null; browserTargetId?: string | null } = {},
 ): Promise<ProviderUserIdentity | null> {
-	if (!providerIdentityPreflightRequested(config)) {
-		return null;
+	if (!config.providerSessionAuthorization) {
+		throw new Error(
+			"ChatGPT provider-session authorization is missing; browser selection cannot authorize a provider login.",
+		);
 	}
 
 	let identity: ProviderUserIdentity | null = null;
@@ -568,27 +568,27 @@ async function assertChatgptAccountSessionPreflight(
 		}
 	}
 
-	const result = assertProviderIdentityPreflight({
-		providerId: "chatgpt",
-		actualIdentity: identity,
-		fallbackIdentity: config.identityPreflightFallbackIdentity,
-		expectedIdentity: config.expectedUserIdentity,
-		expectedServiceAccountId: config.expectedServiceAccountId,
-	});
+	const result = assertProviderSessionAuthorization(
+		config.providerSessionAuthorization,
+		identity,
+		provenance,
+	);
 	if (logger.verbose) {
 		const summary = [
-			result.actualIdentity?.email ? `email=${result.actualIdentity.email}` : null,
-			result.actualIdentity?.accountLevel ? `level=${result.actualIdentity.accountLevel}` : null,
-			result.actualIdentity?.accountPlanType
-				? `plan=${result.actualIdentity.accountPlanType}`
+			result.observation?.email ? `email=${result.observation.email}` : null,
+			result.observation?.accountLevel ? `level=${result.observation.accountLevel}` : null,
+			result.observation?.accountPlanType
+				? `plan=${result.observation.accountPlanType}`
 				: null,
-			result.expectedServiceAccountId ? `binding=${result.expectedServiceAccountId}` : null,
+			result.expectation.configuredServiceAccountId
+				? `binding=${result.expectation.configuredServiceAccountId}`
+				: null,
 		]
 			.filter(Boolean)
 			.join(", ");
 		logger(`ChatGPT account preflight passed${summary ? ` (${summary})` : ""}.`);
 	}
-	return result.actualIdentity;
+	return result.observation;
 }
 
 async function assertChatgptProModeAllowed(
@@ -2040,7 +2040,10 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 			}),
 		);
 		const verifiedChatgptIdentity = await raceWithDisconnect(
-			assertChatgptAccountSessionPreflight(Runtime, config, logger),
+			assertChatgptAccountSessionPreflight(Runtime, config, logger, {
+				browserProcessId: chrome.pid,
+				browserTargetId: lastTargetId ?? null,
+			}),
 		);
 		selectedChatgptAccountLevel = verifiedChatgptIdentity?.accountLevel ?? null;
 		selectedChatgptAccountPlanType = verifiedChatgptIdentity?.accountPlanType ?? null;
@@ -3215,6 +3218,7 @@ async function runRemoteBrowserMode(
 			Runtime,
 			config,
 			logger,
+			{ browserTargetId: remoteTargetId },
 		);
 		selectedChatgptAccountLevel = verifiedChatgptIdentity?.accountLevel ?? null;
 		selectedChatgptAccountPlanType = verifiedChatgptIdentity?.accountPlanType ?? null;

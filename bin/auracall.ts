@@ -504,7 +504,7 @@ interface BrowserDoctorIdentityReconciliationLike {
   ok: boolean;
   status: string;
   summary: string;
-  browserProfileMismatchIsInformational: boolean;
+  chromeGoogleAccountIsInformational: boolean;
 }
 
 interface BrowserDoctorFeatureReportLike {
@@ -3659,7 +3659,10 @@ conversationFilesCommand
     const attachments = await resolveBrowserAttachmentsFromPaths(deduped, process.cwd());
     const browserLogger = createCliBrowserLogger(Boolean(cliOptions.verbose));
     const keepBrowserRequested = Boolean(browserConfig.keepBrowser);
-    const browserRunConfig = keepBrowserRequested ? browserConfig : { ...browserConfig, keepBrowser: true };
+    const browserRunConfig = {
+      ...(keepBrowserRequested ? browserConfig : { ...browserConfig, keepBrowser: true }),
+      providerSessionAuthorization: listOptions.providerSessionAuthorization,
+    };
     let runtimeHint:
       | {
           chromePort?: number;
@@ -8829,8 +8832,8 @@ function printLocalBrowserDoctorReport(
     console.log(
       `- identityReconciliation: ${reconciliation.ok ? 'ok' : 'not-ok'} (${reconciliation.status}) ${reconciliation.summary}`,
     );
-    if (reconciliation.browserProfileMismatchIsInformational) {
-      console.log('- identityAuthority: provider app session is authoritative; Chrome/Google profile mismatch is informational');
+    if (reconciliation.chromeGoogleAccountIsInformational) {
+      console.log('- identityAuthority: provider-session proof is authoritative; Chrome browser sign-in is separate informational provenance');
     }
   }
   if (options.featureStatus) {
@@ -9965,6 +9968,7 @@ profileCommand
         runtimeProfileId: userConfig.auracallProfile ?? null,
         explicitAgentId,
         actualIdentity: identityStatus.identity,
+        providerSessionProof: identityStatus.providerSessionProof,
         identityStatus,
         localReport,
         launchedBrowser,

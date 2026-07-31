@@ -33,6 +33,7 @@ import {
   type BrowserOperationRecord,
 } from '../../packages/browser-service/src/service/operationDispatcher.js';
 import { recordBrowserOperationQueueObservation } from '../browser/operationQueueObservations.js';
+import type { ProviderSessionProof } from '../browser/providers/providerSessionAuthority.js';
 
 const DEFAULT_BROWSER_MEDIA_QUEUE_TIMEOUT_MS = 10 * 60 * 1000;
 const DEFAULT_BROWSER_MEDIA_QUEUE_POLL_MS = 1000;
@@ -67,8 +68,11 @@ export function createBrowserMediaGenerationExecutor(userConfig: ResolvedUserCon
   };
 }
 
-export function createBrowserMediaGenerationMaterializer(userConfig: ResolvedUserConfig): MediaGenerationMaterializer {
-  const gemini = createGeminiBrowserMediaGenerationMaterializer(userConfig);
+export function createBrowserMediaGenerationMaterializer(
+  userConfig: ResolvedUserConfig,
+  options: { onProviderSessionProof?: (proof: ProviderSessionProof) => void } = {},
+): MediaGenerationMaterializer {
+  const gemini = createGeminiBrowserMediaGenerationMaterializer(userConfig, options);
   return async (input) => {
     const { response } = input;
     if (response.provider === 'gemini') {
@@ -147,6 +151,7 @@ export function createBrowserMediaGenerationMaterializer(userConfig: ResolvedUse
         configuredUrl: 'https://grok.com/imagine',
         preserveActiveTab: true,
         mutationSourcePrefix: 'media:grok-imagine-resume',
+        onProviderSessionProof: options.onProviderSessionProof,
       });
       const diagnostics = extractGrokMaterializationDiagnostics(files);
       await input.emitTimeline?.({

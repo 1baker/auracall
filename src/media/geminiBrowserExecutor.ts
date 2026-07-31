@@ -1,6 +1,7 @@
 import path from 'node:path';
 import { BrowserAutomationClient } from '../browser/client.js';
 import type { BrowserProviderPromptProgressEvent } from '../browser/providers/types.js';
+import type { ProviderSessionProof } from '../browser/providers/providerSessionAuthority.js';
 import type { ConversationArtifact, FileRef } from '../browser/providers/domain.js';
 import type { ResolvedUserConfig } from '../config.js';
 import type {
@@ -29,7 +30,10 @@ export function createGeminiBrowserMediaGenerationExecutor(userConfig: ResolvedU
   return async (input) => executeGeminiBrowserMediaGeneration(input, userConfig);
 }
 
-export function createGeminiBrowserMediaGenerationMaterializer(userConfig: ResolvedUserConfig): MediaGenerationMaterializer {
+export function createGeminiBrowserMediaGenerationMaterializer(
+  userConfig: ResolvedUserConfig,
+  options: { onProviderSessionProof?: (proof: ProviderSessionProof) => void } = {},
+): MediaGenerationMaterializer {
   return async (input) => {
     const { response } = input;
     if (response.provider !== 'gemini') {
@@ -71,6 +75,7 @@ export function createGeminiBrowserMediaGenerationMaterializer(userConfig: Resol
       allowNavigation: true,
       preserveActiveTab: false,
       mutationSourcePrefix: 'media:gemini-resume-read',
+      onProviderSessionProof: options.onProviderSessionProof,
     });
     const matchingArtifacts = artifacts.filter((artifact) => isMediaArtifact(artifact, response.mediaType));
     await input.emitTimeline?.({
@@ -119,6 +124,7 @@ export function createGeminiBrowserMediaGenerationMaterializer(userConfig: Resol
           allowNavigation: true,
           preserveActiveTab: false,
           mutationSourcePrefix: 'media:gemini-resume-materialize',
+          onProviderSessionProof: options.onProviderSessionProof,
           ...(target.downloadVariantLabel ? { downloadVariantLabel: target.downloadVariantLabel } : {}),
         },
       });

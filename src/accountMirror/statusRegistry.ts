@@ -1,5 +1,6 @@
 import { getCurrentRuntimeProfiles, getRuntimeProfileBrowserProfileId } from "../config/model.js";
 import { createConfiguredServiceAccountId } from "../config/serviceAccountIdentity.js";
+import type { ProviderSessionProofSummary } from "../browser/providers/providerSessionAuthority.js";
 import {
 	type AccountMirrorBackfillLedger,
 	normalizeAccountMirrorBackfillLedger,
@@ -225,6 +226,7 @@ export type AccountMirrorCollectorDiagnosticEvent = {
 
 export type AccountMirrorMetadataEvidence = {
 	identitySource: string | null;
+	providerSessionProof?: ProviderSessionProofSummary | null;
 	projectSampleIds: string[];
 	conversationSampleIds: string[];
 	detailConversationIdsThisPass?: string[];

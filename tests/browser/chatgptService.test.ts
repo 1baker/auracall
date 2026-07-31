@@ -82,11 +82,15 @@ describe('ChatGPT llm service', () => {
     expect(runBrowserMode).toHaveBeenCalledWith(
       expect.objectContaining({
         config: expect.objectContaining({
-          expectedUserIdentity: expect.objectContaining({
-            email: 'consult@polymerconsultinggroup.com',
-            accountLevel: 'Pro',
+          providerSessionAuthorization: expect.objectContaining({
+            expectation: expect.objectContaining({
+              configuredIdentity: expect.objectContaining({
+                email: 'consult@polymerconsultinggroup.com',
+                accountLevel: 'Pro',
+              }),
+              configuredServiceAccountId: 'service-account:chatgpt:consult@polymerconsultinggroup.com',
+            }),
           }),
-          expectedServiceAccountId: 'service-account:chatgpt:consult@polymerconsultinggroup.com',
         }),
       }),
     );

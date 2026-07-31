@@ -27,6 +27,11 @@ import {
 	snapshotBrowserScrapeTelemetry,
 } from "../browser/providers/scrapeTelemetry.js";
 import type { BrowserProviderListOptions } from "../browser/providers/types.js";
+import {
+	summarizeProviderSessionProof,
+	type ProviderSessionProof,
+	type ProviderSessionProofSummary,
+} from "../browser/providers/providerSessionAuthority.js";
 import type { BrowserProcessOwnerAttribution } from "../browser/service/browserService.js";
 import { resolveRuntimeProfileUserConfig } from "../browser/service/profileConfig.js";
 import { resolveManagedBrowserLaunchContextFromResolvedConfig } from "../browser/service/profileResolution.js";
@@ -94,6 +99,8 @@ export interface HistoryMaterializationInteractionPolicy {
 export interface HistoryMaterializationProviderWorkContext {
 	interactionGovernor: BrowserInteractionGovernor | null;
 	excludedAssetFamilySignatures?: string[];
+	providerSessionProofSummary?: ProviderSessionProofSummary | null;
+	onProviderSessionProof?: (proof: ProviderSessionProof) => void;
 }
 
 export interface HistoryMaterializationManifestEntry {
@@ -206,10 +213,6 @@ export interface HistoryMaterializationProviderListOptions extends BrowserProvid
 	tabUrl?: string;
 	projectId?: string;
 	allowNavigation: true;
-	expectedUserIdentity?: {
-		email?: string;
-		handle?: string;
-	};
 	skipFeatureSignature?: boolean;
 }
 
@@ -224,6 +227,7 @@ export interface HistoryMaterializationResult {
 	archiveItems: RunArchiveItem[];
 	snapshotRefreshes?: HistoryMaterializationSnapshotRefresh[] | null;
 	scrapeTelemetry?: BrowserScrapeTelemetrySnapshot | null;
+	providerSessionProof?: ProviderSessionProofSummary | null;
 	metrics: {
 		conversations: number;
 		materialized: number;
@@ -254,6 +258,7 @@ export interface HistoryMaterializationJob {
 	completedAt: string | null;
 	attemptCount: number;
 	result: HistoryMaterializationResult | null;
+	providerSessionProof?: ProviderSessionProofSummary | null;
 	scrapeTelemetry?: BrowserScrapeTelemetrySnapshot | null;
 	error: {
 		message: string;
@@ -300,11 +305,13 @@ export function projectHistoryMaterializationJobForMonitoring(
 					archiveItems: [],
 					snapshotRefreshes: null,
 					scrapeTelemetry: null,
+					providerSessionProof: job.result.providerSessionProof ?? null,
 					metrics: job.result.metrics,
 					phases: undefined,
 					message: job.result.message.slice(0, 500),
 				}
 			: null,
+		providerSessionProof: job.providerSessionProof ?? job.result?.providerSessionProof ?? null,
 		scrapeTelemetry: null,
 		error: job.error ? { ...job.error, message: job.error.message.slice(0, 500) } : null,
 		message: job.message.slice(0, 500),
@@ -531,6 +538,10 @@ export function createHistoryMaterializationService(
 						sleep: (ms) => sleep(ms),
 					})
 				: null,
+			providerSessionProofSummary: null,
+		};
+		context.onProviderSessionProof = (proof) => {
+			context.providerSessionProofSummary = summarizeProviderSessionProof(proof);
 		};
 		providerWorkContexts.set(jobId, context);
 		return context;
@@ -541,13 +552,15 @@ export function createHistoryMaterializationService(
 		request: HistoryMaterializationCreateRequest,
 		jobId: string,
 		workContext?: HistoryMaterializationProviderWorkContext,
-	) =>
+	) => {
+		const context = workContext ?? providerWorkContext(jobId, request);
+		return (
 		deps.materializeConversation
 			? request.interactionPolicy || workContext?.excludedAssetFamilySignatures?.length
 				? deps.materializeConversation(target, request, jobId, {
-						...workContext,
+						...context,
 						interactionGovernor:
-							workContext?.interactionGovernor ??
+							context.interactionGovernor ??
 							providerWorkContext(jobId, request).interactionGovernor,
 					})
 				: deps.materializeConversation(target, request, jobId)
@@ -558,21 +571,26 @@ export function createHistoryMaterializationService(
 					request,
 					jobId,
 					now,
-					interactionGovernor: providerWorkContext(jobId, request).interactionGovernor,
+					interactionGovernor: context.interactionGovernor,
 					excludedAssetFamilySignatures: workContext?.excludedAssetFamilySignatures ?? [],
-				});
+					onProviderSessionProof: context.onProviderSessionProof,
+				})
+		);
+	};
 	const refreshConversationSnapshot = (
 		target: HistoryMaterializationTarget,
 		request: HistoryMaterializationCreateRequest,
 		jobId: string,
-	) =>
+	) => {
+		const context = providerWorkContext(jobId, request);
+		return (
 		deps.refreshConversationSnapshot
 			? request.interactionPolicy
 				? deps.refreshConversationSnapshot(
 						target,
 						request,
 						jobId,
-						providerWorkContext(jobId, request),
+					context,
 					)
 				: deps.refreshConversationSnapshot(target, request, jobId)
 			: refreshConversationSnapshotTarget({
@@ -581,8 +599,11 @@ export function createHistoryMaterializationService(
 					request,
 					jobId,
 					now,
-					interactionGovernor: providerWorkContext(jobId, request).interactionGovernor,
-				});
+					interactionGovernor: context.interactionGovernor,
+					onProviderSessionProof: context.onProviderSessionProof,
+				})
+		);
+	};
 	const accountMirrorPersistence = createAccountMirrorPersistence({
 		config: deps.config as Record<string, unknown>,
 	});
@@ -607,6 +628,7 @@ export function createHistoryMaterializationService(
 			materializeMediaGenerationTarget({
 				config: deps.config,
 				request,
+				onProviderSessionProof: providerWorkContext(request.jobId, {}).onProviderSessionProof,
 			}));
 	const materializeAccountLibraryFiles =
 		deps.materializeAccountLibraryFiles ??
@@ -614,6 +636,7 @@ export function createHistoryMaterializationService(
 			materializeAccountLibraryFilesTarget({
 				config: deps.config,
 				request,
+				onProviderSessionProof: providerWorkContext(request.jobId, {}).onProviderSessionProof,
 			}));
 	const listAccountLibraryFiles =
 		deps.listAccountLibraryFiles ??
@@ -621,6 +644,9 @@ export function createHistoryMaterializationService(
 			listAccountLibraryFilesTarget({
 				config: deps.config,
 				request,
+				onProviderSessionProof: request.jobId
+					? providerWorkContext(request.jobId, {}).onProviderSessionProof
+					: undefined,
 			}));
 	const materializeProjectSources =
 		deps.materializeProjectSources ??
@@ -628,6 +654,7 @@ export function createHistoryMaterializationService(
 			materializeProjectSourcesTarget({
 				config: deps.config,
 				request,
+				onProviderSessionProof: providerWorkContext(request.jobId, {}).onProviderSessionProof,
 			}));
 
 	const createJobListResult = (
@@ -691,6 +718,7 @@ export function createHistoryMaterializationService(
 				completedAt: null,
 				attemptCount: 0,
 				result: null,
+				providerSessionProof: null,
 				error: null,
 				message: "History materialization job queued.",
 			};
@@ -778,7 +806,7 @@ export function createHistoryMaterializationService(
 				if (running.request.providerWorkNotBefore) {
 					await waitForProviderWorkBoundary(running.request, now, sleep);
 				}
-				const result = await withForegroundWork(() =>
+				const materializationResult = await withForegroundWork(() =>
 					materializeHistoryRequest({
 						config: deps.config,
 						request: running.request,
@@ -796,6 +824,13 @@ export function createHistoryMaterializationService(
 						now,
 					}),
 				);
+				const result: HistoryMaterializationResult = {
+					...materializationResult,
+					providerSessionProof:
+						providerWorkContext(running.id, running.request).providerSessionProofSummary ??
+						materializationResult.providerSessionProof ??
+						null,
+				};
 				if (historyMaterializationResultHasProviderGuard(result)) {
 					await deps.onProviderGuardObserved?.({ request: running.request, result });
 				}
@@ -815,6 +850,7 @@ export function createHistoryMaterializationService(
 					updatedAt: completedAt,
 					completedAt,
 					result,
+					providerSessionProof: result.providerSessionProof ?? null,
 					error:
 						result.status === "failed"
 							? {
@@ -839,6 +875,8 @@ export function createHistoryMaterializationService(
 					updatedAt: completedAt,
 					completedAt,
 					result: null,
+					providerSessionProof:
+						providerWorkContexts.get(running.id)?.providerSessionProofSummary ?? null,
 					error: historyMaterializationJobError(error),
 					message: error instanceof Error ? error.message : "History materialization job failed.",
 				};
@@ -1704,6 +1742,7 @@ async function materializeAccountLibraryCatalogItem(input: {
 async function materializeAccountLibraryFilesTarget(input: {
 	config: ResolvedUserConfig | Record<string, unknown>;
 	request: HistoryAccountLibraryMaterializeInput;
+	onProviderSessionProof?: (proof: ProviderSessionProof) => void;
 }): Promise<{ accountFiles: FileRef[]; files: FileRef[]; manifestPath: string | null }> {
 	const llmService = createLlmService(
 		input.request.provider,
@@ -1735,16 +1774,8 @@ async function materializeAccountLibraryFilesTarget(input: {
 		configuredUrl: "https://chatgpt.com/library",
 		tabUrl: "https://chatgpt.com/library",
 		allowNavigation: true,
-		expectedUserIdentity: resolveHistoryMaterializationExpectedIdentity({
-			provider: input.request.provider,
-			runtimeProfile: input.request.runtimeProfile,
-			browserProfile: input.request.browserProfile,
-			boundIdentityKey: input.request.boundIdentityKey,
-			conversationId: "account-library",
-			providerConversationUrl: "https://chatgpt.com/library",
-			projectId: null,
-		}),
 		skipFeatureSignature: true,
+		onProviderSessionProof: input.onProviderSessionProof,
 	};
 	const file = await resolveAccountLibraryFileForMaterialization(
 		llmService,
@@ -1761,6 +1792,7 @@ async function materializeAccountLibraryFilesTarget(input: {
 async function materializeProjectSourcesTarget(input: {
 	config: ResolvedUserConfig | Record<string, unknown>;
 	request: HistoryProjectSourcesMaterializeInput;
+	onProviderSessionProof?: (proof: ProviderSessionProof) => void;
 }): Promise<{ projectFiles: FileRef[]; files: FileRef[]; manifestPath: string | null }> {
 	const llmService = createLlmService(
 		input.request.provider,
@@ -1792,16 +1824,8 @@ async function materializeProjectSourcesTarget(input: {
 		...(projectUrl ? { configuredUrl: projectUrl, tabUrl: projectUrl } : {}),
 		projectId: input.request.projectId,
 		allowNavigation: true,
-		expectedUserIdentity: resolveHistoryMaterializationExpectedIdentity({
-			provider: input.request.provider,
-			runtimeProfile: input.request.runtimeProfile,
-			browserProfile: input.request.browserProfile,
-			boundIdentityKey: input.request.boundIdentityKey,
-			conversationId: `project:${input.request.projectId}`,
-			providerConversationUrl: projectUrl,
-			projectId: input.request.projectId,
-		}),
 		skipFeatureSignature: true,
+		onProviderSessionProof: input.onProviderSessionProof,
 	};
 	return llmService.materializeProjectFiles(input.request.projectId, {
 		listOptions,
@@ -1812,6 +1836,7 @@ async function materializeProjectSourcesTarget(input: {
 async function listAccountLibraryFilesTarget(input: {
 	config: ResolvedUserConfig | Record<string, unknown>;
 	request: HistoryAccountLibraryListInput;
+	onProviderSessionProof?: (proof: ProviderSessionProof) => void;
 }): Promise<FileRef[]> {
 	const llmService = createLlmService(
 		input.request.provider,
@@ -1843,16 +1868,8 @@ async function listAccountLibraryFilesTarget(input: {
 		configuredUrl: "https://chatgpt.com/library",
 		tabUrl: "https://chatgpt.com/library",
 		allowNavigation: true,
-		expectedUserIdentity: resolveHistoryMaterializationExpectedIdentity({
-			provider: input.request.provider,
-			runtimeProfile: input.request.runtimeProfile,
-			browserProfile: input.request.browserProfile,
-			boundIdentityKey: input.request.boundIdentityKey,
-			conversationId: "account-library",
-			providerConversationUrl: "https://chatgpt.com/library",
-			projectId: null,
-		}),
 		skipFeatureSignature: true,
+		onProviderSessionProof: input.onProviderSessionProof,
 	};
 	return llmService.listAccountFiles({ listOptions });
 }
@@ -2447,6 +2464,7 @@ function targetFromCatalogConversation(
 async function materializeMediaGenerationTarget(input: {
 	config: ResolvedUserConfig | Record<string, unknown>;
 	request: HistoryMediaGenerationMaterializeInput;
+	onProviderSessionProof?: (proof: ProviderSessionProof) => void;
 }): Promise<MediaGenerationResponse> {
 	const mediaService = createMediaGenerationService({
 		materializer: createBrowserMediaGenerationMaterializer(
@@ -2455,6 +2473,7 @@ async function materializeMediaGenerationTarget(input: {
 				input.request.provider,
 				input.request.runtimeProfile,
 			) as ResolvedUserConfig,
+			{ onProviderSessionProof: input.onProviderSessionProof },
 		),
 		runtimeProfile: input.request.runtimeProfile,
 		refreshArchiveIndex: false,
@@ -3311,6 +3330,7 @@ async function refreshConversationSnapshotTarget(input: {
 	jobId?: string | null;
 	now: () => Date;
 	interactionGovernor?: BrowserInteractionGovernor | null;
+	onProviderSessionProof?: (proof: ProviderSessionProof) => void;
 }): Promise<HistoryMaterializationSnapshotRefresh> {
 	const llmService = createLlmService(
 		input.target.provider,
@@ -3335,6 +3355,7 @@ async function refreshConversationSnapshotTarget(input: {
 	const listOptions = {
 		...resolveHistoryMaterializationProviderListOptions(input.target),
 		...(input.interactionGovernor ? { interactionGovernor: input.interactionGovernor } : {}),
+		onProviderSessionProof: input.onProviderSessionProof,
 	};
 	const context = await llmService.getConversationContext(input.target.conversationId, {
 		projectId: input.target.projectId ?? undefined,
@@ -3554,6 +3575,7 @@ async function materializeConversationTarget(input: {
 	now: () => Date;
 	interactionGovernor?: BrowserInteractionGovernor | null;
 	excludedAssetFamilySignatures?: string[];
+	onProviderSessionProof?: (proof: ProviderSessionProof) => void;
 }): Promise<HistoryMaterializationResult> {
 	const selectedKinds = normalizeAssetKinds(input.request.assetKinds);
 	const maxItems = normalizeMaxItems(input.request.maxItems);
@@ -3607,6 +3629,7 @@ async function materializeConversationTarget(input: {
 		scrapeTelemetry,
 		useProviderSession: true,
 		keepProviderSessionOpen: true,
+		onProviderSessionProof: input.onProviderSessionProof,
 	};
 	try {
 		const manifestPaths: string[] = [];
@@ -5338,7 +5361,6 @@ export function resolveHistoryMaterializationProviderListOptions(
 		projectId: target.projectId ?? undefined,
 		allowNavigation: true,
 		accountMirrorInventory: true,
-		expectedUserIdentity: resolveHistoryMaterializationExpectedIdentity(target),
 		skipFeatureSignature: true,
 	};
 }
@@ -5353,23 +5375,6 @@ function resolveHistoryMaterializationConfiguredUrl(
 		return `https://gemini.google.com/gem/${encodeURIComponent(projectId)}`;
 	}
 	return "https://gemini.google.com/app";
-}
-
-function resolveHistoryMaterializationExpectedIdentity(
-	target: HistoryMaterializationTarget,
-): HistoryMaterializationProviderListOptions["expectedUserIdentity"] {
-	const boundIdentityKey = normalizeOptionalString(target.boundIdentityKey);
-	if (!boundIdentityKey) return undefined;
-	if (
-		(target.provider === "gemini" || target.provider === "chatgpt") &&
-		/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(boundIdentityKey)
-	) {
-		return { email: boundIdentityKey.toLowerCase() };
-	}
-	if (target.provider === "grok" && /^@[A-Za-z0-9_]{2,32}$/.test(boundIdentityKey)) {
-		return { handle: boundIdentityKey };
-	}
-	return undefined;
 }
 
 function normalizeProviderConversationTargetFields(

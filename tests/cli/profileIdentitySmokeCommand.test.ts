@@ -10,6 +10,27 @@ import {
   resolveProfileIdentitySmokeExitCode,
   resolveProfileIdentitySmokeTargets,
 } from '../../src/cli/profileIdentitySmokeCommand.js';
+import { createProviderSessionAuthority } from '../../src/browser/providers/providerSessionAuthority.js';
+
+function createProviderSessionProvenance(providerId: 'chatgpt' | 'gemini' | 'grok') {
+  const authority = createProviderSessionAuthority({});
+  const context = {
+    providerId,
+    auracallRuntimeProfile: 'default',
+    browserProfile: 'default',
+    sourceBrowserProfile: 'Default',
+    managedBrowserProfile: `/tmp/auracall/${providerId}`,
+    browserProcessId: 1234,
+    browserTargetId: `${providerId}-tab`,
+    devtoolsHost: '127.0.0.1',
+    devtoolsPort: 9222,
+  };
+  return authority.verify({
+    context,
+    expectation: authority.resolveExpectation(context),
+    observation: null,
+  });
+}
 
 describe('profile identity smoke CLI helpers', () => {
   it('normalizes provider names', () => {
@@ -48,7 +69,6 @@ describe('profile identity smoke CLI helpers', () => {
     ).toEqual({
       identity: {
         email: 'profile@example.com',
-        source: 'profile',
       },
       serviceAccountId: 'service-account:chatgpt:profile@example.com',
       source: 'profile',
@@ -87,10 +107,6 @@ describe('profile identity smoke CLI helpers', () => {
       accountLevel: 'Pro',
       accountPlanType: 'pro',
       accountStructure: 'personal',
-      capabilityProfile: 'chatgpt-pro-unlimited',
-      proAccess: 'unlimited-standard-extended',
-      deepResearchAccess: 'unlimited',
-      source: 'profile',
     });
   });
 
@@ -111,6 +127,7 @@ describe('profile identity smoke CLI helpers', () => {
       target: 'chatgpt',
       runtimeProfileId: 'default',
       actualIdentity: { email: 'operator@example.com', accountLevel: 'Pro', source: 'auth-session' },
+      providerSessionProof: createProviderSessionProvenance('chatgpt'),
       identityStatus: { attempted: true },
       localReport: {},
     });
@@ -190,7 +207,6 @@ describe('profile identity smoke CLI helpers', () => {
     ).toEqual({
       identity: {
         email: 'global@example.com',
-        source: 'config',
       },
       serviceAccountId: 'service-account:gemini:global@example.com',
       source: 'config',
@@ -214,6 +230,7 @@ describe('profile identity smoke CLI helpers', () => {
       target: 'chatgpt',
       runtimeProfileId: 'default',
       actualIdentity: { email: 'ecochran76@gmail.com', source: 'auth-session' },
+      providerSessionProof: createProviderSessionProvenance('chatgpt'),
       identityStatus: { attempted: true },
       localReport: { managedProfileDir: '/tmp/profile' },
       launchedBrowser: true,
@@ -221,11 +238,11 @@ describe('profile identity smoke CLI helpers', () => {
       generatedAt: '2026-04-26T12:00:00.000Z',
     });
 
-    expect(report.preflight).toMatchObject({ ok: true, reason: null });
+    expect(report.providerSessionProof).toMatchObject({ verdict: 'match', failureReason: null });
     expect(report.negative).toMatchObject({
       requested: true,
       ok: true,
-      expectedReason: 'chatgpt_expected_identity_missing',
+      expectedReason: 'provider_session_expectation_missing',
     });
     expect(resolveProfileIdentitySmokeExitCode(report)).toBe(0);
     expect(formatProfileIdentitySmokeReport(report)).toContain('Profile identity smoke: PASS');
@@ -245,16 +262,17 @@ describe('profile identity smoke CLI helpers', () => {
       target: 'grok',
       runtimeProfileId: 'default',
       actualIdentity: { email: 'ez86944@gmail.com' },
+      providerSessionProof: createProviderSessionProvenance('grok'),
       identityStatus: { attempted: true },
       localReport: {},
     });
 
-    expect(report.preflight).toMatchObject({
-      ok: false,
-      reason: 'grok_expected_identity_missing',
+    expect(report.providerSessionProof).toMatchObject({
+      verdict: 'missing',
+      failureReason: 'provider_session_expectation_missing',
     });
     expect(resolveProfileIdentitySmokeExitCode(report)).toBe(1);
-    expect(formatProfileIdentitySmokeReport(report)).toContain('FAIL grok_expected_identity_missing');
+    expect(formatProfileIdentitySmokeReport(report)).toContain('FAIL provider_session_expectation_missing');
   });
 
   it('builds and formats batch reports', () => {
@@ -274,6 +292,7 @@ describe('profile identity smoke CLI helpers', () => {
       target: 'chatgpt',
       runtimeProfileId: 'default',
       actualIdentity: { email: 'ecochran76@gmail.com' },
+      providerSessionProof: createProviderSessionProvenance('chatgpt'),
       identityStatus: { attempted: true },
       localReport: {},
     });
@@ -289,6 +308,7 @@ describe('profile identity smoke CLI helpers', () => {
       target: 'gemini',
       runtimeProfileId: 'default',
       actualIdentity: { email: 'ecochran76@gmail.com' },
+      providerSessionProof: createProviderSessionProvenance('gemini'),
       identityStatus: { attempted: true },
       localReport: {},
     });
@@ -304,6 +324,6 @@ describe('profile identity smoke CLI helpers', () => {
     expect(resolveProfileIdentitySmokeBatchExitCode(batch)).toBe(1);
     expect(formatProfileIdentitySmokeBatchReport(batch)).toContain('Profile identity smoke batch: FAIL');
     expect(formatProfileIdentitySmokeBatchReport(batch)).toContain('- chatgpt: PASS');
-    expect(formatProfileIdentitySmokeBatchReport(batch)).toContain('- gemini: FAIL gemini_expected_identity_missing');
+    expect(formatProfileIdentitySmokeBatchReport(batch)).toContain('- gemini: FAIL provider_session_expectation_missing');
   });
 });

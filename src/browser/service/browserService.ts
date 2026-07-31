@@ -58,6 +58,10 @@ export type BrowserProcessOwnerAttribution = {
 export type ServiceTargetResolution = {
   host?: string;
   port?: number;
+  browserProcessId?: number | null;
+  browserProfile?: string | null;
+  sourceBrowserProfile?: string | null;
+  managedBrowserProfile?: string | null;
   tab?: TabDescriptor | null;
   tabs?: TabDescriptor[];
   tabSelection?: TabResolutionExplanation;
@@ -125,6 +129,11 @@ export class BrowserService extends BrowserServiceCore {
     options: ServiceTargetMatchOptions,
   ): Promise<ServiceTargetResolution> {
     const launchContext = this.resolveLaunchContext(options.serviceId);
+		const selectionProvenance = {
+			browserProfile: launchContext.resolution.profileFamily.browserProfileId,
+			sourceBrowserProfile: launchContext.resolution.browserProfile.sourceProfileName ?? null,
+			managedBrowserProfile: launchContext.managedProfileDir,
+		};
     let target = await this.resolveDevToolsTarget({
       host: undefined,
       port: undefined,
@@ -132,7 +141,7 @@ export class BrowserService extends BrowserServiceCore {
       launchUrl: options.configuredUrl ?? undefined,
     });
     if (!target.port) {
-      return { host: target.host, port: target.port };
+      return { host: target.host, port: target.port, ...selectionProvenance };
     }
 
     const classifiedInstances = await listInstancesWithLiveness({ registryPath: this.registryPath });
@@ -173,7 +182,7 @@ export class BrowserService extends BrowserServiceCore {
     }
     const targetPort = target.port;
     if (!targetPort) {
-      return { host: target.host, port: target.port };
+      return { host: target.host, port: target.port, ...selectionProvenance };
     }
     const profilePath = matchedByPort?.profilePath ?? expectedProfilePath;
     const profileName = matchedByPort?.profileName ?? expectedProfileName;
@@ -242,6 +251,10 @@ export class BrowserService extends BrowserServiceCore {
     return {
       host: target.host,
       port: target.port,
+			browserProcessId: scan?.instance?.pid ?? matchedByPort?.pid ?? null,
+			browserProfile: selectionProvenance.browserProfile,
+			sourceBrowserProfile: selectionProvenance.sourceBrowserProfile,
+			managedBrowserProfile: profilePath,
       tab: tabSelection?.tab ?? null,
       tabs: scan?.tabs,
       tabSelection,

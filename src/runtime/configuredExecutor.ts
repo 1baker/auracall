@@ -22,7 +22,10 @@ import type {
   CookieParam,
 } from '../browser/types.js';
 import { resolveChatgptProjectUrl } from '../browser/providers/chatgptAdapter.js';
-import type { ProviderUserIdentity } from '../browser/providers/types.js';
+import {
+  createProviderSessionAuthority,
+  type ProviderSessionAuthorization,
+} from '../browser/providers/providerSessionAuthority.js';
 import { createLlmService } from '../browser/llmService/providers/index.js';
 import { getAuracallHomeDir } from '../auracallHome.js';
 import { createGeminiWebExecutor } from '../gemini-web/executor.js';
@@ -61,8 +64,6 @@ interface BrowserResponseArtifactMaterializerInput {
   tabTargetId: string | null;
   chromeHost: string | null;
   chromePort: number | null;
-  expectedUserIdentity: ProviderUserIdentity | null;
-  expectedServiceAccountId: string | null;
 }
 
 interface BrowserResponseArtifactMaterializerResult {
@@ -92,10 +93,6 @@ function asBoolean(value: unknown): boolean | null {
 
 function asFiniteNumber(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
-}
-
-function asProviderUserIdentity(value: unknown): ProviderUserIdentity | null {
-  return isRecord(value) ? value as ProviderUserIdentity : null;
 }
 
 function normalizeBrowserObservationStateForRuntime(
@@ -438,8 +435,6 @@ async function materializeBrowserResponseArtifacts(
       tabTargetId: input.tabTargetId ?? undefined,
       host: input.chromeHost ?? undefined,
       port: input.chromePort ?? undefined,
-      expectedUserIdentity: input.expectedUserIdentity,
-      expectedServiceAccountId: input.expectedServiceAccountId,
     },
   });
   const fileArtifacts = result.files.flatMap((file) => {
@@ -871,11 +866,25 @@ export function createConfiguredStoredStepExecutor(
       prompt: effectivePrompt,
       attachments: buildBrowserAttachments(context),
     });
-    const expectedUserIdentity = asProviderUserIdentity(runtimeServiceConfig?.identity ?? globalServiceConfig?.identity);
-    const expectedServiceAccountId = resolveConfiguredServiceAccountId(executionConfig, {
-      serviceId: service,
-      runtimeProfileId: runtimeSelection.runtimeProfileId,
-    });
+    const providerSessionAuthority = createProviderSessionAuthority(executionConfig);
+    const providerSessionContext = {
+      providerId: service,
+      auracallRuntimeProfile: runtimeSelection.runtimeProfileId,
+      browserProfile: runtimeSelection.browserProfileId,
+      sourceBrowserProfile:
+        asNonEmptyString(runtimeBrowserConfig?.sourceProfileName) ??
+        asNonEmptyString(browserProfileConfig?.sourceProfileName) ??
+        asNonEmptyString(browserConfigRecord?.chromeProfile) ??
+        null,
+      managedBrowserProfile: manualLoginProfileDir,
+      browserProcessId: null,
+      browserTargetId: null,
+    };
+    const providerSessionAuthorization: ProviderSessionAuthorization = {
+      authority: providerSessionAuthority,
+      context: providerSessionContext,
+      expectation: providerSessionAuthority.resolveExpectation(providerSessionContext),
+    };
     const liveBrowserServiceStateKey = {
       runId: context.record.runId,
       stepId: context.step.id,
@@ -1044,8 +1053,7 @@ export function createConfiguredStoredStepExecutor(
         thinkingTime: thinkingTime ?? undefined,
         composerTool,
         deepResearchPlanAction: deepResearchPlanAction ?? undefined,
-        expectedUserIdentity,
-        expectedServiceAccountId,
+        providerSessionAuthorization,
       },
       runtimeHintCb: async (hint) => {
         await heartbeatRuntimeEvidence({
@@ -1200,8 +1208,6 @@ export function createConfiguredStoredStepExecutor(
             tabTargetId: result.chromeTargetId ?? null,
             chromeHost: result.chromeHost ?? null,
             chromePort: result.chromePort ?? null,
-            expectedUserIdentity,
-            expectedServiceAccountId,
           })
         : await materializeBrowserResponseArtifacts({
             service,
@@ -1213,8 +1219,6 @@ export function createConfiguredStoredStepExecutor(
             tabTargetId: result.chromeTargetId ?? null,
             chromeHost: result.chromeHost ?? null,
             chromePort: result.chromePort ?? null,
-            expectedUserIdentity,
-            expectedServiceAccountId,
           });
     };
     if (shouldMaterializeBrowserResponseArtifacts(structuredMetadata)) {
