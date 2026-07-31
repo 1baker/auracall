@@ -42183,3 +42183,23 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   is authorized until that exact input shape is reproduced and repaired
   provider-free. Scheduler and five unrelated completions remain paused; the
   default is safely blocked at pass 37.
+
+## 2026-07-31 | Plan 0179 Provider-Session Authority Unification
+
+- The durable issue is identity-authority fragmentation, not merely one missing
+  qualifier case. AuraCall runtime profiles and browser/managed Chrome profiles
+  select configuration and browser storage; only provider application evidence
+  can prove the signed-in provider account.
+- CodeGraph shows expected provider identity is currently reconstructed through
+  service-account config, `LlmService.buildListOptions`, collector state, and
+  history-materialization target options. Callers can supply partial
+  `expectedUserIdentity` while the LLM layer separately supplies
+  `expectedServiceAccountId`.
+- Plan 0179 replaces those shallow paths with one deep provider-session
+  authority interface. It owns expectation resolution, provider-specific
+  normalization, `match|unknown|conflict` comparison, session-bound proof
+  lifetime, and redacted dimension-level diagnostics.
+- Execution is serialized across five milestones: contract/red
+  characterization, deep module, caller migration/old-path removal,
+  diagnostics/docs, then installed validation behind a separate one-pass live
+  authorization. No provider work is authorized by the planning slice.

@@ -7,6 +7,13 @@
 Status: active
 Lane: P01
 
+- Active provider-session authority unification:
+  [docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md](docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md)
+  Replace distributed runtime/browser/provider identity reconstruction with one
+  canonical provider-session proof used by collectors and all materializers.
+  Browser profiles remain provenance only. No provider work is authorized
+  until provider-free migration, installed parity, and a separate live gate.
+
 - Completed forced-pass failure and identity-evidence repair:
   [docs/dev/plans/0177-2026-07-31-forced-pass-failure-and-identity-evidence-repair.md](docs/dev/plans/0177-2026-07-31-forced-pass-failure-and-identity-evidence-repair.md)
   Provider-free regressions preserve strict explicit identity conflicts,

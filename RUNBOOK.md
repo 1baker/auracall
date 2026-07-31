@@ -1,5 +1,24 @@
 # RUNBOOK
 
+## Turn 375 | 2026-07-31
+
+- Opened Plan 0179:
+  `docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md`.
+- Operator identified the durable root problem: AuraCall repeatedly conflates
+  Chrome/browser profile selection with the account signed in to the provider.
+- CodeGraph confirms distributed authority: service-account config,
+  `LlmService.buildListOptions`, collector state, and history materialization
+  independently reconstruct identity inputs. Plan 0178 proved they disagree in
+  one cycle: collector identity passed, then all six materialization transfers
+  failed session drift against the same email.
+- Plan 0179 creates one deep provider-session authority module and carries its
+  session-bound proof across collectors/materializers. AuraCall runtime profile,
+  browser profile, source browser profile, managed browser profile, configured
+  provider account, and observed provider account session remain distinct.
+- This turn authorizes planning only. Scheduler remains paused, the default
+  ChatGPT completion remains blocked at pass 37, and no provider retry is
+  authorized.
+
 ## Turn 374 | 2026-07-31
 
 - Closed Plan 0178 with follow-up required:
