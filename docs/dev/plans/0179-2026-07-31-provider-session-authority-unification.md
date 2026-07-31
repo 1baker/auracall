@@ -432,3 +432,20 @@ live-follow remains stopped for the affected default ChatGPT target.
   under the persisted scheduler pause, prove source/installed parity and zero
   active provider work, then stop. A new live pass requires a fresh separate
   operator authorization because Checkpoint 7 consumed the prior packet.
+
+## Checkpoint 9
+
+- `plan_version`: 7
+- `state_transition`: provenance-repair-validated -> installed-fresh-gate-required
+- `progress_classification`: substantive
+- `evidence`: commit `8a0b8a60` is pushed and installed at API PID `50051`.
+  Source/installed hashes match for ChatGPT adapter (`aa5125b2...f4b38`),
+  provider authority (`92e33e5c...4fa1`), and completion service
+  (`c875f90d...d6ec8`). Immediate readback preserves scheduler pause, five
+  active paused completions, terminal default at pass 37, zero queued/running
+  work, and no managed-browser CDP listener. Git is clean and origin-aligned.
+- `subagent_status`: not_spawned
+- `next_action_or_stop_reason`: stop. The prior one-pass packet was consumed by
+  Checkpoint 7 and cannot authorize another attempt. Require a fresh explicit
+  gate for exactly one default ChatGPT pass; keep the scheduler paused and never
+  retry automatically.

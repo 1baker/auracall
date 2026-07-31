@@ -1,5 +1,39 @@
 # RUNBOOK
 
+## Turn 377 | 2026-07-31
+
+- Plan 0179's first authorized control exposed and repaired a completion-control
+  no-op: `run_one_pass` now re-arms only blocked `live_follow` operations while
+  completed, failed, cancelled, and bounded operations remain inert. Commit
+  `09c34644` is pushed and installed.
+- Exactly one real `run_one_pass` was accepted at `22:22:11.715Z` with ceiling
+  38. It stopped fail-closed at `22:22:12.803Z`, before collection or pass
+  increment, with `provider_session_provenance_missing`: managed browser process
+  `56684` was known but the disposable browser target was `unknown`.
+- No materialization job, provider guard, rate-limit, CAPTCHA, second collection,
+  or unrelated completion start occurred. The provider lease released, target
+  stayed terminal at pass 37, scheduler and five unrelated lanes remained
+  paused, and queued/running work returned to zero. The one-pass packet is
+  consumed and must never be retried.
+- Root cause: account-mirror `tabLifecycle=dispose-new` correctly defers target
+  selection, but `connectToChatgptTab` did not bind the later actual target into
+  canonical provider-session provenance. Commit `8a0b8a60` binds new, reused,
+  retained, and explicit connections at that boundary without weakening the
+  process-plus-target fingerprint or identity comparison.
+- Validation is green: 258/258 focused adapter/authority/collector/LLM/
+  materializer tests; full suite 303 files and 2678 passed / 65 skipped;
+  typecheck, clean build, lint with zero errors, plan audit, and diff hygiene.
+- Final installed acceptance: API PID `50051`; source/installed ChatGPT adapter
+  hash `aa5125b274fa3d7cb42a9392c0f17e725c26abcf5ae4709b17042c91f8af4b38`,
+  provider authority hash `92e33e5c35d2c26f0a8af47fe399817410f486fdfaee4cb4353ec1c8a9ed4fa1`,
+  and completion-service hash
+  `c875f90d30de9b994ef035295f5108bec59d4fad8d842b0c36050d751b3d6ec8`
+  match. Scheduler and five active completions remain paused, target remains
+  failed at pass 37, queued/running counts are zero, and no CDP listener exists.
+- Stop condition: Plan 0179 remains OPEN at its final live acceptance criterion.
+  A fresh explicit authorization is required for exactly one default ChatGPT
+  pass; no scheduler resume and no retry are implied by this installed repair.
+
 ## Turn 376 | 2026-07-31
 
 - Plan 0179 M1-M4 implementation is provider-free green. One deep

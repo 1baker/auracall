@@ -42285,3 +42285,10 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   collector, LLM-identity, and materializer tests; 303 full-suite files with
   2678 passed and 65 live/TTY skips; typecheck, clean build, and lint with zero
   errors. No provider/browser work occurred during the repair or validation.
+- Installed pushed repair `8a0b8a60` at API PID `50051`. Source/installed
+  hashes match for ChatGPT adapter (`aa5125b2...f4b38`), provider-session
+  authority (`92e33e5c...4fa1`), and completion service
+  (`c875f90d...d6ec8`). Scheduler and five active completions remain paused,
+  target remains terminal failed at pass 37, queued/running work is zero, no
+  CDP listener exists, and Git is clean/aligned. Stop at a fresh explicit
+  one-pass authorization gate; the prior packet is consumed.
