@@ -2,15 +2,19 @@
 
 ## Turn 373 | 2026-07-31
 
-- Active Plan 0177:
+- Closed Plan 0177:
   `docs/dev/plans/0177-2026-07-31-forced-pass-failure-and-identity-evidence-repair.md`.
-- Operator authorized the provider-free follow-up repair after Plan 0176.
-- Preserve the existing public `run_one_pass` and identity-preflight interfaces.
-  The two priority behaviors are same-email qualifier omission versus explicit
-  qualifier conflict, and forced-pass ownership through terminal failed
-  materialization without a second refresh.
-- Scheduler and all six completions remain paused. No provider/browser action,
-  guard clear, account/config mutation, or live retry is authorized.
+- Same-email identity now treats omitted detected plan/structure evidence as
+  unknown while explicit qualifier conflicts and primary identity keys remain
+  strict.
+- `run_one_pass` now owns completion materialization through its terminal:
+  failure blocks with `account_mirror_materialization_failed`; success/skip
+  settles idle without a second collector refresh.
+- Relevant tests pass 292/292 with typecheck, build, scoped lint, plan audit,
+  and diff hygiene. Commit `6d8fddcb` is pushed and installed byte-identically.
+- API PID `357684` is active. Scheduler and all six completions remain paused;
+  the default target remains at pass 36 with no force marker or provider guard.
+  No provider/browser action or live retry was issued during this plan.
 
 ## Turn 372 | 2026-07-31
 

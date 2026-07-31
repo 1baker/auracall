@@ -7,12 +7,13 @@
 Status: active
 Lane: P01
 
-- Active forced-pass failure and identity-evidence repair:
+- Completed forced-pass failure and identity-evidence repair:
   [docs/dev/plans/0177-2026-07-31-forced-pass-failure-and-identity-evidence-repair.md](docs/dev/plans/0177-2026-07-31-forced-pass-failure-and-identity-evidence-repair.md)
-  Provider-free regressions will preserve strict explicit identity conflicts,
+  Provider-free regressions preserve strict explicit identity conflicts,
   accept same-email sessions when detected qualifier evidence is absent, and
-  keep a forced pass responsible for its owned failed materialization until the
-  completion becomes blocked. Live provider work remains paused.
+  keep a forced pass responsible for its owned materialization through terminal
+  success or failure. Commit `6d8fddcb` is pushed and installed byte-identically;
+  all live provider work remains paused.
 
 - Completed default live-follow single-pass proof, with follow-up required:
   [docs/dev/plans/0176-2026-07-31-default-live-follow-single-pass-proof.md](docs/dev/plans/0176-2026-07-31-default-live-follow-single-pass-proof.md)

@@ -1,6 +1,6 @@
 # Forced-Pass Failure And Identity-Evidence Repair | 0177-2026-07-31
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 1
 
@@ -63,7 +63,7 @@ completion-owned materialization failure before returning idle.
   collector refresh.
 - [x] Focused tests, adjacent tests, typecheck, production build, scoped lint,
   plan audit, and diff hygiene pass.
-- [ ] Installed runtime is promoted only while scheduler and all completion
+- [x] Installed runtime is promoted only while scheduler and all completion
   lanes remain paused; installed/source hashes and post-restart paused status
   are proved without provider work.
 
@@ -116,3 +116,23 @@ provider lanes remain paused.
 - `next_action_or_stop_reason`: run typecheck, production build, scoped lint,
   full relevant tests, plan audit, and diff hygiene; then commit/push before a
   paused-only installed-runtime promotion.
+
+## Checkpoint 3
+
+- `plan_version`: 1
+- `state_transition`: integrated-validation -> closed
+- `progress_classification`: complete
+- `evidence`: repair commit `6d8fddcb` is pushed. User-runtime installation and
+  service restart changed PID `2827422` -> `357684`. Source and installed
+  completion-service bundles share SHA-256
+  `4170e07c08be2e1ac75e86b6d482ede445e2870aac4370c912edd5219c7df22b`;
+  identity-preflight bundles share
+  `1f1481d121c0fbd0d488b97dcdf320c0e34e55c18d83250ae56cb5f5d79cc1df`.
+  Post-restart status reports scheduler paused, six active completions all
+  paused, zero queued/running, and default ChatGPT unchanged at pass 36 with
+  null force marker and provider guard. Graphiti provider readiness passed,
+  but the compact closeout-memory write could not queue because the local
+  database endpoint `127.0.0.1:6389` refused the connection.
+- `subagent_status`: not_spawned
+- `next_action_or_stop_reason`: stop closed. No live provider replay occurred;
+  any future pass requires a separate bounded authorization packet.
