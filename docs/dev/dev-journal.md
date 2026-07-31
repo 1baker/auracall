@@ -42117,3 +42117,14 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   hydrated without immediately transitioning that idle completion to
   `blocked`. The safety pause restored all six completions and the scheduler to
   paused. No second pass, browser tool, guard clear, or config change occurred.
+
+## 2026-07-31 | Plan 0177 Provider-Free Follow-Up Opened
+
+- The operator authorized the bounded follow-up repair without another live
+  pass. Existing public interfaces remain fixed: identity preflight and
+  completion `run_one_pass` control.
+- Regression priorities are same-email identity with absent detected
+  qualifiers versus explicit qualifier conflict, then forced-pass ownership
+  through terminal failed materialization without another collector refresh.
+- Scheduler and all six completions remain paused; this implementation slice
+  permits no browser/provider work or runtime account/config mutation.

@@ -7,6 +7,13 @@
 Status: active
 Lane: P01
 
+- Active forced-pass failure and identity-evidence repair:
+  [docs/dev/plans/0177-2026-07-31-forced-pass-failure-and-identity-evidence-repair.md](docs/dev/plans/0177-2026-07-31-forced-pass-failure-and-identity-evidence-repair.md)
+  Provider-free regressions will preserve strict explicit identity conflicts,
+  accept same-email sessions when detected qualifier evidence is absent, and
+  keep a forced pass responsible for its owned failed materialization until the
+  completion becomes blocked. Live provider work remains paused.
+
 - Completed default live-follow single-pass proof, with follow-up required:
   [docs/dev/plans/0176-2026-07-31-default-live-follow-single-pass-proof.md](docs/dev/plans/0176-2026-07-31-default-live-follow-single-pass-proof.md)
   One authorized pass advanced 35 -> 36 with 5/8 active interactions, enforced

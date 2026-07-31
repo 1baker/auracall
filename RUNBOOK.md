@@ -1,5 +1,17 @@
 # RUNBOOK
 
+## Turn 373 | 2026-07-31
+
+- Active Plan 0177:
+  `docs/dev/plans/0177-2026-07-31-forced-pass-failure-and-identity-evidence-repair.md`.
+- Operator authorized the provider-free follow-up repair after Plan 0176.
+- Preserve the existing public `run_one_pass` and identity-preflight interfaces.
+  The two priority behaviors are same-email qualifier omission versus explicit
+  qualifier conflict, and forced-pass ownership through terminal failed
+  materialization without a second refresh.
+- Scheduler and all six completions remain paused. No provider/browser action,
+  guard clear, account/config mutation, or live retry is authorized.
+
 ## Turn 372 | 2026-07-31
 
 - Closed Plan 0176 with follow-up required:
