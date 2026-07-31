@@ -11,10 +11,12 @@ Lane: P01
   [docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md](docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md)
   Replace distributed runtime/browser/provider identity reconstruction with one
   canonical provider-session proof used by collectors and all materializers.
-  Browser profiles remain provenance only. The first separate live gate stopped
-  fail-closed because its disposable target was not bound into proof provenance;
-  that boundary is repaired, pushed, installed, and provider-free green. No
-  further provider work is authorized without a fresh separate one-pass gate.
+  Browser profiles remain provenance only. A fresh bounded pass completed
+  exactly one collection and materialized 3 assets with no guard or retry, but
+  exposed a receipt-only defect: reconciliation dropped the canonical proof
+  callback while composing per-conversation exclusions. Provider-free repair
+  and paused installation are in progress; the consumed packet does not
+  authorize another live pass.
 
 - Completed forced-pass failure and identity-evidence repair:
   [docs/dev/plans/0177-2026-07-31-forced-pass-failure-and-identity-evidence-repair.md](docs/dev/plans/0177-2026-07-31-forced-pass-failure-and-identity-evidence-repair.md)

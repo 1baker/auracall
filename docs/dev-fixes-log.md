@@ -6,6 +6,13 @@
   same-normalized-name create before mutation so an old app cannot masquerade
   as the new inventory result.
 
+- 2026-07-31: Reconciliation-specific work context is additive, not a complete
+  replacement for the history-materialization job context. When carrying
+  per-conversation asset-family exclusions, preserve the canonical
+  `onProviderSessionProof` callback so successful fail-closed authorization is
+  also persisted in job/result receipts. A successful provider transfer with a
+  null proof receipt is an observability defect and cannot close a parity gate.
+
 - 2026-07-29: Chrome-launcher 1.2.1 assumes a WSL `PATH` contains a mounted
   Windows `Users/<name>/AppData` segment when it allocates its own temporary
   profile. On a Linux-only path it constructs

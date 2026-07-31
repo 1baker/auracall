@@ -42292,3 +42292,16 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   target remains terminal failed at pass 37, queued/running work is zero, no
   CDP listener exists, and Git is clean/aligned. Stop at a fresh explicit
   one-pass authorization gate; the prior packet is consumed.
+- Fresh bounded completion
+  `acctmirror_completion_996b7b5b-d17d-4c2d-a794-0bd700384183` completed exactly
+  one collector pass with a canonical four-dimension ChatGPT session match.
+  Its owned six-item job succeeded with 3 materialized, 2 duplicate aliases,
+  2 skipped, and 0 failed; no guard, rate-limit, verification signal, second
+  pass, scheduler resume, or unrelated start occurred.
+- Live evidence exposed a receipt-only propagation gap: reconciliation's
+  partial asset-exclusion work context replaced the job context and dropped
+  `onProviderSessionProof`. Authorization remained fail-closed, but the
+  materialization job/result proof summary stayed null. A red regression
+  reproduced the loss; composing the canonical callback into the partial
+  context is green across 462 focused materializer/completion/adapter/HTTP
+  tests. The live packet is consumed and will not be rerun.

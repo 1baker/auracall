@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 7
+Plan version: 8
 
 ## Stable Objective
 
@@ -449,3 +449,25 @@ live-follow remains stopped for the affected default ChatGPT target.
   Checkpoint 7 and cannot authorize another attempt. Require a fresh explicit
   gate for exactly one default ChatGPT pass; keep the scheduler paused and never
   retry automatically.
+
+## Checkpoint 10
+
+- `plan_version`: 8
+- `state_transition`: installed-fresh-gate-required -> live-proof-receipt-repair-required
+- `progress_classification`: substantive
+- `evidence`: fresh authorization started bounded completion
+  `acctmirror_completion_996b7b5b-d17d-4c2d-a794-0bd700384183` with
+  `maxPasses=1`. Exactly one collector pass completed and persisted a canonical
+  four-dimension `match` proof for default ChatGPT. Owned materialization job
+  `hmj_7c901cf1225f4113b00b544780f41299` then succeeded with 3 materialized,
+  2 duplicate aliases, 2 skipped, and 0 failed; no provider guard, rate-limit,
+  verification signal, second pass, scheduler resume, or unrelated start
+  occurred. The materializer's existing proof receipt fields remained null
+  despite its fail-closed adapter checks and six provider calls.
+- `subagent_status`: not_spawned
+- `next_action_or_stop_reason`: repair the provider-free receipt propagation
+  defect. Reconciliation supplied a partial per-conversation work context that
+  replaced, rather than composed with, the job's canonical proof callback.
+  Preserve the callback in that merge, validate and install under the paused
+  posture, then stop. The live packet is consumed; proving persisted
+  collector/materializer parity still requires a fresh separate authorization.

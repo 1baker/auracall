@@ -553,7 +553,13 @@ export function createHistoryMaterializationService(
 		jobId: string,
 		workContext?: HistoryMaterializationProviderWorkContext,
 	) => {
-		const context = workContext ?? providerWorkContext(jobId, request);
+		const jobContext = providerWorkContext(jobId, request);
+		const context = workContext
+			? {
+					...workContext,
+					onProviderSessionProof: jobContext.onProviderSessionProof,
+				}
+			: jobContext;
 		return (
 		deps.materializeConversation
 			? request.interactionPolicy || workContext?.excludedAssetFamilySignatures?.length
@@ -561,7 +567,7 @@ export function createHistoryMaterializationService(
 						...context,
 						interactionGovernor:
 							context.interactionGovernor ??
-							providerWorkContext(jobId, request).interactionGovernor,
+							jobContext.interactionGovernor,
 					})
 				: deps.materializeConversation(target, request, jobId)
 			: materializeConversationTarget({

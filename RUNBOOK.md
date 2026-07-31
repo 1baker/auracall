@@ -1,5 +1,29 @@
 # RUNBOOK
 
+## Turn 378 | 2026-07-31
+
+- Fresh authorization started bounded default-ChatGPT completion
+  `acctmirror_completion_996b7b5b-d17d-4c2d-a794-0bd700384183` with full sweep,
+  full-missing-assets, six-item materialization cap, and `maxPasses=1`; the
+  persisted scheduler remained paused throughout.
+- Exactly one collector pass completed at `22:58:52Z`. Its durable receipt
+  records canonical four-dimension provider-session `match` proof for the
+  configured default ChatGPT account, including browser process `56684` and a
+  concrete browser target. No second collection was possible or observed.
+- Owned job `hmj_7c901cf1225f4113b00b544780f41299` honored the two-minute quiet
+  boundary and succeeded at `23:01:29Z`: 3 materialized, 2 duplicate aliases,
+  2 skipped, 0 failed, across 2 conversations. No rate-limit, CAPTCHA,
+  verification signal, or provider guard appeared.
+- The job/result `providerSessionProof` fields remained null even though six
+  adapter materialization calls passed fail-closed identity authorization.
+  Red regression proved reconciliation's partial exclusion context replaced
+  the canonical job context and discarded `onProviderSessionProof`.
+- Provider-free repair composes the partial reconciliation context with the
+  canonical callback. Focused materializer, completion, ChatGPT adapter, and
+  HTTP suites pass 462/462. Do not rerun provider work: this authorization is
+  consumed. Finish provider-free gates, commit/push, install under pause, and
+  require a fresh explicit gate for receipt-level parity proof.
+
 ## Turn 377 | 2026-07-31
 
 - Plan 0179's first authorized control exposed and repaired a completion-control

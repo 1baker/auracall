@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { setAuracallHomeDirOverrideForTest } from "../src/auracallHome.js";
 import { createCacheStore } from "../src/browser/llmService/cache/store.js";
 import type { ProviderCacheContext } from "../src/browser/providers/cache.js";
+import type { ProviderSessionProof } from "../src/browser/providers/providerSessionAuthority.js";
 import type { RunArchiveItem, RunArchiveService } from "../src/runtime/archiveService.js";
 import {
 	createHistoryMaterializationService,
@@ -4516,7 +4517,31 @@ describe("history materialization service", () => {
 				_request: HistoryMaterializationCreateRequest,
 				_jobId: string,
 				_context?: HistoryMaterializationProviderWorkContext,
-			): Promise<HistoryMaterializationResult> => ({
+			): Promise<HistoryMaterializationResult> => {
+				_context?.onProviderSessionProof?.({
+					providerId: "chatgpt",
+					verdict: "match",
+					failureReason: null,
+					observedAt: "2026-07-20T21:00:01.500Z",
+					sessionFingerprint: "reconciliation-session-fingerprint",
+					expectation: {
+						providerId: "chatgpt",
+						configuredIdentity: { email: "user@example.com", source: "runtime-profile" },
+						configuredServiceAccountId: "service-account:chatgpt:user@example.com",
+						source: "runtime-profile",
+					},
+					observation: { email: "user@example.com", source: "auth-session" },
+					dimensions: [],
+					provenance: {
+						providerId: "chatgpt",
+						auracallRuntimeProfile: "wsl-chrome-3",
+						browserProfile: "wsl-chrome-3",
+						managedBrowserProfile: "/tmp/managed/chatgpt",
+						browserProcessId: 1234,
+						browserTargetId: "target-reconciliation",
+					},
+				} satisfies ProviderSessionProof);
+				return {
 				object: "history_materialization_result",
 				generatedAt: "2026-07-20T21:00:02.000Z",
 				status: "skipped",
@@ -4527,7 +4552,8 @@ describe("history materialization service", () => {
 				archiveItems: [],
 				metrics: { conversations: 1, materialized: 0, skipped: 0, failed: 0 },
 				message: "No new assets.",
-			}),
+				};
+			},
 		);
 		const service = createHistoryMaterializationService({
 			config: {},
@@ -4614,6 +4640,13 @@ describe("history materialization service", () => {
 		expect(materializeConversation).toHaveBeenCalledTimes(1);
 		expect(materializeConversation.mock.calls[0]?.[3]).toMatchObject({
 			excludedAssetFamilySignatures: expect.arrayContaining(["artifact:download:oa_ocr"]),
+		});
+		await expect(service.readJob("hmj_exact_id_terminal_exclusions")).resolves.toMatchObject({
+			status: "skipped",
+			providerSessionProof: {
+				verdict: "match",
+				sessionFingerprint: "reconciliation-session-fingerprint",
+			},
 		});
 	});
 
