@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 3
+Plan version: 4
 
 ## Stable Objective
 
@@ -322,3 +322,27 @@ live-follow remains stopped for the affected default ChatGPT target.
 - `next_action_or_stop_reason`: commit and push the build-output repair,
   recheck containment, reinstall, verify new PID and source/installed parity,
   then stop at the separate explicit one-pass authorization gate.
+
+## Checkpoint 4
+
+- `plan_version`: 4
+- `state_transition`: package-parity-repaired -> startup-containment-repaired
+- `progress_classification`: substantive
+- `evidence`: installed source/module hashes matched and API PID changed
+  `1032 -> 68064`, but restart reconciliation created completion
+  `acctmirror_completion_3f2868cf-7810-4e91-9dd0-05ea060eb595` before persisted
+  scheduler pause was read. It acquired the provider lease and reached
+  `identity:started`; it was paused within 29 seconds and cancelled at pass 0
+  with no materialization cursor/outcome, error, guard, or remaining CDP
+  listener. No rate-limit signal was observed. The original default remains
+  blocked at pass 37; five active completions are paused; queued/running counts
+  are zero. A red/green HTTP regression now proves persisted scheduler pause is
+  read before and suppresses startup completion resume/reconciliation. Final
+  provider-free validation is green at 303 test files, 2675 passed / 65
+  skipped, HTTP 215/215, typecheck, clean build, lint with zero errors, plan
+  audit, and diff hygiene.
+- `subagent_status`: not_spawned
+- `next_action_or_stop_reason`: run the complete provider-free validation
+  packet, commit/push, re-prove containment, reinstall/restart once, and require
+  zero startup completions plus source/runtime parity before stopping at the
+  separate explicit one-pass gate.

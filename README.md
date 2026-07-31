@@ -876,7 +876,10 @@ Terminology note:
   scheduler pause/resume, and live-follow start/pause/resume/cancel in the
   local operator dashboard. Scheduler pause/resume is persisted under the
   AuraCall home cache, so an API service restart preserves the operator's
-  selected posture before startup cadence is considered. Row controls show a compact action-result card with
+  selected posture before startup cadence is considered. A persisted pause
+  also suppresses startup completion hydration and live-follow reconciliation;
+  restart never creates or resumes provider work behind the paused scheduler.
+  Row controls show a compact action-result card with
   the completion id, target, status, and next attempt while keeping raw JSON
   available for debugging. Destructive live-follow cancel actions require a
   confirmation prompt; start, pause, and resume remain one-click controls. The

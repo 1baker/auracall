@@ -1050,10 +1050,10 @@ export async function createResponsesHttpServer(
 		? 0
 		: Math.max(0, options.accountMirrorSchedulerIntervalMs ?? 0);
 	const accountMirrorSchedulerDryRun = options.accountMirrorSchedulerDryRun ?? true;
-	const resumeAccountMirrorCompletionsOnStart = accountMirrorProofScope
+	const resumeAccountMirrorCompletionsOnStartRequested = accountMirrorProofScope
 		? false
 		: (options.resumeAccountMirrorCompletionsOnStart ?? true);
-	const reconcileAccountMirrorLiveFollowOnStart = accountMirrorProofScope
+	const reconcileAccountMirrorLiveFollowOnStartRequested = accountMirrorProofScope
 		? false
 		: (options.reconcileAccountMirrorLiveFollowOnStart ?? true);
 	const configuredRuntimeConfig = deps.config;
@@ -1183,9 +1183,24 @@ export async function createResponsesHttpServer(
 	let accountMirrorArtifactRecoveryPlanner: AccountMirrorArtifactRecoveryPlanner;
 	const accountMirrorSchedulerLedger =
 		deps.accountMirrorSchedulerLedger ??
-		createAccountMirrorSchedulerPassLedger({
-			config: configuredRuntimeConfig,
-		});
+			createAccountMirrorSchedulerPassLedger({
+				config: configuredRuntimeConfig,
+			});
+	const persistedAccountMirrorSchedulerControl =
+		accountMirrorSchedulerIntervalMs > 0
+			? await readAccountMirrorSchedulerControlState().catch((error) => {
+					logger(
+						`Account mirror scheduler control read failed: ${error instanceof Error ? error.message : String(error)}`,
+					);
+					return null;
+				})
+			: null;
+	const initialAccountMirrorSchedulerPaused =
+		accountMirrorSchedulerIntervalMs > 0 && persistedAccountMirrorSchedulerControl?.paused === true;
+	const resumeAccountMirrorCompletionsOnStart =
+		resumeAccountMirrorCompletionsOnStartRequested && !initialAccountMirrorSchedulerPaused;
+	const reconcileAccountMirrorLiveFollowOnStart =
+		reconcileAccountMirrorLiveFollowOnStartRequested && !initialAccountMirrorSchedulerPaused;
 	const accountMirrorProviderWorkCoordinator = createAccountMirrorProviderWorkCoordinator();
 	const accountMirrorSchedulerService =
 		deps.accountMirrorSchedulerService ??
@@ -1348,17 +1363,6 @@ export async function createResponsesHttpServer(
 		lastStartedAt: null,
 		lastCompletedAt: null,
 	};
-	const persistedAccountMirrorSchedulerControl =
-		accountMirrorSchedulerIntervalMs > 0
-			? await readAccountMirrorSchedulerControlState().catch((error) => {
-					logger(
-						`Account mirror scheduler control read failed: ${error instanceof Error ? error.message : String(error)}`,
-					);
-					return null;
-				})
-			: null;
-	const initialAccountMirrorSchedulerPaused =
-		accountMirrorSchedulerIntervalMs > 0 && persistedAccountMirrorSchedulerControl?.paused === true;
 	const accountMirrorSchedulerState: HttpStatusResponse["accountMirrorScheduler"] = {
 		enabled: accountMirrorSchedulerIntervalMs > 0,
 		dryRun: accountMirrorSchedulerDryRun,

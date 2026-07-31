@@ -19818,3 +19818,8 @@ browser-stage lifecycle observability, not transcript truncation.
   before every production build, and inspect the dry package manifest when a
   security/authority module is replaced; otherwise an obsolete authorization
   implementation can remain installed even with clean source tests.
+- Restart safety rule: read persisted scheduler control before completion
+  construction, active-operation resumption, or live-follow reconciliation.
+  A scheduler reported as paused after those startup side effects is too late:
+  provider work may already hold a lease and begin identity collection. A
+  persisted pause must suppress both startup resume and reconciliation.

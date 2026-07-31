@@ -17,6 +17,7 @@ import type {
 import { createAccountMirrorCompletionStore } from "../src/accountMirror/completionStore.js";
 import type { AccountMirrorRefreshService } from "../src/accountMirror/refreshService.js";
 import type { AccountMirrorSchedulerPassLedger } from "../src/accountMirror/schedulerLedger.js";
+import { writeAccountMirrorSchedulerControlState } from "../src/accountMirror/schedulerControlState.js";
 import type { AccountMirrorSchedulerPassResult } from "../src/accountMirror/schedulerService.js";
 import {
 	type AccountMirrorStatusSummary,
@@ -5529,6 +5530,60 @@ describe("http responses adapter", () => {
 			passCount: 0,
 			lifecycleEvents: [],
 		});
+	});
+
+	it("does not reconcile or resume live-follow completions while the persisted scheduler is paused", async () => {
+		const homeDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), "auracall-http-account-mirror-startup-paused-"),
+		);
+		cleanup.push(homeDir);
+		setAuracallHomeDirOverrideForTest(homeDir);
+		await writeAccountMirrorSchedulerControlState({
+			paused: true,
+			updatedAt: "2026-07-31T20:53:00.000Z",
+		});
+		const requestRefresh = vi.fn(() => new Promise<never>(() => {}));
+		const server = await createResponsesHttpServer(
+			{
+				host: "127.0.0.1",
+				port: 0,
+				accountMirrorSchedulerIntervalMs: 60_000,
+			},
+			{
+				config: {
+					model: "gpt-5.2",
+					browser: { cache: { rootDir: homeDir } },
+					runtimeProfiles: {
+						default: {
+							browserProfile: "default",
+							defaultService: "chatgpt",
+							services: {
+								chatgpt: {
+									identity: { email: "operator@example.com" },
+									liveFollow: { enabled: true },
+								},
+							},
+						},
+					},
+				},
+				accountMirrorRefreshService: { requestRefresh },
+			},
+		);
+
+		try {
+			await delay(50);
+			const response = await fetch(`http://127.0.0.1:${server.port}/status`);
+			expect(response.status).toBe(200);
+			expect(await response.json()).toMatchObject({
+				accountMirrorScheduler: { state: "paused", paused: true },
+				accountMirrorCompletions: {
+					metrics: { active: 0, queued: 0, running: 0 },
+				},
+			});
+			expect(requestRefresh).not.toHaveBeenCalled();
+		} finally {
+			await server.close();
+		}
 	});
 
 	it("scopes proof server startup without reconciling unrelated live-follow targets", async () => {

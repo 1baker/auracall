@@ -42227,3 +42227,19 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   generated tree before every production build, and structural coverage keeps
   that lifecycle durable. Rebuild and dry pack now include the canonical
   authority and exclude the obsolete module; focused checks pass 156/156.
+- Restarting API PID `1032` into installed PID `68064` exposed a second M5
+  failure: startup reconciliation preceded persisted scheduler-pause readback
+  and created default completion
+  `acctmirror_completion_3f2868cf-7810-4e91-9dd0-05ea060eb595`. It acquired the
+  provider lease and reached identity-started before operator containment 28.6
+  seconds later. It was paused, inspected, and cancelled at pass 0 with no
+  materialization cursor/outcome, error, guard, or remaining CDP listener; no
+  rate-limit signal was observed. Original default remains blocked at pass 37,
+  five unrelated completions are paused, and queued/running counts are zero.
+- Startup now reads persisted scheduler control before completion service
+  resume/reconciliation. When paused, both are suppressed. The targeted HTTP
+  regression failed with one running completion before the repair and is green
+  with zero active/queued/running completions after it.
+- Final provider-free validation after this repair: 303 test files pass, 2675
+  tests pass with 65 live/TTY skips, HTTP is 215/215, and typecheck, clean
+  build, lint with zero errors, plan audit, and diff hygiene pass.

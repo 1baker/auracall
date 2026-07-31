@@ -29,6 +29,22 @@
   generated output tree before compilation; a structural regression enforces
   that lifecycle. Dry package inspection contains `providerSessionAuthority.js`
   and no obsolete preflight module. PID and containment remain unchanged.
+- The first API restart changed PID `1032` -> `68064` but exposed startup order
+  drift: persisted scheduler pause was read only after startup live-follow
+  reconciliation created default ChatGPT completion
+  `acctmirror_completion_3f2868cf-7810-4e91-9dd0-05ea060eb595`. It acquired the
+  provider lease and reached `identity:started`; containment paused it within
+  29 seconds, then cancelled it at pass 0 with no materialization cursor,
+  outcome, error, guard, or remaining CDP listener. No rate-limit signal was
+  observed. The original default remains blocked at pass 37 and the runtime is
+  restored to five active paused completions with zero queued/running work.
+- Startup now reads persisted scheduler control before constructing/resuming or
+  reconciling completions. A red/green HTTP regression proves a paused
+  scheduler creates/resumes zero provider completions on restart.
+- Final provider-free packet after the startup repair: 303 test files pass,
+  2675 tests pass / 65 live-or-TTY tests skip, HTTP is 215/215, and typecheck,
+  clean production build, lint with zero errors, plan audit, and diff hygiene
+  pass.
 - Remaining M5 order: commit and push, recheck containment, install with
   source/runtime parity and a new PID, then
   stop for a separate explicit authorization for exactly one default ChatGPT
