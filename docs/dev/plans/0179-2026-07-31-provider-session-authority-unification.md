@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 5
+Plan version: 6
 
 ## Stable Objective
 
@@ -22,6 +22,11 @@ bounded installed-runtime proof demonstrates collector/materializer parity.
   ChatGPT completion
   `acctmirror_completion_7c207690-de8a-40a4-82b8-61edd830a25c` is safely
   blocked at pass 37 with no provider guard.
+- The separately authorized control request was provider-free in effect: the
+  installed service returned the unchanged blocked pass-37 record because
+  `run_one_pass` rejected blocked live-follow operations before launch. The
+  real one-pass allowance remains unconsumed while this control defect is
+  repaired and reinstalled under the same pause.
 - Plan 0178's collector accepted the current provider account and completed
   four detail reads. Minutes later, job
   `hmj_6323dddba5f34adc9f6871b404920456` rejected all six transfers as
@@ -366,3 +371,24 @@ live-follow remains stopped for the affected default ChatGPT target.
 - `next_action_or_stop_reason`: hard stop at the separate explicit operator
   authorization required for exactly one default ChatGPT pass. Scheduler must
   remain paused; no retry is permitted.
+
+## Checkpoint 6
+
+- `plan_version`: 6
+- `state_transition`: installed-gate-ready -> blocked-control-repair
+- `progress_classification`: substantive
+- `evidence`: the authorized CLI request addressed the original completion ID
+  but returned its unchanged blocked/pass-37 state, with no force marker,
+  lifecycle event, browser listener, refresh, guard, or materialization work.
+  A deterministic provider-free regression reproduced the no-op because
+  completion control treated every blocked operation as terminal. The repair
+  narrowly permits `run_one_pass` to re-arm blocked `live_follow` records while
+  completed, failed, cancelled, and bounded records remain inert; the focused
+  completion/HTTP/operator suite is green at 285/285 plus the completion-control
+  smoke. The complete provider-free suite is green at 303 files, 2677 passed,
+  and 65 live/TTY skips.
+- `subagent_status`: not_spawned
+- `next_action_or_stop_reason`: finish provider-free validation, commit/push,
+  reinstall while scheduler and every completion remain paused or blocked,
+  prove installed parity and the zero-work baseline, then consume the still
+  unused authorization with exactly one real default ChatGPT pass and no retry.

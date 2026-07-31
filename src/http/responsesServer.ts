@@ -5240,7 +5240,7 @@ function createCompletionReadinessAction(
 	operation: AccountMirrorCompletionOperation,
 	action: "pause" | "resume" | "cancel" | "run_one_pass",
 ): HttpRunControlReadinessAction {
-	const blockedReason = accountMirrorCompletionControlBlockedReason(operation.status, action);
+	const blockedReason = accountMirrorCompletionControlBlockedReason(operation, action);
 	const label =
 		action === "pause"
 			? "Pause"
@@ -5282,9 +5282,10 @@ function createCompletionReadinessAction(
 }
 
 function accountMirrorCompletionControlBlockedReason(
-	status: AccountMirrorCompletionOperation["status"],
+	operation: AccountMirrorCompletionOperation,
 	action: "pause" | "resume" | "cancel" | "run_one_pass",
 ): string | null {
+	const status = operation.status;
 	if (action === "resume") {
 		return status === "paused" ? null : `live-follow status ${status} cannot be resumed`;
 	}
@@ -5297,7 +5298,8 @@ function accountMirrorCompletionControlBlockedReason(
 		return status === "queued" ||
 			status === "running" ||
 			status === "idle_waiting" ||
-			status === "paused"
+			status === "paused" ||
+			(status === "blocked" && operation.mode === "live_follow")
 			? null
 			: `live-follow status ${status} cannot run one pass`;
 	}
@@ -13459,7 +13461,7 @@ function createOperatorBrowserDashboardHtml(
         '<td>' + escapeHtml(formatCompletionPasses(operation)) + '</td>',
         '<td class="wrap">' + escapeHtml(operation.nextAttemptAt || 'none') + '</td>',
         '<td>' + renderCompletionInspectButton(operation.id) + '</td>',
-        '<td>' + renderCompletionControlButtons(operation.id, status) + '</td>',
+        '<td>' + renderCompletionControlButtons(operation) + '</td>',
       ].join('') + '</tr>';
     }
 
@@ -13468,17 +13470,20 @@ function createOperatorBrowserDashboardHtml(
       return '<button type="button" data-completion-id="' + escapeHtml(id) + '" onclick="inspectMirrorCompletion(this.dataset.completionId)">Inspect</button>';
     }
 
-    function renderCompletionControlButtons(id, status) {
+    function renderCompletionControlButtons(operation) {
+      const id = operation && operation.id;
       if (!id) return '<span class="muted">none</span>';
       const escapedId = escapeHtml(id);
-      const actions = completionActionsForStatus(status);
+      const actions = completionActionsForOperation(operation);
       return '<span class="badges">' + [
         '<button type="button" data-completion-id="' + escapedId + '" onclick="fillMirrorCompletionId(this.dataset.completionId)">Use ID</button>',
         ...actions.map((action) => renderCompletionActionButton(id, action, labelForCompletionAction(action))),
       ].join('') + '</span>';
     }
 
-    function completionActionsForStatus(status) {
+    function completionActionsForOperation(operation) {
+      const status = operation && operation.status;
+      if (status === 'blocked' && operation.mode === 'live_follow') return ['run_one_pass'];
       if (status === 'paused') return ['resume', 'run_one_pass', 'cancel'];
       if (status === 'idle_waiting') return ['run_one_pass', 'pause', 'cancel'];
       if (status === 'queued' || status === 'running' || status === 'refreshing') return ['pause', 'run_one_pass', 'cancel'];

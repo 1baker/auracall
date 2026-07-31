@@ -9826,6 +9826,12 @@ describe("http responses adapter", () => {
 			status: "completed",
 			completedAt: "2026-04-30T12:05:00.000Z",
 		};
+		const blockedCompletion: AccountMirrorCompletionOperation = {
+			...runningCompletion,
+			id: "acctmirror_ready_blocked",
+			status: "blocked",
+			completedAt: "2026-04-30T12:06:00.000Z",
+		};
 
 		const server = await createResponsesHttpServer(
 			{ host: "127.0.0.1", port: 0, recoverRunsOnStart: false, backgroundDrainIntervalMs: 60_000 },
@@ -9838,9 +9844,11 @@ describe("http responses adapter", () => {
 							? runningCompletion
 							: id === completedCompletion.id
 								? completedCompletion
+								: id === blockedCompletion.id
+									? blockedCompletion
 								: null,
 					),
-					list: vi.fn(() => [runningCompletion, completedCompletion]),
+					list: vi.fn(() => [runningCompletion, completedCompletion, blockedCompletion]),
 					control: vi.fn(() => runningCompletion),
 				},
 			},
@@ -9906,6 +9914,20 @@ describe("http responses adapter", () => {
 						action: "completion.cancel",
 						available: false,
 						blockedReason: "live-follow status completed cannot be cancelled",
+					}),
+				]),
+			);
+			expect(completionActionsById.acctmirror_ready_blocked).toEqual(
+				expect.arrayContaining([
+					expect.objectContaining({
+						action: "completion.run_one_pass",
+						available: true,
+						payload: {
+							accountMirrorCompletion: {
+								id: "acctmirror_ready_blocked",
+								action: "run_one_pass",
+							},
+						},
 					}),
 				]),
 			);
@@ -24110,7 +24132,7 @@ describe("http responses adapter", () => {
 			expect(html).toContain("data-completion-id");
 			expect(html).toContain("controlMirrorCompletionById");
 			expect(html).toContain("data-completion-action");
-			expect(html).toContain("completionActionsForStatus");
+			expect(html).toContain("completionActionsForOperation");
 			expect(html).toContain("status === 'paused'");
 			expect(html).toContain("confirmMirrorCompletionCancel");
 			expect(html).toContain("action === 'cancel'");

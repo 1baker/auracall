@@ -42251,3 +42251,19 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   record at pass 0, zero queued/running work, and no CDP listener.
 - Plan 0179 remains OPEN solely for its separately explicit authorization and
   exactly one default ChatGPT pass; installation does not supply that gate.
+- The authorized `run_one_pass` control against the original default completion
+  returned the unchanged pass-37 blocked record and launched no browser/provider
+  work. A provider-free red regression proved completion control classified all
+  blocked records as terminal even though the readiness projection recommended
+  a bounded resume. The repair now permits only an explicit `run_one_pass` to
+  re-arm a blocked `live_follow` record; other terminal and bounded records stay
+  inert, and ordinary provider/materialization safety gates remain authoritative.
+  The one real provider pass remains unconsumed pending validation, commit/push,
+  paused installation, and renewed baseline proof.
+- Control-repair validation is green: focused completion, HTTP, CLI, and MCP
+  operator surfaces pass 285/285; the full provider-free suite passes 303 files
+  and 2677 tests with 65 live/TTY skips; typecheck, clean build, lint with zero
+  errors, plan audit, and diff hygiene also pass. Pre-install PID `47446` still
+  reports scheduler paused, five unrelated completions paused, original default
+  blocked at pass 37, zero queued/running completions, and no managed-browser
+  CDP listener.

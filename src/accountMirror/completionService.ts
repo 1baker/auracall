@@ -998,7 +998,12 @@ export function createAccountMirrorCompletionService(input: {
 				return evented ?? resumed;
 			}
 			if (request.action === "run_one_pass") {
-				if (isTerminalOperation(operation)) return operation;
+				if (
+					isTerminalOperation(operation) &&
+					!(operation.mode === "live_follow" && operation.status === "blocked")
+				) {
+					return operation;
+				}
 				if (shouldBlockGeminiResume(operation)) {
 					return blockGeminiResume(operation, "operator");
 				}

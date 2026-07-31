@@ -19823,3 +19823,17 @@ browser-stage lifecycle observability, not transcript truncation.
   A scheduler reported as paused after those startup side effects is too late:
   provider work may already hold a lease and begin identity collection. A
   persisted pause must suppress both startup resume and reconciliation.
+
+## 2026-07-31 | Forced Pass May Re-arm Only Blocked Live Follow
+
+- Symptom: an operator-authorized `run_one_pass` against a repaired completion
+  at `status=blocked` returned the record unchanged because completion control
+  classified every blocked operation as terminal. No provider work launched,
+  but the operator surface could not perform the promised bounded recovery.
+- Durable rule: an explicit forced pass may re-arm a blocked operation only
+  when its mode remains `live_follow`. It must set a one-pass ceiling and then
+  re-evaluate provider guard, identity, pacing, and materialization settlement
+  normally. Completed, failed, cancelled, and bounded operations remain inert.
+- Regression: the pass-37 blocked shape must transition to queued with ceiling
+  38, perform exactly one mocked refresh, clear the force marker, and return to
+  idle. HTTP readiness and browser-ops controls must expose the same contract.

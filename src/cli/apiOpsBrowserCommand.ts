@@ -623,7 +623,8 @@ function summarizeDashboardHtml(html: string): ApiOpsBrowserDashboardSummary {
       && hasInlineCompletionAction(html, 'resume', 'Resume')
       && hasInlineCompletionAction(html, 'run_one_pass', 'Run 1')
       && hasInlineCompletionAction(html, 'cancel', 'Cancel'),
-    hasStateAwareCompletionActions: html.includes('completionActionsForStatus')
+    hasStateAwareCompletionActions: html.includes('completionActionsForOperation')
+      && html.includes("status === 'blocked' && operation.mode === 'live_follow'")
       && html.includes("status === 'paused'")
       && html.includes("status === 'idle_waiting'")
       && html.includes("status === 'queued' || status === 'running' || status === 'refreshing'"),

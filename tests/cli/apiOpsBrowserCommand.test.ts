@@ -331,7 +331,9 @@ const dashboardHtml = `
   '<div id="backgroundDrainControls"><button id="pauseBackgroundDrain">Pause</button><button id="resumeBackgroundDrain">Resume</button></div>';
   '<div id="mirrorSchedulerControls"><button id="runMirrorScheduler">Run Now</button><button id="dryRunMirrorScheduler">Dry Run</button><button id="pauseMirrorScheduler">Pause</button><button id="resumeMirrorScheduler">Resume</button></div>';
   controlMirrorScheduler('run-once', false);
-  function completionActionsForStatus(status) {
+  function completionActionsForOperation(operation) {
+    const status = operation && operation.status;
+    if (status === 'blocked' && operation.mode === 'live_follow') return ['run_one_pass'];
     if (status === 'paused') return ['resume', 'run_one_pass', 'cancel'];
     if (status === 'idle_waiting') return ['run_one_pass', 'pause', 'cancel'];
     if (status === 'queued' || status === 'running' || status === 'refreshing') return ['pause', 'run_one_pass', 'cancel'];

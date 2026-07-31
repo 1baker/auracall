@@ -24,7 +24,9 @@ const _dashboardHtml = `
   async function runLazyLiveFollowPreflight() { return postStatusControl({ preflight: { action: 'run', name: 'lazy-live-follow' } }); }
   function renderAttentionQueue() {}
   function collectAttentionRows() {}
-  function completionActionsForStatus(status) {
+  function completionActionsForOperation(operation) {
+    const status = operation && operation.status;
+    if (status === 'blocked' && operation.mode === 'live_follow') return ['run_one_pass'];
     if (status === 'paused') return ['resume', 'cancel'];
     if (status === 'queued' || status === 'running' || status === 'refreshing') return ['pause', 'cancel'];
     return [];

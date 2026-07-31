@@ -1672,6 +1672,110 @@ describe("account mirror completion service", () => {
 		});
 	});
 
+	test("re-arms one blocked live-follow pass without resuming continuous follow", async () => {
+		const requestRefresh = vi.fn(async () => createRefreshResult());
+		const service = createAccountMirrorCompletionService({
+			registry: createAccountMirrorStatusRegistry({
+				config,
+				now: () => new Date("2026-07-31T12:00:00.000Z"),
+			}),
+			refreshService: { requestRefresh },
+			initialOperations: [
+				{
+					object: "account_mirror_completion",
+					id: "acctmirror_force_blocked_one",
+					provider: "chatgpt",
+					runtimeProfileId: "default",
+					mode: "live_follow",
+					sweepMode: "steady_follow",
+					phase: "steady_follow",
+					status: "blocked",
+					startedAt: "2026-07-31T11:45:00.000Z",
+					completedAt: "2026-07-31T11:59:00.000Z",
+					nextAttemptAt: null,
+					maxPasses: null,
+					passCount: 37,
+					lastRefresh: createRefreshResult(),
+					materializationPolicy: "metadata_only",
+					mirrorCompleteness: completeMirror,
+					error: {
+						message: "Prior materialization failed.",
+						code: "account_mirror_materialization_failed",
+					},
+					lifecycleEvents: [],
+				},
+			],
+			now: () => new Date("2026-07-31T12:00:00.000Z"),
+		});
+
+		expect(
+			service.control({ id: "acctmirror_force_blocked_one", action: "run_one_pass" }),
+		).toMatchObject({
+			status: "queued",
+			completedAt: null,
+			forceRunUntilPassCount: 38,
+			lifecycleEvents: [
+				{
+					type: "operator_forced_pass",
+					status: "queued",
+					previousStatus: "blocked",
+				},
+			],
+		});
+
+		await waitFor(() => service.read("acctmirror_force_blocked_one")?.passCount === 38);
+
+		expect(requestRefresh).toHaveBeenCalledTimes(1);
+		expect(service.read("acctmirror_force_blocked_one")).toMatchObject({
+			status: "idle_waiting",
+			passCount: 38,
+			forceRunUntilPassCount: null,
+			error: null,
+		});
+	});
+
+	test("does not re-arm a blocked bounded completion with run-one-pass", () => {
+		const requestRefresh = vi.fn(async () => createRefreshResult());
+		const service = createAccountMirrorCompletionService({
+			registry: createAccountMirrorStatusRegistry({ config }),
+			refreshService: { requestRefresh },
+			initialOperations: [
+				{
+					object: "account_mirror_completion",
+					id: "acctmirror_bounded_blocked",
+					provider: "chatgpt",
+					runtimeProfileId: "default",
+					mode: "bounded",
+					sweepMode: "steady_follow",
+					phase: "steady_follow",
+					status: "blocked",
+					startedAt: "2026-07-31T11:45:00.000Z",
+					completedAt: "2026-07-31T11:59:00.000Z",
+					nextAttemptAt: null,
+					maxPasses: 1,
+					passCount: 0,
+					lastRefresh: null,
+					materializationPolicy: "metadata_only",
+					mirrorCompleteness: null,
+					error: {
+						message: "Provider guard blocked the bounded run.",
+						code: "account_mirror_provider_cooldown",
+					},
+					lifecycleEvents: [],
+				},
+			],
+		});
+
+		expect(
+			service.control({ id: "acctmirror_bounded_blocked", action: "run_one_pass" }),
+		).toMatchObject({
+			status: "blocked",
+			passCount: 0,
+			lifecycleEvents: [],
+		});
+		expect(requestRefresh).not.toHaveBeenCalled();
+	});
+
 	test("defaults to live follow and keeps running after a complete refresh", async () => {
 		const requestRefresh = vi
 			.fn()
