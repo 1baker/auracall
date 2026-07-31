@@ -1,5 +1,19 @@
 # RUNBOOK
 
+## Turn 374 | 2026-07-31
+
+- Active Plan 0178:
+  `docs/dev/plans/0178-2026-07-31-repaired-default-live-follow-single-pass-proof.md`.
+- Operator authorized exactly one installed `run_one_pass` on default ChatGPT
+  completion `acctmirror_completion_7c207690-de8a-40a4-82b8-61edd830a25c`.
+- Baseline: API PID `1032`; installed/source repaired bundles byte-identical;
+  scheduler and all six completions paused; default pass 36 with null force
+  marker and provider guard.
+- Pass ceiling is 37. No scheduler resume, second pass, browser probe, guard
+  clear, config change, or retry is authorized. Any provider guard,
+  rate-limit, verification page, unexpected lane work, or second collection is
+  a hard stop followed by preservation/restoration of paused posture.
+
 ## Turn 373 | 2026-07-31
 
 - Closed Plan 0177:

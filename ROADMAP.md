@@ -15,6 +15,12 @@ Lane: P01
   success or failure. Commit `6d8fddcb` is pushed and installed byte-identically;
   all live provider work remains paused.
 
+- Active repaired default live-follow single-pass proof:
+  [docs/dev/plans/0178-2026-07-31-repaired-default-live-follow-single-pass-proof.md](docs/dev/plans/0178-2026-07-31-repaired-default-live-follow-single-pass-proof.md)
+  Exactly one installed default-ChatGPT pass may advance 36 -> 37 to prove
+  qualifier omission and forced materialization settlement under the live path.
+  Scheduler and all unrelated completions remain paused; no retry is allowed.
+
 - Completed default live-follow single-pass proof, with follow-up required:
   [docs/dev/plans/0176-2026-07-31-default-live-follow-single-pass-proof.md](docs/dev/plans/0176-2026-07-31-default-live-follow-single-pass-proof.md)
   One authorized pass advanced 35 -> 36 with 5/8 active interactions, enforced

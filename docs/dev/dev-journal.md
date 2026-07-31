@@ -42152,3 +42152,15 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Graphiti provider readiness passed, but the compact closeout-memory write
   could not queue because its local database endpoint `127.0.0.1:6389`
   refused the connection; repo and runtime authorities remain complete.
+
+## 2026-07-31 | Plan 0178 Repaired Default One-Pass Proof Opened
+
+- Operator authorized one installed-runtime pass on default ChatGPT completion
+  `acctmirror_completion_7c207690-de8a-40a4-82b8-61edd830a25c` after the
+  provider-free Plan 0177 repair.
+- Fresh baseline proves API PID `1032`, matching source/installed repair
+  bundles, scheduler paused, all six active completions paused, default pass
+  36, and null force marker/provider guard.
+- The packet permits one `run_one_pass` with pass ceiling 37, durable status
+  observation, and at most one terminal safety pause. It forbids a second
+  pass, scheduler resume, browser probe, guard clear, config change, or retry.
