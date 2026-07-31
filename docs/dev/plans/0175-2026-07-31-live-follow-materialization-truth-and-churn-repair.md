@@ -1,6 +1,6 @@
 # Live-Follow Materialization Truth And Churn Repair | 0175-2026-07-31
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 1
 
@@ -57,7 +57,7 @@ can be considered for a bounded resume.
   repaired with a provider-free regression.
 - [x] Focused and adjacent tests, typecheck, production build, scoped lint,
   plan audit, and diff hygiene pass.
-- [ ] Installed/runtime state is audited without resuming provider work; any
+- [x] Installed/runtime state is audited without resuming provider work; any
   later live proof remains a separately gated bounded action.
 
 ## Hard Bounds And Stop Conditions
@@ -103,3 +103,20 @@ provider work triggered.
 - `next_action_or_stop_reason`: commit and push the validated slice, install
   only while scheduler and every completion remain operator-paused, then
   verify byte identity and paused runtime readback without a provider pass.
+
+## Checkpoint 3
+
+- `plan_version`: 1
+- `state_transition`: validated-install-wait -> closed
+- `progress_classification`: complete
+- `evidence`: implementation commit `a2b34924` is pushed on `main`. Installed
+  service PID `2827422` is active; source and installed
+  `historyMaterializationService.js` share SHA-256
+  `f9f8a799a8e0d6312ffc931ee78be2a5ba2842d2c1b21325383236f172f53065`
+  and `completionService.js` shares
+  `2ba09ad70030ef1404d89c6af7a86d5722225c9ee3df15cfb2f58b678f09ac33`.
+  Scheduler posture/state remain paused, all four enabled ChatGPT targets and
+  all six persisted completions remain paused, and no pass count changed.
+- `subagent_status`: not_spawned
+- `next_action_or_stop_reason`: Plan 0175 is complete. Do not resume live
+  provider work from this plan; any later proof requires a new bounded gate.

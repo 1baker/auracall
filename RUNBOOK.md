@@ -2,7 +2,7 @@
 
 ## Turn 371 | 2026-07-31
 
-- Active Plan 0175:
+- Closed Plan 0175:
   `docs/dev/plans/0175-2026-07-31-live-follow-materialization-truth-and-churn-repair.md`.
 - Durable evidence proves job `hmj_acbb3da47a0f45afae1bf9255c29e95c`
   contained six failed transfers but persisted as skipped. The default lane
@@ -16,6 +16,10 @@
   qualifiers remain strict; no identity relaxation was made.
 - Scheduler and all four ChatGPT completion lanes remain operator-paused. No
   live browser/provider proof is authorized in this plan.
+- Commit `a2b34924` is pushed and installed byte-identically. API PID `2827422`
+  is active with scheduler posture/state paused; all four enabled ChatGPT
+  targets and all six persisted completions remain paused with unchanged pass
+  counts.
 
 ## Turn 370 | 2026-07-25
 
