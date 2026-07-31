@@ -19771,3 +19771,21 @@ browser-stage lifecycle observability, not transcript truncation.
   `account_mirror_materialization_failed` before another provider pass;
   preserve normal quiet-window behavior for succeeded and genuinely skipped
   jobs.
+
+## 2026-07-31 | Forced-Pass Materialization Must Settle Before Control Returns
+
+- Live proof: one forced pass correctly honored 120-second pacing and produced
+  a truthful failed materialization receipt, but the completion cleared its
+  force ceiling and returned idle while the asynchronous job was still
+  running. Hydration updated the cursor/outcome to failed later without an
+  immediate `blocked` transition.
+- Durable rule: a completion-owned forced pass must retain enough lifecycle
+  authority to hydrate its queued materialization to terminal and apply the
+  failure stop before becoming idle. An operator safety pause can prevent a
+  retry, but it is not a substitute for the durable blocked transition.
+- Durable diagnostic: do not infer a real ChatGPT account switch when the
+  configured binding and provider-app evidence share the same email but only
+  the binding contains `plan`/`structure` qualifiers. Treat absent detected
+  qualifier evidence distinctly from a contradictory qualifier before
+  declaring `account_session_drift`; retain strict mismatch behavior when both
+  sides provide conflicting values.

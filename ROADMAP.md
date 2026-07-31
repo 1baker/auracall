@@ -7,11 +7,15 @@
 Status: active
 Lane: P01
 
-- Active default live-follow single-pass proof:
+- Completed default live-follow single-pass proof, with follow-up required:
   [docs/dev/plans/0176-2026-07-31-default-live-follow-single-pass-proof.md](docs/dev/plans/0176-2026-07-31-default-live-follow-single-pass-proof.md)
-  One authorized `run_one_pass` on the previously affected default ChatGPT
-  completion will validate installed Plan 0175 while the scheduler and every
-  other completion remain paused; no retry is permitted.
+  One authorized pass advanced 35 -> 36 with 5/8 active interactions, enforced
+  pacing, and no rate-limit observation. Its materialization job truthfully
+  failed 6 assets instead of reporting a skip, but the forced-pass runner
+  returned before that asynchronous failure could block the completion. The
+  safety pause restored all six completions and the scheduler to paused; a
+  provider-free propagation/identity-evidence repair is required before any
+  second live pass.
 
 - Completed ChatGPT developer-app keyboard recreation:
   [docs/dev/plans/0174-2026-07-25-chatgpt-developer-app-keyboard-recreation.md](docs/dev/plans/0174-2026-07-25-chatgpt-developer-app-keyboard-recreation.md)

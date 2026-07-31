@@ -2,17 +2,30 @@
 
 ## Turn 372 | 2026-07-31
 
-- Active Plan 0176:
+- Closed Plan 0176 with follow-up required:
   `docs/dev/plans/0176-2026-07-31-default-live-follow-single-pass-proof.md`.
 - Operator authorized one bounded pass on default ChatGPT completion
   `acctmirror_completion_7c207690-de8a-40a4-82b8-61edd830a25c`.
 - Baseline: installed PID `2827422`; scheduler paused; all six completions
   paused; default pass count 35; provider guard null; limits remain 8 browser
   interactions/minute with 120-second conversation/page/navigation cooldowns.
-- Exactly one `run_one_pass` is allowed. A terminal safety `pause` is allowed
-  only to restore the default lane if it ends idle/runnable. All other lanes
-  remain paused; no retry, direct browser probe, guard clear, or config change
-  is authorized.
+- Exactly one `run_one_pass` was accepted. Foreground fencing delayed provider
+  acquisition; the collector then ran once from `15:25:51Z` to `15:31:45Z`,
+  advanced pass 35 -> 36, used 5/8 active interactions, honored paced reads,
+  and produced no rate-limit or human-verification observation.
+- Job `hmj_e10de506d132411fb88a0f7511ce7487` truthfully settled failed with
+  `materialized=0 skipped=1 failed=6`. Every failed asset reported
+  `chatgpt_account_session_drift`: the configured service-account binding has
+  `plan=team|structure=workspace`, while provider-app evidence exposes the same
+  email without comparable qualifier fields.
+- Remaining defect: forced-pass completion control returned `idle_waiting`
+  before the asynchronous materialization terminal settled, so the hydrated
+  failed receipt did not transition the completion to `blocked`. The allowed
+  safety pause restored the default lane; scheduler and all six completions are
+  paused at closeout and no retry occurred.
+- Do not run another live pass. First repair and test asynchronous
+  materialization-failure propagation plus qualified identity evidence
+  matching provider-free.
 
 ## Turn 371 | 2026-07-31
 

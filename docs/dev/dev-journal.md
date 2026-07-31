@@ -42095,3 +42095,25 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   both repaired installed bundles hash-match source, scheduler posture/state
   remain paused, and all six persisted completions retain their paused status
   and prior pass counts.
+
+## 2026-07-31 | Plan 0176 Default Live-Follow Single-Pass Proof
+
+- One pushed and operator-authorized `run_one_pass` advanced default ChatGPT
+  completion `acctmirror_completion_7c207690-de8a-40a4-82b8-61edd830a25c`
+  exactly from pass 35 to 36. Foreground-work fencing was preserved, and the
+  collector used 5/8 active interactions over about six minutes with four
+  paced chat loads, no guard correlation, and no rate-limit or verification
+  observation.
+- New job `hmj_e10de506d132411fb88a0f7511ce7487` proves Plan 0175's aggregate
+  truth repair live: 0 materialized, 1 skipped, and 6 failed now produces
+  job/result status `failed` and a failure-specific message.
+- Actual materialization remains blocked by one repeated preflight shape. The
+  binding is the qualified service account
+  `ecochran76@gmail.com|plan=team|structure=workspace`; provider-app evidence
+  identifies the same email authoritatively but does not expose comparable
+  qualifier values, so all six assets fail `chatgpt_account_session_drift`.
+- The live proof also found a completion-control seam: a forced pass returns
+  after queuing asynchronous materialization, so a later failed receipt is
+  hydrated without immediately transitioning that idle completion to
+  `blocked`. The safety pause restored all six completions and the scheduler to
+  paused. No second pass, browser tool, guard clear, or config change occurred.
