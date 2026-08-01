@@ -19916,3 +19916,30 @@ browser-stage lifecycle observability, not transcript truncation.
   reload. A later payload probe may retry the authenticated direct fetch but
   must preserve the active tab. Duplicate diagnostics must reason from mutation
   starts as well as completions so the operator can stop an in-flight repeat.
+
+## 2026-08-01 | Context chunk continuation must retain its browser target
+
+- Symptom: a ChatGPT detail inventory deliberately continued after 24 messages,
+  but each cursor chunk reopened and payload-reloaded the same conversation.
+- Cause: the collector persisted only the message cursor. It disposed the
+  scoped provider session and treated the next chunk as a fresh navigable read,
+  even though the already-loaded target contained the full conversation.
+- Durable rule: pagination within one provider conversation is logical data
+  continuation, not a new browser route operation. Retain the scoped provider
+  session while a chunk cursor remains, and make every continuation
+  navigation-forbidden (`preserveActiveTab=true`). Close the session only on
+  terminal chunk completion or error.
+
+## 2026-08-01 | Cancellation must stop post-await completion effects
+
+- Symptom: an operator-cancelled completion remained terminally `cancelled`,
+  but its in-flight collector later incremented pass count and queued a
+  materialization job.
+- Cause: cancellation stopped only a provider FIFO wait and changed persisted
+  status. It did not abort the active refresh, and the runner applied refresh
+  and materialization side effects immediately after the awaited provider call.
+- Durable rule: every launched completion owns an abort controller. Operator
+  cancel and API shutdown parking must abort active provider work; every awaited
+  provider boundary must check cancellation before pass, ledger, catch-up, or
+  materialization mutation. A provider implementation that resolves despite
+  abort must still be unable to create post-cancel work.

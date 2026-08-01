@@ -42420,3 +42420,32 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   adapter and response-server source/installed hashes match; restart readback
   preserves scheduler `paused`, five paused retained completions, and no active
   completion.
+
+## 2026-08-01 | Plan 0180 chunk-continuation and cancellation hard stop
+
+- Ran the only newly authorized `chatgpt/default` bounded completion,
+  `acctmirror_completion_3cec1299-f0ce-4511-9fc8-705b5e042312`, with one-pass,
+  full-sweep, full-missing-assets limits. Scheduler and unrelated lanes stayed
+  paused.
+- Cancelled when conversation `6a40724d-8688-83ea-ab36-7458e921ed19`
+  reopened and began a second governed payload reload for its next 24-message
+  chunk. Diagnostics correctly classified the duplicate. No rate-limit,
+  ChatGPT guard, CAPTCHA, verification, identity conflict, or second pass
+  occurred.
+- A post-cancel race let the in-flight refresh settle and queue
+  `hmj_153db2c1a1b54933b3518027478298c`; its only execution produced 1
+  materialized, 6 skipped, and 1 `retrieval_failed`. This keeps M5 open and
+  consumes the canary without retry.
+- Red/green repair retains a scoped ChatGPT provider session between context
+  chunks and makes continuation direct-fetch-only on the loaded target. A
+  second regression proves cancel aborts the active refresh signal and forbids
+  pass increments or materialization even if the provider boundary resolves.
+- Focused/adjacent suites pass 274/274. Full-suite effective result is 303
+  files/2,689 tests passing with 65 live/TTY skips; one unrelated 5-millisecond
+  timing miss passed in isolation. TypeScript, build, lint at the retained
+  207-warning baseline, and diff hygiene pass.
+- Commits `fc924d69` and `b3629d10` are pushed and installed at API PID `75678`.
+  Source/installed hashes match, scheduler remains paused, five completions are
+  paused, active materialization jobs are zero, background drain is idle, and
+  the `chatgpt/default` provider guard is clear. No further live work is
+  authorized.

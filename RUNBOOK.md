@@ -1,5 +1,30 @@
 # RUNBOOK
 
+## Turn 382 | 2026-08-01
+
+- Consumed exactly one newly authorized `chatgpt/default` bounded canary:
+  `acctmirror_completion_3cec1299-f0ce-4511-9fc8-705b5e042312`. It was
+  cancelled on a correctly diagnosed `repeated-same-route-attempt` when a
+  24-message detail continuation reopened and reloaded conversation
+  `6a40724d-8688-83ea-ab36-7458e921ed19`. No retry was run.
+- The cancellation exposed a separate post-cancel race: the already-running
+  collector settled, advanced pass count, and queued job
+  `hmj_153db2c1a1b54933b3518027478298c`, which ended 1 materialized, 6 skipped,
+  and 1 `retrieval_failed`. No rate-limit, ChatGPT guard, CAPTCHA, verification,
+  identity conflict, second pass, scheduler resume, or unrelated start occurred.
+- ChatGPT detail continuation now retains its scoped provider session and
+  forbids navigation on later chunks. Completion cancel/shutdown now aborts the
+  active refresh and suppresses post-await pass/materialization side effects.
+  Commits `fc924d69` and `b3629d10` are pushed and installed at PID `75678`;
+  collector and completion-service source/installed hashes match.
+- Provider-free verification is effectively 303 files/2,689 tests passing with
+  65 live/TTY skips; typecheck, build, lint with the 207-warning baseline, and
+  diff hygiene pass. Installed readback preserves scheduler `paused`, five
+  retained completions all paused, zero active materialization jobs, idle
+  background drain, and a clear `chatgpt/default` provider guard.
+- Plan 0180 M5 remains open. Do not run another canary or re-enable scheduler or
+  continuous live follow without fresh explicit operator authorization.
+
 ## Turn 381 | 2026-08-01
 
 - Plan 0180 M6 is implemented and installed. ChatGPT file materialization now

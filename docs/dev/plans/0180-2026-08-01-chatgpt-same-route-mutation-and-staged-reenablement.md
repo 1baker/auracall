@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 4
+Plan version: 5
 
 ## Stable Objective
 
@@ -18,18 +18,22 @@ reenablement.
   cooldowns.
 - The account-mirror scheduler and five unrelated completions remain paused;
   no queued, running, or idle-waiting work remains.
-- The single newly authorized default-profile canary
-  `acctmirror_completion_a49a13cf-7cf0-42b6-851a-fac101d0e342` was cancelled
-  fail-closed during pass 0. It issued a second payload-recovery reload for the
-  exact same conversation 3.448 seconds after the first 95.381-second reload
-  completed.
-- No materialization job, provider guard, rate-limit, CAPTCHA, verification,
-  identity conflict, or second pass occurred. The live packet is consumed and
-  must not be retried without new explicit authorization.
-- The provider-free follow-up repair makes the settled payload retry
-  direct-fetch-only and extends diagnostics to identify repeated same-route
-  `navigate` or `reload` start attempts while the second mutation is still in
-  flight. Commit `8485446c` is pushed and installed under API PID `37737` with
+- The latest separately authorized default-profile canary
+  `acctmirror_completion_3cec1299-f0ce-4511-9fc8-705b5e042312` was cancelled
+  fail-closed after one conversation detail cursor reopened and reloaded the
+  same route for a second 24-message chunk. The second reload began 43.597
+  seconds after the first reload completed and diagnostics correctly classified
+  it as `repeated-same-route-attempt`.
+- A cancellation race then allowed the in-flight collector to settle, increment
+  pass count, and queue materialization job
+  `hmj_153db2c1a1b54933b3518027478298c`. Its only run yielded 1 materialized,
+  6 skipped, and 1 `retrieval_failed`; therefore M5 failed and the packet is
+  consumed. No rate-limit, ChatGPT provider guard, CAPTCHA, verification,
+  identity conflict, second pass, scheduler resume, or unrelated start occurred.
+- Provider-free repairs now retain one scoped ChatGPT provider session across
+  detail chunks, forbid navigation on continuation, abort active collector work
+  on cancel/shutdown, and gate post-await state/materialization effects. Commits
+  `fc924d69` and `b3629d10` are pushed and installed under API PID `75678` with
   scheduler and completion pauses intact.
 
 ## Architecture Decision
@@ -289,3 +293,47 @@ continuous live-follow reenablement remain separately gated afterward.
 - `next_gate`: the M5 acceptance box remains open. Another live pass requires a
   new explicit operator authorization and is not part of this packet;
   scheduler/continuous re-enablement remains prohibited before that proof.
+
+## Checkpoint 6
+
+- `plan_version`: 5
+- `progress_classification`: live gate failed closed; two provider-free runtime
+  boundaries repaired and installed.
+- `live_receipt`: bounded completion
+  `acctmirror_completion_3cec1299-f0ce-4511-9fc8-705b5e042312` started at
+  `2026-08-01T16:53:39.877Z`. Conversation
+  `6a40724d-8688-83ea-ab36-7458e921ed19` completed reload mutation
+  `df81db64-e7e9-42c9-a950-cfa0c31db9de` at
+  `2026-08-01T17:01:02.561Z`, then reopened and started reload mutation
+  `3fd5ff00-d16e-4609-ac80-f5594aa1d306` at
+  `2026-08-01T17:01:46.158Z`. Diagnostics emitted
+  `repeated-same-route-attempt`, and the operator cancelled at
+  `2026-08-01T17:02:13.119Z` without a retry.
+- `post_cancel_receipt`: the pre-repair in-flight collector continued after
+  cancellation, advanced pass count to 1, and queued job
+  `hmj_153db2c1a1b54933b3518027478298c`. The job terminated with 1 materialized,
+  6 skipped, and 1 `retrieval_failed` across 4 conversations. Provider-session
+  proof matched the configured default ChatGPT account; no rate-limit, ChatGPT
+  provider guard, CAPTCHA, verification, or identity conflict appeared.
+- `repair`: ChatGPT detail chunks now retain their scoped provider session and
+  use `preserveActiveTab=true` for continuation, so a cursor cannot reopen or
+  reload the already-loaded route. Completion cancellation and API shutdown now
+  abort the active refresh signal; a collector that resolves despite abort
+  cannot increment the pass or create materialization work.
+- `validation`: focused and adjacent suites pass 274/274. Full-suite effective
+  result is 303 files and 2,689 tests passing with 65 live/TTY skips after one
+  unrelated 5-millisecond rolling-budget timing miss passed in isolation.
+  TypeScript, production build, lint with 207 retained warning-level
+  diagnostics, and diff hygiene pass.
+- `installed_evidence`: commits `fc924d69` and `b3629d10` are pushed at
+  ahead/behind `0/0` and installed under active API PID `75678`. Source and
+  installed SHA-256 match for the collector
+  `70bead7fce9096207591254ff4f750ccc213f914fcc3ae56699a5d77602e7973`
+  and completion service
+  `93dfcf30ff84ffb03ad33c6f2ca03fe8bd7fbb4a84c45e72fbd57244b45d41ee`.
+  Readback reports scheduler `paused`, five retained completions all paused,
+  zero active materialization jobs, idle background drain, and clear
+  `chatgpt/default` provider guard.
+- `next_gate`: M5 remains open because the canary produced both a duplicate
+  mutation and one failed retrieval. Do not rerun it or re-enable scheduler or
+  continuous live follow without a fresh explicit operator authorization.

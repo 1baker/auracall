@@ -13,15 +13,17 @@ Lane: P01
   conversation route and ungoverned recovery reloads. The deep browser-service
   repair now suppresses canonical same-route mutations and routes every actual
   navigation/reload through the existing interaction governor. Commit/install
-  parity and exact asset-identity repair are green. A newly authorized
-  default-profile canary then failed closed during pass 0 when payload recovery
-  started a second reload of the same conversation 3.448 seconds after the
-  first reload completed; diagnostics had not counted the in-flight repeat.
-  The provider-free repair makes the settled payload retry direct-fetch-only
-  and detects repeated same-route reload/navigation starts. Commit `8485446c`
-  is pushed and installed at API PID `37737` with source/installed parity and
-  all pauses intact. A fresh explicit authorization remains before any later
-  live proof; scheduler and continuous live-follow stay paused.
+  parity and exact asset-identity repair are green. The latest authorized
+  default-profile canary failed closed when a 24-message detail continuation
+  reopened and reloaded its already-loaded conversation; the cancellation then
+  exposed a second defect by allowing post-cancel pass/materialization effects.
+  Provider-free repairs retain one scoped ChatGPT target across chunks and
+  abort/gate cancelled completion work. Commits `fc924d69` and `b3629d10` are
+  pushed and installed at API PID `75678` with source/installed parity,
+  scheduler pause, five paused completions, and zero active jobs intact. M5
+  remains open because the consumed canary recorded one duplicate mutation and
+  one failed retrieval; another live proof requires fresh explicit authority,
+  and scheduler/continuous live-follow remain disabled.
 
 - Completed provider-session authority unification:
   [docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md](docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md)
