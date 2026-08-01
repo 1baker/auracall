@@ -42472,3 +42472,22 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   suites pass 256/256; full validation passes 303 files/2,689 tests with 65
   skips, typecheck, build, lint at 207 warnings, source/installed hash parity,
   and paused runtime readback. No retry or further provider work was run.
+
+## 2026-08-01 | Plan 0180 alternate files-download JSON repair
+
+- Reproduced the user-uploaded-file parser gap without provider access: the CDP
+  capture expression accepted only object-valued `download_url`, so a signed
+  URL returned as a JSON string or bounded alternate field was discarded as
+  `json_missing_download_url`.
+- Added one shared self-contained resolver for the tested browser expression and
+  unit seam. It accepts absolute/root-relative URL strings, bounded shallow
+  aliases, and one `data`/`result` wrapper; malformed or error-only JSON remains
+  a retrieval failure. Existing requested-asset response identity validation is
+  unchanged.
+- Commit `bd69437f` is pushed and installed at API PID `91466`; source/runtime
+  adapter hashes match. Focused tests pass 119/119, adjacent tests pass 295/295,
+  typecheck/build/lint pass, and the full suite's sole unrelated timing failure
+  passed its one bounded rerun. Scheduler and five completions remain paused,
+  with no active materialization job and no provider work run.
+- Exact transcript availability remains unknown. Do not retry or re-enable live
+  follow without a fresh explicit operator gate.

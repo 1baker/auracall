@@ -21,9 +21,13 @@ Lane: P01
   settled. Commit `fd5587c2` repairs that provider-free lifecycle boundary and
   is pushed and installed at API PID `77948` with source/installed parity,
   scheduler pause, five paused completions, and zero active jobs intact. M5
-  remains open because the consumed canary materialized 0 and failed 1; another
-  live proof requires fresh explicit authority, and scheduler/continuous live-
-  follow remain disabled.
+  remains open because the consumed canary materialized 0 and failed 1.
+  Provider-free commit `bd69437f` now accepts bounded alternate signed-URL JSON
+  shapes from ChatGPT `files-download` and is installed at API PID `91466` with
+  hash parity and the paused posture intact. This repairs a retrieval defect but
+  does not prove the exact transcript is available. Another one-attempt live
+  proof requires fresh explicit authority, and scheduler/continuous live-follow
+  remain disabled.
 
 - Completed provider-session authority unification:
   [docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md](docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md)

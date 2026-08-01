@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 6
+Plan version: 7
 
 ## Stable Objective
 
@@ -37,6 +37,16 @@ reenablement.
   settlement and blocks failures with
   `account_mirror_materialization_failed`. It is pushed and installed under API
   PID `77948`, with scheduler and completion pauses intact.
+- Provider-free regression `bd69437f` repairs the observed
+  `json_missing_download_url` parser boundary. ChatGPT file-download JSON may
+  now yield a signed URL as the JSON string itself, through the established
+  `download_url`, or through bounded shallow/nested URL fields. Malformed and
+  error-only JSON still fail as `retrieval_failed`; response identity checks
+  remain mandatory before bytes are written. The commit is pushed and installed
+  at API PID `91466` with source/runtime hash parity. This removes one known
+  retrieval defect but does not prove that the exact transcript is currently
+  retrievable; its availability remains unknown until a separately authorized
+  one-attempt canary.
 
 ## Architecture Decision
 
@@ -378,3 +388,34 @@ continuous live-follow reenablement remain separately gated afterward.
   retrieval. No retry is authorized. Keep scheduler and continuous live follow
   disabled while the ChatGPT user-uploaded-file retrieval lane is repaired
   provider-free; any later live proof requires a new explicit operator gate.
+
+## Checkpoint 8
+
+- `plan_version`: 7
+- `progress_classification`: provider-free user-uploaded-file retrieval repair
+  installed; live acceptance remains open.
+- `root_cause`: the ChatGPT `files-download` capture path accepted only an
+  object-valued `download_url`. The failed HTTP 200 JSON response could therefore
+  contain a usable signed URL in another bounded provider shape and still be
+  reported as `json_missing_download_url`.
+- `repair`: one self-contained resolver now accepts an absolute or root-relative
+  URL from a JSON string, the established `download_url`, bounded shallow URL
+  aliases, or one `data`/`result` wrapper. Non-URL strings, malformed URLs, and
+  provider error objects remain failures. The existing requested-file identity
+  validation still gates every filesystem write.
+- `validation`: focused ChatGPT adapter coverage passes 119/119; adjacent
+  adapter, file-service, history-materialization, and completion suites pass
+  295/295. TypeScript, production build, and lint with the retained 207-warning
+  baseline pass. Full validation reached 302 passing files and 2,689 passing
+  tests with one unrelated lease-heartbeat timing failure; its single bounded
+  rerun passed.
+- `installed_evidence`: commit `bd69437f` is pushed at ahead/behind `0/0` and
+  installed under API PID `91466`. Source/installed ChatGPT adapter SHA-256 is
+  `a31b375cc44cf692cc464651f6a99b73c4ae7855a9514199080c69f376a06d1d`.
+  Scheduler remains paused, five retained completions are paused, active
+  completion and active materialization-job counts are zero, background drain
+  is idle, and duplicate same-route attempts remain zero.
+- `next_gate`: do not infer that the exact transcript exists or is downloadable
+  from the parser repair alone. M5 remains open. Any exact-file retrieval proof
+  is a new one-attempt live canary requiring explicit operator authorization;
+  scheduler and continuous live follow remain disabled.

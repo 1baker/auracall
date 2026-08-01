@@ -644,6 +644,13 @@ Terminology note:
   snapshot refresh. Scrape telemetry records these boundaries as
   `llmService.materializeConversationFiles.reuseRefreshedCache` and
   `llmService.materializeConversationFiles.reuseRefreshedContext`.
+  ChatGPT `files-download` JSON may supply a signed URL as the JSON string
+  itself, a recognized shallow URL field, or one `data`/`result` wrapper.
+  Parsing a URL is not materialization proof: AuraCall still requires the
+  requested provider file id or exact response filename before writing bytes.
+  Malformed or error-only JSON remains `retrieval_failed` with unknown
+  availability unless ChatGPT explicitly proves unavailable/deleted/expired
+  state.
   If every known cached file is already terminal-local or outside the bounded
   selection, the history receipt reports `known-files-excluded`; it reserves
   `no-materializable-file` for a genuinely empty refreshed file inventory.

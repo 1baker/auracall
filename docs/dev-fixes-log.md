@@ -1,3 +1,14 @@
+- 2026-08-01: A ChatGPT HTTP 200 `files-download` JSON response without the one
+  historically expected `download_url` key is not evidence that no signed URL
+  exists. Parse only bounded URL-bearing shapes: the JSON string itself,
+  recognized shallow aliases, or one `data`/`result` wrapper; require HTTP(S) or
+  root-relative syntax and reject malformed/error-only payloads. Keep this URL
+  discovery separate from asset identity: requested provider-file-id or exact
+  filename evidence must still pass before bytes are written. Even after parser
+  repair, preserve `retrieval_failed` and unknown availability until an actual
+  transfer succeeds or the provider explicitly proves unavailable/deleted/
+  expired state.
+
 - 2026-08-01: A bounded account-mirror completion that owns asynchronous
   history materialization cannot report `completed` merely because its pass
   cap or mirror-complete condition was reached. Loop through the owned job's

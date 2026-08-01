@@ -1,5 +1,28 @@
 # RUNBOOK
 
+## Turn 384 | 2026-08-01
+
+- Repaired the provider-free ChatGPT user-uploaded-file response parser exposed
+  by Plan 0180's failed exam-writing-chat transcript. The `files-download` JSON
+  resolver now accepts a signed URL supplied as the JSON string itself, through
+  bounded shallow aliases, or through one `data`/`result` wrapper; malformed and
+  error-only JSON still fail closed.
+- This changes retrieval capability, not availability truth. The exact
+  transcript remains `retrieval_failed` with unknown availability until a new,
+  explicitly authorized one-attempt canary succeeds or the provider confirms
+  unavailability. Requested-file identity validation still gates all writes.
+- Commit `bd69437f` is pushed and installed under API PID `91466`.
+  Source/installed ChatGPT adapter SHA-256 matches at
+  `a31b375cc44cf692cc464651f6a99b73c4ae7855a9514199080c69f376a06d1d`.
+  Focused coverage passes 119/119 and adjacent coverage passes 295/295;
+  typecheck, build, lint at the retained 207-warning baseline, and diff hygiene
+  pass. The full suite's only failure was an unrelated lease-heartbeat timing
+  test, which passed its single bounded rerun.
+- Scheduler remains paused, all five retained completions remain paused, active
+  completion and active materialization jobs are zero, background drain is
+  idle, and duplicate same-route attempts remain zero. No browser or provider
+  work ran during this repair/install packet.
+
 ## Turn 383 | 2026-08-01
 
 - Consumed exactly one newly authorized `chatgpt/default` bounded canary:
