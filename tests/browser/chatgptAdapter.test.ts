@@ -55,6 +55,7 @@ import {
 	resolveChatgptCanvasArtifactContentText,
 	resolveChatgptConversationUrl,
 	resolveChatgptDownloadUrlFromJson,
+	selectChatgptDownloadFailure,
 	summarizeChatgptDownloadJsonShape,
 	resolveChatgptProjectCreateConfirmLabelsForTest,
 	resolveChatgptProjectMemoryLabel,
@@ -508,6 +509,7 @@ describe("downloadChatgptConversationFilesWithClient", () => {
 			expect(resolveChatgptDownloadUrlFromJson({ detail: "File not found" })).toBeNull();
 			expect(downloadExpression).toContain("resolveChatgptDownloadUrlFromJson");
 			expect(downloadExpression).toContain("summarizeChatgptDownloadJsonShape");
+			expect(downloadExpression).toContain("selectChatgptDownloadFailure");
 			expect(downloadExpression).toContain("responseShape: summarizeDownloadJsonShape(json)");
 			expect(downloadExpression).toContain(
 				"resolveDownloadUrlFromJson(json, window.location.href)",
@@ -622,6 +624,21 @@ describe("downloadChatgptConversationFilesWithClient", () => {
 		});
 	});
 
+	test("retains provider-confirmed failure evidence over a later generic fallback", () => {
+		const unavailable = {
+			reason: "download_response_not_ok",
+			status: 403,
+			providerError: { detail: "Requested file is no longer available." },
+		};
+		const generic = {
+			reason: "json_missing_download_url",
+			status: 200,
+			responseShape: { kind: "object", keys: [] },
+		};
+		expect(selectChatgptDownloadFailure(unavailable, generic)).toBe(unavailable);
+		expect(selectChatgptDownloadFailure(generic, unavailable)).toBe(unavailable);
+	});
+
 	test("checks readiness once and sequentially downloads twelve files on one client", async () => {
 		const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-chatgpt-batch-"));
 		const scrapeTelemetry = createBrowserScrapeTelemetryRecorder();
@@ -704,7 +721,9 @@ describe("downloadChatgptConversationFilesWithClient", () => {
 					"const isSignedContent = /\\/backend-api\\/estuary\\/content/.test(text)",
 				);
 				expect(expression).toContain("if (candidate.ok) {");
-				expect(expression).toContain("captureError = candidate");
+				expect(expression).toContain(
+					"captureError = selectDownloadFailure(captureError, next)",
+				);
 				expect(expression).toContain("HTMLAnchorElement.prototype.click = originalAnchorClick");
 				expect(expression).toContain("window.open = originalWindowOpen");
 				expect(expression).toContain("providerErrorShape");

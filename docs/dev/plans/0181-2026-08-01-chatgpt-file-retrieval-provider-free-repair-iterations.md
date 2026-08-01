@@ -89,7 +89,7 @@ bounded timeout, while a prompt promise still resolves unchanged.
 
 - [x] R1 red/green regression and validation complete.
 - [x] R2 red/green regression and validation complete.
-- [ ] R3 red/green regression and validation complete.
+- [x] R3 red/green regression and validation complete.
 - [ ] R4 red/green regression and validation complete.
 - [ ] R5 red/green regression and validation complete.
 - [ ] Focused, adjacent, and broad provider-free validation pass.
@@ -151,3 +151,21 @@ pass, and no live/provider authority has been consumed.
 - `subagent_status`: not used.
 - `next_action_or_stop_reason`: R3 is ready; prevent later generic fallback
   evidence from erasing a stronger provider-confirmed failure.
+
+## Checkpoint 3 | R3
+
+- `plan_version`: 1
+- `state_transition`: active -> active
+- `progress_classification`: blocker_reduction
+- `evidence`: regression proved a later HTTP 200 generic missing-URL fallback
+  replaced an earlier 403 response carrying explicit file-unavailable evidence.
+  The browser capture path now selects failures by semantic strength:
+  provider-confirmed unavailable, retryable transport/provider status,
+  structured provider error, response shape, numeric status, then generic text.
+  Equal-strength evidence preserves the earlier matched-surface receipt.
+- `validation`: focused red failed as expected. One allowed rework updated an
+  existing generated-expression assertion from the obsolete assignment to the
+  ranked selector. The full ChatGPT adapter suite passes 122/122.
+- `subagent_status`: not used.
+- `next_action_or_stop_reason`: R4 is ready; keep the capture polling deadline
+  effective when one intercepted response never settles.

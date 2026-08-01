@@ -9792,6 +9792,37 @@ export function summarizeChatgptDownloadJsonShape(json: unknown): Record<string,
 	return Object.keys(children).length > 0 ? { ...root, children } : root;
 }
 
+export function selectChatgptDownloadFailure(current: unknown, candidate: unknown): unknown {
+	const score = (value: unknown): number => {
+		if (!value) return 0;
+		if (typeof value !== "object" || Array.isArray(value)) return 1;
+		const record = value as Record<string, unknown>;
+		const status = typeof record.status === "number" ? record.status : null;
+		let providerText = "";
+		try {
+			providerText = JSON.stringify(record.providerError ?? "").replace(/[_-]+/g, " ");
+		} catch {
+			providerText = "";
+		}
+		const explicitlyUnavailable =
+			status === 404 ||
+			status === 410 ||
+			(/\b(?:file|asset)\b/i.test(providerText) &&
+				/\b(?:not found|no longer available|unavailable|deleted|expired|does not exist)\b/i.test(
+					providerText,
+				));
+		if (explicitlyUnavailable) return 100;
+		if (status === 408 || status === 425 || status === 429 || (status != null && status >= 500)) {
+			return 80;
+		}
+		if (record.providerError && typeof record.providerError === "object") return 70;
+		if (record.responseShape && typeof record.responseShape === "object") return 50;
+		if (status != null) return 40;
+		return typeof record.reason === "string" ? 20 : 10;
+	};
+	return score(candidate) > score(current) ? candidate : current;
+}
+
 export function classifyChatgptFileRetrievalFailure(error: unknown): {
 	failureKind: "provider_unavailable" | "retrieval_failed";
 	retryable: boolean;
@@ -9918,6 +9949,7 @@ async function downloadChatgptConversationFileWithClient(
           };
           const resolveDownloadUrlFromJson = ${resolveChatgptDownloadUrlFromJson.toString()};
           const summarizeDownloadJsonShape = ${summarizeChatgptDownloadJsonShape.toString()};
+          const selectDownloadFailure = ${selectChatgptDownloadFailure.toString()};
           const captureDownloadResponse = async (response, originalUrl, fileName, mimeType) => {
             const clone = response.clone();
             const contentType = clone.headers.get('content-type');
@@ -10091,7 +10123,7 @@ async function downloadChatgptConversationFileWithClient(
 	              captured = next;
 	              return;
 	            }
-	            captureError = candidate;
+	            captureError = selectDownloadFailure(captureError, next);
 	          };
 	          const originalAnchorClick = HTMLAnchorElement.prototype.click;
 	          const originalWindowOpen = window.open;
@@ -10127,7 +10159,8 @@ async function downloadChatgptConversationFileWithClient(
 	                  );
 	                recordCaptureCandidate(candidate, 'fetch');
               }).catch((error) => {
-                captureError = error && typeof error === 'object' && 'message' in error ? error.message : String(error);
+                const failure = error && typeof error === 'object' && 'message' in error ? error.message : String(error);
+                captureError = selectDownloadFailure(captureError, failure);
               }));
             }
             return responsePromise;
@@ -10152,9 +10185,10 @@ async function downloadChatgptConversationFileWithClient(
 	                    );
 	                  recordCaptureCandidate(candidate, 'anchor');
 	                } catch (error) {
-	                  captureError = error && typeof error === 'object' && 'message' in error
+	                  const failure = error && typeof error === 'object' && 'message' in error
 	                    ? error.message
 	                    : String(error);
+	                  captureError = selectDownloadFailure(captureError, failure);
 	                }
 	                if (captured) break;
 	              }
@@ -10171,9 +10205,9 @@ async function downloadChatgptConversationFileWithClient(
 	              if (direct.value?.ok) {
 	                recordCaptureCandidate(direct.value, 'direct');
 	              } else if (direct.value) {
-	                captureError = direct.value;
+	                captureError = selectDownloadFailure(captureError, direct.value);
               } else if (direct.attempted && direct.reason) {
-                captureError = direct.reason;
+                captureError = selectDownloadFailure(captureError, direct.reason);
               }
             }
 	          } finally {
