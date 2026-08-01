@@ -556,6 +556,11 @@
         with `account_mirror_materialization_failed` before completion or
         another collector/provider pass; successful and genuinely skipped
         live-follow jobs retain the normal post-materialization quiet window
+      - ChatGPT file-download regressions must cover both camel-case provider
+        errors and the live snake-case `error_code` / `error_type` envelope;
+        explicit not-found evidence is non-retryable `provider_unavailable`,
+        while failed transport, browser interaction, malformed payloads, and
+        asset-identity mismatches remain `retrieval_failed`
       - operation records persist under the account-mirror cache and are
         hydrated on API/MCP startup; active records resume, and a persisted
         `nextAttemptAt` must be honored before the next refresh request

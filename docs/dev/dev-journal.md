@@ -42510,3 +42510,30 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Plan 0181 is closed. Plan 0180 M5 remains open because the exact transcript
   availability is still unknown and any one-attempt canary requires fresh
   explicit authority.
+
+## 2026-08-01 | Plan 0180 direct CDP availability resolution
+
+- Inspected the exact conversation directly through CDP on the `default`
+  ChatGPT browser profile at port `45011`. The page title was `ChE 4470 Study
+  Guide`; the exact transcript tile exposed provider file id
+  `file-8HnH6aAzRZWcY2932eNuJY` and DOCX MIME. One authenticated in-page request
+  returned HTTP 200 JSON with `error_code = file_not_found`, `error_type =
+  GetDownloadLinkError`, and `status = error`. No rate-limit, CAPTCHA,
+  verification, or blocking surface appeared, and the diagnostic tab was closed.
+- Root cause was narrower than generic materialization failure: the CDP capture
+  parser normalized only camel-case provider error keys, so ChatGPT's snake-case
+  live envelope discarded the authoritative unavailability evidence. Added a
+  shared normalization seam and regression; the response now classifies as
+  non-retryable `provider_unavailable`, while genuine retrieval failures remain
+  distinct.
+- Commit `ff45b48f` is pushed and installed at API PID `31885`, with adapter
+  source/runtime SHA-256 parity
+  `936b88c4775c0681dffc267c24e5b139679af546d4ebadde92fc16decda51074`.
+  Adjacent coverage passes 301/301 and the full provider-free suite passes 303
+  files/2,696 tests with 65 skips; typecheck, build, lint at 207 warnings, and
+  diff hygiene pass.
+- Scheduler and five completions remain paused; queued/running/idle-waiting
+  completions and active history-materialization jobs remain zero; background
+  drain is idle. No canary or live-follow re-enablement ran. Plan 0180 M5 stays
+  open because the consumed canary materialized 0/1, although availability is
+  now conclusively provider-unavailable rather than unknown.

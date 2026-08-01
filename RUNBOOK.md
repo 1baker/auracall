@@ -1,5 +1,27 @@
 # RUNBOOK
 
+## Turn 386 | 2026-08-01
+
+- Inspected the exact exam-writing chat directly through CDP on the correct
+  `default` ChatGPT browser profile, not `wsl-chrome-3`. The live chat and exact
+  DOCX tile exist, but one authenticated in-page download request returned HTTP
+  200 JSON with `file_not_found`, `GetDownloadLinkError`, and `status = error`.
+  The tile is stale and the provider has confirmed the underlying file is
+  unavailable; this is no longer an unknown retrieval state.
+- Repaired the live snake-case provider-error envelope in commit `ff45b48f`.
+  Explicit unavailable/deleted/expired/not-found evidence now becomes terminal
+  `provider_unavailable`; transport/browser/payload/identity failures remain
+  `retrieval_failed`. Full validation passes 303 files/2,696 tests, typecheck,
+  build, lint at 207 warnings, and diff hygiene.
+- The pushed commit is installed at API PID `31885`; source/runtime adapter hash
+  parity is `936b88c4775c0681dffc267c24e5b139679af546d4ebadde92fc16decda51074`.
+  Scheduler and five completions remain paused, with zero queued/running/idle-
+  waiting completions, zero active materialization jobs, and idle background
+  drain. No canary, retry, prompt submission, or live-follow re-enablement ran.
+- Plan 0180 M5 remains open because the consumed canary materialized 0/1. Do not
+  retry the confirmed-unavailable file or infer scheduler authority from this
+  diagnostic repair.
+
 ## Turn 385 | 2026-08-01
 
 - Opened Plan 0181 as a bounded successor packet for up to five additional

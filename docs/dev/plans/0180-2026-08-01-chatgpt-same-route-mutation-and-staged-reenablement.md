@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 8
+Plan version: 9
 
 ## Stable Objective
 
@@ -28,9 +28,12 @@ reenablement.
 - The failed asset belongs to
   `https://chatgpt.com/c/67ccf9d7-9310-8004-b5e1-478dba6eab3a` and is
   `2025-02-03 Step Growth Part 2-20250203_120935-Meeting Transcript.docx`.
-  Its matched tile returned HTTP 200 `files-download` JSON without a download
-  URL. This proves failed retrieval with unknown availability, not provider-
-  confirmed deletion, expiry, or unavailability.
+  Direct CDP inspection on the correct `default` browser profile found the exact
+  live chat, exact file tile, provider file id, and MIME type. One authenticated
+  in-page fetch to the tile's `files-download` endpoint returned HTTP 200 JSON
+  with `error_code = file_not_found`, `error_type = GetDownloadLinkError`, and
+  `status = error`. The provider has therefore confirmed this exact asset is
+  unavailable; the visible tile is stale.
 - The canary exposed a provider-free lifecycle defect: the bounded parent
   reported `completed` before its owned job settled failed. Commit `fd5587c2`
   now keeps bounded and live-follow operations nonterminal through owned-job
@@ -54,6 +57,14 @@ reenablement.
   PID `66696` with source/runtime parity and all pauses intact. These repairs
   improve the next exact-file attempt but do not change M5 or prove the
   transcript available.
+- Commit `ff45b48f` repairs the final diagnostic gap exposed by direct CDP:
+  ChatGPT's live error envelope uses snake-case `error_code`, `error_type`, and
+  `error_message`, while the capture parser previously normalized only camel-
+  case keys. The installed adapter now maps both forms into structured evidence,
+  so this response becomes terminal `provider_unavailable` rather than generic
+  `retrieval_failed`. The historical receipt is not rewritten. M5 and all
+  re-enablement gates remain open because the consumed canary still materialized
+  0/1 and no successful replacement live proof has run.
 
 ## Architecture Decision
 
@@ -442,3 +453,34 @@ continuous live-follow reenablement remain separately gated afterward.
 - `next_gate`: M5 remains open. Only a new explicit authorization may consume
   one no-retry exact-file canary; continuous live follow and scheduler resume
   remain separately prohibited.
+
+## Checkpoint 10
+
+- `plan_version`: 9
+- `progress_classification`: exact asset availability resolved; re-enablement
+  acceptance remains open.
+- `direct_cdp_evidence`: the `default` ChatGPT browser profile on CDP port
+  `45011` loaded conversation `67ccf9d7-9310-8004-b5e1-478dba6eab3a` with title
+  `ChE 4470 Study Guide`. The exact transcript tile exposed provider file id
+  `file-8HnH6aAzRZWcY2932eNuJY` and DOCX MIME. Its authenticated download endpoint
+  returned HTTP 200 JSON with `file_not_found`, `GetDownloadLinkError`, and
+  `status = error`; no rate-limit, CAPTCHA, verification, or blocking surface
+  appeared. The single diagnostic tab was closed after inspection.
+- `repair`: `summarizeChatgptDownloadProviderError` normalizes both camel-case
+  and live snake-case provider error keys. Structured classification now records
+  this exact response as non-retryable `provider_unavailable`; transport, browser,
+  malformed-payload, and identity failures remain `retrieval_failed`.
+- `validation`: focused and adjacent coverage pass 301/301; the full provider-
+  free suite passes 303 files/2,696 tests with 65 skips. Typecheck, production
+  build, lint at the retained 207-warning baseline, and diff hygiene pass.
+- `installed_evidence`: commit `ff45b48f` is pushed and installed under API PID
+  `31885`. Source/installed ChatGPT adapter SHA-256 is
+  `936b88c4775c0681dffc267c24e5b139679af546d4ebadde92fc16decda51074`.
+  Scheduler state is paused; all five active completions are paused; queued,
+  running, and idle-waiting completions are zero; active history-materialization
+  jobs are zero; background drain is idle.
+- `next_gate`: do not retry this confirmed-unavailable file and do not rewrite
+  its historical receipt implicitly. M5 remains open because no asset was
+  materialized. Scheduler and continuous live follow remain disabled pending a
+  separately reviewed successful-materialization proof and explicit
+  re-enablement authority.

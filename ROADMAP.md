@@ -25,18 +25,24 @@ Lane: P01
   parity and exact asset-identity repair are green. The latest authorized
   default-profile canary proved zero duplicate same-route mutations, then its
   owned job failed one transcript as `retrieval_failed` after HTTP 200 JSON
-  omitted a download URL. Availability remains unknown. The canary also exposed
-  a bounded-parent status defect: it reported completed before the failed job
-  settled. Commit `fd5587c2` repairs that provider-free lifecycle boundary and
+  omitted a download URL. Direct CDP inspection on the correct `default` browser
+  profile has now confirmed that exact visible tile is stale: its authenticated
+  endpoint returns `file_not_found` / `GetDownloadLinkError`. Commit `ff45b48f`
+  normalizes ChatGPT's live snake-case error envelope so future observations are
+  terminal `provider_unavailable`, not ambiguous retrieval failures. The canary
+  also exposed a bounded-parent status defect: it reported completed before the
+  failed job settled. Commit `fd5587c2` repairs that provider-free lifecycle boundary and
   is pushed and installed at API PID `77948` with source/installed parity,
   scheduler pause, five paused completions, and zero active jobs intact. M5
   remains open because the consumed canary materialized 0 and failed 1.
   Provider-free commit `bd69437f` now accepts bounded alternate signed-URL JSON
   shapes from ChatGPT `files-download` and is installed at API PID `91466` with
   hash parity and the paused posture intact. This repairs a retrieval defect but
-  does not prove the exact transcript is available. Another one-attempt live
-  proof requires fresh explicit authority, and scheduler/continuous live-follow
-  remain disabled.
+  does not make the exact transcript retrievable. It is provider-confirmed
+  unavailable, the historical receipt remains unchanged, and M5 stays open
+  because the consumed canary materialized 0/1. Any successful replacement live
+  proof and scheduler/continuous live-follow re-enablement require separate
+  explicit authority.
 
 - Completed provider-session authority unification:
   [docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md](docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md)

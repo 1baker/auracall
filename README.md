@@ -648,10 +648,12 @@ Terminology note:
   itself, a recognized shallow URL field, or one `data`/`result` wrapper.
   Parsing a URL is not materialization proof: AuraCall still requires the
   requested provider file id or exact response filename before writing bytes.
-  Malformed or error-only JSON remains `retrieval_failed` with unknown
-  availability unless ChatGPT explicitly proves unavailable/deleted/expired
-  state. Failed JSON responses retain bounded key/type shape evidence without
-  persisting response values. Structured provider evidence determines
+  Malformed or unrecognized error-only JSON remains `retrieval_failed` with
+  unknown availability. Recognized provider envelopes, including ChatGPT's live
+  snake-case `error_code` / `error_type` form, become non-retryable
+  `provider_unavailable` only when they explicitly prove unavailable, deleted,
+  expired, or not-found state. Failed JSON responses retain bounded key/type
+  shape evidence without persisting response values. Structured provider evidence determines
   availability directly, and later generic fallbacks cannot overwrite a
   stronger earlier failure. Intercept polling preserves its deadline even when
   a response hangs; direct, anchor, signed-follow, and body-read stages each

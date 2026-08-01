@@ -1,3 +1,14 @@
+- 2026-08-01: A visible ChatGPT upload tile does not prove its backing file is
+  still retrievable. Inspect the exact tile on the correct browser profile and
+  treat the authenticated `files-download` response as provider authority.
+  ChatGPT may return HTTP 200 with snake-case `error_code`, `error_type`,
+  `error_message`, and `status`; normalize those alongside camel-case keys.
+  Explicit `file_not_found` evidence is terminal `provider_unavailable`, while
+  transport, browser, malformed-payload, and identity failures remain
+  `retrieval_failed`. Never collapse “failed to retrieve” into “not available”
+  without structured provider evidence, and never retry a confirmed-unavailable
+  asset merely because its stale tile remains visible.
+
 - 2026-08-01: ChatGPT download failure handling must preserve evidence strength
   and bounded execution, not merely return an error. Persist only sanitized JSON
   key/type shape when URL discovery fails; classify availability from structured
