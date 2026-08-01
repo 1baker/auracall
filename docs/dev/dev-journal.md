@@ -42350,3 +42350,23 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   the 120-second action cooldowns and full-sweep/full-missing-assets policy.
   The installed runtime has not yet been restarted; scheduler and live work
   remain paused pending broader provider-free validation and commit/install.
+# 2026-08-01 | Plan 0180 installed canary hard stop
+
+- Commit `d96f574d` is pushed and installed at API PID `33973`; browser-service
+  UI and ChatGPT adapter source/installed hashes match. Restart preserved the
+  scheduler pause, five paused completions, and zero queued/running work.
+- All four ChatGPT targets read back 6 browser interactions/minute, unchanged
+  120-second conversation-read/page-refresh/renavigation cooldowns, full sweep,
+  full missing assets, and clear guards.
+- The sole default bounded canary completed exactly one collector pass with no
+  duplicate same-route mutations or safety signal. Its two payload-recovery
+  reloads crossed the governor and completed at conservative cadence.
+- Owned materialization job `hmj_71011a4ee5a14c8b97a836f9600b5517`
+  failed on its only attempt: 0 materialized, 2 skipped, 6 failed. Canonical
+  four-dimension provider-session proof matched and snapshot refresh was
+  routeable, isolating the defect from browser-profile/provider-login authority.
+- All six matched file tiles returned HTTP 200 `files-download` JSON without a
+  usable download URL (`json_missing_download_url`), producing
+  `missing_provider_link`. No retry is authorized. Provider-free download
+  discovery repair is the next gate; scheduler and continuous live-follow stay
+  paused.

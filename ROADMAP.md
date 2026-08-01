@@ -12,9 +12,13 @@ Lane: P01
   Red regressions reproduced redundant physical navigation on an already-ready
   conversation route and ungoverned recovery reloads. The deep browser-service
   repair now suppresses canonical same-route mutations and routes every actual
-  navigation/reload through the existing interaction governor. Provider-free
-  validation is green; commit/install parity and exactly one default-profile
-  bounded canary remain. Scheduler and continuous live-follow stay paused.
+  navigation/reload through the existing interaction governor. Commit/install
+  parity and the collector side of the one default-profile canary are green:
+  one pass, zero duplicate same-route attempts, and no guard/rate-limit signal.
+  Its no-retry materializer failed six matched file tiles because the provider's
+  HTTP 200 JSON responses contained no download URL. A provider-free download-
+  discovery repair is now required; scheduler and continuous live-follow stay
+  paused.
 
 - Completed provider-session authority unification:
   [docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md](docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md)

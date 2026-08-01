@@ -24,6 +24,28 @@
   API PID `63017`. Commit/push/install parity and one no-retry default-profile
   bounded canary remain; no scheduler or continuous-live-follow re-enablement
   is authorized by this plan.
+- Commit `d96f574d` is pushed with ahead/behind `0/0` and installed at API PID
+  `33973`. Source/installed hashes match for browser-service UI
+  `08e21c409207280c8163e9a7a026c62dc1390ed0077b9eafddd4f174b67b5354`
+  and ChatGPT adapter
+  `6807aed7bca4276a05164435292048261dfffa37a67f75836c37385d164d9406`.
+  Restart preserved scheduler pause, five paused completions, zero queued or
+  running work, four clear ChatGPT guards, and live 6/min/120-second policy.
+- The sole canary `acctmirror_completion_a3b0bf86-3ffe-481e-8bda-97a86abddc6a`
+  completed exactly one collector pass. Mutation evidence contains two
+  legitimate target opens, two governed payload reloads, zero duplicate
+  same-route attempts, and no rate-limit/guard/CAPTCHA signal.
+- Owned job `hmj_71011a4ee5a14c8b97a836f9600b5517` consumed its only attempt and
+  failed: 0 materialized, 2 skipped, 6 failed across 2 conversations. Canonical
+  provider-session proof matched all four dimensions, and the refreshed
+  conversation was routeable. Every failed file tile matched, but its fallback
+  returned HTTP 200 `files-download` JSON without a download URL
+  (`json_missing_download_url`), persisted as `missing_provider_link`.
+- Hard stop restored: scheduler and five unrelated completions are paused;
+  queued/running/idle-waiting completions are zero; background drain is idle;
+  the provider guard and rate-limit detection remain clear. The canary is
+  consumed and must not be retried. Plan 0180 remains OPEN for a provider-free
+  asset-download discovery repair before any new live gate.
 
 ## Turn 379 | 2026-07-31
 

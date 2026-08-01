@@ -19879,3 +19879,16 @@ browser-stage lifecycle observability, not transcript truncation.
   reused, retained, and explicitly attached targets. Keep browser process plus
   target mandatory for the session fingerprint; do not weaken the authority to
   accept process-only or browser-profile-only evidence.
+# 2026-08-01 | A matched provider file tile is not materialization success
+
+- Symptom: a bounded ChatGPT materializer matched six visible file tiles and
+  received HTTP 200 JSON from the provider `files-download` endpoint, yet
+  materialized zero bytes.
+- Root boundary: provider-session proof and browser provenance can be fully
+  correct while asset discovery still fails. A successful HTTP status is not a
+  usable asset unless the response yields a signed/downloadable URL or binary
+  payload.
+- Durable rule: persist `json_missing_download_url` / `missing_provider_link`
+  per asset, fail the aggregate truthfully, and do not retry live work. Repair
+  alternate download-link discovery provider-free before spending another live
+  authorization.

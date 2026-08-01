@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 1
+Plan version: 2
 
 ## Stable Objective
 
@@ -114,10 +114,10 @@ most one separately gated default ChatGPT bounded pass.
 - [x] The same test passes through the existing deep navigation/provider seam.
 - [x] Every physical recovery navigation/reload is governed and represented in
   operator-visible interaction evidence.
-- [ ] All four ChatGPT targets read back 6/min plus the existing 120-second
+- [x] All four ChatGPT targets read back 6/min plus the existing 120-second
   action cooldowns without changing sweep/materialization policy.
 - [x] Targeted and broad provider-free validation pass.
-- [ ] The committed repair is pushed, installed, and hash-bound to the running
+- [x] The committed repair is pushed, installed, and hash-bound to the running
   API while scheduler/completion pauses remain intact.
 - [ ] Exactly one default bounded pass satisfies the M5 terminal evidence with
   no retry or unrelated work.
@@ -171,3 +171,36 @@ continuous live-follow reenablement remain separately gated afterward.
   pass.
 - `next_gate`: broad provider-free validation, commit/push, install/hash parity,
   paused-posture readback, then at most one exact default bounded pass.
+
+## Checkpoint 2
+
+- `plan_version`: 2
+- `progress_classification`: substantive
+- `installed_evidence`: commit `d96f574d` is pushed at ahead/behind `0/0` and
+  installed under API PID `33973`. Source/installed hashes match for
+  browser-service UI
+  `08e21c409207280c8163e9a7a026c62dc1390ed0077b9eafddd4f174b67b5354`
+  and ChatGPT adapter
+  `6807aed7bca4276a05164435292048261dfffa37a67f75836c37385d164d9406`.
+  All four ChatGPT targets read back 6/min, three 120-second cooldowns, full
+  sweep, full missing assets, and clear provider guards.
+- `canary_evidence`: completion
+  `acctmirror_completion_a3b0bf86-3ffe-481e-8bda-97a86abddc6a` completed
+  exactly one pass. Its browser mutation bundle contains two legitimate target
+  opens, two governed payload reloads, zero duplicate same-route attempts, and
+  no rate-limit/guard/CAPTCHA signal.
+- `hard_stop`: owned job `hmj_71011a4ee5a14c8b97a836f9600b5517`
+  failed on attempt 1 with 0 materialized, 2 skipped, and 6 failed across 2
+  conversations. Provider-session proof matched email, plan, structure, and
+  account-level dimensions. The refreshed conversation was routeable, all six
+  file tiles matched, and every fallback returned HTTP 200 `files-download`
+  JSON without a download URL (`json_missing_download_url`), persisted as
+  `missing_provider_link`.
+- `runtime_state`: scheduler and five unrelated completions are paused;
+  queued/running/idle-waiting completions are zero; background drain is idle;
+  provider guard and rate-limit detection remain clear.
+- `next_gate`: the live packet is consumed and must not be retried. Keep Plan
+  0180 OPEN while a provider-free asset-download discovery repair is designed,
+  regression-tested, committed, and installed. Any later live proof requires a
+  fresh explicit authorization; scheduler/continuous re-enablement remains
+  separately gated.
