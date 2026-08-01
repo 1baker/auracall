@@ -19845,6 +19845,25 @@ browser-stage lifecycle observability, not transcript truncation.
   38, perform exactly one mocked refresh, clear the force marker, and return to
   idle. HTTP readiness and browser-ops controls must expose the same contract.
 
+## 2026-08-01 | Same-Route Reads Must Not Become Ungoverned Browser Mutations
+
+- Symptom: a bounded ChatGPT mirror pass reported five active provider
+  interactions but browser mutation diagnostics recorded nine completed
+  same-route navigations, including five against one conversation in about 64
+  seconds.
+- Cause: `navigateAndSettle` always called `Page.navigate` before checking its
+  route/readiness predicates. ChatGPT conversation readiness also omitted its
+  provider options when reopening, and payload/readiness recovery reloads did
+  not carry the existing interaction governor into the physical mutation seam.
+- Durable rule: canonical same-route requests that are already ready are a
+  successful no-op and emit no mutation record. Every physical navigation,
+  reload, and fallback must call the existing browser interaction governor
+  immediately before mutation; do not add a parallel collector throttle.
+- Diagnostics rule: ChatGPT scrape telemetry records
+  `chatgpt.skipSameRouteNavigation` for a suppressed route request and records
+  `Page.navigate`/`chatgpt.navigateConversation` only when browser-service
+  reports that a physical mutation occurred.
+
 ## 2026-07-31 | Disposable Browser Targets Must Bind Session Provenance
 
 - Symptom: a canonical provider-session check knew the AuraCall runtime,

@@ -1001,6 +1001,8 @@ async function recoverVisibleChatgptBlockingSurfaceWithClient(
 				ignoreCache: true,
 				waitForDocumentReady: false,
 				fallbackToLocationReload: true,
+				interactionGovernor: options?.interactionGovernor,
+				interactionClass: "provider-recovery",
 				mutationAudit: resolveMutationAudit(client),
 				mutationSource: resolveMutationSource(
 					client,
@@ -2962,6 +2964,8 @@ export async function readChatgptConversationPayloadWithClient(
 	await reloadAndSettle(client, {
 		ignoreCache: true,
 		waitForDocumentReady: false,
+		interactionGovernor: options?.interactionGovernor,
+		interactionClass: "page-refresh",
 		mutationAudit: resolveMutationAudit(client),
 		mutationSource: resolveMutationSource(
 			client,
@@ -6809,8 +6813,6 @@ async function navigateToChatgptConversation(
 	options?: BrowserProviderListOptions,
 ): Promise<void> {
 	const url = resolveChatgptConversationUrl(conversationId, projectId);
-	recordBrowserScrapeCdpCall(options, "Page.navigate");
-	recordBrowserScrapeProviderAction(options, "chatgpt.navigateConversation");
 	const settled = await navigateAndSettle(client, {
 		url,
 		routeExpression: buildConversationRouteExpression(conversationId, projectId),
@@ -6825,9 +6827,17 @@ async function navigateToChatgptConversation(
 		fallbackToLocationAssign: true,
 		timeoutMs: 15_000,
 		fallbackTimeoutMs: 10_000,
+		interactionGovernor: options?.interactionGovernor,
+		interactionClass: "renavigation",
 		mutationAudit: resolveMutationAudit(client),
 		mutationSource: resolveMutationSource(client, "provider:chatgpt", "navigate-conversation"),
 	});
+	if (settled.mutationPerformed) {
+		recordBrowserScrapeCdpCall(options, "Page.navigate");
+		recordBrowserScrapeProviderAction(options, "chatgpt.navigateConversation");
+	} else {
+		recordBrowserScrapeProviderAction(options, "chatgpt.skipSameRouteNavigation");
+	}
 	if (!settled.ok) {
 		throw new Error(settled.reason || `ChatGPT conversation ${conversationId} did not settle`);
 	}
@@ -8165,7 +8175,7 @@ async function ensureChatgptConversationSurfaceReadyForRead(
 			`ChatGPT active conversation content not found for ${conversationId}; refusing to navigate the active tab.`,
 		);
 	}
-	await navigateToChatgptConversation(client, conversationId, projectId);
+	await navigateToChatgptConversation(client, conversationId, projectId, options);
 	let ready = await waitForReady(`ChatGPT conversation ${conversationId} surface ready`);
 	if (ready.ok) {
 		return;
@@ -8179,6 +8189,8 @@ async function ensureChatgptConversationSurfaceReadyForRead(
 		ignoreCache: true,
 		waitForDocumentReady: false,
 		fallbackToLocationReload: true,
+		interactionGovernor: options?.interactionGovernor,
+		interactionClass: "page-refresh",
 		mutationAudit: resolveMutationAudit(client),
 		mutationSource: resolveMutationSource(
 			client,
@@ -8195,7 +8207,7 @@ async function ensureChatgptConversationSurfaceReadyForRead(
 		options,
 		`ChatGPT conversation ${conversationId} readiness after reload`,
 	);
-	await navigateToChatgptConversation(client, conversationId, projectId);
+	await navigateToChatgptConversation(client, conversationId, projectId, options);
 	ready = await waitForReady(`ChatGPT conversation ${conversationId} surface ready after reopen`);
 	if (ready.ok) {
 		return;

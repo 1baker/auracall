@@ -105,14 +105,24 @@ Current active extraction plan:
 
 - `navigateAndSettle({ Page, Runtime }, options)`
   - Shared route-settling primitive for SPA/browser automation flows.
-  - Combines `Page.navigate(...)`, document-ready wait, optional route predicate,
-    optional ready predicate, and optional in-page `location.assign(...)` fallback.
+  - First checks whether the current canonical URL already equals the requested
+    route. When that route also satisfies the requested route/document/ready
+    predicates, it returns with `mutationPerformed=false` and emits no browser
+    mutation record instead of redundantly calling `Page.navigate(...)`.
+    Canonical comparison ignores fragments and query-parameter ordering, but a
+    different origin, path, query key, or query value remains a distinct route.
+  - Otherwise combines `Page.navigate(...)`, document-ready wait, optional route
+    predicate, optional ready predicate, and optional in-page
+    `location.assign(...)` fallback.
   - Returns structured phase data (`route`, `document-ready`, `ready`) so
     callers can throw provider-specific errors without reimplementing the
     settling loop.
   - The current control-plane slice also lets callers attach `mutationAudit`
     and `mutationSource` so browser-service can emit bounded mutation records
     around the navigation attempt and any `location.assign(...)` fallback.
+  - Provider callers may pass the existing `interactionGovernor` and an
+    `interactionClass`; browser-service invokes it immediately before every
+    physical navigation or fallback mutation.
   - Prefer this over ad hoc `Page.navigate(...)` + `waitForDocumentReady(...)`
     + retry logic when the page can route asynchronously.
 
@@ -120,6 +130,9 @@ Current active extraction plan:
   - Shared reload primitive for provider recovery flows.
   - Combines `Page.reload(...)`, optional document-ready wait, optional
     `location.reload()` fallback, and bounded mutation audit records.
+  - Provider callers may pass the existing `interactionGovernor` and an
+    `interactionClass`; browser-service invokes it immediately before the
+    physical reload and again before a fallback reload.
   - Prefer this over provider-local `Page.reload(...)` calls when a browser
     recovery path intentionally refreshes the active page.
 

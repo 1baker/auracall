@@ -7,6 +7,15 @@
 Status: active
 Lane: P01
 
+- Active ChatGPT same-route mutation and staged re-enablement repair:
+  [docs/dev/plans/0180-2026-08-01-chatgpt-same-route-mutation-and-staged-reenablement.md](docs/dev/plans/0180-2026-08-01-chatgpt-same-route-mutation-and-staged-reenablement.md)
+  Red regressions reproduced redundant physical navigation on an already-ready
+  conversation route and ungoverned recovery reloads. The deep browser-service
+  repair now suppresses canonical same-route mutations and routes every actual
+  navigation/reload through the existing interaction governor. Provider-free
+  validation is green; commit/install parity and exactly one default-profile
+  bounded canary remain. Scheduler and continuous live-follow stay paused.
+
 - Completed provider-session authority unification:
   [docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md](docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md)
   Replace distributed runtime/browser/provider identity reconstruction with one

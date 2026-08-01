@@ -1006,14 +1006,14 @@ describe("readChatgptConversationPayloadWithClient", () => {
 			},
 			// biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names.
 			Network: {
-				enable: vi.fn(),
+				enable: vi.fn(async () => undefined),
 				responseReceived: vi.fn(),
 				loadingFinished: vi.fn(),
 				getResponseBody: vi.fn(),
 			},
 			// biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names.
 			Page: {
-				enable: vi.fn(),
+				enable: vi.fn(async () => undefined),
 				reload: vi.fn(),
 			},
 		};
@@ -1031,6 +1031,60 @@ describe("readChatgptConversationPayloadWithClient", () => {
 		expect(client.Network.enable).not.toHaveBeenCalled();
 		expect(client.Page.enable).not.toHaveBeenCalled();
 		expect(client.Page.reload).not.toHaveBeenCalled();
+	});
+
+	test("governs the fallback payload reload before mutating the page", async () => {
+		let onResponseReceived: ((params: never) => void) | null = null;
+		let onLoadingFinished: ((params: never) => void) | null = null;
+		const beforeInteraction = vi.fn(async () => undefined);
+		const client = {
+			// biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names.
+			Runtime: {
+				evaluate: vi.fn(async () => ({
+					result: { value: { ok: false, status: 404, body: "{}" } },
+				})),
+			},
+			// biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names.
+			Network: {
+				enable: vi.fn(async () => undefined),
+				responseReceived: vi.fn((handler) => {
+					onResponseReceived = handler;
+				}),
+				loadingFinished: vi.fn((handler) => {
+					onLoadingFinished = handler;
+				}),
+				getResponseBody: vi.fn(async () => ({
+					body: JSON.stringify({ mapping: { one: { message: { id: "one" } } } }),
+					base64Encoded: false,
+				})),
+			},
+			// biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names.
+			Page: {
+				enable: vi.fn(async () => undefined),
+				reload: vi.fn(async () => {
+					onResponseReceived?.({
+						requestId: "request-1",
+						response: {
+							url: "https://chatgpt.com/backend-api/conversation/conversation-1",
+							status: 200,
+						},
+					} as never);
+					onLoadingFinished?.({ requestId: "request-1" } as never);
+				}),
+			},
+		};
+
+		await expect(
+			readChatgptConversationPayloadWithClient(client as never, "conversation-1", null, {
+				allowNavigation: true,
+				interactionGovernor: { beforeInteraction },
+			}),
+		).resolves.toMatchObject({ mapping: { one: { message: { id: "one" } } } });
+
+		expect(beforeInteraction).toHaveBeenCalledWith("page-refresh");
+		expect(beforeInteraction.mock.invocationCallOrder[0]).toBeLessThan(
+			client.Page.reload.mock.invocationCallOrder[0] ?? Number.POSITIVE_INFINITY,
+		);
 	});
 });
 

@@ -338,6 +338,11 @@
         interactions per minute, four page-read batches, 80 conversation rows,
         and 24 artifact rows per cycle unless the service `liveFollow` config
         overrides those fields
+      - ChatGPT conversation navigation must not call `Page.navigate` when the
+        attached target already has the canonical requested URL and its
+        route/document/conversation predicates are ready; physical navigation,
+        reload, and their fallbacks must cross the shared interaction governor
+        immediately before mutation
       - the scheduler is disabled unless
         `--account-mirror-scheduler-interval-ms <ms>` is set
       - without `--account-mirror-scheduler-execute`, scheduler passes are

@@ -1,4 +1,5 @@
 import type { ChromeClient } from '../types.js';
+import type { BrowserInteractionClass, BrowserInteractionGovernor } from './interactionGovernor.js';
 import { beginBrowserMutation, type BrowserMutationAuditSink } from './mutationDispatcher.js';
 
 export const DEFAULT_DIALOG_SELECTORS = ['[role="dialog"]', 'dialog', '[aria-modal="true"]'] as const;
@@ -550,12 +551,15 @@ export type NavigateAndSettleOptions = WaitForPredicateOptions & {
   fallbackTimeoutMs?: number;
   mutationAudit?: BrowserMutationAuditSink;
   mutationSource?: string;
+  interactionGovernor?: BrowserInteractionGovernor;
+  interactionClass?: BrowserInteractionClass;
 };
 
 export type NavigateAndSettleResult = {
   ok: boolean;
   url: string;
   fallbackUsed: boolean;
+  mutationPerformed: boolean;
   phase: 'complete' | 'route' | 'document-ready' | 'ready';
   reason?: string;
   route?: WaitForPredicateResult;
@@ -571,6 +575,8 @@ export type ReloadAndSettleOptions = WaitForPredicateOptions & {
   fallbackToLocationReload?: boolean;
   mutationAudit?: BrowserMutationAuditSink;
   mutationSource?: string;
+  interactionGovernor?: BrowserInteractionGovernor;
+  interactionClass?: BrowserInteractionClass;
 };
 
 export type ReloadAndSettleResult = {
@@ -1063,16 +1069,11 @@ export async function navigateAndSettle(
 ): Promise<NavigateAndSettleResult> {
   const mutationSource = options.mutationSource ?? 'browser-service:navigateAndSettle';
   const mutationAudit = options.mutationAudit;
-  const fromUrl = mutationAudit ? await readLocationHrefForAudit(client.Runtime) : null;
-  const audit = beginBrowserMutation(mutationAudit, {
-    kind: 'navigate',
-    source: mutationSource,
-    requestedUrl: options.url,
-    fromUrl,
-  });
+  const fromUrl = await readLocationHrefForAudit(client.Runtime);
   const evaluateState = async (
     timeoutMs: number | undefined,
     fallbackUsed: boolean,
+    mutationPerformed: boolean,
   ): Promise<NavigateAndSettleResult> => {
     let route: WaitForPredicateResult | undefined;
     if (options.routeExpression) {
@@ -1086,6 +1087,7 @@ export async function navigateAndSettle(
           ok: false,
           url: options.url,
           fallbackUsed,
+          mutationPerformed,
           phase: 'route',
           route,
           reason: `${route.description ?? 'route'} did not settle`,
@@ -1107,6 +1109,7 @@ export async function navigateAndSettle(
           ok: false,
           url: options.url,
           fallbackUsed,
+          mutationPerformed,
           phase: 'document-ready',
           route,
           documentReady,
@@ -1127,6 +1130,7 @@ export async function navigateAndSettle(
           ok: false,
           url: options.url,
           fallbackUsed,
+          mutationPerformed,
           phase: 'ready',
           route,
           documentReady,
@@ -1140,6 +1144,7 @@ export async function navigateAndSettle(
       ok: true,
       url: options.url,
       fallbackUsed,
+      mutationPerformed,
       phase: 'complete',
       route,
       documentReady,
@@ -1147,9 +1152,23 @@ export async function navigateAndSettle(
     };
   };
 
+  if (areEquivalentNavigationUrls(fromUrl, options.url)) {
+    const alreadySettled = await evaluateState(options.timeoutMs, false, false);
+    if (alreadySettled.ok) {
+      return alreadySettled;
+    }
+  }
+
+  const audit = beginBrowserMutation(mutationAudit, {
+    kind: 'navigate',
+    source: mutationSource,
+    requestedUrl: options.url,
+    fromUrl,
+  });
   try {
+    await options.interactionGovernor?.beforeInteraction(options.interactionClass ?? 'renavigation');
     await client.Page.navigate({ url: options.url });
-    const primary = await evaluateState(options.timeoutMs, false);
+    const primary = await evaluateState(options.timeoutMs, false, true);
     if (primary.ok || !options.fallbackToLocationAssign) {
       await audit.complete({
         outcome: primary.ok ? 'succeeded' : 'failed',
@@ -1160,6 +1179,7 @@ export async function navigateAndSettle(
       return primary;
     }
 
+    await options.interactionGovernor?.beforeInteraction(options.interactionClass ?? 'renavigation');
     await client.Runtime.evaluate({
       expression: `(() => {
         const target = ${JSON.stringify(options.url)};
@@ -1172,7 +1192,7 @@ export async function navigateAndSettle(
       awaitPromise: false,
     }).catch(() => undefined);
 
-    const fallback = await evaluateState(options.fallbackTimeoutMs ?? options.timeoutMs, true);
+    const fallback = await evaluateState(options.fallbackTimeoutMs ?? options.timeoutMs, true, true);
     await audit.complete({
       outcome: fallback.ok ? 'succeeded' : 'failed',
       toUrl: mutationAudit ? await readLocationHrefForAudit(client.Runtime) : options.url,
@@ -1189,6 +1209,27 @@ export async function navigateAndSettle(
     });
     throw error;
   }
+}
+
+function areEquivalentNavigationUrls(currentUrl: string | null, requestedUrl: string): boolean {
+  if (!currentUrl) return false;
+  try {
+    const current = new URL(currentUrl);
+    const requested = new URL(requestedUrl);
+    current.hash = '';
+    requested.hash = '';
+    current.pathname = normalizeNavigationPathname(current.pathname);
+    requested.pathname = normalizeNavigationPathname(requested.pathname);
+    current.searchParams.sort();
+    requested.searchParams.sort();
+    return current.href === requested.href;
+  } catch {
+    return currentUrl === requestedUrl;
+  }
+}
+
+function normalizeNavigationPathname(pathname: string): string {
+  return pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname;
 }
 
 export async function reloadAndSettle(
@@ -1229,11 +1270,13 @@ export async function reloadAndSettle(
 
   try {
     try {
+      await options.interactionGovernor?.beforeInteraction(options.interactionClass ?? 'page-refresh');
       await client.Page.reload({ ignoreCache: options.ignoreCache });
     } catch (error) {
       if (!options.fallbackToLocationReload) {
         throw error;
       }
+      await options.interactionGovernor?.beforeInteraction(options.interactionClass ?? 'page-refresh');
       await client.Runtime.evaluate({
         expression: 'location.reload()',
         awaitPromise: false,

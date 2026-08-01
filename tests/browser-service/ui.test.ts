@@ -1213,7 +1213,8 @@ describe('browser-service ui wait helpers', () => {
     expect(result.ok).toBe(true);
     expect(result.fallbackUsed).toBe(false);
     expect(PAGE.navigate).toHaveBeenCalledWith({ url: 'https://grok.com/files' });
-    expect(runtime.evaluate).toHaveBeenCalledTimes(3);
+    expect(runtime.evaluate).toHaveBeenCalledTimes(4);
+    expect(runtime.evaluate.mock.calls[0]?.[0]?.expression).toBe('location.href');
   });
 
   test('navigateAndSettle retries with location.assign when the first route settle fails', async () => {
@@ -1258,12 +1259,12 @@ describe('browser-service ui wait helpers', () => {
     ).toBe(true);
   });
 
-  test('navigateAndSettle records bounded mutation audit events', async () => {
+  test('navigateAndSettle does not mutate an already-settled requested route', async () => {
     const mutationLog = createInMemoryBrowserMutationLog();
     const runtime = {
       evaluate: vi.fn(async (options: { expression: string }) => {
         if (options.expression === 'location.href') {
-          return { result: { value: 'https://grok.com/files' } };
+          return { result: { value: 'https://grok.com/files?b=2&a=1#old-selection' } };
         }
         if (options.expression.includes('location.pathname === "/files"')) {
           return { result: { value: { path: '/files' } } };
@@ -1282,7 +1283,7 @@ describe('browser-service ui wait helpers', () => {
     };
 
     const result = await navigateAndSettle({ Page: PAGE as never, Runtime: runtime as never }, {
-      url: 'https://grok.com/files',
+      url: 'https://grok.com/files?a=1&b=2#new-selection',
       routeExpression: 'location.pathname === "/files"',
       readyExpression: 'window.__filesReady',
       timeoutMs: 50,
@@ -1292,28 +1293,67 @@ describe('browser-service ui wait helpers', () => {
     });
 
     expect(result.ok).toBe(true);
-    expect(mutationLog.list()).toEqual([
-      expect.objectContaining({
-        phase: 'start',
-        kind: 'navigate',
-        source: 'test:navigate',
-        requestedUrl: 'https://grok.com/files',
-        fromUrl: 'https://grok.com/files',
-      }),
-      expect.objectContaining({
-        phase: 'complete',
-        kind: 'navigate',
-        source: 'test:navigate',
-        requestedUrl: 'https://grok.com/files',
-        toUrl: 'https://grok.com/files',
-        outcome: 'succeeded',
-        fallbackUsed: false,
-      }),
+    expect(result.mutationPerformed).toBe(false);
+    expect(PAGE.navigate).not.toHaveBeenCalled();
+    expect(mutationLog.list()).toEqual([]);
+  });
+
+  test('navigateAndSettle preserves a materially different query route', async () => {
+    const runtime = createRuntime([
+      'https://chatgpt.com/c/123?view=compact',
+      { path: '/c/123' },
+      { readyState: 'complete', visibilityState: 'visible' },
+      { loaded: true },
     ]);
+    const PAGE = {
+      navigate: vi.fn(async () => undefined),
+    };
+
+    const result = await navigateAndSettle({ Page: PAGE as never, Runtime: runtime as never }, {
+      url: 'https://chatgpt.com/c/123?view=full',
+      routeExpression: 'location.pathname === "/c/123"',
+      readyExpression: 'window.__conversationReady',
+      timeoutMs: 50,
+      pollMs: 1,
+    });
+
+    expect(result.ok).toBe(true);
+    expect(result.mutationPerformed).toBe(true);
+    expect(PAGE.navigate).toHaveBeenCalledWith({ url: 'https://chatgpt.com/c/123?view=full' });
+  });
+
+  test('navigateAndSettle governs a physical route mutation before navigating', async () => {
+    const runtime = createRuntime([
+      'https://chatgpt.com/',
+      { path: '/c/123' },
+      { readyState: 'complete', visibilityState: 'visible' },
+      { loaded: true },
+    ]);
+    const beforeInteraction = vi.fn(async () => undefined);
+    const PAGE = {
+      navigate: vi.fn(async () => undefined),
+    };
+
+    const result = await navigateAndSettle({ Page: PAGE as never, Runtime: runtime as never }, {
+      url: 'https://chatgpt.com/c/123',
+      routeExpression: 'location.pathname === "/c/123"',
+      readyExpression: 'window.__conversationReady',
+      timeoutMs: 50,
+      pollMs: 1,
+      interactionGovernor: { beforeInteraction },
+      interactionClass: 'renavigation',
+    });
+
+    expect(result.ok).toBe(true);
+    expect(beforeInteraction).toHaveBeenCalledWith('renavigation');
+    expect(beforeInteraction.mock.invocationCallOrder[0]).toBeLessThan(
+      PAGE.navigate.mock.invocationCallOrder[0] ?? Number.POSITIVE_INFINITY,
+    );
   });
 
   test('reloadAndSettle records bounded mutation audit events', async () => {
     const mutationLog = createInMemoryBrowserMutationLog();
+    const beforeInteraction = vi.fn(async () => undefined);
     const runtime = {
       evaluate: vi.fn(async (options: { expression: string }) => {
         if (options.expression === 'location.href') {
@@ -1335,9 +1375,15 @@ describe('browser-service ui wait helpers', () => {
       pollMs: 1,
       mutationAudit: mutationLog.record,
       mutationSource: 'test:reload',
+      interactionGovernor: { beforeInteraction },
+      interactionClass: 'page-refresh',
     });
 
     expect(result.ok).toBe(true);
+    expect(beforeInteraction).toHaveBeenCalledWith('page-refresh');
+    expect(beforeInteraction.mock.invocationCallOrder[0]).toBeLessThan(
+      PAGE.reload.mock.invocationCallOrder[0] ?? Number.POSITIVE_INFINITY,
+    );
     expect(PAGE.reload).toHaveBeenCalledWith({ ignoreCache: true });
     expect(mutationLog.list()).toEqual([
       expect.objectContaining({

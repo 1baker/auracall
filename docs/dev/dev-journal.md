@@ -42323,3 +42323,30 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   rate-limit, verification signal, second pass, scheduler resume, or unrelated
   completion appeared. Provider lease released and all work returned to zero.
   Plan 0179 is closed; scheduler enablement remains separately gated.
+
+## 2026-08-01 | Plan 0180 Same-Route Mutation And Staged Re-enablement
+
+- Opened Plan 0180 after read-only reenablement review found the installed
+  scheduler paused, five completions paused, zero queued/running work, and clear
+  ChatGPT provider guards. Plan 0179's final default pass retained positive
+  provider-session/materialization proof but recorded nine completed same-route
+  navigation mutations, including five against one conversation in about 64
+  seconds while its scrape budget reported five active provider interactions.
+- The authorized slice is regression-first: repair same-route physical mutation
+  and governor accounting at the existing browser-service/provider seam, restore
+  all four ChatGPT lanes to 6/min with existing 120-second action cooldowns,
+  validate and install with all pauses intact, then consume at most one exact
+  default `maxPasses=1` live packet. Scheduler and continuous live follow remain
+  outside this authorization.
+- Deterministic red/green characterization proved both defects. The shared
+  `navigateAndSettle` interface now treats an already-ready canonical route as
+  a zero-mutation success; navigation and reload helpers invoke the existing
+  interaction governor immediately before each physical primary/fallback
+  mutation. ChatGPT conversation readiness now retains provider options, and
+  payload plus blocking-surface/readiness reload recovery carries the governor.
+- Focused verification is green: 166/166 browser-service/ChatGPT-adapter tests,
+  285/285 adjacent UI/adapter/collector/completion tests, and TypeScript. The
+  user config now specifies 6/min for all four ChatGPT targets while retaining
+  the 120-second action cooldowns and full-sweep/full-missing-assets policy.
+  The installed runtime has not yet been restarted; scheduler and live work
+  remain paused pending broader provider-free validation and commit/install.

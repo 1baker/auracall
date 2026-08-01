@@ -1,5 +1,30 @@
 # RUNBOOK
 
+## Turn 380 | 2026-08-01
+
+- Opened Plan 0180 for the rate-limit-safe ChatGPT re-enablement boundary.
+  Installed diagnostics from the final Plan 0179 control showed nine redundant
+  same-route navigation mutations, including five against one conversation in
+  about 64 seconds, despite a five-interaction collector budget.
+- Red regressions reproduced both unconditional same-route `Page.navigate` and
+  ChatGPT recovery reloads that bypassed the shared interaction governor.
+  Browser-service now canonicalizes the current/requested URL, returns a
+  mutation-free success when the requested route is already ready, and governs
+  each physical navigation/reload immediately before mutation. ChatGPT passes
+  the same governor through navigation, readiness recovery, blocking-surface
+  recovery, and payload fallback paths.
+- All four ChatGPT runtime targets are staged at 6 interactions/minute with
+  unchanged 120-second action cooldowns and unchanged full-sweep,
+  full-missing-assets retrieval policy.
+- Provider-free validation is green: 303 test files and 2,680 tests pass with
+  65 opt-in/TTY tests skipped; focused/adjacent suites, TypeScript, production
+  build, lint with zero errors and 205 retained warning diagnostics, plan audit,
+  and diff hygiene also pass.
+- Current gate: scheduler and five completions remain paused on prior installed
+  API PID `63017`. Commit/push/install parity and one no-retry default-profile
+  bounded canary remain; no scheduler or continuous-live-follow re-enablement
+  is authorized by this plan.
+
 ## Turn 379 | 2026-07-31
 
 - Fresh explicit authorization started bounded completion
