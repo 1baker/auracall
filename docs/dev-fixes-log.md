@@ -1,3 +1,12 @@
+- 2026-08-01: A bounded account-mirror completion that owns asynchronous
+  history materialization cannot report `completed` merely because its pass
+  cap or mirror-complete condition was reached. Loop through the owned job's
+  terminal readback first. On failure, hydrate the outcome and block the parent
+  with `account_mirror_materialization_failed`; keep a failed retrieval pending
+  in the backfill ledger unless the provider separately proves the asset
+  unavailable. This preserves `retrieval_failed` with unknown availability
+  instead of converting orchestration success into false asset success.
+
 - 2026-08-01: ChatGPT file materialization must bind captured bytes to the
   requested asset before writing them. Scope a fallback `Download` control to
   the single viewer dialog opened from the matched file tile, then require the

@@ -1,5 +1,32 @@
 # RUNBOOK
 
+## Turn 383 | 2026-08-01
+
+- Consumed exactly one newly authorized `chatgpt/default` bounded canary:
+  `acctmirror_completion_ec8ec770-b33c-47ba-8f9c-049bf9b97588`. It completed
+  one collector pass with zero duplicate same-route mutations and no provider
+  safety signal or second pass; no retry was run.
+- Owned job `hmj_b092ea72656f437bb7f7ace64b20e401` failed once with 0
+  materialized, 6 skipped, and 1 `retrieval_failed`. The failed transcript is
+  `2025-02-03 Step Growth Part 2-20250203_120935-Meeting Transcript.docx` at
+  `https://chatgpt.com/c/67ccf9d7-9310-8004-b5e1-478dba6eab3a`. Its matched
+  tile returned HTTP 200 `files-download` JSON without a download URL, so
+  availability is unknown—not provider-confirmed unavailable or expired.
+- The pre-repair bounded parent incorrectly reported `completed` before the
+  owned job failed. Commit `fd5587c2` makes bounded completions settle owned
+  materialization before terminal success and blocks failures with
+  `account_mirror_materialization_failed` while retaining a pending retrieval
+  cursor.
+- Provider-free verification passes 303 files/2,689 tests with 65 live/TTY
+  skips, plus typecheck, build, lint at the 207-warning baseline, and diff
+  hygiene. The repair is installed at API PID `77948`; source/installed hash
+  parity passes. Scheduler remains paused, five completions remain paused,
+  active materialization jobs are zero, background drain is idle, and current
+  duplicate same-route attempts are zero.
+- Plan 0180 M5 remains open. Do not retry or re-enable scheduler/continuous live
+  follow without a fresh explicit operator gate; repair user-uploaded-file
+  retrieval provider-free first.
+
 ## Turn 382 | 2026-08-01
 
 - Consumed exactly one newly authorized `chatgpt/default` bounded canary:

@@ -717,7 +717,10 @@ Terminology note:
   not start a duplicate loop for the same provider/runtime target.
   History-materialization jobs stay `running` until provider work actually
   settles or the API service restarts, so readback does not mark a job failed
-  while browser retrieval continues in the background.
+  while browser retrieval continues in the background. A bounded completion
+  also remains nonterminal until its owned materialization settles; a failed
+  owned job blocks the completion with
+  `account_mirror_materialization_failed` instead of reporting `completed`.
   After a completion-owned materialization job reaches terminal state, the
   next live-follow collector waits a full configured minimum interval from
   that provider-work settlement timestamp. A long materialization therefore

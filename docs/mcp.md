@@ -445,7 +445,10 @@ log-tail checks as one release gate before live dogfood.
   sweep mode, phase, pass count, next eligible attempt, latest refresh, mirror
   completeness, materialization policy, and the latest
   `materializationCursor` when a refresh pass queued a history-materialization
-  job. Full-sweep completions default to `full_missing_assets` and snapshot
+  job. Bounded and live-follow operations do not become successfully terminal
+  while that owned job is queued or running; a failed owned job produces
+  `status = blocked` with `account_mirror_materialization_failed`. Full-sweep
+  completions default to `full_missing_assets` and snapshot
   refresh; steady-follow completions default to metadata-only unless an
   operator or service `liveFollow` config opts into asset materialization.
   Full-sweep completion refreshes use an extended collector timeout to tolerate

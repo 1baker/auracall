@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 5
+Plan version: 6
 
 ## Stable Objective
 
@@ -19,22 +19,24 @@ reenablement.
 - The account-mirror scheduler and five unrelated completions remain paused;
   no queued, running, or idle-waiting work remains.
 - The latest separately authorized default-profile canary
-  `acctmirror_completion_3cec1299-f0ce-4511-9fc8-705b5e042312` was cancelled
-  fail-closed after one conversation detail cursor reopened and reloaded the
-  same route for a second 24-message chunk. The second reload began 43.597
-  seconds after the first reload completed and diagnostics correctly classified
-  it as `repeated-same-route-attempt`.
-- A cancellation race then allowed the in-flight collector to settle, increment
-  pass count, and queue materialization job
-  `hmj_153db2c1a1b54933b3518027478298c`. Its only run yielded 1 materialized,
-  6 skipped, and 1 `retrieval_failed`; therefore M5 failed and the packet is
-  consumed. No rate-limit, ChatGPT provider guard, CAPTCHA, verification,
-  identity conflict, second pass, scheduler resume, or unrelated start occurred.
-- Provider-free repairs now retain one scoped ChatGPT provider session across
-  detail chunks, forbid navigation on continuation, abort active collector work
-  on cancel/shutdown, and gate post-await state/materialization effects. Commits
-  `fc924d69` and `b3629d10` are pushed and installed under API PID `75678` with
-  scheduler and completion pauses intact.
+  `acctmirror_completion_ec8ec770-b33c-47ba-8f9c-049bf9b97588` completed one
+  collector pass with zero duplicate same-route mutations and no rate-limit,
+  provider guard, CAPTCHA, verification, identity conflict, or second pass.
+  Owned job `hmj_b092ea72656f437bb7f7ace64b20e401` then failed once with 0
+  materialized, 6 skipped, and 1 `retrieval_failed`; therefore M5 remains open
+  and the live packet is consumed without retry.
+- The failed asset belongs to
+  `https://chatgpt.com/c/67ccf9d7-9310-8004-b5e1-478dba6eab3a` and is
+  `2025-02-03 Step Growth Part 2-20250203_120935-Meeting Transcript.docx`.
+  Its matched tile returned HTTP 200 `files-download` JSON without a download
+  URL. This proves failed retrieval with unknown availability, not provider-
+  confirmed deletion, expiry, or unavailability.
+- The canary exposed a provider-free lifecycle defect: the bounded parent
+  reported `completed` before its owned job settled failed. Commit `fd5587c2`
+  now keeps bounded and live-follow operations nonterminal through owned-job
+  settlement and blocks failures with
+  `account_mirror_materialization_failed`. It is pushed and installed under API
+  PID `77948`, with scheduler and completion pauses intact.
 
 ## Architecture Decision
 
@@ -337,3 +339,42 @@ continuous live-follow reenablement remain separately gated afterward.
 - `next_gate`: M5 remains open because the canary produced both a duplicate
   mutation and one failed retrieval. Do not rerun it or re-enable scheduler or
   continuous live follow without a fresh explicit operator authorization.
+
+## Checkpoint 7
+
+- `plan_version`: 6
+- `progress_classification`: same-route repair proved live; materialization and
+  bounded-parent truth failed closed; provider-free lifecycle repair installed.
+- `live_receipt`: completion
+  `acctmirror_completion_ec8ec770-b33c-47ba-8f9c-049bf9b97588` started at
+  `2026-08-01T18:02:32.269Z`, ran exactly one full-sweep/full-missing-assets
+  pass, and queued owned job `hmj_b092ea72656f437bb7f7ace64b20e401`.
+  Browser diagnostics recorded zero duplicate same-route attempts. Provider-
+  session proof matched email, plan, structure, and account-level dimensions.
+- `hard_stop_result`: the owned job ran once and failed at
+  `2026-08-01T18:14:24.102Z` with 0 materialized, 6 skipped, and 1
+  `retrieval_failed`. The exact failed file is
+  `2025-02-03 Step Growth Part 2-20250203_120935-Meeting Transcript.docx` in
+  `https://chatgpt.com/c/67ccf9d7-9310-8004-b5e1-478dba6eab3a`.
+  Tile matching and fallback occurred, but HTTP 200 `files-download` JSON
+  omitted a download URL (`json_missing_download_url`). Availability remains
+  unknown; do not relabel it provider unavailable or expired.
+- `repair`: bounded completion now loops through owned materialization
+  settlement before evaluating its pass cap or mirror-complete terminal branch.
+  A terminal failed job hydrates its outcome and blocks the parent with
+  `account_mirror_materialization_failed`; the backfill ledger remains
+  `in_progress` with a pending retrieval cursor rather than claiming terminal
+  unavailability.
+- `validation`: account-mirror suites pass 256/256; the full provider-free suite
+  passes 303 files and 2,689 tests with 65 live/TTY skips. TypeScript, production
+  build, lint with the 207-warning baseline, and diff hygiene pass.
+- `installed_evidence`: commit `fd5587c2` is pushed and installed under active
+  API PID `77948`. Source/installed completion-service SHA-256 is
+  `c0e51d641ef2df6f582b78c5421881bb9b894b4f801e7e48fb98609efa72cdd7`.
+  Scheduler remains paused, five active completions are all paused, active
+  history-materialization jobs are zero, background drain is idle, and current
+  duplicate same-route attempts are zero.
+- `next_gate`: M5 remains open because materialization yielded 0/1 and failed
+  retrieval. No retry is authorized. Keep scheduler and continuous live follow
+  disabled while the ChatGPT user-uploaded-file retrieval lane is repaired
+  provider-free; any later live proof requires a new explicit operator gate.

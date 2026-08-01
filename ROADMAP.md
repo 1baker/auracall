@@ -14,16 +14,16 @@ Lane: P01
   repair now suppresses canonical same-route mutations and routes every actual
   navigation/reload through the existing interaction governor. Commit/install
   parity and exact asset-identity repair are green. The latest authorized
-  default-profile canary failed closed when a 24-message detail continuation
-  reopened and reloaded its already-loaded conversation; the cancellation then
-  exposed a second defect by allowing post-cancel pass/materialization effects.
-  Provider-free repairs retain one scoped ChatGPT target across chunks and
-  abort/gate cancelled completion work. Commits `fc924d69` and `b3629d10` are
-  pushed and installed at API PID `75678` with source/installed parity,
+  default-profile canary proved zero duplicate same-route mutations, then its
+  owned job failed one transcript as `retrieval_failed` after HTTP 200 JSON
+  omitted a download URL. Availability remains unknown. The canary also exposed
+  a bounded-parent status defect: it reported completed before the failed job
+  settled. Commit `fd5587c2` repairs that provider-free lifecycle boundary and
+  is pushed and installed at API PID `77948` with source/installed parity,
   scheduler pause, five paused completions, and zero active jobs intact. M5
-  remains open because the consumed canary recorded one duplicate mutation and
-  one failed retrieval; another live proof requires fresh explicit authority,
-  and scheduler/continuous live-follow remain disabled.
+  remains open because the consumed canary materialized 0 and failed 1; another
+  live proof requires fresh explicit authority, and scheduler/continuous live-
+  follow remain disabled.
 
 - Completed provider-session authority unification:
   [docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md](docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md)

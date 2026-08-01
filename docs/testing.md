@@ -552,10 +552,10 @@
       - live-follow mode must not finish simply because history backfill is
         complete; it stays running and periodically crawls for new content
       - an all-failed completion-owned materialization job is not a benign
-        terminal cadence event: the live-follow operation becomes `blocked`
-        with `account_mirror_materialization_failed` before another collector
-        or provider pass; successful and genuinely skipped jobs retain the
-        normal post-materialization quiet window
+        terminal event: bounded and live-follow operations become `blocked`
+        with `account_mirror_materialization_failed` before completion or
+        another collector/provider pass; successful and genuinely skipped
+        live-follow jobs retain the normal post-materialization quiet window
       - operation records persist under the account-mirror cache and are
         hydrated on API/MCP startup; active records resume, and a persisted
         `nextAttemptAt` must be honored before the next refresh request

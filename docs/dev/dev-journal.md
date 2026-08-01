@@ -42449,3 +42449,26 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   paused, active materialization jobs are zero, background drain is idle, and
   the `chatgpt/default` provider guard is clear. No further live work is
   authorized.
+
+## 2026-08-01 | Plan 0180 zero-duplicate canary and bounded status-truth repair
+
+- Ran exactly one authorized `chatgpt/default` bounded completion,
+  `acctmirror_completion_ec8ec770-b33c-47ba-8f9c-049bf9b97588`, with one-pass,
+  full-sweep, full-missing-assets limits. It recorded zero duplicate same-route
+  mutations, no rate-limit/guard/CAPTCHA/verification/identity conflict, and no
+  second pass.
+- Owned job `hmj_b092ea72656f437bb7f7ace64b20e401` ran once and failed with 0
+  materialized, 6 skipped, and 1 `retrieval_failed`. The failed transcript at
+  `https://chatgpt.com/c/67ccf9d7-9310-8004-b5e1-478dba6eab3a` matched its tile,
+  but fallback returned HTTP 200 `files-download` JSON without a download URL.
+  This is unsuccessful retrieval with unknown availability, not proof of
+  deletion, expiry, or provider unavailability.
+- The historical completion receipt exposed a separate lifecycle bug: bounded
+  pass-cap completion returned `completed` before its owned asynchronous job
+  settled failed. A deterministic provider-free regression now requires the
+  parent to hydrate the failed outcome and become `blocked` with
+  `account_mirror_materialization_failed` while its ledger remains pending.
+- Commit `fd5587c2` is pushed and installed at API PID `77948`. Account-mirror
+  suites pass 256/256; full validation passes 303 files/2,689 tests with 65
+  skips, typecheck, build, lint at 207 warnings, source/installed hash parity,
+  and paused runtime readback. No retry or further provider work was run.
