@@ -99,8 +99,16 @@ export interface HistoryMaterializationInteractionPolicy {
 export interface HistoryMaterializationProviderWorkContext {
 	interactionGovernor: BrowserInteractionGovernor | null;
 	excludedAssetFamilySignatures?: string[];
+	selectedCatalogAsset?: HistoryMaterializationSelectedCatalogAsset;
 	providerSessionProofSummary?: ProviderSessionProofSummary | null;
 	onProviderSessionProof?: (proof: ProviderSessionProof) => void;
+}
+
+export interface HistoryMaterializationSelectedCatalogAsset {
+	kind: "file";
+	id: string | null;
+	name: string | null;
+	providerFileId: string | null;
 }
 
 export interface HistoryMaterializationManifestEntry {
@@ -564,7 +572,9 @@ export function createHistoryMaterializationService(
 			: jobContext;
 		return (
 		deps.materializeConversation
-			? request.interactionPolicy || workContext?.excludedAssetFamilySignatures?.length
+			? request.interactionPolicy ||
+				workContext?.excludedAssetFamilySignatures?.length ||
+				workContext?.selectedCatalogAsset
 				? deps.materializeConversation(target, request, jobId, {
 						...context,
 						interactionGovernor:
@@ -581,6 +591,7 @@ export function createHistoryMaterializationService(
 					now,
 					interactionGovernor: context.interactionGovernor,
 					excludedAssetFamilySignatures: workContext?.excludedAssetFamilySignatures ?? [],
+					selectedCatalogAsset: workContext?.selectedCatalogAsset,
 					onProviderSessionProof: context.onProviderSessionProof,
 				})
 		);
@@ -1229,11 +1240,20 @@ async function materializeHistoryRequest(input: {
 			...request,
 			assetKinds: request.assetKinds ?? defaultAssetKindsForCatalogKind(detail.kind),
 		};
+		const selectedCatalogAsset = selectedCatalogFileFromCatalogItem(detail);
 		return reconcileConversationTarget({
 			target,
 			request: scopedRequest,
 			jobId: input.jobId,
 			materializeConversation: input.materializeConversation,
+			...(selectedCatalogAsset
+				? {
+						providerWorkContext: {
+							interactionGovernor: null,
+							selectedCatalogAsset,
+						},
+					}
+				: {}),
 			refreshConversationSnapshot: input.refreshConversationSnapshot,
 			recordConversationEvidence: input.recordConversationEvidence,
 			now: input.now,
@@ -3583,6 +3603,7 @@ async function materializeConversationTarget(input: {
 	now: () => Date;
 	interactionGovernor?: BrowserInteractionGovernor | null;
 	excludedAssetFamilySignatures?: string[];
+	selectedCatalogAsset?: HistoryMaterializationSelectedCatalogAsset;
 	onProviderSessionProof?: (proof: ProviderSessionProof) => void;
 }): Promise<HistoryMaterializationResult> {
 	const selectedKinds = normalizeAssetKinds(input.request.assetKinds);
@@ -3594,6 +3615,12 @@ async function materializeConversationTarget(input: {
 			return signature ? excludedAssetFamilySignatures.has(signature) : false;
 		});
 	const excludeFile = (file: FileRef): boolean => {
+		if (
+			input.selectedCatalogAsset &&
+			!matchesHistoryMaterializationSelectedCatalogFile(file, input.selectedCatalogAsset)
+		) {
+			return true;
+		}
 		const signature = catalogManifestAssetFamilySignature("file", file);
 		return signature ? excludedAssetFamilySignatures.has(signature) : false;
 	};
@@ -4098,6 +4125,59 @@ function targetFromCatalogItem(
 			readCatalogStringField(item, ["projectId"]) ??
 			readRecordString(metadata, ["projectId"]),
 	};
+}
+
+function selectedCatalogFileFromCatalogItem(
+	detail: AccountMirrorCatalogItemResult,
+): HistoryMaterializationSelectedCatalogAsset | null {
+	if (detail.kind !== "files") return null;
+	const item = isRecord(detail.item) ? detail.item : null;
+	if (!item) return null;
+	const metadata = isRecord(item.metadata) ? item.metadata : null;
+	const id = readCatalogStringField(item, ["id", "fileId"]) ?? detail.itemId;
+	const name =
+		readCatalogStringField(item, ["name", "fileName", "title"]) ??
+		readRecordString(metadata, ["name", "fileName", "title"]);
+	const providerFileId =
+		readCatalogStringField(item, ["providerFileId"]) ??
+		readRecordString(metadata, ["providerFileId", "fileId"]);
+	if (!id && !name && !providerFileId) return null;
+	return { kind: "file", id, name, providerFileId };
+}
+
+export function matchesHistoryMaterializationSelectedCatalogFile(
+	file: FileRef,
+	selector: HistoryMaterializationSelectedCatalogAsset,
+): boolean {
+	const metadata = isRecord(file.metadata) ? file.metadata : null;
+	const selectedIds = new Set(
+		[selector.id, selector.providerFileId].filter((value): value is string => Boolean(value)),
+	);
+	const candidateIds = new Set(
+		[
+			file.id,
+			readRecordString(metadata, ["providerFileId", "fileId"]),
+			readChatgptProviderFileId(file.remoteUrl),
+		].filter((value): value is string => Boolean(value)),
+	);
+	if (selectedIds.size > 0 && candidateIds.size > 0) {
+		return Array.from(selectedIds).some((id) => candidateIds.has(id));
+	}
+	return Boolean(
+		selector.name &&
+			normalizeAssetFamilyTitle(selector.name) === normalizeAssetFamilyTitle(file.name),
+	);
+}
+
+function readChatgptProviderFileId(value: string | null | undefined): string | null {
+	if (!value?.startsWith("chatgpt://file/")) return null;
+	const encoded = value.slice("chatgpt://file/".length).trim();
+	if (!encoded) return null;
+	try {
+		return decodeURIComponent(encoded);
+	} catch {
+		return encoded;
+	}
 }
 
 function accountLibraryFileRefFromCatalogItem(

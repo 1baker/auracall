@@ -10,6 +10,7 @@ import type { RunArchiveItem, RunArchiveService } from "../src/runtime/archiveSe
 import {
 	createHistoryMaterializationService,
 	formatHistoryMaterializationFailureReason,
+	matchesHistoryMaterializationSelectedCatalogFile,
 	type HistoryAccountLibraryListInput,
 	type HistoryAccountLibraryMaterializeInput,
 	type HistoryMaterializationCreateRequest,
@@ -3723,6 +3724,125 @@ describe("history materialization service", () => {
 			}),
 			"hmj_catalog_1",
 		);
+	});
+
+	it("preserves exact file identity for a selected catalog item", async () => {
+		const homeDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), "auracall-history-materialize-file-item-"),
+		);
+		setAuracallHomeDirOverrideForTest(homeDir);
+		let scheduled: (() => Promise<void>) | undefined;
+		const readItem = vi.fn(async () => ({
+			object: "account_mirror_catalog_item" as const,
+			generatedAt: "2026-08-01T22:50:00.000Z",
+			provider: "chatgpt" as const,
+			runtimeProfileId: "default",
+			browserProfileId: "default",
+			boundIdentityKey: "user@example.com",
+			status: "eligible" as const,
+			reason: "eligible" as const,
+			kind: "files" as const,
+			itemId: "conv_1:turn_2:0:Requested.docx",
+			item: {
+				id: "conv_1:turn_2:0:Requested.docx",
+				name: "Requested.docx",
+				conversationId: "conv_1",
+				metadata: {
+					providerFileId: "file-requested",
+				},
+			},
+		}));
+		const materializeConversation = vi.fn(
+			async (target): Promise<HistoryMaterializationResult> => ({
+				object: "history_materialization_result",
+				generatedAt: "2026-08-01T22:50:01.000Z",
+				status: "skipped",
+				target,
+				source: {
+					type: "catalog_item",
+					catalogItemId: "conv_1:turn_2:0:Requested.docx",
+					catalogKind: "files",
+				},
+				manifestPaths: [],
+				entries: [],
+				archiveItems: [],
+				metrics: { conversations: 1, materialized: 0, skipped: 1, failed: 0 },
+				message: "No downloadable assets.",
+			}),
+		);
+		const service = createHistoryMaterializationService({
+			config: {},
+			catalogService: {
+				readCatalog: vi.fn(),
+				readItem,
+			},
+			generateId: () => "hmj_file_item_1",
+			now: sequenceNow([
+				"2026-08-01T22:50:00.000Z",
+				"2026-08-01T22:50:01.000Z",
+				"2026-08-01T22:50:02.000Z",
+			]),
+			schedule: (work) => {
+				scheduled = work;
+			},
+			materializeConversation,
+		});
+
+		await service.createJob({
+			catalogItemId: "conv_1:turn_2:0:Requested.docx",
+			provider: "chatgpt",
+			runtimeProfile: "default",
+			catalogKind: "files",
+			assetKinds: ["files"],
+			maxItems: 1,
+			force: true,
+		});
+		if (!scheduled) throw new Error("Expected job to be scheduled.");
+		await scheduled();
+
+		expect(materializeConversation).toHaveBeenCalledWith(
+			expect.objectContaining({ conversationId: "conv_1" }),
+			expect.objectContaining({ assetKinds: ["files"], maxItems: 1 }),
+			"hmj_file_item_1",
+			expect.objectContaining({
+				selectedCatalogAsset: {
+					kind: "file",
+					id: "conv_1:turn_2:0:Requested.docx",
+					name: "Requested.docx",
+					providerFileId: "file-requested",
+				},
+			}),
+		);
+		const selector = {
+			kind: "file" as const,
+			id: "conv_1:turn_2:0:Requested.docx",
+			name: "Requested.docx",
+			providerFileId: "file-requested",
+		};
+		expect(
+			matchesHistoryMaterializationSelectedCatalogFile(
+				{
+					id: "conv_1:turn_1:0:Other.docx",
+					name: "Other.docx",
+					provider: "chatgpt",
+					source: "conversation",
+					remoteUrl: "chatgpt://file/file-other",
+				},
+				selector,
+			),
+		).toBe(false);
+		expect(
+			matchesHistoryMaterializationSelectedCatalogFile(
+				{
+					id: "conv_1:turn_2:0:Requested.docx",
+					name: "Requested.docx",
+					provider: "chatgpt",
+					source: "conversation",
+					remoteUrl: "chatgpt://file/file-requested",
+				},
+				selector,
+			),
+		).toBe(true);
 	});
 
 	it("resolves account mirror artifact catalog items from nested conversation metadata", async () => {
