@@ -1,8 +1,8 @@
 # ChatGPT File Retrieval Provider-Free Repair Iterations | 0181-2026-08-01
 
-State: OPEN
+State: CLOSED
 Lane: P01
-Plan version: 1
+Plan version: 2
 
 ## Stable Objective
 
@@ -21,6 +21,10 @@ bounded solution, and validate the repaired behavior before the next iteration.
 - This successor packet owns provider-free retrieval hardening only. It does not
   authorize a browser, provider request, exact-file canary, scheduler resume,
   completion resume, login, or account change.
+- All five red/green iterations are complete in commits `300c7846`, `1bf89ae9`,
+  `99bd8398`, `10183b39`, and `91fd08da`. Full provider-free validation and
+  installed/runtime parity pass at API PID `66696`; the scheduler and five
+  completions remain paused with zero active materialization work.
 
 ## Bounded Execution Model
 
@@ -92,10 +96,10 @@ bounded timeout, while a prompt promise still resolves unchanged.
 - [x] R3 red/green regression and validation complete.
 - [x] R4 red/green regression and validation complete.
 - [x] R5 red/green regression and validation complete.
-- [ ] Focused, adjacent, and broad provider-free validation pass.
-- [ ] Each landed repair is documented and committed with its root cause.
-- [ ] Final commits are pushed and installed with source/runtime parity.
-- [ ] Runtime readback proves scheduler/completion pauses and zero active
+- [x] Focused, adjacent, and broad provider-free validation pass.
+- [x] Each landed repair is documented and committed with its root cause.
+- [x] Final commits are pushed and installed with source/runtime parity.
+- [x] Runtime readback proves scheduler/completion pauses and zero active
   materialization work without provider access.
 
 ## Hard Stops
@@ -207,3 +211,25 @@ pass, and no live/provider authority has been consumed.
 - `next_action_or_stop_reason`: all five repair iterations are implemented.
   Run adjacent and broad provider-free validation, update durable operator docs,
   commit/push, install with source parity, and verify the paused runtime posture.
+
+## Checkpoint 6 | Closeout
+
+- `plan_version`: 2
+- `state_transition`: awaiting-review -> complete
+- `progress_classification`: outcome_progress
+- `evidence`: all five bounded repair iterations have deterministic red/green
+  tests and separate commits. Adjacent adapter, file-service, history-
+  materialization, and completion coverage passes 300/300. The full provider-
+  free suite passes 303 files and 2,695 tests with 65 live/TTY skips. TypeScript,
+  production build, lint with the retained 207-warning baseline, plan audit,
+  and diff hygiene pass.
+- `installed_evidence`: source and installed ChatGPT adapter SHA-256 match at
+  `5e1b10ce496a85e74eb1510fb7de03fb8935ed21ee22f5862c310f40246494ff`
+  under API PID `66696`. Scheduler state is `paused`; all five active completion
+  records are paused; queued/running/idle-waiting completion counts and active
+  materialization jobs are zero; background drain is idle; duplicate same-route
+  attempts are zero.
+- `subagent_status`: not used across the campaign.
+- `next_action_or_stop_reason`: Plan 0181 is complete. No browser/provider work
+  ran. The exact transcript remains unknown and Plan 0180 M5 still requires a
+  separately authorized one-attempt canary before any re-enablement decision.

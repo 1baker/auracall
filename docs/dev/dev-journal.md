@@ -42491,3 +42491,22 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   with no active materialization job and no provider work run.
 - Exact transcript availability remains unknown. Do not retry or re-enable live
   follow without a fresh explicit operator gate.
+
+## 2026-08-01 | Plan 0181 five provider-free retrieval repairs
+
+- Completed five independently red/green ChatGPT user-uploaded-file retrieval
+  iterations: sanitized response-shape evidence, structured availability
+  classification, semantic failure precedence, capture polling that cannot be
+  trapped by a hung promise, and aborting 10-second fetch/body stage timeouts.
+- Commits `300c7846`, `1bf89ae9`, `99bd8398`, `10183b39`, and `91fd08da` are
+  pushed. Adapter tests pass 124/124, the adjacent materialization/completion
+  packet passes 300/300, and the full provider-free suite passes 303 files and
+  2,695 tests with 65 skips. TypeScript, build, lint at 207 warnings, plan audit,
+  and diff hygiene pass.
+- Installed adapter parity passes at API PID `66696`. Scheduler and five
+  completions remain paused; active materialization jobs are zero, background
+  drain is idle, and duplicate same-route attempts are zero. No browser/provider
+  request ran.
+- Plan 0181 is closed. Plan 0180 M5 remains open because the exact transcript
+  availability is still unknown and any one-attempt canary requires fresh
+  explicit authority.

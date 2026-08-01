@@ -1,3 +1,14 @@
+- 2026-08-01: ChatGPT download failure handling must preserve evidence strength
+  and bounded execution, not merely return an error. Persist only sanitized JSON
+  key/type shape when URL discovery fails; classify availability from structured
+  numeric/provider evidence instead of reparsing an exception string; retain an
+  earlier provider-confirmed failure over a later generic fallback. Never await
+  all intercepted response promises without racing the remaining capture
+  deadline, and locally time out plus abort direct/anchor/signed-follow fetches
+  and response-body reads. These rules improve retrieval diagnosis without
+  weakening requested-asset identity or treating failed retrieval as proof of
+  unavailability.
+
 - 2026-08-01: A ChatGPT HTTP 200 `files-download` JSON response without the one
   historically expected `download_url` key is not evidence that no signed URL
   exists. Parse only bounded URL-bearing shapes: the JSON string itself,

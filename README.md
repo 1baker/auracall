@@ -650,7 +650,12 @@ Terminology note:
   requested provider file id or exact response filename before writing bytes.
   Malformed or error-only JSON remains `retrieval_failed` with unknown
   availability unless ChatGPT explicitly proves unavailable/deleted/expired
-  state.
+  state. Failed JSON responses retain bounded key/type shape evidence without
+  persisting response values. Structured provider evidence determines
+  availability directly, and later generic fallbacks cannot overwrite a
+  stronger earlier failure. Intercept polling preserves its deadline even when
+  a response hangs; direct, anchor, signed-follow, and body-read stages each
+  have a local aborting timeout.
   If every known cached file is already terminal-local or outside the bounded
   selection, the history receipt reports `known-files-excluded`; it reserves
   `no-materializable-file` for a genuinely empty refreshed file inventory.

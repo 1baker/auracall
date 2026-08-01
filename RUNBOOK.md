@@ -12,6 +12,18 @@
   cycle each. Browser/provider attempts remain zero. Scheduler and continuous
   live follow remain disabled and the exact transcript availability remains
   unknown.
+- Completed all five iterations in commits `300c7846`, `1bf89ae9`, `99bd8398`,
+  `10183b39`, and `91fd08da`: bounded JSON shape evidence, structured
+  availability classification, strongest-failure retention, deadline-safe
+  capture polling, and aborting per-stage download timeouts.
+- Adjacent coverage passes 300/300; the full provider-free suite passes 303
+  files/2,695 tests with 65 live/TTY skips. TypeScript, production build, lint at
+  the retained 207-warning baseline, plan audit, and diff hygiene pass.
+- Installed source parity passes at API PID `66696` with adapter SHA-256
+  `5e1b10ce496a85e74eb1510fb7de03fb8935ed21ee22f5862c310f40246494ff`.
+  Scheduler and five completions remain paused; active completion and
+  materialization jobs are zero; background drain is idle; duplicate same-route
+  attempts are zero. No browser/provider work ran.
 
 ## Turn 384 | 2026-08-01
 

@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 7
+Plan version: 8
 
 ## Stable Objective
 
@@ -47,6 +47,13 @@ reenablement.
   retrieval defect but does not prove that the exact transcript is currently
   retrievable; its availability remains unknown until a separately authorized
   one-attempt canary.
+- Successor Plan 0181 completed five additional provider-free repairs: bounded
+  response-shape evidence, structured availability classification, strongest-
+  failure retention, effective capture polling deadlines, and aborting per-stage
+  fetch timeouts. Commits through `91fd08da` are pushed and installed under API
+  PID `66696` with source/runtime parity and all pauses intact. These repairs
+  improve the next exact-file attempt but do not change M5 or prove the
+  transcript available.
 
 ## Architecture Decision
 
@@ -419,3 +426,19 @@ continuous live-follow reenablement remain separately gated afterward.
   from the parser repair alone. M5 remains open. Any exact-file retrieval proof
   is a new one-attempt live canary requiring explicit operator authorization;
   scheduler and continuous live follow remain disabled.
+
+## Checkpoint 9
+
+- `plan_version`: 8
+- `progress_classification`: provider-free blocker reduction complete; live
+  acceptance remains open.
+- `successor_evidence`: Plan 0181 closed five separately red/green retrieval
+  defects in commits `300c7846`, `1bf89ae9`, `99bd8398`, `10183b39`, and
+  `91fd08da`. Full validation passes 303 files/2,695 tests, typecheck, build,
+  lint at 207 warnings, and installed adapter parity.
+- `runtime_state`: API PID `66696`; scheduler and five completions paused; zero
+  queued/running/idle-waiting completions, zero active materialization jobs,
+  idle background drain, and zero duplicate same-route attempts.
+- `next_gate`: M5 remains open. Only a new explicit authorization may consume
+  one no-retry exact-file canary; continuous live follow and scheduler resume
+  remain separately prohibited.

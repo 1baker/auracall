@@ -1868,7 +1868,11 @@
   JSON string and bounded shallow/nested signed-URL fields resolve, while an
   error-only object does not. The same resolver body is embedded in the CDP
   capture expression, and existing response-identity tests remain the write
-  gate.
+  gate. The same suite also locks structured unavailable-versus-retrieval
+  classification, strongest-failure precedence, deadline-safe polling with a
+  never-settling intercepted response, and distinguished per-stage fetch/body
+  timeouts. The five-repair adjacent packet is:
+  `pnpm vitest run tests/browser/chatgptAdapter.test.ts tests/browser/llmServiceFiles.test.ts tests/runtime.historyMaterializationService.test.ts tests/accountMirror/completionService.test.ts`.
   These tests cover direct conversation and catalog-item job creation,
   artifact/file catalog rows with nested conversation metadata, bounded
   reconciliation, freshness-aware bulk reconciliation candidate selection,

@@ -7,12 +7,14 @@
 Status: active
 Lane: P01
 
-- Active ChatGPT file-retrieval provider-free repair iterations:
+- Completed ChatGPT file-retrieval provider-free repair iterations:
   [docs/dev/plans/0181-2026-08-01-chatgpt-file-retrieval-provider-free-repair-iterations.md](docs/dev/plans/0181-2026-08-01-chatgpt-file-retrieval-provider-free-repair-iterations.md)
-  Execute at most five deterministic red/green repairs for evidence loss,
-  availability classification, failure precedence, and unbounded capture/fetch
-  waits. This lane performs no browser/provider work and cannot re-enable the
-  scheduler or continuous live follow.
+  Five deterministic red/green repairs now preserve bounded response-shape
+  evidence, classify structured availability, retain the strongest failure, and
+  bound capture/fetch waits. Commits through `91fd08da` are pushed and installed
+  at API PID `66696`; full validation and paused-runtime parity pass. No
+  browser/provider work ran, and this closure does not re-enable the scheduler
+  or continuous live follow.
 
 - Active ChatGPT same-route mutation and staged re-enablement repair:
   [docs/dev/plans/0180-2026-08-01-chatgpt-same-route-mutation-and-staged-reenablement.md](docs/dev/plans/0180-2026-08-01-chatgpt-same-route-mutation-and-staged-reenablement.md)
