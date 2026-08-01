@@ -7,17 +7,15 @@
 Status: active
 Lane: P01
 
-- Active provider-session authority unification:
+- Completed provider-session authority unification:
   [docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md](docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md)
   Replace distributed runtime/browser/provider identity reconstruction with one
   canonical provider-session proof used by collectors and all materializers.
-  Browser profiles remain provenance only. A fresh bounded pass completed
-  exactly one collection and materialized 3 assets with no guard or retry, but
-  exposed a receipt-only defect: reconciliation dropped the canonical proof
-  callback while composing per-conversation exclusions. Provider-free repair
-  commit `1392bc1b` is pushed and installed byte-identically under the paused
-  scheduler. The consumed packet does not authorize the final receipt-parity
-  pass.
+  Browser profiles remain provenance only. Final bounded installed proof
+  completed exactly one collection and materialized 3 assets with no guard or
+  retry. Collector and materializer receipts persist matching canonical
+  four-dimension provider-account proof; Plan 0179 is closed while the global
+  scheduler remains paused.
 
 - Completed forced-pass failure and identity-evidence repair:
   [docs/dev/plans/0177-2026-07-31-forced-pass-failure-and-identity-evidence-repair.md](docs/dev/plans/0177-2026-07-31-forced-pass-failure-and-identity-evidence-repair.md)

@@ -1,8 +1,8 @@
 # Provider-Session Authority Unification | 0179-2026-07-31
 
-State: OPEN
+State: CLOSED
 Lane: P01
-Plan version: 8
+Plan version: 9
 
 ## Stable Objective
 
@@ -16,18 +16,15 @@ This is a replacement plan, not another matcher exception. It closes only when
 the old distributed identity construction/comparison paths are removed and a
 bounded installed-runtime proof demonstrates collector/materializer parity.
 
-## Current State And Proven Failure
+## Current State And Proven Resolution
 
-- Scheduler remains paused. Five unrelated completions are paused; default
-  ChatGPT completion
-  `acctmirror_completion_7c207690-de8a-40a4-82b8-61edd830a25c` is safely
-  failed at pass 37 with no provider guard after the one authorized pass
-  stopped before collection on missing disposable-target provenance.
-- The separately authorized control request was provider-free in effect: the
-  installed service returned the unchanged blocked pass-37 record because
-  `run_one_pass` rejected blocked live-follow operations before launch. The
-  real one-pass allowance remains unconsumed while this control defect is
-  repaired and reinstalled under the same pause.
+- Installed completion `acctmirror_completion_231c06bb-28ea-4574-8086-f7ba6fd243dd`
+  completed exactly one default-ChatGPT collection and owned terminal
+  materialization without a retry, scheduler resume, or provider guard.
+- Collector and materializer receipts both persist canonical four-dimension
+  `match` proof for the same configured/observed provider account and managed
+  browser process. Their target IDs differ correctly across the collector and
+  materializer browser lifecycles.
 - Plan 0178's collector accepted the current provider account and completed
   four detail reads. Minutes later, job
   `hmj_6323dddba5f34adc9f6871b404920456` rejected all six transfers as
@@ -236,7 +233,7 @@ Expected write surface: validation receipts and plan closeout only.
   audit, and diff hygiene pass.
 - [x] Installed/source parity and paused runtime posture are proved before any
   live gate.
-- [ ] A separately authorized one-pass proof demonstrates collector and
+- [x] A separately authorized one-pass proof demonstrates collector and
   materializer parity without a second pass or new provider guard.
 
 ## Non-Goals
@@ -495,3 +492,30 @@ live-follow remains stopped for the affected default ChatGPT target.
   Require a fresh explicit gate for exactly one bounded default ChatGPT pass to
   close collector/materializer receipt parity; do not resume the scheduler or
   infer authorization from this installation.
+
+## Checkpoint 12
+
+- `plan_version`: 9
+- `state_transition`: installed-fresh-gate-required -> closed
+- `progress_classification`: complete
+- `evidence`: fresh authorization started bounded completion
+  `acctmirror_completion_231c06bb-28ea-4574-8086-f7ba6fd243dd` at API PID
+  `63017` with `maxPasses=1`. Exactly one collector pass completed at
+  `2026-08-01T03:08:28.605Z`. Its receipt persisted `match` proof for email,
+  plan, structure, and account-level with the configured and observed
+  fingerprints identical. Owned job
+  `hmj_c8901dc025c64af29a9f8f7e2e555608` honored the two-minute quiet boundary,
+  succeeded on attempt 1 at `2026-08-01T03:11:43.435Z`, and persisted the same
+  four identity-dimension fingerprints in both job and result receipts. It
+  materialized 3 assets from 2 conversations, recorded 1 duplicate alias and
+  3 skips, and failed 0. Collector and materializer used default AuraCall
+  runtime/browser/source/managed browser profiles and browser process `24621`;
+  distinct target IDs reflect their separate lifecycle phases. No rate-limit,
+  CAPTCHA, verification signal, provider guard, second collection, scheduler
+  resume, or unrelated completion start occurred. The provider lease released;
+  scheduler and five unrelated completions remain paused with zero
+  queued/running/foreground work.
+- `subagent_status`: not_spawned
+- `next_action_or_stop_reason`: Plan 0179 acceptance is complete. Keep the
+  scheduler paused; any future live-follow enablement is a separate operator
+  decision and is not authorized by this closeout.

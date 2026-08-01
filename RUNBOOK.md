@@ -1,5 +1,26 @@
 # RUNBOOK
 
+## Turn 379 | 2026-07-31
+
+- Fresh explicit authorization started bounded completion
+  `acctmirror_completion_231c06bb-28ea-4574-8086-f7ba6fd243dd` under installed
+  API PID `63017`, `maxPasses=1`, full sweep/full-missing-assets, six-item cap,
+  and no force. Scheduler and five unrelated lanes remained paused.
+- Exactly one collector pass completed at `03:08:28Z`. Its persisted canonical
+  proof reports `match` for email, plan, structure, and account-level, with
+  identical configured/observed redacted fingerprints and concrete managed
+  browser process/target provenance.
+- Owned job `hmj_c8901dc025c64af29a9f8f7e2e555608` honored the quiet boundary and
+  succeeded on attempt 1 at `03:11:43Z`: 3 materialized from 2 conversations,
+  1 duplicate alias, 3 skipped, 0 failed. Both job and result now persist the
+  same four identity-dimension fingerprints as the collector. The browser
+  target differs correctly because materialization is a later lifecycle phase;
+  the managed browser process/profile is the same.
+- No rate-limit, CAPTCHA, verification signal, provider guard, second pass,
+  scheduler resume, or unrelated start occurred. The provider lease released;
+  queued/running/foreground work is zero. Plan 0179 is CLOSED. Future scheduler
+  enablement remains a separate operator decision.
+
 ## Turn 378 | 2026-07-31
 
 - Fresh authorization started bounded default-ChatGPT completion

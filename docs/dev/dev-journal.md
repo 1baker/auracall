@@ -42313,3 +42313,13 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   and diff hygiene pass. Scheduler and five completions remain paused with zero
   queued/running/foreground work and no provider guard. The managed ChatGPT
   browser remains alive but idle; no further live pass is authorized.
+- Final fresh bounded proof completed exactly one collector pass in completion
+  `acctmirror_completion_231c06bb-28ea-4574-8086-f7ba6fd243dd`. Collector and
+  materializer receipts persist identical redacted email/plan/structure/
+  account-level fingerprints with `verdict=match` on the same default runtime,
+  browser/source/managed browser profiles and browser process `24621`.
+- Owned job `hmj_c8901dc025c64af29a9f8f7e2e555608` succeeded on attempt 1 with 3
+  materialized, 1 duplicate alias, 3 skipped, and 0 failed. No guard,
+  rate-limit, verification signal, second pass, scheduler resume, or unrelated
+  completion appeared. Provider lease released and all work returned to zero.
+  Plan 0179 is closed; scheduler enablement remains separately gated.
