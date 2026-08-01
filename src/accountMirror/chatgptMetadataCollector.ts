@@ -2509,40 +2509,68 @@ async function safeReadConversationContext(
 	outcome: "completed" | "failed" | "timed_out" | "aborted";
 	detail: string | null;
 }> {
+	let providerListOptions: BrowserProviderListOptions | undefined;
 	try {
 		await beforeAccountMirrorBrowserInteraction(listOptions, pacer, "conversation-read");
-		const chunk =
-			conversation.provider === "chatgpt"
-				? {
-						startMessageIndex:
-							cursor?.conversationId === conversation.id ? cursor.nextMessageIndex : 0,
-						maxMessages:
-							cursor?.conversationId === conversation.id
-								? cursor.messageLimit
-								: CHATGPT_CONTEXT_CHUNK_MESSAGE_LIMIT,
-					}
-				: null;
-		const providerListOptions = withAccountMirrorTabLifecycle(
-			listOptions,
-			conversation.provider === "chatgpt",
-		);
+		const isChatgpt = conversation.provider === "chatgpt";
+		const isChatgptChunkContinuation =
+			isChatgpt && cursor?.conversationId === conversation.id && cursor.nextMessageIndex > 0;
+		const chunk = isChatgpt
+			? {
+					startMessageIndex:
+						cursor?.conversationId === conversation.id ? cursor.nextMessageIndex : 0,
+					maxMessages:
+						cursor?.conversationId === conversation.id
+							? cursor.messageLimit
+							: CHATGPT_CONTEXT_CHUNK_MESSAGE_LIMIT,
+				}
+			: null;
+		providerListOptions = withAccountMirrorTabLifecycle(listOptions, isChatgpt);
+		if (isChatgpt) {
+			providerListOptions = {
+				...(providerListOptions ?? {}),
+				useProviderSession: true,
+				providerSession: listOptions?.providerSession,
+				// The first chunk may perform one governed recovery mutation. A continuation
+				// must reuse that retained target and stay direct-fetch-only so pagination
+				// cannot physically reload the same conversation route again.
+				preserveActiveTab:
+					isChatgptChunkContinuation && listOptions?.providerSession
+						? true
+						: providerListOptions?.preserveActiveTab === true,
+			};
+		}
 		const context = await withProviderCallTimeout(
-			(abortSignal) =>
-				client.getConversationContext(conversation.id, {
+			(abortSignal) => {
+				providerListOptions = {
+					...(providerListOptions ?? {}),
+					abortSignal,
+					...(chunk ? { accountMirrorContextChunk: chunk } : {}),
+				};
+				return client.getConversationContext(conversation.id, {
 					projectId: conversation.projectId,
 					refresh: true,
-					listOptions: {
-						...(providerListOptions ?? {}),
-						abortSignal,
-						...(chunk ? { accountMirrorContextChunk: chunk } : {}),
-					},
-				}),
+					listOptions: providerListOptions,
+				});
+			},
 			timeoutMs,
 			`Conversation context inventory timed out for ${conversation.id}.`,
 			listOptions?.abortSignal,
 		);
+		if (isChatgpt) {
+			const contextChunk = readAccountMirrorContextChunkMetadata(context);
+			const hasMoreChunks = contextChunk?.nextMessageIndex != null;
+			if (hasMoreChunks && listOptions) {
+				listOptions.providerSession = providerListOptions?.providerSession;
+			} else {
+				await closeAccountMirrorProviderSession(providerListOptions);
+				if (listOptions) listOptions.providerSession = undefined;
+			}
+		}
 		return { context, observed: context !== null, outcome: "completed", detail: null };
 	} catch (error) {
+		await closeAccountMirrorProviderSession(providerListOptions);
+		if (listOptions) listOptions.providerSession = undefined;
 		const detail = error instanceof Error ? error.message : String(error);
 		await recordAccountMirrorDomDriftObservation(observation, {
 			surface: "account-mirror-conversation-context",
@@ -2565,6 +2593,15 @@ async function safeReadConversationContext(
 			detail,
 		};
 	}
+}
+
+async function closeAccountMirrorProviderSession(
+	listOptions: BrowserProviderListOptions | undefined,
+): Promise<void> {
+	const session = listOptions?.providerSession;
+	if (!session) return;
+	listOptions.providerSession = undefined;
+	await session.close().catch(() => undefined);
 }
 
 function isProviderGuardFailureDetail(detail: string | null): boolean {

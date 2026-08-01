@@ -79,6 +79,9 @@ describe("ChatGPT account mirror metadata collector", () => {
 		refresh: true,
 		listOptions: {
 			...accountMirrorTabLifecycle,
+			useProviderSession: true,
+			providerSession: undefined,
+			preserveActiveTab: false,
 			accountMirrorContextChunk: {
 				startMessageIndex,
 				maxMessages: 24,
@@ -2087,6 +2090,107 @@ describe("ChatGPT account mirror metadata collector", () => {
 			"conv_large",
 			accountMirrorContextOptions(24),
 		);
+	});
+
+	test("reuses one scoped ChatGPT provider session for chunk continuation without another navigable read", async () => {
+		const closeProviderSession = vi.fn(async () => undefined);
+		const listOptions: BrowserProviderListOptions = {
+			accountMirrorInventory: true,
+			tabLifecycle: "dispose-new",
+		};
+		let contextRead = 0;
+		const client = {
+			listAccountFiles: vi.fn(async () => []),
+			listProjectFiles: vi.fn(async () => []),
+			listConversationFiles: vi.fn(async () => []),
+			getConversationContext: vi.fn(
+				async (conversationId: string, options: { listOptions?: BrowserProviderListOptions }) => {
+					contextRead += 1;
+					if (contextRead === 1) {
+						expect(options.listOptions).toMatchObject({
+							useProviderSession: true,
+							preserveActiveTab: false,
+						});
+						if (options.listOptions) {
+							options.listOptions.providerSession = {
+								providerId: "chatgpt",
+								key: "chatgpt:test:conv_large",
+								value: {},
+								close: closeProviderSession,
+							};
+						}
+						return {
+							provider: "chatgpt" as const,
+							conversationId,
+							messages: Array.from({ length: 24 }, (_, index) => ({
+								role: "assistant" as const,
+								text: `first chunk ${index}`,
+							})),
+							metadata: {
+								accountMirrorContextChunk: {
+									startMessageIndex: 0,
+									endMessageIndex: 24,
+									nextMessageIndex: 24,
+									maxMessages: 24,
+									totalMessages: 40,
+									complete: false,
+								},
+							},
+						};
+					}
+					expect(options.listOptions).toMatchObject({
+						useProviderSession: true,
+						preserveActiveTab: true,
+						providerSession: {
+							providerId: "chatgpt",
+							key: "chatgpt:test:conv_large",
+						},
+					});
+					return {
+						provider: "chatgpt" as const,
+						conversationId,
+						messages: Array.from({ length: 16 }, (_, index) => ({
+							role: "assistant" as const,
+							text: `final chunk ${index + 24}`,
+						})),
+						metadata: {
+							accountMirrorContextChunk: {
+								startMessageIndex: 24,
+								endMessageIndex: 40,
+								nextMessageIndex: null,
+								maxMessages: 24,
+								totalMessages: 40,
+								complete: true,
+							},
+						},
+					};
+				},
+			),
+		};
+
+		const first = await readBoundedChatgptDetailInventory(
+			client,
+			[],
+			[{ id: "conv_large", title: "Large conversation", provider: "chatgpt" }],
+			20,
+			{ maxDetailReads: 1, listOptions },
+		);
+
+		expect(first.cursor.conversationDetail?.nextMessageIndex).toBe(24);
+		expect(listOptions.providerSession).toBeDefined();
+
+		const second = await readBoundedChatgptDetailInventory(
+			client,
+			[],
+			[{ id: "conv_large", title: "Large conversation", provider: "chatgpt" }],
+			20,
+			{ maxDetailReads: 1, listOptions, cursor: first.cursor },
+		);
+
+		expect(second.cursor.conversationDetail).toBeNull();
+		expect(second.cursor.nextConversationIndex).toBe(0);
+		expect(closeProviderSession).toHaveBeenCalledTimes(1);
+		expect(listOptions.providerSession).toBeUndefined();
 	});
 
 	test("maps only ChatGPT library files into account artifacts", () => {
