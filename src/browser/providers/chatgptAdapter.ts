@@ -70,13 +70,13 @@ import type {
 	Project,
 	ProjectMemoryMode,
 } from "./domain.js";
-import { assertProviderSessionAuthorization } from "./providerSessionAuthority.js";
 import {
 	annotateClientMutationContext,
 	resolveMutationAudit,
 	resolveMutationSource,
 } from "./mutationAudit.js";
 import { providerNavigationAllowed } from "./navigationPolicy.js";
+import { assertProviderSessionAuthorization } from "./providerSessionAuthority.js";
 import {
 	recordBrowserScrapeCandidateCount,
 	recordBrowserScrapeCdpCall,
@@ -9713,6 +9713,49 @@ function validateChatgptCapturedFileIdentity(input: {
 	return `captured_asset_identity_mismatch: requested=${input.targetName ?? input.targetProviderFileId ?? "unknown"} response=${responseName ?? (capturedUrl || "unknown")}`;
 }
 
+export function resolveChatgptDownloadUrlFromJson(
+	json: unknown,
+	baseUrl = "https://chatgpt.com/",
+): string | null {
+	const record =
+		json && typeof json === "object" && !Array.isArray(json)
+			? (json as Record<string, unknown>)
+			: null;
+	const nestedRecords = [record?.data, record?.result].filter(
+		(value): value is Record<string, unknown> =>
+			Boolean(value) && typeof value === "object" && !Array.isArray(value),
+	);
+	const candidates: unknown[] = [
+		typeof json === "string" ? json : null,
+		...([record, ...nestedRecords].flatMap((source) =>
+			source
+				? [
+						source.download_url,
+						source.downloadUrl,
+						source.signed_url,
+						source.signedUrl,
+						source.url,
+						source.href,
+					]
+				: [],
+		)),
+	];
+	for (const candidate of candidates) {
+		if (typeof candidate !== "string") continue;
+		const value = candidate.trim();
+		if (!/^(?:https?:\/\/|\/)/i.test(value)) continue;
+		try {
+			const resolved = new URL(value, baseUrl);
+			if (resolved.protocol === "http:" || resolved.protocol === "https:") {
+				return resolved.href;
+			}
+		} catch {
+			// Ignore malformed provider response candidates.
+		}
+	}
+	return null;
+}
+
 function classifyChatgptFileRetrievalFailure(error: unknown): {
 	failureKind: "provider_unavailable" | "retrieval_failed";
 	retryable: boolean;
@@ -9805,6 +9848,7 @@ async function downloadChatgptConversationFileWithClient(
             }
             return Object.keys(summary).length > 0 ? summary : null;
           };
+          const resolveDownloadUrlFromJson = ${resolveChatgptDownloadUrlFromJson.toString()};
           const captureDownloadResponse = async (response, originalUrl, fileName, mimeType) => {
             const clone = response.clone();
             const contentType = clone.headers.get('content-type');
@@ -9817,9 +9861,7 @@ async function downloadChatgptConversationFileWithClient(
               } catch {
                 json = null;
               }
-              const downloadUrl = json && typeof json === 'object' && typeof json.download_url === 'string'
-                ? json.download_url
-                : null;
+              const downloadUrl = resolveDownloadUrlFromJson(json, window.location.href);
               if (!downloadUrl) {
                 return {
                   ok: false,

@@ -53,6 +53,7 @@ import {
 	recoverVisibleChatgptBlockingSurfaceWithClientForTest,
 	resolveChatgptCanvasArtifactContentText,
 	resolveChatgptConversationUrl,
+	resolveChatgptDownloadUrlFromJson,
 	resolveChatgptProjectCreateConfirmLabelsForTest,
 	resolveChatgptProjectMemoryLabel,
 	resolveChatgptProjectMemoryLabelCandidates,
@@ -63,8 +64,8 @@ import {
 } from "../../src/browser/providers/chatgptAdapter.js";
 import type { FileRef } from "../../src/browser/providers/domain.js";
 import { normalizeProjectMemoryMode } from "../../src/browser/providers/domain.js";
-import { createBrowserScrapeTelemetryRecorder } from "../../src/browser/providers/scrapeTelemetry.js";
 import { createProviderSessionAuthority } from "../../src/browser/providers/providerSessionAuthority.js";
+import { createBrowserScrapeTelemetryRecorder } from "../../src/browser/providers/scrapeTelemetry.js";
 
 describe("ChatGPT provider-session connection provenance", () => {
 	test("binds a disposable connection target before provider identity authorization", () => {
@@ -441,6 +442,73 @@ describe("downloadChatgptConversationFilesWithClient", () => {
 			expect(downloadExpression).not.toContain(
 				"Array.from(document.querySelectorAll('button, [role=\"button\"], a'))",
 			);
+		} finally {
+			await fs.rm(tempDir, { recursive: true, force: true });
+		}
+	});
+
+	test("accepts a files-download JSON string as the signed download URL", async () => {
+		const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-chatgpt-json-string-url-"));
+		const destPath = path.join(tempDir, "uploaded-transcript.docx");
+		let downloadExpression = "";
+		const evaluate = vi.fn(async (input: { expression?: string }) => {
+			const expression = input.expression ?? "";
+			if (expression.includes("captureDownloadResponse")) {
+				downloadExpression = expression;
+				return {
+					result: {
+						value: {
+							ok: false,
+							reason: "json_missing_download_url",
+							status: 200,
+							endpointKind: "files-download",
+							contentType: "application/json",
+						},
+					},
+				};
+			}
+			if (expression.includes("hasTurns")) {
+				return {
+					result: { value: { href: "https://chatgpt.com/c/conversation-json-string-url" } },
+				};
+			}
+			return { result: { value: [] } };
+		});
+		const file: FileRef = {
+			id: "conversation-json-string-url:turn:0:uploaded-transcript.docx",
+			name: "uploaded-transcript.docx",
+			provider: "chatgpt",
+			source: "conversation",
+			metadata: { providerFileId: "file_uploaded" },
+		};
+
+		try {
+			await downloadChatgptConversationFilesWithClientForTest(
+				// biome-ignore lint/style/useNamingConvention: CDP client shape uses Runtime.
+				{ Runtime: { evaluate } } as never,
+				"conversation-json-string-url",
+				[{ file, destPath }],
+				null,
+				undefined,
+				{ preserveActiveTab: true },
+			);
+
+			expect(
+				resolveChatgptDownloadUrlFromJson(
+					" https://files.oaiusercontent.com/file-uploaded?sig=bounded ",
+				),
+			).toBe("https://files.oaiusercontent.com/file-uploaded?sig=bounded");
+			expect(
+				resolveChatgptDownloadUrlFromJson({
+					data: { signed_url: "/backend-api/estuary/content?id=file_uploaded" },
+				}),
+			).toBe("https://chatgpt.com/backend-api/estuary/content?id=file_uploaded");
+			expect(resolveChatgptDownloadUrlFromJson({ detail: "File not found" })).toBeNull();
+			expect(downloadExpression).toContain("resolveChatgptDownloadUrlFromJson");
+			expect(downloadExpression).toContain(
+				"resolveDownloadUrlFromJson(json, window.location.href)",
+			);
+			expect(() => new Function(`return ${downloadExpression}`)).not.toThrow();
 		} finally {
 			await fs.rm(tempDir, { recursive: true, force: true });
 		}
