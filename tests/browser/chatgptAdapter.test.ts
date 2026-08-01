@@ -11,6 +11,7 @@ import {
 	buildChatgptUrlRouteExpressionForTest,
 	classifyChatgptBlockingSurfaceProbe,
 	classifyChatgptFileRetrievalFailure,
+	awaitChatgptDownloadPromiseWithTimeout,
 	clickChatgptViewerDownloadButtonWithClientForTest,
 	closeChatgptTabConnectionForTest,
 	createChatgptAdapter,
@@ -512,6 +513,11 @@ describe("downloadChatgptConversationFilesWithClient", () => {
 			expect(downloadExpression).toContain("summarizeChatgptDownloadJsonShape");
 			expect(downloadExpression).toContain("selectChatgptDownloadFailure");
 			expect(downloadExpression).toContain("waitForChatgptCaptureProgress");
+			expect(downloadExpression).toContain("awaitChatgptDownloadPromiseWithTimeout");
+			expect(downloadExpression).toContain("'signed-follow-fetch'");
+			expect(downloadExpression).toContain("'signed-follow-body'");
+			expect(downloadExpression).toContain("'direct-fetch'");
+			expect(downloadExpression).toContain("'anchor-fetch'");
 			expect(downloadExpression).toContain(
 				"waitForCaptureProgress(capturePromises, deadline - Date.now(), 250)",
 			);
@@ -651,6 +657,19 @@ describe("downloadChatgptConversationFilesWithClient", () => {
 		expect(Date.now() - startedAt).toBeLessThan(100);
 	});
 
+	test("bounds stalled download stages without changing prompt results", async () => {
+		await expect(
+			awaitChatgptDownloadPromiseWithTimeout(
+				new Promise<never>(() => undefined),
+				5,
+				"signed-follow-fetch",
+			),
+		).rejects.toThrow("chatgpt_download_timeout:signed-follow-fetch:5ms");
+		await expect(
+			awaitChatgptDownloadPromiseWithTimeout(Promise.resolve("ok"), 100, "direct-fetch"),
+		).resolves.toBe("ok");
+	});
+
 	test("checks readiness once and sequentially downloads twelve files on one client", async () => {
 		const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-chatgpt-batch-"));
 		const scrapeTelemetry = createBrowserScrapeTelemetryRecorder();
@@ -723,9 +742,7 @@ describe("downloadChatgptConversationFilesWithClient", () => {
 				expect(expression).toContain("const clickViewerDownload = () =>");
 				expect(expression).toContain("/^Download$/i.test(entry.label)");
 				expect(expression).toContain("viewerDownloadClicked = clickViewerDownload()");
-				expect(expression).toContain(
-					"const response = await originalFetch(navigationUrl, { credentials: 'include' })",
-				);
+				expect(expression).toContain("const response = await fetchWithTimeout(");
 				expect(expression).toContain("recordCaptureCandidate(candidate, 'anchor')");
 				expect(expression).toContain("recordCaptureCandidate(candidate, 'fetch')");
 				expect(expression).toContain("recordCaptureCandidate(direct.value, 'direct')");

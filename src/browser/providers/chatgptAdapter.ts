@@ -9842,6 +9842,31 @@ export async function waitForChatgptCaptureProgress(
 	}
 }
 
+export async function awaitChatgptDownloadPromiseWithTimeout<T>(
+	promise: Promise<T>,
+	timeoutMs: number,
+	stage: string,
+	onTimeout?: () => void,
+): Promise<T> {
+	let timeout: ReturnType<typeof setTimeout> | null = null;
+	try {
+		return await Promise.race([
+			promise,
+			new Promise<never>((_resolve, reject) => {
+				timeout = setTimeout(() => {
+					try {
+						onTimeout?.();
+					} finally {
+						reject(new Error(`chatgpt_download_timeout:${stage}:${timeoutMs}ms`));
+					}
+				}, Math.max(0, timeoutMs));
+			}),
+		]);
+	} finally {
+		if (timeout) clearTimeout(timeout);
+	}
+}
+
 export function classifyChatgptFileRetrievalFailure(error: unknown): {
 	failureKind: "provider_unavailable" | "retrieval_failed";
 	retryable: boolean;
@@ -9970,10 +9995,29 @@ async function downloadChatgptConversationFileWithClient(
           const summarizeDownloadJsonShape = ${summarizeChatgptDownloadJsonShape.toString()};
           const selectDownloadFailure = ${selectChatgptDownloadFailure.toString()};
           const waitForCaptureProgress = ${waitForChatgptCaptureProgress.toString()};
+          const awaitDownloadPromiseWithTimeout = ${awaitChatgptDownloadPromiseWithTimeout.toString()};
+          const downloadStageTimeoutMs = 10_000;
+          const fetchWithTimeout = (url, init, stage) => {
+            const controller = new AbortController();
+            return awaitDownloadPromiseWithTimeout(
+              originalFetch(url, { ...(init || {}), signal: controller.signal }),
+              downloadStageTimeoutMs,
+              stage,
+              () => controller.abort(),
+            );
+          };
+          const readBodyWithTimeout = (response, stage) => awaitDownloadPromiseWithTimeout(
+            response.arrayBuffer(),
+            downloadStageTimeoutMs,
+            stage,
+            () => {
+              try { response.body?.cancel(); } catch {}
+            },
+          );
           const captureDownloadResponse = async (response, originalUrl, fileName, mimeType) => {
             const clone = response.clone();
             const contentType = clone.headers.get('content-type');
-            const bytes = new Uint8Array(await clone.arrayBuffer());
+            const bytes = new Uint8Array(await readBodyWithTimeout(clone, 'initial-body'));
             if (/application\\/json/i.test(contentType || '')) {
               let json = null;
               try {
@@ -9994,9 +10038,15 @@ async function downloadChatgptConversationFileWithClient(
                   responseShape: summarizeDownloadJsonShape(json),
                 };
               }
-              const followResponse = await originalFetch(downloadUrl, { credentials: 'include' });
+              const followResponse = await fetchWithTimeout(
+                downloadUrl,
+                { credentials: 'include' },
+                'signed-follow-fetch',
+              );
               const followClone = followResponse.clone();
-              const followBytes = new Uint8Array(await followClone.arrayBuffer());
+              const followBytes = new Uint8Array(
+                await readBodyWithTimeout(followClone, 'signed-follow-body'),
+              );
               return {
                 ok: followResponse.ok,
                 status: followResponse.status,
@@ -10027,7 +10077,11 @@ async function downloadChatgptConversationFileWithClient(
             if (!targetProviderFileId) return { attempted: false };
             const directUrl = '/backend-api/files/download/' + encodeURIComponent(targetProviderFileId) + '?inline=true';
             try {
-              const response = await originalFetch(directUrl, { credentials: 'include' });
+              const response = await fetchWithTimeout(
+                directUrl,
+                { credentials: 'include' },
+                'direct-fetch',
+              );
               const value = await captureDownloadResponse(response, directUrl, fileName, mimeType);
               if (value) return { attempted: true, value };
               return { attempted: true, reason: 'direct_download_json_missing_url', status: response.status };
@@ -10196,7 +10250,11 @@ async function downloadChatgptConversationFileWithClient(
 	                const navigationUrl = capturedNavigationUrl;
 	                capturedNavigationUrl = null;
 	                try {
-	                  const response = await originalFetch(navigationUrl, { credentials: 'include' });
+	                  const response = await fetchWithTimeout(
+	                    navigationUrl,
+	                    { credentials: 'include' },
+	                    'anchor-fetch',
+	                  );
 	                  const candidate = await captureDownloadResponse(
 	                      response,
 	                      navigationUrl,

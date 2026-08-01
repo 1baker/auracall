@@ -91,7 +91,7 @@ bounded timeout, while a prompt promise still resolves unchanged.
 - [x] R2 red/green regression and validation complete.
 - [x] R3 red/green regression and validation complete.
 - [x] R4 red/green regression and validation complete.
-- [ ] R5 red/green regression and validation complete.
+- [x] R5 red/green regression and validation complete.
 - [ ] Focused, adjacent, and broad provider-free validation pass.
 - [ ] Each landed repair is documented and committed with its root cause.
 - [ ] Final commits are pushed and installed with source/runtime parity.
@@ -186,3 +186,24 @@ pass, and no live/provider authority has been consumed.
 - `subagent_status`: not used.
 - `next_action_or_stop_reason`: R5 is ready; bound direct fetch, signed follow
   fetch, and response-body promises with a distinguished local timeout.
+
+## Checkpoint 5 | R5
+
+- `plan_version`: 1
+- `state_transition`: active -> awaiting-review
+- `progress_classification`: blocker_reduction
+- `evidence`: direct, anchor, and signed-follow fetches plus initial and signed-
+  follow body reads previously had no local promise deadline. The shared helper
+  now rejects a stalled stage as
+  `chatgpt_download_timeout:<stage>:<milliseconds>`, clears its timer on prompt
+  settlement, and invokes an abort callback for timed-out fetches. The exact
+  helper body is embedded in the browser capture expression; each fetch/body
+  stage is named and bounded at 10 seconds.
+- `validation`: focused red failed as expected. One allowed rework updated an
+  existing anchor-fetch expression assertion to the new bounded helper. Focused
+  timeout/expression cases pass 2/2 and the full ChatGPT adapter suite passes
+  124/124.
+- `subagent_status`: not used.
+- `next_action_or_stop_reason`: all five repair iterations are implemented.
+  Run adjacent and broad provider-free validation, update durable operator docs,
+  commit/push, install with source parity, and verify the paused runtime posture.
