@@ -1,5 +1,18 @@
 # RUNBOOK
 
+## Turn 385 | 2026-08-01
+
+- Opened Plan 0181 as a bounded successor packet for up to five additional
+  provider-free ChatGPT user-uploaded-file retrieval repairs.
+- CodeGraph audit identified five red-capable failures: discarded sanitized
+  JSON shape evidence, brittle string-reparsed availability classification,
+  generic fallback overwriting stronger failure evidence, a hung intercepted
+  response bypassing the capture deadline, and unbounded fetch/body promises.
+- Hard bound is five iterations with two implementation attempts and one rework
+  cycle each. Browser/provider attempts remain zero. Scheduler and continuous
+  live follow remain disabled and the exact transcript availability remains
+  unknown.
+
 ## Turn 384 | 2026-08-01
 
 - Repaired the provider-free ChatGPT user-uploaded-file response parser exposed
