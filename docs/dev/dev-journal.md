@@ -42393,3 +42393,25 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   files, 2,685 tests, typecheck, lint (existing warnings only), build, installed
   code parity, active service, and scheduler `paused` with no active completion.
   No browser or provider request was run.
+
+## 2026-08-01 | Plan 0180 second canary stopped on repeated payload reload
+
+- Ran exactly one authorized bounded completion on the `default` AuraCall
+  runtime profile with `maxPasses=1`; scheduler and unrelated completions stayed
+  paused.
+- Cancelled completion
+  `acctmirror_completion_a49a13cf-7cf0-42b6-851a-fac101d0e342` during pass 0
+  when the collector started a second payload-recovery reload of conversation
+  `6a303b38-a97c-8333-8103-d47ce9a110cd` 3.448 seconds after the first reload
+  completed. No materialization job or provider safety signal appeared.
+- Root cause: a null payload after the first reload caused the settled context
+  reader to call the same reload-capable helper again. Diagnostics counted only
+  completed `navigate` no-ops, leaving the in-flight repeated `reload` at zero.
+- Repair: the settled retry is direct-fetch-only through
+  `preserveActiveTab=true`; diagnostics now classify consecutive same-route
+  `navigate`/`reload` starts within five minutes. Focused suites pass 338/338;
+  the full provider-free suite passes 303 files and 2,687 tests. TypeScript,
+  production build, lint with retained warnings, plan audit, and diff hygiene
+  pass.
+- The live packet is consumed. Do not retry, resume the scheduler, or start
+  continuous live follow without a fresh explicit operator gate.

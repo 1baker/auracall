@@ -5751,7 +5751,18 @@ function summarizeAccountMirrorDiagnosticsBrowserMutations(items: unknown[]): {
 	});
 	const byKind = countBrowserMutationField(completed, "kind");
 	const bySource = countBrowserMutationField(completed, "source");
-	const duplicateSameRouteItems = completed.filter(isDuplicateSameRouteNavigationRecord);
+	const completedSameRouteItems = completed.filter(isDuplicateSameRouteNavigationRecord);
+	const completedSameRouteIds = new Set(
+		completedSameRouteItems
+			.map((item) => (isRecord(item) && typeof item.id === "string" ? item.id : null))
+			.filter((id): id is string => Boolean(id)),
+	);
+	const duplicateSameRouteItems = [
+		...completedSameRouteItems,
+		...findRepeatedSameRouteMutationAttempts(records).filter((item) => {
+			return !(isRecord(item) && typeof item.id === "string" && completedSameRouteIds.has(item.id));
+		}),
+	];
 	return {
 		total: records.length,
 		byKind,
@@ -5762,6 +5773,53 @@ function summarizeAccountMirrorDiagnosticsBrowserMutations(items: unknown[]): {
 		},
 		items: records,
 	};
+}
+
+export const summarizeAccountMirrorDiagnosticsBrowserMutationsForTest =
+	summarizeAccountMirrorDiagnosticsBrowserMutations;
+
+function findRepeatedSameRouteMutationAttempts(items: unknown[]): unknown[] {
+	const starts = items.filter((item) => {
+		const record = isRecord(item) ? item : {};
+		return record.phase === "start" && (record.kind === "navigate" || record.kind === "reload");
+	});
+	const duplicates: unknown[] = [];
+	let previous: Record<string, unknown> | null = null;
+	for (const item of starts) {
+		const current = isRecord(item) ? item : {};
+		if (previous && isRepeatedSameRouteMutationAttempt(previous, current)) {
+			duplicates.push({
+				...current,
+				duplicateReason: "repeated-same-route-attempt",
+				previousMutationId:
+					typeof previous.id === "string" && previous.id.trim() ? previous.id.trim() : null,
+			});
+		}
+		previous = current;
+	}
+	return duplicates;
+}
+
+function isRepeatedSameRouteMutationAttempt(
+	previous: Record<string, unknown>,
+	current: Record<string, unknown>,
+): boolean {
+	if (previous.kind !== current.kind || previous.source !== current.source) {
+		return false;
+	}
+	const previousUrl = normalizeBrowserMutationComparableUrl(previous.requestedUrl);
+	const currentUrl = normalizeBrowserMutationComparableUrl(current.requestedUrl);
+	if (!previousUrl || previousUrl !== currentUrl) {
+		return false;
+	}
+	const previousAt = typeof previous.at === "string" ? Date.parse(previous.at) : Number.NaN;
+	const currentAt = typeof current.at === "string" ? Date.parse(current.at) : Number.NaN;
+	return (
+		Number.isFinite(previousAt) &&
+		Number.isFinite(currentAt) &&
+		currentAt >= previousAt &&
+		currentAt - previousAt <= 5 * 60_000
+	);
 }
 
 function countBrowserMutationField(

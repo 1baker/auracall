@@ -13,14 +13,14 @@ Lane: P01
   conversation route and ungoverned recovery reloads. The deep browser-service
   repair now suppresses canonical same-route mutations and routes every actual
   navigation/reload through the existing interaction governor. Commit/install
-  parity and the collector side of the one default-profile canary are green:
-  one pass, zero duplicate same-route attempts, and no guard/rate-limit signal.
-  Its no-retry materializer failed six matched file tiles because the provider's
-  HTTP 200 JSON responses contained no download URL. Audit also proved an older
-  user-upload entry was falsely materialized with the generated exam DOCX's
-  bytes. The active provider-free gate now requires exact response identity and
-  separate provider-unavailable versus retrieval-failed classification;
-  scheduler and continuous live-follow stay paused.
+  parity and exact asset-identity repair are green. A newly authorized
+  default-profile canary then failed closed during pass 0 when payload recovery
+  started a second reload of the same conversation 3.448 seconds after the
+  first reload completed; diagnostics had not counted the in-flight repeat.
+  The provider-free repair makes the settled payload retry direct-fetch-only
+  and detects repeated same-route reload/navigation starts. Broad validation,
+  commit/install parity, and a fresh explicit authorization remain before any
+  later live proof; scheduler and continuous live-follow stay paused.
 
 - Completed provider-session authority unification:
   [docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md](docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md)

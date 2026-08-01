@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 3
+Plan version: 4
 
 ## Stable Objective
 
@@ -13,24 +13,23 @@ reenablement.
 
 ## Current State
 
-- Plan 0179 closed provider-session authority and materialization-receipt drift.
-  Its final default-account pass produced matching collector/materializer proof,
-  3 materialized assets, 1 duplicate alias, 3 skips, and 0 failures.
-- The installed API is active at PID `63017`; source and installed materializer
-  hashes match the pushed repair.
-- The account-mirror scheduler is operator-paused. Five completions remain
-  paused, including the three retained ChatGPT completions. No completion is
-  queued, running, or idle-waiting.
-- All four configured ChatGPT targets have clear provider guards and zero recent
-  rate-limit detections.
-- The final bounded default pass nevertheless recorded nine completed
-  same-route navigation mutations. Five targeted one conversation within about
-  64 seconds while the scrape budget reported only five total active provider
-  interactions.
-- All four ChatGPT runtime profiles are configured at 8 browser interactions per
-  minute with 120-second conversation-read, refresh, and renavigation cooldowns.
-  The previously proven conservative posture was 6 per minute with the same
-  action-specific cooldowns.
+- M1-M4 and M6 are installed and provider-free green. All four ChatGPT targets
+  retain the conservative 6/min interaction ceiling and 120-second action
+  cooldowns.
+- The account-mirror scheduler and five unrelated completions remain paused;
+  no queued, running, or idle-waiting work remains.
+- The single newly authorized default-profile canary
+  `acctmirror_completion_a49a13cf-7cf0-42b6-851a-fac101d0e342` was cancelled
+  fail-closed during pass 0. It issued a second payload-recovery reload for the
+  exact same conversation 3.448 seconds after the first 95.381-second reload
+  completed.
+- No materialization job, provider guard, rate-limit, CAPTCHA, verification,
+  identity conflict, or second pass occurred. The live packet is consumed and
+  must not be retried without new explicit authorization.
+- The provider-free follow-up repair makes the settled payload retry
+  direct-fetch-only and extends diagnostics to identify repeated same-route
+  `navigate` or `reload` start attempts while the second mutation is still in
+  flight. Commit/install parity remains before any future live gate.
 
 ## Architecture Decision
 
@@ -249,3 +248,36 @@ continuous live-follow reenablement remain separately gated afterward.
 - `validation`: 303 test files and 2,685 tests passed; typecheck, lint, build,
   install, installed-code parity, active service, and paused scheduler parity
   passed. No browser or provider request was run.
+
+## Checkpoint 5
+
+- `plan_version`: 4
+- `progress_classification`: live gate failed closed; bounded provider-free
+  remediation complete.
+- `live_receipt`: completion
+  `acctmirror_completion_a49a13cf-7cf0-42b6-851a-fac101d0e342` started at
+  `2026-08-01T15:52:52.389Z` and was operator-cancelled at
+  `2026-08-01T15:56:05.006Z` during `backfill_history`, before pass or
+  materialization completion. Mutation `29da5703-f6a3-45a8-b8c9-bd8d48fb097b`
+  reloaded conversation `6a303b38-a97c-8333-8103-d47ce9a110cd` from
+  `15:53:07.067Z` through `15:54:42.448Z`; mutation
+  `59e723d6-a084-4223-9bc9-6d04f4d971a0` started the same reload at
+  `15:54:45.896Z`.
+- `hard_stop_result`: scheduler stayed paused, active completion returned to
+  null, and no materialization cursor/outcome, guard, rate-limit, CAPTCHA,
+  verification, identity conflict, or second pass appeared. The diagnostics
+  counter incorrectly remained zero because it only classified completed
+  same-route `navigate` rows.
+- `repair`: the second payload probe after DOM settling now preserves the active
+  tab, allowing its authenticated direct fetch but forbidding another reload.
+  Scheduler diagnostics also classify consecutive same-source, same-kind,
+  same-route `navigate`/`reload` starts within five minutes, including an
+  in-flight second attempt.
+- `validation`: focused ChatGPT adapter, HTTP server, and scheduler diagnostics
+  suites pass 338/338. The full provider-free suite passes 303 files and 2,687
+  tests with 65 live/TTY skips; TypeScript, production build, repository lint
+  with 207 retained warning-level diagnostics, plan audit with zero validation
+  errors, and diff hygiene pass.
+- `next_gate`: commit/push, install, and prove paused runtime parity. The M5
+  acceptance box remains open; another live pass requires a new explicit
+  operator authorization and is not part of this packet.

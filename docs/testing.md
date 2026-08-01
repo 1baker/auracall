@@ -235,9 +235,11 @@
         `auracall api scheduler-diagnostics --port 8080 --provider chatgpt --runtime-profile default`
         and MCP `account_mirror_scheduler_diagnostics`
       - scheduler diagnostics browser-mutation readback includes `byKind`,
-        `bySource`, and `duplicateSameRouteAttempts` so scoped Gemini proof can
-        assert zero reloads and zero duplicate same-route navigations without
-        manually scanning raw mutation rows
+        `bySource`, and `duplicateSameRouteAttempts`; the duplicate summary
+        includes completed same-route navigation no-ops and repeated
+        same-source `navigate`/`reload` starts while the second attempt is in
+        flight, so scoped proof can fail closed without manually scanning raw
+        mutation rows
       - compact history reports `latestYield`, `yieldEvents[]`,
         queued-work owner/kind, resume cursor, and remaining detail surfaces
       - deterministic scheduler preemption proof is available with

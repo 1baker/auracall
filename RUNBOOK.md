@@ -15022,3 +15022,21 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
     app inventory, and `git diff --check` pass;
   - the one approved corrected installed-runtime refresh remains unconsumed
     until the repair is committed and installed.
+
+## Turn 340 | 2026-08-01
+
+- Ran the single authorized Plan 0180 `chatgpt/default` bounded canary with
+  `maxPasses=1`; scheduler and five unrelated completions remained paused.
+- Hard-stopped and cancelled completion
+  `acctmirror_completion_a49a13cf-7cf0-42b6-851a-fac101d0e342` during pass 0
+  after its first governed payload reload completed and a second identical
+  reload started 3.448 seconds later. No materialization job, provider guard,
+  rate limit, CAPTCHA, verification, identity conflict, or second pass occurred.
+- Provider-free repair makes the post-settle payload retry direct-fetch-only
+  and exposes consecutive same-route `navigate`/`reload` starts through
+  `duplicateSameRouteAttempts`, including an in-flight repeat.
+- Focused adapter, HTTP, and CLI suites pass 338/338; the full provider-free
+  suite passes 303 files and 2,687 tests. TypeScript, production build,
+  repository lint with retained warnings, plan audit, and diff hygiene pass.
+- Stop: the live packet is consumed. Complete commit/install paused parity, then
+  require a new explicit authorization before any further provider pass.

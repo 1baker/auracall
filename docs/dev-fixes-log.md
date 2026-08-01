@@ -19903,3 +19903,16 @@ browser-stage lifecycle observability, not transcript truncation.
   per asset, fail the aggregate truthfully, and do not retry live work. Repair
   alternate download-link discovery provider-free before spending another live
   authorization.
+
+## 2026-08-01 | A settled payload retry must not reload the same route again
+
+- Symptom: one bounded ChatGPT context read completed a 95.381-second governed
+  payload-recovery reload, then started the identical reload again 3.448 seconds
+  later while diagnostics still reported zero duplicate attempts.
+- Cause: a null payload made the post-settle retry call the same reload-capable
+  helper. The diagnostics summary inspected only completed `navigate` records,
+  so an in-flight repeated `reload` was invisible.
+- Durable rule: one conversation-context read gets at most one physical payload
+  reload. A later payload probe may retry the authenticated direct fetch but
+  must preserve the active tab. Duplicate diagnostics must reason from mutation
+  starts as well as completions so the operator can stop an in-flight repeat.

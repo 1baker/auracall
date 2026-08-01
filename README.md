@@ -857,10 +857,12 @@ Terminology note:
   reads the same scheduler diagnostics bundle exposed by the dashboard and MCP,
   including the recent in-process browser mutation audit for the selected
   provider/runtime profile when available. The mutation readback includes raw
-  items plus `byKind`, `bySource`, and duplicate same-route navigation attempt
-  counts, so scoped Gemini proof runs can distinguish rail clicks, direct
-  conversation fallback, Gem navigation, target attach/select, and reload
-  evidence without relying on browser clipboard access or attaching to CDP.
+  items plus `byKind`, `bySource`, and duplicate same-route physical mutation
+  attempt counts. Repeated same-source `navigate` or `reload` starts are visible
+  while the second attempt is still in flight, so scoped proof runs can
+  distinguish rail clicks, direct conversation fallback, Gem navigation, target
+  attach/select, and reload evidence without relying on browser clipboard access
+  or attaching to CDP.
   `/status.accountMirrorCompletions` reports completion metrics plus active and
   recent records. Completion readback hydrates terminal materialization job
   status into `materializationOutcome`, including attempted conversations,

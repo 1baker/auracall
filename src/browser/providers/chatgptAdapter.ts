@@ -2977,6 +2977,18 @@ export async function readChatgptConversationPayloadWithClient(
 	return parsePayloadBody(response?.body, response?.base64Encoded ?? false);
 }
 
+function buildChatgptPayloadDirectRetryOptions(
+	options?: BrowserProviderListOptions,
+): BrowserProviderListOptions {
+	return {
+		...options,
+		preserveActiveTab: true,
+	};
+}
+
+export const buildChatgptPayloadDirectRetryOptionsForTest =
+	buildChatgptPayloadDirectRetryOptions;
+
 export function normalizeChatgptConversationLinkProbes(
 	probes: readonly ChatgptConversationLinkProbe[],
 ): Conversation[] {
@@ -8542,7 +8554,11 @@ async function readChatgptConversationContextWithClient(
 					client,
 					conversationId,
 					projectId,
-					options,
+					// The first payload read already exhausted the single governed reload
+					// fallback for this context read. Retry the direct authenticated fetch
+					// after the conversation DOM settles without physically reloading the
+					// same route a second time.
+					buildChatgptPayloadDirectRetryOptions(options),
 				).catch(() => null);
 			}
 			const deepResearchFrameUrls = await readVisibleChatgptDeepResearchFrameUrlsWithClient(

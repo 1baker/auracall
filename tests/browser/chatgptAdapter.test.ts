@@ -7,6 +7,7 @@ import {
 	bindChatgptProviderSessionConnectionForTest,
 	buildChatgptAuthSessionIdentityExpression,
 	buildChatgptCreateProjectDialogStateExpressionForTest,
+	buildChatgptPayloadDirectRetryOptionsForTest,
 	buildChatgptUrlRouteExpressionForTest,
 	classifyChatgptBlockingSurfaceProbe,
 	clickChatgptViewerDownloadButtonWithClientForTest,
@@ -1165,6 +1166,21 @@ describe("isRetryableConnectionError", () => {
 });
 
 describe("readChatgptConversationPayloadWithClient", () => {
+	test("forces the settled payload retry onto the direct-fetch-only path", () => {
+		const interactionGovernor = { beforeInteraction: vi.fn(async () => undefined) };
+		expect(
+			buildChatgptPayloadDirectRetryOptionsForTest({
+				allowNavigation: true,
+				preserveActiveTab: false,
+				interactionGovernor,
+			}),
+		).toMatchObject({
+			allowNavigation: true,
+			preserveActiveTab: true,
+			interactionGovernor,
+		});
+	});
+
 	test("does not reload the active ChatGPT tab when preserveActiveTab is set", async () => {
 		const client = {
 			// biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names.

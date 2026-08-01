@@ -36,6 +36,7 @@ import {
 	createDefaultRuntimeRunServiceStateProbe,
 	createResponsesHttpServer,
 	serveResponsesHttp,
+	summarizeAccountMirrorDiagnosticsBrowserMutationsForTest,
 	terminateSamePortApiServeProcesses,
 } from "../src/http/responsesServer.js";
 import {
@@ -8327,6 +8328,55 @@ describe("http responses adapter", () => {
 		} finally {
 			await server.close();
 		}
+	});
+
+	it("detects an in-flight repeated same-route reload attempt", () => {
+		const firstId = "reload-1";
+		const secondId = "reload-2";
+		const requestedUrl = "https://chatgpt.com/c/conversation-1";
+		const summary = summarizeAccountMirrorDiagnosticsBrowserMutationsForTest([
+			{
+				id: firstId,
+				phase: "start",
+				kind: "reload",
+				source: "provider:chatgpt:fetch-conversation-api-payload-reload",
+				at: "2026-08-01T15:53:07.067Z",
+				requestedUrl,
+			},
+			{
+				id: firstId,
+				phase: "complete",
+				kind: "reload",
+				source: "provider:chatgpt:fetch-conversation-api-payload-reload",
+				at: "2026-08-01T15:54:42.448Z",
+				requestedUrl,
+				toUrl: requestedUrl,
+				outcome: "succeeded",
+			},
+			{
+				id: secondId,
+				phase: "start",
+				kind: "reload",
+				source: "provider:chatgpt:fetch-conversation-api-payload-reload",
+				at: "2026-08-01T15:54:45.896Z",
+				requestedUrl,
+			},
+		]);
+
+		expect(summary).toMatchObject({
+			total: 3,
+			byKind: { reload: 1 },
+			duplicateSameRouteAttempts: {
+				total: 1,
+				items: [
+					expect.objectContaining({
+						id: secondId,
+						duplicateReason: "repeated-same-route-attempt",
+						previousMutationId: firstId,
+					}),
+				],
+			},
+		});
 	});
 
 	it("returns scheduler diagnostics bundles through the API surface", async () => {
