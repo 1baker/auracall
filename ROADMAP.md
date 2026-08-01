@@ -18,9 +18,10 @@ Lane: P01
   started a second reload of the same conversation 3.448 seconds after the
   first reload completed; diagnostics had not counted the in-flight repeat.
   The provider-free repair makes the settled payload retry direct-fetch-only
-  and detects repeated same-route reload/navigation starts. Broad validation,
-  commit/install parity, and a fresh explicit authorization remain before any
-  later live proof; scheduler and continuous live-follow stay paused.
+  and detects repeated same-route reload/navigation starts. Commit `8485446c`
+  is pushed and installed at API PID `37737` with source/installed parity and
+  all pauses intact. A fresh explicit authorization remains before any later
+  live proof; scheduler and continuous live-follow stay paused.
 
 - Completed provider-session authority unification:
   [docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md](docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md)

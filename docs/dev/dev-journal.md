@@ -42415,3 +42415,8 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   pass.
 - The live packet is consumed. Do not retry, resume the scheduler, or start
   continuous live follow without a fresh explicit operator gate.
+- Committed and pushed the repair as `8485446c`, installed it into the user
+  runtime, and restarted the API from PID `14727` to PID `37737`. ChatGPT
+  adapter and response-server source/installed hashes match; restart readback
+  preserves scheduler `paused`, five paused retained completions, and no active
+  completion.

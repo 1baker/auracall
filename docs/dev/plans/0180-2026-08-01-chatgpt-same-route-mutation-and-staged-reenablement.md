@@ -29,7 +29,8 @@ reenablement.
 - The provider-free follow-up repair makes the settled payload retry
   direct-fetch-only and extends diagnostics to identify repeated same-route
   `navigate` or `reload` start attempts while the second mutation is still in
-  flight. Commit/install parity remains before any future live gate.
+  flight. Commit `8485446c` is pushed and installed under API PID `37737` with
+  scheduler and completion pauses intact.
 
 ## Architecture Decision
 
@@ -278,6 +279,13 @@ continuous live-follow reenablement remain separately gated afterward.
   tests with 65 live/TTY skips; TypeScript, production build, repository lint
   with 207 retained warning-level diagnostics, plan audit with zero validation
   errors, and diff hygiene pass.
-- `next_gate`: commit/push, install, and prove paused runtime parity. The M5
-  acceptance box remains open; another live pass requires a new explicit
-  operator authorization and is not part of this packet.
+- `installed_evidence`: commit `8485446c` is pushed at ahead/behind `0/0` and
+  installed under active API PID `37737`. Source/installed SHA-256 parity is
+  `17e91822f828db82250ed6403f5bcd57bcdf9e5c1ae14f0ead3981e140478b3d`
+  for the ChatGPT adapter and
+  `a6b0a58ff7410f08e4ab65562cbd4d55c3b935d3af5d7e09a99a5897c1267151`
+  for the response server. Restart readback reports scheduler `paused`, five
+  active records all paused, and `activeCompletionId=null`.
+- `next_gate`: the M5 acceptance box remains open. Another live pass requires a
+  new explicit operator authorization and is not part of this packet;
+  scheduler/continuous re-enablement remains prohibited before that proof.
