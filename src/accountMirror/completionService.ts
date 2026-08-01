@@ -438,10 +438,8 @@ export function createAccountMirrorCompletionService(input: {
 				let operation = operations.get(id);
 				if (!operation) return;
 				let pass = operation.passCount;
-				if (!(operation.maxPasses === null || pass < operation.maxPasses)) break;
 				if (!shouldContinue(id)) return;
 				if (
-					operation.mode === "live_follow" &&
 					operation.materializationCursor &&
 					(!isTerminalMaterializationStatus(operation.materializationCursor.jobStatus) ||
 						!operation.materializationCursor.providerWorkSettledAt)
@@ -478,6 +476,7 @@ export function createAccountMirrorCompletionService(input: {
 						return blocked;
 					}
 				}
+				if (!(operation.maxPasses === null || pass < operation.maxPasses)) break;
 				if (
 					operation.mode === "live_follow" &&
 					isTerminalMaterializationStatus(operation.materializationCursor?.jobStatus ?? "") &&
@@ -815,6 +814,7 @@ export function createAccountMirrorCompletionService(input: {
 					});
 					return;
 				}
+				if (queuedCompletionMaterialization) continue;
 				if (refresh.mirrorCompleteness.state === "complete") {
 					const latest = operations.get(id);
 					if (

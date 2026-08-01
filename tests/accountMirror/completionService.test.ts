@@ -663,6 +663,7 @@ describe("account mirror completion service", () => {
 
 	test("retains provider ownership until completion-owned materialization settles", async () => {
 		let materializationSettled = false;
+		let currentTimeMs = Date.parse("2026-07-23T12:00:00.000Z");
 		const refreshOrder: string[] = [];
 		const requestRefresh = vi.fn(async (request?: { runtimeProfileId?: string | null }) => {
 			const runtimeProfileId = request?.runtimeProfileId ?? "default";
@@ -710,9 +711,10 @@ describe("account mirror completion service", () => {
 			}),
 			refreshService: { requestRefresh },
 			historyMaterializationService: { createJob, readJob },
-			now: () => new Date("2026-07-23T12:00:00.000Z"),
+			now: () => new Date(currentTimeMs),
 			generateId: () => ids.shift() ?? "unexpected_completion_id",
-			sleep: async () => {
+			sleep: async (ms) => {
+				currentTimeMs += ms;
 				await new Promise((resolve) => setTimeout(resolve, 1));
 			},
 		});
@@ -2145,7 +2147,7 @@ describe("account mirror completion service", () => {
 		service.control({ id: "acctmirror_progress_events", action: "cancel" });
 	});
 
-	test("full-sweep live follow queues snapshot-refresh history materialization after a refresh pass", async () => {
+	test("bounded full-sweep blocks when its owned history materialization fails", async () => {
 		const pacedConfig = {
 			runtimeProfiles: {
 				default: {
@@ -2173,6 +2175,22 @@ describe("account mirror completion service", () => {
 				object: "history_materialization_job" as const,
 				id: "hmj_full_sweep_1",
 				status: "queued",
+			},
+		}));
+		const readJob = vi.fn(async () => ({
+			id: "hmj_full_sweep_1",
+			status: "failed",
+			completedAt: "2026-04-30T12:00:08.000Z",
+			result: {
+				metrics: { conversations: 1, materialized: 0, skipped: 0, failed: 1 },
+				entries: [
+					{
+						status: "failed",
+						reason: "json_missing_download_url",
+						failureKind: "retrieval_failed",
+					},
+				],
+				message: "History reconciliation failed to retrieve 1 asset.",
 			},
 		}));
 		const requestRefresh = vi.fn(async () => ({
@@ -2204,6 +2222,7 @@ describe("account mirror completion service", () => {
 			},
 			historyMaterializationService: {
 				createJob,
+				readJob,
 			},
 			now: () => new Date("2026-04-30T12:00:00.000Z"),
 			generateId: () => "acctmirror_full_sweep",
@@ -2218,7 +2237,7 @@ describe("account mirror completion service", () => {
 			materializationMaxItems: 2,
 		});
 
-		await waitFor(() => service.read("acctmirror_full_sweep")?.status === "completed");
+		await waitFor(() => service.read("acctmirror_full_sweep")?.status === "blocked");
 
 		expect(requestRefresh).toHaveBeenCalledWith(
 			expect.objectContaining({
@@ -2246,13 +2265,15 @@ describe("account mirror completion service", () => {
 			maxItems: 2,
 			force: false,
 		});
+		expect(readJob).toHaveBeenCalledTimes(1);
 		expect(service.read("acctmirror_full_sweep")).toMatchObject({
-			status: "completed",
+			status: "blocked",
 			sweepMode: "full_sweep",
 			materializationPolicy: "full_missing_assets",
 			materializationCursor: {
 				jobId: "hmj_full_sweep_1",
-				jobStatus: "queued",
+				jobStatus: "failed",
+				providerWorkSettledAt: "2026-04-30T12:00:08.000Z",
 				passCount: 1,
 				request: {
 					reconcile: true,
@@ -2270,6 +2291,16 @@ describe("account mirror completion service", () => {
 					maxItems: 2,
 				},
 			},
+			materializationOutcome: {
+				materialized: 0,
+				failed: 1,
+				dispositionCounts: {
+					retrieval_failed: 1,
+				},
+			},
+			error: {
+				code: "account_mirror_materialization_failed",
+			},
 		});
 		expect(
 			registry.readStatus({ provider: "chatgpt", runtimeProfileId: "default" }).entries[0],
@@ -2280,7 +2311,8 @@ describe("account mirror completion service", () => {
 				cursors: {
 					materialization: {
 						status: "pending",
-						reason: "queued materialization job hmj_full_sweep_1 with status queued",
+						reason:
+							"materialization job hmj_full_sweep_1 finished with status failed; materialized=0 failed=1",
 					},
 				},
 			},
@@ -2290,6 +2322,7 @@ describe("account mirror completion service", () => {
 				state: expect.objectContaining({
 					backfillLedger: expect.objectContaining({
 						nextEligiblePhase: "materialization",
+						state: "in_progress",
 					}),
 				}),
 			}),
@@ -3412,6 +3445,16 @@ describe("account mirror completion service", () => {
 				status: "queued",
 			},
 		}));
+		const readJob = vi.fn(async () => ({
+			id: "hmj_upgrade_claim",
+			status: "succeeded",
+			completedAt: "2026-04-30T12:00:04.000Z",
+			result: {
+				metrics: { conversations: 1, materialized: 1, skipped: 0, failed: 0 },
+				entries: [{ status: "materialized", checksumSha256: "abc123" }],
+				message: "History reconciliation materialized 1 asset.",
+			},
+		}));
 		const sleep = vi.fn(() => new Promise<void>(() => {}));
 		const service = createAccountMirrorCompletionService({
 			registry: createAccountMirrorStatusRegistry({
@@ -3423,6 +3466,7 @@ describe("account mirror completion service", () => {
 			},
 			historyMaterializationService: {
 				createJob,
+				readJob,
 			},
 			initialOperations: [initial],
 			resumeActiveOperations: true,
