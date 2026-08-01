@@ -16,9 +16,11 @@ Lane: P01
   parity and the collector side of the one default-profile canary are green:
   one pass, zero duplicate same-route attempts, and no guard/rate-limit signal.
   Its no-retry materializer failed six matched file tiles because the provider's
-  HTTP 200 JSON responses contained no download URL. A provider-free download-
-  discovery repair is now required; scheduler and continuous live-follow stay
-  paused.
+  HTTP 200 JSON responses contained no download URL. Audit also proved an older
+  user-upload entry was falsely materialized with the generated exam DOCX's
+  bytes. The active provider-free gate now requires exact response identity and
+  separate provider-unavailable versus retrieval-failed classification;
+  scheduler and continuous live-follow stay paused.
 
 - Completed provider-session authority unification:
   [docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md](docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md)

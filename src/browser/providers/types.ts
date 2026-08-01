@@ -153,7 +153,9 @@ export type BrowserProviderConversationFileDownloadResult =
 			fileId: string;
 			status: "error";
 			error: string;
-	  };
+			failureKind?: "provider_unavailable" | "retrieval_failed";
+			retryable?: boolean;
+		};
 
 export interface BrowserProvider {
 	id: BrowserProviderConfig["id"];

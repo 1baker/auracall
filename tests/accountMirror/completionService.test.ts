@@ -3019,9 +3019,14 @@ describe("account mirror completion service", () => {
 					{
 						status: "failed",
 						reason: "conversation-not-found-or-unavailable: deleted conversation",
+						failureKind: "provider_unavailable",
 					},
 					{ status: "skipped", reason: "unsupported remote media asset" },
-					{ status: "failed", reason: "missing provider download link" },
+					{
+						status: "failed",
+						reason: "missing provider download link",
+						failureKind: "retrieval_failed",
+					},
 					{ status: "failed", reason: "provider call timed out; retry allowed" },
 				],
 				snapshotRefreshes: [
@@ -3094,9 +3099,9 @@ describe("account mirror completion service", () => {
 				dispositionCounts: {
 					materialized: 3,
 					duplicate: 1,
-					terminal: 1,
+					provider_unavailable: 1,
 					unsupported_remote_media: 1,
-					missing_provider_link: 1,
+					retrieval_failed: 1,
 					retryable: 1,
 				},
 			},

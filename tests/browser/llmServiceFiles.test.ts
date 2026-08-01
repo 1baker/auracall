@@ -1388,6 +1388,68 @@ describe("llmService project file cache writes", () => {
 		}
 	});
 
+	test("persists provider-unavailable separately from an unsuccessful retrieval", async () => {
+		const homeDir = await mkdtemp(path.join(os.tmpdir(), "auracall-llm-file-failure-kind-"));
+		setAuracallHomeDirOverrideForTest(homeDir);
+		const cacheContext: ProviderCacheContext = {
+			provider: "chatgpt",
+			userConfig: {} as ProviderCacheContext["userConfig"],
+			listOptions: {},
+			identityKey: "cache-test@example.com",
+		};
+		const files: FileRef[] = [
+			{ id: "file-gone", name: "gone.docx", provider: "chatgpt", source: "conversation" },
+			{ id: "file-unknown", name: "unknown.docx", provider: "chatgpt", source: "conversation" },
+		];
+		const provider = {
+			id: "chatgpt",
+			config: { id: "chatgpt", selectors: {} as never },
+			listConversationFiles: vi.fn(async () => files),
+			downloadConversationFiles: vi.fn(async () => [
+				{
+					fileId: "file-gone",
+					status: "error" as const,
+					error: "provider returned 404 file not found",
+					failureKind: "provider_unavailable" as const,
+					retryable: false,
+				},
+				{
+					fileId: "file-unknown",
+					status: "error" as const,
+					error: "HTTP 200 JSON contained no download URL",
+					failureKind: "retrieval_failed" as const,
+					retryable: false,
+				},
+			]),
+		};
+		const service = new TestLlmService(provider as never, new JsonCacheStore(), cacheContext);
+
+		try {
+			const result = await service.materializeConversationFiles("conversation-failure-kind", {
+				listOptions: {},
+			});
+			const manifest = JSON.parse(await readFile(result.manifestPath as string, "utf8")) as {
+				entries: Array<Record<string, unknown>>;
+			};
+			expect(manifest.entries).toEqual([
+				expect.objectContaining({
+					fileId: "file-gone",
+					status: "error",
+					failureKind: "provider_unavailable",
+					retryable: false,
+				}),
+				expect.objectContaining({
+					fileId: "file-unknown",
+					status: "error",
+					failureKind: "retrieval_failed",
+					retryable: false,
+				}),
+			]);
+		} finally {
+			await rm(homeDir, { recursive: true, force: true });
+		}
+	});
+
 	test("materializeConversationFiles reuses file inventory from an already-refreshed context", async () => {
 		const homeDir = await mkdtemp(path.join(os.tmpdir(), "auracall-llm-files-refreshed-cache-"));
 		setAuracallHomeDirOverrideForTest(homeDir);

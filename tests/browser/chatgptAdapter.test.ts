@@ -327,6 +327,179 @@ describe("fetchChatgptBinaryWithClient", () => {
 });
 
 describe("downloadChatgptConversationFilesWithClient", () => {
+	test("rejects a captured download whose response filename belongs to another asset", async () => {
+		const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-chatgpt-file-identity-"));
+		const destPath = path.join(tempDir, "uploaded-transcript.docx");
+		const evaluate = vi.fn(async (input: { expression?: string }) => {
+			const expression = input.expression ?? "";
+			if (expression.includes("captureDownloadResponse")) {
+				return {
+					result: {
+						value: {
+							ok: true,
+							status: 200,
+							url: "https://chatgpt.com/backend-api/estuary/content?id=file_generated_exam",
+							contentType:
+								"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+							contentDisposition: 'attachment; filename="generated-exam.docx"',
+							byteLength: 4,
+							base64: Buffer.from("exam", "utf8").toString("base64"),
+							captureTransport: "fetch",
+						},
+					},
+				};
+			}
+			if (expression.includes("hasTurns")) {
+				return {
+					result: { value: { href: "https://chatgpt.com/c/conversation-file-identity" } },
+				};
+			}
+			return { result: { value: [] } };
+		});
+		const file: FileRef = {
+			id: "conversation-file-identity:turn:0:uploaded-transcript.docx",
+			name: "uploaded-transcript.docx",
+			provider: "chatgpt",
+			source: "conversation",
+			metadata: { providerFileId: "file_uploaded_transcript" },
+		};
+
+		try {
+			const result = await downloadChatgptConversationFilesWithClientForTest(
+				// biome-ignore lint/style/useNamingConvention: CDP client shape uses Runtime.
+				{ Runtime: { evaluate } } as never,
+				"conversation-file-identity",
+				[{ file, destPath }],
+				null,
+				undefined,
+				{ preserveActiveTab: true },
+			);
+
+			expect(result).toEqual([
+				expect.objectContaining({
+					fileId: file.id,
+					status: "error",
+					error: expect.stringContaining("captured_asset_identity_mismatch"),
+				}),
+			]);
+			await expect(fs.stat(destPath)).rejects.toMatchObject({ code: "ENOENT" });
+		} finally {
+			await fs.rm(tempDir, { recursive: true, force: true });
+		}
+	});
+
+	test("scopes the fallback Download control to the viewer opened by the matched file tile", async () => {
+		const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-chatgpt-viewer-scope-"));
+		const destPath = path.join(tempDir, "uploaded-transcript.docx");
+		let downloadExpression = "";
+		const evaluate = vi.fn(async (input: { expression?: string }) => {
+			const expression = input.expression ?? "";
+			if (expression.includes("captureDownloadResponse")) {
+				downloadExpression = expression;
+				return {
+					result: {
+						value: {
+							ok: true,
+							status: 200,
+							url: "https://chatgpt.com/backend-api/estuary/content?id=file_uploaded",
+							contentDisposition: 'attachment; filename="uploaded-transcript.docx"',
+							byteLength: 4,
+							base64: Buffer.from("body", "utf8").toString("base64"),
+							captureTransport: "fetch",
+						},
+					},
+				};
+			}
+			if (expression.includes("hasTurns")) {
+				return { result: { value: { href: "https://chatgpt.com/c/conversation-viewer-scope" } } };
+			}
+			return { result: { value: [] } };
+		});
+		const file: FileRef = {
+			id: "conversation-viewer-scope:turn:0:uploaded-transcript.docx",
+			name: "uploaded-transcript.docx",
+			provider: "chatgpt",
+			source: "conversation",
+			metadata: { providerFileId: "file_uploaded" },
+		};
+
+		try {
+			await expect(
+				downloadChatgptConversationFilesWithClientForTest(
+					// biome-ignore lint/style/useNamingConvention: CDP client shape uses Runtime.
+					{ Runtime: { evaluate } } as never,
+					"conversation-viewer-scope",
+					[{ file, destPath }],
+					null,
+					undefined,
+					{ preserveActiveTab: true },
+				),
+			).resolves.toEqual([{ fileId: file.id, status: "materialized" }]);
+			expect(downloadExpression).toContain("const viewerSurface =");
+			expect(downloadExpression).toContain("viewerSurface.querySelectorAll");
+			expect(downloadExpression).not.toContain(
+				"Array.from(document.querySelectorAll('button, [role=\"button\"], a'))",
+			);
+		} finally {
+			await fs.rm(tempDir, { recursive: true, force: true });
+		}
+	});
+
+	test("distinguishes provider-confirmed file unavailability from retrieval failure", async () => {
+		const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-chatgpt-unavailable-"));
+		const file: FileRef = {
+			id: "conversation-unavailable:turn:0:deleted-upload.docx",
+			name: "deleted-upload.docx",
+			provider: "chatgpt",
+			source: "conversation",
+			metadata: { providerFileId: "file_deleted_upload" },
+		};
+		const evaluate = vi.fn(async (input: { expression?: string }) => {
+			const expression = input.expression ?? "";
+			if (expression.includes("captureDownloadResponse")) {
+				return {
+					result: {
+						value: {
+							ok: false,
+							reason: "json_missing_download_url",
+							status: 404,
+							endpointKind: "files-download",
+							contentType: "application/json",
+							providerError: { detail: "File not found or no longer available." },
+						},
+					},
+				};
+			}
+			if (expression.includes("hasTurns")) {
+				return { result: { value: { href: "https://chatgpt.com/c/conversation-unavailable" } } };
+			}
+			return { result: { value: [] } };
+		});
+
+		try {
+			await expect(
+				downloadChatgptConversationFilesWithClientForTest(
+					// biome-ignore lint/style/useNamingConvention: CDP client shape uses Runtime.
+					{ Runtime: { evaluate } } as never,
+					"conversation-unavailable",
+					[{ file, destPath: path.join(tempDir, file.name) }],
+					null,
+					undefined,
+					{ preserveActiveTab: true },
+				),
+			).resolves.toEqual([
+				expect.objectContaining({
+					fileId: file.id,
+					status: "error",
+					failureKind: "provider_unavailable",
+					retryable: false,
+				}),
+			]);
+		} finally {
+			await fs.rm(tempDir, { recursive: true, force: true });
+		}
+	});
+
 	test("checks readiness once and sequentially downloads twelve files on one client", async () => {
 		const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-chatgpt-batch-"));
 		const scrapeTelemetry = createBrowserScrapeTelemetryRecorder();
@@ -335,11 +508,13 @@ describe("downloadChatgptConversationFilesWithClient", () => {
 			const expression = input.expression ?? "";
 			expressions.push(expression);
 			if (expression.includes("captureDownloadResponse")) {
+				const providerFileId = expression.match(/file_\d+/)?.[0] ?? "unknown";
 				return {
 					result: {
 						value: {
 							ok: true,
 							status: 200,
+							url: `https://chatgpt.com/backend-api/files/download/${providerFileId}`,
 							byteLength: 4,
 							base64: Buffer.from("body", "utf8").toString("base64"),
 						},

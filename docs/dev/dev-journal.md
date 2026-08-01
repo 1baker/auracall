@@ -42370,3 +42370,26 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   `missing_provider_link`. No retry is authorized. Provider-free download
   discovery repair is the next gate; scheduler and continuous live-follow stay
   paused.
+- An attempted follow-up confirmation incorrectly used the live `wsl-chrome-3`
+  managed browser profile instead of the `default` managed browser profile that
+  produced the job. Its `conversation_inaccessible` response proves only that
+  the wrong ChatGPT account cannot open this conversation and is not evidence
+  about the default account; the temporary tab was closed without a download.
+- Local archive evidence confirms a split outcome for the exam-writing chat:
+  the generated exam DOCX was successfully materialized, while the six missing
+  user-uploaded transcript DOCX files failed through `files-download`. One older
+  transcript entry marked `materialized` is invalid: its bytes and SHA-256 are
+  identical to the generated exam DOCX, proving cross-asset aliasing. Treat
+  source-file retrieval and generated-artifact retrieval as distinct repair
+  lanes, and do not accept filename/status alone as materialization proof.
+- Completed Plan 0180 M6 provider-free repair. The ChatGPT adapter now scopes
+  fallback Download controls to one viewer dialog and validates captured bytes
+  against the requested provider file id or exact response filename before any
+  write. File manifests, history results, completion receipts, and recovery
+  planning preserve `provider_unavailable` versus `retrieval_failed`.
+- Quarantined the false January transcript archive association without deleting
+  its 99,476-byte evidence file or modifying the valid generated exam artifact.
+  Rebuilt and installed the user runtime/service. Validation passed: 303 test
+  files, 2,685 tests, typecheck, lint (existing warnings only), build, installed
+  code parity, active service, and scheduler `paused` with no active completion.
+  No browser or provider request was run.

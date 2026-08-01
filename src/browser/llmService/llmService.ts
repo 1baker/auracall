@@ -161,6 +161,8 @@ type ConversationFileFetchManifestEntry = {
 	size?: number;
 	materializationMethod?: string;
 	error?: string;
+	failureKind?: "provider_unavailable" | "retrieval_failed";
+	retryable?: boolean;
 };
 
 type ConversationFileFetchManifest = {
@@ -2076,6 +2078,10 @@ export abstract class LlmService {
 			const recordFailedTransfer = (
 				transfer: BrowserProviderConversationFileDownloadInput,
 				error: unknown,
+				failure?: Pick<
+					Extract<BrowserProviderConversationFileDownloadResult, { status: "error" }>,
+					"failureKind" | "retryable"
+				>,
 			): void => {
 				manifestEntries.push({
 					fileId: transfer.file.id,
@@ -2084,6 +2090,13 @@ export abstract class LlmService {
 					remoteUrl: transfer.file.remoteUrl ?? null,
 					mimeType: transfer.file.mimeType,
 					error: normalizeArtifactFetchError(error),
+					failureKind: failure?.failureKind ?? "retrieval_failed",
+					retryable:
+						typeof failure?.retryable === "boolean"
+							? failure.retryable
+							: /rate limit|cooldown|timed out|timeout|temporar(?:y|ily)|try again/i.test(
+									normalizeArtifactFetchError(error),
+								),
 				});
 			};
 			if (pendingTransfers.length > 0 && this.provider.downloadConversationFiles) {
@@ -2125,6 +2138,7 @@ export abstract class LlmService {
 						outcome?.status === "error"
 							? outcome.error
 							: `Provider batch returned no result for ${transfer.file.id}.`,
+						outcome?.status === "error" ? outcome : undefined,
 					);
 				}
 			} else {

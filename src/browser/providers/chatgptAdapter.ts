@@ -9654,6 +9654,75 @@ function resolveChatgptConversationProviderFileId(fileId: string, file?: FileRef
 	return direct ? normalizeUiText(direct) : null;
 }
 
+function readChatgptContentDispositionFileName(value: unknown): string | null {
+	if (typeof value !== "string" || !value.trim()) return null;
+	const encoded = value.match(/filename\*\s*=\s*UTF-8''([^;]+)/i)?.[1];
+	const quoted = value.match(/filename\s*=\s*"([^"]+)"/i)?.[1];
+	const bare = value.match(/filename\s*=\s*([^;]+)/i)?.[1];
+	const candidate = encoded ?? quoted ?? bare ?? null;
+	if (!candidate) return null;
+	const normalized = candidate.trim().replace(/^['"]|['"]$/g, "");
+	try {
+		return normalizeUiText(decodeURIComponent(normalized)) || null;
+	} catch {
+		return normalizeUiText(normalized) || null;
+	}
+}
+
+function validateChatgptCapturedFileIdentity(input: {
+	captured: Record<string, unknown>;
+	targetProviderFileId: string | null;
+	targetName: string | null;
+}): string | null {
+	const capturedUrl = normalizeUiText(
+		typeof input.captured.url === "string" ? input.captured.url : null,
+	);
+	if (
+		input.targetProviderFileId &&
+		/\/backend-api\/files\/download\//.test(capturedUrl) &&
+		capturedUrl.includes(encodeURIComponent(input.targetProviderFileId))
+	) {
+		return null;
+	}
+	const responseName = readChatgptContentDispositionFileName(
+		input.captured.contentDisposition,
+	);
+	if (
+		input.targetName &&
+		responseName &&
+		normalizeFileKey(responseName) === normalizeFileKey(input.targetName)
+	) {
+		return null;
+	}
+	return `captured_asset_identity_mismatch: requested=${input.targetName ?? input.targetProviderFileId ?? "unknown"} response=${responseName ?? (capturedUrl || "unknown")}`;
+}
+
+function classifyChatgptFileRetrievalFailure(error: unknown): {
+	failureKind: "provider_unavailable" | "retrieval_failed";
+	retryable: boolean;
+} {
+	const message = error instanceof Error ? error.message : String(error);
+	const status = Number.parseInt(message.match(/"status":(\d{3})/)?.[1] ?? "", 10);
+	const providerUnavailable =
+		status === 404 ||
+		status === 410 ||
+		/\b(?:file|asset)\b[^.]{0,80}\b(?:not found|no longer available|unavailable|deleted|expired|does not exist)\b/i.test(
+			message,
+		);
+	const retryable =
+		status === 408 ||
+		status === 425 ||
+		status === 429 ||
+		status >= 500 ||
+		/\b(?:rate limit|cooldown|timed out|timeout|temporar(?:y|ily)|try again|connection closed)\b/i.test(
+			message,
+		);
+	return {
+		failureKind: providerUnavailable ? "provider_unavailable" : "retrieval_failed",
+		retryable: providerUnavailable ? false : retryable,
+	};
+}
+
 async function downloadChatgptConversationFileWithClient(
 	client: ChromeClient,
 	conversationId: string,
@@ -9861,7 +9930,11 @@ async function downloadChatgptConversationFileWithClient(
 	            '',
 	          );
 	          const clickViewerDownload = () => {
-	            const controls = Array.from(document.querySelectorAll('button, [role="button"], a'))
+	            const viewerSurfaces = Array.from(document.querySelectorAll('[role="dialog"]'))
+	              .filter((node) => isVisible(node));
+	            if (viewerSurfaces.length !== 1) return false;
+	            const viewerSurface = viewerSurfaces[0];
+	            const controls = Array.from(viewerSurface.querySelectorAll('button, [role="button"], a'))
 	              .filter((node) => node !== target && isVisible(node))
 	              .map((node) => ({ node, label: labelFor(node) }));
 	            const download = controls.find((entry) => /^Download$/i.test(entry.label));
@@ -10044,6 +10117,15 @@ async function downloadChatgptConversationFileWithClient(
 			};
 			throw new Error(`ChatGPT conversation file fetch failed: ${JSON.stringify(diagnostics)}`);
 		}
+		const identityFailure = validateChatgptCapturedFileIdentity({
+			captured: value,
+			targetProviderFileId,
+			targetName,
+		});
+		if (identityFailure) {
+			recordBrowserScrapeDownloadFailure(options);
+			throw new Error(`ChatGPT conversation file fetch failed: ${identityFailure}`);
+		}
 		if (
 			value.captureTransport === "anchor" ||
 			value.captureTransport === "fetch" ||
@@ -10115,10 +10197,12 @@ async function downloadChatgptConversationFilesWithClient(
 					);
 					results.push({ fileId: item.file.id, status: "materialized" });
 				} catch (error) {
+					const failure = classifyChatgptFileRetrievalFailure(error);
 					results.push({
 						fileId: item.file.id,
 						status: "error",
 						error: error instanceof Error ? error.message : String(error),
+						...failure,
 					});
 				}
 			}

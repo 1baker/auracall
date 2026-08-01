@@ -1,5 +1,19 @@
 # RUNBOOK
 
+## Turn 381 | 2026-08-01
+
+- Plan 0180 M6 is implemented and installed. ChatGPT file materialization now
+  fails closed on cross-asset response identity, and operator readbacks separate
+  provider-confirmed unavailability from unsuccessful retrieval with unknown
+  availability. The false January transcript association is quarantined while
+  its bytes/checksum remain preserved as evidence; the valid generated exam
+  DOCX remains materialized.
+- Provider-free validation passed 303 test files/2,685 tests, typecheck, lint,
+  build, installed-code parity, and active-service checks. Installed scheduler
+  readback remains `paused`, with no active ChatGPT completion and zero duplicate
+  same-route attempts. Do not run another browser canary or re-enable continuous
+  live follow without the next explicit Plan 0180 gate.
+
 ## Turn 380 | 2026-08-01
 
 - Opened Plan 0180 for the rate-limit-safe ChatGPT re-enablement boundary.
@@ -46,6 +60,14 @@
   the provider guard and rate-limit detection remain clear. The canary is
   consumed and must not be retried. Plan 0180 remains OPEN for a provider-free
   asset-download discovery repair before any new live gate.
+- Corrected follow-up evidence: the failed canary and prior successful job used
+  the `default` runtime/browser profile, so a probe against `wsl-chrome-3` did
+  not test the owning account. Local hashes prove the generated exam DOCX is
+  valid and retrievable, but the January transcript entry marked materialized
+  contains the identical exam bytes. Plan 0180 version 3 adds a provider-free
+  exact-identity repair plus explicit provider-unavailable versus
+  retrieval-failed classification. No browser retry or reenablement is in this
+  packet.
 
 ## Turn 379 | 2026-07-31
 

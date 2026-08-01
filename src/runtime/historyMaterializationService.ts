@@ -116,6 +116,8 @@ export interface HistoryMaterializationManifestEntry {
 	size: number | null;
 	materializationMethod: string | null;
 	reason: string | null;
+	failureKind?: "provider_unavailable" | "retrieval_failed" | null;
+	retryable?: boolean | null;
 	archiveItemId: string | null;
 	assetRoute: string | null;
 }
@@ -4976,6 +4978,8 @@ type FileManifestEntry = {
 	size?: number;
 	materializationMethod?: string;
 	error?: string;
+	failureKind?: "provider_unavailable" | "retrieval_failed";
+	retryable?: boolean;
 };
 
 async function readArtifactManifestEntries(
@@ -5016,6 +5020,11 @@ async function readFileManifestEntries(manifestPath: string | null): Promise<Fil
 		size: readNumber(entry.size) ?? undefined,
 		materializationMethod: readRecordString(entry, ["materializationMethod"]) ?? undefined,
 		error: readRecordString(entry, ["error"]) ?? undefined,
+		failureKind:
+			entry.failureKind === "provider_unavailable" || entry.failureKind === "retrieval_failed"
+				? entry.failureKind
+				: undefined,
+		retryable: typeof entry.retryable === "boolean" ? entry.retryable : undefined,
 	}));
 }
 
@@ -5084,6 +5093,8 @@ async function historyEntryFromFileManifest(
 		size: readNumber(entry.size),
 		materializationMethod: entry.materializationMethod ?? null,
 		reason: entry.status === "materialized" ? null : (entry.error ?? entry.status),
+		failureKind: entry.status === "materialized" ? null : (entry.failureKind ?? "retrieval_failed"),
+		retryable: entry.status === "materialized" ? null : (entry.retryable ?? false),
 		archiveItemId: null,
 		assetRoute: null,
 	};

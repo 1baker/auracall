@@ -1,3 +1,14 @@
+- 2026-08-01: ChatGPT file materialization must bind captured bytes to the
+  requested asset before writing them. Scope a fallback `Download` control to
+  the single viewer dialog opened from the matched file tile, then require the
+  exact provider file id in a files-download response or an exact normalized
+  response filename. A global Download button and any Estuary content URL are
+  not identity proof. Persist `provider_unavailable` only for provider-confirmed
+  404/410 or explicit deleted/expired/not-found evidence; missing URLs, tile
+  misses, identity mismatches, and other unsuccessful transfers are
+  `retrieval_failed`. Recovery plans expose those rows as blocked diagnostic
+  work rather than terminal unavailable work.
+
 - 2026-07-29: ChatGPT developer-app OAuth create cannot infer a human gate from
   the requested auth mode alone. Snapshot page targets before the trusted
   Create click, require a fresh changed/new OAuth or human-action navigation

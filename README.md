@@ -547,6 +547,9 @@ Terminology note:
   candidates before queuing provider work. Candidate rows classify
   remote-known missing local assets, unknown/deferred inventory, blocked
   targets, evidence confidence, and the explicit recovery action to take.
+  `retrievalFailed` means AuraCall did not obtain verified bytes and does not
+  prove the provider asset is unavailable; only provider-confirmed 404/410 or
+  explicit deleted/expired/not-found evidence is terminal unavailability.
   History-backed materialization is an explicit separate job surface:
   `POST /v1/account-mirrors/materializations` queues a durable
   `history_materialization_job` by provider conversation id, account-mirror

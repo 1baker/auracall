@@ -1677,20 +1677,26 @@ function countMaterializationDispositions(entries: unknown[]): Record<string, nu
 	for (const entry of entries) {
 		const status = readNestedString(entry, ["status"]) ?? "unknown";
 		const reason = (readNestedString(entry, ["reason"]) ?? "").toLowerCase();
+		const failureKind = readNestedString(entry, ["failureKind"]);
 		const disposition =
-			status === "materialized"
-				? "materialized"
-				: status === "duplicate" || reason.includes("already_materialized")
-					? "duplicate"
-					: reason.includes("conversation-not-found-or-unavailable")
-						? "terminal"
-						: reason.includes("unsupported") && reason.includes("remote")
-							? "unsupported_remote_media"
-							: reason.includes("missing") && (reason.includes("link") || reason.includes("url"))
-								? "missing_provider_link"
-								: /rate limit|cooldown|timed out|timeout|retry/.test(reason)
-									? "retryable"
-									: status;
+			failureKind === "provider_unavailable"
+				? "provider_unavailable"
+				: failureKind === "retrieval_failed"
+					? "retrieval_failed"
+					: status === "materialized"
+						? "materialized"
+						: status === "duplicate" || reason.includes("already_materialized")
+							? "duplicate"
+							: reason.includes("conversation-not-found-or-unavailable")
+								? "terminal"
+								: reason.includes("unsupported") && reason.includes("remote")
+									? "unsupported_remote_media"
+									: reason.includes("missing") &&
+											(reason.includes("link") || reason.includes("url"))
+										? "missing_provider_link"
+										: /rate limit|cooldown|timed out|timeout|retry/.test(reason)
+											? "retryable"
+											: status;
 		counts[disposition] = (counts[disposition] ?? 0) + 1;
 	}
 	return counts;

@@ -111,6 +111,7 @@ export interface AccountMirrorArtifactRecoveryCandidate {
     duplicateAliases: AssetCounts;
     unsupportedMetadataOnly: AssetCounts;
     staticFalsePositive: AssetCounts;
+    retrievalFailed: AssetCounts;
     failedTerminal: AssetCounts;
     accountLibrary: AccountLibraryRecoveryCounts;
   };
@@ -165,6 +166,7 @@ export interface AccountMirrorArtifactRecoveryPlanResult {
     duplicateAliases: AssetCounts;
     unsupportedMetadataOnly: AssetCounts;
     staticFalsePositive: AssetCounts;
+    retrievalFailed: AssetCounts;
     failedTerminal: AssetCounts;
     accountLibrary: AccountLibraryRecoveryCounts;
     unknownOrDeferred: {
@@ -263,6 +265,7 @@ function candidateFromStatusEntry(
   const nonActionableTotal = sumAssetCounts(classification.duplicateAliases) +
     sumAssetCounts(classification.unsupportedMetadataOnly) +
     sumAssetCounts(classification.staticFalsePositive) +
+    sumAssetCounts(classification.retrievalFailed) +
     sumAssetCounts(classification.failedTerminal);
   if (remoteTotal <= 0 && unknownTotal <= 0 && nonActionableTotal <= 0) return [];
 
@@ -307,7 +310,9 @@ function candidateFromStatusEntry(
       retrievableMissingLocal,
       status: classificationOnlyStatus(classification),
       action: 'none',
-      reason: `Target has no currently retrievable missing local assets; ${nonActionableTotal} remaining rows are classified as duplicate, unsupported/static, or terminal failed work.`,
+      reason: sumAssetCounts(classification.retrievalFailed) > 0
+        ? `Target has no currently retrievable missing local assets; ${sumAssetCounts(classification.retrievalFailed)} rows failed retrieval without provider-confirmed unavailability and require diagnosis before retry.`
+        : `Target has no currently retrievable missing local assets; ${nonActionableTotal} remaining rows are classified as duplicate, unsupported/static, or provider-confirmed terminal work.`,
       confidence: recoveryConfidence(inventory),
     })];
   }
@@ -363,6 +368,7 @@ function createStatusCandidate(input: {
       duplicateAliases: totalAssetCounts(classification.duplicateAliases),
       unsupportedMetadataOnly: totalAssetCounts(classification.unsupportedMetadataOnly),
       staticFalsePositive: totalAssetCounts(classification.staticFalsePositive),
+      retrievalFailed: totalAssetCounts(classification.retrievalFailed),
       failedTerminal: totalAssetCounts(classification.failedTerminal),
       accountLibrary: totalAccountLibraryRecoveryCounts(classification.accountLibrary),
     },
@@ -397,6 +403,7 @@ interface RecoveryClassificationCounts {
   duplicateAliases: AssetCounts;
   unsupportedMetadataOnly: AssetCounts;
   staticFalsePositive: AssetCounts;
+  retrievalFailed: AssetCounts;
   failedTerminal: AssetCounts;
   accountLibrary: AccountLibraryRecoveryCounts;
 }
@@ -492,7 +499,13 @@ function addHistoryMaterializationClassification(
     const field = entry.kind === 'file' ? 'files' : entry.kind === 'artifact' ? 'artifacts' : 'media';
     if (entry.status === 'duplicate') incrementAssetCount(counts.duplicateAliases, field);
     if (entry.status === 'failed' || entry.status === 'skipped') {
-      incrementAssetCount(counts.failedTerminal, field);
+      if (entry.failureKind === 'retrieval_failed') {
+        incrementAssetCount(counts.retrievalFailed, field);
+      } else {
+        // Older manifests did not distinguish retrieval failure from terminal
+        // provider unavailability, so retain their historical interpretation.
+        incrementAssetCount(counts.failedTerminal, field);
+      }
     }
   }
 }
@@ -524,6 +537,7 @@ function zeroRecoveryClassificationCounts(): RecoveryClassificationCounts {
     duplicateAliases: zeroAssetCountsWithTotal(),
     unsupportedMetadataOnly: zeroAssetCountsWithTotal(),
     staticFalsePositive: zeroAssetCountsWithTotal(),
+    retrievalFailed: zeroAssetCountsWithTotal(),
     failedTerminal: zeroAssetCountsWithTotal(),
     accountLibrary: zeroAccountLibraryRecoveryCounts(),
   };
@@ -536,6 +550,7 @@ function capRecoveryClassificationCounts(
   const remaining = totalAssetCounts(remoteKnownMissingLocal);
   const duplicateAliases = takeClassificationCounts(classification.duplicateAliases, remaining);
   const staticFalsePositive = takeClassificationCounts(classification.staticFalsePositive, remaining);
+  const retrievalFailed = takeClassificationCounts(classification.retrievalFailed, remaining);
   const failedTerminal = takeClassificationCounts(classification.failedTerminal, remaining);
   const unsupportedMetadataOnly = takeClassificationCounts(classification.unsupportedMetadataOnly, remaining);
   const accountLibraryRemoteKnownMissingLocal = capAssetCounts(classification.accountLibrary.remoteKnownMissingLocal, remoteKnownMissingLocal);
@@ -547,6 +562,7 @@ function capRecoveryClassificationCounts(
     duplicateAliases,
     unsupportedMetadataOnly,
     staticFalsePositive,
+    retrievalFailed,
     failedTerminal,
     accountLibrary: {
       ...classification.accountLibrary,
@@ -810,7 +826,10 @@ function classifyRetrievableMissing(
 ): AssetCounts {
   const nonActionable = addAssetCounts(
     addAssetCounts(classification.duplicateAliases, classification.unsupportedMetadataOnly),
-    addAssetCounts(classification.staticFalsePositive, classification.failedTerminal),
+    addAssetCounts(
+      addAssetCounts(classification.staticFalsePositive, classification.retrievalFailed),
+      classification.failedTerminal,
+    ),
   );
   return totalAssetCounts(subtractAssetCounts(remoteKnownMissingLocal, nonActionable));
 }
@@ -818,6 +837,7 @@ function classifyRetrievableMissing(
 function classificationOnlyStatus(
   classification: RecoveryClassificationCounts,
 ): AccountMirrorArtifactRecoveryCandidateStatus {
+  if (sumAssetCounts(classification.retrievalFailed) > 0) return 'blocked';
   if (sumAssetCounts(classification.failedTerminal) > 0) return 'terminal';
   if (sumAssetCounts(classification.unsupportedMetadataOnly) > 0 || sumAssetCounts(classification.staticFalsePositive) > 0) {
     return 'unsupported';
@@ -961,6 +981,7 @@ function candidateFromSearchRow(row: SearchProjectionRow): AccountMirrorArtifact
       duplicateAliases: { artifacts: 0, files: 0, media: 0, total: 0 },
       unsupportedMetadataOnly: { artifacts: 0, files: 0, media: 0, total: 0 },
       staticFalsePositive: { artifacts: 0, files: 0, media: 0, total: 0 },
+      retrievalFailed: { artifacts: 0, files: 0, media: 0, total: 0 },
       failedTerminal: { artifacts: 0, files: 0, media: 0, total: 0 },
       accountLibrary: zeroAccountLibraryRecoveryCounts(),
     },
@@ -1137,6 +1158,7 @@ function summarizeCandidates(
   const duplicateAliases = { artifacts: 0, files: 0, media: 0, total: 0 };
   const unsupportedMetadataOnly = { artifacts: 0, files: 0, media: 0, total: 0 };
   const staticFalsePositive = { artifacts: 0, files: 0, media: 0, total: 0 };
+  const retrievalFailed = { artifacts: 0, files: 0, media: 0, total: 0 };
   const failedTerminal = { artifacts: 0, files: 0, media: 0, total: 0 };
   const accountLibrary = zeroAccountLibraryRecoveryCounts();
   const unknownOrDeferred = { artifacts: 0, files: 0, media: 0, total: 0 };
@@ -1163,6 +1185,10 @@ function summarizeCandidates(
     staticFalsePositive.files += candidate.counts.staticFalsePositive.files;
     staticFalsePositive.media += candidate.counts.staticFalsePositive.media;
     staticFalsePositive.total += candidate.counts.staticFalsePositive.total;
+    retrievalFailed.artifacts += candidate.counts.retrievalFailed.artifacts;
+    retrievalFailed.files += candidate.counts.retrievalFailed.files;
+    retrievalFailed.media += candidate.counts.retrievalFailed.media;
+    retrievalFailed.total += candidate.counts.retrievalFailed.total;
     failedTerminal.artifacts += candidate.counts.failedTerminal.artifacts;
     failedTerminal.files += candidate.counts.failedTerminal.files;
     failedTerminal.media += candidate.counts.failedTerminal.media;
@@ -1198,6 +1224,7 @@ function summarizeCandidates(
     duplicateAliases,
     unsupportedMetadataOnly,
     staticFalsePositive,
+    retrievalFailed,
     failedTerminal,
     accountLibrary: totalAccountLibraryRecoveryCounts(accountLibrary),
     unknownOrDeferred,

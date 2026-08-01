@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 2
+Plan version: 3
 
 ## Stable Objective
 
@@ -108,6 +108,19 @@ most one separately gated default ChatGPT bounded pass.
   materializations, zero redundant same-route physical mutations, no provider
   guard/rate-limit/CAPTCHA/verification signal, and restored zero-work posture.
 
+### M6 | Exact Asset Capture And Availability Truth
+
+- Add a provider-free regression proving a response for a generated artifact
+  cannot be persisted under a requested user-uploaded file identity.
+- Scope viewer fallback controls to the surface opened by the matched file tile
+  and require response identity evidence before writing bytes.
+- Persist an explicit distinction between provider-confirmed unavailability and
+  an unsuccessful retrieval whose underlying availability remains unknown.
+- Keep both outcomes out of automatic live-follow retry cadence while exposing
+  them separately to completion receipts and recovery planning.
+- Quarantine the known January transcript false materialization without
+  deleting the preserved evidence or the valid generated exam DOCX.
+
 ## Acceptance Criteria
 
 - [x] A deterministic test fails on redundant same-route physical navigation.
@@ -121,6 +134,9 @@ most one separately gated default ChatGPT bounded pass.
   API while scheduler/completion pauses remain intact.
 - [ ] Exactly one default bounded pass satisfies the M5 terminal evidence with
   no retry or unrelated work.
+- [x] Cross-asset capture fails closed before filesystem or archive mutation.
+- [x] Provider-unavailable and retrieval-failed assets remain separately
+  queryable and are not collapsed into one terminal-failure count.
 
 ## Non-Goals
 
@@ -204,3 +220,32 @@ continuous live-follow reenablement remain separately gated afterward.
   regression-tested, committed, and installed. Any later live proof requires a
   fresh explicit authorization; scheduler/continuous re-enablement remains
   separately gated.
+
+## Checkpoint 3
+
+- `plan_version`: 3
+- `progress_classification`: substantive correction
+- `evidence`: job `hmj_c8901dc025c64af29a9f8f7e2e555608` used the
+  `default` runtime and managed browser profiles. Its generated exam DOCX is a
+  valid 99,476-byte archive, while the January transcript entry marked
+  materialized has the identical SHA-256 and contains the exam, proving
+  cross-asset aliasing. A follow-up probe against `wsl-chrome-3` was the wrong
+  account lane and is excluded from default-profile availability evidence.
+- `repair_gate`: execute M6 provider-free with vertical red/green tests. Do not
+  start a browser, retry the consumed canary, or change scheduler/completion
+  pause state.
+
+## Checkpoint 4
+
+- `progress_classification`: M6 complete; the plan remains open at the
+  separately authorized live-canary and staged-reenablement gates.
+- `implementation`: fallback Download discovery is scoped to one viewer dialog;
+  captured bytes require provider-file-id or exact response-filename evidence;
+  file manifests, history results, completion receipts, and recovery planning
+  preserve `provider_unavailable` versus `retrieval_failed`.
+- `runtime_repair`: the false January transcript association is quarantined in
+  both archive indexes with its evidence path and checksum preserved. The valid
+  generated exam DOCX remains materialized and unchanged.
+- `validation`: 303 test files and 2,685 tests passed; typecheck, lint, build,
+  install, installed-code parity, active service, and paused scheduler parity
+  passed. No browser or provider request was run.

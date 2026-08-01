@@ -761,6 +761,8 @@ describe("history materialization service", () => {
 						fileName: "failed-project-file.pdf",
 						status: "error",
 						error: "project_source_download_failed",
+						failureKind: "retrieval_failed",
+						retryable: true,
 						materializationMethod: "chatgpt-project-source-row",
 					},
 				],
@@ -804,6 +806,13 @@ describe("history materialization service", () => {
 			result: {
 				status: "failed",
 				metrics: { materialized: 0, failed: 1 },
+				entries: [
+					expect.objectContaining({
+						status: "failed",
+						failureKind: "retrieval_failed",
+						retryable: true,
+					}),
+				],
 				phases: { materialization: { status: "failed" } },
 			},
 		});

@@ -441,7 +441,7 @@ describe("account mirror artifact recovery planner", () => {
 		});
 	});
 
-	it("separates retrievable recovery work from unsupported, static, duplicate, and terminal failed rows", async () => {
+	it("separates retrieval failures from provider-unavailable terminal rows", async () => {
 		const registry = registryWithEntries([
 			statusEntry({
 				provider: "chatgpt",
@@ -568,6 +568,8 @@ describe("account mirror artifact recovery planner", () => {
 								size: null,
 								materializationMethod: null,
 								reason: "ChatGPT conversation file fetch failed: tile_not_found",
+								failureKind: "retrieval_failed" as const,
+								retryable: false,
 								archiveItemId: null,
 								assetRoute: null,
 							},
@@ -612,7 +614,8 @@ describe("account mirror artifact recovery planner", () => {
 			duplicateAliases: { artifacts: 1, files: 0, total: 1 },
 			staticFalsePositive: { artifacts: 1, files: 0, total: 1 },
 			unsupportedMetadataOnly: { artifacts: 0, files: 1, total: 1 },
-			failedTerminal: { artifacts: 0, files: 1, total: 1 },
+			retrievalFailed: { artifacts: 0, files: 1, total: 1 },
+			failedTerminal: { artifacts: 0, files: 0, total: 0 },
 		});
 		expect(result.metrics.retrievableMissingLocal).toMatchObject({
 			artifacts: 2,
