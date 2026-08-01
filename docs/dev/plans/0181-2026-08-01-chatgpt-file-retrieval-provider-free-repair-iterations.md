@@ -88,7 +88,7 @@ bounded timeout, while a prompt promise still resolves unchanged.
 ## Acceptance Criteria
 
 - [x] R1 red/green regression and validation complete.
-- [ ] R2 red/green regression and validation complete.
+- [x] R2 red/green regression and validation complete.
 - [ ] R3 red/green regression and validation complete.
 - [ ] R4 red/green regression and validation complete.
 - [ ] R5 red/green regression and validation complete.
@@ -133,3 +133,21 @@ pass, and no live/provider authority has been consumed.
   operator did not request delegation.
 - `next_action_or_stop_reason`: R2 is ready; replace serialized-string
   availability inference with a structured provider-free classifier.
+
+## Checkpoint 2 | R2
+
+- `plan_version`: 1
+- `state_transition`: active -> active
+- `progress_classification`: blocker_reduction
+- `evidence`: regression proved a structured 403 with provider detail `Not
+  found: requested file was deleted` was not classifiable through the prior
+  order-sensitive serialized-message regex. Download failures now carry their
+  structured diagnostics on the Error object; the classifier consumes numeric
+  status and bounded nested provider evidence directly, with serialized text
+  retained only as a compatibility fallback. A plain 403 access denial remains
+  `retrieval_failed`.
+- `validation`: focused red failed as expected; repaired classifier cases pass
+  2/2 and the full ChatGPT adapter suite passes 121/121.
+- `subagent_status`: not used.
+- `next_action_or_stop_reason`: R3 is ready; prevent later generic fallback
+  evidence from erasing a stronger provider-confirmed failure.

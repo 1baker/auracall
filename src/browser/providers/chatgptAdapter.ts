@@ -9792,26 +9792,58 @@ export function summarizeChatgptDownloadJsonShape(json: unknown): Record<string,
 	return Object.keys(children).length > 0 ? { ...root, children } : root;
 }
 
-function classifyChatgptFileRetrievalFailure(error: unknown): {
+export function classifyChatgptFileRetrievalFailure(error: unknown): {
 	failureKind: "provider_unavailable" | "retrieval_failed";
 	retryable: boolean;
 } {
 	const message = error instanceof Error ? error.message : String(error);
-	const status = Number.parseInt(message.match(/"status":(\d{3})/)?.[1] ?? "", 10);
+	const diagnostics =
+		error &&
+		typeof error === "object" &&
+		"retrievalDiagnostics" in error &&
+		isRecord(error.retrievalDiagnostics)
+			? error.retrievalDiagnostics
+			: null;
+	const structuredStatus = diagnostics?.status;
+	const status =
+		typeof structuredStatus === "number" && Number.isFinite(structuredStatus)
+			? structuredStatus
+			: Number.parseInt(message.match(/"status":(\d{3})/)?.[1] ?? "", 10);
+	const textFragments: string[] = [message];
+	const collectText = (value: unknown, depth: number): void => {
+		if (depth > 2 || value == null) return;
+		if (typeof value === "string") {
+			textFragments.push(value);
+			return;
+		}
+		if (Array.isArray(value)) {
+			for (const item of value.slice(0, 8)) collectText(item, depth + 1);
+			return;
+		}
+		if (isRecord(value)) {
+			for (const item of Object.values(value).slice(0, 12)) collectText(item, depth + 1);
+		}
+	};
+	collectText(diagnostics?.reason, 0);
+	collectText(diagnostics?.providerError, 0);
+	const normalizedEvidence = textFragments.join(" ").replace(/[_-]+/g, " ");
+	const mentionsFile = /\b(?:file|asset)\b/i.test(normalizedEvidence);
+	const mentionsUnavailable =
+		/\b(?:not found|no longer available|unavailable|deleted|expired|does not exist)\b/i.test(
+			normalizedEvidence,
+		);
 	const providerUnavailable =
 		status === 404 ||
 		status === 410 ||
-		/\b(?:file|asset)\b[^.]{0,80}\b(?:not found|no longer available|unavailable|deleted|expired|does not exist)\b/i.test(
-			message,
-		);
+		(mentionsFile && mentionsUnavailable);
 	const retryable =
 		status === 408 ||
 		status === 425 ||
 		status === 429 ||
 		status >= 500 ||
-		/\b(?:rate limit|cooldown|timed out|timeout|temporar(?:y|ily)|try again|connection closed)\b/i.test(
-			message,
-		);
+			/\b(?:rate limit|cooldown|timed out|timeout|temporar(?:y|ily)|try again|connection closed)\b/i.test(
+				normalizedEvidence,
+			);
 	return {
 		failureKind: providerUnavailable ? "provider_unavailable" : "retrieval_failed",
 		retryable: providerUnavailable ? false : retryable,
@@ -10215,7 +10247,11 @@ async function downloadChatgptConversationFileWithClient(
 				...(isRecord(value?.providerError) ? { providerError: value.providerError } : {}),
 				...(isRecord(value?.responseShape) ? { responseShape: value.responseShape } : {}),
 			};
-			throw new Error(`ChatGPT conversation file fetch failed: ${JSON.stringify(diagnostics)}`);
+			const error = new Error(
+				`ChatGPT conversation file fetch failed: ${JSON.stringify(diagnostics)}`,
+			) as Error & { retrievalDiagnostics: Record<string, unknown> };
+			error.retrievalDiagnostics = diagnostics;
+			throw error;
 		}
 		const identityFailure = validateChatgptCapturedFileIdentity({
 			captured: value,

@@ -10,6 +10,7 @@ import {
 	buildChatgptPayloadDirectRetryOptionsForTest,
 	buildChatgptUrlRouteExpressionForTest,
 	classifyChatgptBlockingSurfaceProbe,
+	classifyChatgptFileRetrievalFailure,
 	clickChatgptViewerDownloadButtonWithClientForTest,
 	closeChatgptTabConnectionForTest,
 	createChatgptAdapter,
@@ -593,6 +594,32 @@ describe("downloadChatgptConversationFilesWithClient", () => {
 		} finally {
 			await fs.rm(tempDir, { recursive: true, force: true });
 		}
+	});
+
+	test("classifies structured provider unavailability independent of phrase order", () => {
+		const unavailable = new Error("ChatGPT conversation file fetch failed") as Error & {
+			retrievalDiagnostics?: Record<string, unknown>;
+		};
+		unavailable.retrievalDiagnostics = {
+			status: 403,
+			providerError: { detail: "Not found: requested file was deleted." },
+		};
+		expect(classifyChatgptFileRetrievalFailure(unavailable)).toEqual({
+			failureKind: "provider_unavailable",
+			retryable: false,
+		});
+
+		const denied = new Error("ChatGPT conversation file fetch failed") as Error & {
+			retrievalDiagnostics?: Record<string, unknown>;
+		};
+		denied.retrievalDiagnostics = {
+			status: 403,
+			providerError: { detail: "Access denied for this request." },
+		};
+		expect(classifyChatgptFileRetrievalFailure(denied)).toEqual({
+			failureKind: "retrieval_failed",
+			retryable: false,
+		});
 	});
 
 	test("checks readiness once and sequentially downloads twelve files on one client", async () => {
