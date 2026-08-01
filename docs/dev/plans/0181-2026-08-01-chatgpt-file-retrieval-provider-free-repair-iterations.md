@@ -90,7 +90,7 @@ bounded timeout, while a prompt promise still resolves unchanged.
 - [x] R1 red/green regression and validation complete.
 - [x] R2 red/green regression and validation complete.
 - [x] R3 red/green regression and validation complete.
-- [ ] R4 red/green regression and validation complete.
+- [x] R4 red/green regression and validation complete.
 - [ ] R5 red/green regression and validation complete.
 - [ ] Focused, adjacent, and broad provider-free validation pass.
 - [ ] Each landed repair is documented and committed with its root cause.
@@ -169,3 +169,20 @@ pass, and no live/provider authority has been consumed.
 - `subagent_status`: not used.
 - `next_action_or_stop_reason`: R4 is ready; keep the capture polling deadline
   effective when one intercepted response never settles.
+
+## Checkpoint 4 | R4
+
+- `plan_version`: 1
+- `state_transition`: active -> active
+- `progress_classification`: blocker_reduction
+- `evidence`: a never-settling intercepted response previously made
+  `Promise.allSettled(capturePromises)` unreachable from the loop deadline.
+  The exact helper embedded in the browser expression now races current capture
+  settlement against the smaller of the remaining deadline and poll interval,
+  then clears its timer on early settlement. The capture loop no longer directly
+  awaits all intercepted promises.
+- `validation`: focused red failed as expected; repaired focused cases pass 2/2
+  and the full ChatGPT adapter suite passes 123/123.
+- `subagent_status`: not used.
+- `next_action_or_stop_reason`: R5 is ready; bound direct fetch, signed follow
+  fetch, and response-body promises with a distinguished local timeout.

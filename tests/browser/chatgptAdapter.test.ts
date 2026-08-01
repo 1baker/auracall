@@ -57,6 +57,7 @@ import {
 	resolveChatgptDownloadUrlFromJson,
 	selectChatgptDownloadFailure,
 	summarizeChatgptDownloadJsonShape,
+	waitForChatgptCaptureProgress,
 	resolveChatgptProjectCreateConfirmLabelsForTest,
 	resolveChatgptProjectMemoryLabel,
 	resolveChatgptProjectMemoryLabelCandidates,
@@ -510,6 +511,11 @@ describe("downloadChatgptConversationFilesWithClient", () => {
 			expect(downloadExpression).toContain("resolveChatgptDownloadUrlFromJson");
 			expect(downloadExpression).toContain("summarizeChatgptDownloadJsonShape");
 			expect(downloadExpression).toContain("selectChatgptDownloadFailure");
+			expect(downloadExpression).toContain("waitForChatgptCaptureProgress");
+			expect(downloadExpression).toContain(
+				"waitForCaptureProgress(capturePromises, deadline - Date.now(), 250)",
+			);
+			expect(downloadExpression).not.toContain("await Promise.allSettled(capturePromises)");
 			expect(downloadExpression).toContain("responseShape: summarizeDownloadJsonShape(json)");
 			expect(downloadExpression).toContain(
 				"resolveDownloadUrlFromJson(json, window.location.href)",
@@ -637,6 +643,12 @@ describe("downloadChatgptConversationFilesWithClient", () => {
 		};
 		expect(selectChatgptDownloadFailure(unavailable, generic)).toBe(unavailable);
 		expect(selectChatgptDownloadFailure(generic, unavailable)).toBe(unavailable);
+	});
+
+	test("keeps the capture poll deadline reachable when an intercepted response hangs", async () => {
+		const startedAt = Date.now();
+		await waitForChatgptCaptureProgress([new Promise<never>(() => undefined)], 5, 5);
+		expect(Date.now() - startedAt).toBeLessThan(100);
 	});
 
 	test("checks readiness once and sequentially downloads twelve files on one client", async () => {

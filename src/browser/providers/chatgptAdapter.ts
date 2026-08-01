@@ -9823,6 +9823,25 @@ export function selectChatgptDownloadFailure(current: unknown, candidate: unknow
 	return score(candidate) > score(current) ? candidate : current;
 }
 
+export async function waitForChatgptCaptureProgress(
+	promises: readonly Promise<unknown>[],
+	remainingMs: number,
+	pollMs = 250,
+): Promise<void> {
+	const boundedWaitMs = Math.max(0, Math.min(pollMs, remainingMs));
+	let timeout: ReturnType<typeof setTimeout> | null = null;
+	try {
+		await Promise.race([
+			Promise.allSettled([...promises]).then(() => undefined),
+			new Promise<void>((resolve) => {
+				timeout = setTimeout(resolve, boundedWaitMs);
+			}),
+		]);
+	} finally {
+		if (timeout) clearTimeout(timeout);
+	}
+}
+
 export function classifyChatgptFileRetrievalFailure(error: unknown): {
 	failureKind: "provider_unavailable" | "retrieval_failed";
 	retryable: boolean;
@@ -9950,6 +9969,7 @@ async function downloadChatgptConversationFileWithClient(
           const resolveDownloadUrlFromJson = ${resolveChatgptDownloadUrlFromJson.toString()};
           const summarizeDownloadJsonShape = ${summarizeChatgptDownloadJsonShape.toString()};
           const selectDownloadFailure = ${selectChatgptDownloadFailure.toString()};
+          const waitForCaptureProgress = ${waitForChatgptCaptureProgress.toString()};
           const captureDownloadResponse = async (response, originalUrl, fileName, mimeType) => {
             const clone = response.clone();
             const contentType = clone.headers.get('content-type');
@@ -10170,7 +10190,7 @@ async function downloadChatgptConversationFileWithClient(
 	            const captureStartedAt = Date.now();
 	            const deadline = Date.now() + 20_000;
 	            while (!captured && Date.now() < deadline) {
-	              await Promise.allSettled(capturePromises);
+	              await waitForCaptureProgress(capturePromises, deadline - Date.now(), 250);
 	              if (captured) break;
 	              if (capturedNavigationUrl) {
 	                const navigationUrl = capturedNavigationUrl;
@@ -10195,7 +10215,6 @@ async function downloadChatgptConversationFileWithClient(
 	              if (!viewerDownloadClicked && Date.now() - captureStartedAt >= 750) {
 	                viewerDownloadClicked = clickViewerDownload();
 	              }
-	              await sleep(250);
 	            }
             if (!captured) {
 	              const direct = await tryDirectProviderFileDownload(
