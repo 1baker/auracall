@@ -87,7 +87,7 @@ bounded timeout, while a prompt promise still resolves unchanged.
 
 ## Acceptance Criteria
 
-- [ ] R1 red/green regression and validation complete.
+- [x] R1 red/green regression and validation complete.
 - [ ] R2 red/green regression and validation complete.
 - [ ] R3 red/green regression and validation complete.
 - [ ] R4 red/green regression and validation complete.
@@ -115,3 +115,21 @@ The plan closes when every executed iteration has red/green evidence and the
 five acceptance boxes are either proved or explicitly stopped for lack of a
 real provider-free failure seam, broad validation and installed paused parity
 pass, and no live/provider authority has been consumed.
+
+## Checkpoint 1 | R1
+
+- `plan_version`: 1
+- `state_transition`: ready -> active
+- `progress_classification`: blocker_reduction
+- `evidence`: deterministic regression proved an unrecognized nested URL shape
+  and an error-only object previously collapsed to the same opaque failure.
+  `summarizeChatgptDownloadJsonShape` now emits only bounded key names and value
+  kinds through one child level; it never emits values. The exact helper body is
+  embedded in the browser capture expression and its result propagates through
+  direct, intercepted, and terminal failure diagnostics.
+- `validation`: focused red failed as expected; repaired focused cases pass 2/2
+  and the full ChatGPT adapter suite passes 120/120.
+- `subagent_status`: not used; direct CodeGraph exploration was required and the
+  operator did not request delegation.
+- `next_action_or_stop_reason`: R2 is ready; replace serialized-string
+  availability inference with a structured provider-free classifier.

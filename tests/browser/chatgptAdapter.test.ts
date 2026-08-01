@@ -54,6 +54,7 @@ import {
 	resolveChatgptCanvasArtifactContentText,
 	resolveChatgptConversationUrl,
 	resolveChatgptDownloadUrlFromJson,
+	summarizeChatgptDownloadJsonShape,
 	resolveChatgptProjectCreateConfirmLabelsForTest,
 	resolveChatgptProjectMemoryLabel,
 	resolveChatgptProjectMemoryLabelCandidates,
@@ -505,6 +506,8 @@ describe("downloadChatgptConversationFilesWithClient", () => {
 			).toBe("https://chatgpt.com/backend-api/estuary/content?id=file_uploaded");
 			expect(resolveChatgptDownloadUrlFromJson({ detail: "File not found" })).toBeNull();
 			expect(downloadExpression).toContain("resolveChatgptDownloadUrlFromJson");
+			expect(downloadExpression).toContain("summarizeChatgptDownloadJsonShape");
+			expect(downloadExpression).toContain("responseShape: summarizeDownloadJsonShape(json)");
 			expect(downloadExpression).toContain(
 				"resolveDownloadUrlFromJson(json, window.location.href)",
 			);
@@ -512,6 +515,29 @@ describe("downloadChatgptConversationFilesWithClient", () => {
 		} finally {
 			await fs.rm(tempDir, { recursive: true, force: true });
 		}
+	});
+
+	test("preserves bounded JSON shape evidence when a download URL is not resolved", () => {
+		expect(
+			summarizeChatgptDownloadJsonShape({
+				payload: { temporary_link: "https://secret.example/download?token=do-not-persist" },
+				request_id: "private-request-id",
+			}),
+		).toEqual({
+			kind: "object",
+			keys: ["payload", "request_id"],
+			valueKinds: { payload: "object", request_id: "string" },
+			children: {
+				payload: {
+					kind: "object",
+					keys: ["temporary_link"],
+					valueKinds: { temporary_link: "string" },
+				},
+			},
+		});
+		expect(JSON.stringify(summarizeChatgptDownloadJsonShape({ url: "?token=secret" }))).not.toContain(
+			"secret",
+		);
 	});
 
 	test("distinguishes provider-confirmed file unavailability from retrieval failure", async () => {

@@ -9756,6 +9756,42 @@ export function resolveChatgptDownloadUrlFromJson(
 	return null;
 }
 
+export function summarizeChatgptDownloadJsonShape(json: unknown): Record<string, unknown> {
+	const kindOf = (value: unknown): string => {
+		if (value === null) return "null";
+		if (Array.isArray(value)) return "array";
+		return typeof value;
+	};
+	const summarizeRecord = (value: Record<string, unknown>): Record<string, unknown> => {
+		const keys = Object.keys(value)
+			.filter((key) => /^[A-Za-z0-9_.-]{1,64}$/.test(key))
+			.sort()
+			.slice(0, 12);
+		return {
+			kind: "object",
+			keys,
+			valueKinds: Object.fromEntries(keys.map((key) => [key, kindOf(value[key])] as const)),
+		};
+	};
+	if (!json || typeof json !== "object" || Array.isArray(json)) {
+		return { kind: kindOf(json) };
+	}
+	const root = summarizeRecord(json as Record<string, unknown>);
+	const children = Object.fromEntries(
+		Object.keys(json as Record<string, unknown>)
+			.filter((key) => /^[A-Za-z0-9_.-]{1,64}$/.test(key))
+			.sort()
+			.slice(0, 12)
+			.flatMap((key) => {
+				const value = (json as Record<string, unknown>)[key];
+				return value && typeof value === "object" && !Array.isArray(value)
+					? [[key, summarizeRecord(value as Record<string, unknown>)] as const]
+					: [];
+			}),
+	);
+	return Object.keys(children).length > 0 ? { ...root, children } : root;
+}
+
 function classifyChatgptFileRetrievalFailure(error: unknown): {
 	failureKind: "provider_unavailable" | "retrieval_failed";
 	retryable: boolean;
@@ -9849,6 +9885,7 @@ async function downloadChatgptConversationFileWithClient(
             return Object.keys(summary).length > 0 ? summary : null;
           };
           const resolveDownloadUrlFromJson = ${resolveChatgptDownloadUrlFromJson.toString()};
+          const summarizeDownloadJsonShape = ${summarizeChatgptDownloadJsonShape.toString()};
           const captureDownloadResponse = async (response, originalUrl, fileName, mimeType) => {
             const clone = response.clone();
             const contentType = clone.headers.get('content-type');
@@ -9870,6 +9907,7 @@ async function downloadChatgptConversationFileWithClient(
                   endpointKind: endpointKind(originalUrl),
                   contentType,
                   providerError: providerErrorShape(json),
+                  responseShape: summarizeDownloadJsonShape(json),
                 };
               }
               const followResponse = await originalFetch(downloadUrl, { credentials: 'include' });
@@ -9968,6 +10006,7 @@ async function downloadChatgptConversationFileWithClient(
               endpointKind: direct.value?.endpointKind || null,
               contentType: direct.value?.contentType || null,
               providerError: direct.value?.providerError || null,
+              responseShape: direct.value?.responseShape || null,
             };
           }
 	          const target = match.tile.querySelector('button[aria-label], button, [role="button"]');
@@ -10127,6 +10166,7 @@ async function downloadChatgptConversationFileWithClient(
               contentType: captureFailure?.contentType || null,
               captureTransport: captureFailure?.captureTransport || null,
               providerError: captureFailure?.providerError || null,
+              responseShape: captureFailure?.responseShape || null,
             };
           }
           if (!captured.ok) {
@@ -10139,6 +10179,7 @@ async function downloadChatgptConversationFileWithClient(
               endpointKind: captured.endpointKind || null,
               contentType: captured.contentType || null,
               providerError: captured.providerError || null,
+              responseShape: captured.responseShape || null,
             };
           }
           if (!captured.base64 || captured.byteLength <= 0) {
@@ -10172,6 +10213,7 @@ async function downloadChatgptConversationFileWithClient(
 					? { captureTransport: value.captureTransport }
 					: {}),
 				...(isRecord(value?.providerError) ? { providerError: value.providerError } : {}),
+				...(isRecord(value?.responseShape) ? { responseShape: value.responseShape } : {}),
 			};
 			throw new Error(`ChatGPT conversation file fetch failed: ${JSON.stringify(diagnostics)}`);
 		}
