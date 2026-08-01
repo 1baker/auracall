@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 9
+Plan version: 10
 
 ## Stable Objective
 
@@ -65,6 +65,16 @@ reenablement.
   `retrieval_failed`. The historical receipt is not rewritten. M5 and all
   re-enablement gates remain open because the consumed canary still materialized
   0/1 and no successful replacement live proof has run.
+- The separately authorized one-attempt positive-control job
+  `hmj_4295f645a45a4cfd881bdc6c4d7c871a` addressed the exact catalog item
+  `ChE 4470-5470 Exam 2 Spring 2025.docx`, but its receipt proved AuraCall
+  attempted a different cached file, `2025-01-22 Introduction...Transcript.docx`.
+  That different file returned provider-confirmed `file_not_found`; the job
+  failed 0/1 and was not retried. Commit `eccb3780` now carries the selected
+  catalog file identity through provider work and excludes every nonmatching
+  file before `maxItems` is applied. It is pushed and installed under API PID
+  `29769`; the repair is provider-free green but has not received another live
+  attempt. M5 and re-enablement remain open.
 
 ## Architecture Decision
 
@@ -484,3 +494,40 @@ continuous live-follow reenablement remain separately gated afterward.
   materialized. Scheduler and continuous live follow remain disabled pending a
   separately reviewed successful-materialization proof and explicit
   re-enablement authority.
+
+## Checkpoint 11
+
+- `plan_version`: 10
+- `progress_classification`: positive-control attempt failed closed and exposed
+  exact-catalog-selection drift; provider-free repair installed; live acceptance
+  remains open.
+- `authorized_attempt`: job `hmj_4295f645a45a4cfd881bdc6c4d7c871a` used the
+  `default` AuraCall runtime profile, exact file catalog item, `files` only,
+  `maxItems = 1`, `force = true`, and a 300-second provider-work timeout. It ran
+  once with four-dimension provider-session match, one CDP attachment, two
+  `Runtime.evaluate` calls, zero physical browser mutations, and no retry.
+- `failure_evidence`: despite the requested Exam DOCX catalog ID, the persisted
+  manifest attempted the Introduction transcript because catalog resolution
+  narrowed only to the conversation and kind before applying `maxItems`. The
+  different transcript returned structured `file_not_found` and was correctly
+  classified non-retryable `provider_unavailable`. Result: 0 materialized, 1
+  failed. The already-local Exam DOCX remained byte-identical at SHA-256
+  `a6ef6841e43c7f3162f093fbbc74e45ceafd9b3616af5c6a45d96a1839d42b7b`.
+- `repair`: selected file catalog identity now travels in the provider-work
+  context as exact catalog ID, name, and provider file ID. Conversation-file
+  enumeration excludes every nonmatching file before `maxItems` selection, so
+  an exact catalog request cannot silently transfer another file.
+- `validation`: the red regression failed on the missing selector and passes
+  after repair. Focused history/file coverage passes 112/112; full provider-free
+  validation passes 303 files/2,697 tests with 65 skips. Typecheck, production
+  build, lint at the retained 207-warning baseline, and diff hygiene pass.
+- `installed_evidence`: commit `eccb3780` is pushed and installed under API PID
+  `29769`. Source/installed history-materialization service SHA-256 is
+  `76edbae8094e0b22a88f23b713cf4033cfd78d7e5e87fbc0c74ff03850e1029c`.
+  Scheduler remains paused, all five retained completions remain paused, queued/
+  running/idle-waiting completions and active materialization jobs are zero,
+  background drain is idle, and duplicate same-route mutations remain zero.
+- `next_gate`: the one-attempt live packet is consumed. Do not retry it or infer
+  re-enablement authority from the provider-free repair. M5 still requires a
+  separately authorized exact-asset success after review; scheduler and
+  continuous live follow remain disabled.

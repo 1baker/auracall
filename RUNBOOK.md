@@ -1,5 +1,29 @@
 # RUNBOOK
 
+## Turn 387 | 2026-08-01
+
+- Consumed one explicitly authorized, no-retry positive-control materialization
+  attempt for the exact default-profile catalog item `ChE 4470-5470 Exam 2
+  Spring 2025.docx`. Job `hmj_4295f645a45a4cfd881bdc6c4d7c871a` used files
+  only, `maxItems = 1`, a 300-second provider-work timeout, and a confirmed four-
+  dimension provider-session match.
+- The job failed 0/1 because AuraCall lost exact asset identity after resolving
+  the catalog item to its conversation. It selected the earlier `2025-01-22
+  Introduction...Transcript.docx`, which returned provider-confirmed
+  `file_not_found`. The receipt proves one CDP attachment, two runtime reads,
+  zero physical browser mutations, and no retry. The requested Exam DOCX's
+  existing local checksum remained unchanged.
+- Commit `eccb3780` repairs the selector provider-free: exact catalog ID,
+  filename, and provider file ID now reach conversation-file filtering, and all
+  nonmatching files are excluded before `maxItems`. Focused coverage passes
+  112/112; the full suite passes 303 files/2,697 tests with 65 skips; typecheck,
+  build, lint at 207 warnings, and diff hygiene pass.
+- The pushed repair is installed at API PID `29769` with source/runtime hash
+  parity `76edbae8094e0b22a88f23b713cf4033cfd78d7e5e87fbc0c74ff03850e1029c`.
+  Scheduler and all five completions remain paused; queued/running/idle-waiting
+  completions and active materialization jobs are zero; duplicate same-route
+  mutations remain zero. The one-attempt packet is consumed and M5 remains open.
+
 ## Turn 386 | 2026-08-01
 
 - Inspected the exact exam-writing chat directly through CDP on the correct

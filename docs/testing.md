@@ -561,6 +561,10 @@
         explicit not-found evidence is non-retryable `provider_unavailable`,
         while failed transport, browser interaction, malformed payloads, and
         asset-identity mismatches remain `retrieval_failed`
+      - selected `catalogItemId` file materialization must preserve exact catalog
+        ID/name/provider-file identity into the transfer filter; construct a
+        multi-file conversation fixture and prove a nonselected earlier file is
+        excluded before `maxItems` is applied
       - operation records persist under the account-mirror cache and are
         hydrated on API/MCP startup; active records resume, and a persisted
         `nextAttemptAt` must be honored before the next refresh request

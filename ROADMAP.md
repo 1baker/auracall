@@ -43,6 +43,14 @@ Lane: P01
   because the consumed canary materialized 0/1. Any successful replacement live
   proof and scheduler/continuous live-follow re-enablement require separate
   explicit authority.
+  The next authorized exact-file positive control failed closed because the
+  catalog-item route selected a different conversation file before applying
+  `maxItems = 1`. Job `hmj_4295f645a45a4cfd881bdc6c4d7c871a` attempted the
+  Introduction transcript instead of the requested Exam DOCX and correctly
+  classified that different file as `provider_unavailable`. Commit `eccb3780`
+  preserves exact catalog ID/name/provider-file identity through transfer
+  selection and is installed at API PID `29769`. No retry ran; M5 and all
+  scheduler/continuous live-follow gates remain open.
 
 - Completed provider-session authority unification:
   [docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md](docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md)

@@ -42537,3 +42537,32 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   drain is idle. No canary or live-follow re-enablement ran. Plan 0180 M5 stays
   open because the consumed canary materialized 0/1, although availability is
   now conclusively provider-unavailable rather than unknown.
+
+## 2026-08-01 | Plan 0180 exact catalog file selection repair
+
+- Ran the one explicitly authorized positive-control job
+  `hmj_4295f645a45a4cfd881bdc6c4d7c871a` against the exact default-profile Exam
+  DOCX catalog item with files only, `maxItems = 1`, `force = true`, and a
+  300-second provider-work timeout. Four-dimension provider-session proof
+  matched; the job ran once and failed 0/1 without retry.
+- The durable receipt proved exact catalog identity was discarded after target
+  resolution: AuraCall enumerated the conversation and selected the earlier
+  Introduction transcript. That different file returned structured
+  `file_not_found` and correctly classified `provider_unavailable`. Telemetry
+  recorded one CDP attachment, two runtime evaluations, one attempted download,
+  zero successful downloads, and zero physical browser mutations. The existing
+  Exam DOCX stayed byte-identical at SHA-256
+  `a6ef6841e43c7f3162f093fbbc74e45ceafd9b3616af5c6a45d96a1839d42b7b`.
+- Added a red/green regression and exact selector carried through provider-work
+  context. File enumeration now matches catalog ID or provider file ID and
+  excludes nonselected files before applying `maxItems`; exact filename is a
+  fallback only when identifier evidence is unavailable.
+- Commit `eccb3780` is pushed and installed at API PID `29769`. Focused coverage
+  passes 112/112; full provider-free validation passes 303 files/2,697 tests
+  with 65 skips; typecheck, build, lint at 207 warnings, and diff hygiene pass.
+  Source/runtime history-materialization hash parity is
+  `76edbae8094e0b22a88f23b713cf4033cfd78d7e5e87fbc0c74ff03850e1029c`.
+- Scheduler and all five retained completions remain paused; queued/running/
+  idle-waiting completions and active materialization jobs are zero; duplicate
+  same-route mutations remain zero. No second live attempt ran, and Plan 0180 M5
+  plus all re-enablement gates remain open.

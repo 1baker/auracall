@@ -658,6 +658,11 @@ Terminology note:
   stronger earlier failure. Intercept polling preserves its deadline even when
   a response hangs; direct, anchor, signed-follow, and body-read stages each
   have a local aborting timeout.
+  A files-catalog materialization request is exact-asset authority, not merely a
+  conversation hint: AuraCall carries the selected catalog ID, filename, and
+  provider file ID into transfer selection and excludes every nonmatching file
+  before applying `maxItems`. It must never silently download or classify a
+  different file from the same conversation.
   If every known cached file is already terminal-local or outside the bounded
   selection, the history receipt reports `known-files-excluded`; it reserves
   `no-materializable-file` for a genuinely empty refreshed file inventory.

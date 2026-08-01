@@ -1,3 +1,12 @@
+- 2026-08-01: An account-mirror file `catalogItemId` is exact asset authority,
+  not permission to select any file from the resolved conversation. Carry its
+  catalog ID, exact filename, and provider file ID into the provider-work
+  context, exclude nonmatching enumerated files before applying `maxItems`, and
+  persist the actually attempted identity in the receipt. A one-item limit does
+  not make a broad conversation selection exact; without the identity filter it
+  can deterministically choose the wrong earlier file and misattribute that
+  file's provider-unavailable result to the requested asset.
+
 - 2026-08-01: A visible ChatGPT upload tile does not prove its backing file is
   still retrievable. Inspect the exact tile on the correct browser profile and
   treat the authenticated `files-download` response as provider authority.
