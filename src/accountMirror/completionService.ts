@@ -351,6 +351,7 @@ export function createAccountMirrorCompletionService(input: {
 	const operations = new Map<string, AccountMirrorCompletionOperation>();
 	const persistQueues = new Map<string, Promise<void>>();
 	const activeRuns = new Set<string>();
+	const activeRunAbortControllers = new Map<string, AbortController>();
 	const sleepWakeups = new Set<() => void>();
 	const providerWorkCoordinator =
 		input.providerWorkCoordinator ?? createAccountMirrorProviderWorkCoordinator();
@@ -406,15 +407,20 @@ export function createAccountMirrorCompletionService(input: {
 	const launch = (id: string) => {
 		if (activeRuns.has(id)) return;
 		activeRuns.add(id);
-		void run(id).finally(() => {
+		const abortController = new AbortController();
+		activeRunAbortControllers.set(id, abortController);
+		void run(id, abortController.signal).finally(() => {
 			activeRuns.delete(id);
+			if (activeRunAbortControllers.get(id) === abortController) {
+				activeRunAbortControllers.delete(id);
+			}
 			if (operations.get(id)?.status === "queued") {
 				launch(id);
 			}
 		});
 	};
 
-	const run = async (id: string) => {
+	const run = async (id: string, abortSignal: AbortSignal) => {
 		update(id, { status: "running", completedAt: null });
 		try {
 			const initialOperation = operations.get(id);
@@ -701,6 +707,7 @@ export function createAccountMirrorCompletionService(input: {
 							? { cleanupManagedBrowserAfterRefresh: true }
 							: {}),
 						...(collectorTimeoutMs ? { collectorTimeoutMs } : {}),
+						abortSignal,
 					});
 				} catch (error) {
 					const eligibleAt = readEligibleAt(error);
@@ -728,6 +735,7 @@ export function createAccountMirrorCompletionService(input: {
 					}
 					throw error;
 				}
+				if (abortSignal.aborted) return;
 				const nextPassCount = pass + 1;
 				pass = nextPassCount;
 				const refreshedPatch: Partial<AccountMirrorCompletionOperation> = {
@@ -1027,6 +1035,7 @@ export function createAccountMirrorCompletionService(input: {
 			if (request.action === "cancel") {
 				if (isTerminalOperation(operation)) return operation;
 				cancelProviderWorkWait(operation.id);
+				abortActiveRun(operation.id, "Account-mirror completion cancelled by operator request.");
 				const updated = update(operation.id, {
 					status: "cancelled",
 					completedAt: now().toISOString(),
@@ -1100,6 +1109,7 @@ export function createAccountMirrorCompletionService(input: {
 			const parked: AccountMirrorCompletionOperation[] = [];
 			for (const id of Array.from(activeRuns)) {
 				cancelProviderWorkWait(id);
+				abortActiveRun(id, "Account-mirror completion parked for API shutdown.");
 				const operation = operations.get(id);
 				if (!operation) continue;
 				if (!isRunnableOperation(operation)) continue;
@@ -1194,6 +1204,12 @@ export function createAccountMirrorCompletionService(input: {
 		providerWorkCoordinator.cancel(id);
 	}
 
+	function abortActiveRun(id: string, message: string): void {
+		const controller = activeRunAbortControllers.get(id);
+		if (!controller || controller.signal.aborted) return;
+		controller.abort(new Error(message));
+	}
+
 	function releaseProviderWorkLeaseWhenSafe(id: string): void {
 		const operation = operations.get(id);
 		if (!operation || !providerWorkLeases.has(id)) return;
@@ -1252,6 +1268,7 @@ export function createAccountMirrorCompletionService(input: {
 			interactionPolicy?: AccountMirrorMaterializationInteractionPolicy | null;
 		} = {},
 	): Promise<void> {
+		if (operations.get(operation.id)?.status === "cancelled") return;
 		if (!input.historyMaterializationService) {
 			throw new Error("Account mirror full-sweep materialization is not configured.");
 		}

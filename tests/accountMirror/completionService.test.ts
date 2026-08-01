@@ -11,6 +11,7 @@ import { createAccountMirrorCompletionStore } from "../../src/accountMirror/comp
 import { chooseLiveFollowCyclePhase } from "../../src/accountMirror/liveFollowCycleDecision.js";
 import {
 	AccountMirrorRefreshError,
+	type AccountMirrorRefreshRequest,
 	type AccountMirrorRefreshResult,
 } from "../../src/accountMirror/refreshService.js";
 import { createAccountMirrorStatusRegistry } from "../../src/accountMirror/statusRegistry.js";
@@ -1598,6 +1599,65 @@ describe("account mirror completion service", () => {
 			processPid: process.pid,
 		});
 		expect(service.control({ id: "missing", action: "pause" })).toBeNull();
+	});
+
+	test("aborts an in-flight collector and forbids post-cancel materialization", async () => {
+		let resolveRefresh: (value: AccountMirrorRefreshResult) => void = () => undefined;
+		const requestRefresh = vi.fn(
+			(_request?: AccountMirrorRefreshRequest) =>
+				new Promise<AccountMirrorRefreshResult>((resolve) => {
+					resolveRefresh = resolve;
+				}),
+		);
+		const createJob = vi.fn(async () => ({
+			object: "history_materialization_job_create" as const,
+			generatedAt: "2026-04-30T12:00:01.000Z",
+			reused: false,
+			job: { id: "hmj_forbidden_after_cancel", status: "queued" },
+		}));
+		const service = createAccountMirrorCompletionService({
+			registry: createAccountMirrorStatusRegistry({
+				config,
+				now: () => new Date("2026-04-30T12:00:00.000Z"),
+			}),
+			refreshService: { requestRefresh },
+			historyMaterializationService: { createJob },
+			now: () => new Date("2026-04-30T12:00:00.000Z"),
+			generateId: () => "acctmirror_cancel_inflight",
+		});
+
+		service.start({
+			maxPasses: 1,
+			sweepMode: "full_sweep",
+			materializationPolicy: "full_missing_assets",
+		});
+		await waitFor(() => requestRefresh.mock.calls.length === 1);
+		const refreshRequest = requestRefresh.mock.calls[0]?.[0];
+		expect(refreshRequest?.abortSignal?.aborted).toBe(false);
+
+		expect(service.control({ id: "acctmirror_cancel_inflight", action: "cancel" })).toMatchObject({
+			status: "cancelled",
+			passCount: 0,
+		});
+		expect(refreshRequest?.abortSignal?.aborted).toBe(true);
+
+		// Simulate a provider boundary that resolves despite observing cancellation.
+		resolveRefresh(createRefreshResult());
+		await waitFor(() =>
+			Boolean(
+				service
+					.read("acctmirror_cancel_inflight")
+					?.lifecycleEvents?.some((event) => event.type === "provider_work_released"),
+			),
+		);
+
+		expect(service.read("acctmirror_cancel_inflight")).toMatchObject({
+			status: "cancelled",
+			passCount: 0,
+			materializationCursor: null,
+			materializationOutcome: null,
+		});
+		expect(createJob).not.toHaveBeenCalled();
 	});
 
 	test("forces one live-follow pass without converting the subscription to bounded completion", async () => {
