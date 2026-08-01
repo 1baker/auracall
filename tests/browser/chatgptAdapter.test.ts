@@ -58,6 +58,7 @@ import {
 	resolveChatgptDownloadUrlFromJson,
 	selectChatgptDownloadFailure,
 	summarizeChatgptDownloadJsonShape,
+	summarizeChatgptDownloadProviderError,
 	waitForChatgptCaptureProgress,
 	resolveChatgptProjectCreateConfirmLabelsForTest,
 	resolveChatgptProjectMemoryLabel,
@@ -511,6 +512,7 @@ describe("downloadChatgptConversationFilesWithClient", () => {
 			expect(resolveChatgptDownloadUrlFromJson({ detail: "File not found" })).toBeNull();
 			expect(downloadExpression).toContain("resolveChatgptDownloadUrlFromJson");
 			expect(downloadExpression).toContain("summarizeChatgptDownloadJsonShape");
+			expect(downloadExpression).toContain("summarizeChatgptDownloadProviderError");
 			expect(downloadExpression).toContain("selectChatgptDownloadFailure");
 			expect(downloadExpression).toContain("waitForChatgptCaptureProgress");
 			expect(downloadExpression).toContain("awaitChatgptDownloadPromiseWithTimeout");
@@ -553,6 +555,28 @@ describe("downloadChatgptConversationFilesWithClient", () => {
 		expect(JSON.stringify(summarizeChatgptDownloadJsonShape({ url: "?token=secret" }))).not.toContain(
 			"secret",
 		);
+	});
+
+	test("normalizes the live snake-case file-not-found download envelope", () => {
+		const providerError = summarizeChatgptDownloadProviderError({
+				error_code: "file_not_found",
+				error_type: "GetDownloadLinkError",
+				status: "error",
+				error_message: null,
+			});
+		expect(providerError).toEqual({
+			code: "file_not_found",
+			type: "GetDownloadLinkError",
+			status: "error",
+		});
+		const error = new Error("ChatGPT conversation file fetch failed") as Error & {
+			retrievalDiagnostics?: Record<string, unknown>;
+		};
+		error.retrievalDiagnostics = { status: 200, providerError };
+		expect(classifyChatgptFileRetrievalFailure(error)).toEqual({
+			failureKind: "provider_unavailable",
+			retryable: false,
+		});
 	});
 
 	test("distinguishes provider-confirmed file unavailability from retrieval failure", async () => {

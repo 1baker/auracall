@@ -9792,6 +9792,31 @@ export function summarizeChatgptDownloadJsonShape(json: unknown): Record<string,
 	return Object.keys(children).length > 0 ? { ...root, children } : root;
 }
 
+export function summarizeChatgptDownloadProviderError(
+	json: unknown,
+): Record<string, string> | null {
+	if (!json || typeof json !== "object" || Array.isArray(json)) return null;
+	const record = json as Record<string, unknown>;
+	const source =
+		record.error && typeof record.error === "object" && !Array.isArray(record.error)
+			? (record.error as Record<string, unknown>)
+			: record;
+	const fields: Array<[string, unknown[]]> = [
+		["code", [source.code, source.error_code]],
+		["type", [source.type, source.error_type]],
+		["status", [source.status]],
+		["message", [source.message, source.error_message, source.detail]],
+	];
+	const summary: Record<string, string> = {};
+	for (const [targetKey, candidates] of fields) {
+		const value = candidates.find((candidate) => typeof candidate === "string" && candidate.trim());
+		if (typeof value === "string") {
+			summary[targetKey] = value.replace(/\s+/g, " ").trim().slice(0, 160);
+		}
+	}
+	return Object.keys(summary).length > 0 ? summary : null;
+}
+
 export function selectChatgptDownloadFailure(current: unknown, candidate: unknown): unknown {
 	const score = (value: unknown): number => {
 		if (!value) return 0;
@@ -9980,17 +10005,7 @@ async function downloadChatgptConversationFileWithClient(
             if (/\\/backend-api\\/estuary\\/content/.test(text)) return 'estuary-content';
             return 'other';
           };
-          const providerErrorShape = (json) => {
-            if (!json || typeof json !== 'object' || Array.isArray(json)) return null;
-            const source = json.error && typeof json.error === 'object' ? json.error : json;
-            const summary = {};
-            for (const key of ['code', 'type', 'message', 'detail']) {
-              if (typeof source[key] === 'string' && source[key].trim()) {
-                summary[key] = source[key].replace(/\\s+/g, ' ').trim().slice(0, 160);
-              }
-            }
-            return Object.keys(summary).length > 0 ? summary : null;
-          };
+          const providerErrorShape = ${summarizeChatgptDownloadProviderError.toString()};
           const resolveDownloadUrlFromJson = ${resolveChatgptDownloadUrlFromJson.toString()};
           const summarizeDownloadJsonShape = ${summarizeChatgptDownloadJsonShape.toString()};
           const selectDownloadFailure = ${selectChatgptDownloadFailure.toString()};
