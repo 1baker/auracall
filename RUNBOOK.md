@@ -1,5 +1,29 @@
 # RUNBOOK
 
+## Turn 396 | 2026-08-02
+
+- Corrected the fresh source-file diagnosis from the operator's direct native
+  proof. The HTML/screenshot belongs to the uploaded TXT tile; activating it
+  opens a preview with an upper-right exact `button[aria-label="Download"]`.
+- The manually downloaded source is 505 bytes at SHA-256 `5d17e7ec...` and is
+  byte-identical to the submitted fixture (`cmp=0`). ChatGPT source
+  availability is proven; the earlier direct-route 403 is not the terminal
+  provider-access conclusion.
+- Provider-free red/green localized AuraCall's miss to a strict single-visible-
+  dialog assumption. The adapter now snapshots exact visible Download buttons
+  before tile activation and clicks only the sole newly visible one, retaining
+  the older dialog-scoped fallback.
+- The focused regression failed 1/1 before repair and passed after it. ChatGPT
+  adapter/file tests pass 167/167; history-materialization/MCP tests pass 75/75.
+- The full provider-free suite passes 304 files/2,704 tests with 65 skips;
+  typecheck, production build, touched lint (one retained naming warning), plan
+  audit with zero validation errors, and diff hygiene pass.
+- This slice did not install, launch a browser, retry materialization, or alter
+  runtime posture. The consumed job remains 1 materialized / 1 failed, M5 is
+  open, and aggregate terminal-status truth remains a separate repair. Final
+  readback: installed API PID `96156` active with zero restarts, five active
+  completions all paused, and active `chatgpt/default` materialization jobs `0`.
+
 ## Turn 395 | 2026-08-02
 
 - Repaired the root CLI provider-session authorization path provider-free. Root

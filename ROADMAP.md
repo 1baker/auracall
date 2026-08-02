@@ -102,8 +102,13 @@ Lane: P01
   job materialized and fully validated that DOCX, but the exact uploaded TXT
   failed its provider route with HTTP 403 JSON `Forbidden`. Metrics are 1
   materialized / 1 failed despite a `succeeded` job envelope. The packet is
-  consumed without retry; M5 and all re-enablement gates remain open pending
-  provider-free aggregate-status and upload-route repair.
+  consumed without retry. The operator subsequently proved the exact uploaded
+  source is available by opening its tile preview and downloading the
+  upper-right aria-labeled control; the 505-byte result is byte-identical to
+  the submitted fixture. Provider-free repair now targets the sole newly
+  visible exact Download button even when the preview has no dialog role. It is
+  tested but not installed or proven live. M5 and all re-enablement gates
+  remain open pending automated two-asset proof and aggregate-status repair.
 
 - Completed provider-session authority unification:
   [docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md](docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md)

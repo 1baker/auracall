@@ -10179,7 +10179,25 @@ async function downloadChatgptConversationFileWithClient(
 	            node.textContent ||
 	            '',
 	          );
+	          const visiblePreviewDownloadControls = () => Array.from(
+	            document.querySelectorAll('button[aria-label="Download"]')
+	          ).filter((node) => isVisible(node));
+	          const previewDownloadControlsBeforeTileClick = new Set(
+	            visiblePreviewDownloadControls()
+	          );
+	          const clickNewPreviewDownload = () => {
+	            const newPreviewDownloadControls = visiblePreviewDownloadControls()
+	              .filter((node) => !previewDownloadControlsBeforeTileClick.has(node));
+	            if (newPreviewDownloadControls.length === 0) return null;
+	            if (newPreviewDownloadControls.length !== 1) return false;
+	            const download = newPreviewDownloadControls[0];
+	            if (!download || typeof download.click !== 'function') return false;
+	            download.click();
+	            return true;
+	          };
 	          const clickViewerDownload = () => {
+	            const newPreviewDownloadClicked = clickNewPreviewDownload();
+	            if (newPreviewDownloadClicked !== null) return newPreviewDownloadClicked;
 	            const viewerSurfaces = Array.from(document.querySelectorAll('[role="dialog"]'))
 	              .filter((node) => isVisible(node));
 	            if (viewerSurfaces.length !== 1) return false;

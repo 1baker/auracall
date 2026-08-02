@@ -20109,3 +20109,19 @@ browser-stage lifecycle observability, not transcript truncation.
 - Follow-up rule: aggregate job truth must fail when any requested selected
   asset fails. Repair that provider-free and diagnose the source-file retrieval
   route before authorizing another live control; do not retry the consumed job.
+
+## 2026-08-02 | Preview Download controls may appear without a dialog role
+
+- Symptom: an exact uploaded ChatGPT source tile opened a working preview with
+  `button[aria-label="Download"]`, but AuraCall skipped it because the fallback
+  first required exactly one visible `[role="dialog"]`, then fell through to a
+  direct route that returned 403.
+- Durable rule: bind preview controls by UI transition as well as container
+  semantics. Snapshot exact visible controls before activating the exact asset,
+  and act only on the sole newly visible exact control afterward. Zero or
+  multiple new controls must fail closed.
+- Compatibility rule: retain the single-dialog-scoped lookup for older layouts;
+  do not replace it with an unconstrained global label search.
+- Evidence rule: a byte-identical operator download proves provider
+  availability and corrects attribution, but it does not rewrite a failed
+  AuraCall materialization receipt or satisfy automated acceptance.

@@ -445,6 +445,19 @@ describe("downloadChatgptConversationFilesWithClient", () => {
 			).resolves.toEqual([{ fileId: file.id, status: "materialized" }]);
 			expect(downloadExpression).toContain("const viewerSurface =");
 			expect(downloadExpression).toContain("viewerSurface.querySelectorAll");
+			expect(downloadExpression).toContain("const visiblePreviewDownloadControls = () =>");
+			expect(downloadExpression).toContain(
+				"document.querySelectorAll('button[aria-label=\"Download\"]')",
+			);
+			expect(downloadExpression).toContain(
+				"const previewDownloadControlsBeforeTileClick = new Set(",
+			);
+			expect(downloadExpression).toContain("!previewDownloadControlsBeforeTileClick.has(node)");
+			expect(downloadExpression).toContain("if (newPreviewDownloadControls.length === 0) return null");
+			expect(downloadExpression).toContain("if (newPreviewDownloadControls.length !== 1)");
+			expect(downloadExpression).toContain(
+				"if (newPreviewDownloadClicked !== null) return newPreviewDownloadClicked",
+			);
 			expect(downloadExpression).not.toContain(
 				"Array.from(document.querySelectorAll('button, [role=\"button\"], a'))",
 			);

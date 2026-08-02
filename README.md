@@ -658,6 +658,12 @@ Terminology note:
   stronger earlier failure. Intercept polling preserves its deadline even when
   a response hangs; direct, anchor, signed-follow, and body-read stages each
   have a local aborting timeout.
+  When activating an exact ChatGPT conversation-file tile opens a preview,
+  AuraCall snapshots visible `Download` buttons before activation and clicks
+  only the sole newly visible exact `button[aria-label="Download"]`. This
+  supports current source-file previewers that do not expose a dialog role;
+  multiple newly visible controls fail closed, while zero new exact controls
+  may use the existing single-dialog-scoped fallback for older layouts.
   A files-catalog materialization request is exact-asset authority, not merely a
   conversation hint: AuraCall carries the selected catalog ID, filename, and
   provider file ID into transfer selection and excludes every nonmatching file

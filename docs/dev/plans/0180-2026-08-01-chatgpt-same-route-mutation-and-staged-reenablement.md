@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 15
+Plan version: 22
 
 ## Stable Objective
 
@@ -18,6 +18,14 @@ reenablement.
   cooldowns.
 - The account-mirror scheduler and five unrelated completions remain paused;
   no queued, running, or idle-waiting work remains.
+- The fresh one-upload/one-DOCX control proved both provider assets are
+  downloadable through ChatGPT's preview UI: the generated DOCX materialized
+  automatically, and the operator manually downloaded the uploaded 505-byte
+  TXT through the source tile's previewer. The manual TXT is byte-identical to
+  the submitted fixture, but the consumed AuraCall job still remains a partial
+  failure because its role-dialog-only preview fallback missed that source
+  preview and fell through to the 403 direct route. A provider-free selector
+  repair is green but not installed or proven live.
 - The latest separately authorized default-profile canary
   `acctmirror_completion_ec8ec770-b33c-47ba-8f9c-049bf9b97588` completed one
   collector pass with zero duplicate same-route mutations and no rate-limit,
@@ -917,3 +925,37 @@ continuous live-follow reenablement remain separately gated afterward.
   asset cannot produce a successful job envelope, then diagnose the fresh
   upload's 403 route provider-free. Any new provider attempt requires separate
   operator authorization.
+
+## Checkpoint 23
+
+- `plan_version`: 22
+- `state_transition`: apparent fresh-upload access failure -> operator-proven
+  source preview download -> provider-free role-less preview selector repair;
+  M5 remains open and no new provider authority was inferred.
+- `manual_source_proof`: the operator opened the exact uploaded source tile,
+  then used the previewer's upper-right `button[aria-label="Download"]`.
+  `/home/ecochran76/Downloads/auracall-m5-source-20260802T185953Z.txt` is 505
+  bytes with SHA-256
+  `5d17e7ec1b61d4c6eaaefbb3bfd8ae542bb5a373113a506c681ade0aa641044b`;
+  `cmp` against the sole submitted fixture returns `0`.
+- `corrected_diagnosis`: ChatGPT did not deny source availability. AuraCall
+  required exactly one visible `[role="dialog"]` before it would click a
+  preview Download control. The current source preview exposes the exact
+  aria-labeled button without satisfying that surface assumption, so AuraCall
+  skipped the UI route and observed the secondary direct endpoint's 403.
+- `repair`: snapshot visible exact `button[aria-label="Download"]` controls
+  before opening the matched tile. After the preview opens, click only when
+  exactly one such control is newly visible. Preserve the existing single-
+  dialog fallback for older layouts when no new exact control appears, and
+  fail closed on ambiguous new controls.
+- `tdd_receipt`: the focused regression failed 1/1 before the repair and then
+  passed. The complete ChatGPT adapter/file packet passes 167/167 and adjacent
+  history-materialization/MCP tests pass 75/75. The full provider-free suite
+  passes 304 files/2,704 tests with 65 skips; typecheck, production build,
+  touched lint with one retained naming warning, plan audit with zero validation
+  errors, and diff hygiene pass.
+- `acceptance_boundary`: both source and generated output now have verified
+  local bytes, but the source copy was manually downloaded, not materialized by
+  AuraCall. The historical job remains materialized 1 / failed 1; aggregate
+  status truth is still a separate open repair. Do not install, retry, or run a
+  provider proof without fresh authorization.

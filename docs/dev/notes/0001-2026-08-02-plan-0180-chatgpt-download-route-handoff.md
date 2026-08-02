@@ -401,6 +401,25 @@ Re-read these values; they are a snapshot, not permission to mutate.
   provider-free packet should repair aggregate job status and diagnose the
   fresh upload route; any later live attempt requires separate authorization.
 
+## 2026-08-02 Source Preview Correction Addendum
+
+- The HTML and screenshot supplied by the operator belong to
+  `auracall-m5-source-20260802T185953Z.txt`, not the generated DOCX.
+- Clicking that uploaded source tile opens a previewer whose upper-right
+  control is an exact `button[aria-label="Download"]`. The operator used it
+  successfully.
+- The resulting `/home/ecochran76/Downloads/auracall-m5-source-20260802T185953Z.txt`
+  is 505 bytes and SHA-256 `5d17e7ec...`; it is byte-identical to the submitted
+  fixture (`cmp=0`). ChatGPT source availability is therefore proven.
+- The AuraCall defect is narrower: `clickViewerDownload` required exactly one
+  visible `[role="dialog"]`, so it could miss the current role-less source
+  preview and fall through to the 403 direct route.
+- The provider-free repair snapshots exact visible Download buttons before
+  tile activation and clicks only the sole newly visible exact control. The
+  old single-dialog fallback remains for older layouts. No install, live retry,
+  scheduler resume, or continuous-live re-enablement is authorized by this
+  correction.
+
 ## Suggested Skills
 
 - `agent-browser`: required for retained authenticated browser/CDP inspection

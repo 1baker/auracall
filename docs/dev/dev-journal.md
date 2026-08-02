@@ -42767,3 +42767,28 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   HTTP 403 JSON `Forbidden` with no URL. Job metrics are materialized 1 / failed
   1 even though its envelope says `succeeded`. Both-asset acceptance therefore
   fails; no retry or second job ran and M5 remains open.
+
+## 2026-08-02 | Source preview proof corrected the fresh-upload diagnosis
+
+- The operator clarified that the supplied preview HTML belongs to
+  `auracall-m5-source-20260802T185953Z.txt`. Clicking that source tile and the
+  upper-right exact `button[aria-label="Download"]` produced a 505-byte local
+  file with SHA-256 `5d17e7ec...`; `cmp` against the submitted fixture returned
+  zero. The source is provider-downloadable through native UI.
+- The adapter already attempted a viewer fallback, but only after resolving
+  exactly one visible `[role="dialog"]`. The current source preview can expose
+  its exact aria-labeled button without satisfying that role assumption, so the
+  fallback returned false and later observed the direct endpoint's 403.
+- Added a fail-closed provider-free repair: record exact visible Download
+  buttons before activating the matched tile, then click only the sole newly
+  visible exact control. The existing single-dialog fallback remains for older
+  UI variants.
+- TDD receipt: focused test red 1/1, then green; complete adapter/files tests
+  167/167 and history-materialization/MCP tests 75/75 pass. No installation,
+  browser work, provider retry, or runtime mutation occurred. The full
+  provider-free suite also passes 304 files/2,704 tests with 65 skips, followed
+  by typecheck, production build, touched lint with one retained naming
+  warning, zero-error plan audit, and clean diff hygiene.
+- Final readback remained provider-free: API PID `96156` is active with zero
+  restarts, all five active completions are paused, and active
+  `chatgpt/default` materialization jobs are zero.
