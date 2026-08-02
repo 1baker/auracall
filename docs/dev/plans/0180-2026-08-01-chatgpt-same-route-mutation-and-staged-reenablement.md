@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 12
+Plan version: 13
 
 ## Stable Objective
 
@@ -87,10 +87,12 @@ reenablement.
 - Operator verification after that proof found working DOCX links near the end
   of the same chat. They download as
   `ChE_4470_5470_Exam_2_Spring_2025_Problem_3_updated_fresh-1.docx` at about
-  99.48 KB, consistent with the preserved 99,476-byte local Exam DOCX. This
-  disproves any working assumption that the intended document itself vanished;
-  the remaining defect is a download-route/identity mismatch between the 403
-  provider-file endpoint and the later live chat control. Fresh-session work is
+  99.48 KB. Local verification then separated two blobs: the requested catalog-
+  named DOCX is 108,667 bytes at SHA-256 `a6ef6841...`, while a distinct later
+  generated-output DOCX is 99,476 bytes at SHA-256 `480b6881...`. The operator's
+  `...fresh-1.docx` was not checksummed by this agent. The remaining question is
+  therefore whether the later control is safely related to the requested asset,
+  not a proven alternate route to identical bytes. Fresh-session work is
   governed by
   `docs/dev/notes/0001-2026-08-02-plan-0180-chatgpt-download-route-handoff.md`.
 
@@ -588,16 +590,44 @@ continuous live-follow reenablement remain separately gated afterward.
   fresh-agent download-route investigation is ready.
 - `operator_evidence`: links near the end of the exact chat download
   `ChE_4470_5470_Exam_2_Spring_2025_Problem_3_updated_fresh-1.docx` at about
-  99.48 KB. This is consistent with the preserved 99,476-byte Exam DOCX and
-  means the intended artifact is available through a live chat control despite
-  the exact catalog provider-file endpoint returning 403.
+  99.48 KB. This proves a later generated-output control is downloadable; it
+  does not prove byte or logical identity with the requested catalog asset.
 - `remaining_gap`: bind the later live control to the requested catalog asset
   without weakening Plan 0180 M6 cross-asset identity checks. Preserve the
   actual provider filename and distinguish a catalog alias from the downloaded
   asset identity.
 - `handoff`: the next session must start from
   `docs/dev/notes/0001-2026-08-02-plan-0180-chatgpt-download-route-handoff.md`,
-  perform one read-only CDP/DOM inspection on the retained `default` browser
-  profile, then build a provider-free red/green repair. No browser click,
+  perform provider-free identity diagnosis first, and stop at the browser gate
+  if no retained `default` target exists. No browser launch or click,
   materialization retry, scheduler resume, or continuous live-follow
   re-enablement is authorized by this checkpoint.
+
+## Checkpoint 14
+
+- `plan_version`: 13
+- `progress_classification`: regression corrected; unsafe implementation
+  inference removed; provider-free diagnosis is ready.
+- `identity_correction`: the catalog-named local DOCX has SHA-256
+  `a6ef6841e43c7f3162f093fbbc74e45ceafd9b3616af5c6a45d96a1839d42b7b`
+  and size 108,667 bytes. The separately preserved generated-output DOCX has
+  SHA-256
+  `480b68813ebbcadf9f5089f0119329fd4a2cecd1a2176aca632688140e27ded6`
+  and size 99,476 bytes. The operator-observed `...fresh-1.docx` remains an
+  unchecksummed third observation. The `480b...` blob also retains multiple
+  filesystem aliases, including the quarantined January transcript association;
+  the context snapshot binds the valid generated output to download artifact
+  `download-dom:a71ab5c2-df5f-4f77-a9de-b235cd876154:0`. Size, checksum reuse,
+  and filename aliases are not provider/source identity evidence.
+- `runtime_gate`: API PID `29769`, scheduler paused, five completions paused,
+  queued/running materialization jobs zero, and browser mutations zero. The
+  earlier managed `default` browser PID is gone and CDP port `45011` is closed;
+  no retained target exists to inspect under the prior no-launch authority.
+- `packet_boundary`: Packet A may inspect persisted evidence, use CodeGraph,
+  and create a provider-free red-capable diagnosis/fixture plan. It may not
+  implement product code, install, launch a browser, click a control, or run a
+  live materialization. Each later packet requires review and the applicable
+  explicit gate.
+- `next_gate`: complete Packet A and review its evidence. If live DOM evidence
+  remains necessary, obtain explicit authorization to launch exactly one
+  managed `default` ChatGPT target for read-only inspection.

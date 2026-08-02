@@ -1,3 +1,16 @@
+- 2026-08-02: Filename similarity and approximate size cannot join a failed
+  ChatGPT catalog-file route to a later generated-output control. Record each
+  local blob's filename, exact byte count, checksum, discovery source, and
+  provider identity separately. In the observed case the catalog-named blob was
+  108,667 bytes at `a6ef6841...`, while the generated-output blob was 99,476
+  bytes at `480b6881...`; an operator-observed `...fresh-1.docx` remained
+  unchecksummed. Model these as distinct assets until source-local provider or
+  content evidence establishes an explicit relationship. A content-addressed
+  blob may retain several filenames from a prior cross-asset defect; those
+  aliases prove byte reuse, not source or provider identity. If the required
+  managed browser target is absent, stop rather than silently launching another
+  profile or treating a different profile as equivalent.
+
 - 2026-08-01: An account-mirror file `catalogItemId` is exact asset authority,
   not permission to select any file from the resolved conversation. Carry its
   catalog ID, exact filename, and provider file ID into the provider-work

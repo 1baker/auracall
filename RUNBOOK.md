@@ -1,15 +1,37 @@
 # RUNBOOK
 
+## Turn 390 | 2026-08-02
+
+- Corrected
+  `docs/dev/plans/0180-2026-08-01-chatgpt-same-route-mutation-and-staged-reenablement.md`
+  and its download-route handoff after local checksum/size
+  verification disproved its identity shortcut. The requested catalog-named
+  DOCX is 108,667 bytes at SHA-256 `a6ef6841...`; the separately preserved
+  generated-output DOCX is 99,476 bytes at SHA-256 `480b6881...`. The operator's
+  similarly named `...fresh-1.docx` download remains unchecksummed by this agent.
+  The `480b...` blob also retains multiple filesystem aliases, including the
+  quarantined January transcript association; those aliases are evidence of the
+  prior defect, not current asset authority.
+- Reframed the next work from implementing an assumed alternate route to Packet
+  A provider-free identity diagnosis. Packet A may inspect persisted evidence,
+  build a red-capable fixture/repair plan, and use CodeGraph, but may not change
+  product code, install, launch a browser, click, or run materialization.
+- Current fail-closed readback remains API PID `29769`, scheduler paused, five
+  completions paused, queued/running materialization jobs 0/0, and browser
+  mutations 0. The recorded managed `default` Chrome PID is gone and CDP port
+  `45011` is closed, so live DOM inspection requires a new explicit launch gate.
+
 ## Turn 389 | 2026-08-02
 
 - The operator manually verified that working DOCX links exist near the end of
   the exact `ChE 4470 Study Guide` chat. They download as
   `ChE_4470_5470_Exam_2_Spring_2025_Problem_3_updated_fresh-1.docx` at about
-  99.48 KB, consistent with the preserved 99,476-byte local Exam DOCX.
+  99.48 KB. Turn 390 corrects the later-discovered local identity mismatch.
 - This corrects the working diagnosis after job
   `hmj_50e7aa9598be44fc950ddb1b89d4ca2f`: exact catalog selection is repaired,
-  but AuraCall follows a 403 direct provider-file endpoint instead of the live
-  later-chat download control. The intended document is not presumed vanished.
+  but AuraCall follows a 403 direct provider-file endpoint while a later
+  generated-output control remains downloadable. Their relationship was not
+  proved by this turn.
 - Wrote fresh-agent authority
   `docs/dev/notes/0001-2026-08-02-plan-0180-chatgpt-download-route-handoff.md`
   with startup order, exact identities, read-only CDP packet, provider-free

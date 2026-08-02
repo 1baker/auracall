@@ -42589,9 +42589,10 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Operator verification found working DOCX links near the end of the exact chat
   that download as
   `ChE_4470_5470_Exam_2_Spring_2025_Problem_3_updated_fresh-1.docx` at about
-  99.48 KB. This is consistent with the preserved 99,476-byte Exam DOCX and
-  changes the next diagnosis from vanished artifact to direct-route versus
-  live-control mismatch.
+  99.48 KB. The identity-correction entry below records that the 99,476-byte
+  generated output and 108,667-byte catalog-named DOCX are distinct blobs; this
+  observation therefore changes the next work to relationship diagnosis, not a
+  proven alternate download route.
 - Added repo-native fresh-agent handoff
   `docs/dev/notes/0001-2026-08-02-plan-0180-chatgpt-download-route-handoff.md`.
   It requires read-only CDP inspection on the retained `default` browser
@@ -42602,3 +42603,27 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   materialization jobs zero, browser mutations zero, and duplicate same-route
   attempts zero. No browser action or provider request ran while writing the
   handoff.
+
+## 2026-08-02 | Plan 0180 identity correction and browser gate
+
+- Local `sha256sum` plus `stat` disproved the handoff's checksum/size pairing.
+  The requested catalog-named DOCX is 108,667 bytes with SHA-256
+  `a6ef6841e43c7f3162f093fbbc74e45ceafd9b3616af5c6a45d96a1839d42b7b`;
+  the separately preserved later generated-output DOCX is 99,476 bytes with
+  SHA-256
+  `480b68813ebbcadf9f5089f0119329fd4a2cecd1a2176aca632688140e27ded6`.
+  The operator-observed `...fresh-1.docx` remains unchecksummed by this agent.
+  The `480b...` blob remains reachable under multiple preserved filenames,
+  including the quarantined January transcript alias. The context snapshot
+  separately binds the valid generated output to
+  `download-dom:a71ab5c2-df5f-4f77-a9de-b235cd876154:0`; filesystem aliases are
+  retained defect evidence, not provider/source identity.
+- Reframed the handoff as provider-free Packet A. The next agent must model the
+  catalog asset and generated output as distinct until source-local relationship
+  evidence proves otherwise. Packet A stops at a red-capable fixture/repair
+  plan; product implementation is a separately reviewed packet.
+- Re-read the fail-closed runtime: API PID `29769`, scheduler paused, five
+  completions paused, queued/running materialization jobs zero, and browser
+  mutations zero. The managed `default` PID from the receipt no longer exists
+  and port `45011` is closed. No browser launch, DOM inspection, click,
+  provider request, or materialization ran.
