@@ -855,6 +855,7 @@ export function createHistoryMaterializationService(
 				);
 				const result: HistoryMaterializationResult = {
 					...materializationResult,
+					status: resolveHistoryMaterializationJobResultStatus(materializationResult),
 					providerSessionProof:
 						providerWorkContext(running.id, running.request).providerSessionProofSummary ??
 						materializationResult.providerSessionProof ??
@@ -5452,6 +5453,18 @@ export function resolveHistoryMaterializationResultStatus(metrics: {
 	if (metrics.materialized > 0) return "materialized";
 	if (metrics.failed > 0) return "failed";
 	return "skipped";
+}
+
+function resolveHistoryMaterializationJobResultStatus(
+	result: HistoryMaterializationResult,
+): HistoryMaterializationResult["status"] {
+	if (result.status === "failed" || result.metrics.failed <= 0) return result.status;
+	if (historyMaterializationResultHasProviderGuard(result)) return result.status;
+	const failedEntries = result.entries.filter((entry) => entry.status === "failed");
+	if (failedEntries.length === 0) return "failed";
+	return failedEntries.some((entry) => !isConversationNotFoundOrUnavailableReason(entry.reason))
+		? "failed"
+		: result.status;
 }
 
 function summarizeEntries(

@@ -20125,3 +20125,17 @@ browser-stage lifecycle observability, not transcript truncation.
 - Evidence rule: a byte-identical operator download proves provider
   availability and corrects attribution, but it does not rewrite a failed
   AuraCall materialization receipt or satisfy automated acceptance.
+
+## 2026-08-02 | Real partial transfer failure must fail the durable job
+
+- Symptom: a history result with one materialized selected asset and one failed
+  selected asset persisted `result.status=materialized` and
+  `job.status=succeeded`, contradicting its own materialized 1 / failed 1
+  metrics.
+- Durable rule: a successful selected transfer cannot hide another real failed
+  selected transfer. Normalize the durable result/job to `failed` from manifest
+  entry truth before publication.
+- Boundary rule: not every failed metric is an asset-transfer failure.
+  Synthetic `conversation-not-found-or-unavailable` routeability placeholders
+  and provider-guard evidence keep their dedicated semantics; do not flatten
+  those control-plane outcomes into ordinary transfer failure.

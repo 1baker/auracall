@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 22
+Plan version: 23
 
 ## Stable Objective
 
@@ -26,6 +26,11 @@ reenablement.
   failure because its role-dialog-only preview fallback missed that source
   preview and fell through to the 403 direct route. A provider-free selector
   repair is green but not installed or proven live.
+- Aggregate terminal truth is provider-free green: any real failed selected
+  transfer now makes the result and durable job failed even when another asset
+  materializes. Synthetic routeability placeholders and provider guards retain
+  their dedicated semantics. Commit/install parity and one bounded live proof
+  remain.
 - The latest separately authorized default-profile canary
   `acctmirror_completion_ec8ec770-b33c-47ba-8f9c-049bf9b97588` completed one
   collector pass with zero duplicate same-route mutations and no rate-limit,
@@ -959,3 +964,33 @@ continuous live-follow reenablement remain separately gated afterward.
   AuraCall. The historical job remains materialized 1 / failed 1; aggregate
   status truth is still a separate open repair. Do not install, retry, or run a
   provider proof without fresh authorization.
+
+## Checkpoint 24
+
+- `plan_version`: 23
+- `state_transition`: preview selector repair green -> aggregate partial-
+  transfer truth repair green -> commit/install/live proof gate.
+- `authorization`: the operator's `ok go` authorizes this provider-free repair,
+  commit/install parity for both pending repairs, and exactly one no-retry fresh
+  ChatGPT two-asset proof. Existing account, guard, CAPTCHA, verification,
+  `Answer now`, and same-route hard stops remain authoritative.
+- `red_receipt`: public history-service regression
+  `marks a direct job failed when any selected transfer fails` produced the
+  exact defect: result `materialized`, metrics 1/1, job `succeeded`, and no job
+  error.
+- `root_cause`: the lower aggregate resolver intentionally preferred any
+  materialized count over failed count. The durable runner trusted that result
+  label, so one successful transfer hid a real failed selected transfer.
+- `repair`: the durable runner normalizes terminal result status from manifest
+  entries. A real failed transfer forces result/job failure; synthetic
+  `conversation-not-found-or-unavailable` routeability entries and provider-
+  guard results preserve their existing special handling. Mixed project-source
+  transfers follow the same fail-closed contract.
+- `green_receipt`: focused regression passes; the complete history service is
+  73/73, adjacent completion/HTTP/CLI/MCP surfaces pass, and the full provider-
+  free suite passes 304 files/2,705 tests with 65 skips. Typecheck, production
+  build, touched lint, zero-error plan audit, and diff hygiene pass.
+- `next_gate`: commit and push, install both pending source changes, prove exact
+  source/runtime hashes and paused posture, then consume at most one fresh
+  two-asset ChatGPT proof. Stop without retry on any hard-stop signal or any
+  nonzero failed materialization.

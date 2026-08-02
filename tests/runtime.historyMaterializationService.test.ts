@@ -374,6 +374,96 @@ describe("history materialization service", () => {
 		await fs.rm(homeDir, { recursive: true, force: true });
 	});
 
+	it("marks a direct job failed when any selected transfer fails", async () => {
+		const store = createInMemoryHistoryMaterializationJobStore([]);
+		let scheduled: (() => Promise<void>) | undefined;
+		const materializeConversation = vi.fn(
+			async (target): Promise<HistoryMaterializationResult> => ({
+				object: "history_materialization_result",
+				generatedAt: "2026-08-02T21:00:01.000Z",
+				status: "materialized",
+				target,
+				source: {
+					type: "conversation",
+					provider: "chatgpt",
+					conversationId: target.conversationId,
+				},
+				manifestPaths: ["/tmp/two-asset-manifest.json"],
+				entries: [
+					{
+						kind: "artifact",
+						providerId: "artifact_docx",
+						title: "generated.docx",
+						status: "materialized",
+						localPath: "/tmp/generated.docx",
+						remoteUrl: null,
+						cacheKey: "generated.docx",
+						checksumSha256: "docx-sha256",
+						mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+						size: 1024,
+						materializationMethod: "download-button",
+						reason: "eligible",
+						archiveItemId: "archive-docx",
+						assetRoute: "/v1/archive/items/archive-docx/asset",
+					},
+					{
+						kind: "file",
+						providerId: "file_source",
+						title: "source.txt",
+						status: "failed",
+						localPath: null,
+						remoteUrl: null,
+						cacheKey: null,
+						checksumSha256: null,
+						mimeType: "text/plain",
+						size: null,
+						materializationMethod: null,
+						reason: "retrieval_failed",
+						archiveItemId: null,
+						assetRoute: null,
+					},
+				],
+				archiveItems: [],
+				metrics: { conversations: 1, materialized: 1, skipped: 0, failed: 1 },
+				message: "Materialized one selected asset and failed one selected asset.",
+			}),
+		);
+		const service = createHistoryMaterializationService({
+			config: {},
+			catalogService: { readCatalog: vi.fn(), readItem: vi.fn() },
+			store,
+			generateId: () => "hmj_partial_failed",
+			now: sequenceNow([
+				"2026-08-02T21:00:00.000Z",
+				"2026-08-02T21:00:01.000Z",
+				"2026-08-02T21:00:02.000Z",
+			]),
+			schedule: (work) => {
+				scheduled = work;
+			},
+			materializeConversation,
+		});
+
+		await service.createJob({
+			provider: "chatgpt",
+			runtimeProfile: "default",
+			conversationId: "conv_partial_failed",
+			assetKinds: ["all"],
+			force: true,
+		});
+		if (!scheduled) throw new Error("Expected job to be scheduled.");
+		await scheduled();
+
+		await expect(service.readJob("hmj_partial_failed")).resolves.toMatchObject({
+			status: "failed",
+			result: {
+				status: "failed",
+				metrics: { materialized: 1, failed: 1 },
+			},
+			error: { type: "internal_error", statusCode: 500 },
+		});
+	});
+
 	it("waits for the collector quiet boundary before starting provider work", async () => {
 		const homeDir = await fs.mkdtemp(
 			path.join(os.tmpdir(), "auracall-history-materialize-provider-quiet-boundary-"),
@@ -706,14 +796,14 @@ describe("history materialization service", () => {
 			}),
 		);
 		await expect(service.readJob("hmj_project_sources_1")).resolves.toMatchObject({
-			status: "succeeded",
+			status: "failed",
 			source: {
 				type: "project_sources",
 				provider: "chatgpt",
 				projectId: "g-p-source",
 			},
 			result: {
-				status: "materialized",
+				status: "failed",
 				target: {
 					provider: "chatgpt",
 					conversationId: "project:g-p-source",
@@ -742,6 +832,7 @@ describe("history materialization service", () => {
 					},
 				],
 			},
+			error: { type: "internal_error", statusCode: 500 },
 		});
 	});
 

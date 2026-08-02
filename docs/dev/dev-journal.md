@@ -42792,3 +42792,23 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Final readback remained provider-free: API PID `96156` is active with zero
   restarts, all five active completions are paused, and active
   `chatgpt/default` materialization jobs are zero.
+
+## 2026-08-02 | Partial selected-transfer results now fail durable jobs
+
+- The new public-service regression reproduced the exact fresh-control defect:
+  a result containing one materialized DOCX entry and one failed source entry
+  retained `status=materialized`, so the durable job published `succeeded`
+  despite metrics materialized 1 / failed 1.
+- Root cause was the shared aggregate policy that preferred any materialized
+  count over failed count. The job runner trusted that label without
+  distinguishing real transfer failures from synthetic routeability or guard
+  evidence.
+- The runner now normalizes terminal status from entries: any real failed
+  selected transfer makes result/job failed, including mixed project-source
+  jobs. `conversation-not-found-or-unavailable` placeholders and provider-
+  guard results preserve their existing special semantics.
+- The regression went red 1/1 and green after the repair. History service is
+  73/73; adjacent completion/HTTP/CLI/MCP and the full provider-free suite pass
+  at 304 files/2,705 tests with 65 skips. Typecheck, production build, touched
+  lint, zero-error plan audit, and diff hygiene pass. No install or provider
+  work occurred at this checkpoint.

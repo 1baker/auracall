@@ -420,6 +420,21 @@ Re-read these values; they are a snapshot, not permission to mutate.
   scheduler resume, or continuous-live re-enablement is authorized by this
   correction.
 
+## 2026-08-02 Aggregate Truth Repair Addendum
+
+- The operator authorized provider-free aggregate repair, installation/parity
+  of both pending fixes, and exactly one later no-retry ChatGPT two-asset proof.
+- A public history-service regression reproduced the consumed receipt exactly:
+  one materialized entry, one failed entry, result `materialized`, and durable
+  job `succeeded`.
+- The repaired runner publishes result/job `failed` whenever a real selected
+  transfer entry fails, including mixed project-source transfers. Synthetic
+  routeability placeholders and provider-guard evidence retain their existing
+  dedicated semantics.
+- Provider-free validation passes 304 files/2,705 tests with 65 skips plus
+  typecheck, production build, touched lint, zero-error plan audit, and diff
+  hygiene. Commit/install/live proof remain the next serialized gates.
+
 ## Suggested Skills
 
 - `agent-browser`: required for retained authenticated browser/CDP inspection

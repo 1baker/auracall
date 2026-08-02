@@ -1,5 +1,25 @@
 # RUNBOOK
 
+## Turn 397 | 2026-08-02
+
+- The operator authorized the recommended bounded sequence: provider-free
+  aggregate-status repair, commit/install parity for both pending repairs, and
+  exactly one no-retry two-asset ChatGPT proof.
+- A public history-service regression reproduced the exact partial-success
+  defect: one materialized entry plus one failed entry persisted result
+  `materialized` and job `succeeded` with metrics 1/1.
+- The durable runner now fails result and job when any real selected transfer
+  fails. Synthetic terminal routeability placeholders and provider-guard
+  evidence retain their dedicated semantics; mixed project-source transfers
+  are also fail-closed.
+- Red 1/1 became green. History service passes 73/73; adjacent completion,
+  HTTP, CLI, and MCP surfaces pass; full provider-free validation passes 304
+  files/2,705 tests with 65 skips, plus typecheck, production build, touched
+  lint, zero-error plan audit, and diff hygiene.
+- No install or provider work has occurred at this checkpoint. Next: commit and
+  push, install/parity, confirm paused/empty posture, then consume the single
+  authorized live proof.
+
 ## Turn 396 | 2026-08-02
 
 - Corrected the fresh source-file diagnosis from the operator's direct native

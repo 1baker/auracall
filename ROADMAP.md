@@ -107,8 +107,12 @@ Lane: P01
   upper-right aria-labeled control; the 505-byte result is byte-identical to
   the submitted fixture. Provider-free repair now targets the sole newly
   visible exact Download button even when the preview has no dialog role. It is
-  tested but not installed or proven live. M5 and all re-enablement gates
-  remain open pending automated two-asset proof and aggregate-status repair.
+  tested but not installed or proven live. Aggregate status is now also repaired
+  provider-free: any real failed selected transfer makes the result and durable
+  job `failed` even beside a successful transfer, while routeability placeholders
+  and provider guards keep their dedicated semantics. Full validation passes;
+  commit/install parity and one bounded live two-asset proof are next. M5 and
+  all re-enablement gates remain open pending that automated proof.
 
 - Completed provider-session authority unification:
   [docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md](docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md)

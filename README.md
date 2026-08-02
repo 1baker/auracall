@@ -571,9 +571,11 @@ Terminology note:
   reCAPTCHA, or visible human-verification pages surface as
   `provider_guard_required` job failures with HTTP 409 semantics; operators
   must clear the managed browser profile before retrying.
-  Aggregate result status is derived from the manifest entries: when nothing
-  materializes and at least one selected transfer fails, the result and durable
-  job are `failed`, not `skipped`. A completion-owned all-failed job blocks its
+  Aggregate job status is derived from the manifest entries: any real selected
+  asset transfer failure makes both the result and durable job `failed`, even
+  when another selected asset materializes. Synthetic terminal routeability
+  placeholders and provider-guard evidence retain their dedicated semantics;
+  they are not reclassified as ordinary transfer failures. A completion-owned failed job blocks its
   live-follow operation before another provider pass; inspect and correct the
   materialization or account/browser condition, then start a fresh bounded
   operation rather than relying on automatic retry.
