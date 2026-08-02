@@ -1,5 +1,28 @@
 # RUNBOOK
 
+## Turn 388 | 2026-08-01
+
+- Consumed exactly one newly authorized no-retry proof for the exact default-
+  profile catalog item `ChE 4470-5470 Exam 2 Spring 2025.docx`. Job
+  `hmj_50e7aa9598be44fc950ddb1b89d4ca2f` ran once with files only,
+  `maxItems = 1`, `force = true`, a 300-second provider-work timeout, and
+  matching email, plan, structure, and account-level provider-session proof.
+- The installed exact-selector repair worked live: the requested catalog ID,
+  attempted entry title, and remote provider identity all refer to the Exam
+  DOCX (`file_000000005a1471fd8c7c84bc199426d4`). The earlier wrong-file
+  selection did not recur.
+- The matched `files-download` endpoint returned HTTP 403 JSON `Forbidden`.
+  With no provider not-found/deleted/expired evidence, AuraCall correctly
+  recorded non-retryable `retrieval_failed`, not `provider_unavailable`.
+  Downloads were attempted 1/succeeded 0/failed 1; materialized 0/failed 1.
+  The existing local Exam DOCX remained byte-identical at SHA-256
+  `a6ef6841e43c7f3162f093fbbc74e45ceafd9b3616af5c6a45d96a1839d42b7b`.
+- API PID remains `29769`. Scheduler and all five completions are paused,
+  active materialization jobs and duplicate same-route mutations are zero, and
+  no retry ran. Plan 0180 M5 and scheduler/continuous live-follow re-enablement
+  remain open; the next proof must use a separately reviewed retrievable target
+  and new explicit authorization.
+
 ## Turn 387 | 2026-08-01
 
 - Consumed one explicitly authorized, no-retry positive-control materialization

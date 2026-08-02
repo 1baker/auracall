@@ -42566,3 +42566,19 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   idle-waiting completions and active materialization jobs are zero; duplicate
   same-route mutations remain zero. No second live attempt ran, and Plan 0180 M5
   plus all re-enablement gates remain open.
+## 2026-08-01 | Plan 0180 exact selector live proof
+
+- Ran exactly one newly authorized no-retry materialization job,
+  `hmj_50e7aa9598be44fc950ddb1b89d4ca2f`, for the exact default-profile Exam DOCX
+  catalog item. The persisted requested and attempted identities agree on the
+  catalog ID, title, and provider file id, proving installed selector repair
+  `eccb3780` live; the earlier wrong-file selection did not recur.
+- The provider's matched endpoint returned HTTP 403 JSON `Forbidden`. Because
+  this response contains no structured unavailable/not-found/expired evidence,
+  the entry correctly remains non-retryable `retrieval_failed`, not
+  `provider_unavailable`. Result: 0 materialized, 1 failed, no retry.
+- The local Exam DOCX checksum remains
+  `a6ef6841e43c7f3162f093fbbc74e45ceafd9b3616af5c6a45d96a1839d42b7b`.
+  Scheduler and five completions remain paused; active materialization jobs and
+  duplicate same-route mutations are zero. Plan 0180 M5 and all re-enablement
+  gates remain open pending a separately authorized successful target.

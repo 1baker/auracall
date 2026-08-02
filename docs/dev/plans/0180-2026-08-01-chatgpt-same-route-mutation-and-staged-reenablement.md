@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 10
+Plan version: 11
 
 ## Stable Objective
 
@@ -75,6 +75,15 @@ reenablement.
   file before `maxItems` is applied. It is pushed and installed under API PID
   `29769`; the repair is provider-free green but has not received another live
   attempt. M5 and re-enablement remain open.
+- The next separately authorized exact-asset proof
+  `hmj_50e7aa9598be44fc950ddb1b89d4ca2f` proved the selector repair live: the
+  requested, attempted, and failed entry all identify `ChE 4470-5470 Exam 2
+  Spring 2025.docx`, including provider file id
+  `file_000000005a1471fd8c7c84bc199426d4`. The provider returned HTTP 403 JSON
+  `{"detail":"Forbidden"}` from the matched `files-download` endpoint, so
+  AuraCall correctly retained non-retryable `retrieval_failed` rather than
+  claiming deletion, expiry, or provider unavailability. The job ran once,
+  materialized 0/1, and was not retried. M5 and re-enablement remain open.
 
 ## Architecture Decision
 
@@ -531,3 +540,34 @@ continuous live-follow reenablement remain separately gated afterward.
   re-enablement authority from the provider-free repair. M5 still requires a
   separately authorized exact-asset success after review; scheduler and
   continuous live follow remain disabled.
+
+## Checkpoint 12
+
+- `plan_version`: 11
+- `progress_classification`: exact selector proved live; provider retrieval
+  failed closed; live acceptance remains open.
+- `authorized_attempt`: job `hmj_50e7aa9598be44fc950ddb1b89d4ca2f`
+  requested the exact Exam DOCX catalog item with `files` only, `maxItems = 1`,
+  `force = true`, and a 300-second provider-work timeout. It ran once under the
+  `default` AuraCall runtime and browser profiles with four-dimension provider-
+  session match and no retry.
+- `selector_evidence`: the persisted entry now has the exact requested catalog
+  ID, exact title `ChE 4470-5470 Exam 2 Spring 2025.docx`, and remote provider
+  identity `file_000000005a1471fd8c7c84bc199426d4`. The prior wrong-file
+  selection did not recur, proving installed commit `eccb3780` on the live path.
+- `failure_evidence`: the matched endpoint returned HTTP 403 JSON with
+  `detail = Forbidden`; no structured unavailable/not-found/expired signal was
+  present. AuraCall therefore recorded non-retryable `retrieval_failed`, not
+  `provider_unavailable`. Downloads were attempted 1, succeeded 0, failed 1;
+  metrics were materialized 0 and failed 1. The pre-existing local Exam DOCX
+  remained byte-identical at SHA-256
+  `a6ef6841e43c7f3162f093fbbc74e45ceafd9b3616af5c6a45d96a1839d42b7b`.
+- `runtime_state`: API PID `29769`; scheduler and all five completions remain
+  paused; queued/running materialization jobs are zero; duplicate same-route
+  browser mutations remain zero. Telemetry recorded one target open plus two
+  attachments and no rate-limit, CAPTCHA, verification, or identity conflict.
+- `next_gate`: the exact-selector defect is live-closed, but M5 is not satisfied
+  because the job materialized 0/1. Do not retry this consumed packet or resume
+  scheduler/continuous live follow. A successful materialization proof requires
+  a newly reviewed target whose provider endpoint is demonstrably retrievable
+  and separate explicit authorization.

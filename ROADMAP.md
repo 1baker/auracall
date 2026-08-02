@@ -51,6 +51,13 @@ Lane: P01
   preserves exact catalog ID/name/provider-file identity through transfer
   selection and is installed at API PID `29769`. No retry ran; M5 and all
   scheduler/continuous live-follow gates remain open.
+  The next authorized one-attempt job
+  `hmj_50e7aa9598be44fc950ddb1b89d4ca2f` proved that repair live by selecting
+  only the requested Exam DOCX and its exact provider file ID. Its matched
+  endpoint returned HTTP 403 `Forbidden`, which remains truthfully
+  `retrieval_failed` because it does not prove deletion, expiry, or provider
+  unavailability. The job materialized 0/1 without retry, so M5 and all
+  re-enablement gates remain open.
 
 - Completed provider-session authority unification:
   [docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md](docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md)

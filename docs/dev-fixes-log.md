@@ -19994,3 +19994,15 @@ browser-stage lifecycle observability, not transcript truncation.
   provider boundary must check cancellation before pass, ledger, catch-up, or
   materialization mutation. A provider implementation that resolves despite
   abort must still be unable to create post-cancel work.
+## 2026-08-01 | HTTP forbidden is retrieval failure, not availability proof
+
+- Symptom: an exact ChatGPT file tile and provider file ID can resolve
+  correctly while the authenticated `files-download` endpoint returns HTTP 403
+  JSON `Forbidden` and no bytes.
+- Durable rule: exact asset identity proves selection, not retrievability. A
+  generic forbidden response remains `retrieval_failed` unless the provider
+  supplies structured not-found/deleted/expired/unavailable evidence. Never
+  infer provider unavailability merely from HTTP status or an empty download.
+- Operator rule: a one-attempt exact-asset proof that ends this way consumes its
+  live packet and cannot satisfy a successful-materialization re-enablement
+  gate, even when an older valid local copy remains available.
