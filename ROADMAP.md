@@ -94,7 +94,16 @@ Lane: P01
   identity redacted from logs and session metadata. The focused packet passes
   60/60 and the full suite passes 2,704 tests with 65 skips, plus typecheck,
   build, lint, plan audit, and diff hygiene; install and the single newly
-  authorized live control remain gated on commit/parity.
+  authorized live control were gated on commit/parity.
+  Commit `068608e7` is now pushed and installed byte-identically at API PID
+  `96156`. The newly authorized ChatGPT turn passed canonical identity proof,
+  uploaded the sole fixture, completed, and generated the requested DOCX in
+  fresh conversation `6a6fa606-9870-83ea-9bdd-090d134ec58f`. The sole bounded
+  job materialized and fully validated that DOCX, but the exact uploaded TXT
+  failed its provider route with HTTP 403 JSON `Forbidden`. Metrics are 1
+  materialized / 1 failed despite a `succeeded` job envelope. The packet is
+  consumed without retry; M5 and all re-enablement gates remain open pending
+  provider-free aggregate-status and upload-route repair.
 
 - Completed provider-session authority unification:
   [docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md](docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md)

@@ -855,8 +855,9 @@ continuous live-follow reenablement remain separately gated afterward.
   canonical preflight.
 - `privacy_boundary`: verbose browser configuration logs replace the authority
   object with a redacted summary containing provider, expectation source,
-  presence booleans, and session context; configured email and service-account
-  identifiers are never logged.
+  presence booleans, and session context; that configuration diagnostic does
+  not serialize configured email or service-account identifiers. Existing
+  observed-account preflight diagnostics are a separate surface.
 - `tdd_receipt`: the execution-boundary regression failed because browser work
   received no authorization; the canonical constructor and redacted-summary
   regressions failed because those helpers did not exist; and the root binding
@@ -867,3 +868,52 @@ continuous live-follow reenablement remain separately gated afterward.
   touched-file lint, plan audit with zero validation errors, and diff hygiene
   pass. Commit/push, install, parity, and live evidence remain pending at this
   checkpoint.
+
+## Checkpoint 22
+
+- `plan_version`: 21
+- `state_transition`: root provider-session repair green -> installed/live
+  authorization proven -> fresh two-asset materialization partial failure;
+  M5 remains open and the live packet is consumed.
+- `commit_and_install`: commit `068608e7` is pushed with
+  `origin/main...HEAD` at `0 0`. Installed/source SHA-256 parity matches for
+  `auracall.js` (`2c485736...`), `browserProviderSession.js`
+  (`26a7b5bd...`), `sessionRunner.js` (`421b14e7...`), and
+  `providerSessionAuthority.js` (`18948f4f...`). API PID `96156` is active with
+  zero restarts.
+- `live_turn`: session `m5-chatgpt-docx-authority-proof` completed in 3m31s
+  using explicit target `chatgpt`, model `gpt-5.2`, and exactly one uploaded
+  505-byte fixture. Canonical account preflight passed, the sent message
+  retained the upload, and fresh conversation
+  `6a6fa606-9870-83ea-9bdd-090d134ec58f` returned one downloadable
+  `auracall-m5-20260802T185953Z.docx` artifact.
+- `materialization_job`: the sole authorized job
+  `hmj_6de2e65fda214587bccb054bda1977d9` refreshed exactly 2 messages, 1 file,
+  and 1 artifact. Provider-session proof matched email, plan, structure, and
+  account-level dimensions on PID `27020`, target
+  `FB9AC8AB5EE0C14585DEDF16384ED6C8`.
+- `docx_result`: artifact
+  `download-dom:30ef7f99-9285-4351-8a41-02e6dd51aa54:0` materialized by its
+  download button at 38,665 bytes with SHA-256
+  `fb6cba5f0c4c8cd8a441d9186ded18092362edc3747d1ef186d737706115692a`.
+  ZIP validation passes; `[Content_Types].xml` and `word/document.xml` exist;
+  document text contains the exact control ID, one-upload provenance sentence,
+  and all three required list items.
+- `upload_result`: the exact TXT tile and provider file ID were discovered, but
+  `files-download` returned HTTP 403 JSON `Forbidden` without a downloadable
+  URL. It is terminal `retrieval_failed`, non-retryable, with no local path or
+  checksum. The original local fixture remains 505 bytes at SHA-256
+  `5d17e7ec1b61d4c6eaaefbb3bfd8ae542bb5a373113a506c681ade0aa641044b`,
+  but that source copy is not provider materialization proof.
+- `acceptance_result`: FAIL. The job envelope is `succeeded` because one asset
+  materialized, but its own metrics are materialized 1 / failed 1. Both assets
+  were not locally materialized, so M5 and every scheduler/continuous-live-
+  follow gate remain open. No retry or second job ran.
+- `post_stop_posture`: API PID `96156`; scheduler operator-paused; five active
+  completions all paused; completion queued/running `0`/`0`; active history-
+  materialization jobs `0`. The retained ChatGPT browser remains open on port
+  `45011` under the authorized keep-browser setting.
+- `next_gate`: repair aggregate materialization truth so any failed requested
+  asset cannot produce a successful job envelope, then diagnose the fresh
+  upload's 403 route provider-free. Any new provider attempt requires separate
+  operator authorization.

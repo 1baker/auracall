@@ -89,9 +89,11 @@ You can pass the same payload inline (`--browser-inline-cookies '<json or base64
   provider-session authorization from the selected AuraCall runtime profile,
   browser profile, and configured ChatGPT account identity. Authorization is
   attached only at the browser execution boundary: it is not persisted in
-  session metadata, and verbose logs expose only presence/source fields rather
-  than the configured identity. Missing or conflicting configured identity
-  still fails before attachment upload or prompt submission.
+  session metadata, and the browser-config diagnostic exposes only presence/
+  source fields rather than serializing the authority's configured identity.
+  Existing account-preflight diagnostics may separately report observed login
+  identity. Missing or conflicting configured identity still fails before
+  attachment upload or prompt submission.
 - `auracall login --target grok`: opens the configured browser profile for Grok sign-in.
 - `auracall wizard`: guided first-run onboarding. It detects candidate local/WSL/Windows Chromium profiles, writes a profile-scoped Aura-Call config entry, then runs the same managed-profile setup flow described below. On WSL, prefer the WSL Chrome path first unless you are intentionally testing the Windows relay path; for the primary WSL setup, keep that profile on Aura-Call `default`.
 - `auracall setup --target <chatgpt|gemini|grok>`: inspect the managed Aura-Call profile, open the managed login browser when needed, then send a real verification prompt through that same profile. Use `--skip-login` when the managed profile is already signed in and `--skip-verify` when you only want inspection/bootstrap.

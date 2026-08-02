@@ -20091,6 +20091,21 @@ browser-stage lifecycle observability, not transcript truncation.
   and configured provider account. Browser selection and login DOM state are
   provenance signals, never authorization substitutes.
 - Privacy rule: inject authority only into the immediate browser execution
-  configuration. Do not persist it in session metadata or log configured email
-  or service-account identifiers; diagnostics may expose only redacted
-  presence/source fields and non-secret runtime provenance.
+  configuration. Do not persist it in session metadata or serialize its
+  configured email or service-account identifiers in browser-config logs;
+  that diagnostic may expose only redacted presence/source fields and
+  non-secret runtime provenance. Existing observed-account proof diagnostics
+  are a separate surface.
+
+## 2026-08-02 | Partial asset materialization is not two-asset success
+
+- Symptom: one fresh conversation exposed exactly one uploaded TXT and one
+  generated DOCX. The DOCX materialized, while the uploaded file's exact
+  `files-download` route returned HTTP 403 JSON `Forbidden`; job metrics said
+  materialized 1 / failed 1 but the durable job envelope said `succeeded`.
+- Durable rule: acceptance is evaluated across every requested asset. One
+  valid generated artifact cannot substitute for a failed source upload, and a
+  pre-existing local source fixture is not provider-materialization proof.
+- Follow-up rule: aggregate job truth must fail when any requested selected
+  asset fails. Repair that provider-free and diagnose the source-file retrieval
+  route before authorizing another live control; do not retry the consumed job.

@@ -16,6 +16,18 @@
 - No install or browser/provider mutation occurred at this checkpoint. One new
   explicitly ChatGPT-bound upload/DOCX attempt is authorized only after commit,
   install, and exact source/runtime parity; all prior hard stops remain active.
+- Commit `068608e7` was then pushed and installed with exact parity at API PID
+  `96156`. The one authorized ChatGPT turn completed in 3m31s with one verified
+  upload and generated DOCX in conversation
+  `6a6fa606-9870-83ea-9bdd-090d134ec58f`.
+- Sole job `hmj_6de2e65fda214587bccb054bda1977d9` proved four-dimension account
+  match and materialized the 38,665-byte DOCX (`fb6cba5f...`). ZIP/OOXML and
+  all required content checks pass. The exact uploaded TXT failed HTTP 403
+  `Forbidden`, so job metrics are 1 materialized / 1 failed and two-asset
+  acceptance fails despite the job envelope saying `succeeded`.
+- No retry or second job ran. Scheduler and five completions remain paused,
+  queued/running counts are zero, active materialization jobs are zero, M5 is
+  open, and any new provider attempt requires separate authority.
 
 ## Turn 394 | 2026-08-02
 

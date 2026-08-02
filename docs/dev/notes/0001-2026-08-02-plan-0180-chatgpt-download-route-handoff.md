@@ -374,8 +374,32 @@ Re-read these values; they are a snapshot, not permission to mutate.
   touched lint, zero-error plan audit, and diff hygiene pass. Commit/push,
   install parity, and the one live attempt remain pending.
 - Configured email and service-account identifiers are excluded from persisted
-  session configuration and verbose logs; only redacted presence/source and
-  non-secret provenance fields are emitted.
+  session configuration and from the browser-config authority serialization;
+  that diagnostic emits only redacted presence/source and non-secret
+  provenance fields. Existing observed-account preflight output is separate.
+
+## 2026-08-02 Fresh Control Terminal Addendum
+
+- Commit `068608e7` is pushed and installed byte-identically. API PID `96156`
+  is active with zero restarts; scheduler and all five active completions remain
+  paused; completion queued/running is `0`/`0`; active materialization jobs are
+  zero after the packet.
+- Session `m5-chatgpt-docx-authority-proof` completed in 3m31s. It passed
+  canonical default-account proof, uploaded exactly the 505-byte fixture, and
+  created fresh conversation `6a6fa606-9870-83ea-9bdd-090d134ec58f` with one
+  generated `auracall-m5-20260802T185953Z.docx` download.
+- Sole job `hmj_6de2e65fda214587bccb054bda1977d9` discovered exactly one file and
+  one artifact. Four account-proof dimensions matched. The DOCX materialized
+  by exact `download-dom:30ef7f99-9285-4351-8a41-02e6dd51aa54:0` identity at
+  38,665 bytes and SHA-256 `fb6cba5f...`; ZIP/OOXML and required-text checks
+  pass.
+- The uploaded TXT did not materialize. Its exact `files-download` endpoint
+  returned HTTP 403 JSON `Forbidden` with no URL, classified non-retryable
+  `retrieval_failed`. Metrics are 1 materialized / 1 failed even though the job
+  envelope says `succeeded`.
+- The packet is consumed with no retry or second job. M5 remains open. The next
+  provider-free packet should repair aggregate job status and diagnose the
+  fresh upload route; any later live attempt requires separate authorization.
 
 ## Suggested Skills
 

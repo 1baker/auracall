@@ -42748,3 +42748,22 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   60 tests and the full provider-free suite passes 304 files/2,704 tests with
   65 skips, followed by clean typecheck, build, touched lint, plan audit, and
   diff hygiene. No install or browser/provider mutation occurred yet.
+
+## 2026-08-02 | Fresh ChatGPT upload/DOCX control ended partial
+
+- Pushed `068608e7`, installed it byte-identically, and verified the API active
+  at PID `96156` with zero restarts. The scheduler stayed paused, all five
+  active completions stayed paused, queued/running stayed zero, and no active
+  materialization job existed before the control.
+- The one authorized root run passed canonical ChatGPT account proof, uploaded
+  the exact 505-byte fixture, submitted once, and completed in 3m31s. Fresh
+  conversation `6a6fa606-9870-83ea-9bdd-090d134ec58f` returned the requested
+  `auracall-m5-20260802T185953Z.docx` download.
+- Sole job `hmj_6de2e65fda214587bccb054bda1977d9` refreshed exactly one file and
+  one artifact with four-dimension provider-session match. The DOCX
+  materialized at 38,665 bytes/SHA-256 `fb6cba5f...`, passed ZIP/OOXML checks,
+  and contains every required control string.
+- The exact uploaded TXT failed retrieval: ChatGPT `files-download` returned
+  HTTP 403 JSON `Forbidden` with no URL. Job metrics are materialized 1 / failed
+  1 even though its envelope says `succeeded`. Both-asset acceptance therefore
+  fails; no retry or second job ran and M5 remains open.
