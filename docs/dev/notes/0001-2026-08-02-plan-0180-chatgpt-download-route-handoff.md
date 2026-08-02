@@ -1,7 +1,7 @@
 # Plan 0180 ChatGPT Download-Route Fresh-Agent Handoff
 
 Date: 2026-08-02
-State: ready for provider-free identity diagnosis; browser inspection awaits a managed-target gate
+State: Packet A diagnosed; awaiting review of Packet B exact-artifact selection repair
 Governing plan: `docs/dev/plans/0180-2026-08-01-chatgpt-same-route-mutation-and-staged-reenablement.md`
 Scope: diagnose whether the direct-route catalog asset and later generated output are safely related; do not resume live follow or spend another materialization attempt
 
@@ -32,7 +32,7 @@ operator authorization.
 2. This handoff for the current resume boundary.
 3. Plan 0180, especially Current State, M5, M6, Hard Stops, and Checkpoints
    10-14.
-4. `ROADMAP.md` and `RUNBOOK.md` Turn 390 for current lane and runtime posture.
+4. `ROADMAP.md` and `RUNBOOK.md` Turn 391 for current lane and runtime posture.
 5. Persisted job receipt:
    `/home/ecochran76/.auracall/runtime/archive/history-materialization-jobs/index.json`,
    job `hmj_50e7aa9598be44fc950ddb1b89d4ca2f`.
@@ -126,8 +126,8 @@ git log --oneline -5
 git status --short --branch
 git rev-list --left-right --count origin/main...HEAD
 sed -n '1,240p' AGENTS.md
-sed -n '1,240p' docs/dev/notes/0001-2026-08-02-plan-0180-chatgpt-download-route-handoff.md
-sed -n '1,640p' docs/dev/plans/0180-2026-08-01-chatgpt-same-route-mutation-and-staged-reenablement.md
+sed -n '1,360p' docs/dev/notes/0001-2026-08-02-plan-0180-chatgpt-download-route-handoff.md
+sed -n '1,720p' docs/dev/plans/0180-2026-08-01-chatgpt-same-route-mutation-and-staged-reenablement.md
 sed -n '1,240p' README.md
 sed -n '1,260p' docs/testing.md
 sed -n '1,240p' docs/dev/plans/0008-2026-04-14-browser-profile-family-refactor.md
@@ -182,6 +182,69 @@ rg --files /home/ecochran76/.auracall | \
    Preserve the actual provider filename and represent any catalog alias
    explicitly; never rewrite one asset's bytes under another asset identity.
 
+## Packet A Result
+
+Packet A is complete without browser or product-code mutation:
+
+- CodeGraph proves catalog files and `download-dom` generated outputs use
+  separate materialization routes. `downloadConversationFile` cannot safely
+  substitute a later generated artifact, while `materializeConversationArtifact`
+  preserves the artifact's own ID, title, URI, and filename.
+- Existing response identity validation is correctly fail-closed: a captured
+  `files-download` URL must contain the requested provider file ID, or the
+  response `Content-Disposition` filename must exactly normalize to the
+  requested filename. The focused cross-asset and download-button-selection
+  regressions pass 2/2.
+- Persisted context lists the requested catalog file as provider file
+  `file_000000005a1471fd8c7c84bc199426d4` on message
+  `d69912db-e287-4c61-bd33-a12ff3f97c04`, and independently lists generated
+  artifact `download-dom:a71ab5c2-df5f-4f77-a9de-b235cd876154:0` on message
+  `d6018171-1609-460c-aa5a-976b6483910f`. No persisted relationship field joins
+  them.
+- A separate provider-free defect blocks the seemingly safe artifact route:
+  exact file catalog items carry `selectedCatalogAsset` and filter before
+  `maxItems`, but artifact catalog items resolve only to the conversation and
+  `assetKinds: ["artifacts"]`. `HistoryMaterializationSelectedCatalogAsset`
+  currently permits only `kind: "file"`, and artifact selection has no exact-ID
+  filter before `maxItems`.
+- A temporary assertion in
+  `tests/runtime.historyMaterializationService.test.ts` required artifact catalog
+  item `artifact_catalog_1` to reach materialization as an exact artifact
+  selector. The command below failed deterministically because the fourth
+  provider-work argument was absent. The temporary assertion was then removed,
+  and the unchanged baseline test passed.
+
+```bash
+pnpm vitest run tests/runtime.historyMaterializationService.test.ts \
+  -t 'resolves account mirror artifact catalog items from nested conversation metadata'
+```
+
+The red finding means no browser proof or catalog-artifact job is safe yet: an
+exact generated-output request could select an earlier artifact before the
+one-item budget is applied.
+
+## Packet B | Proposed Exact-Artifact Selection Repair
+
+Packet B requires review before implementation. Its bounded write surface is
+`src/runtime/historyMaterializationService.ts`, focused history materialization
+tests, and the governing documentation.
+
+1. Extend `HistoryMaterializationSelectedCatalogAsset` into a discriminated
+   `file | artifact` selector without weakening the existing file branch.
+2. Build the artifact selector from catalog item ID, title, URI, kind, message/
+   turn identity, and other provider-local identifiers that the catalog already
+   preserves. Prefer exact IDs/URIs; use normalized title only when identifier
+   evidence is unavailable and unambiguous.
+3. Apply `matchesHistoryMaterializationSelectedCatalogArtifact` before
+   `maxItems`, just as exact file selection is applied before the file budget.
+4. Add red/green regressions for an earlier unrelated artifact, a same-title
+   ambiguous artifact, and the exact `download-dom` item. Preserve the existing
+   cross-asset response-identity tests.
+5. Run focused history, ChatGPT adapter, and LLM file tests, followed by
+   typecheck, build, lint baseline, plan audit, and diff hygiene. Commit and push
+   the provider-free repair, but do not install or launch a browser until the
+   separate runtime gate is reviewed.
+
 ## Browser Inspection Gate
 
 The previously recorded managed `default` Chrome PID is gone and CDP port
@@ -193,15 +256,15 @@ click or download, and stop on every existing browser hard stop.
 
 ## Packet A Acceptance Criteria
 
-- The local identity ledger records both preserved blobs without conflating
+- [x] The local identity ledger records both preserved blobs without conflating
   filename, checksum, size, catalog identity, or generated-output provenance.
-- A deterministic provider-free command is red-capable for unsafe cross-asset
+- [x] A deterministic provider-free command is red-capable for unsafe cross-asset
   aliasing in the 403-direct-route/later-control shape.
-- The diagnosis names the evidence still required to relate the later control
+- [x] The diagnosis names the evidence still required to relate the later control
   to the requested catalog item.
-- A prospective repair preserves actual provider filenames and keeps Plan 0180
+- [x] A prospective repair preserves actual provider filenames and keeps Plan 0180
   M6 cross-asset identity checks intact.
-- No product-code implementation, install, browser launch, download, or live
+- [x] No product-code implementation, install, browser launch, download, or live
   materialization occurs in Packet A.
 
 ## Hard Stops And Non-Authorizations
@@ -253,7 +316,8 @@ Re-read these values; they are a snapshot, not permission to mutate.
 
 Update Plan 0180, `ROADMAP.md`, `RUNBOOK.md`, `docs/dev/dev-journal.md`, and
 `docs/dev-fixes-log.md` when the diagnosis or behavior changes. Preserve exact
-validation and runtime readbacks. Packet A closes at a reviewed provider-free
-diagnosis and fixture/repair plan. Keep M5 OPEN until one separately authorized
-bounded default-account collector/materializer pass reaches zero failed
-materializations and all existing safety criteria.
+validation and runtime readbacks. Packet A is closed at a reviewed provider-free
+diagnosis and fixture/repair plan; Packet B remains awaiting review. Keep M5
+OPEN until one separately authorized bounded default-account collector/
+materializer pass reaches zero failed materializations and all existing safety
+criteria.

@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 13
+Plan version: 14
 
 ## Stable Objective
 
@@ -95,6 +95,13 @@ reenablement.
   not a proven alternate route to identical bytes. Fresh-session work is
   governed by
   `docs/dev/notes/0001-2026-08-02-plan-0180-chatgpt-download-route-handoff.md`.
+- Packet A provider-free diagnosis confirms the requested catalog file and
+  later `download-dom` output are separate assets and that existing response
+  identity validation rejects cross-asset capture. It also found a distinct
+  blocker: artifact catalog items do not carry exact selected-asset identity
+  into provider work, so `maxItems = 1` can select an earlier artifact. Packet B
+  exact-artifact selection repair awaits review; browser and live gates remain
+  closed.
 
 ## Architecture Decision
 
@@ -631,3 +638,32 @@ continuous live-follow reenablement remain separately gated afterward.
 - `next_gate`: complete Packet A and review its evidence. If live DOM evidence
   remains necessary, obtain explicit authorization to launch exactly one
   managed `default` ChatGPT target for read-only inspection.
+
+## Checkpoint 15
+
+- `plan_version`: 14
+- `progress_classification`: blocker reduction; unsafe artifact fallback
+  identified provider-free before browser work.
+- `route_diagnosis`: catalog files flow through `downloadConversationFile` and
+  generated `download-dom` items flow through `materializeConversationArtifact`.
+  Existing capture validation accepts only the requested provider-file URL or
+  exact response filename, and focused cross-asset/download-button regressions
+  pass 2/2. The later artifact is not a safe implicit fallback for the 403 file.
+- `persisted_evidence`: the requested file belongs to message
+  `d69912db-e287-4c61-bd33-a12ff3f97c04`; generated artifact
+  `download-dom:a71ab5c2-df5f-4f77-a9de-b235cd876154:0` belongs to message
+  `d6018171-1609-460c-aa5a-976b6483910f`. No persisted relationship field joins
+  them.
+- `red_loop`: a temporary expectation at the existing artifact-catalog test
+  required exact selected artifact identity. The focused Vitest command failed
+  1/1 because provider work received only the conversation target and
+  `assetKinds: ["artifacts"]`, with no fourth `selectedCatalogAsset` argument.
+  The temporary assertion was removed and the unchanged baseline passed 1/1.
+- `root_cause`: `HistoryMaterializationSelectedCatalogAsset` supports only
+  `kind: "file"`; `selectedCatalogFileFromCatalogItem` returns null for artifact
+  items; and `excludeArtifact` applies only family exclusions, not exact catalog
+  identity, before `maxItems`.
+- `next_gate`: review Packet B in the handoff. The proposed provider-free repair
+  adds a discriminated artifact selector and filters exact artifact identity
+  before budget. Do not install, launch a browser, click, or run a catalog-
+  artifact materialization until the repair and its validation are reviewed.

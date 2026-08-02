@@ -42627,3 +42627,25 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   mutations zero. The managed `default` PID from the receipt no longer exists
   and port `45011` is closed. No browser launch, DOM inspection, click,
   provider request, or materialization ran.
+
+## 2026-08-02 | Plan 0180 Packet A exact-artifact selection diagnosis
+
+- CodeGraph traced catalog-file materialization through
+  `downloadConversationFile` and `download-dom` generated outputs through
+  `materializeConversationArtifact`. Existing validation requires the requested
+  provider-file URL or exact response filename before a file write; focused
+  cross-asset and download-button selection tests pass 2/2.
+- Persisted context contains no relationship field between the requested file
+  on message `d69912db-e287-4c61-bd33-a12ff3f97c04` and generated artifact
+  `download-dom:a71ab5c2-df5f-4f77-a9de-b235cd876154:0` on message
+  `d6018171-1609-460c-aa5a-976b6483910f`.
+- A temporary red assertion at the existing artifact-catalog service test
+  required exact selected artifact identity. The focused test failed because
+  the provider-work call had only three arguments: conversation target,
+  `assetKinds: ["artifacts"]`, and job ID. The temporary assertion was removed,
+  and the baseline passed.
+- Root cause: selected catalog identity is currently a file-only interface and
+  filter. Artifact catalog items resolve a conversation but are not filtered by
+  exact artifact ID before `maxItems`, so a bounded request may choose an earlier
+  artifact. Packet B is documented but not authorized for implementation. No
+  browser or runtime mutation ran.

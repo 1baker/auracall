@@ -70,8 +70,12 @@ Lane: P01
   to the requested catalog asset. Fresh-agent
   provider-free diagnosis now starts from
   `docs/dev/notes/0001-2026-08-02-plan-0180-chatgpt-download-route-handoff.md`;
-  the managed `default` target is absent, and M5 plus all browser/live
-  re-enablement gates remain open.
+  Packet A confirmed the two routes are separate and existing response identity
+  fails closed. It also found that exact artifact catalog identity is not
+  carried into provider work before `maxItems`, so a later artifact cannot yet
+  be requested safely as a one-item proof. Packet B exact-artifact selection
+  repair awaits review; the managed `default` target is absent, and M5 plus all
+  browser/live re-enablement gates remain open.
 
 - Completed provider-session authority unification:
   [docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md](docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md)

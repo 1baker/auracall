@@ -1,5 +1,25 @@
 # RUNBOOK
 
+## Turn 391 | 2026-08-02
+
+- Completed Plan 0180 Packet A provider-free diagnosis. CodeGraph shows catalog
+  files and `download-dom` outputs use separate materialization routes; the
+  existing file response validator accepts only a requested provider-file URL
+  or exact response filename. Focused cross-asset and download-button-selection
+  regressions pass 2/2.
+- Persisted context keeps the requested catalog file on message
+  `d69912db-e287-4c61-bd33-a12ff3f97c04` and the later generated artifact
+  `download-dom:a71ab5c2-df5f-4f77-a9de-b235cd876154:0` on different message
+  `d6018171-1609-460c-aa5a-976b6483910f`; no relationship field joins them.
+- A temporary provider-free assertion exposed a separate exact-artifact
+  selection defect: artifact catalog requests pass only conversation scope and
+  `assetKinds: ["artifacts"]`, with no selected artifact identity before
+  `maxItems`. The focused test failed 1/1 under that assertion; after the
+  temporary assertion was removed, the unchanged baseline passed 1/1.
+- Packet B proposes a discriminated artifact selector plus exact filtering
+  before budget. No product code, install, browser launch, provider request, or
+  materialization ran. Packet B and every browser/live gate await review.
+
 ## Turn 390 | 2026-08-02
 
 - Corrected

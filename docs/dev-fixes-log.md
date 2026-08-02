@@ -1,3 +1,13 @@
+- 2026-08-02: Exact catalog selection must apply to artifacts as well as files
+  before `maxItems`. Resolving an artifact catalog item to its conversation and
+  setting `assetKinds: ["artifacts"]` is not exact selection; it can spend a
+  one-item budget on an earlier artifact. Carry a discriminated artifact
+  selector with exact ID/URI and source-local message or turn evidence into
+  provider work, exclude nonmatching artifacts before the budget, and fail
+  closed on ambiguous same-title candidates. Never repair a forbidden file by
+  silently substituting a later `download-dom` artifact; materialize that output
+  under its own identity only after exact artifact selection is proved.
+
 - 2026-08-02: Filename similarity and approximate size cannot join a failed
   ChatGPT catalog-file route to a later generated-output control. Record each
   local blob's filename, exact byte count, checksum, discovery source, and
