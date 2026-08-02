@@ -1,7 +1,7 @@
 # Plan 0180 ChatGPT Download-Route Fresh-Agent Handoff
 
 Date: 2026-08-02
-State: Packet B installed; first fresh live control consumed by Grok misroute; ChatGPT/live gate closed
+State: Packet B and target/model guard installed; corrected control stopped on missing ChatGPT session authority
 Governing plan: `docs/dev/plans/0180-2026-08-01-chatgpt-same-route-mutation-and-staged-reenablement.md`
 Scope: diagnose whether the direct-route catalog asset and later generated output are safely related; do not resume live follow or spend another materialization attempt
 
@@ -21,6 +21,16 @@ was left open and idle, and the interrupted local session still reports
 active materialization jobs, and ChatGPT guards remain zero/clear. Repair or
 prove the provider/model binding before requesting fresh authorization for one
 explicitly model-bound ChatGPT attempt.
+
+The subsequent provider-free guard is commit `1fda7598` and is installed with
+source/installed `browserConfig.js` hash `ee91c9f...`. One newly authorized,
+explicitly model-bound attempt then reached the correct `default/chatgpt`
+managed profile but stopped before upload/submission because canonical ChatGPT
+provider-session authorization was absent. Session
+`m5-fresh-docx-control-chatgpt` is terminal `error`; it has no conversation ID,
+and no materialization job was created. Do not retry or infer account authority
+from its successful login DOM check. The next packet is provider-free diagnosis
+or repair of canonical provider-session authorization.
 
 ## Mission
 

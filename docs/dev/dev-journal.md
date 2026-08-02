@@ -42713,3 +42713,20 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Updated `docs/browser-mode.md` so operators must pair bounded explicit targets
   with compatible explicit models. The operator's `continue` authorizes one new
   ChatGPT-only attempt after validation, commit, install, and parity proof.
+
+## 2026-08-02 | Corrected ChatGPT control stopped on missing session authority
+
+- Commit `1fda7598` is pushed and installed. Source/installed
+  `browserConfig.js` hashes match at `ee91c9f...`; the exact original provider
+  mismatch now fails before browser work.
+- The corrected one-attempt command explicitly resolved target ChatGPT, model
+  `gpt-5.2`, URL `https://chatgpt.com/`, and managed profile
+  `default/chatgpt`. It reused the retained Chrome, opened one dedicated tab,
+  and passed login DOM detection.
+- Provider-session preflight then stopped with missing canonical ChatGPT
+  authorization before the upload or prompt was submitted. Session
+  `m5-fresh-docx-control-chatgpt` is terminal `error` and has no conversation
+  ID. No DOCX or materialization job exists.
+- API PID `62920` remains active; scheduler and five retained completions remain
+  paused; queued/running targets and active materialization jobs are zero. The
+  packet is consumed without retry and M5 remains open.

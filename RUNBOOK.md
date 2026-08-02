@@ -1,5 +1,25 @@
 # RUNBOOK
 
+## Turn 394 | 2026-08-02
+
+- Repaired the CLI provider/model binding defect provider-free. An explicit
+  browser target now rejects a recognized incompatible model before browser
+  work. The exact `chatgpt` plus `grok-4.20` regression went red, then the
+  focused config suite passed 31/31; typecheck, build, touched lint, plan audit,
+  and diff hygiene passed. Commit `1fda7598` is pushed and installed.
+- Source/installed `browserConfig.js` hashes match at `ee91c9f...`. The API is
+  active at PID `62920`, scheduler paused, five completions paused, and target
+  counts remain queued/running `0`/`0`.
+- The separately authorized corrected packet resolved target `chatgpt`, model
+  `gpt-5.2`, URL `https://chatgpt.com/`, and managed profile
+  `default/chatgpt`. It opened one dedicated ChatGPT tab, passed login check,
+  then hard-stopped before upload or submission because canonical ChatGPT
+  provider-session authorization was missing.
+- Session `m5-fresh-docx-control-chatgpt` is terminal `error`; no conversation
+  ID, history-materialization job, or new asset exists. The job index has zero
+  active jobs and no job created after the attempt. No retry is authorized; M5
+  and every scheduler/continuous-live-follow gate remain open.
+
 ## Turn 393 | 2026-08-02
 
 - Installed the reviewed Plan 0180 Packet B runtime at API PID `81726`; source

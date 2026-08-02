@@ -83,7 +83,12 @@ Lane: P01
   upload and DOCX generation, but no ChatGPT request or materialization ran.
   The packet is consumed without retry; M5 plus every scheduler/continuous-live-
   follow gate remains open pending a separately authorized, explicitly model-
-  bound ChatGPT attempt.
+  bound ChatGPT attempt. Commit `1fda7598` now rejects explicit target/model
+  conflicts before browser work and is installed with byte parity. The next
+  authorized corrected command reached the right ChatGPT profile but stopped
+  before upload or submission because canonical provider-session authorization
+  was missing. No conversation or materialization job was created; that packet
+  is also consumed and M5 remains open.
 
 - Completed provider-session authority unification:
   [docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md](docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md)

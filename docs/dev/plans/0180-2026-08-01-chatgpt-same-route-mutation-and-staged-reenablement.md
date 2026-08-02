@@ -794,3 +794,40 @@ continuous live-follow reenablement remain separately gated afterward.
   sole fixture and requested DOCX. Bind both `--browser-target chatgpt` and an
   explicit ChatGPT model. Preserve Checkpoint 17's remaining hard bounds and
   stop conditions; no Grok reuse, cross-provider materialization, or retry.
+
+## Checkpoint 20
+
+- `plan_version`: 19
+- `state_transition`: provider-free target/model repair green -> corrected
+  ChatGPT packet hard-stopped and consumed before upload/submission.
+- `validation_and_commit`: the exact mismatch regression first failed 1/1 and
+  then `tests/cli/browserConfig.test.ts` passed 31/31. Typecheck, production
+  build, touched-file lint, plan audit, and diff hygiene passed. Commit
+  `1fda7598` is pushed with `origin/main...HEAD` at `0 0`.
+- `install_receipt`: source and installed `dist/src/cli/browserConfig.js` both
+  have SHA-256
+  `ee91c9f19e287fad8d1c502a5f711967a72fc40101c12e31edcd27f206b16680`.
+  API service is active at PID `62920` with zero restarts.
+- `pre_submit_guard_proof`: the original explicit ChatGPT target with ambient
+  `grok-4.20` model now fails with the target/model conflict before browser
+  mutation. The corrected command explicitly bound target `chatgpt` and model
+  `gpt-5.2`.
+- `live_result`: the corrected command resolved `https://chatgpt.com/`, managed
+  profile `/home/ecochran76/.auracall/browser-profiles/default/chatgpt`, and
+  dedicated target `F8C1F1ACD3BE681B15B4672B37950F83`. It passed the login
+  DOM check, then failed provider-session preflight with `ChatGPT provider-
+  session authorization is missing; browser selection cannot authorize a
+  provider login.`
+- `mutation_boundary`: no file upload, prompt submission, model response,
+  conversation ID, generated DOCX, or materialization occurred. Session
+  `m5-fresh-docx-control-chatgpt` is terminal `error`; its model receipt is also
+  `error`. The history-materialization index has zero active jobs and no job
+  created after `2026-08-02T19:52:00Z`.
+- `post_stop_posture`: API PID `62920`; scheduler paused; five active
+  completions all paused; queued/running targets `0`/`0`; active history-
+  materialization jobs `0`. The reused ChatGPT browser remains open on port
+  `45011` per `--browser-keep-browser`.
+- `next_gate`: repair or provision canonical provider-session authorization
+  through a provider-free reviewed packet. Do not infer authorization from
+  browser selection or a successful login DOM check, and do not retry the live
+  control without another explicit operator authorization.

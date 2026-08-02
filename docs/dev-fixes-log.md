@@ -20067,3 +20067,16 @@ browser-stage lifecycle observability, not transcript truncation.
 - Repair: `buildBrowserConfig` now rejects an explicit target when a recognized
   model resolves to another provider. A regression reproduces the exact
   `chatgpt`/`grok-4.20` mismatch and proves rejection before browser work.
+
+## 2026-08-02 | Browser login state is not provider-session authorization
+
+- Symptom: a correctly model-bound root ChatGPT run selected the intended
+  managed profile, reached `chatgpt.com`, and passed login DOM detection, but
+  provider-session preflight had no canonical authorization proof.
+- Durable rule: selecting a browser target, reusing an authenticated profile,
+  and passing a login-page check establish neither account identity nor
+  provider-session authorization. Fail before attachment upload or prompt
+  submission when canonical provider-session authority is absent.
+- Operator rule: preserve that stop as a non-mutation outcome. Do not bypass it,
+  infer authority from browser state, or retry a bounded live packet until the
+  canonical authorization path is provisioned and verified provider-free.
