@@ -20050,3 +20050,17 @@ browser-stage lifecycle observability, not transcript truncation.
   unique authority. Compare fields by domain and require one title/kind-
   compatible candidate. Title-only matches, shared source evidence, and shared
   URI with conflicting direct IDs fail closed.
+
+## 2026-08-02 | Browser target and model must agree before submission
+
+- Symptom: a command explicitly passed `--browser-target chatgpt` but omitted a
+  model, retained default model `grok-4.20`, and submitted the bounded upload
+  and prompt to Grok.
+- Durable rule: treat provider target and model as one pre-submit identity
+  contract. A provider-explicit browser command must either derive a compatible
+  provider model or fail before browser reuse, upload, and submission; never
+  allow an incompatible default model to override the explicit target.
+- Operator rule: for a bounded provider packet, inspect the fully resolved
+  provider/model/browser-profile tuple before the first mutation. Any mismatch
+  consumes the attempt and hard-stops without retry or cross-provider
+  materialization.

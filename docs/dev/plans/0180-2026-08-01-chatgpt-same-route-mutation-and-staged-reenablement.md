@@ -699,3 +699,73 @@ continuous live-follow reenablement remain separately gated afterward.
 - `runtime_gate`: no install, browser launch, click, provider request, live
   materialization, scheduler resume, or completion resume occurred. M5 and all
   re-enablement gates remain open.
+
+## Checkpoint 17
+
+- `plan_version`: 16
+- `state_transition`: Packet B complete -> one fresh M5/M6 positive-control
+  packet authorized and awaiting installed parity.
+- `progress_classification`: bounded live target preparation; M5 remains open
+  until the packet reaches its terminal evidence.
+- `authorization`: the operator authorized one new root ChatGPT conversation
+  containing exactly one user-uploaded source file, one prompt asking ChatGPT
+  to generate a DOCX artifact, a wait for the turn to finish, and exact
+  materialization verification of both assets.
+- `control_identity`: source fixture
+  `docs/dev/fixtures/auracall-m5-source-20260802T185953Z.txt`, control ID
+  `AURACALL-M5-20260802T185953Z`, requested generated filename
+  `auracall-m5-20260802T185953Z.docx`.
+- `preflight`: API PID `29769`; scheduler operator-paused; five retained
+  completions paused; target counts queued `0` / running `0`; active history
+  materialization jobs `0`; all four ChatGPT provider guards clear.
+- `hard_bounds`: one chat, one uploaded file, one submitted turn, one generated
+  DOCX, and at most one materialization job for the fresh conversation. No
+  retry, scheduler resume, completion resume, unrelated provider work, or
+  automatic re-enablement decision.
+- `hard_stops`: stop on upload mismatch, missing fresh conversation identity,
+  response timeout, rate limit, CAPTCHA, verification, identity conflict,
+  duplicate same-route mutation, ambiguous asset identity, any failed
+  materialization, or loss of paused zero-work posture.
+- `acceptance`: the terminal turn exposes the exact upload and generated DOCX
+  as distinct provider assets; the bounded materialization receipt selects
+  both exact identities, writes both local files, and the local upload bytes
+  match the source fixture while the DOCX is a valid ZIP/OOXML document that
+  contains the control ID. Passing this packet satisfies M5 but does not by
+  itself authorize scheduler or continuous live-follow re-enablement.
+
+## Checkpoint 18
+
+- `plan_version`: 17
+- `state_transition`: fresh M5/M6 positive-control packet authorized -> hard-
+  stopped and consumed on provider mismatch; no retry authorized.
+- `progress_classification`: no M5 progress; the live attempt exposed a CLI
+  provider/model binding defect before any ChatGPT or materialization work.
+- `install_receipt`: Packet B installed successfully at API PID `81726`.
+  Source and installed SHA-256 hashes match for
+  `historyMaterializationService.js` (`7d91d7265a4bfe95bda28e78df3127ec06de139a3cf685229c821c8bf259a2f2`)
+  and `llmService.js` (`a52eeaac94d20ef7e3de6aa8fe0a7579177c556d71a7c42c0e31a21f03a4ba09`).
+- `incident`: the installed CLI invocation included
+  `--browser-target chatgpt` but no explicit model. Resolution retained default
+  model `grok-4.20`, selected `https://grok.com/`, reused the preexisting
+  managed Grok browser, uploaded the sole fixture, and submitted the prompt
+  before the provider mismatch was visible in command output.
+- `wrong_provider_evidence`: read-only DOM inspection found completed Grok
+  conversation `3d5d24dd-ec36-426c-b48f-836f0629652f`, title
+  `AURACALL-M5-20260802T185953Z DOCX Created - Grok`, the exact visible upload
+  `auracall-m5-source-20260802T185953Z.txt`, and generated file control
+  `auracall-m5-20260802T185953Z.docx`. The assistant confirmation includes the
+  exact control ID and says the required three-item list was included.
+- `acceptance_result`: not run for the authorized provider. No ChatGPT request
+  occurred; no history-materialization job was created; neither asset was
+  locally materialized or validated. Wrong-provider UI evidence cannot satisfy
+  M5 or M6.
+- `post_stop_posture`: API PID `81726`; scheduler paused; five retained
+  completions paused; queued/running targets `0`/`0`; all four ChatGPT provider
+  guards clear; active history-materialization jobs `0`. The reused preexisting
+  Grok browser was left open and idle to avoid disrupting operator state. The
+  interrupted local AuraCall session still reports `running` and is not a
+  terminal receipt.
+- `next_gate`: first repair or otherwise prove provider/model binding with a
+  provider-free pre-submit assertion. A later positive control must explicitly
+  bind a ChatGPT model and requires fresh operator authorization; do not reuse
+  this consumed packet or materialize its Grok artifacts.

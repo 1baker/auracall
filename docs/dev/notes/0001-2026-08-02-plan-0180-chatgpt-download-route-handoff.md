@@ -1,9 +1,26 @@
 # Plan 0180 ChatGPT Download-Route Fresh-Agent Handoff
 
 Date: 2026-08-02
-State: Packet B implemented and independently reviewed; browser/live gate remains closed
+State: Packet B installed; first fresh live control consumed by Grok misroute; ChatGPT/live gate closed
 Governing plan: `docs/dev/plans/0180-2026-08-01-chatgpt-same-route-mutation-and-staged-reenablement.md`
 Scope: diagnose whether the direct-route catalog asset and later generated output are safely related; do not resume live follow or spend another materialization attempt
+
+## 2026-08-02 Resume-Boundary Update
+
+Packet B is installed at API PID `81726` with source/installed parity. The
+separately authorized fresh ChatGPT positive control did not reach ChatGPT:
+`--browser-target chatgpt` was combined with no explicit model, the CLI retained
+default `grok-4.20`, and the request was submitted to Grok conversation
+`3d5d24dd-ec36-426c-b48f-836f0629652f`.
+
+Read-only inspection confirmed that wrong-provider turn contains the exact TXT
+upload and generated DOCX control, but no materialization ran. Do not use those
+Grok assets as M5 evidence. The packet is consumed, the preexisting Grok browser
+was left open and idle, and the interrupted local session still reports
+`running`. Scheduler and five completions remain paused; queued/running targets,
+active materialization jobs, and ChatGPT guards remain zero/clear. Repair or
+prove the provider/model binding before requesting fresh authorization for one
+explicitly model-bound ChatGPT attempt.
 
 ## Mission
 

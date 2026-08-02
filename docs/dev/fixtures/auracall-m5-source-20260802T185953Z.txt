@@ -1,0 +1,12 @@
+AuraCall Plan 0180 fresh materialization positive control
+
+Control ID: AURACALL-M5-20260802T185953Z
+Source role: user-provided upload in one new root ChatGPT conversation
+
+Please preserve this control ID in the generated Microsoft Word document.
+The document should state that it was derived from exactly one uploaded source
+file and should include this three-item list:
+
+1. Exact uploaded-file identity matters.
+2. Exact generated-artifact identity matters.
+3. Cross-asset substitution must fail closed.

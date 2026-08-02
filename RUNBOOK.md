@@ -1,5 +1,26 @@
 # RUNBOOK
 
+## Turn 393 | 2026-08-02
+
+- Installed the reviewed Plan 0180 Packet B runtime at API PID `81726`; source
+  and installed hashes match for `historyMaterializationService.js`
+  (`7d91d726...`) and `llmService.js` (`a52eeaac...`). Scheduler pause, five
+  paused completions, zero queued/running targets, and clear ChatGPT guards
+  remained intact.
+- The authorized fresh ChatGPT positive-control packet hard-stopped because the
+  CLI resolved `--browser-target chatgpt` with no explicit model to default
+  model `grok-4.20` and submitted the one-file request to Grok instead. The
+  consumed wrong-provider conversation is
+  `3d5d24dd-ec36-426c-b48f-836f0629652f`.
+- Read-only DOM inspection confirmed the Grok turn completed and displayed both
+  `auracall-m5-source-20260802T185953Z.txt` and generated
+  `auracall-m5-20260802T185953Z.docx`. That is incident evidence only: it does
+  not satisfy the ChatGPT acceptance criterion and was not materialized.
+- No ChatGPT request or history-materialization job ran. No retry is authorized.
+  The reused preexisting Grok browser remains open and idle; the interrupted
+  local session still reports `running` and must not be treated as terminal
+  proof. M5 and every scheduler/continuous-live-follow gate remain open.
+
 ## Turn 392 | 2026-08-02
 
 - Completed Plan 0180 Packet B provider-free exact-artifact selection. Catalog

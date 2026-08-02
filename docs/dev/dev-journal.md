@@ -42669,3 +42669,35 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   207-warning baseline, plan audit, and diff hygiene pass. The remediated full
   provider-free suite passes 303 files/2,699 tests with 65 skips. No browser,
   provider, install, service, scheduler, completion, or live mutation ran.
+
+## 2026-08-02 | Plan 0180 fresh upload plus generated-DOCX control authorized
+
+- Froze one new root-chat control under ID
+  `AURACALL-M5-20260802T185953Z` with exactly one uploaded text fixture and
+  requested output `auracall-m5-20260802T185953Z.docx`.
+- Preflight readback: API PID `29769`, scheduler paused, five retained
+  completions paused, queued/running targets zero, active history
+  materialization jobs zero, and every ChatGPT provider guard clear.
+- Packet bounds are one chat, one upload, one submitted turn, one generated
+  DOCX, and one materialization job with no retry. Any verification challenge,
+  identity ambiguity, failed asset, duplicate same-route mutation, or pause
+  drift is a hard stop. Scheduler and continuous live follow remain closed.
+
+## 2026-08-02 | Plan 0180 fresh control hard-stopped on provider mismatch
+
+- Installed reviewed Packet B at API PID `81726` with source/installed hash
+  parity and the paused zero-work posture intact.
+- The bounded command specified `--browser-target chatgpt` but omitted an
+  explicit model. AuraCall retained default model `grok-4.20`, reused a
+  preexisting managed Grok browser, and submitted the upload/prompt there before
+  the mismatch was visible in command output. The command was interrupted once
+  detected and no retry ran.
+- Read-only DOM inspection confirmed Grok conversation
+  `3d5d24dd-ec36-426c-b48f-836f0629652f` completed with the exact uploaded TXT
+  and a generated DOCX bearing the requested filename and control ID. Those are
+  wrong-provider incident artifacts and were not materialized.
+- No ChatGPT request or history-materialization job occurred. Scheduler remains
+  paused, five completions remain paused, queued/running targets are zero, all
+  ChatGPT guards are clear, and active materialization jobs are zero. M5 stays
+  open and another live attempt requires fresh authorization after provider/
+  model binding is made explicit and checked before submit.

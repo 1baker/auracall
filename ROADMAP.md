@@ -76,9 +76,14 @@ Lane: P01
   eligible artifacts by exact catalog identity before ChatGPT same-title dedup
   and the item budget. Direct ID, URI-only, shared-URI, shared-message/turn,
   ambiguous-title, and exact `download-dom` paths are provider-free covered;
-  final independent audit passed. The managed `default` target remains absent,
-  no install or provider work ran, and M5 plus every browser/live gate remains
-  open.
+  final independent audit passed. Packet B is installed byte-identically at API
+  PID `81726`, but the first authorized fresh positive-control command resolved
+  its unspecified model to `grok-4.20` and submitted to Grok despite
+  `--browser-target chatgpt`. Read-only inspection confirmed the wrong-provider
+  upload and DOCX generation, but no ChatGPT request or materialization ran.
+  The packet is consumed without retry; M5 plus every scheduler/continuous-live-
+  follow gate remains open pending a separately authorized, explicitly model-
+  bound ChatGPT attempt.
 
 - Completed provider-session authority unification:
   [docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md](docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md)
