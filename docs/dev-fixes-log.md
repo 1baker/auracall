@@ -19994,6 +19994,7 @@ browser-stage lifecycle observability, not transcript truncation.
   provider boundary must check cancellation before pass, ledger, catch-up, or
   materialization mutation. A provider implementation that resolves despite
   abort must still be unable to create post-cancel work.
+
 ## 2026-08-01 | HTTP forbidden is retrieval failure, not availability proof
 
 - Symptom: an exact ChatGPT file tile and provider file ID can resolve
@@ -20006,3 +20007,9 @@ browser-stage lifecycle observability, not transcript truncation.
 - Operator rule: a one-attempt exact-asset proof that ends this way consumes its
   live packet and cannot satisfy a successful-materialization re-enablement
   gate, even when an older valid local copy remains available.
+- Follow-up operator evidence found a working later-chat download control for
+  the same intended content. Durable diagnosis must therefore compare the
+  failing direct provider-file route with message-local download controls
+  before calling the content unavailable. Preserve the provider-supplied
+  filename and require source-local identity evidence; matching extension or
+  size alone is insufficient.

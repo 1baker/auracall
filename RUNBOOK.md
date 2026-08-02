@@ -1,5 +1,24 @@
 # RUNBOOK
 
+## Turn 389 | 2026-08-02
+
+- The operator manually verified that working DOCX links exist near the end of
+  the exact `ChE 4470 Study Guide` chat. They download as
+  `ChE_4470_5470_Exam_2_Spring_2025_Problem_3_updated_fresh-1.docx` at about
+  99.48 KB, consistent with the preserved 99,476-byte local Exam DOCX.
+- This corrects the working diagnosis after job
+  `hmj_50e7aa9598be44fc950ddb1b89d4ca2f`: exact catalog selection is repaired,
+  but AuraCall follows a 403 direct provider-file endpoint instead of the live
+  later-chat download control. The intended document is not presumed vanished.
+- Wrote fresh-agent authority
+  `docs/dev/notes/0001-2026-08-02-plan-0180-chatgpt-download-route-handoff.md`
+  with startup order, exact identities, read-only CDP packet, provider-free
+  red/green target, acceptance criteria, and hard stops.
+- Runtime remains fail-closed: API PID `29769`, scheduler paused, five
+  completions paused, queued/running materialization jobs 0/0, browser mutations
+  0, and duplicate same-route attempts 0. The handoff authorizes no click,
+  download, retry, scheduler resume, or continuous live-follow re-enablement.
+
 ## Turn 388 | 2026-08-01
 
 - Consumed exactly one newly authorized no-retry proof for the exact default-

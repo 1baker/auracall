@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 11
+Plan version: 12
 
 ## Stable Objective
 
@@ -84,6 +84,15 @@ reenablement.
   AuraCall correctly retained non-retryable `retrieval_failed` rather than
   claiming deletion, expiry, or provider unavailability. The job ran once,
   materialized 0/1, and was not retried. M5 and re-enablement remain open.
+- Operator verification after that proof found working DOCX links near the end
+  of the same chat. They download as
+  `ChE_4470_5470_Exam_2_Spring_2025_Problem_3_updated_fresh-1.docx` at about
+  99.48 KB, consistent with the preserved 99,476-byte local Exam DOCX. This
+  disproves any working assumption that the intended document itself vanished;
+  the remaining defect is a download-route/identity mismatch between the 403
+  provider-file endpoint and the later live chat control. Fresh-session work is
+  governed by
+  `docs/dev/notes/0001-2026-08-02-plan-0180-chatgpt-download-route-handoff.md`.
 
 ## Architecture Decision
 
@@ -571,3 +580,24 @@ continuous live-follow reenablement remain separately gated afterward.
   scheduler/continuous live follow. A successful materialization proof requires
   a newly reviewed target whose provider endpoint is demonstrably retrievable
   and separate explicit authorization.
+
+## Checkpoint 13
+
+- `plan_version`: 12
+- `progress_classification`: operator evidence corrects the working diagnosis;
+  fresh-agent download-route investigation is ready.
+- `operator_evidence`: links near the end of the exact chat download
+  `ChE_4470_5470_Exam_2_Spring_2025_Problem_3_updated_fresh-1.docx` at about
+  99.48 KB. This is consistent with the preserved 99,476-byte Exam DOCX and
+  means the intended artifact is available through a live chat control despite
+  the exact catalog provider-file endpoint returning 403.
+- `remaining_gap`: bind the later live control to the requested catalog asset
+  without weakening Plan 0180 M6 cross-asset identity checks. Preserve the
+  actual provider filename and distinguish a catalog alias from the downloaded
+  asset identity.
+- `handoff`: the next session must start from
+  `docs/dev/notes/0001-2026-08-02-plan-0180-chatgpt-download-route-handoff.md`,
+  perform one read-only CDP/DOM inspection on the retained `default` browser
+  profile, then build a provider-free red/green repair. No browser click,
+  materialization retry, scheduler resume, or continuous live-follow
+  re-enablement is authorized by this checkpoint.

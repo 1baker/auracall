@@ -42566,6 +42566,7 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   idle-waiting completions and active materialization jobs are zero; duplicate
   same-route mutations remain zero. No second live attempt ran, and Plan 0180 M5
   plus all re-enablement gates remain open.
+
 ## 2026-08-01 | Plan 0180 exact selector live proof
 
 - Ran exactly one newly authorized no-retry materialization job,
@@ -42582,3 +42583,22 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   Scheduler and five completions remain paused; active materialization jobs and
   duplicate same-route mutations are zero. Plan 0180 M5 and all re-enablement
   gates remain open pending a separately authorized successful target.
+
+## 2026-08-02 | Plan 0180 fresh-agent download-route handoff
+
+- Operator verification found working DOCX links near the end of the exact chat
+  that download as
+  `ChE_4470_5470_Exam_2_Spring_2025_Problem_3_updated_fresh-1.docx` at about
+  99.48 KB. This is consistent with the preserved 99,476-byte Exam DOCX and
+  changes the next diagnosis from vanished artifact to direct-route versus
+  live-control mismatch.
+- Added repo-native fresh-agent handoff
+  `docs/dev/notes/0001-2026-08-02-plan-0180-chatgpt-download-route-handoff.md`.
+  It requires read-only CDP inspection on the retained `default` browser
+  profile, CodeGraph-first structural discovery, provider-free red/green repair,
+  strict response identity, and a separate authorization before any later live
+  attempt.
+- Runtime readback remains scheduler paused, five completions paused, active
+  materialization jobs zero, browser mutations zero, and duplicate same-route
+  attempts zero. No browser action or provider request ran while writing the
+  handoff.

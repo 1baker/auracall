@@ -58,6 +58,14 @@ Lane: P01
   `retrieval_failed` because it does not prove deletion, expiry, or provider
   unavailability. The job materialized 0/1 without retry, so M5 and all
   re-enablement gates remain open.
+  The operator subsequently verified working links near the end of the same
+  chat. They download the intended content as
+  `ChE_4470_5470_Exam_2_Spring_2025_Problem_3_updated_fresh-1.docx` at about
+  99.48 KB. The active defect is therefore the 403 direct-provider-file route
+  versus the live later-chat download control, not a vanished intended
+  document. Fresh-agent diagnosis now starts from
+  `docs/dev/notes/0001-2026-08-02-plan-0180-chatgpt-download-route-handoff.md`;
+  M5 and all live re-enablement gates remain open.
 
 - Completed provider-session authority unification:
   [docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md](docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md)
