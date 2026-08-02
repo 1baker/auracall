@@ -42812,3 +42812,22 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   at 304 files/2,705 tests with 65 skips. Typecheck, production build, touched
   lint, zero-error plan audit, and diff hygiene pass. No install or provider
   work occurred at this checkpoint.
+
+## 2026-08-02 | Fresh two-asset proof failed closed after DOCX preview success
+
+- Pushed aggregate repair `8cca7962`, installed it with preview repair
+  `004eaf25`, and verified source/runtime parity under active API PID `86598`.
+  Scheduler and all five completions remained paused, with no active jobs before
+  the proof.
+- Session `m5-chatgpt-docx-preview-proof` ran exactly once with the sole 505-byte
+  source and completed fresh ChatGPT conversation
+  `6a6fb365-db60-83ea-803e-42007bbc1c61`.
+- Sole job `hmj_f4fde42cd30644699e534d5568a6f914` matched all four account-proof
+  dimensions and attempted the one discovered file plus one artifact. The DOCX
+  materialized through `clickArtifactViewerDownload`; its 38,509-byte OOXML at
+  SHA-256 `a703a4db...` passes integrity and requested-content checks.
+- The upload tile matched but produced no captured UI binary, and its bounded
+  fallback returned 403 JSON `Forbidden` with no URL. Aggregate repair worked:
+  the first and only attempt terminated job/result `failed`, metrics 1/1.
+- The no-retry packet is consumed. M5 and all re-enablement remain open; the
+  next work is provider-free diagnosis of uploaded-file preview capture.

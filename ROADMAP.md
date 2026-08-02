@@ -105,14 +105,17 @@ Lane: P01
   consumed without retry. The operator subsequently proved the exact uploaded
   source is available by opening its tile preview and downloading the
   upper-right aria-labeled control; the 505-byte result is byte-identical to
-  the submitted fixture. Provider-free repair now targets the sole newly
-  visible exact Download button even when the preview has no dialog role. It is
-  tested but not installed or proven live. Aggregate status is now also repaired
-  provider-free: any real failed selected transfer makes the result and durable
-  job `failed` even beside a successful transfer, while routeability placeholders
-  and provider guards keep their dedicated semantics. Full validation passes;
-  commit/install parity and one bounded live two-asset proof are next. M5 and
-  all re-enablement gates remain open pending that automated proof.
+  the submitted fixture. Preview repair `004eaf25` and aggregate-truth repair
+  `8cca7962` are now pushed and installed with exact parity. The single
+  authorized fresh ChatGPT proof produced one upload and the requested DOCX.
+  Sole job `hmj_f4fde42cd30644699e534d5568a6f914` successfully materialized and
+  validated the 38,509-byte DOCX through the current artifact preview, but the
+  uploaded TXT still yielded no captured preview binary and its bounded direct
+  fallback returned 403 JSON `Forbidden`. The repaired envelope correctly
+  terminated `failed`, metrics 1 materialized / 1 failed. No retry ran. M5 and
+  all re-enablement gates remain open pending provider-free diagnosis of the
+  exact uploaded-file preview capture lifecycle and separate authority for any
+  future live proof.
 
 - Completed provider-session authority unification:
   [docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md](docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md)

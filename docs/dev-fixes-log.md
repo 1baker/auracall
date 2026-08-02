@@ -20139,3 +20139,15 @@ browser-stage lifecycle observability, not transcript truncation.
   Synthetic `conversation-not-found-or-unavailable` routeability placeholders
   and provider-guard evidence keep their dedicated semantics; do not flatten
   those control-plane outcomes into ordinary transfer failure.
+
+## 2026-08-02 | Preview controls are asset-surface specific
+
+- Live evidence can validate one preview path without validating every tile
+  type. The current generated-artifact preview opened and downloaded through
+  its upper-right exact Download control, while the uploaded-file tile in the
+  same conversation still produced no captured binary and fell back to 403.
+- Keep source-file and generated-artifact transfer receipts distinct. Shared
+  labels, filenames, or nearby UI structure cannot justify cross-asset success.
+- A provider-free selector test must model the exact source-tile transition and
+  download-capture lifecycle observed live; a generic role-less preview fixture
+  is insufficient evidence until the installed source route materializes bytes.

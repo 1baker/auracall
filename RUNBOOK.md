@@ -1,5 +1,26 @@
 # RUNBOOK
 
+## Turn 398 | 2026-08-02
+
+- Pushed aggregate-truth repair `8cca7962`, installed it together with preview
+  repair `004eaf25`, and proved exact source/runtime hashes. API PID `86598`
+  was active with zero restarts; scheduler and five completions remained
+  paused, with no active materialization jobs before the live packet.
+- The single authorized ChatGPT turn passed canonical four-dimension account
+  proof, uploaded only the 505-byte fixture, and completed once in fresh
+  conversation `6a6fb365-db60-83ea-803e-42007bbc1c61` with the requested DOCX.
+- Sole job `hmj_f4fde42cd30644699e534d5568a6f914` discovered one upload and one
+  artifact. It materialized the DOCX through the current previewer's Download
+  control: 38,509 bytes, SHA-256 `a703a4db...`, valid OOXML, with the exact
+  control ID, one-source statement, and all three source items.
+- The uploaded TXT tile matched, but AuraCall did not capture its preview
+  download; the exact fallback endpoint again returned 403 JSON `Forbidden`
+  with no URL. The repaired envelope truthfully terminated `failed`, metrics
+  1 materialized / 1 failed, on attempt 1.
+- Hard stop: no retry or second job ran. M5 and scheduler/continuous-live-follow
+  re-enablement remain open pending a provider-free source-preview capture
+  diagnosis and a separately authorized future proof.
+
 ## Turn 397 | 2026-08-02
 
 - The operator authorized the recommended bounded sequence: provider-free

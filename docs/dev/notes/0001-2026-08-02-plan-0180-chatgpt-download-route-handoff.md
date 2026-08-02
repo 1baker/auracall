@@ -435,6 +435,29 @@ Re-read these values; they are a snapshot, not permission to mutate.
   typecheck, production build, touched lint, zero-error plan audit, and diff
   hygiene. Commit/install/live proof remain the next serialized gates.
 
+## 2026-08-02 Fresh Preview Proof Terminal Addendum
+
+- Aggregate commit `8cca7962` and preview commit `004eaf25` are pushed and
+  installed with exact source/runtime parity. API PID `86598` was active with
+  zero restarts; scheduler and all five completions were paused and no
+  materialization job was active before the proof.
+- Session `m5-chatgpt-docx-preview-proof` completed exactly one prompt using
+  exactly the sole 505-byte fixture in fresh ChatGPT conversation
+  `6a6fb365-db60-83ea-803e-42007bbc1c61`.
+- Sole job `hmj_f4fde42cd30644699e534d5568a6f914` discovered one file and one
+  artifact. All four provider-account proof dimensions matched. The generated
+  DOCX materialized through the current previewer's exact Download control at
+  38,509 bytes and SHA-256 `a703a4db...`; OOXML and required-content checks
+  pass.
+- The exact uploaded TXT tile matched, but no UI binary was captured and the
+  bounded `files-download` fallback returned HTTP 403 JSON `Forbidden` with no
+  URL. The repaired job/result correctly terminated `failed`, metrics 1
+  materialized / 1 failed, on attempt 1.
+- This packet is consumed. Do not retry or create a second job. M5 and every
+  re-enablement gate remain open; diagnose the current uploaded-file preview
+  activation/capture boundary provider-free before requesting another live
+  proof.
+
 ## Suggested Skills
 
 - `agent-browser`: required for retained authenticated browser/CDP inspection

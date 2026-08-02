@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 23
+Plan version: 24
 
 ## Stable Objective
 
@@ -18,19 +18,21 @@ reenablement.
   cooldowns.
 - The account-mirror scheduler and five unrelated completions remain paused;
   no queued, running, or idle-waiting work remains.
-- The fresh one-upload/one-DOCX control proved both provider assets are
-  downloadable through ChatGPT's preview UI: the generated DOCX materialized
-  automatically, and the operator manually downloaded the uploaded 505-byte
-  TXT through the source tile's previewer. The manual TXT is byte-identical to
-  the submitted fixture, but the consumed AuraCall job still remains a partial
-  failure because its role-dialog-only preview fallback missed that source
-  preview and fell through to the 403 direct route. A provider-free selector
-  repair is green but not installed or proven live.
-- Aggregate terminal truth is provider-free green: any real failed selected
-  transfer now makes the result and durable job failed even when another asset
-  materializes. Synthetic routeability placeholders and provider guards retain
-  their dedicated semantics. Commit/install parity and one bounded live proof
-  remain.
+- The source-preview and aggregate-truth repairs are pushed and installed
+  byte-identically. The single authorized fresh proof passed the canonical
+  ChatGPT account check, uploaded exactly one 505-byte fixture, and produced
+  exactly one requested DOCX in fresh conversation
+  `6a6fb365-db60-83ea-803e-42007bbc1c61`.
+- Sole job `hmj_f4fde42cd30644699e534d5568a6f914` materialized the generated DOCX
+  through the current previewer's upper-right Download control. The 38,509-byte
+  OOXML package has SHA-256 `a703a4db...` and contains the exact control ID,
+  exactly-one-source statement, and all three source-list items. The uploaded
+  TXT still fell through to its exact `files-download` endpoint and failed with
+  HTTP 403 JSON `Forbidden` / `json_missing_download_url`. The repaired durable
+  envelope correctly reports `failed` with metrics 1 materialized / 1 failed.
+- The packet is consumed without retry. M5 remains open because AuraCall did
+  not materialize both selected assets, and every scheduler/continuous-live-
+  follow gate remains closed.
 - The latest separately authorized default-profile canary
   `acctmirror_completion_ec8ec770-b33c-47ba-8f9c-049bf9b97588` completed one
   collector pass with zero duplicate same-route mutations and no rate-limit,
@@ -994,3 +996,38 @@ continuous live-follow reenablement remain separately gated afterward.
   source/runtime hashes and paused posture, then consume at most one fresh
   two-asset ChatGPT proof. Stop without retry on any hard-stop signal or any
   nonzero failed materialization.
+
+## Checkpoint 25
+
+- `plan_version`: 24
+- `state_transition`: both pending repairs installed -> one fresh two-asset
+  proof consumed -> truthful partial-transfer failure; M5 remains open.
+- `installed_gate`: commits `004eaf25` and `8cca7962` are pushed. Installed
+  ChatGPT adapter SHA-256 matches source at `40f6c6f...`; installed history
+  materializer matches source at `b24d4208...`. API PID `86598` was active with
+  zero restarts, scheduler paused, all five completions paused, and zero active
+  materialization jobs before the proof.
+- `turn_receipt`: session `m5-chatgpt-docx-preview-proof` completed once with
+  one source upload in fresh conversation
+  `6a6fb365-db60-83ea-803e-42007bbc1c61`. It returned
+  `auracall-m5-20260802T185953Z.docx`; no prompt retry or second conversation
+  ran.
+- `job_receipt`: sole job `hmj_f4fde42cd30644699e534d5568a6f914`
+  refreshed one file and one artifact with all four provider-account proof
+  dimensions matching. It attempted two downloads, materialized one, failed
+  one, and terminated `failed` on its first attempt.
+- `artifact_result`: the generated DOCX materialized by exact
+  `download-dom:2d831855-9ce9-4d90-a652-d60a65d88c11:0` identity through
+  `chatgpt.clickArtifactViewerDownload`. It is 38,509 bytes at SHA-256
+  `a703a4db8a5fa458f3316fbb9bc3325d5d376ab1729374151f424c31cfddf468`;
+  ZIP integrity and all requested content checks pass.
+- `source_result`: the exact uploaded TXT tile matched, but the automated UI
+  transition did not yield a captured binary and the fallback `files-download`
+  request returned 403 JSON `Forbidden` with no download URL. The source entry
+  is non-retryable `retrieval_failed`; the prior operator copy remains 505 bytes
+  at SHA-256 `5d17e7ec...` and byte-identical to the fixture, but cannot satisfy
+  automated materialization acceptance.
+- `terminal_boundary`: no retry or second job is authorized. M5 and scheduler/
+  continuous-live-follow re-enablement remain open. Diagnose the current
+  uploaded-file preview activation/capture boundary provider-free before any
+  later separately authorized proof.
