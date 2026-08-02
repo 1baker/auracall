@@ -20036,3 +20036,17 @@ browser-stage lifecycle observability, not transcript truncation.
   before calling the content unavailable. Preserve the provider-supplied
   filename and require source-local identity evidence; matching extension or
   size alone is insufficient.
+
+## 2026-08-02 | Exact artifact selection must precede family deduplication
+
+- Symptom: an exact artifact catalog request resolved only conversation and
+  asset kind, so `maxItems = 1` could choose an earlier artifact. A first repair
+  still let same-title family dedup collapse distinct controls before selection.
+- Durable rule: carry selected artifact identity into provider work and apply it
+  to eligible raw candidates before provider-family deduplication and budgets.
+  Direct provider-local artifact ID outranks URI; URI is used only without a
+  direct ID, and URI-derived catalog lookup keys are not IDs.
+- Ambiguity rule: message and turn IDs are scoped narrowing evidence, not asset-
+  unique authority. Compare fields by domain and require one title/kind-
+  compatible candidate. Title-only matches, shared source evidence, and shared
+  URI with conflicting direct IDs fail closed.

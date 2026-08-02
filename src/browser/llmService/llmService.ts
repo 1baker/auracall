@@ -295,9 +295,7 @@ function selectMaterializableConversationArtifacts(
 	providerId: ProviderId,
 	artifacts: ConversationArtifact[],
 ): ConversationArtifact[] {
-	const eligible = artifacts.filter(
-		(artifact) => !isStaticChatgptImageArtifactFalsePositive(providerId, artifact),
-	);
+	const eligible = selectEligibleConversationArtifacts(providerId, artifacts);
 	if (providerId !== "chatgpt") return eligible;
 	const downloadButtonTitles = new Set(
 		eligible
@@ -322,6 +320,15 @@ function selectMaterializableConversationArtifacts(
 		}
 	}
 	return Array.from(representatives.values());
+}
+
+function selectEligibleConversationArtifacts(
+	providerId: ProviderId,
+	artifacts: ConversationArtifact[],
+): ConversationArtifact[] {
+	return artifacts.filter(
+		(artifact) => !isStaticChatgptImageArtifactFalsePositive(providerId, artifact),
+	);
 }
 
 function normalizeArtifactTitleForDeduplication(value: string): string {
@@ -1590,7 +1597,10 @@ export abstract class LlmService {
 			listOptions?: BrowserProviderListOptions;
 			refresh?: boolean;
 			maxItems?: number | null;
-			excludeArtifact?: (artifact: ConversationArtifact) => boolean;
+			excludeArtifact?: (
+				artifact: ConversationArtifact,
+				candidates: ConversationArtifact[],
+			) => boolean;
 		},
 	): Promise<{ artifacts: ConversationArtifact[]; files: FileRef[]; manifestPath: string | null }> {
 		if (!this.provider.materializeConversationArtifact) {
@@ -1609,13 +1619,18 @@ export abstract class LlmService {
 				refresh: options?.refresh ?? true,
 				listOptions,
 			});
-			const artifacts = limitItems(
-				selectMaterializableConversationArtifacts(
-					this.providerId,
-					Array.isArray(context.artifacts) ? context.artifacts : [],
-				).filter((artifact) => options?.excludeArtifact?.(artifact) !== true),
-				options?.maxItems,
+			const eligibleArtifactCandidates = selectEligibleConversationArtifacts(
+				this.providerId,
+				Array.isArray(context.artifacts) ? context.artifacts : [],
 			);
+			const selectedArtifactCandidates = eligibleArtifactCandidates.filter(
+				(artifact) => options?.excludeArtifact?.(artifact, eligibleArtifactCandidates) !== true,
+			);
+			const artifactCandidates = selectMaterializableConversationArtifacts(
+				this.providerId,
+				selectedArtifactCandidates,
+			);
+			const artifacts = limitItems(artifactCandidates, options?.maxItems);
 			if (listOptions.useProviderSession === true) {
 				listOptions.interactionGovernor = undefined;
 				listOptions.skipFeatureSignature = true;

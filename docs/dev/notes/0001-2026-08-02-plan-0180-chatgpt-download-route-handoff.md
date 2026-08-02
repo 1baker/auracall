@@ -1,7 +1,7 @@
 # Plan 0180 ChatGPT Download-Route Fresh-Agent Handoff
 
 Date: 2026-08-02
-State: Packet A diagnosed; awaiting review of Packet B exact-artifact selection repair
+State: Packet B implemented and independently reviewed; browser/live gate remains closed
 Governing plan: `docs/dev/plans/0180-2026-08-01-chatgpt-same-route-mutation-and-staged-reenablement.md`
 Scope: diagnose whether the direct-route catalog asset and later generated output are safely related; do not resume live follow or spend another materialization attempt
 
@@ -223,11 +223,12 @@ The red finding means no browser proof or catalog-artifact job is safe yet: an
 exact generated-output request could select an earlier artifact before the
 one-item budget is applied.
 
-## Packet B | Proposed Exact-Artifact Selection Repair
+## Packet B | Implemented Exact-Artifact Selection Repair
 
-Packet B requires review before implementation. Its bounded write surface is
-`src/runtime/historyMaterializationService.ts`, focused history materialization
-tests, and the governing documentation.
+Packet B is provider-free complete. Review expanded its bounded write surface
+from the history service into `src/browser/llmService/llmService.ts` and its
+focused tests because exact selection must run against eligible raw candidates
+before ChatGPT same-title family deduplication and `maxItems`.
 
 1. Extend `HistoryMaterializationSelectedCatalogAsset` into a discriminated
    `file | artifact` selector without weakening the existing file branch.
@@ -244,6 +245,20 @@ tests, and the governing documentation.
    typecheck, build, lint baseline, plan audit, and diff hygiene. Commit and push
    the provider-free repair, but do not install or launch a browser until the
    separate runtime gate is reviewed.
+
+Implementation result:
+
+- Artifact catalog rows now carry direct artifact ID, URI, title, kind,
+  message ID, and turn ID. Direct ID is strongest, URI is used when no direct
+  ID exists, and URI-derived catalog lookup keys are not artifact IDs.
+- Eligible raw artifacts are selector-filtered before ChatGPT family dedup and
+  the item budget. Message/turn and title fallbacks require one field-scoped,
+  kind-compatible candidate; shared source, shared URI with conflicting IDs,
+  and same-title ambiguity fail closed.
+- Independent audit findings were reconciled in the same slice. Final closure
+  audit passed with no findings.
+- Focused history, ChatGPT adapter, and LLM tests pass 239/239. Typecheck,
+  touched-file lint, production build, plan audit, and diff hygiene pass.
 
 ## Browser Inspection Gate
 
@@ -266,6 +281,18 @@ click or download, and stop on every existing browser hard stop.
   M6 cross-asset identity checks intact.
 - [x] No product-code implementation, install, browser launch, download, or live
   materialization occurs in Packet A.
+
+## Packet B Acceptance Criteria
+
+- [x] Exact artifact identity is carried from catalog resolution into provider
+  work without weakening exact-file behavior.
+- [x] Selection and ambiguity evaluation occur before ChatGPT deduplication and
+  `maxItems`.
+- [x] Direct ID, URI-only, shared-URI, shared-message/turn, same-title ambiguous,
+  and exact `download-dom` cases are provider-free covered.
+- [x] Independent findings were reconciled and final audit passed.
+- [x] No install, browser launch, click, provider request, live materialization,
+  scheduler resume, or completion resume occurred.
 
 ## Hard Stops And Non-Authorizations
 
@@ -317,7 +344,8 @@ Re-read these values; they are a snapshot, not permission to mutate.
 Update Plan 0180, `ROADMAP.md`, `RUNBOOK.md`, `docs/dev/dev-journal.md`, and
 `docs/dev-fixes-log.md` when the diagnosis or behavior changes. Preserve exact
 validation and runtime readbacks. Packet A is closed at a reviewed provider-free
-diagnosis and fixture/repair plan; Packet B remains awaiting review. Keep M5
+diagnosis and Packet B is closed at a validated exact-artifact selector repair.
+Keep M5
 OPEN until one separately authorized bounded default-account collector/
 materializer pass reaches zero failed materializations and all existing safety
 criteria.

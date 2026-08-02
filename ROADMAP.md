@@ -72,10 +72,13 @@ Lane: P01
   `docs/dev/notes/0001-2026-08-02-plan-0180-chatgpt-download-route-handoff.md`;
   Packet A confirmed the two routes are separate and existing response identity
   fails closed. It also found that exact artifact catalog identity is not
-  carried into provider work before `maxItems`, so a later artifact cannot yet
-  be requested safely as a one-item proof. Packet B exact-artifact selection
-  repair awaits review; the managed `default` target is absent, and M5 plus all
-  browser/live re-enablement gates remain open.
+  carried into provider work before `maxItems`. Packet B now filters raw
+  eligible artifacts by exact catalog identity before ChatGPT same-title dedup
+  and the item budget. Direct ID, URI-only, shared-URI, shared-message/turn,
+  ambiguous-title, and exact `download-dom` paths are provider-free covered;
+  final independent audit passed. The managed `default` target remains absent,
+  no install or provider work ran, and M5 plus every browser/live gate remains
+  open.
 
 - Completed provider-session authority unification:
   [docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md](docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md)

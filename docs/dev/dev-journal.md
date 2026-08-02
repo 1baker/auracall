@@ -42649,3 +42649,23 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   exact artifact ID before `maxItems`, so a bounded request may choose an earlier
   artifact. Packet B is documented but not authorized for implementation. No
   browser or runtime mutation ran.
+
+## 2026-08-02 | Plan 0180 Packet B exact-artifact selection repair
+
+- Extended selected catalog identity into a file/artifact union and preserved
+  artifact ID, URI, title, kind, message, and turn evidence through provider
+  work. Direct ID outranks URI; URI-derived lookup keys are not artifact IDs.
+- Selector evaluation now runs on eligible raw artifacts before ChatGPT same-
+  title family deduplication and `maxItems`. Source evidence must narrow, with
+  title/kind when present, to one candidate; title fallback is unique-only.
+- TDD covered exact later `download-dom` selection, ambiguous same-title and
+  shared-source rejection, shared-URI ID precedence, URI-only catalog rows, and
+  pre-budget filtering. The focused history/ChatGPT/LLM packet passes 239/239.
+- A bounded read-only audit drove repairs for pre-selector dedup, non-unique
+  source matching, shared-URI precedence, and URI-only selector typing. Final
+  closure audit passed; the reviewed `llmService.ts` seam expansion was
+  necessary for pre-dedup selection.
+- Typecheck, production build, touched lint, repository lint at the existing
+  207-warning baseline, plan audit, and diff hygiene pass. The remediated full
+  provider-free suite passes 303 files/2,699 tests with 65 skips. No browser,
+  provider, install, service, scheduler, completion, or live mutation ran.

@@ -21,6 +21,7 @@ import type { ConversationArtifact, FileRef, Project } from "../../src/browser/p
 import { createBrowserScrapeTelemetryRecorder } from "../../src/browser/providers/scrapeTelemetry.js";
 import type { BrowserProviderListOptions } from "../../src/browser/providers/types.js";
 import type { ResolvedUserConfig } from "../../src/config.js";
+import { matchesHistoryMaterializationSelectedCatalogArtifact } from "../../src/runtime/historyMaterializationService.js";
 
 class TestLlmService extends LlmService {
 	constructor(
@@ -1034,6 +1035,108 @@ describe("llmService project file cache writes", () => {
 		}
 	});
 
+	test("materializeConversationArtifacts applies exact selection before same-title ChatGPT dedup", async () => {
+		const homeDir = await mkdtemp(path.join(os.tmpdir(), "auracall-llm-files-exact-artifact-"));
+		setAuracallHomeDirOverrideForTest(homeDir);
+		const cacheContext: ProviderCacheContext = {
+			provider: "chatgpt",
+			userConfig: {} as ProviderCacheContext["userConfig"],
+			listOptions: {},
+			identityKey: "cache-test@example.com",
+		};
+		const store = new JsonCacheStore();
+		const artifacts: ConversationArtifact[] = [
+			{
+				id: "download-dom:turn-1:0",
+				title: "Download the report",
+				kind: "download",
+				uri: "chatgpt://download-button/turn-1/0",
+				messageId: "message-1",
+				metadata: { turnId: "turn-1" },
+			},
+			{
+				id: "download-dom:turn-2:0",
+				title: "Download the report",
+				kind: "download",
+				uri: "chatgpt://download-button/turn-2/0",
+				messageId: "message-2",
+				metadata: { turnId: "turn-2" },
+			},
+		];
+		const provider = {
+			id: "chatgpt",
+			config: { id: "chatgpt", selectors: {} as never },
+			readConversationContext: vi.fn(async () => ({
+				provider: "chatgpt",
+				conversationId: "conversation-exact-artifact",
+				messages: [{ role: "assistant", text: "done" }],
+				artifacts,
+			})),
+			materializeConversationArtifact: vi.fn(
+				async (_conversationId: string, artifact: ConversationArtifact) =>
+					({
+						id: `file-${artifact.id}`,
+						name: "report.docx",
+						provider: "chatgpt",
+						source: "conversation",
+						size: 42,
+						localPath: "/tmp/report.docx",
+						remoteUrl: artifact.uri,
+					}) satisfies FileRef,
+			),
+		};
+		const service = new TestLlmService(provider as never, store, cacheContext);
+		const exactSelector = {
+			kind: "artifact" as const,
+			id: "download-dom:turn-2:0",
+			title: "Download the report",
+			uri: "chatgpt://download-button/turn-2/0",
+			artifactKind: "download" as const,
+			messageId: "message-2",
+			turnId: "turn-2",
+		};
+
+		try {
+			const exact = await service.materializeConversationArtifacts("conversation-exact-artifact", {
+				listOptions: {},
+				refresh: true,
+				maxItems: 1,
+				excludeArtifact: (artifact, candidates) =>
+					!matchesHistoryMaterializationSelectedCatalogArtifact(
+						artifact,
+						exactSelector,
+						candidates,
+					),
+			});
+			expect(exact.artifacts.map((artifact) => artifact.id)).toEqual(["download-dom:turn-2:0"]);
+
+			const titleOnly = await service.materializeConversationArtifacts(
+				"conversation-exact-artifact",
+				{
+					listOptions: {},
+					refresh: true,
+					maxItems: 1,
+					excludeArtifact: (artifact, candidates) =>
+						!matchesHistoryMaterializationSelectedCatalogArtifact(
+							artifact,
+							{
+								...exactSelector,
+								id: null,
+								uri: null,
+								messageId: null,
+								turnId: null,
+							},
+							candidates,
+						),
+				},
+			);
+			expect(titleOnly.artifacts).toEqual([]);
+			expect(provider.materializeConversationArtifact).toHaveBeenCalledTimes(1);
+		} finally {
+			await rm(homeDir, { recursive: true, force: true });
+		}
+	});
+
 	test("materializeConversationArtifacts deduplicates ChatGPT same-source sandbox aliases before spending budget", async () => {
 		const homeDir = await mkdtemp(path.join(os.tmpdir(), "auracall-llm-files-same-source-alias-"));
 		setAuracallHomeDirOverrideForTest(homeDir);
@@ -1173,13 +1276,21 @@ describe("llmService project file cache writes", () => {
 		const service = new TestLlmService(provider as never, store, cacheContext);
 
 		try {
+			const observedCandidateSets: string[][] = [];
 			const result = await service.materializeConversationArtifacts("conversation-mixed", {
 				listOptions: {},
 				refresh: true,
 				maxItems: 1,
-				excludeArtifact: (artifact) => artifact.id === artifacts[0]?.id,
+				excludeArtifact: (artifact, candidates) => {
+					observedCandidateSets.push(candidates.map((candidate) => candidate.id));
+					return artifact.id === artifacts[0]?.id;
+				},
 			});
 
+			expect(observedCandidateSets).toEqual([
+				artifacts.map((artifact) => artifact.id),
+				artifacts.map((artifact) => artifact.id),
+			]);
 			expect(result.artifacts.map((artifact) => artifact.title)).toEqual(["New Guide"]);
 			expect(provider.materializeConversationArtifact).toHaveBeenCalledTimes(1);
 			expect(provider.materializeConversationArtifact.mock.calls[0]?.[1].title).toBe("New Guide");

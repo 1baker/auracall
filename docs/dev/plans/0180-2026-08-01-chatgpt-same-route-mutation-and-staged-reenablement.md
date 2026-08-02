@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 14
+Plan version: 15
 
 ## Stable Objective
 
@@ -100,7 +100,10 @@ reenablement.
   identity validation rejects cross-asset capture. It also found a distinct
   blocker: artifact catalog items do not carry exact selected-asset identity
   into provider work, so `maxItems = 1` can select an earlier artifact. Packet B
-  exact-artifact selection repair awaits review; browser and live gates remain
+  now filters eligible raw candidates by exact artifact identity before ChatGPT
+  family deduplication and `maxItems`. Direct ID outranks URI, URI-only rows
+  remain URI-selected, and source/title fallbacks require one unambiguous
+  candidate. Final independent review passed; browser and live gates remain
   closed.
 
 ## Architecture Decision
@@ -667,3 +670,32 @@ continuous live-follow reenablement remain separately gated afterward.
   adds a discriminated artifact selector and filters exact artifact identity
   before budget. Do not install, launch a browser, click, or run a catalog-
   artifact materialization until the repair and its validation are reviewed.
+
+## Checkpoint 16
+
+- `plan_version`: 15
+- `progress_classification`: Packet B provider-free implementation and review
+  complete; browser/live gate unchanged.
+- `implementation`: selected catalog identity is now a discriminated file/
+  artifact selector. Exact artifact selection runs against eligible raw
+  candidates before ChatGPT family deduplication and `maxItems`.
+- `identity_precedence`: direct artifact ID is strongest; URI is authoritative
+  only without a direct ID, and URI-derived lookup keys are not IDs. Message/
+  turn fields are compared by domain and, with title/kind when present, must
+  narrow to exactly one candidate. Title-only fallback is unique-only.
+- `tdd_receipt`: coverage proves exact later `download-dom` selection, same-
+  title ambiguity rejection, shared message/turn rejection, shared-URI ID
+  precedence, URI-only selector construction, and pre-budget filtering.
+- `review_receipt`: one bounded read-only auditor found pre-selector dedup,
+  non-unique source matching, shared-URI precedence, and URI-only catalog typing
+  edges. All were reconciled; final closure audit passed with no findings. The
+  reviewed `llmService.ts` seam expansion is necessary for pre-dedup selection.
+- `validation`: focused history/ChatGPT/LLM tests 239/239; typecheck, production
+  build, touched-file lint, repository lint with the existing 207-warning
+  baseline, plan audit with zero validation errors, and diff hygiene pass. One
+  initial full-suite run had an unrelated Gemini spacing assertion miss by 2 ms
+  and its exact rerun passed; the remediated suite then passed 303 files/2,699
+  tests with 65 skips. Final validation is recorded in the commit receipt.
+- `runtime_gate`: no install, browser launch, click, provider request, live
+  materialization, scheduler resume, or completion resume occurred. M5 and all
+  re-enablement gates remain open.

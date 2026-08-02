@@ -104,12 +104,22 @@ export interface HistoryMaterializationProviderWorkContext {
 	onProviderSessionProof?: (proof: ProviderSessionProof) => void;
 }
 
-export interface HistoryMaterializationSelectedCatalogAsset {
-	kind: "file";
-	id: string | null;
-	name: string | null;
-	providerFileId: string | null;
-}
+export type HistoryMaterializationSelectedCatalogAsset =
+	| {
+			kind: "file";
+			id: string | null;
+			name: string | null;
+			providerFileId: string | null;
+	  }
+	| {
+			kind: "artifact";
+			id: string | null;
+			title: string | null;
+			uri: string | null;
+			artifactKind: ConversationArtifact["kind"] | null;
+			messageId: string | null;
+			turnId: string | null;
+	  };
 
 export interface HistoryMaterializationManifestEntry {
 	kind: "artifact" | "file" | "media";
@@ -1240,7 +1250,7 @@ async function materializeHistoryRequest(input: {
 			...request,
 			assetKinds: request.assetKinds ?? defaultAssetKindsForCatalogKind(detail.kind),
 		};
-		const selectedCatalogAsset = selectedCatalogFileFromCatalogItem(detail);
+		const selectedCatalogAsset = selectedCatalogAssetFromCatalogItem(detail);
 		return reconcileConversationTarget({
 			target,
 			request: scopedRequest,
@@ -3609,14 +3619,28 @@ async function materializeConversationTarget(input: {
 	const selectedKinds = normalizeAssetKinds(input.request.assetKinds);
 	const maxItems = normalizeMaxItems(input.request.maxItems);
 	const excludedAssetFamilySignatures = new Set(input.excludedAssetFamilySignatures ?? []);
-	const excludeArtifact = (artifact: ConversationArtifact): boolean =>
-		(["artifact", "media"] as const).some((kind) => {
+	const excludeArtifact = (
+		artifact: ConversationArtifact,
+		candidates: ConversationArtifact[],
+	): boolean => {
+		if (
+			input.selectedCatalogAsset?.kind === "artifact" &&
+			!matchesHistoryMaterializationSelectedCatalogArtifact(
+				artifact,
+				input.selectedCatalogAsset,
+				candidates,
+			)
+		) {
+			return true;
+		}
+		return (["artifact", "media"] as const).some((kind) => {
 			const signature = catalogManifestAssetFamilySignature(kind, artifact);
 			return signature ? excludedAssetFamilySignatures.has(signature) : false;
 		});
+	};
 	const excludeFile = (file: FileRef): boolean => {
 		if (
-			input.selectedCatalogAsset &&
+			input.selectedCatalogAsset?.kind === "file" &&
 			!matchesHistoryMaterializationSelectedCatalogFile(file, input.selectedCatalogAsset)
 		) {
 			return true;
@@ -4127,27 +4151,47 @@ function targetFromCatalogItem(
 	};
 }
 
-function selectedCatalogFileFromCatalogItem(
+function selectedCatalogAssetFromCatalogItem(
 	detail: AccountMirrorCatalogItemResult,
 ): HistoryMaterializationSelectedCatalogAsset | null {
-	if (detail.kind !== "files") return null;
 	const item = isRecord(detail.item) ? detail.item : null;
 	if (!item) return null;
 	const metadata = isRecord(item.metadata) ? item.metadata : null;
-	const id = readCatalogStringField(item, ["id", "fileId"]) ?? detail.itemId;
-	const name =
-		readCatalogStringField(item, ["name", "fileName", "title"]) ??
-		readRecordString(metadata, ["name", "fileName", "title"]);
-	const providerFileId =
-		readCatalogStringField(item, ["providerFileId"]) ??
-		readRecordString(metadata, ["providerFileId", "fileId"]);
-	if (!id && !name && !providerFileId) return null;
-	return { kind: "file", id, name, providerFileId };
+	if (detail.kind === "files") {
+		const id = readCatalogStringField(item, ["id", "fileId"]) ?? detail.itemId;
+		const name =
+			readCatalogStringField(item, ["name", "fileName", "title"]) ??
+			readRecordString(metadata, ["name", "fileName", "title"]);
+		const providerFileId =
+			readCatalogStringField(item, ["providerFileId"]) ??
+			readRecordString(metadata, ["providerFileId", "fileId"]);
+		if (!id && !name && !providerFileId) return null;
+		return { kind: "file", id, name, providerFileId };
+	}
+	if (detail.kind !== "artifacts" && detail.kind !== "media") return null;
+	const catalogItemId = detail.itemId === "unknown" ? null : detail.itemId;
+	const title =
+		readCatalogStringField(item, ["title", "name", "fileName"]) ??
+		readRecordString(metadata, ["title", "name", "fileName"]);
+	const uri =
+		readCatalogStringField(item, ["uri", "url", "href", "remoteUrl"]) ??
+		readRecordString(metadata, ["uri", "url", "href", "remoteUrl"]);
+	const directId = readCatalogStringField(item, ["artifactId", "id", "mediaId"]);
+	const id = directId ?? (uri ? null : catalogItemId);
+	const artifactKind = normalizeConversationArtifactKind(
+		readCatalogStringField(item, ["kind", "artifactKind"]) ??
+			readRecordString(metadata, ["kind", "artifactKind"]),
+	);
+	const messageId =
+		readCatalogStringField(item, ["messageId"]) ?? readRecordString(metadata, ["messageId"]);
+	const turnId = readCatalogStringField(item, ["turnId"]) ?? readRecordString(metadata, ["turnId"]);
+	if (!id && !title && !uri && !messageId && !turnId) return null;
+	return { kind: "artifact", id, title, uri, artifactKind, messageId, turnId };
 }
 
 export function matchesHistoryMaterializationSelectedCatalogFile(
 	file: FileRef,
-	selector: HistoryMaterializationSelectedCatalogAsset,
+	selector: Extract<HistoryMaterializationSelectedCatalogAsset, { kind: "file" }>,
 ): boolean {
 	const metadata = isRecord(file.metadata) ? file.metadata : null;
 	const selectedIds = new Set(
@@ -4167,6 +4211,56 @@ export function matchesHistoryMaterializationSelectedCatalogFile(
 		selector.name &&
 			normalizeAssetFamilyTitle(selector.name) === normalizeAssetFamilyTitle(file.name),
 	);
+}
+
+export function matchesHistoryMaterializationSelectedCatalogArtifact(
+	artifact: ConversationArtifact,
+	selector: Extract<HistoryMaterializationSelectedCatalogAsset, { kind: "artifact" }>,
+	candidates: ConversationArtifact[],
+): boolean {
+	if (selector.id) return artifact.id === selector.id;
+	if (selector.uri) return artifact.uri === selector.uri;
+	if (selector.messageId || selector.turnId) {
+		const sourceMatches = candidates.filter((candidate) => {
+			const candidateMetadata = isRecord(candidate.metadata) ? candidate.metadata : null;
+			const candidateMessageId =
+				candidate.messageId ?? readRecordString(candidateMetadata, ["messageId"]);
+			const candidateTurnId = readRecordString(candidateMetadata, ["turnId"]);
+			return (
+				(!selector.messageId || candidateMessageId === selector.messageId) &&
+				(!selector.turnId || candidateTurnId === selector.turnId) &&
+				(!selector.title ||
+					normalizeAssetFamilyTitle(candidate.title) ===
+						normalizeAssetFamilyTitle(selector.title)) &&
+				(!selector.artifactKind || candidate.kind === selector.artifactKind)
+			);
+		});
+		return sourceMatches.length === 1 && sourceMatches[0] === artifact;
+	}
+	if (!selector.title) return false;
+	const normalizedTitle = normalizeAssetFamilyTitle(selector.title);
+	const titleMatches = candidates.filter(
+		(candidate) =>
+			normalizeAssetFamilyTitle(candidate.title) === normalizedTitle &&
+			(!selector.artifactKind || candidate.kind === selector.artifactKind),
+	);
+	return titleMatches.length === 1 && titleMatches[0] === artifact;
+}
+
+function normalizeConversationArtifactKind(
+	value: string | null,
+): ConversationArtifact["kind"] | null {
+	if (
+		value === "document" ||
+		value === "download" ||
+		value === "canvas" ||
+		value === "generated" ||
+		value === "image" ||
+		value === "spreadsheet"
+	) {
+		return value;
+	}
+	return null;
 }
 
 function readChatgptProviderFileId(value: string | null | undefined): string | null {

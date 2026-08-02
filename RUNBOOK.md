@@ -1,5 +1,23 @@
 # RUNBOOK
 
+## Turn 392 | 2026-08-02
+
+- Completed Plan 0180 Packet B provider-free exact-artifact selection. Catalog
+  artifact identity now reaches provider work, and eligible raw artifacts are
+  filtered before ChatGPT family deduplication and `maxItems`.
+- Direct ID outranks URI; URI-only rows remain URI-selected; message/turn fields
+  are domain-specific and must narrow with title/kind to one candidate; title-
+  only fallback requires one candidate.
+- Red/green coverage includes earlier and same-title `download-dom` controls,
+  shared message/turn, shared URI with conflicting IDs, URI-only catalog rows,
+  and pre-budget filtering. Exact-file and cross-asset validation stay green.
+- Independent audit findings were repaired; final closure audit passed. Focused
+  tests pass 239/239, full provider-free validation passes 303 files/2,699 tests
+  with 65 skips, and typecheck, build, lint baselines, plan audit, and diff
+  hygiene pass.
+- No install, browser launch, provider request, live materialization, scheduler
+  resume, or completion resume ran. M5 and every browser/live gate remain open.
+
 ## Turn 391 | 2026-08-02
 
 - Completed Plan 0180 Packet A provider-free diagnosis. CodeGraph shows catalog

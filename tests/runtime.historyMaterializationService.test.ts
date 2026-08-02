@@ -10,6 +10,7 @@ import type { RunArchiveItem, RunArchiveService } from "../src/runtime/archiveSe
 import {
 	createHistoryMaterializationService,
 	formatHistoryMaterializationFailureReason,
+	matchesHistoryMaterializationSelectedCatalogArtifact,
 	matchesHistoryMaterializationSelectedCatalogFile,
 	type HistoryAccountLibraryListInput,
 	type HistoryAccountLibraryMaterializeInput,
@@ -3851,7 +3852,7 @@ describe("history materialization service", () => {
 		);
 		setAuracallHomeDirOverrideForTest(homeDir);
 		let scheduled: (() => Promise<void>) | undefined;
-		const readItem = vi.fn(async () => ({
+		const readItem = vi.fn(async (request: { itemId: string }) => ({
 			object: "account_mirror_catalog_item" as const,
 			generatedAt: "2026-05-22T18:15:00.000Z",
 			provider: "chatgpt" as const,
@@ -3861,17 +3862,32 @@ describe("history materialization service", () => {
 			status: "eligible" as const,
 			reason: "eligible" as const,
 			kind: "artifacts" as const,
-			itemId: "artifact_catalog_1",
-			item: {
-				id: "artifact_catalog_1",
-				title: "Legacy readout",
-				kind: "download",
-				metadata: {
-					conversationId: "conv_from_artifact",
-					projectId: "project_from_artifact",
-					providerConversationUrl: "https://chatgpt.com/c/conv_from_artifact",
-				},
-			},
+			itemId: request.itemId,
+			item:
+				request.itemId === "artifact_catalog_uri_only"
+					? {
+							title: "URI-only readout",
+							kind: "download",
+							uri: "chatgpt://download-button/turn_uri_only/0",
+							metadata: {
+								conversationId: "conv_from_artifact",
+								projectId: "project_from_artifact",
+								providerConversationUrl: "https://chatgpt.com/c/conv_from_artifact",
+							},
+						}
+					: {
+							artifactId: "download-dom:turn_artifact_1:0",
+							title: "Legacy readout",
+							kind: "download",
+							uri: "chatgpt://download-button/turn_artifact_1/0",
+							messageId: "message_artifact_1",
+							metadata: {
+								conversationId: "conv_from_artifact",
+								projectId: "project_from_artifact",
+								providerConversationUrl: "https://chatgpt.com/c/conv_from_artifact",
+								turnId: "turn_artifact_1",
+							},
+						},
 		}));
 		const materializeConversation = vi.fn(
 			async (target): Promise<HistoryMaterializationResult> => ({
@@ -3897,7 +3913,7 @@ describe("history materialization service", () => {
 				readCatalog: vi.fn(),
 				readItem,
 			},
-			generateId: () => "hmj_artifact_item_1",
+			generateId: sequenceId(["hmj_artifact_item_1", "hmj_artifact_item_uri_only"]),
 			now: sequenceNow([
 				"2026-05-22T18:15:00.000Z",
 				"2026-05-22T18:15:01.000Z",
@@ -3929,7 +3945,186 @@ describe("history materialization service", () => {
 				assetKinds: ["artifacts"],
 			}),
 			"hmj_artifact_item_1",
+			expect.objectContaining({
+				selectedCatalogAsset: {
+					kind: "artifact",
+					id: "download-dom:turn_artifact_1:0",
+					title: "Legacy readout",
+					uri: "chatgpt://download-button/turn_artifact_1/0",
+					artifactKind: "download",
+					messageId: "message_artifact_1",
+					turnId: "turn_artifact_1",
+				},
+			}),
 		);
+
+		materializeConversation.mockClear();
+		const priorScheduled = scheduled;
+		await service.createJob({
+			catalogItemId: "artifact_catalog_uri_only",
+			provider: "chatgpt",
+			runtimeProfile: "default",
+			catalogKind: "artifacts",
+			force: true,
+		});
+		if (!scheduled || scheduled === priorScheduled) {
+			throw new Error("Expected URI-only job to be scheduled.");
+		}
+		await scheduled();
+		expect(materializeConversation).toHaveBeenCalledWith(
+			expect.objectContaining({ conversationId: "conv_from_artifact" }),
+			expect.objectContaining({ assetKinds: ["artifacts"] }),
+			"hmj_artifact_item_uri_only",
+			expect.objectContaining({
+				selectedCatalogAsset: {
+					kind: "artifact",
+					id: null,
+					title: "URI-only readout",
+					uri: "chatgpt://download-button/turn_uri_only/0",
+					artifactKind: "download",
+					messageId: null,
+					turnId: null,
+				},
+			}),
+		);
+	});
+
+	it("matches an exact selected download artifact and rejects earlier or ambiguous candidates", () => {
+		const exactSelector = {
+			kind: "artifact" as const,
+			id: "download-dom:turn-2:0",
+			title: "Download the report",
+			uri: "chatgpt://download-button/turn-2/0",
+			artifactKind: "download" as const,
+			messageId: "message-2",
+			turnId: "turn-2",
+		};
+		const earlierCandidate = {
+			id: "download-dom:turn-1:0",
+			title: "Earlier report",
+			kind: "download" as const,
+			uri: "chatgpt://download-button/turn-1/0",
+			messageId: "message-1",
+			metadata: { turnId: "turn-1" },
+		};
+		const exactCandidate = {
+			id: "download-dom:turn-2:0",
+			title: "Download the report",
+			kind: "download" as const,
+			uri: "chatgpt://download-button/turn-2/0",
+			messageId: "message-2",
+			metadata: { turnId: "turn-2" },
+		};
+		const candidates = [earlierCandidate, exactCandidate];
+
+		expect(
+			matchesHistoryMaterializationSelectedCatalogArtifact(
+				earlierCandidate,
+				exactSelector,
+				candidates,
+			),
+		).toBe(false);
+		expect(
+			matchesHistoryMaterializationSelectedCatalogArtifact(
+				exactCandidate,
+				exactSelector,
+				candidates,
+			),
+		).toBe(true);
+		const earlierSharedUriCandidate = {
+			...earlierCandidate,
+			uri: "sandbox:/mnt/data/shared-report.docx",
+		};
+		const exactSharedUriCandidate = {
+			...exactCandidate,
+			uri: "sandbox:/mnt/data/shared-report.docx",
+		};
+		const sharedUriCandidates = [earlierSharedUriCandidate, exactSharedUriCandidate];
+		const sharedUriSelector = {
+			...exactSelector,
+			uri: "sandbox:/mnt/data/shared-report.docx",
+		};
+		expect(
+			matchesHistoryMaterializationSelectedCatalogArtifact(
+				earlierSharedUriCandidate,
+				sharedUriSelector,
+				sharedUriCandidates,
+			),
+		).toBe(false);
+		expect(
+			matchesHistoryMaterializationSelectedCatalogArtifact(
+				exactSharedUriCandidate,
+				sharedUriSelector,
+				sharedUriCandidates,
+			),
+		).toBe(true);
+
+		const ambiguousSelector = {
+			kind: "artifact" as const,
+			id: null,
+			title: "Same report",
+			uri: null,
+			artifactKind: "download" as const,
+			messageId: null,
+			turnId: null,
+		};
+		const ambiguousCandidates = [
+			{ id: "artifact-1", title: "Same report", kind: "download" as const },
+			{ id: "artifact-2", title: "Same report", kind: "download" as const },
+		];
+		expect(
+			ambiguousCandidates.some((artifact) =>
+				matchesHistoryMaterializationSelectedCatalogArtifact(
+					artifact,
+					ambiguousSelector,
+					ambiguousCandidates,
+				),
+			),
+		).toBe(false);
+		const uniqueCandidate = {
+			id: "artifact-unique",
+			title: "Unique report",
+			kind: "download" as const,
+		};
+		expect(
+			matchesHistoryMaterializationSelectedCatalogArtifact(
+				uniqueCandidate,
+				{ ...ambiguousSelector, title: "Unique report" },
+				[uniqueCandidate],
+			),
+		).toBe(true);
+
+		const sharedSourceSelector = {
+			...ambiguousSelector,
+			title: "Shared source report",
+			messageId: "message-shared",
+			turnId: "turn-shared",
+		};
+		const sharedSourceCandidates = [
+			{
+				id: "artifact-shared-1",
+				title: "Shared source report",
+				kind: "download" as const,
+				messageId: "message-shared",
+				metadata: { turnId: "turn-shared" },
+			},
+			{
+				id: "artifact-shared-2",
+				title: "Shared source report",
+				kind: "download" as const,
+				messageId: "message-shared",
+				metadata: { turnId: "turn-shared" },
+			},
+		];
+		expect(
+			sharedSourceCandidates.some((artifact) =>
+				matchesHistoryMaterializationSelectedCatalogArtifact(
+					artifact,
+					sharedSourceSelector,
+					sharedSourceCandidates,
+				),
+			),
+		).toBe(false);
 	});
 
 	it("runs bounded reconciliation from materializable account mirror conversation rows", async () => {
