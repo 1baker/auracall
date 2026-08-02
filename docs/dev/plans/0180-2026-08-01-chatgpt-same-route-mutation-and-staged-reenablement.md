@@ -831,3 +831,39 @@ continuous live-follow reenablement remain separately gated afterward.
   through a provider-free reviewed packet. Do not infer authorization from
   browser selection or a successful login DOM check, and do not retry the live
   control without another explicit operator authorization.
+
+## Checkpoint 21
+
+- `plan_version`: 20
+- `state_transition`: missing root provider-session authority -> provider-free
+  execution-boundary repair green; one new live ChatGPT attempt authorized and
+  gated on commit, install, and parity.
+- `authorization`: the operator's `ok go` authorizes the provider-free repair
+  and exactly one new explicitly target/model-bound ChatGPT control after the
+  repaired runtime is installed and verified. Checkpoint 17's remaining hard
+  bounds and stops remain unchanged.
+- `root_cause`: stored/API execution built canonical provider-session authority
+  from selected runtime configuration, but root CLI inline, detached, and setup
+  verification paths passed browser configuration without that authority. The
+  configured default ChatGPT account identity exists; browser login state was
+  not used as a substitute.
+- `repair`: one CLI helper constructs canonical authorization from the selected
+  AuraCall runtime profile, browser profile, source browser profile, managed
+  browser profile, and configured account identity. Session execution injects
+  it only into the browser call, leaving persisted session configuration and
+  metadata unchanged. Runtime PID and target remain bound later by the existing
+  canonical preflight.
+- `privacy_boundary`: verbose browser configuration logs replace the authority
+  object with a redacted summary containing provider, expectation source,
+  presence booleans, and session context; configured email and service-account
+  identifiers are never logged.
+- `tdd_receipt`: the execution-boundary regression failed because browser work
+  received no authorization; the canonical constructor and redacted-summary
+  regressions failed because those helpers did not exist; and the root binding
+  regression failed because its CLI module did not exist. After repair, the
+  focused packet passes 5 files/60 tests.
+- `validation`: focused 5 files/60 tests and the full provider-free suite at
+  304 files/2,704 tests with 65 skips pass. Typecheck, production build,
+  touched-file lint, plan audit with zero validation errors, and diff hygiene
+  pass. Commit/push, install, parity, and live evidence remain pending at this
+  checkpoint.

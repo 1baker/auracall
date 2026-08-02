@@ -357,6 +357,26 @@ Verified immediately before this handoff:
 
 Re-read these values; they are a snapshot, not permission to mutate.
 
+## 2026-08-02 Root CLI Authorization Repair Addendum
+
+- The operator authorized a provider-free repair and exactly one later
+  ChatGPT-bound upload/DOCX attempt after commit, install, and parity.
+- Root cause is now localized: root inline, detached, and setup-verification
+  browser execution omitted the canonical provider-session authority already
+  used by stored/API execution. The default configuration does contain the
+  configured ChatGPT account identity.
+- The repair constructs authority from the selected AuraCall runtime profile,
+  browser profile, managed profile, and configured identity, then injects it
+  only at the browser execution boundary. Runtime Chrome PID and target remain
+  bound by the existing canonical preflight.
+- Provider-free validation at this checkpoint: focused 5 files/60 tests,
+  full suite 304 files/2,704 tests with 65 skips, typecheck, production build,
+  touched lint, zero-error plan audit, and diff hygiene pass. Commit/push,
+  install parity, and the one live attempt remain pending.
+- Configured email and service-account identifiers are excluded from persisted
+  session configuration and verbose logs; only redacted presence/source and
+  non-secret provenance fields are emitted.
+
 ## Suggested Skills
 
 - `agent-browser`: required for retained authenticated browser/CDP inspection

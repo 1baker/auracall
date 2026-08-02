@@ -20080,3 +20080,17 @@ browser-stage lifecycle observability, not transcript truncation.
 - Operator rule: preserve that stop as a non-mutation outcome. Do not bypass it,
   infer authority from browser state, or retry a bounded live packet until the
   canonical authorization path is provisioned and verified provider-free.
+
+## 2026-08-02 | Provider-session authority belongs at the execution boundary
+
+- Symptom: stored/API browser execution constructed canonical provider-session
+  authority, while root CLI inline, detached, and setup-verification execution
+  omitted it and failed before upload despite valid configured account identity.
+- Durable rule: every browser entry point must construct authority from the
+  selected AuraCall runtime profile, browser profile, managed browser profile,
+  and configured provider account. Browser selection and login DOM state are
+  provenance signals, never authorization substitutes.
+- Privacy rule: inject authority only into the immediate browser execution
+  configuration. Do not persist it in session metadata or log configured email
+  or service-account identifiers; diagnostics may expose only redacted
+  presence/source fields and non-secret runtime provenance.

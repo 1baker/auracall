@@ -173,6 +173,39 @@ export function createProviderSessionAuthority(
 	};
 }
 
+export function createProviderSessionAuthorization(
+	config: MutableRecord,
+	context: ProviderSessionContext,
+	options: { now?: () => Date; onProof?: (proof: ProviderSessionProof) => void } = {},
+): ProviderSessionAuthorization {
+	const authority = createProviderSessionAuthority(config, { now: options.now });
+	return {
+		authority,
+		context: { ...context },
+		expectation: authority.resolveExpectation(context),
+		onProof: options.onProof,
+	};
+}
+
+export function summarizeProviderSessionAuthorization(
+	authorization: ProviderSessionAuthorization,
+): {
+	providerId: BrowserProviderConfig["id"];
+	expectationSource: ProviderAccountExpectation["source"];
+	configuredIdentityPresent: boolean;
+	configuredServiceAccountIdPresent: boolean;
+	context: ProviderSessionContext;
+} {
+	return {
+		providerId: authorization.expectation.providerId,
+		expectationSource: authorization.expectation.source,
+		configuredIdentityPresent: authorization.expectation.configuredIdentity !== null,
+		configuredServiceAccountIdPresent:
+			authorization.expectation.configuredServiceAccountId !== null,
+		context: { ...authorization.context },
+	};
+}
+
 export class ProviderSessionAuthorityError extends Error {
 	readonly code: ProviderSessionProof["failureReason"];
 	readonly proof: ProviderSessionProof;

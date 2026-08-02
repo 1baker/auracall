@@ -2,6 +2,7 @@ import { describe, expect, test, vi } from 'vitest';
 import type { RunOracleOptions } from '../../src/oracle.js';
 import type { BrowserSessionConfig } from '../../src/sessionStore.js';
 import { runBrowserSessionExecution } from '../../src/browser/sessionRunner.js';
+import { createProviderSessionAuthority } from '../../src/browser/providers/providerSessionAuthority.js';
 
 const baseRunOptions: RunOracleOptions = {
   prompt: 'Hello world',
@@ -13,6 +14,69 @@ const baseRunOptions: RunOracleOptions = {
 const baseConfig: BrowserSessionConfig = { selectedAgentId: 'analyst' };
 
 describe('runBrowserSessionExecution', () => {
+  test('injects provider-session authorization only at the browser execution boundary', async () => {
+    const log = vi.fn();
+    const authority = createProviderSessionAuthority({
+      profiles: {
+        default: {
+          services: { chatgpt: { identity: { email: 'operator@example.com' } } },
+        },
+      },
+    });
+    const context = {
+      providerId: 'chatgpt' as const,
+      auracallRuntimeProfile: 'default',
+      browserProfile: 'default',
+      managedBrowserProfile: '/tmp/managed/chatgpt',
+      browserProcessId: null,
+      browserTargetId: null,
+    };
+    const providerSessionAuthorization = {
+      authority,
+      context,
+      expectation: authority.resolveExpectation(context),
+    };
+    const executeBrowser = vi.fn(async () => ({
+      answerText: 'ok',
+      answerMarkdown: 'ok',
+      tookMs: 1,
+      answerTokens: 1,
+      answerChars: 2,
+    }));
+
+    await runBrowserSessionExecution(
+      {
+        runOptions: { ...baseRunOptions, verbose: true },
+        browserConfig: baseConfig,
+        cwd: '/repo',
+        log,
+      },
+      {
+        assemblePrompt: async () => ({
+          markdown: 'prompt',
+          composerText: 'prompt',
+          estimatedInputTokens: 1,
+          attachments: [],
+          inlineFileCount: 0,
+          tokenEstimateIncludesInlineFiles: false,
+          attachmentsPolicy: 'auto',
+          attachmentMode: 'inline',
+          fallback: null,
+        }),
+        executeBrowser,
+        providerSessionAuthorization,
+      },
+    );
+
+    expect(executeBrowser).toHaveBeenCalledWith(
+      expect.objectContaining({
+        config: expect.objectContaining({ providerSessionAuthorization }),
+      }),
+    );
+    expect(log.mock.calls.some((call) => String(call[0]).includes('operator@example.com'))).toBe(false);
+    expect(baseConfig).not.toHaveProperty('providerSessionAuthorization');
+  });
+
   test('logs stats and returns usage/runtime', async () => {
     const log = vi.fn();
     const persistRuntimeHint = vi.fn();

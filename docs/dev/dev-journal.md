@@ -42730,3 +42730,21 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - API PID `62920` remains active; scheduler and five retained completions remain
   paused; queued/running targets and active materialization jobs are zero. The
   packet is consumed without retry and M5 remains open.
+
+## 2026-08-02 | Root CLI provider-session authority repaired provider-free
+
+- Confirmed the default runtime configuration already has a ChatGPT account
+  identity. The missing-authority failure came from root CLI inline, detached,
+  and setup-verification paths not constructing the same canonical authority
+  used by stored/API execution.
+- Added one root CLI constructor and injected its result only at the browser
+  execution boundary. Persisted session configuration remains authority-free;
+  the existing preflight still binds live Chrome PID and target provenance.
+- Added redacted verbose summaries so configured email and service-account
+  identifiers cannot leak through browser configuration diagnostics.
+- Three red loops reproduced the missing execution authorization, missing
+  canonical constructor, and missing root binding; a fourth proved the
+  redaction helper was absent. The consolidated focused packet passes 5 files/
+  60 tests and the full provider-free suite passes 304 files/2,704 tests with
+  65 skips, followed by clean typecheck, build, touched lint, plan audit, and
+  diff hygiene. No install or browser/provider mutation occurred yet.

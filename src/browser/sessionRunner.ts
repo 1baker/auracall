@@ -12,6 +12,7 @@ import {
   type BrowserSessionRunnerDeps as CoreBrowserSessionRunnerDeps,
 } from '../../packages/browser-service/src/sessionRunner.js';
 import type { BrowserRunResult } from './types.js';
+import type { ProviderSessionAuthorization } from './providers/providerSessionAuthority.js';
 
 interface RunBrowserSessionArgs {
   runOptions: RunOracleOptions;
@@ -26,6 +27,7 @@ export type BrowserSessionRunnerDeps = {
   assemblePrompt?: typeof assembleBrowserPrompt;
   executeBrowser?: (options: ExecuteBrowserInput) => Promise<BrowserRunResult>;
   persistRuntimeHint?: (runtime: BrowserRuntimeMetadata) => Promise<void> | void;
+  providerSessionAuthorization?: ProviderSessionAuthorization;
 };
 
 export async function runBrowserSessionExecution(
@@ -56,9 +58,12 @@ export async function runBrowserSessionExecution(
     verbose?: boolean;
     runtimeHintCb?: (hint: BrowserRuntimeMetadata) => void | Promise<void>;
   }) => {
-    const config = options.config && options.config.timeoutMs == null
+    const baseConfig = options.config && options.config.timeoutMs == null
       ? { ...options.config, timeoutMs: undefined }
       : options.config;
+    const config = deps.providerSessionAuthorization
+      ? { ...baseConfig, providerSessionAuthorization: deps.providerSessionAuthorization }
+      : baseConfig;
     return (deps.executeBrowser ?? runBrowserMode)({
       ...options,
       config,

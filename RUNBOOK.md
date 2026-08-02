@@ -1,5 +1,22 @@
 # RUNBOOK
 
+## Turn 395 | 2026-08-02
+
+- Repaired the root CLI provider-session authorization path provider-free. Root
+  inline, detached, and setup-verification execution now constructs the same
+  canonical authority as stored/API execution from selected runtime config.
+- Authorization is injected only at browser execution, so persisted session
+  config remains clean. Verbose diagnostics redact configured email and
+  service-account IDs while retaining provider, expectation-source, presence,
+  and runtime provenance fields.
+- Red tests reproduced missing execution authorization, missing canonical/root
+  constructors, and missing redaction. The consolidated packet passes 5 files/
+  60 tests and the full suite passes 304 files/2,704 tests with 65 skips;
+  typecheck, production build, touched lint, plan audit, and diff hygiene pass.
+- No install or browser/provider mutation occurred at this checkpoint. One new
+  explicitly ChatGPT-bound upload/DOCX attempt is authorized only after commit,
+  install, and exact source/runtime parity; all prior hard stops remain active.
+
 ## Turn 394 | 2026-08-02
 
 - Repaired the CLI provider/model binding defect provider-free. An explicit

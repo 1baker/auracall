@@ -128,7 +128,10 @@ import {
 	sanitizeChatgptThinkingText,
 } from "./providers/chatgptEvidence.js";
 import { resolveGrokConversationUrl, resolveGrokProjectUrl } from "./providers/grokAdapter.js";
-import { assertProviderSessionAuthorization } from "./providers/providerSessionAuthority.js";
+import {
+	assertProviderSessionAuthorization,
+	summarizeProviderSessionAuthorization,
+} from "./providers/providerSessionAuthority.js";
 import type { ProviderUserIdentity } from "./providers/types.js";
 import { alignPromptEchoPair, buildPromptEchoMatcher } from "./reattachHelpers.js";
 import { resolveManagedBrowserLaunchContextFromResolvedConfig } from "./service/profileResolution.js";
@@ -1547,9 +1550,13 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 	const runtimeHintCb = options.runtimeHintCb;
 	const runtimeEvidenceCb = options.runtimeEvidenceCb;
 	if (config.debug || process.env.CHATGPT_DEVTOOLS_TRACE === "1") {
+		const { providerSessionAuthorization, ...debugConfig } = config;
 		logger(
 			`[browser-mode] config: ${JSON.stringify({
-				...config,
+				...debugConfig,
+				providerSessionAuthorization: providerSessionAuthorization
+					? summarizeProviderSessionAuthorization(providerSessionAuthorization)
+					: undefined,
 				promptLength: promptText.length,
 			})}`,
 		);

@@ -1,7 +1,66 @@
 import { describe, expect, test } from "vitest";
-import { createProviderSessionAuthority } from "../../src/browser/providers/providerSessionAuthority.js";
+import {
+	createProviderSessionAuthorization,
+	createProviderSessionAuthority,
+	summarizeProviderSessionAuthorization,
+} from "../../src/browser/providers/providerSessionAuthority.js";
 
 describe("provider session authority", () => {
+	test("constructs canonical authorization from configured account identity and execution context", () => {
+		const context = {
+			providerId: "chatgpt" as const,
+			auracallRuntimeProfile: "default",
+			browserProfile: "default",
+			managedBrowserProfile: "/tmp/managed/chatgpt",
+			browserProcessId: null,
+			browserTargetId: null,
+		};
+		const authorization = createProviderSessionAuthorization(
+			{
+				profiles: {
+					default: {
+						services: { chatgpt: { identity: { email: "operator@example.com" } } },
+					},
+				},
+			},
+			context,
+		);
+
+		expect(authorization.context).toEqual(context);
+		expect(authorization.expectation).toMatchObject({
+			providerId: "chatgpt",
+			configuredIdentity: { email: "operator@example.com" },
+			source: "runtime-profile",
+		});
+	});
+
+	test("summarizes authorization without exposing configured account identity", () => {
+		const context = {
+			providerId: "chatgpt" as const,
+			auracallRuntimeProfile: "default",
+			browserProfile: "default",
+			managedBrowserProfile: "/tmp/managed/chatgpt",
+			browserProcessId: null,
+			browserTargetId: null,
+		};
+		const authorization = createProviderSessionAuthorization(
+			{
+				profiles: {
+					default: {
+						services: { chatgpt: { identity: { email: "operator@example.com" } } },
+					},
+				},
+			},
+			context,
+		);
+
+		const serialized = JSON.stringify(summarizeProviderSessionAuthorization(authorization));
+		expect(serialized).toContain('"providerId":"chatgpt"');
+		expect(serialized).toContain('"configuredIdentityPresent":true');
+		expect(serialized).not.toContain("operator@example.com");
+		expect(serialized).not.toContain("service-account:chatgpt");
+	});
+
 	test("authorizes the same configured provider account across different managed browser profiles", () => {
 		const authority = createProviderSessionAuthority({
 			profiles: {

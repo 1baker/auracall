@@ -245,6 +245,7 @@ import { createWorkbenchCapabilityService } from '../src/workbench/service.js';
 import { createBrowserWorkbenchCapabilityDiscovery } from '../src/workbench/browserDiscovery.js';
 import { createBrowserWorkbenchCapabilityDiagnostics } from '../src/workbench/browserDiagnostics.js';
 import { performSessionRun } from '../src/cli/sessionRunner.js';
+import { buildRootBrowserProviderSessionAuthorization } from '../src/cli/browserProviderSession.js';
 import type { BrowserSessionRunnerDeps } from '../src/browser/sessionRunner.js';
 import { isMediaFile } from '../src/browser/prompt.js';
 import type { BrowserProviderListOptions, ProviderUserIdentity } from '../src/browser/providers/types.js';
@@ -9404,6 +9405,11 @@ async function runBrowserSetupCommand(commandOptions: SetupCommandOptions): Prom
         false,
         verificationNotifications,
         userConfig,
+        false,
+        {
+          providerSessionAuthorization:
+            buildRootBrowserProviderSessionAuthorization(userConfig, browserConfig) ?? undefined,
+        },
       );
     } catch (error) {
       verificationReport.status = 'failed';
@@ -11128,6 +11134,14 @@ async function runRootCommand(options: CliOptions): Promise<void> {
     return;
   }
 
+  if (browserConfig && !remoteExecutionActive && browserConfig.target === 'chatgpt') {
+    browserDeps = {
+      ...browserDeps,
+      providerSessionAuthorization:
+        buildRootBrowserProviderSessionAuthorization(userConfig, browserConfig) ?? undefined,
+    };
+  }
+
   await sessionStore.ensureStorage();
   const baseRunOptions = buildRunOptions(resolvedOptions, {
     preview: false,
@@ -11335,6 +11349,13 @@ async function executeSession(sessionId: string) {
   const { logLine, writeChunk, stream } = sessionStore.createLogWriter(sessionId);
   const userConfig = await resolveConfig({}, metadata.cwd ?? process.cwd(), process.env);
   const notifications = deriveNotificationSettingsFromMetadata(metadata, process.env, userConfig.notify);
+  const browserDeps =
+    browserConfig?.target === 'chatgpt'
+      ? {
+          providerSessionAuthorization:
+            buildRootBrowserProviderSessionAuthorization(userConfig, browserConfig) ?? undefined,
+        }
+      : undefined;
   try {
     await performSessionRun({
       sessionMeta: metadata,
@@ -11346,6 +11367,7 @@ async function executeSession(sessionId: string) {
       write: writeChunk,
       version: VERSION,
       notifications,
+      browserDeps,
     });
   } catch {
     // Errors are already logged to the session log; keep quiet to mirror stored-session behavior.

@@ -88,7 +88,13 @@ Lane: P01
   authorized corrected command reached the right ChatGPT profile but stopped
   before upload or submission because canonical provider-session authorization
   was missing. No conversation or materialization job was created; that packet
-  is also consumed and M5 remains open.
+  is also consumed and M5 remains open. Provider-free repair now constructs the
+  canonical authorization for root inline, detached, and setup-verification
+  execution and injects it only at the browser boundary, with configured
+  identity redacted from logs and session metadata. The focused packet passes
+  60/60 and the full suite passes 2,704 tests with 65 skips, plus typecheck,
+  build, lint, plan audit, and diff hygiene; install and the single newly
+  authorized live control remain gated on commit/parity.
 
 - Completed provider-session authority unification:
   [docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md](docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md)
