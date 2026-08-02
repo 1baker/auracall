@@ -20064,3 +20064,6 @@ browser-stage lifecycle observability, not transcript truncation.
   provider/model/browser-profile tuple before the first mutation. Any mismatch
   consumes the attempt and hard-stops without retry or cross-provider
   materialization.
+- Repair: `buildBrowserConfig` now rejects an explicit target when a recognized
+  model resolves to another provider. A regression reproduces the exact
+  `chatgpt`/`grok-4.20` mismatch and proves rejection before browser work.

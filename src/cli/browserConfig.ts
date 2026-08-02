@@ -98,10 +98,17 @@ export async function buildBrowserConfig(options: BrowserFlagOptions): Promise<B
   const isGeminiModel = baseModel.startsWith('gemini-');
   const isGrokModel = baseModel.startsWith('grok-');
   const isChatGptModel = baseModel.startsWith('gpt-') && !baseModel.includes('codex');
+  const modelTarget = inferBrowserServiceId(options.model);
+  if (options.browserTarget && modelTarget && options.browserTarget !== modelTarget) {
+    throw new Error(
+      `Explicit browser target "${options.browserTarget}" conflicts with model "${options.model}", which resolves to "${modelTarget}". ` +
+        'Choose a model for the requested browser target before starting browser work.',
+    );
+  }
   const shouldUseOverride = !isChatGptModel && normalizedOverride.length > 0 && normalizedOverride !== baseModel;
   const modelStrategy =
     normalizeBrowserModelStrategy(options.browserModelStrategy) ?? DEFAULT_MODEL_STRATEGY;
-  const target = isGrokModel ? 'grok' : isGeminiModel ? 'gemini' : options.browserTarget ?? 'chatgpt';
+  const target = options.browserTarget ?? modelTarget ?? 'chatgpt';
   const chatgptSemanticModelSelection =
     target === 'chatgpt' ? options.chatgptSemanticModelSelection ?? null : null;
   const managedProfileRoot = resolveEffectiveManagedProfileRoot({

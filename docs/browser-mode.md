@@ -69,7 +69,10 @@ You can pass the same payload inline (`--browser-inline-cookies '<json or base64
 - `--gemini`: shorthand for `--engine browser --model gemini-3-pro` (Gemini web mode).
 - `--gemini-url`: override the Gemini web URL (e.g., a specific Gem).
 - `--grok-url`: override the Grok web URL (e.g., a project link like `https://grok.com/project/<id>`).
-- `--browser-target`: force the browser automation target (`chatgpt`, `gemini`, or `grok`) regardless of the model shorthand.
+- `--browser-target`: explicitly select the browser automation target
+  (`chatgpt`, `gemini`, or `grok`). When the chosen model identifies a provider,
+  it must agree with this target; AuraCall fails before browser work on a
+  mismatch. Pair bounded commands with an explicit compatible `--model`.
 - `--project-id` / `--conversation-id`: override the browser run scope without changing the configured default URL. Conversation takes precedence over project; both are optional.
 - `auracall login --target gemini`: opens the configured browser profile for Gemini sign-in (useful when cookies are missing).
   - if the managed Gemini page lands on `google.com/sorry`, CAPTCHA,

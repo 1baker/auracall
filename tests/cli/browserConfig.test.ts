@@ -54,6 +54,15 @@ describe('buildBrowserConfig', () => {
     expect(config.modelStrategy).toBe('current');
   });
 
+  test('rejects an explicit browser target that conflicts with the resolved model provider', async () => {
+    await expect(
+      buildBrowserConfig({
+        model: 'grok-4.20',
+        browserTarget: 'chatgpt',
+      }),
+    ).rejects.toThrow(/browser target.*chatgpt.*model.*grok-4\.20.*grok/i);
+  });
+
   test('uses semantic ChatGPT selector metadata for desired model and thinking time', async () => {
     const config = await buildBrowserConfig({
       model: 'gpt-5.1-pro',

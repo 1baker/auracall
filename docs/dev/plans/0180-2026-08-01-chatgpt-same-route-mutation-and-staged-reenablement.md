@@ -769,3 +769,28 @@ continuous live-follow reenablement remain separately gated afterward.
   provider-free pre-submit assertion. A later positive control must explicitly
   bind a ChatGPT model and requires fresh operator authorization; do not reuse
   this consumed packet or materialize its Grok artifacts.
+
+## Checkpoint 19
+
+- `plan_version`: 18
+- `state_transition`: provider-mismatch hard stop -> provider-free repair green;
+  one new explicitly model-bound ChatGPT attempt authorized by the operator's
+  `continue` instruction.
+- `red_receipt`: the public `buildBrowserConfig` regression passed
+  `model: "grok-4.20"` with `browserTarget: "chatgpt"` and resolved target
+  `grok`; the focused Vitest command failed 1/1 on that exact symptom.
+- `root_cause`: target derivation gave a recognized Grok or Gemini model higher
+  precedence than an explicit `browserTarget`, allowing incompatible explicit
+  intent to reach browser profile resolution and submission.
+- `repair`: infer the model provider once and reject a recognized explicit
+  target/model conflict during config construction. Compatible explicit pairs,
+  model-only inference, and unknown-model fallback retain their existing
+  behavior.
+- `green_receipt`: `tests/cli/browserConfig.test.ts` passes 31/31. The operator
+  contract now requires `--browser-target` and recognized provider model to
+  agree.
+- `live_authorization`: after validation, commit, install, and exact source/
+  installed parity, run at most one new root ChatGPT conversation with the same
+  sole fixture and requested DOCX. Bind both `--browser-target chatgpt` and an
+  explicit ChatGPT model. Preserve Checkpoint 17's remaining hard bounds and
+  stop conditions; no Grok reuse, cross-provider materialization, or retry.

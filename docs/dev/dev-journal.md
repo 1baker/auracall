@@ -42701,3 +42701,15 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   ChatGPT guards are clear, and active materialization jobs are zero. M5 stays
   open and another live attempt requires fresh authorization after provider/
   model binding is made explicit and checked before submit.
+
+## 2026-08-02 | Browser target/model mismatch repaired provider-free
+
+- Added a public `buildBrowserConfig` regression for the consumed packet's exact
+  mismatch: explicit ChatGPT target plus model `grok-4.20`. It failed by
+  resolving target `grok`, reproducing the live defect without browser work.
+- Config construction now rejects a recognized provider-model conflict with an
+  explicit browser target before managed-profile resolution or any browser
+  mutation. The focused config suite passes 31/31.
+- Updated `docs/browser-mode.md` so operators must pair bounded explicit targets
+  with compatible explicit models. The operator's `continue` authorizes one new
+  ChatGPT-only attempt after validation, commit, install, and parity proof.
