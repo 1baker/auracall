@@ -20164,3 +20164,18 @@ browser-stage lifecycle observability, not transcript truncation.
   stem and extension to match the requested asset. Permit only Chrome's terminal
   numeric collision suffix, with or without a preceding space; reject ambiguity
   and always remove the scratch directory.
+
+## 2026-08-02 | A reused preview shell is not sufficient download authority
+
+- Symptom: after a generated artifact used ChatGPT's preview shell, the exact
+  uploaded source still failed with 403 and no browser-download success. A
+  provider-free hypothesis that treated one reused visible Download control as
+  the source control reproduced the same 1/1 partial failure live.
+- Durable rule: control count and label alone do not prove that a reused preview
+  shell is bound to the newly selected asset. Require branch-level evidence for
+  exact tile activation, preview identity/change, chosen control, native
+  download observation, and final filename/bytes before accepting the path.
+- Validation rule: a green DOM-expression fixture can justify one bounded retry
+  only when tied to a specific receipt; repeated terminal evidence invalidates
+  the hypothesis. Revert the unproven runtime change and stop rather than
+  stacking retries or weakening asset identity.

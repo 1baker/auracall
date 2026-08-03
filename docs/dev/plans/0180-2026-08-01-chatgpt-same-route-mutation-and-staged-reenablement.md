@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 25
+Plan version: 26
 
 ## Stable Objective
 
@@ -39,7 +39,18 @@ reenablement.
   download manager. The repair uses one isolated per-transfer download
   directory and accepts only one stable, nonempty filename matching the exact
   requested asset modulo Chrome's numeric collision suffix. It is validated but
-  not installed or proven live; M5 remains open.
+  was installed for the later bounded proof but did not produce a successful
+  source transfer; M5 remains open.
+- Commit `9c7691e5` was installed byte-identically before a fresh default-
+  ChatGPT turn. Conversation `6a6ffa3e-37f8-83ea-9a0f-833adb3b78c9`
+  contains exactly one uploaded 505-byte fixture and one generated DOCX. The
+  first job `hmj_8c9d2cc271954129a1d4fdf247999cf7` materialized the DOCX but
+  failed the source 403. A narrowly tested reused-preview-control hypothesis
+  was installed for the operator-authorized retry; retry job
+  `hmj_dfb704142a694f5b9f0a10db96d457ed` reproduced the same truthful 1/1
+  failure with exact four-dimension identity proof. The hypothesis was reverted
+  and the pushed runtime restored byte-identically. No further retry is
+  authorized; M5 and all re-enablement gates remain open.
 - The latest separately authorized default-profile canary
   `acctmirror_completion_ec8ec770-b33c-47ba-8f9c-049bf9b97588` completed one
   collector pass with zero duplicate same-route mutations and no rate-limit,
@@ -1074,3 +1085,46 @@ continuous live-follow reenablement remain separately gated afterward.
 - `next_gate`: update canonical docs, run the zero-error plan audit, commit and
   push. Do not install or consume another live proof without separate explicit
   authorization.
+
+## Checkpoint 27
+
+- `plan_version`: 26
+- `state_transition`: provider-free source capture repair -> installed fresh
+  two-asset proof -> one justified retry -> repeated partial-transfer failure;
+  M5 remains open.
+- `authorization`: the operator authorized installation, one final two-asset
+  proof, and one retry only if evidence made it likely to succeed. No scheduler
+  resume, completion resume, continuous live follow, or further retry was
+  authorized.
+- `fresh_turn`: the canonical default-account preflight matched; exactly one
+  505-byte fixture was uploaded and one prompt was submitted. ChatGPT completed
+  an artifact-only turn in conversation
+  `6a6ffa3e-37f8-83ea-9a0f-833adb3b78c9`; the root textual extractor timed out
+  without resubmitting, while later history refresh found one file and one
+  artifact.
+- `first_receipt`: job `hmj_8c9d2cc271954129a1d4fdf247999cf7`
+  matched all four provider-session dimensions, materialized the 38,561-byte
+  DOCX at SHA-256 `70ccc62c...`, and failed the exact source with HTTP 403 JSON
+  `Forbidden`; result/job status is `failed`, metrics 1 materialized / 1 failed.
+- `retry_basis`: the first receipt showed no source viewer-download action after
+  the artifact preview had already used the preview shell. A provider-free
+  hypothesis allowed the sole reused exact Download control after exact tile
+  activation while retaining zero/multiple-control hard stops. Focused tests,
+  the 202-test adapter/history/MCP packet, typecheck, and build passed before
+  install.
+- `retry_receipt`: job `hmj_dfb704142a694f5b9f0a10db96d457ed`
+  again matched all four identity dimensions and terminated `failed`, metrics
+  1/1, with the same exact source 403. No source browser-download telemetry was
+  emitted. The hypothesis is therefore not accepted as a repair.
+- `content_receipt`: the materialized DOCX is valid OOXML and contains the exact
+  control ID, the exactly-one-upload provenance, and all three list items. The
+  operator-downloaded source in `~/Downloads` is 505 bytes, SHA-256
+  `5d17e7ec...`, and byte-identical to the fixture, proving provider UI
+  availability but not AuraCall materialization.
+- `rollback_and_posture`: the unproven hypothesis was reverted, commit
+  `9c7691e5` was rebuilt/reinstalled with exact adapter hash parity
+  `85d2ebe6...`, and API PID `95673` is active with zero restarts. Scheduler and
+  completion pauses remain authority; no further browser attempt ran.
+- `next_gate`: add provider-free telemetry that distinguishes preview activation,
+  control inventory/reuse, browser-download observation, and filename mismatch
+  before requesting any new live authority. Do not retry from the 403 alone.

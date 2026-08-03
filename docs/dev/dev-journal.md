@@ -42848,3 +42848,23 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Adapter/history/MCP tests pass 202/202; full provider-free suite passes 304
   files/2,706 tests with 65 skips. Typecheck, build, touched lint with one
   retained warning, and diff hygiene pass. No runtime/provider mutation ran.
+
+## 2026-08-02 | Installed fresh two-asset proof and authorized retry stayed partial
+
+- Installed pushed repair `9c7691e5` byte-identically, kept the scheduler and
+  five completions paused, and created fresh ChatGPT conversation
+  `6a6ffa3e-37f8-83ea-9a0f-833adb3b78c9` from exactly one 505-byte fixture and
+  one prompt. ChatGPT completed an artifact-only response; the root textual
+  extractor timed out without another submission.
+- Job `hmj_8c9d2cc271954129a1d4fdf247999cf7` found one file and one artifact,
+  matched all four account dimensions, materialized the DOCX, and failed the
+  exact source 403. The 38,561-byte DOCX at SHA-256 `70ccc62c...` is valid OOXML
+  and contains the control, provenance, and three required items.
+- A narrowly scoped reused-preview-control hypothesis passed 202/202 adjacent
+  tests, typecheck, and build. The sole authorized retry
+  `hmj_dfb704142a694f5b9f0a10db96d457ed` reproduced the same truthful `failed`
+  result, metrics 1 materialized / 1 failed, with exact identity match and no
+  source native-download success.
+- Stopped without another retry, reverted the unproven hypothesis, rebuilt and
+  reinstalled pushed source, and restored exact adapter hash parity
+  `85d2ebe6...`. API PID `95673` is active with zero restarts. M5 remains open.

@@ -483,6 +483,31 @@ Re-read these values; they are a snapshot, not permission to mutate.
 - M5 remains open. Install/parity and any later live proof require separate
   explicit authorization; never infer either from this provider-free repair.
 
+## 2026-08-02 Installed Proof And Retry Terminal Addendum
+
+- The operator authorized install, one fresh two-asset proof, and one retry only
+  when well-justified and likely to succeed. Pushed repair `9c7691e5` was
+  installed byte-identically before browser work.
+- Fresh ChatGPT conversation `6a6ffa3e-37f8-83ea-9a0f-833adb3b78c9`
+  contains exactly one 505-byte uploaded fixture and one requested DOCX.
+  ChatGPT completed an artifact-only response; AuraCall's root textual
+  extraction timed out without resubmission, while the history snapshot later
+  found exactly one file and one artifact.
+- First job `hmj_8c9d2cc271954129a1d4fdf247999cf7` matched all four identity
+  dimensions, materialized the 38,561-byte DOCX at SHA-256 `70ccc62c...`, and
+  failed the source with the exact 403 `Forbidden` receipt. The DOCX is valid
+  OOXML and contains every requested string.
+- A narrowly scoped reused-preview-control hypothesis passed provider-free
+  checks and was installed for the one authorized retry. Retry job
+  `hmj_dfb704142a694f5b9f0a10db96d457ed` reproduced the same truthful `failed`
+  result, metrics 1 materialized / 1 failed, with no source native-download
+  success. No further retry ran.
+- The hypothesis was reverted and pushed runtime `9c7691e5` restored with exact
+  adapter hash parity `85d2ebe6...`; API PID `95673` is active with zero
+  restarts. M5 and all re-enablement gates remain open. The next bounded work is
+  provider-free branch-level preview/download telemetry; new live work requires
+  new explicit authority.
+
 ## Suggested Skills
 
 - `agent-browser`: required for retained authenticated browser/CDP inspection

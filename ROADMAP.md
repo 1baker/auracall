@@ -118,8 +118,16 @@ Lane: P01
   accepted in-page fetch/anchor/direct bytes. The repaired source path configures
   an isolated per-transfer download directory and accepts only one stable,
   nonempty exact-name file, allowing Chrome's numeric collision suffix and
-  rejecting mismatch or ambiguity. Full validation is green, but the repair is
-  not installed or live-proven; both require separate authority.
+  rejecting mismatch or ambiguity. Commit `9c7691e5` was installed and a fresh
+  default-ChatGPT turn produced exactly one uploaded fixture plus one requested
+  DOCX. Job `hmj_8c9d2cc271954129a1d4fdf247999cf7` materialized the DOCX and
+  failed the source 403. One evidence-based reused-preview-control hypothesis
+  was validated, installed, and consumed by the sole authorized retry
+  `hmj_dfb704142a694f5b9f0a10db96d457ed`; it reproduced the same truthful 1/1
+  failure and emitted no source native-download success. The hypothesis was
+  reverted and the pushed runtime restored byte-identically. M5 and every
+  re-enablement gate remain open; the next work is provider-free branch-level
+  telemetry, not another live retry.
 
 - Completed provider-session authority unification:
   [docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md](docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md)

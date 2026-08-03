@@ -15447,3 +15447,22 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   adapter and response server are byte-identical to source; scheduler remains
   paused, all five retained completions are paused, and active completion is
   null. No provider work ran during install/restart.
+
+## Turn 341 | 2026-08-02
+
+- Installed pushed ChatGPT native-source repair `9c7691e5` and ran one fresh
+  default-account turn with exactly one 505-byte upload and one requested DOCX.
+  ChatGPT completed conversation `6a6ffa3e-37f8-83ea-9a0f-833adb3b78c9`;
+  artifact-only output exceeded the root textual extractor, but history refresh
+  found exactly one file and one artifact without resubmitting the prompt.
+- First job `hmj_8c9d2cc271954129a1d4fdf247999cf7` passed all four identity
+  dimensions, materialized and validated the DOCX, and failed the source 403,
+  ending `failed` at metrics 1 materialized / 1 failed.
+- A provider-free reused-preview-control hypothesis passed focused validation
+  and was installed for the one authorized retry. Retry
+  `hmj_dfb704142a694f5b9f0a10db96d457ed` reproduced the same terminal 1/1
+  failure with no source native-download success. No further retry ran.
+- Reverted the unproven hypothesis and restored pushed runtime parity. API PID
+  `95673` is active with zero restarts and adapter SHA-256 `85d2ebe6...` in
+  source and installed runtime. Keep scheduler and all completion lanes paused;
+  next work is provider-free source-preview branch telemetry.
