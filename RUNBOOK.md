@@ -1,5 +1,25 @@
 # RUNBOOK
 
+## Turn 399 | 2026-08-02
+
+- Diagnosed the consumed source-preview failure provider-free. The exact public
+  regression failed twice: an exact tile/control click plus valid native
+  browser-download bytes still returned the live-shaped 403
+  `retrieval_failed` result.
+- Root cause: conversation-file materialization intercepted fetch, anchor, and
+  direct-route bytes but never configured or inspected Chrome's download
+  manager. Generated artifacts already did, matching the live telemetry where
+  only the successful DOCX emitted `Browser.setDownloadBehavior`.
+- The source path now uses one isolated per-transfer browser download directory.
+  After the exact preview click it accepts only one stable, nonempty file with
+  the requested complete filename/extension, allowing Chrome's terminal
+  numeric collision suffix (`name(1).txt`); ambiguity and mismatch fail closed.
+- Red became green. Adapter/history/MCP tests pass 202/202; full provider-free
+  validation passes 304 files/2,706 tests with 65 skips. Typecheck, production
+  build, touched lint with one retained warning, and diff hygiene pass.
+- No install, browser/provider request, materialization retry, scheduler resume,
+  or completion resume ran. M5 and every re-enablement gate remain open.
+
 ## Turn 398 | 2026-08-02
 
 - Pushed aggregate-truth repair `8cca7962`, installed it together with preview

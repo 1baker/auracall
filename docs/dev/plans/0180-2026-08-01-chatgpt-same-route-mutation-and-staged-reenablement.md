@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 24
+Plan version: 25
 
 ## Stable Objective
 
@@ -33,6 +33,13 @@ reenablement.
 - The packet is consumed without retry. M5 remains open because AuraCall did
   not materialize both selected assets, and every scheduler/continuous-live-
   follow gate remains closed.
+- Provider-free diagnosis of that source miss is green. The source path clicked
+  the preview control but accepted only intercepted fetch/anchor bytes; unlike
+  artifact materialization, it never configured or inspected Chrome's native
+  download manager. The repair uses one isolated per-transfer download
+  directory and accepts only one stable, nonempty filename matching the exact
+  requested asset modulo Chrome's numeric collision suffix. It is validated but
+  not installed or proven live; M5 remains open.
 - The latest separately authorized default-profile canary
   `acctmirror_completion_ec8ec770-b33c-47ba-8f9c-049bf9b97588` completed one
   collector pass with zero duplicate same-route mutations and no rate-limit,
@@ -1031,3 +1038,39 @@ continuous live-follow reenablement remain separately gated afterward.
   continuous-live-follow re-enablement remain open. Diagnose the current
   uploaded-file preview activation/capture boundary provider-free before any
   later separately authorized proof.
+
+## Checkpoint 26
+
+- `plan_version`: 25
+- `state_transition`: truthful fresh source failure -> deterministic native-
+  download reproduction -> provider-free source capture repair green; M5
+  remains open.
+- `authorization`: the operator's `ok go` authorized the recommended provider-
+  free diagnosis, repair, validation, documentation, commit, and push. It did
+  not authorize install, browser/provider work, another materialization job,
+  scheduler resume, or continuous-live-follow re-enablement.
+- `red_receipt`: public batch test
+  `materializes an uploaded file when its preview Download control uses the
+  browser download manager` failed identically twice. The exact tile/control
+  transition reported `viewerDownloadClicked=true` and the boundary supplied
+  valid native-download bytes, but the result remained non-retryable
+  `retrieval_failed` with the live 403 diagnostics.
+- `root_cause`: uploaded-file materialization configured no CDP download
+  directory and accepted only bytes captured through patched in-page fetch,
+  anchor, or direct routes. The artifact path separately configured
+  `Browser.setDownloadBehavior`, explaining why the DOCX succeeded while the
+  source preview's native download was invisible. The first repair pass also
+  exposed Chrome's no-space collision suffix, `name(1).txt`.
+- `repair`: create one isolated per-transfer directory beside the destination,
+  configure Browser/Page download behavior, and consult it only when the exact
+  matched preview control was clicked. Accept exactly one stable, nonempty file
+  whose complete name and extension match the requested asset after removing
+  at most one terminal numeric collision suffix; reject multiple or mismatched
+  files and always remove the scratch directory.
+- `green_receipt`: exact regression passes; ChatGPT adapter plus history/MCP
+  surfaces pass 202/202. Full provider-free validation passes 304 files/2,706
+  tests with 65 skips. Typecheck, production build, touched lint with one
+  retained naming warning, and diff hygiene pass.
+- `next_gate`: update canonical docs, run the zero-error plan audit, commit and
+  push. Do not install or consume another live proof without separate explicit
+  authorization.

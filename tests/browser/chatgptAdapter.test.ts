@@ -707,6 +707,76 @@ describe("downloadChatgptConversationFilesWithClient", () => {
 		).resolves.toBe("ok");
 	});
 
+	test("materializes an uploaded file when its preview Download control uses the browser download manager", async () => {
+		const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-chatgpt-native-download-"));
+		const destPath = path.join(tempDir, "auracall-m5-source-20260802T185953Z.txt");
+		const sourceBytes = Buffer.from("exact uploaded source bytes\n", "utf8");
+		let browserDownloadDir: string | null = null;
+		const send = vi.fn(async (method: string, params?: Record<string, unknown>) => {
+			if (method === "Browser.setDownloadBehavior" && typeof params?.downloadPath === "string") {
+				browserDownloadDir = params.downloadPath;
+			}
+		});
+		const evaluate = vi.fn(async (input: { expression?: string }) => {
+			const expression = input.expression ?? "";
+			if (expression.includes("captureDownloadResponse")) {
+				if (browserDownloadDir) {
+					await fs.writeFile(
+						path.join(browserDownloadDir, "auracall-m5-source-20260802T185953Z(1).txt"),
+						sourceBytes,
+					);
+				}
+				return {
+					result: {
+						value: {
+							ok: false,
+							reason: "json_missing_download_url",
+							tileMatched: true,
+							viewerDownloadClicked: true,
+							fallbackAttempted: true,
+							status: 403,
+							endpointKind: "files-download",
+							contentType: "application/json",
+							providerError: { message: "Forbidden" },
+						},
+					},
+				};
+			}
+			if (expression.includes("hasTurns")) {
+				return { result: { value: { href: "https://chatgpt.com/c/conversation-native" } } };
+			}
+			return { result: { value: [] } };
+		});
+		const file: FileRef = {
+			id: "conversation-native:turn:0:auracall-m5-source-20260802T185953Z.txt",
+			name: "auracall-m5-source-20260802T185953Z.txt",
+			provider: "chatgpt",
+			source: "conversation",
+			metadata: { providerFileId: "file_native_upload" },
+		};
+
+		try {
+			await expect(
+				downloadChatgptConversationFilesWithClientForTest(
+					// biome-ignore lint/style/useNamingConvention: CDP client shape uses Runtime.
+					{ Runtime: { evaluate }, send } as never,
+					"conversation-native",
+					[{ file, destPath }],
+					null,
+					undefined,
+					{ preserveActiveTab: true },
+				),
+			).resolves.toEqual([{ fileId: file.id, status: "materialized" }]);
+			expect(send).toHaveBeenCalledWith(
+				"Browser.setDownloadBehavior",
+				expect.objectContaining({ behavior: "allow", eventsEnabled: true }),
+			);
+			expect(await fs.readFile(destPath)).toEqual(sourceBytes);
+		} finally {
+			await fs.rm(tempDir, { recursive: true, force: true });
+		}
+	});
+
 	test("checks readiness once and sequentially downloads twelve files on one client", async () => {
 		const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-chatgpt-batch-"));
 		const scrapeTelemetry = createBrowserScrapeTelemetryRecorder();

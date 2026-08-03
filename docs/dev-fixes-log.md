@@ -20151,3 +20151,16 @@ browser-stage lifecycle observability, not transcript truncation.
 - A provider-free selector test must model the exact source-tile transition and
   download-capture lifecycle observed live; a generic role-less preview fixture
   is insufficient evidence until the installed source route materializes bytes.
+
+## 2026-08-02 | A successful preview click may bypass in-page capture
+
+- Symptom: the exact uploaded-file preview Download control was clicked, but no
+  patched `fetch`, anchor, or `window.open` path exposed bytes; the later direct
+  fallback returned 403 even though Chrome had downloaded the source natively.
+- Durable rule: when a provider preview can invoke the browser download manager,
+  configure an isolated per-transfer directory before the exact click and
+  inspect that directory as a distinct capture transport.
+- Identity rule: accept exactly one stable, nonempty file and require its full
+  stem and extension to match the requested asset. Permit only Chrome's terminal
+  numeric collision suffix, with or without a preceding space; reject ambiguity
+  and always remove the scratch directory.

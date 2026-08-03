@@ -113,9 +113,13 @@ Lane: P01
   uploaded TXT still yielded no captured preview binary and its bounded direct
   fallback returned 403 JSON `Forbidden`. The repaired envelope correctly
   terminated `failed`, metrics 1 materialized / 1 failed. No retry ran. M5 and
-  all re-enablement gates remain open pending provider-free diagnosis of the
-  exact uploaded-file preview capture lifecycle and separate authority for any
-  future live proof.
+  all re-enablement gates remain open. Provider-free diagnosis now confirms the
+  source preview used Chrome's native download manager, while AuraCall only
+  accepted in-page fetch/anchor/direct bytes. The repaired source path configures
+  an isolated per-transfer download directory and accepts only one stable,
+  nonempty exact-name file, allowing Chrome's numeric collision suffix and
+  rejecting mismatch or ambiguity. Full validation is green, but the repair is
+  not installed or live-proven; both require separate authority.
 
 - Completed provider-session authority unification:
   [docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md](docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md)

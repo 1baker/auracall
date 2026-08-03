@@ -42831,3 +42831,20 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   the first and only attempt terminated job/result `failed`, metrics 1/1.
 - The no-retry packet is consumed. M5 and all re-enablement remain open; the
   next work is provider-free diagnosis of uploaded-file preview capture.
+
+## 2026-08-02 | Uploaded-file native preview download repaired provider-free
+
+- A public batch regression modeled the exact consumed result: exact source
+  tile matched, preview Download clicked, native bytes supplied, then 403
+  fallback retained. It failed identically twice as non-retryable
+  `retrieval_failed`.
+- The source path lacked the artifact path's CDP download-manager setup and
+  filesystem wait. Added one isolated per-transfer directory and bound native
+  acceptance to the exact preview click, one stable nonempty file, and exact
+  requested filename/extension modulo Chrome's numeric collision suffix.
+- The first repair run exposed the live no-space suffix `name(1).txt`; widening
+  only that terminal suffix made the exact regression green without weakening
+  full-stem identity.
+- Adapter/history/MCP tests pass 202/202; full provider-free suite passes 304
+  files/2,706 tests with 65 skips. Typecheck, build, touched lint with one
+  retained warning, and diff hygiene pass. No runtime/provider mutation ran.

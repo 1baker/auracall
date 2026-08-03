@@ -665,7 +665,12 @@ Terminology note:
   only the sole newly visible exact `button[aria-label="Download"]`. This
   supports current source-file previewers that do not expose a dialog role;
   multiple newly visible controls fail closed, while zero new exact controls
-  may use the existing single-dialog-scoped fallback for older layouts.
+  may use the existing single-dialog-scoped fallback for older layouts. The
+  source-file path also configures an isolated browser download directory and
+  accepts a native browser download only when exactly one stable, nonempty file
+  appears there after that exact preview click. Its filename must match the
+  requested asset, allowing only Chrome's numeric collision suffix such as
+  `name(1).txt`; ambiguous or mismatched downloads fail closed.
   A files-catalog materialization request is exact-asset authority, not merely a
   conversation hint: AuraCall carries the selected catalog ID, filename, and
   provider file ID into transfer selection and excludes every nonmatching file

@@ -9970,6 +9970,11 @@ async function downloadChatgptConversationFileWithClient(
 		);
 	}
 	const normalizedProjectId = normalizeChatgptProjectId(projectId);
+	const destinationDir = path.dirname(destPath);
+	await fs.mkdir(destinationDir, { recursive: true });
+	const browserDownloadDir = await fs.mkdtemp(
+		path.join(destinationDir, ".auracall-chatgpt-file-download-"),
+	);
 	recordBrowserScrapeDownloadAttempt(options);
 	const downloadFromReadySurface = async (): Promise<Record<string, unknown>> => {
 		if (!surfacePrepared) {
@@ -9982,6 +9987,7 @@ async function downloadChatgptConversationFileWithClient(
 		}
 		recordBrowserScrapeCdpCall(options, "Runtime.evaluate");
 		recordBrowserScrapeProviderAction(options, "chatgpt.downloadConversationFile");
+		await configureChatgptDownloadBehaviorWithClient(client, browserDownloadDir, options);
 		const result = await client.Runtime.evaluate({
 			expression: `(async () => {
           const targetProviderFileId = ${JSON.stringify(targetProviderFileId)};
@@ -10343,6 +10349,7 @@ async function downloadChatgptConversationFileWithClient(
               captureTransport: captureFailure?.captureTransport || null,
               providerError: captureFailure?.providerError || null,
               responseShape: captureFailure?.responseShape || null,
+              viewerDownloadClicked,
             };
           }
           if (!captured.ok) {
@@ -10373,7 +10380,36 @@ async function downloadChatgptConversationFileWithClient(
 			awaitPromise: true,
 			returnByValue: true,
 		});
-		const value = isRecord(result.result?.value) ? result.result.value : null;
+		let value = isRecord(result.result?.value) ? result.result.value : null;
+		if ((!value || value.ok !== true) && value?.viewerDownloadClicked === true) {
+			const downloadedPath = await waitForSingleChatgptDownloadedFile(browserDownloadDir, 5_000);
+			if (downloadedPath) {
+				const downloadedName = path.basename(downloadedPath);
+				if (targetName && !browserDownloadedFileNameMatchesTarget(downloadedName, targetName)) {
+					throw new Error(
+						`ChatGPT conversation file fetch failed: captured_asset_identity_mismatch: requested=${targetName} response=${downloadedName}`,
+					);
+				}
+				const bytes = await fs.readFile(downloadedPath);
+				if (bytes.byteLength > 0) {
+					value = {
+						ok: true,
+						status: 200,
+						url: "",
+						contentDisposition: targetName
+							? `attachment; filename="${targetName.replaceAll('"', "")}"`
+							: null,
+						byteLength: bytes.byteLength,
+						base64: bytes.toString("base64"),
+						providerFileId: targetProviderFileId,
+						fileName: downloadedName,
+						mimeType: file?.mimeType ?? null,
+						captureTransport: "browser-download",
+						viewerDownloadClicked: true,
+					};
+				}
+			}
+		}
 		if (!value || value.ok !== true || typeof value.base64 !== "string") {
 			recordBrowserScrapeDownloadFailure(options);
 			const diagnostics = {
@@ -10409,7 +10445,8 @@ async function downloadChatgptConversationFileWithClient(
 		if (
 			value.captureTransport === "anchor" ||
 			value.captureTransport === "fetch" ||
-			value.captureTransport === "direct"
+			value.captureTransport === "direct" ||
+			value.captureTransport === "browser-download"
 		) {
 			recordBrowserScrapeProviderAction(
 				options,
@@ -10421,25 +10458,29 @@ async function downloadChatgptConversationFileWithClient(
 		}
 		return value;
 	};
-	const captured = surfacePrepared
-		? await downloadFromReadySurface()
-		: await withChatgptBlockingSurfaceRecovery(
-				client,
-				`downloadChatgptConversationFile:${conversationId}:${fileId}`,
-				downloadFromReadySurface,
-				{
-					debugContext,
-					reopen: buildChatgptConversationReopen(
-						client,
-						conversationId,
-						normalizedProjectId,
-						options,
-					),
-					providerOptions: options,
-				},
-			);
-	await fs.writeFile(destPath, Buffer.from(captured.base64 as string, "base64"));
-	recordBrowserScrapeDownloadSuccess(options);
+	try {
+		const captured = surfacePrepared
+			? await downloadFromReadySurface()
+			: await withChatgptBlockingSurfaceRecovery(
+					client,
+					`downloadChatgptConversationFile:${conversationId}:${fileId}`,
+					downloadFromReadySurface,
+					{
+						debugContext,
+						reopen: buildChatgptConversationReopen(
+							client,
+							conversationId,
+							normalizedProjectId,
+							options,
+						),
+						providerOptions: options,
+					},
+				);
+		await fs.writeFile(destPath, Buffer.from(captured.base64 as string, "base64"));
+		recordBrowserScrapeDownloadSuccess(options);
+	} finally {
+		await fs.rm(browserDownloadDir, { recursive: true, force: true });
+	}
 }
 
 async function downloadChatgptConversationFilesWithClient(
@@ -11186,6 +11227,58 @@ async function waitForChatgptDownloadedFile(
 		await sleep(250);
 	}
 	return null;
+}
+
+async function waitForSingleChatgptDownloadedFile(
+	destDir: string,
+	timeoutMs: number,
+): Promise<string | null> {
+	const deadline = Date.now() + timeoutMs;
+	let lastPath: string | null = null;
+	let lastSize = -1;
+	let stableCount = 0;
+	while (Date.now() < deadline) {
+		const entries = await fs.readdir(destDir, { withFileTypes: true }).catch(() => []);
+		const completed = entries
+			.filter(
+				(entry) =>
+					entry.isFile() &&
+					!entry.name.endsWith(".crdownload") &&
+					!entry.name.endsWith(".tmp"),
+			)
+			.map((entry) => entry.name);
+		if (completed.length > 1) {
+			throw new Error("ChatGPT source preview produced multiple browser downloads.");
+		}
+		const candidateName = completed[0];
+		if (candidateName) {
+			const candidatePath = path.join(destDir, candidateName);
+			const stat = await fs.stat(candidatePath).catch(() => null);
+			if (stat) {
+				if (candidatePath === lastPath && stat.size === lastSize) {
+					stableCount += 1;
+				} else {
+					lastPath = candidatePath;
+					lastSize = stat.size;
+					stableCount = 0;
+				}
+				if (stableCount >= 1) return candidatePath;
+			}
+		}
+		await sleep(250);
+	}
+	return null;
+}
+
+function browserDownloadedFileNameMatchesTarget(actualName: string, targetName: string): boolean {
+	const normalizeName = (value: string): string => normalizeUiText(value).toLowerCase();
+	if (normalizeName(actualName) === normalizeName(targetName)) return true;
+	const actualExtension = path.extname(actualName);
+	const targetExtension = path.extname(targetName);
+	if (actualExtension.toLowerCase() !== targetExtension.toLowerCase()) return false;
+	const actualStem = actualName.slice(0, actualName.length - actualExtension.length);
+	const targetStem = targetName.slice(0, targetName.length - targetExtension.length);
+	return normalizeName(actualStem.replace(/\s?\(\d+\)$/, "")) === normalizeName(targetStem);
 }
 
 async function fileRefFromChatgptDownloadedArtifact(

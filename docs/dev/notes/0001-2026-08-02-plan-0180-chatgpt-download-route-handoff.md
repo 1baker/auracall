@@ -458,6 +458,31 @@ Re-read these values; they are a snapshot, not permission to mutate.
   activation/capture boundary provider-free before requesting another live
   proof.
 
+## 2026-08-02 Native Source Capture Repair Addendum
+
+- The next `ok go` authorized provider-free diagnosis and repair only. No
+  install, browser/provider work, materialization retry, scheduler resume, or
+  completion resume occurred.
+- The exact public regression supplied a matched source tile, confirmed preview
+  click, valid native browser-download bytes, and the consumed 403 fallback
+  shape. It failed identically twice because the source path only accepted
+  patched fetch/anchor/direct bytes and never configured Chrome's download
+  manager.
+- The repaired source transfer creates one isolated directory beside the final
+  destination, configures Browser/Page download behavior, and consults it only
+  after the exact matched preview control was clicked. It accepts exactly one
+  stable, nonempty file with the requested full filename/extension after
+  removing at most one terminal numeric collision suffix such as `(1)`.
+  Multiple or mismatched files fail closed; scratch state is always removed.
+- The first repair run exposed the no-space live filename form
+  `auracall-m5-source-20260802T185953Z(1).txt`; the narrowed suffix normalization
+  then made the regression green. Adapter/history/MCP tests pass 202/202; the
+  full provider-free suite passes 304 files/2,706 tests with 65 skips, plus
+  typecheck, production build, touched lint with one retained warning, and diff
+  hygiene.
+- M5 remains open. Install/parity and any later live proof require separate
+  explicit authorization; never infer either from this provider-free repair.
+
 ## Suggested Skills
 
 - `agent-browser`: required for retained authenticated browser/CDP inspection
