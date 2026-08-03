@@ -456,11 +456,88 @@ describe("downloadChatgptConversationFilesWithClient", () => {
 			expect(downloadExpression).toContain('button[aria-label="Download"]');
 			expect(downloadExpression).toContain("if (previewSurfaces.length !== 1)");
 			expect(downloadExpression).toContain("if (controls.length !== 1) return false");
+			expect(downloadExpression).toContain("previewIdentityPresentBeforeTileClick");
+			expect(downloadExpression).toContain("previewObservationCount += 1");
+			expect(downloadExpression).toContain(
+				"previewScopedDownloadControlTotalCount = scopedControls.length",
+			);
+			expect(downloadExpression).toContain("globalDownloadControlCount = globalControls.length");
+			expect(downloadExpression).toContain(
+				"globalVisibleDownloadControlCount = globalControls.filter((node) => " +
+					"isVisible(node)).length",
+			);
 			expect(downloadExpression).not.toContain("previewDownloadControlsBeforeTileClick");
 			expect(downloadExpression).not.toContain("newPreviewDownloadControls");
 			expect(downloadExpression).not.toContain(
 				"Array.from(document.querySelectorAll('button, [role=\"button\"], a'))",
 			);
+		} finally {
+			await fs.rm(tempDir, { recursive: true, force: true });
+		}
+	});
+
+	test("preserves bounded preview lifecycle evidence when source transfer fails", async () => {
+		const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-chatgpt-preview-evidence-"));
+		const file: FileRef = {
+			id: "conversation-preview-evidence:turn:0:uploaded-source.txt",
+			name: "uploaded-source.txt",
+			provider: "chatgpt",
+			source: "conversation",
+			metadata: { providerFileId: "file_uploaded_source" },
+		};
+		const evaluate = vi.fn(async (input: { expression?: string }) => {
+			const expression = input.expression ?? "";
+			if (expression.includes("captureDownloadResponse")) {
+				return {
+					result: {
+						value: {
+							ok: false,
+							reason: "json_missing_download_url",
+							tileMatched: true,
+							fallbackAttempted: true,
+							status: 403,
+							endpointKind: "files-download",
+							contentType: "application/json",
+							previewIdentityMatched: true,
+							previewIdentityPresentBeforeTileClick: false,
+							previewSurfaceCount: 1,
+							previewObservationCount: 42,
+							previewDownloadControlCount: 0,
+							previewScopedDownloadControlTotalCount: 1,
+							globalDownloadControlCount: 1,
+							globalVisibleDownloadControlCount: 0,
+							providerError: { message: "Forbidden" },
+						},
+					},
+				};
+			}
+			if (expression.includes("hasTurns")) {
+				return {
+					result: { value: { href: "https://chatgpt.com/c/conversation-preview-evidence" } },
+				};
+			}
+			return { result: { value: [] } };
+		});
+
+		try {
+			const [result] = await downloadChatgptConversationFilesWithClientForTest(
+				// biome-ignore lint/style/useNamingConvention: CDP client shape uses Runtime.
+				{ Runtime: { evaluate } } as never,
+				"conversation-preview-evidence",
+				[{ file, destPath: path.join(tempDir, file.name) }],
+				null,
+				undefined,
+				{ preserveActiveTab: true },
+			);
+
+			expect(result.status).toBe("error");
+			if (result.status !== "error") throw new Error("expected failed source transfer");
+			expect(result.fileId).toBe(file.id);
+			expect(result.error).toContain('"previewIdentityPresentBeforeTileClick":false');
+			expect(result.error).toContain('"previewObservationCount":42');
+			expect(result.error).toContain('"previewScopedDownloadControlTotalCount":1');
+			expect(result.error).toContain('"globalDownloadControlCount":1');
+			expect(result.error).toContain('"globalVisibleDownloadControlCount":0');
 		} finally {
 			await fs.rm(tempDir, { recursive: true, force: true });
 		}

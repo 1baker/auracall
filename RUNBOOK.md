@@ -15511,3 +15511,24 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   `95673` is active with zero restarts and adapter SHA-256 `85d2ebe6...` in
   source and installed runtime. Keep scheduler and all completion lanes paused;
   next work is provider-free source-preview branch telemetry.
+
+## Turn 342 | 2026-08-03
+
+- Diagnosed the consumed exact-flyout zero-control receipt without launching a
+  browser or provider job. Recovered manual DOM proves the visible exact
+  Download button can be inside the exact filename-labelled flyout, while the
+  production expression already polls that exact branch for its bounded
+  20-second window. The missing failure-time DOM prevents choosing among hidden
+  control state, topology drift, incomplete mount, and stale preview identity.
+- Added sanitized lifecycle diagnostics for exact-preview presence before tile
+  activation, observation count, scoped total/visible Download controls, and
+  global total/visible controls. Click authority remains exactly one visible
+  Download button inside exactly one visible filename-matched flyout.
+- Two provider-free red/green tracers pass. Adapter/history/MCP tests pass
+  203/203; typecheck, production build, full provider-free tests, and diff
+  hygiene pass. Scoped Biome retains broad baseline formatting drift and its
+  known CDP `Runtime` naming warning.
+- No install, browser launch, provider interaction, materialization job, retry,
+  scheduler resume, or completion resume ran. API PID `16830` remains active
+  with zero restarts; scheduler is paused, active completion is null, and
+  queued/running jobs are zero.

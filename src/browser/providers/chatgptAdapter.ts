@@ -10181,23 +10181,41 @@ async function downloadChatgptConversationFileWithClient(
 	          };
 	          const previewName = normalize(match.tile.getAttribute('aria-label')) ||
 	            normalize(match.metadata?.fileName || targetName || '');
+	          const matchingPreviewSurfaces = () => Array.from(
+	            document.querySelectorAll('section[data-testid="screen-threadFlyOut"][aria-label]')
+	          ).filter((node) =>
+	            isVisible(node) && normalize(node.getAttribute('aria-label')) === previewName
+	          );
 	          let previewSurfaceCount = 0;
 	          let previewDownloadControlCount = 0;
+	          let previewScopedDownloadControlTotalCount = 0;
+	          let globalDownloadControlCount = 0;
+	          let globalVisibleDownloadControlCount = 0;
+	          let previewObservationCount = 0;
 	          let previewIdentityMatched = false;
+	          const previewIdentityPresentBeforeTileClick = previewName
+	            ? matchingPreviewSurfaces().length > 0
+	            : false;
 	          const clickViewerDownload = () => {
 	            if (!previewName) return false;
-	            const previewSurfaces = Array.from(
-	              document.querySelectorAll('section[data-testid="screen-threadFlyOut"][aria-label]')
-	            ).filter((node) =>
-	              isVisible(node) && normalize(node.getAttribute('aria-label')) === previewName
+	            previewObservationCount += 1;
+	            const globalControls = Array.from(
+	              document.querySelectorAll('button[aria-label="Download"]')
 	            );
+	            globalDownloadControlCount = globalControls.length;
+	            globalVisibleDownloadControlCount = globalControls.filter((node) => isVisible(node)).length;
+	            const previewSurfaces = matchingPreviewSurfaces();
 	            previewSurfaceCount = previewSurfaces.length;
+	            previewScopedDownloadControlTotalCount = 0;
+	            previewDownloadControlCount = 0;
 	            if (previewSurfaces.length !== 1) return false;
 	            previewIdentityMatched = true;
 	            const previewSurface = previewSurfaces[0];
-	            const controls = Array.from(
+	            const scopedControls = Array.from(
 	              previewSurface.querySelectorAll('button[aria-label="Download"]')
-	            ).filter((node) => isVisible(node));
+	            );
+	            previewScopedDownloadControlTotalCount = scopedControls.length;
+	            const controls = scopedControls.filter((node) => isVisible(node));
 	            previewDownloadControlCount = controls.length;
 	            if (controls.length !== 1) return false;
 	            const download = controls[0];
@@ -10340,8 +10358,13 @@ async function downloadChatgptConversationFileWithClient(
               responseShape: captureFailure?.responseShape || null,
               viewerDownloadClicked,
               previewIdentityMatched,
+	              previewIdentityPresentBeforeTileClick,
               previewSurfaceCount,
+	              previewObservationCount,
               previewDownloadControlCount,
+	              previewScopedDownloadControlTotalCount,
+	              globalDownloadControlCount,
+	              globalVisibleDownloadControlCount,
             };
           }
           if (!captured.ok) {
@@ -10372,8 +10395,13 @@ async function downloadChatgptConversationFileWithClient(
 	            ...captured,
 	            viewerDownloadClicked,
 	            previewIdentityMatched,
+	            previewIdentityPresentBeforeTileClick,
 	            previewSurfaceCount,
+	            previewObservationCount,
 	            previewDownloadControlCount,
+	            previewScopedDownloadControlTotalCount,
+	            globalDownloadControlCount,
+	            globalVisibleDownloadControlCount,
 	          };
         })()`,
 			awaitPromise: true,
@@ -10436,6 +10464,27 @@ async function downloadChatgptConversationFileWithClient(
 					: {}),
 				...(typeof value?.previewDownloadControlCount === "number"
 					? { previewDownloadControlCount: value.previewDownloadControlCount }
+					: {}),
+				...(typeof value?.previewIdentityPresentBeforeTileClick === "boolean"
+					? {
+							previewIdentityPresentBeforeTileClick:
+								value.previewIdentityPresentBeforeTileClick,
+						}
+					: {}),
+				...(typeof value?.previewObservationCount === "number"
+					? { previewObservationCount: value.previewObservationCount }
+					: {}),
+				...(typeof value?.previewScopedDownloadControlTotalCount === "number"
+					? {
+							previewScopedDownloadControlTotalCount:
+								value.previewScopedDownloadControlTotalCount,
+						}
+					: {}),
+				...(typeof value?.globalDownloadControlCount === "number"
+					? { globalDownloadControlCount: value.globalDownloadControlCount }
+					: {}),
+				...(typeof value?.globalVisibleDownloadControlCount === "number"
+					? { globalVisibleDownloadControlCount: value.globalVisibleDownloadControlCount }
 					: {}),
 			};
 			const error = new Error(

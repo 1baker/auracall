@@ -139,8 +139,14 @@ Lane: P01
   dimensions and materialized the valid 38,752-byte DOCX, but the exact source
   flyout exposed zero scoped Download controls and its fallback returned 403
   `Forbidden`. The job failed truthfully at metrics 1/1 without retry. M5 and
-  every re-enablement gate remain open pending provider-free diagnosis; any new
-  live proof requires separate explicit authority.
+  every re-enablement gate remain open. Provider-free diagnosis recovered
+  manual DOM proving the exact control can be scoped inside the exact flyout and
+  confirmed the production expression already polls for 20 seconds, leaving a
+  lifecycle/state ambiguity rather than a universal selector or missing-wait
+  defect. The adapter now preserves pre-click preview presence, observation
+  count, and scoped/global total-versus-visible control counts without widening
+  click authority. The repair is validated but not installed; any new live proof
+  requires separate explicit authority.
 
 - Completed provider-session authority unification:
   [docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md](docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md)

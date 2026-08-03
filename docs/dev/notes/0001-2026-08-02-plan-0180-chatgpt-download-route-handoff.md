@@ -567,6 +567,31 @@ Re-read these values; they are a snapshot, not permission to mutate.
 - `tdd`: use for the provider-free red/green repair.
 - `handoff`: use again only when producing the next clean-session boundary.
 
+## 2026-08-03 Provider-Free Lifecycle Evidence Addendum
+
+- Recovered manual DOM from the prior bounded inspection proves the visible
+  exact Download button was a descendant of the exact filename-labelled
+  `screen-threadFlyOut`. The earlier `buttonInsideExactRegion=false` value only
+  described a missing `[role="region"]`, not the actual flyout section.
+- The production expression already retries the exact scoped lookup throughout
+  its bounded 20-second capture window. A universal static selector/topology
+  defect and a simple missing-wait defect are therefore falsified.
+- Because the consumed browser exited before failure-time inspection, the live
+  receipt cannot distinguish a scoped-but-hidden control, a global-only control
+  outside the flyout, an incompletely mounted preview, or a matching preview
+  that existed before the source tile click.
+- The provider-free repair preserves exactly those sanitized branch dimensions:
+  pre-click preview identity, observation count, scoped total/visible control
+  counts, and global total/visible counts. It does not record filenames, URLs,
+  or page text and does not broaden the click boundary.
+- Adapter/history/MCP tests pass 203/203; typecheck, production build, full
+  provider-free tests, and diff hygiene pass. Scoped Biome retains repository-
+  baseline formatting drift and the known `Runtime` naming warning.
+- The repair is not installed. API PID `16830` remains active with zero
+  restarts, scheduler paused, active completion null, and zero queued/running
+  jobs. Installation or another fresh proof requires separate explicit
+  authorization; never retry the consumed job.
+
 ## Required Closeout
 
 Update Plan 0180, `ROADMAP.md`, `RUNBOOK.md`, `docs/dev/dev-journal.md`, and

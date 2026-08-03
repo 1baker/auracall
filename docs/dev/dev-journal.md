@@ -42914,3 +42914,22 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   so a post-failure read-only DOM inspection would have required a relaunch and
   did not run. No job retry or replacement ran. M5 and all scheduler/
   completion/continuous-live-follow gates remain open.
+
+## 2026-08-03 | Exact-flyout lifecycle diagnostics hardened provider-free
+
+- Recovered prior manual DOM proves the exact visible Download control can be
+  inside the exact filename-labelled flyout. The emitted materializer already
+  polls that scoped branch for the bounded 20-second capture window, so a
+  universal selector mismatch and a simple missing wait are not the consumed
+  failure's root cause.
+- Added bounded sanitized evidence for pre-click exact-preview presence,
+  observation count, scoped total/visible control counts, and global
+  total/visible control counts. The adapter still clicks only one visible exact
+  control inside exactly one visible filename-matched flyout.
+- Both red/green tracers pass; adapter/history/MCP tests pass 203/203, and
+  typecheck, production build, full provider-free tests, and diff hygiene pass.
+  Scoped Biome retains broad baseline formatting drift and the known CDP
+  `Runtime` naming warning.
+- No install, browser/provider action, job, retry, or scheduler/completion
+  resume ran. API PID `16830` remains active with zero restarts, scheduler
+  paused, active completion null, and zero queued/running jobs. M5 stays open.

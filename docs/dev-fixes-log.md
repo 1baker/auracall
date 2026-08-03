@@ -20204,3 +20204,15 @@ browser-stage lifecycle observability, not transcript truncation.
   manual download proves the source is provider-available, while this separate
   automated receipt proves only that the control was unavailable to the
   materializer at that moment; neither receipt rewrites the other.
+
+## 2026-08-03 | Preserve preview lifecycle dimensions, not only the terminal visible count
+
+- A final visible-control count of zero cannot distinguish a hidden scoped
+  control, topology drift, incomplete mount, or stale preview identity.
+- For bounded preview diagnosis, retain whether exact identity existed before
+  activation, how many observations ran, and scoped/global total-versus-visible
+  counts. Keep this inventory sanitized: counts and booleans are sufficient;
+  filenames, URLs, page text, and unscoped click candidates are not.
+- Diagnostics must not broaden authority. Continue to act only when exactly one
+  visible filename-matched preview contains exactly one visible exact Download
+  control; all ambiguous branches remain fail-closed.

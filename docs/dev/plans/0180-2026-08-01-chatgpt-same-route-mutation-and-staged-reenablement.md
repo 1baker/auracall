@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 28
+Plan version: 29
 
 ## Stable Objective
 
@@ -13,6 +13,20 @@ reenablement.
 
 ## Current State
 
+- Provider-free lifecycle diagnosis disproved a universal selector/topology
+  defect: recovered manual DOM evidence shows the visible exact Download button
+  as a descendant of the exact filename-labelled flyout, and the production
+  expression already polls that branch throughout its bounded 20-second capture
+  window. The consumed live failure retained no failure-time DOM, so it cannot
+  distinguish a hidden scoped control, topology drift, incomplete preview mount,
+  or a pre-existing/stale exact preview surface.
+- The adapter now preserves sanitized branch evidence without widening click
+  authority: whether exact preview identity existed before tile activation,
+  observation count, scoped total and visible Download-control counts, and
+  global total and visible counts. It still clicks only one visible exact
+  Download control inside exactly one visible filename-matched flyout and
+  otherwise fails closed. Provider-free validation passes; this diagnostic
+  repair is not installed and does not satisfy M5.
 - M1-M4 and M6 are installed and provider-free green. All four ChatGPT targets
   retain the conservative 6/min interaction ceiling and 120-second action
   cooldowns.
@@ -1225,3 +1239,36 @@ continuous live-follow reenablement remain separately gated afterward.
 - `next_gate`: diagnose provider-free why a filename-matched flyout can report
   zero scoped controls at transfer time. Any new live proof requires separate
   explicit authority and must not reuse this consumed job.
+
+## Checkpoint 30
+
+- `plan_version`: 29
+- `state_transition`: zero-control receipt -> provider-free lifecycle diagnosis
+  -> bounded branch-evidence repair; M5 remains open.
+- `diagnosis`: recovered manual DOM proves the visible exact Download button can
+  be a descendant of the exact filename-labelled flyout. The emitted production
+  expression already retries the scoped lookup for the remainder of its bounded
+  20-second capture window, so neither a universal topology mismatch nor a
+  simple missing wait explains the consumed failure.
+- `evidence_gap`: the consumed browser exited before failure-time inspection.
+  Existing terminal fields cannot distinguish scoped-but-hidden control state,
+  global-only topology drift, incomplete preview mounting, or an exact preview
+  surface that predated tile activation.
+- `repair`: failure diagnostics now retain pre-click exact-preview presence,
+  repeated observation count, scoped total/visible Download-control counts, and
+  global total/visible counts. No filenames, URLs, page text, or broader click
+  candidates were added; the only authorized click remains exactly one visible
+  Download button inside exactly one visible filename-matched flyout.
+- `validation`: the public lifecycle-evidence regression failed before host
+  propagation and passed after it; the emitted-expression tracer failed before
+  browser inventory and passed after it. Adapter/history/MCP tests pass 203/203,
+  `pnpm run check`, production build, the full provider-free suite, and diff
+  hygiene pass. Scoped Biome still reports broad repository-baseline formatting
+  drift and the retained CDP `Runtime` naming warning.
+- `authority_and_posture`: no install, browser launch, provider interaction,
+  materialization job, retry, scheduler resume, or completion resume ran. API
+  PID `16830` remains active with zero restarts; scheduler is paused,
+  `activeCompletionId` is null, and queued/running jobs are zero.
+- `next_gate`: commit and push the provider-free diagnostic repair. Installing
+  it and authorizing exactly one new fresh proof are separate gates; do not
+  retry or replace consumed job `hmj_91cf0b1e4b2744f78324a51b11f0da11`.
