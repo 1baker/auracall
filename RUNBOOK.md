@@ -1,5 +1,28 @@
 # RUNBOOK
 
+## Turn 400 | 2026-08-03
+
+- Inspected the retained authenticated ChatGPT page through the managed
+  `default` browser profile without submitting a prompt or creating a job. The
+  exact source tile opened a visible filename-labelled
+  `screen-threadFlyOut`, not a dialog, with one upper-right exact Download
+  button.
+- The bounded manual download produced 505 bytes at SHA-256 `5d17e7ec...` and
+  matched the canonical source fixture byte-for-byte. This proves both preview
+  identity and native source availability.
+- Provider-free TDD replaced the disproven global “new Download node” heuristic
+  with exact filename-labelled flyout scoping. Zero or multiple matching
+  flyouts/controls fail closed, and diagnostics record exact identity plus
+  surface/control counts.
+- Focused red became green; adapter/history/MCP tests pass 202/202, typecheck,
+  production build, and diff hygiene pass. The full provider-free suite passed
+  2,705 tests with one unrelated 27 ms versus 30 ms timing failure; the exact
+  focused rerun passed. Scoped Biome retains baseline file-format drift and the
+  known CDP `Runtime` naming warning.
+- No install or new live materialization ran. API PID `95673` remains the
+  installed pre-repair runtime; scheduler and five completions remain paused,
+  active `chatgpt/default` materialization jobs remain zero, and M5 stays open.
+
 ## Turn 399 | 2026-08-02
 
 - Diagnosed the consumed source-preview failure provider-free. The exact public

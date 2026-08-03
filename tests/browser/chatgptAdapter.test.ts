@@ -396,7 +396,7 @@ describe("downloadChatgptConversationFilesWithClient", () => {
 		}
 	});
 
-	test("scopes the fallback Download control to the viewer opened by the matched file tile", async () => {
+	test("scopes the preview Download control to the exact filename-labelled flyout", async () => {
 		const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-chatgpt-viewer-scope-"));
 		const destPath = path.join(tempDir, "uploaded-transcript.docx");
 		let downloadExpression = "";
@@ -443,21 +443,21 @@ describe("downloadChatgptConversationFilesWithClient", () => {
 					{ preserveActiveTab: true },
 				),
 			).resolves.toEqual([{ fileId: file.id, status: "materialized" }]);
-			expect(downloadExpression).toContain("const viewerSurface =");
-			expect(downloadExpression).toContain("viewerSurface.querySelectorAll");
-			expect(downloadExpression).toContain("const visiblePreviewDownloadControls = () =>");
 			expect(downloadExpression).toContain(
-				"document.querySelectorAll('button[aria-label=\"Download\"]')",
+				'section[data-testid="screen-threadFlyOut"][aria-label]',
 			);
 			expect(downloadExpression).toContain(
-				"const previewDownloadControlsBeforeTileClick = new Set(",
+				"normalize(node.getAttribute('aria-label')) === previewName",
 			);
-			expect(downloadExpression).toContain("!previewDownloadControlsBeforeTileClick.has(node)");
-			expect(downloadExpression).toContain("if (newPreviewDownloadControls.length === 0) return null");
-			expect(downloadExpression).toContain("if (newPreviewDownloadControls.length !== 1)");
 			expect(downloadExpression).toContain(
-				"if (newPreviewDownloadClicked !== null) return newPreviewDownloadClicked",
+				"const previewName = normalize(match.tile.getAttribute('aria-label')) ||",
 			);
+			expect(downloadExpression).toContain("previewSurface.querySelectorAll");
+			expect(downloadExpression).toContain('button[aria-label="Download"]');
+			expect(downloadExpression).toContain("if (previewSurfaces.length !== 1)");
+			expect(downloadExpression).toContain("if (controls.length !== 1) return false");
+			expect(downloadExpression).not.toContain("previewDownloadControlsBeforeTileClick");
+			expect(downloadExpression).not.toContain("newPreviewDownloadControls");
 			expect(downloadExpression).not.toContain(
 				"Array.from(document.querySelectorAll('button, [role=\"button\"], a'))",
 			);
@@ -711,6 +711,7 @@ describe("downloadChatgptConversationFilesWithClient", () => {
 		const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-chatgpt-native-download-"));
 		const destPath = path.join(tempDir, "auracall-m5-source-20260802T185953Z.txt");
 		const sourceBytes = Buffer.from("exact uploaded source bytes\n", "utf8");
+		const scrapeTelemetry = createBrowserScrapeTelemetryRecorder();
 		let browserDownloadDir: string | null = null;
 		const send = vi.fn(async (method: string, params?: Record<string, unknown>) => {
 			if (method === "Browser.setDownloadBehavior" && typeof params?.downloadPath === "string") {
@@ -733,6 +734,9 @@ describe("downloadChatgptConversationFilesWithClient", () => {
 							reason: "json_missing_download_url",
 							tileMatched: true,
 							viewerDownloadClicked: true,
+							previewIdentityMatched: true,
+							previewSurfaceCount: 1,
+							previewDownloadControlCount: 1,
 							fallbackAttempted: true,
 							status: 403,
 							endpointKind: "files-download",
@@ -764,7 +768,7 @@ describe("downloadChatgptConversationFilesWithClient", () => {
 					[{ file, destPath }],
 					null,
 					undefined,
-					{ preserveActiveTab: true },
+					{ scrapeTelemetry, preserveActiveTab: true },
 				),
 			).resolves.toEqual([{ fileId: file.id, status: "materialized" }]);
 			expect(send).toHaveBeenCalledWith(
@@ -772,6 +776,10 @@ describe("downloadChatgptConversationFilesWithClient", () => {
 				expect.objectContaining({ behavior: "allow", eventsEnabled: true }),
 			);
 			expect(await fs.readFile(destPath)).toEqual(sourceBytes);
+			expect(scrapeTelemetry.providerActions).toMatchObject({
+				"chatgpt.downloadConversationFile.preview.exactFlyout": 1,
+				"chatgpt.downloadConversationFile.viewerDownload": 1,
+			});
 		} finally {
 			await fs.rm(tempDir, { recursive: true, force: true });
 		}
@@ -847,7 +855,8 @@ describe("downloadChatgptConversationFilesWithClient", () => {
 				);
 				expect(expression).toContain("capturedNavigationUrl = href");
 				expect(expression).toContain("const clickViewerDownload = () =>");
-				expect(expression).toContain("/^Download$/i.test(entry.label)");
+				expect(expression).toContain('section[data-testid="screen-threadFlyOut"][aria-label]');
+				expect(expression).toContain("previewSurface.querySelectorAll");
 				expect(expression).toContain("viewerDownloadClicked = clickViewerDownload()");
 				expect(expression).toContain("const response = await fetchWithTimeout(");
 				expect(expression).toContain("recordCaptureCandidate(candidate, 'anchor')");

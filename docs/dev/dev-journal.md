@@ -42868,3 +42868,25 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Stopped without another retry, reverted the unproven hypothesis, rebuilt and
   reinstalled pushed source, and restored exact adapter hash parity
   `85d2ebe6...`. API PID `95673` is active with zero restarts. M5 remains open.
+
+## 2026-08-03 | Exact filename-labelled source flyout repaired provider-free
+
+- Retained-browser inspection clicked only the exact uploaded-source tile. The
+  resulting preview is a visible `section[data-testid="screen-threadFlyOut"]`
+  with the exact filename in `aria-label`, one upper-right exact Download
+  control, and no dialog.
+- A bounded manual click downloaded 505 bytes at SHA-256 `5d17e7ec...`; the
+  bytes match the canonical fixture. The earlier 403 therefore remains a route
+  failure, not source unavailability.
+- TDD first replaced the old node-novelty expectation and reproduced the defect.
+  The adapter now scopes to exactly one filename-labelled flyout and exactly one
+  Download button inside it. It records preview identity and surface/control
+  counts for later receipts and fails closed on mismatch or ambiguity.
+- Focused red became green. Adapter/history/MCP tests pass 202/202; typecheck,
+  production build, and diff hygiene pass. The full provider-free suite passed
+  2,705 tests with one unrelated 27 ms versus 30 ms rate-limit timing failure;
+  its exact focused rerun passed. Scoped Biome continues to expose broad baseline
+  formatting drift and the retained CDP `Runtime` naming warning.
+- No install, prompt submission, upload, materialization job, retry, scheduler
+  resume, or completion resume occurred. The installed runtime remains the
+  pushed pre-repair build under API PID `95673`; M5 remains open.

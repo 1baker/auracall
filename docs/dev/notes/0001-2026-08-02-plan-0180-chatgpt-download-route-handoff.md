@@ -508,6 +508,34 @@ Re-read these values; they are a snapshot, not permission to mutate.
   provider-free branch-level preview/download telemetry; new live work requires
   new explicit authority.
 
+## 2026-08-03 Exact Flyout DOM Proof And Provider-Free Repair Addendum
+
+- Authenticated inspection used the retained `default` ChatGPT browser and
+  clicked only the exact user-turn source tile in conversation
+  `6a6ffa3e-37f8-83ea-9a0f-833adb3b78c9`. No prompt or materialization job was
+  created.
+- The source preview is one visible
+  `section[data-testid="screen-threadFlyOut"]` with exact aria-label
+  `auracall-m5-source-20260802T185953Z(2).txt`. It contains one upper-right
+  `button[aria-label="Download"]`; the page exposes no preview dialog.
+- The bounded manual download produced 505 bytes at SHA-256 `5d17e7ec...` and
+  is byte-identical to
+  `docs/dev/fixtures/auracall-m5-source-20260802T185953Z.txt`.
+- The prior retry hypothesis was structurally wrong because it required a new
+  global Download node. The provider-free repair instead binds the exact
+  selected filename to one visible flyout and clicks only its sole scoped exact
+  Download control. Exact identity plus surface/control counts are retained in
+  diagnostics/telemetry.
+- Focused TDD failed before and passed after repair. Adapter/history/MCP tests
+  pass 202/202; typecheck, production build, and diff hygiene pass. The full
+  provider-free suite passed 2,705 tests with one unrelated 27 ms versus 30 ms
+  rate-limit timing failure; its exact focused rerun passed. Scoped Biome retains
+  baseline format drift and the known CDP `Runtime` naming warning.
+- The repair is not installed. API PID `95673` remains the pushed pre-repair
+  runtime, scheduler and five completions remain paused, and active
+  `chatgpt/default` jobs remain zero. Installation plus one fresh two-asset proof
+  is a separate explicit gate; never retry the two consumed jobs.
+
 ## Suggested Skills
 
 - `agent-browser`: required for retained authenticated browser/CDP inspection

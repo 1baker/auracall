@@ -10179,41 +10179,30 @@ async function downloadChatgptConversationFileWithClient(
 	            const style = node.ownerDocument.defaultView?.getComputedStyle(node);
 	            return !style || (style.display !== 'none' && style.visibility !== 'hidden');
 	          };
-	          const labelFor = (node) => normalize(
-	            node.getAttribute('aria-label') ||
-	            node.getAttribute('title') ||
-	            node.textContent ||
-	            '',
-	          );
-	          const visiblePreviewDownloadControls = () => Array.from(
-	            document.querySelectorAll('button[aria-label="Download"]')
-	          ).filter((node) => isVisible(node));
-	          const previewDownloadControlsBeforeTileClick = new Set(
-	            visiblePreviewDownloadControls()
-	          );
-	          const clickNewPreviewDownload = () => {
-	            const newPreviewDownloadControls = visiblePreviewDownloadControls()
-	              .filter((node) => !previewDownloadControlsBeforeTileClick.has(node));
-	            if (newPreviewDownloadControls.length === 0) return null;
-	            if (newPreviewDownloadControls.length !== 1) return false;
-	            const download = newPreviewDownloadControls[0];
+	          const previewName = normalize(match.tile.getAttribute('aria-label')) ||
+	            normalize(match.metadata?.fileName || targetName || '');
+	          let previewSurfaceCount = 0;
+	          let previewDownloadControlCount = 0;
+	          let previewIdentityMatched = false;
+	          const clickViewerDownload = () => {
+	            if (!previewName) return false;
+	            const previewSurfaces = Array.from(
+	              document.querySelectorAll('section[data-testid="screen-threadFlyOut"][aria-label]')
+	            ).filter((node) =>
+	              isVisible(node) && normalize(node.getAttribute('aria-label')) === previewName
+	            );
+	            previewSurfaceCount = previewSurfaces.length;
+	            if (previewSurfaces.length !== 1) return false;
+	            previewIdentityMatched = true;
+	            const previewSurface = previewSurfaces[0];
+	            const controls = Array.from(
+	              previewSurface.querySelectorAll('button[aria-label="Download"]')
+	            ).filter((node) => isVisible(node));
+	            previewDownloadControlCount = controls.length;
+	            if (controls.length !== 1) return false;
+	            const download = controls[0];
 	            if (!download || typeof download.click !== 'function') return false;
 	            download.click();
-	            return true;
-	          };
-	          const clickViewerDownload = () => {
-	            const newPreviewDownloadClicked = clickNewPreviewDownload();
-	            if (newPreviewDownloadClicked !== null) return newPreviewDownloadClicked;
-	            const viewerSurfaces = Array.from(document.querySelectorAll('[role="dialog"]'))
-	              .filter((node) => isVisible(node));
-	            if (viewerSurfaces.length !== 1) return false;
-	            const viewerSurface = viewerSurfaces[0];
-	            const controls = Array.from(viewerSurface.querySelectorAll('button, [role="button"], a'))
-	              .filter((node) => node !== target && isVisible(node))
-	              .map((node) => ({ node, label: labelFor(node) }));
-	            const download = controls.find((entry) => /^Download$/i.test(entry.label));
-	            if (!download?.node || typeof download.node.click !== 'function') return false;
-	            download.node.click();
 	            return true;
 	          };
 	          let captured = null;
@@ -10350,6 +10339,9 @@ async function downloadChatgptConversationFileWithClient(
               providerError: captureFailure?.providerError || null,
               responseShape: captureFailure?.responseShape || null,
               viewerDownloadClicked,
+              previewIdentityMatched,
+              previewSurfaceCount,
+              previewDownloadControlCount,
             };
           }
           if (!captured.ok) {
@@ -10375,7 +10367,14 @@ async function downloadChatgptConversationFileWithClient(
               contentType: captured.contentType || null,
             };
           }
-	          return { ok: true, ...captured, viewerDownloadClicked };
+	          return {
+	            ok: true,
+	            ...captured,
+	            viewerDownloadClicked,
+	            previewIdentityMatched,
+	            previewSurfaceCount,
+	            previewDownloadControlCount,
+	          };
         })()`,
 			awaitPromise: true,
 			returnByValue: true,
@@ -10406,6 +10405,9 @@ async function downloadChatgptConversationFileWithClient(
 						mimeType: file?.mimeType ?? null,
 						captureTransport: "browser-download",
 						viewerDownloadClicked: true,
+						previewIdentityMatched: value?.previewIdentityMatched === true,
+						previewSurfaceCount: value?.previewSurfaceCount,
+						previewDownloadControlCount: value?.previewDownloadControlCount,
 					};
 				}
 			}
@@ -10426,6 +10428,15 @@ async function downloadChatgptConversationFileWithClient(
 					: {}),
 				...(isRecord(value?.providerError) ? { providerError: value.providerError } : {}),
 				...(isRecord(value?.responseShape) ? { responseShape: value.responseShape } : {}),
+				...(typeof value?.previewIdentityMatched === "boolean"
+					? { previewIdentityMatched: value.previewIdentityMatched }
+					: {}),
+				...(typeof value?.previewSurfaceCount === "number"
+					? { previewSurfaceCount: value.previewSurfaceCount }
+					: {}),
+				...(typeof value?.previewDownloadControlCount === "number"
+					? { previewDownloadControlCount: value.previewDownloadControlCount }
+					: {}),
 			};
 			const error = new Error(
 				`ChatGPT conversation file fetch failed: ${JSON.stringify(diagnostics)}`,
@@ -10455,6 +10466,12 @@ async function downloadChatgptConversationFileWithClient(
 		}
 		if (value.viewerDownloadClicked === true) {
 			recordBrowserScrapeProviderAction(options, "chatgpt.downloadConversationFile.viewerDownload");
+		}
+		if (value.previewIdentityMatched === true) {
+			recordBrowserScrapeProviderAction(
+				options,
+				"chatgpt.downloadConversationFile.preview.exactFlyout",
+			);
 		}
 		return value;
 	};

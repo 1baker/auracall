@@ -126,8 +126,15 @@ Lane: P01
   `hmj_dfb704142a694f5b9f0a10db96d457ed`; it reproduced the same truthful 1/1
   failure and emitted no source native-download success. The hypothesis was
   reverted and the pushed runtime restored byte-identically. M5 and every
-  re-enablement gate remain open; the next work is provider-free branch-level
-  telemetry, not another live retry.
+  re-enablement gate remain open. Retained-browser inspection has now proven the
+  source preview is an exact filename-labelled `screen-threadFlyOut`, not a
+  dialog, and that its sole upper-right Download control can be reused rather
+  than newly mounted. A bounded manual click returned the exact 505-byte
+  fixture. The provider-free adapter now scopes only to that exact flyout,
+  requires one Download control, and records identity plus surface/control
+  counts. The repair is validated but not installed; installation and one fresh
+  two-asset proof remain separate explicit gates, not a retry of either consumed
+  job.
 
 - Completed provider-session authority unification:
   [docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md](docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md)

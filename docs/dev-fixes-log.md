@@ -1,3 +1,13 @@
+- 2026-08-03: A ChatGPT source preview Download control cannot be identified by
+  global DOM-node novelty or a dialog role. The current UI reuses preview chrome
+  and exposes the identity boundary as one visible
+  `section[data-testid="screen-threadFlyOut"][aria-label]` whose label exactly
+  matches the selected source filename. After activating the exact tile, bind
+  only to that flyout and require exactly one scoped
+  `button[aria-label="Download"]`; fail closed on zero, mismatch, or ambiguity.
+  Record the matched identity and surface/control counts so native-download
+  misses remain diagnosable without another provider attempt.
+
 - 2026-08-02: Exact catalog selection must apply to artifacts as well as files
   before `maxItems`. Resolving an artifact catalog item to its conversation and
   setting `assetKinds: ["artifacts"]` is not exact selection; it can spend a

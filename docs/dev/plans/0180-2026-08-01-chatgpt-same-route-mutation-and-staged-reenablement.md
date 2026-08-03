@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 26
+Plan version: 27
 
 ## Stable Objective
 
@@ -33,6 +33,16 @@ reenablement.
 - The packet is consumed without retry. M5 remains open because AuraCall did
   not materialize both selected assets, and every scheduler/continuous-live-
   follow gate remains closed.
+- Direct authenticated DOM inspection of the retained fresh conversation proved
+  the source preview is a visible
+  `section[data-testid="screen-threadFlyOut"]` whose `aria-label` exactly equals
+  the selected filename. It is not a dialog, and its sole upper-right
+  `button[aria-label="Download"]` can be the same DOM node seen before tile
+  activation. A bounded manual click downloaded 505 bytes at SHA-256
+  `5d17e7ec...`, byte-identical to the fixture. The provider-free adapter repair
+  now binds the click to that exact filename-labelled flyout, requires exactly
+  one scoped Download control, and records flyout/control counts. It is not yet
+  installed and no new materialization attempt is authorized.
 - Provider-free diagnosis of that source miss is green. The source path clicked
   the preview control but accepted only intercepted fetch/anchor bytes; unlike
   artifact materialization, it never configured or inspected Chrome's native
@@ -1128,3 +1138,37 @@ continuous live-follow reenablement remain separately gated afterward.
 - `next_gate`: add provider-free telemetry that distinguishes preview activation,
   control inventory/reuse, browser-download observation, and filename mismatch
   before requesting any new live authority. Do not retry from the 403 alone.
+
+## Checkpoint 28
+
+- `plan_version`: 27
+- `state_transition`: retained-browser DOM inspection -> exact source-preview
+  identity proof -> provider-free filename-scoped flyout repair; M5 remains open.
+- `live_dom_receipt`: clicking only the exact user-turn source tile in fresh
+  conversation `6a6ffa3e-37f8-83ea-9a0f-833adb3b78c9` opened one visible
+  `section[data-testid="screen-threadFlyOut"]` labelled
+  `auracall-m5-source-20260802T185953Z(2).txt`. It contained exactly one visible
+  upper-right `button[aria-label="Download"]` and no dialog. The bounded manual
+  download produced 505 bytes at SHA-256 `5d17e7ec...`, byte-identical to the
+  canonical fixture.
+- `root_cause`: the reverted hypothesis keyed on global control novelty, but the
+  current preview shell can reuse its Download node. The stable identity boundary
+  is the exact filename-labelled flyout after the exact source tile is activated.
+- `repair`: source materialization now finds exactly one visible matching flyout,
+  requires exactly one scoped exact Download button, and otherwise fails closed.
+  Failure diagnostics and provider-action telemetry record exact-flyout identity,
+  surface count, and control count.
+- `validation`: the focused regression failed against the old heuristic and
+  passed after repair. Adapter/history/MCP tests pass 202/202; typecheck and
+  production build pass. The full provider-free suite passed 2,705 tests and
+  reported one unrelated 27 ms versus 30 ms rate-limit timing failure; its exact
+  focused rerun passed. Touched Biome still reports repository-baseline formatting
+  drift and the retained CDP `Runtime` naming warning, while diff hygiene passes.
+- `authority_and_posture`: no prompt, upload, materialization job, install,
+  scheduler resume, completion resume, or continuous live-follow action ran.
+  The installed runtime remains the pushed pre-repair build under API PID
+  `95673`, with scheduler and five completions paused and zero active
+  `chatgpt/default` materialization jobs.
+- `next_gate`: commit and push this provider-free repair. Installation and one
+  fresh two-asset proof require separate explicit authorization; do not reuse or
+  retry either consumed job.
