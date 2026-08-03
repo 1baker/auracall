@@ -1,5 +1,27 @@
 # RUNBOOK
 
+## Turn 401 | 2026-08-03
+
+- Installed pushed exact-flyout repair `ec81ed0d` with source/runtime adapter
+  SHA-256 parity `138cd460...`. API PID `16830` is active/running with zero
+  restarts; the account-mirror scheduler remains paused.
+- Submitted one fresh ChatGPT turn using exactly the sole 505-byte fixture and
+  one DOCX-generation prompt. Conversation
+  `6a70a15a-b390-83ea-912b-bf1af667e1d3` completed once; no prompt retry ran.
+- Sole job `hmj_91cf0b1e4b2744f78324a51b11f0da11` matched all four canonical
+  account dimensions and ran once with `maxItems=2`. It materialized the
+  generated DOCX through the artifact preview, then failed the source upload:
+  exact tile/flyout identity matched, scoped Download control count was zero,
+  and the bounded direct fallback returned HTTP 403 JSON `Forbidden`.
+- The DOCX is 38,752 bytes at SHA-256 `bb83234f...`; OOXML integrity and every
+  requested content assertion pass. No source file exists in the fresh
+  conversation cache. Final job/result is truthfully `failed`, metrics 1
+  materialized / 1 failed, attempt 1.
+- Hard stop: do not retry this job or create a replacement from this packet.
+  The retained browser exited before a post-failure read-only DOM snapshot.
+  Keep scheduler/completion/continuous-live-follow gates paused; diagnose the
+  zero-control observation provider-free before requesting new live authority.
+
 ## Turn 400 | 2026-08-03
 
 - Inspected the retained authenticated ChatGPT page through the managed

@@ -132,9 +132,15 @@ Lane: P01
   than newly mounted. A bounded manual click returned the exact 505-byte
   fixture. The provider-free adapter now scopes only to that exact flyout,
   requires one Download control, and records identity plus surface/control
-  counts. The repair is validated but not installed; installation and one fresh
-  two-asset proof remain separate explicit gates, not a retry of either consumed
-  job.
+  counts. Commit `ec81ed0d` was then installed byte-identically and exercised by
+  exactly one fresh two-asset packet. Conversation
+  `6a70a15a-b390-83ea-912b-bf1af667e1d3` contained the sole upload and requested
+  DOCX; job `hmj_91cf0b1e4b2744f78324a51b11f0da11` matched all four account
+  dimensions and materialized the valid 38,752-byte DOCX, but the exact source
+  flyout exposed zero scoped Download controls and its fallback returned 403
+  `Forbidden`. The job failed truthfully at metrics 1/1 without retry. M5 and
+  every re-enablement gate remain open pending provider-free diagnosis; any new
+  live proof requires separate explicit authority.
 
 - Completed provider-session authority unification:
   [docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md](docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md)

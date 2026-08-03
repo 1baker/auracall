@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 27
+Plan version: 28
 
 ## Stable Objective
 
@@ -18,6 +18,23 @@ reenablement.
   cooldowns.
 - The account-mirror scheduler and five unrelated completions remain paused;
   no queued, running, or idle-waiting work remains.
+- Commit `ec81ed0d` was installed with exact adapter source/runtime parity under
+  API PID `16830` with zero service restarts. The single newly authorized live
+  packet created fresh ChatGPT conversation
+  `6a70a15a-b390-83ea-912b-bf1af667e1d3` from exactly one 505-byte fixture and
+  one prompt, then ran sole job `hmj_91cf0b1e4b2744f78324a51b11f0da11`
+  once with a two-item ceiling and exact four-dimension account match.
+- The generated DOCX materialized through the artifact preview at 38,752 bytes,
+  SHA-256 `bb83234f...`; OOXML integrity, exact control ID, exactly-one-source
+  statement, and all three source-list items pass. The exact uploaded TXT tile
+  and filename-labelled flyout matched, but that flyout exposed zero scoped
+  Download controls at observation time. The bounded fallback returned HTTP 403
+  JSON `Forbidden` / `json_missing_download_url`; job/result therefore ended
+  truthfully `failed`, metrics 1 materialized / 1 failed, attempt 1.
+- The retained browser exited after terminal settlement, so a post-failure
+  read-only DOM snapshot could not run without launching another browser. No
+  retry or second job ran. This packet is consumed; M5 and every scheduler/
+  continuous-live-follow re-enablement gate remain open.
 - The source-preview and aggregate-truth repairs are pushed and installed
   byte-identically. The single authorized fresh proof passed the canonical
   ChatGPT account check, uploaded exactly one 505-byte fixture, and produced
@@ -41,8 +58,10 @@ reenablement.
   activation. A bounded manual click downloaded 505 bytes at SHA-256
   `5d17e7ec...`, byte-identical to the fixture. The provider-free adapter repair
   now binds the click to that exact filename-labelled flyout, requires exactly
-  one scoped Download control, and records flyout/control counts. It is not yet
-  installed and no new materialization attempt is authorized.
+  one scoped Download control, and records flyout/control counts. It was
+  subsequently installed and exercised by the single packet above; the live
+  source path still failed closed because the matching flyout contained zero
+  scoped controls at observation time.
 - Provider-free diagnosis of that source miss is green. The source path clicked
   the preview control but accepted only intercepted fetch/anchor bytes; unlike
   artifact materialization, it never configured or inspected Chrome's native
@@ -1172,3 +1191,37 @@ continuous live-follow reenablement remain separately gated afterward.
 - `next_gate`: commit and push this provider-free repair. Installation and one
   fresh two-asset proof require separate explicit authorization; do not reuse or
   retry either consumed job.
+
+## Checkpoint 29
+
+- `plan_version`: 28
+- `state_transition`: installed exact-flyout repair -> fresh two-asset live
+  proof -> truthful partial-transfer terminal failure; M5 remains open.
+- `install_receipt`: pushed commit `ec81ed0d` was installed byte-identically;
+  source and installed ChatGPT adapter SHA-256 are both
+  `138cd4601774f5bffb5560101603356fc980d1180bd99f718aa6fdbbda9f4e63`.
+  API PID `16830` is active/running with zero restarts.
+- `turn_receipt`: session `m5-chatgpt-exact-flyout-proof` submitted exactly one
+  prompt with exactly the 505-byte canonical fixture. ChatGPT completed fresh
+  conversation `6a70a15a-b390-83ea-912b-bf1af667e1d3` and returned the
+  requested DOCX artifact. No prompt retry or second submission ran.
+- `job_receipt`: sole job `hmj_91cf0b1e4b2744f78324a51b11f0da11`
+  matched email, plan, structure, and account-level proof, ran once, and ended
+  `failed` with metrics 1 materialized / 1 failed. The generated DOCX succeeded
+  through `chatgpt.clickArtifactViewerDownload`; the source entry failed
+  non-retryably after exact tile/flyout match, zero scoped Download controls,
+  and HTTP 403 JSON `Forbidden` from `files-download`.
+- `content_receipt`: cached
+  `auracall-m5-20260802T185953Z(3).docx` is 38,752 bytes at SHA-256
+  `bb83234f9241f89bd8cc1ab3cf041286a9b5a1b6b41e4b79b8eb44808b9345f4`.
+  `unzip -t` passes, and document XML contains the exact control ID, exact
+  one-upload provenance statement, and all three fixture list items. No source
+  bytes were materialized into this conversation cache.
+- `terminal_boundary`: the packet is consumed. The browser retained by the
+  prompt turn was no longer listening on port 45065 after job settlement, so
+  post-failure DOM inspection would require a new browser launch and did not
+  run. No retry, second job, scheduler resume, completion resume, or continuous
+  live-follow action is authorized.
+- `next_gate`: diagnose provider-free why a filename-matched flyout can report
+  zero scoped controls at transfer time. Any new live proof requires separate
+  explicit authority and must not reuse this consumed job.

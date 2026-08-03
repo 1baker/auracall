@@ -536,6 +536,28 @@ Re-read these values; they are a snapshot, not permission to mutate.
   `chatgpt/default` jobs remain zero. Installation plus one fresh two-asset proof
   is a separate explicit gate; never retry the two consumed jobs.
 
+## 2026-08-03 Installed Exact-Flyout Proof Terminal Addendum
+
+- Operator authorization installed pushed commit `ec81ed0d` byte-identically;
+  source and installed adapter SHA-256 are `138cd460...`. API PID `16830` is
+  active/running with zero restarts and the scheduler pause remains intact.
+- Session `m5-chatgpt-exact-flyout-proof` submitted exactly one prompt with the
+  sole 505-byte fixture. ChatGPT completed fresh conversation
+  `6a70a15a-b390-83ea-912b-bf1af667e1d3` and returned the requested DOCX.
+- Sole job `hmj_91cf0b1e4b2744f78324a51b11f0da11` ran once with a two-item
+  ceiling and exact four-dimension account match. The generated DOCX
+  materialized through its preview at 38,752 bytes and SHA-256 `bb83234f...`;
+  OOXML and all requested-content checks pass.
+- The exact source tile and filename-labelled flyout matched, but the flyout
+  contained zero scoped Download controls at observation time. The direct
+  fallback returned HTTP 403 JSON `Forbidden` / `json_missing_download_url`.
+  No source bytes were cached, so job/result truthfully ended `failed`, metrics
+  1 materialized / 1 failed.
+- The retained browser exited before a post-failure read-only DOM snapshot.
+  This packet is consumed: do not retry the job, create a replacement, resume
+  scheduler/completions, or infer continuous-live-follow authority. M5 remains
+  open pending provider-free diagnosis of the zero-control observation.
+
 ## Suggested Skills
 
 - `agent-browser`: required for retained authenticated browser/CDP inspection

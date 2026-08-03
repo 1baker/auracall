@@ -20189,3 +20189,18 @@ browser-stage lifecycle observability, not transcript truncation.
   only when tied to a specific receipt; repeated terminal evidence invalidates
   the hypothesis. Revert the unproven runtime change and stop rather than
   stacking retries or weakening asset identity.
+
+## 2026-08-03 | Exact preview identity does not guarantee control availability
+
+- Live receipt: the exact uploaded-file tile activated one visible
+  filename-labelled `screen-threadFlyOut`, yet the installed transfer observed
+  zero scoped `button[aria-label="Download"]` controls and correctly failed
+  closed before the direct route returned 403 JSON `Forbidden`.
+- Durable rule: treat preview identity and actionable control inventory as two
+  separate post-activation conditions. A matching flyout cannot authorize an
+  unscoped click, cross-asset substitution, or success when its exact control is
+  absent at the observation point.
+- Evidence rule: preserve both counts and terminal fallback evidence. A prior
+  manual download proves the source is provider-available, while this separate
+  automated receipt proves only that the control was unavailable to the
+  materializer at that moment; neither receipt rewrites the other.

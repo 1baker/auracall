@@ -42890,3 +42890,27 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - No install, prompt submission, upload, materialization job, retry, scheduler
   resume, or completion resume occurred. The installed runtime remains the
   pushed pre-repair build under API PID `95673`; M5 remains open.
+
+## 2026-08-03 | Installed exact-flyout proof remained a truthful 1/1 partial
+
+- Installed pushed commit `ec81ed0d` and verified exact adapter hash parity at
+  `138cd460...` under active API PID `16830` with zero restarts. Scheduler and
+  completion gates were not resumed.
+- Fresh session `m5-chatgpt-exact-flyout-proof` used exactly one 505-byte source
+  fixture and one prompt. ChatGPT completed conversation
+  `6a70a15a-b390-83ea-912b-bf1af667e1d3` with the requested DOCX; there was no
+  prompt retry or second submission.
+- Sole materialization job `hmj_91cf0b1e4b2744f78324a51b11f0da11`
+  matched all four provider-account dimensions and ran once. The artifact path
+  materialized `auracall-m5-20260802T185953Z(3).docx`; its 38,752-byte OOXML at
+  SHA-256 `bb83234f...` is structurally valid and contains the exact control,
+  provenance statement, and three list items.
+- The source path matched the exact tile and one exact filename-labelled
+  flyout, but observed zero scoped Download controls. It then failed the
+  bounded `files-download` fallback with HTTP 403 JSON `Forbidden` /
+  `json_missing_download_url`. The job/result correctly ended `failed`, metrics
+  1 materialized / 1 failed, and no source file was cached.
+- The retained browser was no longer listening on port 45065 after settlement,
+  so a post-failure read-only DOM inspection would have required a relaunch and
+  did not run. No job retry or replacement ran. M5 and all scheduler/
+  completion/continuous-live-follow gates remain open.
