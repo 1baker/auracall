@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 29
+Plan version: 30
 
 ## Stable Objective
 
@@ -13,6 +13,34 @@ reenablement.
 
 ## Current State
 
+- Diagnostic commit `69f11a35` is pushed and installed byte-identically. The
+  source and installed ChatGPT adapter SHA-256 are both
+  `70004b92fa0bf2a5687de442b7cf70ab456437f2d15c1deb29cd1d58a131e08e`;
+  API PID `24738` is active/running with zero restarts.
+- The sole newly authorized fresh proof submitted exactly one prompt with the
+  sole 505-byte fixture in ChatGPT conversation
+  `6a711231-211c-83ea-869c-2eb6dcd9bf50`, then created sole job
+  `hmj_2aa3edc177a6425c8d89e4539ebf3f76` once with a two-item ceiling and
+  exact four-dimension provider-session match. No prompt retry, replacement
+  job, scheduler resume, or completion resume ran.
+- The generated DOCX materialized through its preview at 37,202 bytes and
+  SHA-256 `e9a36305e6d8c349968ad0dcb9186e6680b452a5f1755cdaf938339e351294a1`.
+  OOXML integrity, one-page visual inspection, the exact control ID, the
+  exactly-one-upload provenance statement, and all three verbatim source-list
+  items pass. The uploaded TXT did not materialize, so the job ended truthfully
+  `failed`, metrics 1 materialized / 1 failed, on attempt 1.
+- The source receipt matched the exact tile and exact filename-labelled flyout,
+  with `previewIdentityPresentBeforeTileClick=false`, one preview surface,
+  587,217 observations, and zero scoped, global, total, or visible Download
+  controls. Its bounded direct fallback returned HTTP 403 JSON `Forbidden` /
+  `json_missing_download_url`.
+- CodeGraph confirms the polling defect behind that lifecycle evidence:
+  `waitForChatgptCaptureProgress` races `Promise.allSettled(promises)` against
+  a timer. With an empty capture-promise list, the already-settled branch wins
+  immediately and cancels the timer, allowing the preview loop to spin without
+  a browser-rendering/macrotask yield. This explains the extreme observation
+  count and is the next provider-free red/green repair target; it is not
+  authority for another live attempt.
 - Provider-free lifecycle diagnosis disproved a universal selector/topology
   defect: recovered manual DOM evidence shows the visible exact Download button
   as a descendant of the exact filename-labelled flyout, and the production
@@ -1272,3 +1300,47 @@ continuous live-follow reenablement remain separately gated afterward.
 - `next_gate`: commit and push the provider-free diagnostic repair. Installing
   it and authorizing exactly one new fresh proof are separate gates; do not
   retry or replace consumed job `hmj_91cf0b1e4b2744f78324a51b11f0da11`.
+
+## Checkpoint 31
+
+- `plan_version`: 30
+- `state_transition`: lifecycle diagnostics installed -> sole fresh two-asset
+  proof -> renderer-yield defect isolated; M5 remains open.
+- `authorization`: the operator authorized installation of pushed commit
+  `69f11a35` and exactly one fresh, no-retry ChatGPT two-asset proof. Scheduler,
+  completions, retry/replacement jobs, and continuous live follow remained out
+  of scope.
+- `install_receipt`: source and installed adapter SHA-256 are both
+  `70004b92fa0bf2a5687de442b7cf70ab456437f2d15c1deb29cd1d58a131e08e`.
+  API PID `24738` is active/running with zero restarts.
+- `turn_receipt`: session `m5-chatgpt-preview-lifecycle-proof` uploaded exactly
+  one 505-byte fixture and submitted exactly one prompt. ChatGPT completed
+  conversation `6a711231-211c-83ea-869c-2eb6dcd9bf50` with the requested DOCX.
+  Requested model metadata remained `gpt-5.2` under current-model strategy,
+  while the visible picker showed the current Work/GPT-5.6 Sol surface; no
+  resubmission or model-switch mutation ran.
+- `job_receipt`: sole job `hmj_2aa3edc177a6425c8d89e4539ebf3f76`
+  matched all four provider-session dimensions and ended `failed`, metrics 1
+  materialized / 1 failed, attempt 1. No retry or replacement job ran.
+- `artifact_receipt`: cached
+  `auracall-m5-20260802T185953Z(4).docx` is 37,202 bytes at SHA-256
+  `e9a36305e6d8c349968ad0dcb9186e6680b452a5f1755cdaf938339e351294a1`.
+  `unzip -t`, rendered one-page visual review, and all required content checks
+  pass.
+- `source_receipt`: exact tile and flyout identity matched after activation;
+  pre-click identity was false. Across 587,217 observations, scoped/global and
+  total/visible Download-control counts all remained zero. The direct fallback
+  returned 403 JSON `Forbidden` / `json_missing_download_url`, and no source
+  bytes were cached.
+- `root_cause`: CodeGraph shows `waitForChatgptCaptureProgress` races an
+  all-settled capture list against a timer. For an empty list, the all-settled
+  branch resolves immediately and the timer is cleared, so the caller can
+  tight-loop without a real macrotask/browser-rendering yield.
+- `terminal_posture`: scheduler paused, five completions paused,
+  `activeCompletionId=null`, queued/running jobs 0/0, API PID `24738` active
+  with zero restarts. The retained prompt browser remains outside cleanup
+  authority under `--browser-keep-browser`.
+- `next_gate`: add a provider-free red regression for the empty-capture-list
+  path, repair it to retain a real bounded timer/macrotask yield, and validate
+  without provider work. Do not run another live proof until that repair is
+  committed, installed, and separately authorized.

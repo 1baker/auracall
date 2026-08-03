@@ -15532,3 +15532,24 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   scheduler resume, or completion resume ran. API PID `16830` remains active
   with zero restarts; scheduler is paused, active completion is null, and
   queued/running jobs are zero.
+
+## Turn 343 | 2026-08-03
+
+- Installed pushed lifecycle-diagnostic commit `69f11a35` with exact adapter
+  source/runtime SHA-256 `70004b92...` under API PID `24738`, zero restarts.
+- Ran exactly one fresh ChatGPT turn with one 505-byte upload and one prompt.
+  Conversation `6a711231-211c-83ea-869c-2eb6dcd9bf50` returned the requested
+  DOCX; no prompt retry or second submission ran.
+- Sole job `hmj_2aa3edc177a6425c8d89e4539ebf3f76` matched all four account dimensions
+  and ran once. The 37,202-byte DOCX at SHA-256 `e9a36305...` passed OOXML,
+  rendered visual, control-ID, provenance, and verbatim-list validation.
+- The exact source tile/flyout matched post-click, but 587,217 observations saw
+  zero scoped/global total/visible Download controls. The 403 direct fallback
+  left the job truthfully `failed`, metrics 1 materialized / 1 failed.
+- CodeGraph isolated the cause: empty capture promises make
+  `Promise.allSettled([])` win immediately over the polling timer and clear it,
+  allowing a tight loop that starves the preview renderer. No retry or
+  replacement ran.
+- Stop: scheduler and five completions remain paused, active completion is
+  null, queued/running jobs are 0/0. Repair and validate the real-yield boundary
+  provider-free before seeking another live proof.

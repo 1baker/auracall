@@ -592,6 +592,30 @@ Re-read these values; they are a snapshot, not permission to mutate.
   jobs. Installation or another fresh proof requires separate explicit
   authorization; never retry the consumed job.
 
+## 2026-08-03 Installed Lifecycle Proof Terminal Addendum
+
+- Pushed diagnostic commit `69f11a35` was installed byte-identically; source
+  and installed adapter SHA-256 are
+  `70004b92fa0bf2a5687de442b7cf70ab456437f2d15c1deb29cd1d58a131e08e`.
+  API PID `24738` is active/running with zero restarts.
+- The sole fresh session `m5-chatgpt-preview-lifecycle-proof` submitted one
+  prompt with one 505-byte upload and completed conversation
+  `6a711231-211c-83ea-869c-2eb6dcd9bf50`. No prompt retry or resubmission ran.
+- Sole job `hmj_2aa3edc177a6425c8d89e4539ebf3f76` ran once with a two-item ceiling and
+  exact four-dimension account match. It materialized and fully validated the
+  37,202-byte DOCX at SHA-256 `e9a36305...`, but failed the source transfer;
+  durable status is `failed`, metrics 1 materialized / 1 failed.
+- The source path matched the exact post-click flyout and proved it did not
+  pre-exist tile activation. It then emitted 587,217 observations with every
+  scoped/global total/visible Download-control count at zero before the direct
+  403 `Forbidden` fallback.
+- CodeGraph isolated the provider-free defect: when capture promises are empty,
+  `Promise.allSettled([])` resolves immediately, wins the polling race, and
+  clears the timer. The loop therefore lacks a real renderer/macrotask yield.
+- This packet is consumed. Do not retry, replace the job, resume scheduler or
+  completions, or run another provider turn. First add a provider-free red
+  regression, repair the empty-list real-yield boundary, and validate it.
+
 ## Required Closeout
 
 Update Plan 0180, `ROADMAP.md`, `RUNBOOK.md`, `docs/dev/dev-journal.md`, and

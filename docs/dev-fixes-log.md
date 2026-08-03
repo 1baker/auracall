@@ -20216,3 +20216,18 @@ browser-stage lifecycle observability, not transcript truncation.
 - Diagnostics must not broaden authority. Continue to act only when exactly one
   visible filename-matched preview contains exactly one visible exact Download
   control; all ambiguous branches remain fail-closed.
+
+## 2026-08-03 | Empty promise polling must still yield to the renderer
+
+- Symptom: a bounded 20-second preview loop recorded 587,217 observations of
+  the exact post-click flyout but never saw a Download control anywhere in the
+  page, despite prior manual proof that the control mounts and downloads the
+  exact source.
+- Root cause: racing `Promise.allSettled(capturePromises)` against a timer does
+  not impose a delay when the capture list is empty. The all-settled branch wins
+  immediately, the timer is cleared, and repeated CDP evaluation can starve the
+  browser's rendering/macrotask work.
+- Durable rule: every bounded UI polling path must perform a real bounded timer
+  or equivalent macrotask yield even when its event/promise collection is empty.
+  Add an explicit empty-list regression; observation ceilings and wall-clock
+  deadlines alone do not prove the page had an opportunity to render.

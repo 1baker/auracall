@@ -42933,3 +42933,24 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - No install, browser/provider action, job, retry, or scheduler/completion
   resume ran. API PID `16830` remains active with zero restarts, scheduler
   paused, active completion null, and zero queued/running jobs. M5 stays open.
+
+## 2026-08-03 | Lifecycle proof isolated empty-capture renderer starvation
+
+- Installed pushed diagnostic commit `69f11a35` byte-identically under active
+  API PID `24738` with zero restarts, then ran the sole authorized fresh
+  ChatGPT turn: one 505-byte upload, one prompt, conversation
+  `6a711231-211c-83ea-869c-2eb6dcd9bf50`, and no resubmission.
+- Sole job `hmj_2aa3edc177a6425c8d89e4539ebf3f76` matched all four provider-session
+  dimensions and ran once. It materialized the requested 37,202-byte DOCX at
+  SHA-256 `e9a36305...`; OOXML, rendered one-page visual review, exact control
+  ID, exactly-one-source statement, and the three verbatim items pass.
+- The source tile and exact post-click flyout matched, but 587,217 observations
+  found no scoped/global total/visible Download control. The direct fallback
+  returned 403 JSON `Forbidden`, so the durable job truthfully ended `failed`,
+  metrics 1 materialized / 1 failed. No retry or replacement ran.
+- CodeGraph confirmed `waitForChatgptCaptureProgress` races
+  `Promise.allSettled(promises)` with a timer. An empty list settles immediately
+  and clears the timer, permitting a tight preview loop without a renderer/
+  macrotask yield. The next gate is provider-free red/green repair only.
+- Scheduler and five completions remain paused, active completion is null, and
+  queued/running jobs are 0/0. M5 and all re-enablement gates remain open.

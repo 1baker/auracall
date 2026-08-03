@@ -145,7 +145,16 @@ Lane: P01
   lifecycle/state ambiguity rather than a universal selector or missing-wait
   defect. The adapter now preserves pre-click preview presence, observation
   count, and scoped/global total-versus-visible control counts without widening
-  click authority. The repair is validated but not installed; any new live proof
+  click authority. Commit `69f11a35` is now installed byte-identically. The sole
+  fresh proof produced and fully validated the requested 37,202-byte DOCX, but
+  source materialization still failed, so job
+  `hmj_2aa3edc177a6425c8d89e4539ebf3f76` ended truthfully 1 materialized / 1
+  failed without retry. The new receipt observed the exact post-click flyout
+  587,217 times while every scoped/global total/visible Download-control count
+  stayed zero. Structural review isolated an empty-capture-list polling defect:
+  the already-settled promise branch defeats and cancels the timer, starving the
+  preview loop of a real renderer/macrotask yield. M5 and all re-enablement
+  gates remain open pending a provider-free red/green repair; another live proof
   requires separate explicit authority.
 
 - Completed provider-session authority unification:
