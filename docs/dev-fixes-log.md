@@ -1,3 +1,11 @@
+- 2026-08-03: When ChatGPT captured-response and native-download paths can both
+  supply filename evidence, route both through one strict identity classifier.
+  Preserve exact provider-file URL authority first; filename fallback may
+  accept only exact or symmetric terminal numeric collision suffixes with
+  equal extensions and complete remaining stems. Emit separate sanitized
+  branch counters so an absent downstream counter still identifies which gate
+  stopped a transfer without exposing filenames, URLs, or response payloads.
+
 - 2026-08-03: ChatGPT file transfer has two independent filename identity
   gates: intercepted-response validation and native-download fallback
   validation. A green native public-boundary regression cannot prove the

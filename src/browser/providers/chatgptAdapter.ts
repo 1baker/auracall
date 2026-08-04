@@ -9685,11 +9685,18 @@ function readChatgptContentDispositionFileName(value: unknown): string | null {
 	}
 }
 
-function validateChatgptCapturedFileIdentity(input: {
+type ChatgptCapturedFileIdentityDecision =
+	| "providerFileIdMatch"
+	| ChatgptFileNameIdentityDecision;
+
+function classifyChatgptCapturedFileIdentity(input: {
 	captured: Record<string, unknown>;
 	targetProviderFileId: string | null;
 	targetName: string | null;
-}): string | null {
+}): {
+	decision: ChatgptCapturedFileIdentityDecision | null;
+	failure: string | null;
+} {
 	const capturedUrl = normalizeUiText(
 		typeof input.captured.url === "string" ? input.captured.url : null,
 	);
@@ -9698,19 +9705,28 @@ function validateChatgptCapturedFileIdentity(input: {
 		/\/backend-api\/files\/download\//.test(capturedUrl) &&
 		capturedUrl.includes(encodeURIComponent(input.targetProviderFileId))
 	) {
-		return null;
+		return { decision: "providerFileIdMatch", failure: null };
 	}
 	const responseName = readChatgptContentDispositionFileName(
 		input.captured.contentDisposition,
 	);
-	if (
-		input.targetName &&
-		responseName &&
-		normalizeFileKey(responseName) === normalizeFileKey(input.targetName)
-	) {
-		return null;
+	if (input.targetName && responseName) {
+		const decision = classifyChatgptFileNameIdentity(
+			responseName,
+			input.targetName,
+		);
+		if (decision === "exactMatch" || decision === "collisionSuffixMatch") {
+			return { decision, failure: null };
+		}
+		return {
+			decision,
+			failure: `captured_asset_identity_mismatch: requested=${input.targetName} response=${responseName}`,
+		};
 	}
-	return `captured_asset_identity_mismatch: requested=${input.targetName ?? input.targetProviderFileId ?? "unknown"} response=${responseName ?? (capturedUrl || "unknown")}`;
+	return {
+		decision: null,
+		failure: `captured_asset_identity_mismatch: requested=${input.targetName ?? input.targetProviderFileId ?? "unknown"} response=${responseName ?? (capturedUrl || "unknown")}`,
+	};
 }
 
 export function resolveChatgptDownloadUrlFromJson(
@@ -10418,7 +10434,7 @@ async function downloadChatgptConversationFileWithClient(
 			if (downloadedPath) {
 				const downloadedName = path.basename(downloadedPath);
 				const nativeIdentityDecision = targetName
-					? classifyBrowserDownloadedFileNameIdentity(downloadedName, targetName)
+					? classifyChatgptFileNameIdentity(downloadedName, targetName)
 					: null;
 				if (nativeIdentityDecision) {
 					recordBrowserScrapeProviderAction(
@@ -10510,14 +10526,20 @@ async function downloadChatgptConversationFileWithClient(
 			error.retrievalDiagnostics = diagnostics;
 			throw error;
 		}
-		const identityFailure = validateChatgptCapturedFileIdentity({
+		const capturedIdentity = classifyChatgptCapturedFileIdentity({
 			captured: value,
 			targetProviderFileId,
 			targetName,
 		});
-		if (identityFailure) {
+		if (capturedIdentity.decision) {
+			recordBrowserScrapeProviderAction(
+				options,
+				`chatgpt.downloadConversationFile.capturedIdentity.${capturedIdentity.decision}.v1`,
+			);
+		}
+		if (capturedIdentity.failure) {
 			recordBrowserScrapeDownloadFailure(options);
-			throw new Error(`ChatGPT conversation file fetch failed: ${identityFailure}`);
+			throw new Error(`ChatGPT conversation file fetch failed: ${capturedIdentity.failure}`);
 		}
 		if (
 			value.captureTransport === "anchor" ||
@@ -11353,16 +11375,16 @@ async function waitForSingleChatgptDownloadedFile(
 	return null;
 }
 
-type BrowserDownloadedFileNameIdentityDecision =
+type ChatgptFileNameIdentityDecision =
 	| "exactMatch"
 	| "collisionSuffixMatch"
 	| "extensionMismatch"
 	| "stemMismatch";
 
-function classifyBrowserDownloadedFileNameIdentity(
+function classifyChatgptFileNameIdentity(
 	actualName: string,
 	targetName: string,
-): BrowserDownloadedFileNameIdentityDecision {
+): ChatgptFileNameIdentityDecision {
 	const normalizeName = (value: string): string => normalizeUiText(value).toLowerCase();
 	if (normalizeName(actualName) === normalizeName(targetName)) return "exactMatch";
 	const actualExtension = path.extname(actualName);

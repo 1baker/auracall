@@ -411,9 +411,82 @@ async function runNativeConversationDownloadIdentityScenario(
 }
 
 describe("downloadChatgptConversationFilesWithClient", () => {
-	test("rejects a captured download whose response filename belongs to another asset", async () => {
+	test("accepts an unsuffixed captured response for a collision-suffixed catalog name", async () => {
+		const tempDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), "auracall-chatgpt-captured-catalog-suffix-"),
+		);
+		const targetName = "auracall-m5-source-20260802T185953Z(7).txt";
+		const responseName = "auracall-m5-source-20260802T185953Z.txt";
+		const destPath = path.join(tempDir, targetName);
+		const sourceBytes = Buffer.from("exact captured source bytes\n", "utf8");
+		const scrapeTelemetry = createBrowserScrapeTelemetryRecorder();
+		const evaluate = vi.fn(async (input: { expression?: string }) => {
+			const expression = input.expression ?? "";
+			if (expression.includes("captureDownloadResponse")) {
+				return {
+					result: {
+						value: {
+							ok: true,
+							status: 200,
+							url: "https://chatgpt.com/backend-api/estuary/content?id=file_other_identity",
+							contentType: "text/plain",
+							contentDisposition: `attachment; filename="${responseName}"`,
+							byteLength: sourceBytes.byteLength,
+							base64: sourceBytes.toString("base64"),
+							captureTransport: "fetch",
+						},
+					},
+				};
+			}
+			if (expression.includes("hasTurns")) {
+				return { result: { value: { href: "https://chatgpt.com/c/captured-identity" } } };
+			}
+			return { result: { value: [] } };
+		});
+		const file: FileRef = {
+			id: `captured-identity:turn:0:${targetName}`,
+			name: targetName,
+			provider: "chatgpt",
+			source: "conversation",
+			metadata: { providerFileId: "file_captured_identity" },
+		};
+
+		try {
+			const result = await downloadChatgptConversationFilesWithClientForTest(
+				// biome-ignore lint/style/useNamingConvention: CDP client shape uses Runtime.
+				{ Runtime: { evaluate } } as never,
+				"captured-identity",
+				[{ file, destPath }],
+				null,
+				undefined,
+				{ scrapeTelemetry, preserveActiveTab: true },
+			);
+
+			expect(result).toEqual([{ fileId: file.id, status: "materialized" }]);
+			expect(await fs.readFile(destPath)).toEqual(sourceBytes);
+			expect(scrapeTelemetry.providerActions).toMatchObject({
+				"chatgpt.downloadConversationFile.capturedIdentity.collisionSuffixMatch.v1": 1,
+			});
+		} finally {
+			await fs.rm(tempDir, { recursive: true, force: true });
+		}
+	});
+
+	test.each([
+		{
+			targetName: "uploaded-transcript.docx",
+			responseName: "generated-exam.docx",
+			decision: "stemMismatch",
+		},
+		{
+			targetName: "auracall-m5-source-20260802T185953Z(7).txt",
+			responseName: "auracall-m5-source-20260802T185953Z.pdf",
+			decision: "extensionMismatch",
+		},
+	])("rejects a captured download on $decision", async ({ targetName, responseName, decision }) => {
 		const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-chatgpt-file-identity-"));
-		const destPath = path.join(tempDir, "uploaded-transcript.docx");
+		const destPath = path.join(tempDir, targetName);
+		const scrapeTelemetry = createBrowserScrapeTelemetryRecorder();
 		const evaluate = vi.fn(async (input: { expression?: string }) => {
 			const expression = input.expression ?? "";
 			if (expression.includes("captureDownloadResponse")) {
@@ -425,7 +498,7 @@ describe("downloadChatgptConversationFilesWithClient", () => {
 							url: "https://chatgpt.com/backend-api/estuary/content?id=file_generated_exam",
 							contentType:
 								"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-							contentDisposition: 'attachment; filename="generated-exam.docx"',
+							contentDisposition: `attachment; filename="${responseName}"`,
 							byteLength: 4,
 							base64: Buffer.from("exam", "utf8").toString("base64"),
 							captureTransport: "fetch",
@@ -441,8 +514,8 @@ describe("downloadChatgptConversationFilesWithClient", () => {
 			return { result: { value: [] } };
 		});
 		const file: FileRef = {
-			id: "conversation-file-identity:turn:0:uploaded-transcript.docx",
-			name: "uploaded-transcript.docx",
+			id: `conversation-file-identity:turn:0:${targetName}`,
+			name: targetName,
 			provider: "chatgpt",
 			source: "conversation",
 			metadata: { providerFileId: "file_uploaded_transcript" },
@@ -456,7 +529,7 @@ describe("downloadChatgptConversationFilesWithClient", () => {
 				[{ file, destPath }],
 				null,
 				undefined,
-				{ preserveActiveTab: true },
+				{ scrapeTelemetry, preserveActiveTab: true },
 			);
 
 			expect(result).toEqual([
@@ -467,6 +540,9 @@ describe("downloadChatgptConversationFilesWithClient", () => {
 				}),
 			]);
 			await expect(fs.stat(destPath)).rejects.toMatchObject({ code: "ENOENT" });
+			expect(scrapeTelemetry.providerActions).toMatchObject({
+				[`chatgpt.downloadConversationFile.capturedIdentity.${decision}.v1`]: 1,
+			});
 		} finally {
 			await fs.rm(tempDir, { recursive: true, force: true });
 		}
@@ -475,6 +551,7 @@ describe("downloadChatgptConversationFilesWithClient", () => {
 	test("scopes the preview Download control to the exact filename-labelled flyout", async () => {
 		const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-chatgpt-viewer-scope-"));
 		const destPath = path.join(tempDir, "uploaded-transcript.docx");
+		const scrapeTelemetry = createBrowserScrapeTelemetryRecorder();
 		let downloadExpression = "";
 		const evaluate = vi.fn(async (input: { expression?: string }) => {
 			const expression = input.expression ?? "";
@@ -516,7 +593,7 @@ describe("downloadChatgptConversationFilesWithClient", () => {
 					[{ file, destPath }],
 					null,
 					undefined,
-					{ preserveActiveTab: true },
+					{ scrapeTelemetry, preserveActiveTab: true },
 				),
 			).resolves.toEqual([{ fileId: file.id, status: "materialized" }]);
 			expect(downloadExpression).toContain(
@@ -547,6 +624,9 @@ describe("downloadChatgptConversationFilesWithClient", () => {
 			expect(downloadExpression).not.toContain(
 				"Array.from(document.querySelectorAll('button, [role=\"button\"], a'))",
 			);
+			expect(scrapeTelemetry.providerActions).toMatchObject({
+				"chatgpt.downloadConversationFile.capturedIdentity.exactMatch.v1": 1,
+			});
 		} finally {
 			await fs.rm(tempDir, { recursive: true, force: true });
 		}
@@ -1168,6 +1248,7 @@ describe("downloadChatgptConversationFilesWithClient", () => {
 			}
 			expect(scrapeTelemetry.providerActions).toMatchObject({
 				"chatgpt.downloadConversationFile": 12,
+				"chatgpt.downloadConversationFile.capturedIdentity.providerFileIdMatch.v1": 12,
 			});
 			for (const item of items) {
 				expect(await fs.readFile(item.destPath, "utf8")).toBe("body");

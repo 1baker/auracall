@@ -43149,3 +43149,19 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Prompts, materialization jobs, completions, canaries, scheduler controls,
   browser inspection, and guard actions are all capped at zero. The campaign's
   2/2 live failures remain consumed.
+
+## 2026-08-03 | Plan 0184 response/native identity parity validates
+
+- The exact `(7)`/unsuffixed captured-response public test failed before the
+  repair with `captured_asset_identity_mismatch` and no bytes, then passed with
+  exact bytes and collision-suffix telemetry after one shared strict classifier
+  replaced captured exact-name-only fallback.
+- Exact provider-file URL authority remains first. Captured and native exact/
+  collision success plus extension/complete-stem rejection pass together 9/9;
+  sanitized telemetry distinguishes provider-file, exact, collision, extension,
+  and stem decisions without logging filenames or URLs.
+- Adapter 134/134, adjacent 76/76, and full provider-free 304 files/2,714 tests
+  pass. Typecheck, build, scoped lint, plan/goal audits, CodeGraph, diff hygiene,
+  and bounded review pass; only the established CDP naming warning remains.
+- No runtime/provider action ran. Code repair 1/1, red/green 3/3, and review
+  rework 1/1 are consumed; the sole install remains and all live caps stay zero.

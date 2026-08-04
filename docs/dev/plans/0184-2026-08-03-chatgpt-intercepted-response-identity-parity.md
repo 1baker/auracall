@@ -130,13 +130,13 @@ completion resume because the goal-wide live-failure ceiling is already 2/2.
 
 ## Acceptance Criteria
 
-- [ ] Exact live intercepted-response `(7)`/unsuffixed scenario is red before
+- [x] Exact live intercepted-response `(7)`/unsuffixed scenario is red before
   production repair.
-- [ ] One strict classifier governs both filename gates and preserves exact
+- [x] One strict classifier governs both filename gates and preserves exact
   provider-file URL authority.
-- [ ] Intercepted and native positive/negative public-boundary cases pass with
+- [x] Intercepted and native positive/negative public-boundary cases pass with
   sanitized branch telemetry and no cross-asset weakening.
-- [ ] Targeted, adjacent, broad, type/build/lint/audit, CodeGraph, diff, and
+- [x] Targeted, adjacent, broad, type/build/lint/audit, CodeGraph, diff, and
   review gates pass.
 - [ ] Repair is committed, pushed, installed, and loaded by a post-mtime healthy
   process with paused zero-work parity.
@@ -176,3 +176,53 @@ preserved. It does not close Plan 0180 M5 or prove two-asset materialization.
 - `remaining_criteria`: W1-W5 and all six acceptance items.
 - `next_action_or_stop_reason`: add the exact public-boundary intercepted red;
   stop if current code does not reproduce the terminal manifest behavior.
+
+## Checkpoint 2
+
+- `plan_version`: 1
+- `state_transition`: ready provider-free -> exact intercepted-response red ->
+  shared strict identity classifier green.
+- `progress_classification`: acceptance_movement
+- `evidence`: the public adapter test for catalog
+  `auracall-m5-source-20260802T185953Z(7).txt` versus successful captured
+  response `auracall-m5-source-20260802T185953Z.txt` failed exactly as
+  `captured_asset_identity_mismatch` with no bytes before production repair and
+  passed afterward with exact bytes plus sanitized
+  `capturedIdentity.collisionSuffixMatch.v1`. Captured stem/extension negatives,
+  exact filename, exact provider-file URL, and existing native exact/collision/
+  stem/extension cases pass together 9/9.
+- `subagent_status`: `not_spawned`; delegation remains prohibited and the
+  adapter path is serialized.
+- `budget_consumption`: code repair 1/1; red/green cycles 3/3; review rework
+  0/1; install/restart 0/1; prompts/jobs/completions 0/0; goal live failures
+  2/2.
+- `remaining_criteria`: W4-W5 and three remaining acceptance items.
+- `next_action_or_stop_reason`: run complete provider-free validation and one
+  bounded self-review; stop before install on any unresolved semantic finding.
+
+## Checkpoint 3
+
+- `plan_version`: 1
+- `state_transition`: shared identity green -> provider-free validated after
+  one bounded vocabulary rework.
+- `progress_classification`: acceptance_movement
+- `evidence`: the complete ChatGPT adapter suite passes 134/134; adjacent
+  history/MCP suites pass 76/76; the full provider-free suite passes 304 files
+  and 2,714 tests with 21 files and 65 opt-in tests skipped. Typecheck,
+  production build, scoped Biome lint, plan audit, goal-only audit, CodeGraph
+  status, and diff hygiene pass. Scoped lint reports only the established CDP
+  `Runtime` naming warning. Self-review preserved provider-file URL precedence,
+  extension equality, complete remaining-stem equality, ambiguity rejection,
+  and cross-asset rejection; its one rework renamed the shared contract from a
+  native-specific name to `classifyChatgptFileNameIdentity`, after which the
+  adapter, typecheck, build, and lint gates passed again.
+- `subagent_status`: `not_spawned`; the required review was performed on the
+  single coupled slice.
+- `budget_consumption`: code repair 1/1; red/green cycles 3/3; review rework
+  1/1; install/restart 0/1; prompts/jobs/completions 0/0; goal live failures
+  2/2.
+- `remaining_criteria`: commit/push/install parity and two remaining acceptance
+  items.
+- `next_action_or_stop_reason`: commit and push the validated repair, then
+  spend the sole install/restart attempt and require exact post-mtime paused
+  zero-work parity; no live action follows.
