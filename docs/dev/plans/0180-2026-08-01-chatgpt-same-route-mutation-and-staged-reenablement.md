@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 32
+Plan version: 33
 
 ## Stable Objective
 
@@ -13,6 +13,27 @@ reenablement.
 
 ## Current State
 
+- The installed renderer-yield repair now has one fresh no-retry live receipt.
+  Session `m5-chatgpt-renderer-yield-proof` submitted exactly one prompt with
+  the sole 505-byte fixture in fresh ChatGPT conversation
+  `6a714cfe-6068-83ea-a196-aec283440fa9`. Canonical email, plan, structure,
+  and account-level identity all matched; no prompt retry, resubmission, or
+  model-switch mutation ran.
+- Sole job `hmj_f9d3b3ef5dc649b6aadd53b286f1d944` refreshed exactly one uploaded
+  file and one generated artifact, ran once, and ended truthfully `failed` at
+  metrics 1 materialized / 1 failed. The DOCX materialized at 38,520 bytes and
+  SHA-256 `186d737017e0157eb57327bb414c7ce1540649b120e6c6fc0229982f9760e55f`;
+  ZIP integrity, exact control/provenance/list content, and rendered one-page
+  visual inspection pass.
+- The renderer-yield repair advanced the uploaded-file path past the prior
+  zero-control/403 failure: ChatGPT returned a native capture named
+  `auracall-m5-source-20260802T185953Z.txt`. AuraCall failed closed because the
+  refreshed catalog title was `auracall-m5-source-20260802T185953Z(5).txt`, so
+  response identity validation emitted `captured_asset_identity_mismatch` and
+  persisted no source bytes. M5 and every re-enablement gate remain open. The
+  next gate is provider-free normalization of provider-added terminal numeric
+  collision suffixes across catalog and captured-response identity; another
+  live attempt requires separate explicit no-retry authority.
 - Pushed commit `9381182b` repairs the empty-capture renderer-yield defect and
   is installed with exact built/runtime adapter SHA-256
   `d31e46a7945972c15431389d330de82b0c0d3af4b68222fc8080f78d7613789b`.
@@ -1425,3 +1446,38 @@ continuous live-follow reenablement remain separately gated afterward.
 - `next_gate`: any fresh two-asset ChatGPT proof requires separate explicit
   no-retry authority. Do not infer live or re-enablement authority from install
   parity.
+
+## Checkpoint 34
+
+- `plan_version`: 33
+- `state_transition`: installed renderer-yield repair -> one fresh no-retry
+  proof -> native source capture reached -> collision-suffix identity mismatch;
+  M5 remains open.
+- `turn_receipt`: session `m5-chatgpt-renderer-yield-proof` submitted exactly
+  one prompt with exactly the canonical 505-byte fixture. ChatGPT completed
+  fresh conversation `6a714cfe-6068-83ea-a196-aec283440fa9` and returned the
+  requested DOCX. The visible current Work/GPT-5.6 Sol surface was retained
+  after the legacy `Instant` option was absent; no model mutation or second
+  submission ran.
+- `job_receipt`: sole job `hmj_f9d3b3ef5dc649b6aadd53b286f1d944`
+  matched all four provider-session dimensions, ran once with a two-item
+  ceiling, and terminated `failed`, metrics 1 materialized / 1 failed.
+- `artifact_receipt`: cached
+  `auracall-m5-20260802T185953Z(5).docx` is 38,520 bytes at SHA-256
+  `186d737017e0157eb57327bb414c7ce1540649b120e6c6fc0229982f9760e55f`.
+  `unzip -t`, exact control ID, exactly-one-upload provenance, all three
+  verbatim list items, and rendered one-page visual inspection pass.
+- `source_receipt`: the provider returned native captured bytes named
+  `auracall-m5-source-20260802T185953Z.txt`, proving the repaired polling path
+  reached the preview download. The refreshed catalog independently named the
+  same upload `auracall-m5-source-20260802T185953Z(5).txt`; strict response
+  identity therefore failed closed as `captured_asset_identity_mismatch`, and
+  no source file was persisted or checksummed.
+- `terminal_posture`: API PID `94356` remains active/running with zero restarts;
+  scheduler and all five completions remain paused, `activeCompletionId=null`,
+  and queued/running jobs are 0/0. No retry, replacement job, scheduler resume,
+  completion resume, or continuous-live-follow action ran.
+- `next_gate`: reproduce and repair the catalog-versus-response terminal
+  numeric collision-suffix normalization provider-free. Do not infer that the
+  captured bytes are accepted merely from the original response filename, and
+  do not spend another live attempt without separate explicit authority.

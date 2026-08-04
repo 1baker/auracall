@@ -20235,3 +20235,20 @@ browser-stage lifecycle observability, not transcript truncation.
   empty collection, and retain the event-versus-timer race only for nonempty
   collections. A fake-timer regression should prove the empty path is pending
   before the bound and settled at the bound.
+
+## 2026-08-03 | Provider collision suffixes can differ across catalog and capture
+
+- Live receipt: ChatGPT cataloged one fresh uploaded source as
+  `auracall-m5-source-20260802T185953Z(5).txt`, while its exact preview download
+  returned native bytes with the original unsuffixed filename. Strict response
+  identity rejected the capture as `captured_asset_identity_mismatch` and
+  persisted no bytes.
+- Durable rule: provider-added terminal numeric collision suffixes are
+  presentation identities, not necessarily stable asset identities across
+  catalog and download surfaces. Normalize only the established terminal
+  collision form on both sides, then require the entire remaining stem and
+  extension to match; never accept partial stems, extension drift, multiple
+  candidates, or cross-asset substitution.
+- Evidence rule: a captured response filename is proof that preview download
+  occurred, but not accepted materialization until normalized exact identity,
+  nonempty bytes, checksum, and durable manifest publication all pass.

@@ -15584,3 +15584,22 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
 - No browser/provider action, prompt, upload, materialization job, retry, or
   re-enablement ran. M5 remains open; a fresh two-asset proof requires separate
   explicit no-retry authority.
+
+## Turn 346 | 2026-08-03
+
+- Consumed exactly one fresh no-retry Plan 0180 proof. Session
+  `m5-chatgpt-renderer-yield-proof` submitted one prompt with the sole 505-byte
+  fixture and completed conversation `6a714cfe-6068-83ea-a196-aec283440fa9`.
+  Canonical four-dimension ChatGPT identity matched; no resubmission ran.
+- Sole job `hmj_f9d3b3ef5dc649b6aadd53b286f1d944` ran once with a two-item ceiling
+  and ended `failed`, metrics 1 materialized / 1 failed. The generated DOCX is
+  38,520 bytes at SHA-256 `186d7370...` and passes ZIP integrity, exact content,
+  and rendered one-page visual review.
+- Renderer-yield repair reached the source preview's native download. ChatGPT
+  returned `auracall-m5-source-20260802T185953Z.txt`, while refreshed catalog
+  identity was `auracall-m5-source-20260802T185953Z(5).txt`; strict validation
+  stopped on `captured_asset_identity_mismatch` and persisted no source bytes.
+- No retry or replacement job ran. API PID `94356` remains active/running with
+  zero restarts; scheduler and all five completions remain paused, active
+  completion is null, and queued/running jobs are 0/0. M5 and all re-enablement
+  gates remain open pending provider-free collision-suffix normalization.

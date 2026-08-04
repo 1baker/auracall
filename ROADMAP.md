@@ -161,7 +161,16 @@ Lane: P01
   and installed byte-identically at adapter SHA-256 `d31e46a7...` under active
   API PID `94356`; scheduler and five completions remain paused and queued/
   running jobs are 0/0. M5 and all re-enablement gates remain open, and another
-  live proof requires separate explicit authority.
+  live proof requires separate explicit authority. That one fresh no-retry
+  proof is now consumed: conversation `6a714cfe-6068-83ea-a196-aec283440fa9`
+  and sole job `hmj_f9d3b3ef5dc649b6aadd53b286f1d944` again ended 1 materialized /
+  1 failed. The renderer-yield repair reached a native source capture, but the
+  catalog title carried provider collision suffix `(5)` while the response
+  filename used the original unsuffixed name, so strict identity validation
+  failed closed and persisted no source bytes. The generated 38,520-byte DOCX
+  passes OOXML, requested-content, and rendered visual checks. M5 remains open;
+  next work is provider-free collision-suffix identity normalization, not a
+  retry or scheduler/continuous-live-follow re-enablement.
 
 - Completed provider-session authority unification:
   [docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md](docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md)

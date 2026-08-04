@@ -660,3 +660,25 @@ Keep M5
 OPEN until one separately authorized bounded default-account collector/
 materializer pass reaches zero failed materializations and all existing safety
 criteria.
+
+## 2026-08-03 Renderer-Yield Live Proof Terminal Addendum
+
+- Session `m5-chatgpt-renderer-yield-proof` used the installed renderer-yield
+  repair and submitted one prompt with one 505-byte fixture. Fresh conversation
+  `6a714cfe-6068-83ea-a196-aec283440fa9` returned the requested DOCX; no retry,
+  resubmission, or model mutation ran.
+- Sole job `hmj_f9d3b3ef5dc649b6aadd53b286f1d944` matched email, plan, structure,
+  and account-level identity and ran once. It ended truthfully `failed`, metrics
+  1 materialized / 1 failed.
+- The 38,520-byte DOCX at SHA-256 `186d7370...` passes ZIP integrity, exact
+  control ID, exactly-one-upload provenance, all three verbatim source items,
+  and rendered one-page visual inspection.
+- The source route advanced beyond the earlier renderer-starvation receipt and
+  captured native bytes named `auracall-m5-source-20260802T185953Z.txt`.
+  Refreshed catalog identity instead used
+  `auracall-m5-source-20260802T185953Z(5).txt`; the validator correctly stopped
+  on `captured_asset_identity_mismatch` and persisted no source bytes.
+- This packet is consumed. Do not retry or create another job. Keep scheduler
+  and five completions paused. The next bounded packet is provider-free
+  diagnosis and repair of terminal numeric collision-suffix normalization
+  across catalog and captured-response identity.

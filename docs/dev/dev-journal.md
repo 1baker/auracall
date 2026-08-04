@@ -42986,3 +42986,24 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - No browser/provider action, prompt, upload, materialization job, retry,
   scheduler resume, or completion resume ran. M5 and all re-enablement gates
   remain open; another live proof requires separate authority.
+
+## 2026-08-03 | Renderer-yield live proof reached source capture but failed identity
+
+- Ran exactly one fresh ChatGPT turn with the sole 505-byte fixture and one
+  prompt. Conversation `6a714cfe-6068-83ea-a196-aec283440fa9` returned the
+  requested DOCX; canonical email, plan, structure, and account-level proof
+  matched and no prompt retry or resubmission ran.
+- Sole job `hmj_f9d3b3ef5dc649b6aadd53b286f1d944` ran once with a two-item ceiling
+  and ended truthfully `failed`, metrics 1 materialized / 1 failed. The
+  38,520-byte DOCX at SHA-256 `186d7370...` passes OOXML, exact requested
+  content, and rendered one-page visual inspection.
+- The repaired source-preview loop reached a native capture named
+  `auracall-m5-source-20260802T185953Z.txt`. The refreshed catalog named the
+  upload `auracall-m5-source-20260802T185953Z(5).txt`, so strict response
+  identity emitted `captured_asset_identity_mismatch` and persisted no source
+  bytes. This replaces the prior zero-control/403 diagnosis with a bounded
+  provider-added collision-suffix normalization defect.
+- No retry or replacement job ran. API PID `94356` remains active with zero
+  restarts; scheduler and five completions are paused, active completion is
+  null, and queued/running jobs are 0/0. M5 and all re-enablement gates remain
+  open pending provider-free repair.
