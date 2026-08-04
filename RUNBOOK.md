@@ -15647,3 +15647,19 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
 - Final API PID `91706` is active/running with zero restarts. Scheduler and five
   completions are paused, queued/running work is 0/0, active history jobs are
   zero, default `activeCompletionId` is null, and all ChatGPT guards are clear.
+
+## Turn 349 | 2026-08-03
+
+- Opened Plan 0183 as the bounded successor to Plan 0182's installed/live
+  contradiction. It begins with the exact `(6)`/unsuffixed scenario through
+  built and installed public adapter exports; no production edit or provider
+  action precedes that receipt.
+- Provider-free limits are two installed-boundary executions, one code repair,
+  one review rework, and one install/restart. The whole goal's live-failure cap
+  is two; Plan 0182 consumed one, leaving exactly one final direct proof failure
+  before terminal stop. The conditional canary remains unreachable until the
+  direct proof materializes both assets with zero failures.
+- CodeGraph is healthy at 875 files, 16,480 nodes, and 55,683 edges. It confirms
+  one native matcher caller and the existing public adapter test seam.
+- Delegation is `not_spawned` because governing runtime policy prohibits it and
+  the successor remains one serialized adapter/test/install/live path.

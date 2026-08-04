@@ -43075,3 +43075,16 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   and no retry/replacement occurred. API PID `91706` remains healthy; scheduler
   and five completions are paused, queued/running work is zero, default active
   completion is null, active history jobs are zero, and all guards are clear.
+
+## 2026-08-03 | Plan 0183 opens at the installed module boundary
+
+- The persistent goal remains unmet, so material replanning uses a bounded
+  successor rather than reopening Plan 0182 or resetting its attempt history.
+  The goal-wide live-failure ceiling is two; one has already been consumed.
+- W1 will execute the exact `(6)` catalog versus unsuffixed native-download
+  scenario through both built and installed public adapter exports before any
+  production edit. W2 may add only one sanitized native-decision telemetry
+  contract and must retain strict extension/full-stem/cross-asset rejection.
+- A single install/restart and one final direct proof are allowed after full
+  provider-free validation. The one-pass default canary remains conditional on
+  exact TXT and DOCX success; any further live failure closes the successor.
