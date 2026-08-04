@@ -5,6 +5,21 @@ State: Plan 0185 explicitly authorized two-gate live acceptance
 Governing plan: `docs/dev/plans/0180-2026-08-01-chatgpt-same-route-mutation-and-staged-reenablement.md`
 Scope: execute one fresh exact two-asset proof and one conditional one-pass canary; stop at the first failed live gate
 
+## 2026-08-04 Plan 0185 Direct Gate Passed
+
+Fresh conversation `6a720f4a-49d8-83ea-9211-b99ee9ceefa1` used exactly the
+canonical 505-byte upload and returned the requested DOCX. Sole job
+`hmj_312d4a93f03146acaf75ab2bf93d8fa7` ran once with exact four-dimension
+provider-session identity and succeeded at 2 materialized / 0 failed / 0
+duplicate aliases.
+
+The materialized TXT is byte-identical to the fixture at SHA-256
+`5d17e7ec...`. The 37,824-byte DOCX at SHA-256 `f4ccc580...` passes ZIP/OOXML,
+exact control-ID, exactly-one-source, verbatim-list, and rendered one-page
+visual checks. No retry or replacement ran. Plan 0185 now authorizes exactly
+one new default `maxPasses=1` canary; scheduler and retained completions remain
+paused, and any canary failure is terminal.
+
 ## 2026-08-04 Plan 0185 Explicit Live Authority
 
 The operator reviewed why the prior ceiling was exhausted and explicitly

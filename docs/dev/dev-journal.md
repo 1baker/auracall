@@ -43202,3 +43202,19 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   the current selected model instead of forcing a second interaction.
 - This is generation evidence only. The sole two-item materialization job and
   exact TXT/DOCX validation remain before the conditional canary can be entered.
+
+## 2026-08-04 | Plan 0185 exact two-asset direct proof passes
+
+- Sole job `hmj_312d4a93f03146acaf75ab2bf93d8fa7` ran once against fresh
+  conversation `6a720f4a-49d8-83ea-9211-b99ee9ceefa1`, matched all four
+  provider-session dimensions, and settled succeeded at 2 materialized / 0
+  failed / 0 duplicate aliases.
+- The materialized source is byte-identical to the 505-byte fixture at SHA-256
+  `5d17e7ec...`. The generated 37,824-byte DOCX at SHA-256 `f4ccc580...` passes
+  ZIP/OOXML integrity and exact control-ID, provenance, and verbatim-list checks.
+- DOCX workflow rendering produced one page. Visual inspection confirmed the
+  numbered three-item list and all requested text are legible with no clipping
+  or overlap.
+- No retry or replacement ran. Active history jobs returned to zero. The
+  direct gate unlocks exactly one default `maxPasses=1` canary; it does not
+  authorize scheduler or retained-completion resume.

@@ -135,7 +135,7 @@ at the first failed live gate without a retry, replacement chat, or repair loop.
   posture before live work.
 - [x] One fresh root turn uses exactly one canonical source upload and returns
   the requested DOCX without a second submission.
-- [ ] One direct job at `attemptCount=1` materializes exact TXT and DOCX with
+- [x] One direct job at `attemptCount=1` materializes exact TXT and DOCX with
   metrics 2/0 and passes byte, content, OOXML, checksum, and rendered QA.
 - [ ] Only after direct success, one new default completion runs at
   `maxPasses=1` and its owned materialization settles with zero failures,
@@ -213,3 +213,31 @@ no retry; another attempt is not implied by this plan.
 - `next_action_or_stop_reason`: commit/push this receipt, then create the sole
   `maxItems=2` direct materialization job for the exact fresh conversation. Any
   failed asset prevents the canary and closes the packet terminally.
+
+## Checkpoint 3 | Direct Proof Passed
+
+- `plan_version`: 1
+- `state_transition`: direct turn complete -> sole two-item job succeeded ->
+  exact artifact validation green -> conditional canary unlocked.
+- `progress_classification`: acceptance_movement
+- `evidence`: job `hmj_312d4a93f03146acaf75ab2bf93d8fa7` ran once from
+  `2026-08-04T16:15:32.051Z` to `16:15:50.309Z`, matched all four provider-
+  session dimensions, and settled `succeeded` with 2 materialized / 0 failed /
+  0 duplicate aliases. The 505-byte materialized TXT is byte-identical to the
+  fixture at SHA-256 `5d17e7ec...`. The 37,824-byte DOCX is valid OOXML at
+  SHA-256 `f4ccc580...` and contains the exact control ID, exactly-one-source
+  statement, and verbatim numbered three-item list.
+- `rendered_qa`: the DOCX rendered through the repository DOCX review workflow
+  as one clean page; visual inspection found all required content legible,
+  correctly numbered, and free of clipping or overlap.
+- `post_job_posture`: active history jobs are zero. Scheduler and retained
+  completions remain paused; no retry or replacement ran.
+- `subagent_status`: `not_spawned`; validation remained serialized.
+- `budget_consumption`: historical failures retained 2; new prompts 1/1;
+  direct jobs 1/1; completion starts 0/1; owned canary jobs 0/1; new live
+  failures 0/1; live stages 1/2; code/install/rework 0/0.
+- `remaining_criteria`: one new default `maxPasses=1` completion and its owned
+  job, final paused zero-work posture, and durable closeout.
+- `next_action_or_stop_reason`: commit/push this direct-proof receipt, then
+  start exactly one conditional canary. Any failed asset, guard, duplicate
+  mutation, or second pass closes the packet without retry.

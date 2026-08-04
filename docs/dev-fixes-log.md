@@ -20303,3 +20303,14 @@ browser-stage lifecycle observability, not transcript truncation.
   match; ambiguity, partial stems, multiple downloads, and cross-asset names
   remain terminal. Remove diagnostic evidence after the contradiction is
   resolved and covered by a durable regression.
+
+## 2026-08-04 | Two-asset acceptance requires bytes plus rendered semantics
+
+- A successful materialization count is necessary but does not alone establish
+  upload/artifact identity. Compare uploaded bytes to the canonical fixture,
+  validate the generated package and required text, and inspect its rendered
+  output before unlocking a downstream canary.
+- Preserve provider collision suffixes as presentation evidence while binding
+  acceptance to full remaining stem, extension, bytes, and content. In the
+  fresh control, one exact job produced byte-identical TXT and a separately
+  verified DOCX at 2 materialized / 0 failed without substitution.

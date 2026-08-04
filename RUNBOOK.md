@@ -15734,3 +15734,12 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
 - W1 success proves generation only. Scheduler/completions remain paused and
   active jobs remain zero. The sole two-item materialization job is the next
   gate; the conditional canary remains unreachable until exact 2/0 validation.
+- Sole direct job `hmj_312d4a93f03146acaf75ab2bf93d8fa7` then ran once,
+  matched all four provider-session dimensions, and succeeded at 2 materialized
+  / 0 failed / 0 duplicate aliases.
+- The cached 505-byte TXT is byte-identical to the fixture at SHA-256
+  `5d17e7ec...`. The 37,824-byte DOCX at SHA-256 `f4ccc580...` passes ZIP/OOXML,
+  exact requested-content, and one-page rendered visual validation.
+- The direct prompt and job budgets are consumed without retry. Active jobs
+  returned to zero, and exactly one new default `maxPasses=1` canary is now the
+  only authorized live gate.

@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 37
+Plan version: 38
 
 ## Stable Objective
 
@@ -14,11 +14,11 @@ reenablement.
 ## Current State
 
 - Plan 0185 is open under the operator's 2026-08-04 explicit two-gate live
-  authority. It preserves the two prior live failures as history and permits
-  exactly one fresh two-asset direct proof, followed only on complete success by
-  one new default `maxPasses=1` canary. Either live failure is terminal; no
-  retry, replacement, code repair, install, scheduler resume, or continuous-
-  live edge exists in the packet.
+  authority. It preserves the two prior live failures as history. Its sole
+  fresh direct proof is green at 2 materialized / 0 failed with byte-identical
+  TXT and fully validated DOCX, unlocking exactly one new default
+  `maxPasses=1` canary. A canary failure is terminal; no retry, replacement,
+  code repair, install, scheduler resume, or continuous-live edge exists.
 - Plan 0184 is closed provider-free complete. Commit `957b37c0` makes captured-
   response and native-download filename evidence share one strict exact/
   collision/extension/stem classifier while preserving exact provider-file URL
@@ -1586,3 +1586,23 @@ continuous live-follow reenablement remain separately gated afterward.
   0/2. Code repair, install, retry, and retained-runtime resume remain 0/0.
 - `next_gate`: commit/push the Plan 0185 authority checkpoint, then run its W1
   preflight and sole direct turn. A failed direct gate prevents the canary.
+
+## Checkpoint 38
+
+- `plan_version`: 38
+- `state_transition`: Plan 0185 fresh generation -> sole exact two-asset
+  materialization -> M5 direct-proof half green; conditional canary unlocked.
+- `job_receipt`: `hmj_312d4a93f03146acaf75ab2bf93d8fa7` matched all four
+  provider-session dimensions, ran once, and succeeded with 2 materialized / 0
+  failed / 0 duplicate aliases.
+- `source_receipt`: the materialized 505-byte TXT is byte-identical to the
+  canonical fixture at SHA-256 `5d17e7ec...`.
+- `artifact_receipt`: the materialized 37,824-byte DOCX is SHA-256
+  `f4ccc580...`, passes ZIP/OOXML integrity and exact required-content checks,
+  and renders as one clean, legible page with the verbatim numbered list.
+- `authority_and_posture`: the direct prompt and job budgets are consumed; no
+  retry, replacement, repair, install, scheduler resume, or retained-completion
+  resume ran. Active history jobs returned to zero.
+- `next_gate`: Plan 0185 authorizes exactly one new `chatgpt/default`
+  `maxPasses=1` canary. M5 remains open until that completion and its owned
+  materializer settle green and paused zero-work posture is restored.

@@ -26,10 +26,11 @@ Lane: P01
   [docs/dev/plans/0184-2026-08-03-chatgpt-intercepted-response-identity-parity.md](docs/dev/plans/0184-2026-08-03-chatgpt-intercepted-response-identity-parity.md).
   Active explicitly authorized two-gate live successor:
   [docs/dev/plans/0185-2026-08-04-chatgpt-two-gate-live-acceptance.md](docs/dev/plans/0185-2026-08-04-chatgpt-two-gate-live-acceptance.md).
-  Plan 0185 preserves the two prior failures as history and permits exactly one
-  fresh two-asset direct proof, followed only on complete success by one new
-  `maxPasses=1` default canary. Either failure is terminal; there is no repair,
-  retry, scheduler resume, or continuous-live edge in this packet.
+  Plan 0185 preserves the two prior failures as history. Its sole fresh direct
+  proof is now green: one exact job materialized byte-identical TXT plus valid,
+  content-verified DOCX at 2/0. This unlocks exactly one new `maxPasses=1`
+  default canary. A canary failure is terminal; there is no repair, retry,
+  scheduler resume, or continuous-live edge in this packet.
   Plan 0184 repaired, validated, pushed, and installed the separate
   intercepted-response collision-suffix boundary without live work. Both
   filename gates now share one strict classifier and preserve provider-file URL
