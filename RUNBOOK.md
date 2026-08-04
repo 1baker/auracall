@@ -15830,3 +15830,11 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   0/0, all ChatGPT guards clear, and API PID `1091` healthy with zero restarts.
 - Automatic resume, scheduler action, replacement completion, direct job,
   retry, repair, config/install/restart, and unrelated target action remain 0/0.
+- Controlled pass 3 advanced the exact completion once and reduced remaining
+  detail surfaces from 10 to 6. Owned job
+  `hmj_1a4cd3f12afc4764b5c23c5e43777ab4` ran once, matched all four provider-
+  session dimensions, and settled skipped at 0 materialized / 7 skipped / 0
+  failed / 0 duplicate aliases.
+- The exact completion was re-paused at `2026-08-04T21:29:40.296Z`. Scheduler
+  and six completions are paused, active completion work is zero, guards are
+  clear, and controlled pass 4 is the only eligible next action.

@@ -116,3 +116,30 @@ terminally after exact pause with the remaining count and stop reason.
 - `remaining_criteria`: three unchecked live/outcome criteria plus final audit.
 - `next_action_or_stop_reason`: audit and commit/push this authority packet,
   then repeat preflight before the first and only currently eligible control.
+
+## Checkpoint 2 | Controlled Pass 3 Settled And Paused
+
+- `plan_version`: 1
+- `state_transition`: authorized ready -> one controlled pass -> owned job
+  settled -> exact completion re-paused -> next pass eligible.
+- `progress_classification`: outcome_progress
+- `evidence`: `run-one-pass` advanced the exact completion from pass 2 to 3.
+  Refresh `acctmirror_0bd20c5e-a93b-4ba6-b45d-5f8c35edc485` completed the
+  persisted `detail-inventory` phase from `2026-08-04T21:13:51.546Z` through
+  `21:22:16.911Z`, scanned four conversations, and reduced remaining detail
+  surfaces from 10 to 6. Telemetry was passive-dominant at 5/6 interactions,
+  no LLM-service requests, and no provider guard.
+- `job_evidence`: owned job `hmj_1a4cd3f12afc4764b5c23c5e43777ab4`
+  ran once and settled `skipped` at `2026-08-04T21:28:52.673Z` with 4
+  conversations, 0 materialized, 7 skipped, 0 failed, 0 duplicate aliases,
+  and all four provider-session dimensions matching.
+- `safety_posture`: exact pause completed at `2026-08-04T21:29:40.296Z`;
+  scheduler and six completions are paused, queued/running completions are
+  0/0, default guard and every ChatGPT guard are clear, and error is null.
+- `subagent_status`: `not_spawned`; serialized live control.
+- `budget_consumption`: controls 1/3; passes 1/3; jobs 1/3; pauses 1/3;
+  failures 0/1; elapsed about 16/75 minutes; forbidden mutations 0/0.
+- `remaining_criteria`: 6 detail surfaces require at most two more controlled
+  passes, then backlog reclassification, final posture, audit, and closeout.
+- `next_action_or_stop_reason`: commit/push this checkpoint, repeat exact
+  preflight, then permit only controlled pass 4.
