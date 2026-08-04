@@ -20252,3 +20252,20 @@ browser-stage lifecycle observability, not transcript truncation.
 - Evidence rule: a captured response filename is proof that preview download
   occurred, but not accepted materialization until normalized exact identity,
   nonempty bytes, checksum, and durable manifest publication all pass.
+
+## 2026-08-03 | Green source-level suffix fixtures do not prove the installed decision
+
+- A public adapter regression for catalog `...(5).txt` versus native `....txt`
+  turned green after symmetric suffix normalization, and the installed adapter
+  was byte-identical and visibly contained that code. A fresh installed run
+  nevertheless rejected the exact ASCII `...(6).txt` versus `....txt` pair at
+  the same native branch.
+- Durable rule: when live behavior contradicts a green source fixture and exact
+  installed bytes, do not broaden identity or spend another provider retry.
+  First reproduce through the installed module boundary or add sanitized
+  branch evidence for actual/target extensions, normalized stems, and the
+  boolean decision at the existing fail-closed point.
+- Keep the proof narrow: extensions and complete remaining stems must still
+  match; ambiguity, partial stems, multiple downloads, and cross-asset names
+  remain terminal. Remove diagnostic evidence after the contradiction is
+  resolved and covered by a durable regression.

@@ -682,3 +682,22 @@ criteria.
   and five completions paused. The next bounded packet is provider-free
   diagnosis and repair of terminal numeric collision-suffix normalization
   across catalog and captured-response identity.
+
+## 2026-08-03 Plan 0182 Terminal Addendum
+
+- Plan 0182 validated, pushed, and installed symmetric suffix repair
+  `ea1efb75` at exact adapter SHA-256
+  `ab54d533a4827761bac05ad76554cbb8f2ac0332e61d19135c981f67d171b219`.
+  The exact public regression and full provider-free suite passed.
+- Its sole fresh W4 turn completed conversation
+  `6a715be8-2834-83ea-82a1-eb1d54e93f85`; sole job
+  `hmj_25347a95316e4517bd91ac6620c3127b` ran once with exact four-dimension
+  identity and ended 1 materialized / 1 failed.
+- The DOCX is 37,087 bytes at SHA-256 `8a3a123d...` and passes structural,
+  content, and rendered visual validation. The TXT again failed for catalog
+  `...(6).txt` versus native `....txt`, despite installed code containing the
+  symmetric helper.
+- The campaign is closed at its configured live-failure ceiling. W5 did not
+  run; no retry, replacement chat/job, scheduler/completion resume, or guard
+  action is authorized. The next gate is provider-free installed-module or
+  decision-branch evidence for normalized extensions/stems. M5 remains open.

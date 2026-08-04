@@ -1,8 +1,8 @@
 # ChatGPT Live-Follow Collision-Suffix Repair And Bounded Proof | 0182-2026-08-03
 
-State: OPEN
+State: CLOSED
 Lane: P01
-Plan version: 1
+Plan version: 2
 Governing goal: repair and test the remaining ChatGPT live-follow materialization
 path without turn-by-turn authorization or unbounded retries.
 Supports: Plan 0180 M5.
@@ -17,6 +17,27 @@ campaign at the first failed live gate rather than cycling.
 
 ## Current State
 
+- The campaign reached its configured terminal live stop. Repair commit
+  `ea1efb75` passed provider-free validation, was pushed and installed on the
+  first attempt, and is byte-identical at adapter SHA-256
+  `ab54d533a4827761bac05ad76554cbb8f2ac0332e61d19135c981f67d171b219`.
+- Session `m5-chatgpt-collision-suffix-proof` spent the sole prompt budget with
+  exactly the canonical 505-byte fixture and completed fresh conversation
+  `6a715be8-2834-83ea-82a1-eb1d54e93f85`. Sole job
+  `hmj_25347a95316e4517bd91ac6620c3127b` ran once with `maxItems=2`, matched all
+  four provider-session dimensions, and terminated `failed`, metrics 1
+  materialized / 1 failed.
+- The 37,087-byte DOCX materialized at SHA-256
+  `8a3a123dcabe81d2e480d6850aabd151b5cd562530e0b0047240430e5ed48608` and
+  passes OOXML integrity, exact control/provenance/list content, and one-page
+  visual QA. The TXT again failed `captured_asset_identity_mismatch` for catalog
+  `...(6).txt` versus native `....txt`, despite installed code containing the
+  symmetric helper and the exact public regression passing provider-free.
+- W5 did not run. The prompt, direct-job, and live-failure budgets are consumed;
+  no retry or replacement is permitted by this plan. API PID `91706` remains
+  active/running with zero restarts; scheduler and five completions are paused,
+  queued/running work is 0/0, active history jobs are zero, default
+  `activeCompletionId` is null, and all ChatGPT guards are clear.
 - Plan 0180 M1-M4 and M6 are installed and provider-free green. Renderer-yield
   repair `9381182b` is installed byte-identically under API PID `94356` at
   adapter SHA-256
@@ -162,7 +183,7 @@ Required checkpoint fields: `plan_version`, `state_transition`,
   failed entries and validates both artifacts.
 - [ ] One `maxPasses=1` default live-follow canary satisfies Plan 0180 M5 with
   no retry, duplicate route mutation, safety signal, or unrelated work.
-- [ ] Final scheduler/completion/job posture is paused and zero-work; continuous
+- [x] Final scheduler/completion/job posture is paused and zero-work; continuous
   re-enablement remains separately gated.
 
 ## Non-Goals
@@ -283,3 +304,39 @@ to paused zero-work. Test counts or a successful DOCX alone are insufficient.
 - `next_action_or_stop_reason`: enter W4 once with the canonical fixture, one
   fresh ChatGPT root conversation, one prompt, and one two-item materialization
   job; any terminal failure prevents W5 and ends live execution without retry.
+
+## Checkpoint 5 | Terminal Stop
+
+- `plan_version`: 2
+- `state_transition`: installed parity -> one fresh W4 turn and one direct job
+  -> repeated native collision-suffix identity rejection -> campaign closed at
+  configured hard stop; W5 not entered.
+- `progress_classification`: terminal_blocked
+- `evidence`: session `m5-chatgpt-collision-suffix-proof` completed fresh
+  conversation `6a715be8-2834-83ea-82a1-eb1d54e93f85`; sole job
+  `hmj_25347a95316e4517bd91ac6620c3127b` has `attemptCount=1`, exact
+  four-dimension provider-session match, and terminal metrics 1 materialized /
+  1 failed. Artifact manifest proves the DOCX materialized; file manifest
+  proves `captured_asset_identity_mismatch` for requested
+  `auracall-m5-source-20260802T185953Z(6).txt` versus native response
+  `auracall-m5-source-20260802T185953Z.txt`.
+- `artifact_validation`: DOCX is 37,087 bytes at SHA-256
+  `8a3a123dcabe81d2e480d6850aabd151b5cd562530e0b0047240430e5ed48608`;
+  ZIP/OOXML, exact control ID, exactly-one-upload statement, verbatim three-item
+  list, and rendered one-page visual inspection pass. No TXT bytes were
+  published, so W4 acceptance fails.
+- `runtime_contradiction`: source and installed adapter hashes match and the
+  installed JavaScript contains symmetric suffix normalization, while the live
+  native branch still rejected the exact ASCII `(6)`/unsuffixed pair. The next
+  safe gate is provider-free branch instrumentation or an installed-module
+  reproduction that records extensions and normalized stems at the decision;
+  it is not another live retry.
+- `subagent_status`: `not_spawned`; governing runtime policy prohibited
+  delegation and the work stayed on one serialized path.
+- `budget_consumption`: provider-free W1 attempts 2/2; review rework 0/1;
+  install 1/2; prompt submissions 1/1; direct jobs 1/1; live-follow starts
+  0/1; owned canary jobs 0/1; live failures 1/1; live stages 1/2.
+- `remaining_criteria`: W4 exact TXT materialization and W5 default live-follow
+  proof remain unmet; Plan 0180 M5 remains open.
+- `next_action_or_stop_reason`: terminal stop. Do not retry, replace the chat or
+  job, start W5, resume scheduler/completions, or clear guards under this plan.

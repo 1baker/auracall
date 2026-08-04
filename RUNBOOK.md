@@ -15624,3 +15624,26 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
 - Delegation is `not_spawned`: current runtime policy prohibits subagents
   without explicit user delegation, and the critical path has one narrow,
   serialized code/test/install/live write surface.
+
+## Turn 348 | 2026-08-03
+
+- Plan 0182 repair `ea1efb75` passed its exact red/green, 129/129 adapter,
+  76/76 adjacent, type/build/audit, and 304-file/2,709-test provider-free gates.
+  It was pushed and installed on attempt 1; source/installed adapter SHA-256 is
+  `ab54d533a4827761bac05ad76554cbb8f2ac0332e61d19135c981f67d171b219`.
+- The sole W4 prompt used exactly the 505-byte fixture in fresh conversation
+  `6a715be8-2834-83ea-82a1-eb1d54e93f85`. Sole job
+  `hmj_25347a95316e4517bd91ac6620c3127b` ran once, matched email/plan/structure/
+  account-level identity, and terminated `failed`, metrics 1 materialized / 1
+  failed.
+- DOCX `auracall-m5-20260802T185953Z(6).docx` is 37,087 bytes at SHA-256
+  `8a3a123dcabe81d2e480d6850aabd151b5cd562530e0b0047240430e5ed48608` and
+  passes OOXML, exact requested content, and one-page visual inspection. The
+  TXT again failed closed for requested `...(6).txt` versus native `....txt`.
+- This consumes Plan 0182's prompt, direct-job, and live-failure budgets. W5
+  did not run; no retry, replacement, scheduler/completion resume, or guard
+  action is authorized. Next gate: provider-free installed-branch evidence for
+  the normalized stems/extensions before any successor live campaign.
+- Final API PID `91706` is active/running with zero restarts. Scheduler and five
+  completions are paused, queued/running work is 0/0, active history jobs are
+  zero, default `activeCompletionId` is null, and all ChatGPT guards are clear.

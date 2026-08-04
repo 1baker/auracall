@@ -43055,3 +43055,23 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - No browser/provider action, prompt, materialization job, retry, scheduler
   resume, or completion resume ran during install. W4 may now spend its sole
   fresh-prompt and direct-job budget; any failure is terminal without retry.
+
+## 2026-08-03 | Plan 0182 stopped on repeated live suffix rejection
+
+- The sole W4 turn completed fresh conversation
+  `6a715be8-2834-83ea-82a1-eb1d54e93f85` from exactly one 505-byte fixture and
+  one prompt. Sole job `hmj_25347a95316e4517bd91ac6620c3127b` ran once with
+  `maxItems=2` and exact four-dimension provider-session match.
+- The job terminated `failed`, metrics 1 materialized / 1 failed. The 37,087-
+  byte DOCX at SHA-256 `8a3a123d...` passes ZIP/OOXML, exact control ID,
+  exactly-one-upload provenance, all three verbatim items, and rendered
+  one-page visual QA.
+- The source failed again as `captured_asset_identity_mismatch`: requested
+  `auracall-m5-source-20260802T185953Z(6).txt`, native response
+  `auracall-m5-source-20260802T185953Z.txt`. This contradicts the green exact
+  public regression and the byte-identical installed helper's symmetric code;
+  provider-free decision-branch evidence is required before another live gate.
+- Prompt 1/1, direct job 1/1, and live failure 1/1 are consumed. W5 did not run
+  and no retry/replacement occurred. API PID `91706` remains healthy; scheduler
+  and five completions are paused, queued/running work is zero, default active
+  completion is null, active history jobs are zero, and all guards are clear.

@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 33
+Plan version: 34
 
 ## Stable Objective
 
@@ -13,6 +13,19 @@ reenablement.
 
 ## Current State
 
+- Plan 0182 is closed at its configured first-live-failure stop. Repair commit
+  `ea1efb75` is pushed and installed byte-identically, but fresh conversation
+  `6a715be8-2834-83ea-82a1-eb1d54e93f85` and sole job
+  `hmj_25347a95316e4517bd91ac6620c3127b` again ended 1 materialized / 1 failed
+  on catalog `...(6).txt` versus native `....txt` identity. The exact public
+  regression passes and installed JavaScript contains the symmetric helper, so
+  the next gate is provider-free decision-branch evidence, not another live
+  attempt. M5 remains open and W5 did not run.
+- The fresh DOCX is 37,087 bytes at SHA-256
+  `8a3a123dcabe81d2e480d6850aabd151b5cd562530e0b0047240430e5ed48608` and
+  passes structural, exact-content, and rendered visual QA. Scheduler and five
+  completions remain paused with queued/running work 0/0; no retry or
+  re-enablement action ran.
 - The installed renderer-yield repair now has one fresh no-retry live receipt.
   Session `m5-chatgpt-renderer-yield-proof` submitted exactly one prompt with
   the sole 505-byte fixture in fresh ChatGPT conversation
