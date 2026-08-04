@@ -771,6 +771,28 @@ describe("downloadChatgptConversationFilesWithClient", () => {
 		expect(Date.now() - startedAt).toBeLessThan(100);
 	});
 
+	test("yields for the bounded poll interval when no capture is pending", async () => {
+		vi.useFakeTimers();
+		try {
+			let settled = false;
+			const wait = waitForChatgptCaptureProgress([], 25, 25).then(() => {
+				settled = true;
+			});
+
+			await vi.advanceTimersByTimeAsync(0);
+			expect(settled).toBe(false);
+
+			await vi.advanceTimersByTimeAsync(24);
+			expect(settled).toBe(false);
+
+			await vi.advanceTimersByTimeAsync(1);
+			await wait;
+			expect(settled).toBe(true);
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
 	test("bounds stalled download stages without changing prompt results", async () => {
 		await expect(
 			awaitChatgptDownloadPromiseWithTimeout(

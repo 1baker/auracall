@@ -9856,11 +9856,16 @@ export async function waitForChatgptCaptureProgress(
 	const boundedWaitMs = Math.max(0, Math.min(pollMs, remainingMs));
 	let timeout: ReturnType<typeof setTimeout> | null = null;
 	try {
+		const boundedWait = new Promise<void>((resolve) => {
+			timeout = setTimeout(resolve, boundedWaitMs);
+		});
+		if (promises.length === 0) {
+			await boundedWait;
+			return;
+		}
 		await Promise.race([
 			Promise.allSettled([...promises]).then(() => undefined),
-			new Promise<void>((resolve) => {
-				timeout = setTimeout(resolve, boundedWaitMs);
-			}),
+			boundedWait,
 		]);
 	} finally {
 		if (timeout) clearTimeout(timeout);
