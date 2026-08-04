@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 36
+Plan version: 37
 
 ## Stable Objective
 
@@ -13,6 +13,12 @@ reenablement.
 
 ## Current State
 
+- Plan 0185 is open under the operator's 2026-08-04 explicit two-gate live
+  authority. It preserves the two prior live failures as history and permits
+  exactly one fresh two-asset direct proof, followed only on complete success by
+  one new default `maxPasses=1` canary. Either live failure is terminal; no
+  retry, replacement, code repair, install, scheduler resume, or continuous-
+  live edge exists in the packet.
 - Plan 0184 is closed provider-free complete. Commit `957b37c0` makes captured-
   response and native-download filename evidence share one strict exact/
   collision/extension/stem classifier while preserving exact provider-file URL
@@ -1560,3 +1566,23 @@ continuous live-follow reenablement remain separately gated afterward.
 - `next_gate`: Plan 0180 M5 still needs a fresh two-asset proof and conditional
   one-pass canary, but the campaign live ceiling is consumed 2/2. New explicit
   live authority is required; do not reset attempt history implicitly.
+
+## Checkpoint 37
+
+- `plan_version`: 37
+- `state_transition`: Plan 0184 installed provider-free closure -> operator
+  review of the incomplete-boundary planning defect -> Plan 0185 explicitly
+  authorized two-gate live acceptance.
+- `authority_receipt`: the operator's 2026-08-04 `ok go` accepts one exact
+  two-asset direct proof and, only if fully green, one new default
+  `maxPasses=1` canary. Historical failures remain recorded at 2.
+- `runtime_receipt`: `main` is clean and current; API PID `65381` is
+  active/running with zero restarts, scheduler and five completions are paused,
+  active materialization jobs are zero, default ChatGPT has no active completion
+  or guard, and the canonical fixture remains 505 bytes at SHA-256
+  `5d17e7ec...`.
+- `budget_receipt`: new prompts 0/1, direct jobs 0/1, conditional completion
+  starts 0/1, conditional owned jobs 0/1, new live failures 0/1, and live stages
+  0/2. Code repair, install, retry, and retained-runtime resume remain 0/0.
+- `next_gate`: commit/push the Plan 0185 authority checkpoint, then run its W1
+  preflight and sole direct turn. A failed direct gate prevents the canary.

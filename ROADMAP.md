@@ -24,12 +24,19 @@ Lane: P01
   [docs/dev/plans/0183-2026-08-03-chatgpt-installed-native-identity-decision-proof.md](docs/dev/plans/0183-2026-08-03-chatgpt-installed-native-identity-decision-proof.md).
   Closed provider-free successor:
   [docs/dev/plans/0184-2026-08-03-chatgpt-intercepted-response-identity-parity.md](docs/dev/plans/0184-2026-08-03-chatgpt-intercepted-response-identity-parity.md).
+  Active explicitly authorized two-gate live successor:
+  [docs/dev/plans/0185-2026-08-04-chatgpt-two-gate-live-acceptance.md](docs/dev/plans/0185-2026-08-04-chatgpt-two-gate-live-acceptance.md).
+  Plan 0185 preserves the two prior failures as history and permits exactly one
+  fresh two-asset direct proof, followed only on complete success by one new
+  `maxPasses=1` default canary. Either failure is terminal; there is no repair,
+  retry, scheduler resume, or continuous-live edge in this packet.
   Plan 0184 repaired, validated, pushed, and installed the separate
   intercepted-response collision-suffix boundary without live work. Both
   filename gates now share one strict classifier and preserve provider-file URL
   authority; 2,714 provider-free tests pass. The goal-wide 2/2 failure ceiling
-  was not reset, so M5's fresh proof and conditional canary remain blocked on
-  new explicit live authority.
+  was not reset. The operator supplied new explicit authority on 2026-08-04
+  through Plan 0185's distinct one-shot direct-proof and conditional-canary
+  ledger; this does not erase or relabel the prior failures.
   Plan 0183 proved the native collision-suffix scenario through built and
   installed public adapter boundaries and installed sanitized decision
   telemetry. Its sole direct proof then failed before that branch: the separate

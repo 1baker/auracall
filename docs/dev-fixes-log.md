@@ -1,3 +1,11 @@
+- 2026-08-04: A live retry ceiling can execute correctly while provider-free
+  coverage is still incomplete. Before spending the final live attempt, map and
+  exercise every fail-closed gate that can terminate the observed path; proving
+  only a downstream fallback is insufficient when an earlier validator can
+  reject the same evidence. If a successor is later authorized, preserve prior
+  failures as history and give the new direct proof and conditional canary
+  separate one-shot budgets rather than describing the action as one more retry.
+
 - 2026-08-03: When ChatGPT captured-response and native-download paths can both
   supply filename evidence, route both through one strict identity classifier.
   Preserve exact provider-file URL authority first; filename fallback may

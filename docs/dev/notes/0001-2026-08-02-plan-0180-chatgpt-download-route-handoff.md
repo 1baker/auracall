@@ -1,9 +1,25 @@
 # Plan 0180 ChatGPT Download-Route Fresh-Agent Handoff
 
 Date: 2026-08-02
-State: Plan 0184 installed provider-free; goal-wide live failure budget 2/2 exhausted
+State: Plan 0185 explicitly authorized two-gate live acceptance
 Governing plan: `docs/dev/plans/0180-2026-08-01-chatgpt-same-route-mutation-and-staged-reenablement.md`
-Scope: diagnose whether the direct-route catalog asset and later generated output are safely related; do not resume live follow or spend another materialization attempt
+Scope: execute one fresh exact two-asset proof and one conditional one-pass canary; stop at the first failed live gate
+
+## 2026-08-04 Plan 0185 Explicit Live Authority
+
+The operator reviewed why the prior ceiling was exhausted and explicitly
+authorized a distinct bounded successor. Plan 0185 preserves the two prior
+failures as history and permits one new fresh two-asset direct proof. Only a
+fully green 2 materialized / 0 failed result permits one new default
+`maxPasses=1` canary. The first failed live gate stops the packet without a
+retry, replacement chat/job, code repair, install, scheduler resume, retained-
+completion resume, guard clear, or continuous-live edge.
+
+Preflight authority is the installed Plan 0184 parity repair at commit
+`957b37c0`, API PID `65381`, paused scheduler and five paused completions, zero
+active materialization jobs, null default active completion, clear default
+ChatGPT guard, and the exact 505-byte canonical fixture. Success remains
+unproven until both the direct proof and conditional canary pass.
 
 ## 2026-08-03 Plan 0184 Provider-Free Closure
 

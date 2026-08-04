@@ -15714,3 +15714,16 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
 - No prompt, upload, materialization job, completion, canary, or browser action
   ran. Plan 0184 is provider-free complete; Plan 0180 M5 remains blocked because
   its campaign live-failure ceiling is exhausted at 2/2.
+
+## Turn 353 | 2026-08-04
+
+- Opened Plan 0185 after the operator explicitly authorized the recommended
+  two-gate successor. The two prior failures remain durable history rather than
+  a resettable counter.
+- The new packet permits one fresh exact two-asset direct proof and, only after
+  complete success, one new default `maxPasses=1` canary. The first failed live
+  gate closes the packet with no retry, replacement, code repair, or install.
+- Pre-plan readback found clean `main`, installed Plan 0184 runtime PID `65381`
+  active with zero restarts, paused scheduler and five paused completions, zero
+  active materialization jobs, no default active completion or ChatGPT guard,
+  and the exact 505-byte fixture at SHA-256 `5d17e7ec...`.

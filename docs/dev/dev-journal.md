@@ -43177,3 +43177,16 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Plan 0184 is provider-free complete. It consumed no prompt, job, completion,
   canary, browser, or provider action. Plan 0180 M5 remains blocked at the
   campaign's exhausted 2/2 live-failure ceiling.
+
+## 2026-08-04 | Plan 0185 opens under explicit two-gate authority
+
+- The operator reviewed that Plan 0183's second live failure followed incomplete
+  provider-free boundary coverage and authorized one distinct bounded successor
+  rather than an unqualified retry.
+- Plan 0185 preserves both prior failures, permits one fresh two-asset direct
+  proof, and permits one new default `maxPasses=1` canary only after exact 2/0
+  materialization. Either failure is terminal and no repair/retry/install edge
+  exists.
+- Preflight found clean `main`, healthy API PID `65381`, paused scheduler and
+  five completions, zero active jobs, null default active completion, clear
+  default ChatGPT guard, and the exact 505-byte fixture checksum.
