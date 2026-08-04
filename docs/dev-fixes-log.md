@@ -20347,3 +20347,13 @@ browser-stage lifecycle observability, not transcript truncation.
   nonzero while bounded jobs repeatedly find no downloadable candidates, stop
   and diagnose routeability/materialization selection instead of substituting
   unlimited cadence for missing evidence.
+
+## 2026-08-04 | Semantic early-stops preserve unused live authority
+
+- A maximum pass count is a ceiling, not a target. When the governed outcome
+  reaches its semantic terminal condition early, do not consume remaining
+  controls merely because they were budgeted.
+- Re-pause and reclassify the next obligation from current status. Here detail
+  inventory reached zero after two of three permitted controls, while the
+  separate missing-local backlog remained unchanged; the unused pass could not
+  prove materializer convergence and therefore remained unspent.

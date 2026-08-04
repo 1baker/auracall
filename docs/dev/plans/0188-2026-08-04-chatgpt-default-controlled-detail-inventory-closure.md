@@ -1,8 +1,9 @@
 # ChatGPT Default Controlled Detail-Inventory Closure | 0188-2026-08-04
 
-State: OPEN
+State: CLOSED
 Lane: P01
-Plan version: 1
+Plan version: 2
+Outcome: COMPLETE
 Governing objective: close the remaining default ChatGPT detail inventory with
 individually controlled passes while preserving operator-paused runtime posture.
 
@@ -78,13 +79,13 @@ cadence or scheduler authority.
 ## Acceptance Criteria
 
 - [x] Authority packet is committed/pushed before live control.
-- [ ] At most three exact `run-one-pass` controls each advance one pass and one
+- [x] At most three exact `run-one-pass` controls each advance one pass and one
   owned job without failure, guard, identity mismatch, or duplicate mutation.
-- [ ] Remaining detail surfaces reach zero, or the configured ceiling closes
+- [x] Remaining detail surfaces reach zero, or the configured ceiling closes
   terminally with the exact paused zero-work posture preserved.
-- [ ] The post-inventory missing-local backlog is reclassified without direct
+- [x] The post-inventory missing-local backlog is reclassified without direct
   materialization, automatic resume, or scheduler action.
-- [ ] Canonical docs, audits, commit/push, and remote parity state the exact
+- [x] Canonical docs, audits, commit/push, and remote parity state the exact
   terminal outcome.
 
 ## Hard Stops And Non-Goals
@@ -143,3 +144,42 @@ terminally after exact pause with the remaining count and stop reason.
   passes, then backlog reclassification, final posture, audit, and closeout.
 - `next_action_or_stop_reason`: commit/push this checkpoint, repeat exact
   preflight, then permit only controlled pass 4.
+
+## Checkpoint 3 | Inventory Complete And Paused
+
+- `plan_version`: 2
+- `state_transition`: pass 3 paused checkpoint -> governed cadence wait ->
+  controlled pass 4 -> owned job settled -> exact pause -> early-stop complete.
+- `progress_classification`: outcome_progress
+- `evidence`: the second control honored eligibility
+  `2026-08-04T21:33:52.673Z`, then refresh
+  `acctmirror_ef4d14d9-dc36-4289-ba65-19eacf66d98f` completed one final
+  `detail-inventory` surface from `21:33:52.687Z` through `21:36:18.142Z`.
+  Remaining detail surfaces reached 0, `mirrorCompleteness=complete`, and the
+  durable cycle moved to `currentPhase=complete` / `nextPhase=complete`.
+  Telemetry was balanced at 2/6 interactions, no LLM-service requests, and no
+  provider guard.
+- `job_evidence`: owned job `hmj_86d37c10800b4ff39e9b928c951b52f0`
+  ran once and settled `skipped` at `2026-08-04T21:42:40.900Z` with 4
+  conversations, 0 materialized, 7 skipped, 0 failed, 0 duplicate aliases,
+  and all four provider-session dimensions matching.
+- `backlog_reclassification`: metadata and detail inventory are current, but
+  the separate `full_missing_assets` obligation remains
+  `materialization_required`: 30 artifacts plus 32 files, total 62, are known
+  remote and missing locally. Four consecutive owned jobs across Plans 0186
+  and 0188 total 0 materialized / 28 skipped / 0 failed, so additional live-
+  follow passes are not evidence-backed; a separate routeability/materializer-
+  selection diagnosis is the next gate.
+- `safety_posture`: exact pause completed at `2026-08-04T21:43:26.823Z`;
+  scheduler and six completions are paused; queued/running completions and jobs
+  are 0/0; all ChatGPT guards are clear; duplicate same-route attempts are 0;
+  API PID `1091` is active/running with zero restarts.
+- `subagent_status`: `not_spawned`; serialized live control and primary-agent
+  readback.
+- `budget_consumption`: controls 2/3; passes 2/3; jobs 2/3; pauses 2/3;
+  failures 0/1; elapsed about 30/75 minutes; forbidden mutations 0/0. The third
+  control/pass/job/pause remained unused because the semantic early-stop fired.
+- `remaining_criteria`: none within Plan 0188. Materialization convergence,
+  automatic cadence, and scheduler resume remain outside this closed plan.
+- `next_action_or_stop_reason`: stop complete; preserve exact paused posture
+  and open only a provider-free/read-only routeability-selection diagnosis.
