@@ -1,8 +1,9 @@
 # ChatGPT Default Two-Pass Continuous Activation | 0186-2026-08-04
 
-State: OPEN
+State: CLOSED
 Lane: P01
-Plan version: 1
+Plan version: 2
+Outcome: COMPLETE
 Governing objective: prove automatic cadence on one default ChatGPT target
 without granting global scheduler or indefinite unattended authority.
 
@@ -111,12 +112,12 @@ a third pass. Keep the global scheduler and every unrelated completion paused.
   and preserves the three operator-paused ChatGPT completions.
 - [x] Exactly one new default live-follow completion starts under explicit
   installed full-sweep/materialization policy while scheduler remains paused.
-- [ ] The same completion reaches exactly two automatic passes; each owned job
+- [x] The same completion reaches exactly two automatic passes; each owned job
   settles with zero failures, exact identity, no guard, and no duplicate
   same-route mutation.
-- [ ] The exact completion is paused before a third pass and final runtime
+- [x] The exact completion is paused before a third pass and final runtime
   posture is scheduler paused, six completions paused, and zero active work.
-- [ ] Canonical docs, audits, commit/push, and remote parity describe the exact
+- [x] Canonical docs, audits, commit/push, and remote parity describe the exact
   terminal outcome.
 
 ## Hard Stops And Non-Goals
@@ -174,3 +175,37 @@ terminally after the one permitted exact pause.
   pause before pass three, final posture, audit, and closeout.
 - `next_action_or_stop_reason`: commit/push this checkpoint, then allow only the
   same completion's automatic second wake after the persisted quiet interval.
+
+## Checkpoint 3 | Complete
+
+- `plan_version`: 2
+- `state_transition`: pass one settled -> cadence-driven pass two and owned
+  materializer settled -> exact operator pause -> cross-gate paused proof ->
+  complete.
+- `progress_classification`: outcome_progress
+- `evidence`: the same completion woke automatically for pass two and owned job
+  `hmj_d85f68d19e674a11a96acc6de72bc6e4` ran once, settling `skipped` at
+  `2026-08-04T19:50:12.681Z` with 4 conversations attempted, 0 materialized,
+  7 skipped, 0 failed, and 0 duplicate aliases. Email, plan, structure, and
+  account-level provider-session dimensions all matched. The remaining detail
+  surfaces fell from 18 before activation to 10 after the two bounded passes.
+- `safety_posture`: the sole pause ran at `2026-08-04T19:50:32.441Z`, before
+  the former third-pass eligibility time `2026-08-04T19:55:12.681Z`. At
+  `2026-08-04T19:55:41Z`, 29 seconds past that gate, the completion remained
+  `paused` at `passCount=2`, with the second job still its materialization
+  cursor and no error or third job. Scheduler is paused; all six retained
+  completions are paused; queued/running completions and jobs are 0/0; all
+  ChatGPT guards are clear; duplicate same-route attempts are zero; and API PID
+  `65381` is active/running with zero restarts.
+- `projection_note`: scheduler diagnostics retain `wait.kind=active` and the
+  paused completion ID as an ownership pointer. The authoritative completion
+  record and target decision classify it `operator_paused`, while aggregate
+  queued/running counts remain zero; this is not provider activity.
+- `subagent_status`: `not_spawned`; serialized live observation and control.
+- `budget_consumption`: starts 1/1; passes 2/2; owned jobs 2/2; safety pauses
+  1/1; live failures 0/1; elapsed about 40/60 minutes; forbidden mutations 0/0.
+- `remaining_criteria`: none within Plan 0186. The 10 remaining detail surfaces,
+  indefinite default leave-running authority, other target resumes, and global
+  scheduler resume remain outside this closed plan.
+- `next_action_or_stop_reason`: stop complete. Preserve the paused zero-work
+  posture pending a separately reviewed policy/backlog decision.

@@ -43267,3 +43267,20 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Scheduler and unrelated completions remain paused. Duplicate same-route
   mutations are zero and no error, guard, rate-limit, CAPTCHA, or verification
   signal appeared. Only the same completion's automatic second wake remains.
+
+## 2026-08-04 | Plan 0186 two-pass activation closes complete
+
+- The same default completion woke automatically for pass two. Its second and
+  final owned job `hmj_d85f68d19e674a11a96acc6de72bc6e4` ran once and settled
+  skipped at 0 materialized / 7 skipped / 0 failed / 0 duplicate aliases with
+  all four provider-session dimensions matching. Two bounded passes reduced
+  remaining detail surfaces from 18 to 10.
+- The sole authorized pause ran at `2026-08-04T19:50:32.441Z`, before the
+  former third-pass gate at `2026-08-04T19:55:12.681Z`. A direct read at
+  19:55:41Z proved the completion remained paused at `passCount=2`, with no
+  error or third job.
+- Final readback shows scheduler paused, six retained completions paused,
+  queued/running completions and jobs 0/0, all ChatGPT guards clear, duplicate
+  same-route attempts zero, and API PID `65381` healthy with zero restarts.
+  Plan 0186 closes complete; the remaining backlog and any indefinite or global
+  resume require separate review.

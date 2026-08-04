@@ -15782,3 +15782,17 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
 - Scheduler and unrelated completions remain paused, duplicate same-route
   mutations remain zero, and no safety signal appeared. The same completion's
   automatic second cadence wake is the only remaining live gate.
+- The same completion woke on cadence for pass two. Owned job
+  `hmj_d85f68d19e674a11a96acc6de72bc6e4` ran once and settled skipped at
+  0 materialized / 7 skipped / 0 failed / 0 duplicate aliases with all four
+  provider-session dimensions matching. Remaining default detail surfaces fell
+  from 18 to 10 across the two passes.
+- The exact completion was paused at `2026-08-04T19:50:32.441Z`, before its
+  former third-pass eligibility at `2026-08-04T19:55:12.681Z`. At 19:55:41Z it
+  remained paused at `passCount=2`, with the second job still its cursor and no
+  third job or error.
+- Final posture is scheduler paused, six retained completions paused,
+  queued/running completions and jobs 0/0, all ChatGPT guards clear, duplicate
+  same-route attempts zero, and API PID `65381` healthy with zero restarts.
+  Plan 0186 is complete; unattended default continuation and scheduler resume
+  remain separate operator decisions.
