@@ -109,7 +109,7 @@ a third pass. Keep the global scheduler and every unrelated completion paused.
 
 - [x] Read-only planning identifies default as the sole eligible ChatGPT target
   and preserves the three operator-paused ChatGPT completions.
-- [ ] Exactly one new default live-follow completion starts under explicit
+- [x] Exactly one new default live-follow completion starts under explicit
   installed full-sweep/materialization policy while scheduler remains paused.
 - [ ] The same completion reaches exactly two automatic passes; each owned job
   settles with zero failures, exact identity, no guard, and no duplicate
@@ -150,3 +150,27 @@ terminally after the one permitted exact pause.
 - `remaining_criteria`: W1-W3 and the four unchecked acceptance items.
 - `next_action_or_stop_reason`: audit and commit/push this authority packet,
   then run final preflight. Any mismatch stops before live activation.
+
+## Checkpoint 2 | Pass One Settled
+
+- `plan_version`: 1
+- `state_transition`: authorized ready -> exact default live-follow start ->
+  first collector pass and owned materializer settled green.
+- `progress_classification`: outcome_progress
+- `evidence`: completion
+  `acctmirror_completion_db1266f9-7b50-41d5-bf32-1adaddb735b3` started at
+  `2026-08-04T19:15:19.325Z` in `mode=live_follow` with the explicit installed
+  full-sweep/full-missing-assets, all-asset, max-six policy and reached
+  `passCount=1`. Owned job `hmj_66ef8d5f263641d89f7dd0b6ab6d4869`
+  ran once and settled `skipped` at 0 materialized / 7 skipped / 0 failed / 0
+  duplicate aliases with all four provider-session dimensions matching.
+- `safety_posture`: scheduler remains paused; unrelated completions remain
+  paused; duplicate same-route attempts remain zero; no error, guard, rate
+  limit, CAPTCHA, or verification signal appeared.
+- `subagent_status`: `not_spawned`; serialized observation.
+- `budget_consumption`: starts 1/1; passes 1/2; owned jobs 1/2; safety pauses
+  0/1; live failures 0/1; elapsed about 15/60 minutes; forbidden mutations 0/0.
+- `remaining_criteria`: one cadence-driven second pass and owned job, exact
+  pause before pass three, final posture, audit, and closeout.
+- `next_action_or_stop_reason`: commit/push this checkpoint, then allow only the
+  same completion's automatic second wake after the persisted quiet interval.

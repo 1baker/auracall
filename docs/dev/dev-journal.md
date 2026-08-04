@@ -43255,3 +43255,15 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Planning changed no live state. API PID `65381` remains healthy; scheduler and
   five completions are paused; active work is zero; default active completion
   and all ChatGPT guards are null/clear.
+
+## 2026-08-04 | Plan 0186 first automatic pass settles green
+
+- Sole completion `acctmirror_completion_db1266f9-7b50-41d5-bf32-1adaddb735b3`
+  started in live-follow mode under the explicit installed full-sweep/full-
+  missing-assets, all-asset, max-six policy and reached `passCount=1`.
+- Owned job `hmj_66ef8d5f263641d89f7dd0b6ab6d4869` ran once and settled skipped
+  at 0 materialized / 7 skipped / 0 failed / 0 duplicate aliases with exact
+  email, plan, structure, and account-level provider-session matches.
+- Scheduler and unrelated completions remain paused. Duplicate same-route
+  mutations are zero and no error, guard, rate-limit, CAPTCHA, or verification
+  signal appeared. Only the same completion's automatic second wake remains.
