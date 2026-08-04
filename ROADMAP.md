@@ -30,6 +30,12 @@ Lane: P01
   [docs/dev/plans/0186-2026-08-04-chatgpt-default-two-pass-continuous-activation.md](docs/dev/plans/0186-2026-08-04-chatgpt-default-two-pass-continuous-activation.md).
   Closed backlog-policy review:
   [docs/dev/plans/0187-2026-08-04-chatgpt-default-backlog-policy-review.md](docs/dev/plans/0187-2026-08-04-chatgpt-default-backlog-policy-review.md).
+  Active controlled inventory-closure successor:
+  [docs/dev/plans/0188-2026-08-04-chatgpt-default-controlled-detail-inventory-closure.md](docs/dev/plans/0188-2026-08-04-chatgpt-default-controlled-detail-inventory-closure.md).
+  Plan 0188 permits at most three one-at-a-time `run-one-pass` controls on the
+  existing default completion, with exact re-pause and settlement review after
+  each pass. It stops early at zero detail surfaces and does not authorize
+  automatic cadence, direct backlog materialization, or scheduler resume.
   Plan 0187 rejects unattended continuation from the current evidence. Ten
   detail surfaces remain while 62 known remote assets are missing locally, and
   two clean materialization jobs produced zero downloads. The next eligible

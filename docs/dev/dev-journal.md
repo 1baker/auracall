@@ -43300,3 +43300,15 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   the 62-asset materialization backlog be reclassified.
 - No live or configuration action ran. Scheduler and all six completions remain
   paused, queued/running work is zero, and ChatGPT guards remain clear.
+
+## 2026-08-04 | Plan 0188 opens controlled inventory closure
+
+- The operator explicitly authorized Plan 0187's proposed successor: no more
+  than three individual `run-one-pass` controls on the existing default
+  completion, stopping early when detail surfaces reach zero.
+- Every pass requires its owned job to settle cleanly and the exact completion
+  to be re-paused before another control. Any failure, guard, identity mismatch,
+  duplicate mutation, or nondecreasing surface count is terminal without retry.
+- Preflight remains pass 2 with 10 detail surfaces and 62 missing-local assets;
+  scheduler and six completions are paused, active work is zero, ChatGPT guards
+  are clear, and API PID `1091` is healthy with zero restarts.
