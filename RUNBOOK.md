@@ -15665,3 +15665,23 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   one native matcher caller and the existing public adapter test seam.
 - Delegation is `not_spawned` because governing runtime policy prohibits it and
   the successor remains one serialized adapter/test/install/live path.
+
+## Turn 350 | 2026-08-03
+
+- Plan 0183 provider-free validation passed 2,712 tests and installed commit
+  `5bf02331` byte-identically under post-mtime API PID `56881`. The native
+  public boundary classified exact/collision/extension/stem decisions without
+  weakening strict rejection.
+- The sole live turn uploaded the canonical 505-byte fixture once and completed
+  fresh conversation `6a716326-1784-83ea-ac22-0aaff0480d79`. Sole job
+  `hmj_8e07857be43c464bb280024812fdab54` ran once with exact four-dimension
+  identity and terminated failed, metrics 1 materialized / 1 failed.
+- DOCX `...(7).docx` is 38,519 bytes at SHA-256 `1887fb42...` and passes OOXML,
+  required content, and one-page visual QA. TXT catalog `...(7).txt` versus
+  unsuffixed captured response failed before the native fallback; absence of
+  `nativeIdentity.*` telemetry isolates the separate intercepted-response exact
+  filename validator.
+- Goal live failures are exhausted at 2/2. No retry, replacement, or conditional
+  canary ran. Scheduler and five completions remain paused, queued/running work
+  and active jobs are zero, default active completion is null, and all ChatGPT
+  guards are clear. Plan 0183 is terminal; Plan 0180 M5 remains open.

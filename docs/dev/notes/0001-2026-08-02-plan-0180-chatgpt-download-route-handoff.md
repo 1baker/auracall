@@ -1,9 +1,34 @@
 # Plan 0180 ChatGPT Download-Route Fresh-Agent Handoff
 
 Date: 2026-08-02
-State: Packet B and target/model guard installed; corrected control stopped on missing ChatGPT session authority
+State: Plan 0183 terminal; goal-wide live failure budget 2/2 exhausted
 Governing plan: `docs/dev/plans/0180-2026-08-01-chatgpt-same-route-mutation-and-staged-reenablement.md`
 Scope: diagnose whether the direct-route catalog asset and later generated output are safely related; do not resume live follow or spend another materialization attempt
+
+## 2026-08-03 Plan 0183 Terminal Resume Boundary
+
+Plan 0183 is closed after its sole final live proof. Session
+`m5-native-decision-final-proof` uploaded exactly one canonical 505-byte source
+and completed fresh ChatGPT conversation
+`6a716326-1784-83ea-ac22-0aaff0480d79`. Sole job
+`hmj_8e07857be43c464bb280024812fdab54` ran once with exact account/profile
+proof and ended 1 materialized / 1 failed. No retry or canary ran.
+
+The generated `auracall-m5-20260802T185953Z(7).docx` is valid at 38,519 bytes,
+SHA-256 `1887fb42d900dd7548318b97c85fd1502be399e82558af6560a2a6685cec3da2`,
+and passes exact content plus rendered QA. The source catalog title was
+`auracall-m5-source-20260802T185953Z(7).txt`; the captured response filename was
+unsuffixed and no TXT bytes were published.
+
+The decisive diagnostic is absence of the installed
+`chatgpt.downloadConversationFile.nativeIdentity.*.v1` counter. The transfer
+failed in the earlier intercepted-response validator, which still requires
+exact normalized filename equality, before the repaired native fallback could
+run. A future successor must start provider-free at that validator. The
+goal-wide live failure ceiling is exhausted at 2/2, so this note does not grant
+another prompt, job, canary, scheduler/completion resume, or continuous
+reenablement. Current posture is paused and zero-work with all ChatGPT guards
+clear.
 
 ## 2026-08-02 Resume-Boundary Update
 

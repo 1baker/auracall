@@ -1,8 +1,8 @@
 # ChatGPT Installed Native Identity Decision Proof | 0183-2026-08-03
 
-State: OPEN
+State: CLOSED
 Lane: P01
-Plan version: 1
+Plan version: 2
 Governing goal: repair and test the remaining ChatGPT live-follow materialization
 path without turn-by-turn authorization or unbounded retries.
 Supports: Plan 0180 M5; succeeds closed Plan 0182.
@@ -162,7 +162,7 @@ canary only if both exact assets materialize with zero failures.
   process with paused zero-work parity.
 - [ ] One final direct proof materializes exact TXT and DOCX with zero failures.
 - [ ] One conditional `maxPasses=1` default canary satisfies Plan 0180 M5.
-- [ ] Final scheduler/completion/job posture is paused and zero-work; continuous
+- [x] Final scheduler/completion/job posture is paused and zero-work; continuous
   re-enablement remains separately gated.
 
 ## Hard Stops And Non-Goals
@@ -272,3 +272,50 @@ configured stop and Plan 0180 M5 remains open.
 - `next_action_or_stop_reason`: enter W5 exactly once with the canonical
   fixture, one unique root slug, one prompt, and one `maxItems=2` job; any
   failed asset closes the successor terminally and prevents W6.
+
+## Checkpoint 5 | Terminal Stop
+
+- `plan_version`: 2
+- `state_transition`: installed parity -> one fresh W5 turn and one direct job
+  -> intercepted-response collision-suffix rejection -> campaign closed at
+  configured hard stop; W6 not entered.
+- `progress_classification`: terminal_blocked
+- `turn_receipt`: session `m5-native-decision-final-proof` uploaded exactly the
+  canonical 505-byte fixture, submitted one prompt, and completed fresh
+  conversation `6a716326-1784-83ea-ac22-0aaff0480d79` with the requested DOCX
+  link. No second submission ran.
+- `job_receipt`: sole job `hmj_8e07857be43c464bb280024812fdab54`
+  was new, matched all four provider-session dimensions, ran at
+  `attemptCount=1` with `maxItems=2`, and terminated `failed`, metrics 1
+  materialized / 1 failed. No retry or replacement job ran.
+- `artifact_receipt`: cached
+  `auracall-m5-20260802T185953Z(7).docx` is 38,519 bytes at SHA-256
+  `1887fb42d900dd7548318b97c85fd1502be399e82558af6560a2a6685cec3da2`.
+  ZIP/OOXML integrity, exact control ID, exactly-one-upload provenance, all
+  three verbatim list items, and rendered one-page visual QA pass.
+- `source_receipt`: refreshed catalog identity was
+  `auracall-m5-source-20260802T185953Z(7).txt`; the captured response named
+  `auracall-m5-source-20260802T185953Z.txt`. The file manifest contains no
+  `nativeIdentity.*` decision and the TXT was not published. Production source
+  shows the intercepted-response validator at the earlier capture boundary
+  requires exact `normalizeFileKey` equality, so it rejected before the native
+  collision-suffix classifier could execute.
+- `root_cause`: W1 proved the wrong boundary. Built/installed public probes and
+  W2 telemetry exercised only the native-download fallback, while live work
+  stopped in the separate intercepted-response identity validator. Strict
+  cross-asset behavior remains correct, but terminal numeric collision suffix
+  equivalence is not shared across both authorized filename identity gates.
+- `terminal_posture`: API PID `56881` remains active/running with zero restarts;
+  scheduler state/posture are paused, foreground work is inactive,
+  queued/running completions are 0/0 with five paused, active history jobs are
+  zero, default `activeCompletionId` is null, and all four ChatGPT guards are
+  clear.
+- `budget_consumption`: installed probes 2/2; code repair 1/1; review rework
+  0/1; install/restart 1/1; prompts 1/1; direct jobs 1/1; completion starts 0/1;
+  owned canary jobs 0/1; goal live failures 2/2; live stages 1/2.
+- `remaining_criteria`: exact TXT plus DOCX direct proof, conditional one-pass
+  canary, and Plan 0180 M5 remain unmet.
+- `next_action_or_stop_reason`: terminal stop. Do not run W6, another prompt,
+  another job, or another repair under this plan. A future successor must begin
+  provider-free at the intercepted-response validator and cannot infer renewed
+  live authority after the goal-wide 2/2 live-failure ceiling.

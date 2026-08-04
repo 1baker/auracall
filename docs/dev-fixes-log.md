@@ -1,3 +1,12 @@
+- 2026-08-03: ChatGPT file transfer has two independent filename identity
+  gates: intercepted-response validation and native-download fallback
+  validation. A green native public-boundary regression cannot prove the
+  intercepted-response path. Add branch-specific sanitized telemetry and make
+  collision-suffix equivalence consistent only after separate red coverage for
+  each gate; absence of the downstream counter is evidence that an earlier
+  validator stopped the transfer. Preserve strict extension, complete-stem,
+  provider-file, and cross-asset rejection at both boundaries.
+
 - 2026-08-03: When ChatGPT native-download identity behavior contradicts a
   green matcher regression, prove the same scenario through both built and
   installed public adapter exports before changing semantics. Record one

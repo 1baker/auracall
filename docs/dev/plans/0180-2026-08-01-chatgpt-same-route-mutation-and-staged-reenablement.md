@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 34
+Plan version: 35
 
 ## Stable Objective
 
@@ -13,6 +13,15 @@ reenablement.
 
 ## Current State
 
+- Plan 0183 is closed at its goal-wide 2/2 live-failure ceiling. Fresh
+  conversation `6a716326-1784-83ea-ac22-0aaff0480d79` and sole job
+  `hmj_8e07857be43c464bb280024812fdab54` ended 1 materialized / 1 failed on
+  catalog `...(7).txt` versus unsuffixed captured-response identity. Absence of
+  the new `nativeIdentity.*` telemetry proves the native fallback never ran;
+  the earlier intercepted-response validator still requires exact normalized
+  filename equality and is the remaining boundary. The valid 38,519-byte DOCX
+  is SHA-256 `1887fb42...`; no TXT bytes were published. M5 remains open, the
+  one-pass canary did not run, and no further live attempt is authorized.
 - Plan 0182 is closed at its configured first-live-failure stop. Repair commit
   `ea1efb75` is pushed and installed byte-identically, but fresh conversation
   `6a715be8-2834-83ea-82a1-eb1d54e93f85` and sole job
@@ -1494,3 +1503,30 @@ continuous live-follow reenablement remain separately gated afterward.
   numeric collision-suffix normalization provider-free. Do not infer that the
   captured bytes are accepted merely from the original response filename, and
   do not spend another live attempt without separate explicit authority.
+
+## Checkpoint 35
+
+- `plan_version`: 35
+- `state_transition`: Plan 0183 native-boundary parity and telemetry -> one
+  final direct proof -> intercepted-response identity failure; M5 remains open.
+- `campaign_receipt`: Plan 0183 repair `5bf02331` and installed receipt
+  `6c0b1ec3` are pushed. Provider-free validation passed 2,712 tests; installed
+  source/runtime adapter hashes matched and API PID `56881` loaded post-mtime.
+- `turn_and_job_receipt`: fresh conversation
+  `6a716326-1784-83ea-ac22-0aaff0480d79` used one 505-byte upload and one
+  prompt. Sole job `hmj_8e07857be43c464bb280024812fdab54`
+  matched all four session dimensions, ran once, and ended failed at 1
+  materialized / 1 failed.
+- `boundary_receipt`: catalog `...(7).txt` versus captured response `....txt`
+  failed before the native fallback; the file manifest has no
+  `nativeIdentity.*` counter. The remaining defect is terminal-suffix parity in
+  the separate intercepted-response validator, not installed-module drift.
+- `artifact_receipt`: DOCX `...(7).docx` is 38,519 bytes at SHA-256
+  `1887fb42d900dd7548318b97c85fd1502be399e82558af6560a2a6685cec3da2`
+  and passes OOXML, exact content, and one-page rendered QA. No TXT was cached.
+- `terminal_posture`: scheduler and five completions are paused, queued/running
+  work and active history jobs are zero, default active completion is null, all
+  ChatGPT guards are clear, and the conditional canary was not started.
+- `next_gate`: the goal-wide live-failure budget is exhausted at 2/2. Any
+  successor begins with a provider-free intercepted-response regression and
+  requires new explicit live authority before another direct proof.

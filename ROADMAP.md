@@ -20,12 +20,17 @@ Lane: P01
   [docs/dev/plans/0180-2026-08-01-chatgpt-same-route-mutation-and-staged-reenablement.md](docs/dev/plans/0180-2026-08-01-chatgpt-same-route-mutation-and-staged-reenablement.md)
   Supporting execution campaign:
   [docs/dev/plans/0182-2026-08-03-chatgpt-live-follow-collision-suffix-repair-and-bounded-proof.md](docs/dev/plans/0182-2026-08-03-chatgpt-live-follow-collision-suffix-repair-and-bounded-proof.md).
-  Active successor packet:
+  Closed terminal successor packet:
   [docs/dev/plans/0183-2026-08-03-chatgpt-installed-native-identity-decision-proof.md](docs/dev/plans/0183-2026-08-03-chatgpt-installed-native-identity-decision-proof.md).
-  Plan 0183 first proves the exact collision-suffix scenario through both built
-  and installed public adapter boundaries, then adds sanitized decision
-  telemetry and permits only one remaining campaign-level live failure. Its
-  direct proof and conditional one-pass canary each retain one-shot budgets.
+  Plan 0183 proved the native collision-suffix scenario through built and
+  installed public adapter boundaries and installed sanitized decision
+  telemetry. Its sole direct proof then failed before that branch: the separate
+  intercepted-response validator rejected catalog `...(7).txt` versus the
+  unsuffixed response, leaving no `nativeIdentity.*` counter. The DOCX passed;
+  the TXT was not published. The goal-wide live-failure ceiling is exhausted
+  at 2/2, the conditional canary did not run, and M5 remains open. Any successor
+  begins provider-free at that intercepted-response validator and requires new
+  explicit live authority.
   Plan 0182 is closed at its configured first-live-failure stop. Its repair is
   pushed, validated, and installed byte-identically, but the sole fresh direct
   job again ended 1 materialized / 1 failed on catalog `...(6).txt` versus
