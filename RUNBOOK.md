@@ -15867,3 +15867,15 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   backlog 62, exact completion paused at pass 4, scheduler and six completions
   paused, active work 0, default guard null, and API PID `1091` healthy.
 - CodeGraph is healthy at 875 indexed files, 16,483 nodes, and 55,701 edges.
+- The deterministic assertion reproduced the exact mismatch twice with exit 5:
+  metadata current, 62 missing locally, zero detail surfaces, paused completion,
+  and a terminal 0 materialized / 7 skipped / 0 failed job.
+- Structural and persisted-job evidence identified a contract mismatch, not a
+  retry shortage. Status reports the global missing-local inventory;
+  reconciliation separately gates routeable, eligible, nonterminal catalog
+  candidates and bounds attempted assets/targets. The latest seven entries
+  were all terminal skips, with no retryable failure.
+- Four focused tests passed. Plan 0189 closes complete without source, config,
+  installed runtime, browser/provider, job, completion, or scheduler mutation.
+  The next gate is a provider-free red regression plus explicit eligible and
+  selected candidate observability under separate authority.

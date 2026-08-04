@@ -43352,3 +43352,22 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   scheduler state, or job state.
 - Runtime remains exactly paused and zero-work; CodeGraph is healthy and ready
   for direct structural exploration after the red loop is established.
+
+## 2026-08-04 | Plan 0189 closes on selection-contract diagnosis
+
+- A compact provider-free assertion reproduced the same red 62-versus-zero
+  state twice. The initial two shell drafts were harness-construction errors
+  and were excluded from the feedback-loop count.
+- The global `remoteKnownMissingLocal` projection and reconciliation selection
+  are not the same denominator. Reconciliation filters per-conversation catalog
+  rows by routeability, asset evidence, terminal-family history, freshness, and
+  its bounded target/asset budget.
+- The latest persisted job had one collector-reused conversation and seven
+  terminal skips across four results: no downloadable artifact/file surfaces,
+  known file families terminal or outside selection, and one unmatched media
+  record. It had zero retryable failures; another attempt was therefore not the
+  missing ingredient.
+- Four focused existing tests passed. No source, test, config, runtime,
+  provider, browser, job, completion, or scheduler mutation ran. The safe next
+  slice is a separately authorized provider-free regression/observability
+  repair exposing eligible and selected counts alongside the global backlog.

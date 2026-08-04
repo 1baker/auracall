@@ -1,8 +1,9 @@
 # ChatGPT Materialization Selection Diagnosis | 0189-2026-08-04
 
-State: OPEN
+State: CLOSED
 Lane: P01
-Plan version: 1
+Plan version: 2
+Outcome: COMPLETE
 Governing objective: explain provider-free why 62 metadata-current missing-local
 assets produce zero downloadable selections.
 
@@ -77,14 +78,14 @@ root cause plus the smallest safe successor. Preserve all runtime pauses.
 
 ## Acceptance Criteria
 
-- [ ] One exact provider-free command reproduces the 62-versus-zero mismatch
+- [x] One exact provider-free command reproduces the 62-versus-zero mismatch
   twice with deterministic nonzero exit and captured compact evidence.
-- [ ] CodeGraph identifies the separate backlog projection and materialization
+- [x] CodeGraph identifies the separate backlog projection and materialization
   candidate-selection inputs/call path without grep-based reconstruction.
-- [ ] One ranked hypothesis set is tested with no provider or source mutation.
-- [ ] Root cause is stated at the correct certainty level with the smallest
+- [x] One ranked hypothesis set is tested with no provider or source mutation.
+- [x] Root cause is stated at the correct certainty level with the smallest
   safe repair/validation successor and explicit non-goals.
-- [ ] Canonical docs, audits, runtime preservation, commit/push, and remote
+- [x] Canonical docs, audits, runtime preservation, commit/push, and remote
   parity describe the terminal result.
 
 ## Hard Stops And Non-Goals
@@ -114,3 +115,84 @@ boundary and required next evidence.
 - `remaining_criteria`: all five acceptance items.
 - `next_action_or_stop_reason`: audit and commit/push this packet, then build
   and run the exact red-capable provider-free feedback loop twice.
+
+## Checkpoint 2 | Deterministic Red Loop
+
+- `plan_version`: 1
+- `state_transition`: `READY` -> `RED_LOOP` -> `HYPOTHESES`.
+- `progress_classification`: evidence_gain
+- `evidence`: one compact provider-free shell assertion read `/status`, the
+  exact completion, and its exact terminal job, then emitted the same nine
+  scalars and exit 5 twice: metadata current true, missing local 62, detail
+  surfaces 0, completion paused, job skipped, materialized 0, skipped 7, and
+  failed 0. Two earlier shell drafts failed before the assertion because one
+  used zsh's read-only `status` name and one exceeded the argument-list limit;
+  neither was counted as a feedback-loop run.
+- `subagent_status`: `not_spawned`.
+- `budget_consumption`: feedback loops 2/3; CodeGraph flow calls 0/4; probes
+  0/3; hypothesis sets 1/1; forbidden mutations 0/0.
+- `remaining_criteria`: trace the two projections, test the ranked hypotheses,
+  state the supported cause, and close.
+- `next_action_or_stop_reason`: compare the global missing-local aggregation
+  with the reconciliation candidate gates and sanitized persisted-job result.
+
+## Checkpoint 3 | Root Cause Supported
+
+- `plan_version`: 1
+- `state_transition`: `HYPOTHESES` -> `ROOT_CAUSE_SUPPORTED`.
+- `progress_classification`: blocker_reduction
+- `evidence`: CodeGraph and exact-source fallback show that the status backlog
+  is the account-wide `remoteKnownMissingLocal` inventory, while reconciliation
+  independently builds per-conversation candidates from routeable catalog
+  rows, eligible manifest families, freshness evidence, and absence of terminal
+  evidence. `maxItems` caps attempted targets/assets; it is not a promise that
+  the global backlog contains that many currently downloadable candidates.
+  The sanitized persisted latest job had `maxItems=6`, one collector-reused
+  conversation, four conversation results, and seven terminal skips: known
+  file families were already terminal or outside the bounded selection, two
+  details exposed no downloadable artifact/file assets, and one media item had
+  no account-mirror match. There were zero retryable failures. Four focused
+  existing tests passed for terminal-family exclusion, collector snapshot
+  reuse, remaining-budget behavior, and completion failure semantics.
+- `subagent_status`: `not_spawned`.
+- `budget_consumption`: feedback loops 2/3; CodeGraph flow calls 3/4; probes
+  2/3; hypothesis sets 1/1; forbidden mutations 0/0; elapsed within 45/45.
+- `remaining_criteria`: canonical closeout, audits, current paused readback,
+  commit/push, and remote parity.
+- `next_action_or_stop_reason`: close complete. The evidence falsifies stale
+  aggregation as the primary cause and falsifies an insufficient retry budget;
+  it supports a projection/eligibility contract mismatch.
+
+## Root Cause And Successor
+
+The supported cause is a semantic mismatch between two truthful but
+non-equivalent quantities. The 62 count is a global metadata inventory of
+remote-known assets lacking local bytes. The job operates on a separately
+derived, bounded set of routeable and nonterminal catalog candidates. The
+latest selected surfaces produced terminal skips rather than transient
+failures, so an additional pass or a larger retry allowance had no supported
+path to materialization.
+
+The smallest safe successor is provider-free source/test work that first adds
+a red regression proving the confusing 62-versus-zero projection, then exposes
+or derives explicit `eligibleCandidates` and `selectedCandidates` counts beside
+the global backlog and preserves terminal skip dispositions. It must not make
+global missing-local count imply downloadability, weaken terminal-family
+deduplication, increase live retries, or resume the scheduler/completion.
+
+## Final Checkpoint | Complete
+
+- `plan_version`: 2
+- `state_transition`: `ROOT_CAUSE_SUPPORTED` -> `COMPLETE`.
+- `progress_classification`: accepted_completion
+- `evidence`: deterministic red loop 2/2; ranked hypotheses tested; structural
+  and persisted-job evidence agree; 4/4 focused tests pass; canonical docs and
+  audits are current; scheduler and exact completion remain paused with no new
+  job or provider action.
+- `subagent_status`: `not_spawned`.
+- `budget_consumption`: feedback loops 2/3; CodeGraph flow calls 3/4; probes
+  2/3; hypothesis sets 1/1; source/config/build/install/live/control mutations
+  0/0; duration within ceiling.
+- `remaining_criteria`: none inside Plan 0189.
+- `next_action_or_stop_reason`: terminal stop. Any regression/observability
+  repair requires a separately authorized provider-free implementation plan.

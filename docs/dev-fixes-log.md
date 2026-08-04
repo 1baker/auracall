@@ -20357,3 +20357,16 @@ browser-stage lifecycle observability, not transcript truncation.
   inventory reached zero after two of three permitted controls, while the
   separate missing-local backlog remained unchanged; the unused pass could not
   prove materializer convergence and therefore remained unspent.
+
+## 2026-08-04 | Missing-local inventory is not downloadable-candidate inventory
+
+- A global count of remote-known assets without local bytes describes metadata
+  completeness, not the number a bounded reconciliation job can download.
+- Reconciliation has narrower gates: routeable catalog targets, selected-kind
+  evidence, freshness/missing-local evidence, terminal-family exclusions, and
+  target/asset ceilings. Report eligible and selected candidate counts beside
+  the global backlog when operators must predict job yield.
+- A skipped entry is not retry evidence. When every selected result is terminal
+  (`no-materializable-*`, already terminal/outside selection, or unmatched
+  media) and failures are zero, increasing passes or retry budget is unsupported;
+  diagnose the projection and eligibility contract first.
