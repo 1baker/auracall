@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 31
+Plan version: 32
 
 ## Stable Objective
 
@@ -13,8 +13,10 @@ reenablement.
 
 ## Current State
 
-- Pushed commit `9381182b` repairs the empty-capture renderer-yield defect
-  provider-free. A focused
+- Pushed commit `9381182b` repairs the empty-capture renderer-yield defect and
+  is installed with exact built/runtime adapter SHA-256
+  `d31e46a7945972c15431389d330de82b0c0d3af4b68222fc8080f78d7613789b`.
+  API PID `94356` is active/running with zero restarts. A focused
   fake-timer regression proved the helper settled at virtual time 0 before the
   change; it now remains pending through 24 ms and settles at the bounded 25 ms
   interval. Nonempty capture lists retain their existing early-progress race.
@@ -27,9 +29,9 @@ reenablement.
   304 files/2,708 tests with 21 files/65 tests skipped. Scoped Biome retains
   only the existing broad adapter/test formatting/import baseline and known CDP
   `Runtime` naming warning; diff hygiene remains required before commit.
-- The pushed repair is not installed and has no live receipt. M5 and every scheduler/
-  completion/continuous-live-follow re-enablement gate remain open. Installation
-  and any new ChatGPT proof require separate explicit authorization.
+- The installed repair has no live receipt. M5 and every scheduler/completion/
+  continuous-live-follow re-enablement gate remain open. Any new ChatGPT proof
+  requires separate explicit authorization.
 - Diagnostic commit `69f11a35` is pushed and installed byte-identically. The
   source and installed ChatGPT adapter SHA-256 are both
   `70004b92fa0bf2a5687de442b7cf70ab456437f2d15c1deb29cd1d58a131e08e`;
@@ -1397,3 +1399,29 @@ continuous live-follow reenablement remain separately gated afterward.
 - `next_gate`: installation and any fresh two-asset proof remain separate
   explicit gates; do not infer either from provider-free validation or the
   pushed repair.
+
+## Checkpoint 33
+
+- `plan_version`: 32
+- `state_transition`: pushed provider-free renderer-yield repair -> installed
+  byte parity with paused zero-work posture; M5 remains open.
+- `authorization`: the operator's `ok go` authorized installation and exact
+  runtime parity only. It did not authorize ChatGPT/browser work, prompt
+  submission, a materialization job, retry, scheduler/completion resume, or
+  continuous live follow.
+- `preflight`: `main` matched `origin/main`; built adapter SHA-256 was
+  `d31e46a...` while installed adapter SHA-256 remained `70004b92...`. API PID
+  `24738` was active with zero restarts, scheduler and five completions paused,
+  `activeCompletionId=null`, and queued/running jobs 0/0.
+- `install_receipt`: `pnpm run install:user-runtime-service` completed and
+  restarted the user API service into PID `94356`. AuraCall version remains
+  `0.1.1`; `NRestarts=0`, `ActiveState=active`, and `SubState=running`.
+- `parity_receipt`: built and installed
+  `dist/src/browser/providers/chatgptAdapter.js` SHA-256 are both
+  `d31e46a7945972c15431389d330de82b0c0d3af4b68222fc8080f78d7613789b`.
+- `terminal_posture`: scheduler and all five completions remain paused,
+  `activeCompletionId=null`, and queued/running jobs remain 0/0. No browser,
+  provider, prompt, upload, job, or retry action ran.
+- `next_gate`: any fresh two-asset ChatGPT proof requires separate explicit
+  no-retry authority. Do not infer live or re-enablement authority from install
+  parity.

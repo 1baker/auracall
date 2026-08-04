@@ -42973,3 +42973,16 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Code/test repair `9381182b` is pushed. No install, provider/browser work, job,
   retry, or scheduler/completion resume ran. The installed runtime remains
   `69f11a35`; M5 stays open.
+
+## 2026-08-03 | Renderer-yield repair installed with paused parity
+
+- Installed pushed repair `9381182b` using the user-runtime service installer.
+  The API restarted from PID `24738` into active/running PID `94356` with zero
+  restarts; the CLI remains version `0.1.1`.
+- Built and installed ChatGPT adapter SHA-256 are byte-identical at
+  `d31e46a7945972c15431389d330de82b0c0d3af4b68222fc8080f78d7613789b`.
+- Scheduler and five completions remain paused, active completion is null, and
+  queued/running history-materialization jobs are 0/0.
+- No browser/provider action, prompt, upload, materialization job, retry,
+  scheduler resume, or completion resume ran. M5 and all re-enablement gates
+  remain open; another live proof requires separate authority.

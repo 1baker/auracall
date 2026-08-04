@@ -15571,3 +15571,16 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
 - Code/test repair `9381182b` is pushed. No install, browser/provider action,
   materialization job, retry, scheduler resume, or completion resume ran. M5
   remains open; installation and any live proof require separate authority.
+
+## Turn 345 | 2026-08-03
+
+- Installed pushed renderer-yield repair `9381182b` through the user-runtime
+  service installer. The API restarted from PID `24738` into PID `94356` and is
+  active/running with zero restarts; AuraCall remains version `0.1.1`.
+- Built and installed ChatGPT adapter SHA-256 are exactly
+  `d31e46a7945972c15431389d330de82b0c0d3af4b68222fc8080f78d7613789b`.
+- Scheduler and all five completions remain paused, active completion is null,
+  and queued/running materialization jobs are 0/0.
+- No browser/provider action, prompt, upload, materialization job, retry, or
+  re-enablement ran. M5 remains open; a fresh two-asset proof requires separate
+  explicit no-retry authority.

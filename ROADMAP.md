@@ -158,9 +158,10 @@ Lane: P01
   the helper awaits its bounded timer when no capture promise exists. Nonempty
   capture lists retain early-progress behavior. Adjacent tests pass 246/246 and
   the full provider-free suite passes 2,708 tests. Commit `9381182b` is pushed
-  but not installed;
-  M5 and all re-enablement gates remain open, and another live proof requires
-  separate explicit authority.
+  and installed byte-identically at adapter SHA-256 `d31e46a7...` under active
+  API PID `94356`; scheduler and five completions remain paused and queued/
+  running jobs are 0/0. M5 and all re-enablement gates remain open, and another
+  live proof requires separate explicit authority.
 
 - Completed provider-session authority unification:
   [docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md](docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md)

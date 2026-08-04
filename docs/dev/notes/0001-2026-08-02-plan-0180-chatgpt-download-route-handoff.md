@@ -636,6 +636,20 @@ Re-read these values; they are a snapshot, not permission to mutate.
 - Next gate: installation and any fresh two-asset proof require separate
   explicit authorization; do not infer them from the provider-free result.
 
+## 2026-08-03 Installed Renderer-Yield Repair Addendum
+
+- Pushed repair `9381182b` was installed through the user-runtime service
+  installer. API PID `94356` is active/running with zero restarts and AuraCall
+  remains version `0.1.1`.
+- Built and installed ChatGPT adapter SHA-256 are both
+  `d31e46a7945972c15431389d330de82b0c0d3af4b68222fc8080f78d7613789b`.
+- Scheduler and all five completions remain paused, active completion is null,
+  and queued/running materialization jobs are 0/0.
+- No ChatGPT/browser action, prompt submission, upload, materialization job,
+  retry, scheduler/completion resume, or continuous-live-follow action ran.
+- M5 remains open. A fresh two-asset proof is a separate explicit no-retry gate;
+  do not infer it from installed parity.
+
 ## Required Closeout
 
 Update Plan 0180, `ROADMAP.md`, `RUNBOOK.md`, `docs/dev/dev-journal.md`, and
