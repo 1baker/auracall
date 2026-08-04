@@ -151,11 +151,11 @@ Required checkpoint fields: `plan_version`, `state_transition`,
 
 ## Acceptance Criteria
 
-- [ ] Provider-free regression reproduces the exact suffixed-catalog versus
+- [x] Provider-free regression reproduces the exact suffixed-catalog versus
   unsuffixed-native-response mismatch.
-- [ ] Symmetric terminal numeric collision-suffix normalization accepts only a
+- [x] Symmetric terminal numeric collision-suffix normalization accepts only a
   complete stem/extension match and keeps cross-asset failures closed.
-- [ ] Targeted, adjacent, and broad provider-free validation pass.
+- [x] Targeted, adjacent, and broad provider-free validation pass.
 - [ ] Repair is committed, pushed, installed, and byte-identical to source with
   all paused/zero-work guards intact.
 - [ ] One fresh direct proof materializes the exact TXT and DOCX with zero
@@ -214,3 +214,48 @@ to paused zero-work. Test counts or a successful DOCX alone are insufficient.
 - `remaining_criteria`: W1-W5 and all acceptance checks.
 - `next_action_or_stop_reason`: run W1 exact red tracer, then implement only the
   symmetric terminal collision-suffix normalization required to turn it green.
+
+## Checkpoint 2
+
+- `plan_version`: 1
+- `state_transition`: provider-free filename mismatch -> focused regression
+  green after symmetric terminal numeric collision-suffix normalization.
+- `progress_classification`: blocker_reduction
+- `evidence`: the exact public adapter regression failed twice before repair
+  with `captured_asset_identity_mismatch` for requested
+  `auracall-m5-source-20260802T185953Z(5).txt` versus native response
+  `auracall-m5-source-20260802T185953Z.txt`; after the three-line production
+  repair it passes 1/1. Extension equality and complete normalized-stem
+  equality remain mandatory.
+- `subagent_status`: `not_spawned`; the governing runtime prohibition remains
+  active and this is still one serialized critical path.
+- `budget_consumption`: provider-free W1 attempts 2/2; review rework 0/1;
+  install 0/2; prompt submissions 0/1; direct jobs 0/1; live-follow starts
+  0/1; owned canary jobs 0/1; live failures 0/1; live stages 0/2.
+- `remaining_criteria`: W2-W5 plus cross-asset self-review and final paused
+  zero-work verification.
+- `next_action_or_stop_reason`: run W2 targeted, adjacent, and broad
+  provider-free validation; stop before installation if any consolidated
+  validation finding remains after the single permitted rework cycle.
+
+## Checkpoint 3
+
+- `plan_version`: 1
+- `state_transition`: focused repair green -> provider-free validation and
+  bounded self-review complete.
+- `progress_classification`: blocker_reduction
+- `evidence`: ChatGPT adapter 129/129; adjacent history-materialization/MCP
+  76/76; typecheck and production build pass; full provider-free suite 304
+  files/2,709 tests with 21 files/65 tests skipped; plan audit reports 182
+  candidates and zero errors; `git diff --check` passes. Scoped Biome lint
+  passes with only the established CDP `Runtime` naming warning. Self-review
+  confirms extension equality, complete normalized-stem equality, unchanged
+  intercepted-response identity, and upstream ambiguous-download rejection.
+- `subagent_status`: `not_spawned`; the governing runtime prohibition remains
+  active, so the required review is the plan's single independent self-review.
+- `budget_consumption`: provider-free W1 attempts 2/2; review rework 0/1;
+  install 0/2; prompt submissions 0/1; direct jobs 0/1; live-follow starts
+  0/1; owned canary jobs 0/1; live failures 0/1; live stages 0/2.
+- `remaining_criteria`: W3-W5 plus final paused zero-work verification.
+- `next_action_or_stop_reason`: commit and push the validated repair, then run
+  one install and require exact installed parity before any live stage.

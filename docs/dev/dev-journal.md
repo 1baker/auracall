@@ -43023,3 +43023,21 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   adapter test surface before changing implementation.
 - Scheduler and five completions remain paused, active completion is null, and
   queued/running materialization jobs are zero. No live budget has been spent.
+
+## 2026-08-03 | Collision-suffix repair is provider-free validated
+
+- Added one public adapter regression for the exact live mismatch: catalog
+  target `auracall-m5-source-20260802T185953Z(5).txt` and native download
+  `auracall-m5-source-20260802T185953Z.txt`. The unmodified adapter failed
+  twice with `captured_asset_identity_mismatch`; the minimized symmetric
+  terminal numeric-suffix repair turns the same test green.
+- The repair does not change intercepted-response identity and continues to
+  require an exact extension plus the complete remaining normalized stem.
+  Ambiguous native-download handling remains upstream and fail-closed.
+- Adapter tests pass 129/129; adjacent history-materialization/MCP tests pass
+  76/76; typecheck, production build, plan audit, and diff hygiene pass. The
+  full provider-free suite passes 304 files/2,709 tests with 21 files/65 tests
+  skipped. Scoped Biome lint retains only the known CDP `Runtime` warning.
+- W1 consumed its two permitted red confirmations; review consumed no rework.
+  No install, browser/provider action, prompt, job, retry, scheduler resume, or
+  completion resume ran. The next gate is committed install with paused parity.

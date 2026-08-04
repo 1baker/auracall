@@ -11349,7 +11349,9 @@ function browserDownloadedFileNameMatchesTarget(actualName: string, targetName: 
 	if (actualExtension.toLowerCase() !== targetExtension.toLowerCase()) return false;
 	const actualStem = actualName.slice(0, actualName.length - actualExtension.length);
 	const targetStem = targetName.slice(0, targetName.length - targetExtension.length);
-	return normalizeName(actualStem.replace(/\s?\(\d+\)$/, "")) === normalizeName(targetStem);
+	const normalizeCollisionStem = (value: string): string =>
+		normalizeName(value.replace(/\s?\(\d+\)$/, ""));
+	return normalizeCollisionStem(actualStem) === normalizeCollisionStem(targetStem);
 }
 
 async function fileRefFromChatgptDownloadedArtifact(
