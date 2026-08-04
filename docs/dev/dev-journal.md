@@ -43237,3 +43237,21 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   running completions 0/0, active jobs 0, default active completion and guard
   null, and API PID `65381` healthy with zero restarts. Plans 0185 and 0180 are
   complete; continuous re-enablement remains a separate operator decision.
+
+## 2026-08-04 | Plan 0186 bounds target-only continuous activation
+
+- Read-only ChatGPT reconciliation campaign
+  `acctmirror_reconciliation_35143c29-d627-4775-bf45-6f40ffeef5a4` selected
+  only `chatgpt/default`; the other three ChatGPT targets have existing
+  operator-paused completions and remain untouched.
+- Default retains 18 detail surfaces and the installed `full_sweep` /
+  `full_missing_assets`, all-asset, max-six policy. A global scheduler resume
+  would therefore be materially broader than the completed default canary.
+- Plan 0186 permits one default live-follow start, exactly two automatic
+  passes, at most two owned jobs, and one exact pause before pass three or on
+  the first failure/safety signal. The duration ceiling is 60 minutes; retry,
+  repair, install, config mutation, scheduler action, and unrelated completion
+  action are all 0/0.
+- Planning changed no live state. API PID `65381` remains healthy; scheduler and
+  five completions are paused; active work is zero; default active completion
+  and all ChatGPT guards are null/clear.

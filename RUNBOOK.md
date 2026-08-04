@@ -15755,3 +15755,21 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   `65381` healthy with zero restarts.
 - Plan 0185 and Plan 0180 M5 are complete. Continuous scheduler/live-follow
   re-enablement remains outside this closed packet.
+
+## Turn 354 | 2026-08-04
+
+- Opened Plan 0186 as the separate target-level re-enablement packet authorized
+  by the operator's `ok go`. It permits one new `chatgpt/default` live-follow
+  completion, exactly two cadence-driven passes, at most two owned jobs, and
+  one required exact pause before a third pass.
+- Read-only campaign `acctmirror_reconciliation_35143c29-d627-4775-bf45-6f40ffeef5a4`
+  classified default as the sole eligible ChatGPT target. The other three
+  ChatGPT targets retain operator-paused completions and are excluded.
+- Default still has 18 remaining detail surfaces under configured `full_sweep`
+  / `full_missing_assets`, asset kind `all`, max items 6, and 6/min plus
+  120-second action cooldowns. This is not authority for global scheduler or
+  indefinite continuous resume.
+- Pre-plan posture remains API PID `65381` healthy, scheduler and five retained
+  completions paused, queued/running work and active jobs zero, default active
+  completion and guard null, and all ChatGPT guards clear. No live mutation ran
+  during planning.

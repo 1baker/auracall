@@ -26,6 +26,12 @@ Lane: P01
   [docs/dev/plans/0184-2026-08-03-chatgpt-intercepted-response-identity-parity.md](docs/dev/plans/0184-2026-08-03-chatgpt-intercepted-response-identity-parity.md).
   Closed explicitly authorized two-gate live successor:
   [docs/dev/plans/0185-2026-08-04-chatgpt-two-gate-live-acceptance.md](docs/dev/plans/0185-2026-08-04-chatgpt-two-gate-live-acceptance.md).
+  Active staged re-enablement successor:
+  [docs/dev/plans/0186-2026-08-04-chatgpt-default-two-pass-continuous-activation.md](docs/dev/plans/0186-2026-08-04-chatgpt-default-two-pass-continuous-activation.md).
+  Plan 0186 permits one new `chatgpt/default` live-follow completion to prove
+  exactly two cadence-driven passes and then requires an exact pause before a
+  third pass. Global scheduler resume, other target resumes, and indefinite
+  leave-running authority remain excluded.
   Plan 0185 preserves the two prior failures as history. Its sole fresh direct
   proof materialized byte-identical TXT plus valid, content-verified DOCX at
   2/0. Its conditional default canary then completed exactly one pass; the

@@ -20325,3 +20325,13 @@ browser-stage lifecycle observability, not transcript truncation.
   If that shape is not confirmed, prefer canonical completion/status evidence
   and do not launch. Close any agent-created wrong-service process by exact PID
   and exclude its output from acceptance evidence.
+
+## 2026-08-04 | A green bounded canary does not authorize broad resume
+
+- A one-pass target canary proves that target's bounded collector/materializer
+  path, not the safety of globally resuming configured targets or leaving a
+  completion unattended indefinitely.
+- Run the dry-run reconciliation classifier first. Preserve operator-paused
+  targets, inspect the selected target's actual sweep/materialization backlog,
+  and use a reversible pass ceiling plus exact pause before considering
+  persistent or scheduler authority.
