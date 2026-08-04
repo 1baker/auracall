@@ -43041,3 +43041,17 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - W1 consumed its two permitted red confirmations; review consumed no rework.
   No install, browser/provider action, prompt, job, retry, scheduler resume, or
   completion resume ran. The next gate is committed install with paused parity.
+
+## 2026-08-03 | Collision-suffix repair installed with paused parity
+
+- Commit `ea1efb75` is pushed and installed on the first allowed installer
+  attempt. The API service is active/running at PID `91706` with zero restarts.
+- Built and installed `chatgptAdapter.js` are byte-identical at SHA-256
+  `ab54d533a4827761bac05ad76554cbb8f2ac0332e61d19135c981f67d171b219`.
+- Scheduler state/posture remain paused with no foreground work. Completion
+  metrics are queued 0/running 0/paused 5; all five retained records read
+  `paused`. Active history-materialization jobs are zero, the default ChatGPT
+  target has null `activeCompletionId`, and all four ChatGPT guards are clear.
+- No browser/provider action, prompt, materialization job, retry, scheduler
+  resume, or completion resume ran during install. W4 may now spend its sole
+  fresh-prompt and direct-job budget; any failure is terminal without retry.

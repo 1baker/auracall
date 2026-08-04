@@ -156,7 +156,7 @@ Required checkpoint fields: `plan_version`, `state_transition`,
 - [x] Symmetric terminal numeric collision-suffix normalization accepts only a
   complete stem/extension match and keeps cross-asset failures closed.
 - [x] Targeted, adjacent, and broad provider-free validation pass.
-- [ ] Repair is committed, pushed, installed, and byte-identical to source with
+- [x] Repair is committed, pushed, installed, and byte-identical to source with
   all paused/zero-work guards intact.
 - [ ] One fresh direct proof materializes the exact TXT and DOCX with zero
   failed entries and validates both artifacts.
@@ -259,3 +259,27 @@ to paused zero-work. Test counts or a successful DOCX alone are insufficient.
 - `remaining_criteria`: W3-W5 plus final paused zero-work verification.
 - `next_action_or_stop_reason`: commit and push the validated repair, then run
   one install and require exact installed parity before any live stage.
+
+## Checkpoint 4
+
+- `plan_version`: 1
+- `state_transition`: provider-free validation complete -> pushed repair
+  installed with paused zero-work parity.
+- `progress_classification`: blocker_reduction
+- `evidence`: commit `ea1efb75` is pushed to `origin/main`; install attempt 1
+  completed; API service is active/running at PID `91706` with `NRestarts=0`;
+  source and installed `chatgptAdapter.js` share SHA-256
+  `ab54d533a4827761bac05ad76554cbb8f2ac0332e61d19135c981f67d171b219`.
+  Scheduler state/posture are paused, foreground work is inactive, completion
+  metrics are queued 0/running 0/paused 5, all five retained completion records
+  read `paused`, active history-materialization jobs are 0, default target
+  `activeCompletionId` is null, and all four ChatGPT guards are clear.
+- `subagent_status`: `not_spawned`; the governing runtime prohibition remains
+  active and installed parity is direct runtime evidence.
+- `budget_consumption`: provider-free W1 attempts 2/2; review rework 0/1;
+  install 1/2; prompt submissions 0/1; direct jobs 0/1; live-follow starts
+  0/1; owned canary jobs 0/1; live failures 0/1; live stages 0/2.
+- `remaining_criteria`: W4, W5, and final paused zero-work verification.
+- `next_action_or_stop_reason`: enter W4 once with the canonical fixture, one
+  fresh ChatGPT root conversation, one prompt, and one two-item materialization
+  job; any terminal failure prevents W5 and ends live execution without retry.
