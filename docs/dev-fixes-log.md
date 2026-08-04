@@ -20335,3 +20335,15 @@ browser-stage lifecycle observability, not transcript truncation.
   targets, inspect the selected target's actual sweep/materialization backlog,
   and use a reversible pass ceiling plus exact pause before considering
   persistent or scheduler authority.
+
+## 2026-08-04 | Clean passes do not prove backlog convergence
+
+- A live-follow pass can be safe and productive for metadata while its owned
+  materialization job downloads nothing. Track remaining detail surfaces and
+  missing-local assets as separate obligations; zero failures is not evidence
+  that the latter is routeable or converging.
+- Before unattended continuation, bound inventory closure from the observed
+  per-pass rate and re-read the backlog afterward. If missing-local counts stay
+  nonzero while bounded jobs repeatedly find no downloadable candidates, stop
+  and diagnose routeability/materialization selection instead of substituting
+  unlimited cadence for missing evidence.

@@ -43284,3 +43284,19 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   same-route attempts zero, and API PID `65381` healthy with zero restarts.
   Plan 0186 closes complete; the remaining backlog and any indefinite or global
   resume require separate review.
+
+## 2026-08-04 | Plan 0187 rejects unattended continuation
+
+- Read-only review found the default target still owes 10 detail surfaces and
+  separately reports 62 known remote assets missing locally. Plan 0186 safely
+  advanced eight surfaces, but its two jobs produced no downloads: combined
+  0 materialized / 14 skipped / 0 failed.
+- Installed `full_sweep` / `full_missing_assets` policy would continue every
+  five minutes plus jitter with max-six materialization batches. That is broad
+  enough to require explicit convergence evidence, not merely clean passes.
+- The next proposed gate is no more than three individual `run-one-pass`
+  controls on the existing completion, stopping early at zero detail surfaces
+  and requiring paused zero-work restoration after every pass. Only then should
+  the 62-asset materialization backlog be reclassified.
+- No live or configuration action ran. Scheduler and all six completions remain
+  paused, queued/running work is zero, and ChatGPT guards remain clear.

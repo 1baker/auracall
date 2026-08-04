@@ -28,6 +28,14 @@ Lane: P01
   [docs/dev/plans/0185-2026-08-04-chatgpt-two-gate-live-acceptance.md](docs/dev/plans/0185-2026-08-04-chatgpt-two-gate-live-acceptance.md).
   Closed staged re-enablement successor:
   [docs/dev/plans/0186-2026-08-04-chatgpt-default-two-pass-continuous-activation.md](docs/dev/plans/0186-2026-08-04-chatgpt-default-two-pass-continuous-activation.md).
+  Closed backlog-policy review:
+  [docs/dev/plans/0187-2026-08-04-chatgpt-default-backlog-policy-review.md](docs/dev/plans/0187-2026-08-04-chatgpt-default-backlog-policy-review.md).
+  Plan 0187 rejects unattended continuation from the current evidence. Ten
+  detail surfaces remain while 62 known remote assets are missing locally, and
+  two clean materialization jobs produced zero downloads. The next eligible
+  packet is at most three individually observed `run-one-pass` controls on the
+  existing default completion, stopping early at zero detail surfaces before
+  reclassifying materialization convergence. It is proposed, not authorized.
   Plan 0186 proved exactly two cadence-driven `chatgpt/default` passes and two
   clean owned-job settlements, then paused the exact completion before its
   third-pass gate. The pause persisted across that gate with no third job;
