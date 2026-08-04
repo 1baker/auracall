@@ -43088,3 +43088,21 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - A single install/restart and one final direct proof are allowed after full
   provider-free validation. The one-pass default canary remains conditional on
   exact TXT and DOCX success; any further live failure closes the successor.
+
+## 2026-08-03 | Plan 0183 native identity decisions validate provider-free
+
+- Built and installed public adapter exports both materialized the exact
+  `(6)` catalog versus unsuffixed native-download scenario with byte parity,
+  disproving a source-versus-installed matcher divergence.
+- The one permitted production repair now emits one sanitized, versioned
+  decision counter at the native-download identity boundary: exact match,
+  collision-suffix match, extension mismatch, or complete-stem mismatch.
+  Extension and complete-stem mismatches still fail before publication, while
+  the separate intercepted-response validator is unchanged.
+- Public-boundary identity cases pass 4/4, the complete ChatGPT adapter suite
+  passes 132/132, adjacent history/MCP suites pass 76/76, and the full
+  provider-free suite passes 304 files and 2,712 tests. Typecheck, build,
+  scoped lint, plan/goal audits, diff hygiene, and bounded self-review pass.
+- No browser/provider action occurred. Installed probes 2/2 and code repair
+  1/1 are consumed; install/restart, prompt, direct job, and canary budgets
+  remain untouched.

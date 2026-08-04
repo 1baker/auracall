@@ -10417,7 +10417,19 @@ async function downloadChatgptConversationFileWithClient(
 			const downloadedPath = await waitForSingleChatgptDownloadedFile(browserDownloadDir, 5_000);
 			if (downloadedPath) {
 				const downloadedName = path.basename(downloadedPath);
-				if (targetName && !browserDownloadedFileNameMatchesTarget(downloadedName, targetName)) {
+				const nativeIdentityDecision = targetName
+					? classifyBrowserDownloadedFileNameIdentity(downloadedName, targetName)
+					: null;
+				if (nativeIdentityDecision) {
+					recordBrowserScrapeProviderAction(
+						options,
+						`chatgpt.downloadConversationFile.nativeIdentity.${nativeIdentityDecision}.v1`,
+					);
+				}
+				if (
+					nativeIdentityDecision === "extensionMismatch" ||
+					nativeIdentityDecision === "stemMismatch"
+				) {
 					throw new Error(
 						`ChatGPT conversation file fetch failed: captured_asset_identity_mismatch: requested=${targetName} response=${downloadedName}`,
 					);
@@ -11341,17 +11353,28 @@ async function waitForSingleChatgptDownloadedFile(
 	return null;
 }
 
-function browserDownloadedFileNameMatchesTarget(actualName: string, targetName: string): boolean {
+type BrowserDownloadedFileNameIdentityDecision =
+	| "exactMatch"
+	| "collisionSuffixMatch"
+	| "extensionMismatch"
+	| "stemMismatch";
+
+function classifyBrowserDownloadedFileNameIdentity(
+	actualName: string,
+	targetName: string,
+): BrowserDownloadedFileNameIdentityDecision {
 	const normalizeName = (value: string): string => normalizeUiText(value).toLowerCase();
-	if (normalizeName(actualName) === normalizeName(targetName)) return true;
+	if (normalizeName(actualName) === normalizeName(targetName)) return "exactMatch";
 	const actualExtension = path.extname(actualName);
 	const targetExtension = path.extname(targetName);
-	if (actualExtension.toLowerCase() !== targetExtension.toLowerCase()) return false;
+	if (actualExtension.toLowerCase() !== targetExtension.toLowerCase()) return "extensionMismatch";
 	const actualStem = actualName.slice(0, actualName.length - actualExtension.length);
 	const targetStem = targetName.slice(0, targetName.length - targetExtension.length);
 	const normalizeCollisionStem = (value: string): string =>
 		normalizeName(value.replace(/\s?\(\d+\)$/, ""));
-	return normalizeCollisionStem(actualStem) === normalizeCollisionStem(targetStem);
+	return normalizeCollisionStem(actualStem) === normalizeCollisionStem(targetStem)
+		? "collisionSuffixMatch"
+		: "stemMismatch";
 }
 
 async function fileRefFromChatgptDownloadedArtifact(

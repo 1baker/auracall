@@ -334,6 +334,82 @@ describe("fetchChatgptBinaryWithClient", () => {
 	});
 });
 
+async function runNativeConversationDownloadIdentityScenario(
+	targetName: string,
+	downloadedName: string,
+): Promise<{
+	result: Awaited<ReturnType<typeof downloadChatgptConversationFilesWithClientForTest>>;
+	destinationBytes: Buffer | null;
+	providerActions: Record<string, number>;
+}> {
+	const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-chatgpt-native-identity-"));
+	const destPath = path.join(tempDir, targetName);
+	const sourceBytes = Buffer.from("native identity scenario bytes\n", "utf8");
+	const scrapeTelemetry = createBrowserScrapeTelemetryRecorder();
+	let browserDownloadDir: string | null = null;
+	const send = vi.fn(async (method: string, params?: Record<string, unknown>) => {
+		if (method === "Browser.setDownloadBehavior" && typeof params?.downloadPath === "string") {
+			browserDownloadDir = params.downloadPath;
+		}
+	});
+	const evaluate = vi.fn(async (input: { expression?: string }) => {
+		const expression = input.expression ?? "";
+		if (expression.includes("captureDownloadResponse")) {
+			if (browserDownloadDir) {
+				await fs.writeFile(path.join(browserDownloadDir, downloadedName), sourceBytes);
+			}
+			return {
+				result: {
+					value: {
+						ok: false,
+						reason: "json_missing_download_url",
+						tileMatched: true,
+						viewerDownloadClicked: true,
+						previewIdentityMatched: true,
+						previewSurfaceCount: 1,
+						previewDownloadControlCount: 1,
+						fallbackAttempted: true,
+						status: 403,
+						endpointKind: "files-download",
+						contentType: "application/json",
+						providerError: { message: "Forbidden" },
+					},
+				},
+			};
+		}
+		if (expression.includes("hasTurns")) {
+			return { result: { value: { href: "https://chatgpt.com/c/native-identity" } } };
+		}
+		return { result: { value: [] } };
+	});
+	const file: FileRef = {
+		id: `native-identity:turn:0:${targetName}`,
+		name: targetName,
+		provider: "chatgpt",
+		source: "conversation",
+		metadata: { providerFileId: "file_native_identity" },
+	};
+
+	try {
+		const result = await downloadChatgptConversationFilesWithClientForTest(
+			// biome-ignore lint/style/useNamingConvention: CDP client shape uses Runtime.
+			{ Runtime: { evaluate }, send } as never,
+			"native-identity",
+			[{ file, destPath }],
+			null,
+			undefined,
+			{ scrapeTelemetry, preserveActiveTab: true },
+		);
+		return {
+			result,
+			destinationBytes: await fs.readFile(destPath).catch(() => null),
+			providerActions: { ...scrapeTelemetry.providerActions },
+		};
+	} finally {
+		await fs.rm(tempDir, { recursive: true, force: true });
+	}
+}
+
 describe("downloadChatgptConversationFilesWithClient", () => {
 	test("rejects a captured download whose response filename belongs to another asset", async () => {
 		const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-chatgpt-file-identity-"));
@@ -888,10 +964,11 @@ describe("downloadChatgptConversationFilesWithClient", () => {
 		const tempDir = await fs.mkdtemp(
 			path.join(os.tmpdir(), "auracall-chatgpt-native-catalog-suffix-"),
 		);
-		const targetName = "auracall-m5-source-20260802T185953Z(5).txt";
+		const targetName = "auracall-m5-source-20260802T185953Z(6).txt";
 		const downloadedName = "auracall-m5-source-20260802T185953Z.txt";
 		const destPath = path.join(tempDir, targetName);
 		const sourceBytes = Buffer.from("exact uploaded source bytes\n", "utf8");
+		const scrapeTelemetry = createBrowserScrapeTelemetryRecorder();
 		let browserDownloadDir: string | null = null;
 		const send = vi.fn(async (method: string, params?: Record<string, unknown>) => {
 			if (method === "Browser.setDownloadBehavior" && typeof params?.downloadPath === "string") {
@@ -947,13 +1024,56 @@ describe("downloadChatgptConversationFilesWithClient", () => {
 					[{ file, destPath }],
 					null,
 					undefined,
-					{ preserveActiveTab: true },
+					{ scrapeTelemetry, preserveActiveTab: true },
 				),
 			).resolves.toEqual([{ fileId: file.id, status: "materialized" }]);
 			expect(await fs.readFile(destPath)).toEqual(sourceBytes);
+			expect(scrapeTelemetry.providerActions).toMatchObject({
+				"chatgpt.downloadConversationFile.nativeIdentity.collisionSuffixMatch.v1": 1,
+			});
 		} finally {
 			await fs.rm(tempDir, { recursive: true, force: true });
 		}
+	});
+
+	test.each([
+		{
+			targetName: "auracall-m5-source-20260802T185953Z(6).txt",
+			downloadedName: "unrelated-source-20260802T185953Z.txt",
+			decision: "stemMismatch",
+		},
+		{
+			targetName: "auracall-m5-source-20260802T185953Z(6).txt",
+			downloadedName: "auracall-m5-source-20260802T185953Z.pdf",
+			decision: "extensionMismatch",
+		},
+	])("rejects a native download on $decision", async ({ targetName, downloadedName, decision }) => {
+		const outcome = await runNativeConversationDownloadIdentityScenario(targetName, downloadedName);
+
+		expect(outcome.result).toEqual([
+			expect.objectContaining({
+				fileId: `native-identity:turn:0:${targetName}`,
+				status: "error",
+				error: expect.stringContaining("captured_asset_identity_mismatch"),
+			}),
+		]);
+		expect(outcome.destinationBytes).toBeNull();
+		expect(outcome.providerActions).toMatchObject({
+			[`chatgpt.downloadConversationFile.nativeIdentity.${decision}.v1`]: 1,
+		});
+	});
+
+	test("records an exact native download identity decision", async () => {
+		const fileName = "auracall-m5-source-20260802T185953Z.txt";
+		const outcome = await runNativeConversationDownloadIdentityScenario(fileName, fileName);
+
+		expect(outcome.result).toEqual([
+			{ fileId: `native-identity:turn:0:${fileName}`, status: "materialized" },
+		]);
+		expect(outcome.destinationBytes?.toString("utf8")).toBe("native identity scenario bytes\n");
+		expect(outcome.providerActions).toMatchObject({
+			"chatgpt.downloadConversationFile.nativeIdentity.exactMatch.v1": 1,
+		});
 	});
 
 	test("checks readiness once and sequentially downloads twelve files on one client", async () => {

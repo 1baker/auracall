@@ -15650,8 +15650,10 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
 
 ## Turn 349 | 2026-08-03
 
-- Opened Plan 0183 as the bounded successor to Plan 0182's installed/live
-  contradiction. It begins with the exact `(6)`/unsuffixed scenario through
+- Opened
+  `docs/dev/plans/0183-2026-08-03-chatgpt-installed-native-identity-decision-proof.md`
+  as the bounded successor to Plan 0182's installed/live contradiction. It
+  begins with the exact `(6)`/unsuffixed scenario through
   built and installed public adapter exports; no production edit or provider
   action precedes that receipt.
 - Provider-free limits are two installed-boundary executions, one code repair,

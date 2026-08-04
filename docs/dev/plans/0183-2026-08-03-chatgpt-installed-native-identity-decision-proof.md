@@ -153,11 +153,11 @@ canary only if both exact assets materialize with zero failures.
 
 ## Acceptance Criteria
 
-- [ ] Built and installed public adapter boundaries agree on the exact native
+- [x] Built and installed public adapter boundaries agree on the exact native
   collision-suffix scenario.
-- [ ] Sanitized telemetry proves which native identity decision executed and
+- [x] Sanitized telemetry proves which native identity decision executed and
   strict cross-asset/extension/complete-stem rejection remains green.
-- [ ] Targeted, adjacent, broad, type/build/lint/audit, and review gates pass.
+- [x] Targeted, adjacent, broad, type/build/lint/audit, and review gates pass.
 - [ ] Repair is committed, pushed, installed, and loaded by a post-mtime healthy
   process with paused zero-work parity.
 - [ ] One final direct proof materializes exact TXT and DOCX with zero failures.
@@ -200,3 +200,51 @@ configured stop and Plan 0180 M5 remains open.
 - `next_action_or_stop_reason`: run W1 through the built and installed public
   exports before changing production code; stop if results diverge without a
   bounded explanation.
+
+## Checkpoint 2
+
+- `plan_version`: 1
+- `state_transition`: ready provider-free -> built and installed public adapter
+  boundaries agree on exact `(6)`/unsuffixed materialization.
+- `progress_classification`: blocker_reduction
+- `evidence`: two isolated executions of
+  `downloadChatgptConversationFilesWithClientForTest`, one from the current
+  built module and one from the installed module, each returned `materialized`,
+  published 28 bytes, and matched the supplied bytes exactly for catalog
+  `auracall-m5-source-20260802T185953Z(6).txt` versus native
+  `auracall-m5-source-20260802T185953Z.txt`.
+- `subagent_status`: `not_spawned`; delegation remains prohibited and no
+  independent lane exists.
+- `budget_consumption`: installed probes 2/2; code repair 0/1; review rework
+  0/1; install/restart 0/1; prompts 0/1; direct jobs 0/1; completion starts 0/1;
+  owned canary jobs 0/1; goal live failures 1/2; live stages 0/2.
+- `remaining_criteria`: W2-W6 and six remaining acceptance items.
+- `next_action_or_stop_reason`: add one sanitized native-decision telemetry
+  tracer and one production classification contract; preserve all exact
+  identity rejection boundaries and stop if the single repair cannot validate.
+
+## Checkpoint 3
+
+- `plan_version`: 1
+- `state_transition`: installed boundary proved -> native decision observable
+  -> provider-free validated.
+- `progress_classification`: acceptance_movement
+- `evidence`: one red/green contract added four versioned sanitized decisions:
+  `exactMatch`, `collisionSuffixMatch`, `extensionMismatch`, and
+  `stemMismatch`. The public-boundary cases pass 4/4, the complete ChatGPT
+  adapter suite passes 132/132, adjacent history/MCP suites pass 76/76, and the
+  full provider-free suite passes 304 files and 2,712 tests with 21 files and
+  65 opt-in tests skipped. Typecheck, production build, scoped Biome lint,
+  plan audit, goal-only audit, and diff hygiene pass; scoped lint reports only
+  the established CDP Runtime naming warning. Bounded self-review found no
+  weakening of extension, complete-stem, ambiguity, or intercepted-response
+  identity gates and required no rework.
+- `subagent_status`: `not_spawned`; delegation remains prohibited and the
+  validation path was serialized.
+- `budget_consumption`: installed probes 2/2; code repair 1/1; review rework
+  0/1; install/restart 0/1; prompts 0/1; direct jobs 0/1; completion starts 0/1;
+  owned canary jobs 0/1; goal live failures 1/2; live stages 0/2.
+- `remaining_criteria`: W4-W6 and four remaining acceptance items.
+- `next_action_or_stop_reason`: commit and push the validated slice, then spend
+  the sole install/restart attempt and require exact installed hash, post-mtime
+  healthy PID, and paused zero-work parity before any provider action.

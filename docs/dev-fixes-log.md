@@ -1,3 +1,12 @@
+- 2026-08-03: When ChatGPT native-download identity behavior contradicts a
+  green matcher regression, prove the same scenario through both built and
+  installed public adapter exports before changing semantics. Record one
+  sanitized versioned decision counter for exact match, collision-suffix
+  match, extension mismatch, or complete-stem mismatch at the publication
+  boundary. This distinguishes loaded branch behavior without logging URLs,
+  page text, payloads, or filenames and preserves fail-closed extension,
+  complete-stem, ambiguity, and intercepted-response identity gates.
+
 - 2026-08-03: A ChatGPT source preview Download control cannot be identified by
   global DOM-node novelty or a dialog role. The current UI reuses preview chrome
   and exposes the identity boundary as one visible
