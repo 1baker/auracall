@@ -15685,3 +15685,16 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   canary ran. Scheduler and five completions remain paused, queued/running work
   and active jobs are zero, default active completion is null, and all ChatGPT
   guards are clear. Plan 0183 is terminal; Plan 0180 M5 remains open.
+
+## Turn 351 | 2026-08-03
+
+- Opened
+  `docs/dev/plans/0184-2026-08-03-chatgpt-intercepted-response-identity-parity.md`
+  as the provider-free successor to Plan 0183. It targets the earlier captured-
+  response exact-name validator that stopped the live transfer before native
+  telemetry could run.
+- Bounds are one code repair, three vertical red/green cycles, one review
+  rework, one install/restart, and zero prompts, jobs, completions, canaries, or
+  browser/provider actions. Goal live failures remain consumed 2/2.
+- First gate is the exact `(7)` catalog versus unsuffixed captured-response
+  scenario through the public adapter. No production edit precedes that red.

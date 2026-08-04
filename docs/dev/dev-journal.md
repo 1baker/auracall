@@ -43136,3 +43136,16 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   did not run. Scheduler and five completions remain paused, queued/running work
   and active history jobs are zero, default active completion is null, and all
   ChatGPT guards are clear.
+
+## 2026-08-03 | Plan 0184 opens provider-free at the actual response gate
+
+- The live receipt and missing native telemetry isolate
+  `validateChatgptCapturedFileIdentity`: exact provider-file URL authority is
+  preserved, but filename fallback requires exact normalized equality and does
+  not share the native terminal numeric collision-suffix classifier.
+- Plan 0184 begins with the exact `(7)`/unsuffixed captured-response red through
+  the public adapter, then permits one shared-classifier repair, three vertical
+  red/green cycles, one review rework, and one install.
+- Prompts, materialization jobs, completions, canaries, scheduler controls,
+  browser inspection, and guard actions are all capped at zero. The campaign's
+  2/2 live failures remain consumed.
