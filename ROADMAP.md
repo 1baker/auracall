@@ -32,6 +32,12 @@ Lane: P01
   [docs/dev/plans/0187-2026-08-04-chatgpt-default-backlog-policy-review.md](docs/dev/plans/0187-2026-08-04-chatgpt-default-backlog-policy-review.md).
   Closed controlled inventory-closure successor:
   [docs/dev/plans/0188-2026-08-04-chatgpt-default-controlled-detail-inventory-closure.md](docs/dev/plans/0188-2026-08-04-chatgpt-default-controlled-detail-inventory-closure.md).
+  Active provider-free selection diagnosis:
+  [docs/dev/plans/0189-2026-08-04-chatgpt-materialization-selection-diagnosis.md](docs/dev/plans/0189-2026-08-04-chatgpt-materialization-selection-diagnosis.md).
+  Plan 0189 builds a deterministic red loop for the 62 metadata-current
+  missing-local assets versus zero latest-job materialization, then uses
+  CodeGraph and bounded provider-free probes to identify the status-to-selection
+  mismatch. It authorizes no source/runtime/provider mutation.
   Plan 0188 used two of three permitted one-at-a-time controls and stopped early
   at zero detail surfaces with metadata complete. Both jobs were clean but
   materialized nothing; combined with Plan 0186, four jobs total 0 materialized

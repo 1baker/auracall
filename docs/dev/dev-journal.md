@@ -43340,3 +43340,15 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   consecutive jobs across Plans 0186/0188 produced 0 materialized / 28 skipped
   / 0 failed. Further live-follow cadence is not justified; routeability and
   materializer selection require a separate provider-free/read-only diagnosis.
+
+## 2026-08-04 | Plan 0189 opens provider-free selection diagnosis
+
+- The operator authorized read-only diagnosis of why metadata-current status
+  reports 62 known remote assets missing locally while consecutive bounded
+  materialization jobs select no downloadable bytes.
+- The diagnosis is feedback-loop first, then CodeGraph structural flow, one
+  ranked hypothesis set, and bounded provider-free probes. It cannot change
+  source, tests, config, installed runtime, provider state, completion state,
+  scheduler state, or job state.
+- Runtime remains exactly paused and zero-work; CodeGraph is healthy and ready
+  for direct structural exploration after the red loop is established.

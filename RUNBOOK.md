@@ -15853,3 +15853,17 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   `full_missing_assets`. Four consecutive jobs across Plans 0186/0188 total
   0 materialized / 28 skipped / 0 failed. Plan 0188 closes complete; the next
   gate is routeability/materializer-selection diagnosis, not another pass.
+
+## Turn 357 | 2026-08-04
+
+- Opened Plan 0189 under explicit operator authority for provider-free,
+  read-only diagnosis of the 62 missing-local assets versus zero-download job
+  mismatch.
+- The packet permits two baseline red-loop runs, at most four CodeGraph flow
+  calls, one ranked hypothesis set, and three provider-free probes. Source,
+  config, build/install/restart, job, provider, completion, and scheduler
+  actions are all 0/0.
+- Preflight remains metadata complete, detail surfaces 0, materialization
+  backlog 62, exact completion paused at pass 4, scheduler and six completions
+  paused, active work 0, default guard null, and API PID `1091` healthy.
+- CodeGraph is healthy at 875 indexed files, 16,483 nodes, and 55,701 edges.
