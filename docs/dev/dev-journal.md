@@ -43165,3 +43165,15 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   and bounded review pass; only the established CDP naming warning remains.
 - No runtime/provider action ran. Code repair 1/1, red/green 3/3, and review
   rework 1/1 are consumed; the sole install remains and all live caps stay zero.
+
+## 2026-08-03 | Plan 0184 installs and closes provider-free
+
+- Pushed repair `957b37c0`, spent the sole install/restart, and proved source/
+  installed adapter SHA-256 parity at `97a3410d...`.
+- API PID `65381` started after installed mtime, is active/running, and has zero
+  restarts. Scheduler and five completions remain paused, queued/running work
+  and active jobs are zero, default active completion is null, and all ChatGPT
+  guards are clear.
+- Plan 0184 is provider-free complete. It consumed no prompt, job, completion,
+  canary, browser, or provider action. Plan 0180 M5 remains blocked at the
+  campaign's exhausted 2/2 live-failure ceiling.

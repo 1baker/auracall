@@ -1,6 +1,6 @@
 # ChatGPT Intercepted Response Identity Parity | 0184-2026-08-03
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 1
 Governing goal: finish the bounded ChatGPT live-follow repair and testing
@@ -138,9 +138,9 @@ completion resume because the goal-wide live-failure ceiling is already 2/2.
   sanitized branch telemetry and no cross-asset weakening.
 - [x] Targeted, adjacent, broad, type/build/lint/audit, CodeGraph, diff, and
   review gates pass.
-- [ ] Repair is committed, pushed, installed, and loaded by a post-mtime healthy
+- [x] Repair is committed, pushed, installed, and loaded by a post-mtime healthy
   process with paused zero-work parity.
-- [ ] Plan 0180 M5 remains open and no live budget is reset or consumed.
+- [x] Plan 0180 M5 remains open and no live budget is reset or consumed.
 
 ## Hard Stops And Non-Goals
 
@@ -226,3 +226,28 @@ preserved. It does not close Plan 0180 M5 or prove two-asset materialization.
 - `next_action_or_stop_reason`: commit and push the validated repair, then
   spend the sole install/restart attempt and require exact post-mtime paused
   zero-work parity; no live action follows.
+
+## Checkpoint 4 | Provider-Free Complete
+
+- `plan_version`: 1
+- `state_transition`: provider-free validated -> pushed repair installed and
+  loaded -> successor closed provider-free complete.
+- `progress_classification`: acceptance_movement
+- `evidence`: commit `957b37c0` is pushed to `origin/main`; the sole install
+  attempt completed. Source and installed `chatgptAdapter.js` share SHA-256
+  `97a3410d29c709d4171414de81bd04184e44098f434a191c6243b8cf469db1ad`.
+  Installed mtime is `2026-08-03 23:16:00 CDT`; API PID `65381` started at
+  `23:16:08 CDT`, is active/running, and has `NRestarts=0`. Scheduler
+  state/posture are paused, foreground work is inactive, completion metrics are
+  queued 0/running 0/paused 5, active history jobs are zero, default
+  `activeCompletionId` is null, and all four ChatGPT guards are clear.
+- `subagent_status`: `not_spawned`; delegation remained prohibited throughout
+  the serialized provider-free slice.
+- `budget_consumption`: code repair 1/1; red/green cycles 3/3; review rework
+  1/1; install/restart 1/1; prompts/jobs/completions 0/0; goal live failures
+  remain 2/2.
+- `remaining_criteria`: this plan has none. Plan 0180 M5 still requires a fresh
+  two-asset direct proof and conditional one-pass canary under new explicit
+  live authority.
+- `next_action_or_stop_reason`: close provider-free complete. Do not run live
+  work under this plan; the campaign is blocked at its exhausted 2/2 live gate.

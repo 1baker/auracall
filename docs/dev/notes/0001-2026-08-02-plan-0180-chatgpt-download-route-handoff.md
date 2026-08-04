@@ -1,9 +1,29 @@
 # Plan 0180 ChatGPT Download-Route Fresh-Agent Handoff
 
 Date: 2026-08-02
-State: Plan 0183 terminal; goal-wide live failure budget 2/2 exhausted
+State: Plan 0184 installed provider-free; goal-wide live failure budget 2/2 exhausted
 Governing plan: `docs/dev/plans/0180-2026-08-01-chatgpt-same-route-mutation-and-staged-reenablement.md`
 Scope: diagnose whether the direct-route catalog asset and later generated output are safely related; do not resume live follow or spend another materialization attempt
+
+## 2026-08-03 Plan 0184 Provider-Free Closure
+
+Commit `957b37c0` is pushed and installed. Captured-response and native-download
+filename evidence now share one strict classifier: exact and symmetric terminal
+numeric collision suffixes may pass only with equal extensions and complete
+remaining stems; exact provider-file URL authority remains first. Public
+captured/native parity cases pass 9/9, the adapter passes 134/134, adjacent
+history/MCP passes 76/76, and the full provider-free suite passes 2,714 tests.
+
+Source and installed adapter SHA-256 match at
+`97a3410d29c709d4171414de81bd04184e44098f434a191c6243b8cf469db1ad`.
+API PID `65381` loaded after installed mtime with zero restarts. Scheduler and
+five completions are paused, queued/running work and active jobs are zero,
+default active completion is null, and all ChatGPT guards are clear.
+
+No live action ran. Plan 0180 M5 still requires one fresh two-asset proof and a
+conditional `maxPasses=1` canary, but the campaign live-failure ceiling remains
+consumed 2/2. This handoff grants neither action; new explicit live authority
+must preserve the prior attempt history rather than resetting it implicitly.
 
 ## 2026-08-03 Plan 0183 Terminal Resume Boundary
 

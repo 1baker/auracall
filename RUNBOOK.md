@@ -15698,3 +15698,19 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   browser/provider actions. Goal live failures remain consumed 2/2.
 - First gate is the exact `(7)` catalog versus unsuffixed captured-response
   scenario through the public adapter. No production edit precedes that red.
+
+## Turn 352 | 2026-08-03
+
+- Plan 0184 exact public red reproduced the live intercepted-response failure,
+  then commit `957b37c0` unified captured and native filename decisions under
+  one strict classifier while preserving provider-file URL precedence.
+- Captured/native positive and negative cases pass 9/9; adapter 134/134,
+  adjacent 76/76, full provider-free 304 files/2,714 tests, typecheck, build,
+  lint, audits, CodeGraph, diff, and review gates pass.
+- The sole install loaded source/runtime adapter SHA-256 `97a3410d...` under
+  post-mtime API PID `65381` with zero restarts. Scheduler and five completions
+  remain paused, queued/running work and active jobs are zero, default active
+  completion is null, and all ChatGPT guards are clear.
+- No prompt, upload, materialization job, completion, canary, or browser action
+  ran. Plan 0184 is provider-free complete; Plan 0180 M5 remains blocked because
+  its campaign live-failure ceiling is exhausted at 2/2.

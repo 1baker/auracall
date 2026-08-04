@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 35
+Plan version: 36
 
 ## Stable Objective
 
@@ -13,6 +13,14 @@ reenablement.
 
 ## Current State
 
+- Plan 0184 is closed provider-free complete. Commit `957b37c0` makes captured-
+  response and native-download filename evidence share one strict exact/
+  collision/extension/stem classifier while preserving exact provider-file URL
+  authority first. Adapter 134/134, adjacent 76/76, and full provider-free 304
+  files/2,714 tests pass. The repair is installed byte-identically at SHA-256
+  `97a3410d...` under post-mtime API PID `65381`; all pauses and zero-work
+  posture remain intact. M5 is still open because the goal-wide live-failure
+  ceiling is exhausted at 2/2 and no fresh proof or canary ran.
 - Plan 0183 is closed at its goal-wide 2/2 live-failure ceiling. Fresh
   conversation `6a716326-1784-83ea-ac22-0aaff0480d79` and sole job
   `hmj_8e07857be43c464bb280024812fdab54` ended 1 materialized / 1 failed on
@@ -1530,3 +1538,25 @@ continuous live-follow reenablement remain separately gated afterward.
 - `next_gate`: the goal-wide live-failure budget is exhausted at 2/2. Any
   successor begins with a provider-free intercepted-response regression and
   requires new explicit live authority before another direct proof.
+
+## Checkpoint 36
+
+- `plan_version`: 36
+- `state_transition`: intercepted-response blocker -> Plan 0184 exact red and
+  shared-classifier repair -> pushed installed provider-free closure; M5 open.
+- `repair_receipt`: commit `957b37c0` is pushed. The exact `(7)`/unsuffixed
+  captured-response red became exact-byte success with collision telemetry;
+  captured/native provider-file, exact, collision, extension, and stem cases
+  pass through public adapter behavior.
+- `validation_receipt`: adapter 134/134, adjacent history/MCP 76/76, full
+  provider-free 304 files/2,714 tests, typecheck, build, scoped lint, plan/goal
+  audits, CodeGraph, diff hygiene, and bounded review pass.
+- `install_receipt`: source/installed adapter SHA-256 are both
+  `97a3410d29c709d4171414de81bd04184e44098f434a191c6243b8cf469db1ad`;
+  API PID `65381` loaded after installed mtime and has zero restarts.
+- `terminal_posture`: scheduler and five completions are paused, queued/running
+  work and active history jobs are zero, default active completion is null, and
+  all ChatGPT guards are clear. No live action ran.
+- `next_gate`: Plan 0180 M5 still needs a fresh two-asset proof and conditional
+  one-pass canary, but the campaign live ceiling is consumed 2/2. New explicit
+  live authority is required; do not reset attempt history implicitly.
