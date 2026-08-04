@@ -42954,3 +42954,22 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   macrotask yield. The next gate is provider-free red/green repair only.
 - Scheduler and five completions remain paused, active completion is null, and
   queued/running jobs are 0/0. M5 and all re-enablement gates remain open.
+
+## 2026-08-03 | Empty-capture polling now yields provider-free
+
+- Added a deterministic test through `waitForChatgptCaptureProgress`: with an
+  empty capture list and a 25 ms bound, the old helper failed because it settled
+  after advancing fake time by 0 ms. The minimized red directly reproduces the
+  renderer-starvation condition isolated by the preceding live receipt.
+- The minimal repair creates the bounded timer once and awaits it directly when
+  the list is empty. Nonempty capture lists retain the established race, so a
+  real capture can still advance the caller early.
+- Exact red/green passes; adapter/history/MCP suites pass 246/246. Typecheck,
+  production build, and the full provider-free suite pass 304 files/2,708 tests
+  with 21 files/65 tests skipped.
+- Scoped Biome retains broad pre-existing adapter/test format and import-order
+  drift plus the known CDP `Runtime` naming warning. No unrelated formatting
+  rewrite ran.
+- Code/test repair `9381182b` is pushed. No install, provider/browser work, job,
+  retry, or scheduler/completion resume ran. The installed runtime remains
+  `69f11a35`; M5 stays open.

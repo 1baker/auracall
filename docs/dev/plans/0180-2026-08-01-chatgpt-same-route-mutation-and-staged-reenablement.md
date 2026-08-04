@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 30
+Plan version: 31
 
 ## Stable Objective
 
@@ -13,6 +13,23 @@ reenablement.
 
 ## Current State
 
+- Pushed commit `9381182b` repairs the empty-capture renderer-yield defect
+  provider-free. A focused
+  fake-timer regression proved the helper settled at virtual time 0 before the
+  change; it now remains pending through 24 ms and settles at the bounded 25 ms
+  interval. Nonempty capture lists retain their existing early-progress race.
+- The implementation stays behind the existing
+  `waitForChatgptCaptureProgress` interface: it creates the bounded timer once
+  and awaits it directly only when no capture promise exists. No provider,
+  browser, scheduler, completion, job, install, or runtime mutation ran.
+- Exact red/green passes, adjacent adapter/history/MCP tests pass 246/246,
+  typecheck and production build pass, and the full provider-free suite passes
+  304 files/2,708 tests with 21 files/65 tests skipped. Scoped Biome retains
+  only the existing broad adapter/test formatting/import baseline and known CDP
+  `Runtime` naming warning; diff hygiene remains required before commit.
+- The pushed repair is not installed and has no live receipt. M5 and every scheduler/
+  completion/continuous-live-follow re-enablement gate remain open. Installation
+  and any new ChatGPT proof require separate explicit authorization.
 - Diagnostic commit `69f11a35` is pushed and installed byte-identically. The
   source and installed ChatGPT adapter SHA-256 are both
   `70004b92fa0bf2a5687de442b7cf70ab456437f2d15c1deb29cd1d58a131e08e`;
@@ -1344,3 +1361,39 @@ continuous live-follow reenablement remain separately gated afterward.
   path, repair it to retain a real bounded timer/macrotask yield, and validate
   without provider work. Do not run another live proof until that repair is
   committed, installed, and separately authorized.
+
+## Checkpoint 32
+
+- `plan_version`: 31
+- `state_transition`: live-isolated empty-capture starvation -> deterministic
+  red -> minimal provider-free real-yield repair green; M5 remains open.
+- `authorization`: the operator's `ok go` authorized the recommended provider-
+  free regression, repair, validation, documentation, commit, and push. It did
+  not authorize install, browser/provider work, a materialization job, retry,
+  scheduler/completion resume, or continuous live follow.
+- `red_receipt`: `pnpm vitest run tests/browser/chatgptAdapter.test.ts -t
+  "yields for the bounded poll interval when no capture is pending"` failed
+  because the helper was already settled after advancing fake time by 0 ms.
+- `root_cause`: `Promise.allSettled([])` resolves immediately, wins the race
+  against the bounded timer, and clears that timer. The production caller could
+  therefore repeat CDP evaluation without a renderer/macrotask yield while the
+  capture list remained empty.
+- `repair`: create the bounded timer once and await it directly for an empty
+  capture list. Preserve the existing race between capture completion and that
+  timer when at least one capture promise exists. The interface and caller
+  contract do not widen.
+- `green_receipt`: the exact regression remains pending through virtual 24 ms
+  and settles at 25 ms. Adapter/history/MCP suites pass 246/246; typecheck,
+  production build, and the full provider-free suite pass 304 files/2,708 tests
+  with 21 files/65 tests skipped.
+- `lint_receipt`: scoped Biome continues to report the existing broad
+  `chatgptAdapter.ts`/test formatting and import-order baseline plus the known
+  CDP `Runtime` naming warning. No broad mechanical reformat was applied.
+- `authority_and_posture`: no install or runtime/provider action ran. Installed
+  commit remains `69f11a35` under API PID `24738`; scheduler and five
+  completions remain paused, and the last verified active-completion/job posture
+  remains null and 0/0.
+- `commit_receipt`: code and test commit `9381182b` is pushed to `origin/main`.
+- `next_gate`: installation and any fresh two-asset proof remain separate
+  explicit gates; do not infer either from provider-free validation or the
+  pushed repair.

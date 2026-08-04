@@ -153,9 +153,14 @@ Lane: P01
   587,217 times while every scoped/global total/visible Download-control count
   stayed zero. Structural review isolated an empty-capture-list polling defect:
   the already-settled promise branch defeats and cancels the timer, starving the
-  preview loop of a real renderer/macrotask yield. M5 and all re-enablement
-  gates remain open pending a provider-free red/green repair; another live proof
-  requires separate explicit authority.
+  preview loop of a real renderer/macrotask yield. A deterministic fake-timer
+  regression now fails at virtual time 0 before the repair and passes only after
+  the helper awaits its bounded timer when no capture promise exists. Nonempty
+  capture lists retain early-progress behavior. Adjacent tests pass 246/246 and
+  the full provider-free suite passes 2,708 tests. Commit `9381182b` is pushed
+  but not installed;
+  M5 and all re-enablement gates remain open, and another live proof requires
+  separate explicit authority.
 
 - Completed provider-session authority unification:
   [docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md](docs/dev/plans/0179-2026-07-31-provider-session-authority-unification.md)

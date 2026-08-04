@@ -20231,3 +20231,7 @@ browser-stage lifecycle observability, not transcript truncation.
   or equivalent macrotask yield even when its event/promise collection is empty.
   Add an explicit empty-list regression; observation ceilings and wall-clock
   deadlines alone do not prove the page had an opportunity to render.
+- Repair pattern: construct the bounded timer once, await it directly for the
+  empty collection, and retain the event-versus-timer race only for nonempty
+  collections. A fake-timer regression should prove the empty path is pending
+  before the bound and settled at the bound.

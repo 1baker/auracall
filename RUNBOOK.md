@@ -15553,3 +15553,21 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
 - Stop: scheduler and five completions remain paused, active completion is
   null, queued/running jobs are 0/0. Repair and validate the real-yield boundary
   provider-free before seeking another live proof.
+
+## Turn 344 | 2026-08-03
+
+- Added one deterministic fake-timer regression at the existing exported
+  capture-progress interface. Before repair, an empty capture list settled at
+  virtual time 0 instead of the bounded 25 ms interval.
+- Repaired the helper to await its already-bounded timer directly when no
+  capture promise exists. Nonempty lists still race capture completion against
+  the timer, preserving early progress without widening the interface.
+- Exact red/green passes; adapter/history/MCP suites pass 246/246. Typecheck,
+  production build, and the full provider-free suite pass 304 files/2,708 tests
+  with 21 files/65 tests skipped.
+- Scoped Biome retains the existing broad adapter/test formatting and import-
+  order baseline plus the known CDP `Runtime` warning; no unrelated reformat
+  was taken.
+- Code/test repair `9381182b` is pushed. No install, browser/provider action,
+  materialization job, retry, scheduler resume, or completion resume ran. M5
+  remains open; installation and any live proof require separate authority.

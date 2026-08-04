@@ -616,6 +616,26 @@ Re-read these values; they are a snapshot, not permission to mutate.
   completions, or run another provider turn. First add a provider-free red
   regression, repair the empty-list real-yield boundary, and validate it.
 
+## 2026-08-03 Provider-Free Renderer-Yield Repair Addendum
+
+- The exact regression calls the existing exported capture-progress helper with
+  an empty promise list and a 25 ms bound. It failed before repair because the
+  helper settled at virtual time 0; after repair it remains pending through
+  24 ms and settles at 25 ms.
+- The helper now constructs the bounded timer once and awaits it directly only
+  for an empty capture list. Nonempty lists retain their existing capture-
+  completion-versus-timer race, so the public interface and early-progress
+  contract are unchanged.
+- Adapter/history/MCP suites pass 246/246. Typecheck, production build, and the
+  full provider-free suite pass 304 files/2,708 tests with 21 files/65 tests
+  skipped. Scoped Biome retains only the existing broad adapter/test formatting
+  and import-order baseline plus the known CDP `Runtime` warning.
+- Code/test repair `9381182b` is pushed. No install, browser/provider action,
+  job, retry, scheduler/completion resume, or continuous-live-follow action ran.
+  Installed runtime remains commit `69f11a35`; M5 remains open.
+- Next gate: installation and any fresh two-asset proof require separate
+  explicit authorization; do not infer them from the provider-free result.
+
 ## Required Closeout
 
 Update Plan 0180, `ROADMAP.md`, `RUNBOOK.md`, `docs/dev/dev-journal.md`, and
