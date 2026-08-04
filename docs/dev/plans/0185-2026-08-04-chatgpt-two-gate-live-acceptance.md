@@ -131,9 +131,9 @@ at the first failed live gate without a retry, replacement chat, or repair loop.
 
 ## Acceptance Criteria
 
-- [ ] Preflight proves the installed repaired runtime and paused zero-work
+- [x] Preflight proves the installed repaired runtime and paused zero-work
   posture before live work.
-- [ ] One fresh root turn uses exactly one canonical source upload and returns
+- [x] One fresh root turn uses exactly one canonical source upload and returns
   the requested DOCX without a second submission.
 - [ ] One direct job at `attemptCount=1` materializes exact TXT and DOCX with
   metrics 2/0 and passes byte, content, OOXML, checksum, and rendered QA.
@@ -183,3 +183,33 @@ no retry; another attempt is not implied by this plan.
 - `next_action_or_stop_reason`: audit the plan and current runtime, commit/push
   this authority checkpoint, then enter W1 exactly once if preflight remains
   green.
+
+## Checkpoint 2 | Direct Turn Complete
+
+- `plan_version`: 1
+- `state_transition`: authorized ready -> exact preflight green -> one fresh
+  root ChatGPT turn completed with requested DOCX link.
+- `progress_classification`: acceptance_movement
+- `evidence`: session `m5-two-gate-live-acceptance` ran once from
+  `2026-08-04T16:11:33.444Z` to `16:14:00.865Z`, uploaded exactly
+  `docs/dev/fixtures/auracall-m5-source-20260802T185953Z.txt`, passed the bound
+  Business/team account preflight, and completed fresh conversation
+  `6a720f4a-49d8-83ea-9211-b99ee9ceefa1`. Its sole response returned
+  `auracall-m5-20260802T185953Z.docx` as a sandbox download link. No second
+  submission ran.
+- `model_receipt`: the CLI contract recorded model `gpt-5.2` with
+  `browser-model-strategy=current`. ChatGPT's current picker no longer exposed
+  the legacy `Instant` label, so AuraCall preserved the already selected model
+  and submitted once rather than forcing a different provider control.
+- `post_turn_posture`: scheduler remains paused, five retained completions are
+  paused, queued/running completion work is 0/0, default active completion is
+  null, default ChatGPT guard is clear, and active history jobs are zero.
+- `subagent_status`: `not_spawned`; the turn remained serialized.
+- `budget_consumption`: historical failures retained 2; new prompts 1/1;
+  direct jobs 0/1; completion starts 0/1; owned canary jobs 0/1; new live
+  failures 0/1; live stages 1/2; code/install/rework 0/0.
+- `remaining_criteria`: exact two-asset materialization, artifact validation,
+  conditional one-pass canary, final posture, and closeout.
+- `next_action_or_stop_reason`: commit/push this receipt, then create the sole
+  `maxItems=2` direct materialization job for the exact fresh conversation. Any
+  failed asset prevents the canary and closes the packet terminally.

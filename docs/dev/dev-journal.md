@@ -43190,3 +43190,15 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Preflight found clean `main`, healthy API PID `65381`, paused scheduler and
   five completions, zero active jobs, null default active completion, clear
   default ChatGPT guard, and the exact 505-byte fixture checksum.
+
+## 2026-08-04 | Plan 0185 fresh direct turn completes
+
+- Session `m5-two-gate-live-acceptance` passed exact Business/team account
+  preflight, uploaded exactly the canonical 505-byte fixture, submitted once,
+  and completed fresh conversation `6a720f4a-49d8-83ea-9211-b99ee9ceefa1`.
+- The sole response returned the requested
+  `auracall-m5-20260802T185953Z.docx` link. ChatGPT's model menu no longer
+  exposed the legacy `Instant` label; `model-strategy=current` correctly kept
+  the current selected model instead of forcing a second interaction.
+- This is generation evidence only. The sole two-item materialization job and
+  exact TXT/DOCX validation remain before the conditional canary can be entered.

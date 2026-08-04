@@ -15727,3 +15727,10 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   active with zero restarts, paused scheduler and five paused completions, zero
   active materialization jobs, no default active completion or ChatGPT guard,
   and the exact 505-byte fixture at SHA-256 `5d17e7ec...`.
+- The sole W1 turn then completed session `m5-two-gate-live-acceptance` and
+  fresh conversation `6a720f4a-49d8-83ea-9211-b99ee9ceefa1` in 2m27s after
+  exact Business/team account proof and exactly one 505-byte upload. The single
+  response returned the requested DOCX link; no second submission ran.
+- W1 success proves generation only. Scheduler/completions remain paused and
+  active jobs remain zero. The sole two-item materialization job is the next
+  gate; the conditional canary remains unreachable until exact 2/0 validation.
