@@ -15603,3 +15603,24 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   zero restarts; scheduler and all five completions remain paused, active
   completion is null, and queued/running jobs are 0/0. M5 and all re-enablement
   gates remain open pending provider-free collision-suffix normalization.
+
+## Turn 347 | 2026-08-03
+
+- Opened
+  `docs/dev/plans/0182-2026-08-03-chatgpt-live-follow-collision-suffix-repair-and-bounded-proof.md`
+  as the bounded execution campaign for the remaining Plan 0180 M5 path. It
+  replaces repeated turn-level live authorization with a
+  serialized provider-free repair, install, one direct two-asset proof, and one
+  `maxPasses=1` default live-follow canary only after the direct proof passes.
+- Retry budgets are explicit: two provider-free work-unit attempts, one review
+  rework, up to two provider-free install attempts, one prompt, one direct job,
+  one completion start, one completion-owned job, and one total live failure.
+  Every live failure is terminal; no replacement conversation/job or scheduler
+  resume is authorized.
+- Current evidence isolates asymmetric terminal numeric collision-suffix
+  normalization in `browserDownloadedFileNameMatchesTarget`: the helper strips
+  `(n)` from captured names but not catalog targets. The first execution unit
+  is one public adapter red/green tracer preserving strict cross-asset identity.
+- Delegation is `not_spawned`: current runtime policy prohibits subagents
+  without explicit user delegation, and the critical path has one narrow,
+  serialized code/test/install/live write surface.

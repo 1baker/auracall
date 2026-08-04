@@ -43007,3 +43007,19 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   restarts; scheduler and five completions are paused, active completion is
   null, and queued/running jobs are 0/0. M5 and all re-enablement gates remain
   open pending provider-free repair.
+
+## 2026-08-03 | Plan 0182 bounded live-follow repair campaign opened
+
+- Replaced the repeated one-turn proof loop with one durable execution plan:
+  provider-free suffix repair, validation/review, committed install, one fresh
+  two-asset proof, and one `maxPasses=1` default live-follow canary only after
+  the direct proof passes.
+- Hard budgets prevent cycling: prompt, direct job, completion start, and
+  completion-owned job are each capped at one; any live failure is terminal.
+  Provider-free work is capped at two attempts per unit and one review rework.
+- The current code strips Chrome's terminal numeric suffix from a downloaded
+  filename but not from the refreshed catalog target. W1 will reproduce the
+  exact `(5)` catalog versus unsuffixed response mismatch through the public
+  adapter test surface before changing implementation.
+- Scheduler and five completions remain paused, active completion is null, and
+  queued/running materialization jobs are zero. No live budget has been spent.

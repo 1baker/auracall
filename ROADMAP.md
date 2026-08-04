@@ -18,6 +18,14 @@ Lane: P01
 
 - Active ChatGPT same-route mutation and staged re-enablement repair:
   [docs/dev/plans/0180-2026-08-01-chatgpt-same-route-mutation-and-staged-reenablement.md](docs/dev/plans/0180-2026-08-01-chatgpt-same-route-mutation-and-staged-reenablement.md)
+  Supporting execution campaign:
+  [docs/dev/plans/0182-2026-08-03-chatgpt-live-follow-collision-suffix-repair-and-bounded-proof.md](docs/dev/plans/0182-2026-08-03-chatgpt-live-follow-collision-suffix-repair-and-bounded-proof.md).
+  Plan 0182 replaces turn-by-turn proof authorization with one finite state
+  machine: provider-free repair, install, one fresh two-asset proof, then one
+  `maxPasses=1` default live-follow canary only if the direct proof is fully
+  green. Direct prompt/job and canary start/job budgets are each one; the first
+  live failure is terminal and scheduler/continuous re-enablement stays out of
+  scope.
   Red regressions reproduced redundant physical navigation on an already-ready
   conversation route and ungoverned recovery reloads. The deep browser-service
   repair now suppresses canonical same-route mutations and routes every actual
