@@ -124,7 +124,7 @@ terminally after exact pause with the remaining count and stop reason.
   settled -> exact completion re-paused -> next pass eligible.
 - `progress_classification`: outcome_progress
 - `evidence`: `run-one-pass` advanced the exact completion from pass 2 to 3.
-  Refresh `acctmirror_0bd20c5e-a93b-4ba6-b45d-5f8c35edc485` completed the
+  Refresh `acctmirror_dda37186-7846-4522-954c-1c1ff49ce47f` completed the
   persisted `detail-inventory` phase from `2026-08-04T21:13:51.546Z` through
   `21:22:16.911Z`, scanned four conversations, and reduced remaining detail
   surfaces from 10 to 6. Telemetry was passive-dominant at 5/6 interactions,
