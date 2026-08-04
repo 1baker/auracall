@@ -1,8 +1,9 @@
 # ChatGPT Two-Gate Live Acceptance | 0185-2026-08-04
 
-State: OPEN
+State: CLOSED
 Lane: P01
-Plan version: 1
+Plan version: 2
+Outcome: COMPLETE
 Governing goal: finish the bounded ChatGPT live-flow repair and testing campaign
 without an unbounded retry loop.
 Supports: Plan 0180 M5; succeeds closed Plan 0184.
@@ -17,7 +18,8 @@ at the first failed live gate without a retry, replacement chat, or repair loop.
 
 ## Current State
 
-- Historical Plan 0182 and Plan 0183 live failures remain recorded at 2/2.
+- Plan 0185 is complete. Historical Plan 0182 and Plan 0183 live failures
+  remain recorded at 2/2.
   The operator explicitly authorized this separate successor packet on
   2026-08-04 after reviewing that the second failure resulted from incomplete
   provider-free boundary coverage, not merely an inadequate numeric ceiling.
@@ -30,8 +32,11 @@ at the first failed live gate without a retry, replacement chat, or repair loop.
   are zero, the default ChatGPT target has no active completion or provider
   guard, and the canonical fixture is 505 bytes at SHA-256
   `5d17e7ec1b61d4c6eaaefbb3bfd8ae542bb5a373113a506c681ade0aa641044b`.
-- Plan 0180 M5 remains open. A successful direct proof is necessary but not
-  sufficient; the conditional canary is a separate live acceptance gate.
+- The fresh direct proof passed at 2 materialized / 0 failed. The conditional
+  canary then completed exactly one pass; its owned reconciliation job settled
+  skipped with 0 failed assets because selected assets were already satisfied.
+  Plan 0180 M5 is complete. Continuous scheduler re-enablement remains outside
+  this plan.
 
 ## Authority And Ownership
 
@@ -137,12 +142,12 @@ at the first failed live gate without a retry, replacement chat, or repair loop.
   the requested DOCX without a second submission.
 - [x] One direct job at `attemptCount=1` materializes exact TXT and DOCX with
   metrics 2/0 and passes byte, content, OOXML, checksum, and rendered QA.
-- [ ] Only after direct success, one new default completion runs at
+- [x] Only after direct success, one new default completion runs at
   `maxPasses=1` and its owned materialization settles with zero failures,
   duplicate mutations, safety signals, or second pass.
-- [ ] Final runtime posture is paused and zero-work; continuous re-enablement
+- [x] Final runtime posture is paused and zero-work; continuous re-enablement
   remains outside this plan.
-- [ ] Canonical docs, audit, commit/push, and remote parity describe the exact
+- [x] Canonical docs, audit, commit/push, and remote parity describe the exact
   live outcome without treating the attempt itself as success evidence.
 
 ## Hard Stops And Non-Goals
@@ -241,3 +246,39 @@ no retry; another attempt is not implied by this plan.
 - `next_action_or_stop_reason`: commit/push this direct-proof receipt, then
   start exactly one conditional canary. Any failed asset, guard, duplicate
   mutation, or second pass closes the packet without retry.
+
+## Checkpoint 4 | Complete
+
+- `plan_version`: 2
+- `state_transition`: direct proof passed -> one conditional canary and owned
+  materializer settled -> final paused zero-work posture -> complete.
+- `progress_classification`: acceptance_achieved
+- `completion_receipt`: bounded completion
+  `acctmirror_completion_fc68b6da-1f08-44f6-8351-5f3572a99dc4` ran from
+  `2026-08-04T16:20:21.400Z` to `16:30:46.193Z`, completed with
+  `maxPasses=1`, `passCount=1`, and no error.
+- `owned_job_receipt`: `hmj_f1a648290a414190bb0f1a24611e5642`
+  ran once and settled `skipped`, metrics 0 materialized / 3 skipped / 0
+  failed / 0 duplicate aliases. Its four provider-session dimensions matched;
+  no retry or replacement job ran.
+- `mutation_and_safety_receipt`: the canary recorded one ChatGPT target open
+  and one governed payload reload, with zero duplicate same-route attempts.
+  The final default status record has null provider guard and null active
+  completion; no CAPTCHA, verification, or rate-limit signal appeared.
+- `final_posture`: scheduler paused; five retained completions paused; queued/
+  running completions 0/0; active materialization jobs 0; API PID `65381`
+  active/running with zero restarts.
+- `diagnostic_deviation`: a read-only `browser-tools doctor` invocation omitted
+  an explicit service selector and launched a new default/Grok Chrome PID
+  `8738` instead of inspecting ChatGPT. It performed no prompt, click, or
+  navigation beyond opening Grok, produced no canary evidence, and was closed
+  immediately by exact PID. This did not alter the serialized canary or its
+  receipts.
+- `subagent_status`: `not_spawned`; all work remained serialized.
+- `budget_consumption`: historical failures retained 2; new prompts 1/1;
+  direct jobs 1/1; completion starts 1/1; owned canary jobs 1/1; new live
+  failures 0/1; live stages 2/2; code/install/rework 0/0.
+- `remaining_criteria`: none inside Plan 0185. Continuous live-follow and
+  scheduler re-enablement remain a separate operator decision.
+- `next_action_or_stop_reason`: close Plan 0180 M5, audit, commit/push, and stop
+  with the scheduler and retained completions paused.

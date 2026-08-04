@@ -15743,3 +15743,15 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
 - The direct prompt and job budgets are consumed without retry. Active jobs
   returned to zero, and exactly one new default `maxPasses=1` canary is now the
   only authorized live gate.
+- Conditional completion `acctmirror_completion_fc68b6da-1f08-44f6-8351-5f3572a99dc4`
+  completed with `maxPasses=1`, `passCount=1`, and no error. Its sole owned job
+  `hmj_f1a648290a414190bb0f1a24611e5642` ran once, matched all four session
+  dimensions, and settled skipped at 0 materialized / 3 skipped / 0 failed /
+  0 duplicate aliases because selected assets required no new download.
+- Canary mutation evidence contains one target open and one governed reload,
+  with zero duplicate same-route attempts and no guard/safety signal. Final
+  posture is scheduler paused, five retained completions paused, queued/running
+  work 0/0, active jobs 0, default active completion and guard null, and API PID
+  `65381` healthy with zero restarts.
+- Plan 0185 and Plan 0180 M5 are complete. Continuous scheduler/live-follow
+  re-enablement remains outside this closed packet.

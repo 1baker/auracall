@@ -1,8 +1,9 @@
 # ChatGPT Same-Route Mutation And Staged Re-enablement | 0180-2026-08-01
 
-State: OPEN
+State: CLOSED
 Lane: P01
-Plan version: 38
+Plan version: 39
+Outcome: COMPLETE
 
 ## Stable Objective
 
@@ -13,20 +14,19 @@ reenablement.
 
 ## Current State
 
-- Plan 0185 is open under the operator's 2026-08-04 explicit two-gate live
-  authority. It preserves the two prior live failures as history. Its sole
-  fresh direct proof is green at 2 materialized / 0 failed with byte-identical
-  TXT and fully validated DOCX, unlocking exactly one new default
-  `maxPasses=1` canary. A canary failure is terminal; no retry, replacement,
-  code repair, install, scheduler resume, or continuous-live edge exists.
+- Plan 0180 is complete through closed Plan 0185. Historical live failures
+  remain recorded at 2/2; the separately authorized successor then passed its
+  exact two-asset direct proof at 2/0 and completed one default bounded canary
+  at `maxPasses=1`, `passCount=1`. Its owned job settled with zero failures,
+  provider-session parity, and zero duplicate same-route mutations. Scheduler
+  and retained completions remain paused; continuous re-enablement is separate.
 - Plan 0184 is closed provider-free complete. Commit `957b37c0` makes captured-
   response and native-download filename evidence share one strict exact/
   collision/extension/stem classifier while preserving exact provider-file URL
   authority first. Adapter 134/134, adjacent 76/76, and full provider-free 304
   files/2,714 tests pass. The repair is installed byte-identically at SHA-256
   `97a3410d...` under post-mtime API PID `65381`; all pauses and zero-work
-  posture remain intact. M5 is still open because the goal-wide live-failure
-  ceiling is exhausted at 2/2 and no fresh proof or canary ran.
+  posture remained intact before the separately authorized Plan 0185 proof.
 - Plan 0183 is closed at its goal-wide 2/2 live-failure ceiling. Fresh
   conversation `6a716326-1784-83ea-ac22-0aaff0480d79` and sole job
   `hmj_8e07857be43c464bb280024812fdab54` ended 1 materialized / 1 failed on
@@ -34,8 +34,9 @@ reenablement.
   the new `nativeIdentity.*` telemetry proves the native fallback never ran;
   the earlier intercepted-response validator still requires exact normalized
   filename equality and is the remaining boundary. The valid 38,519-byte DOCX
-  is SHA-256 `1887fb42...`; no TXT bytes were published. M5 remains open, the
-  one-pass canary did not run, and no further live attempt is authorized.
+  is SHA-256 `1887fb42...`; no TXT bytes were published. At the Plan 0183
+  checkpoint M5 remained open, its one-pass canary did not run, and no further
+  live attempt was authorized by that packet.
 - Plan 0182 is closed at its configured first-live-failure stop. Repair commit
   `ea1efb75` is pushed and installed byte-identically, but fresh conversation
   `6a715be8-2834-83ea-82a1-eb1d54e93f85` and sole job
@@ -43,7 +44,7 @@ reenablement.
   on catalog `...(6).txt` versus native `....txt` identity. The exact public
   regression passes and installed JavaScript contains the symmetric helper, so
   the next gate is provider-free decision-branch evidence, not another live
-  attempt. M5 remains open and W5 did not run.
+  attempt. At the Plan 0182 checkpoint M5 remained open and W5 did not run.
 - The fresh DOCX is 37,087 bytes at SHA-256
   `8a3a123dcabe81d2e480d6850aabd151b5cd562530e0b0047240430e5ed48608` and
   passes structural, exact-content, and rendered visual QA. Scheduler and five
@@ -386,7 +387,7 @@ most one separately gated default ChatGPT bounded pass.
 - [x] Targeted and broad provider-free validation pass.
 - [x] The committed repair is pushed, installed, and hash-bound to the running
   API while scheduler/completion pauses remain intact.
-- [ ] Exactly one default bounded pass satisfies the M5 terminal evidence with
+- [x] Exactly one default bounded pass satisfies the M5 terminal evidence with
   no retry or unrelated work.
 - [x] Cross-asset capture fails closed before filesystem or archive mutation.
 - [x] Provider-unavailable and retrieval-failed assets remain separately
@@ -1606,3 +1607,23 @@ continuous live-follow reenablement remain separately gated afterward.
 - `next_gate`: Plan 0185 authorizes exactly one new `chatgpt/default`
   `maxPasses=1` canary. M5 remains open until that completion and its owned
   materializer settle green and paused zero-work posture is restored.
+
+## Checkpoint 39
+
+- `plan_version`: 39
+- `state_transition`: Plan 0185 direct proof green -> one bounded default pass
+  and owned job settled -> M5 and Plan 0180 complete.
+- `completion_receipt`: `acctmirror_completion_fc68b6da-1f08-44f6-8351-5f3572a99dc4`
+  completed once with `maxPasses=1`, `passCount=1`, and no error.
+- `materializer_receipt`: owned job `hmj_f1a648290a414190bb0f1a24611e5642`
+  ran once, matched all four provider-session dimensions, and settled skipped
+  at 0 materialized / 3 skipped / 0 failed / 0 duplicate aliases because the
+  selected assets required no new download.
+- `mutation_and_guard_receipt`: one target open and one governed payload reload
+  produced zero duplicate same-route attempts. No rate-limit, CAPTCHA,
+  verification, or guard signal appeared; final default provider guard is null.
+- `terminal_posture`: scheduler paused, five retained completions paused,
+  queued/running completions 0/0, active jobs 0, default active completion null,
+  and API PID `65381` active/running with zero restarts.
+- `scope_receipt`: continuous scheduler/live-follow re-enablement did not run
+  and remains a separate operator decision. Historical failures remain intact.

@@ -16,7 +16,7 @@ Lane: P01
   browser/provider work ran, and this closure does not re-enable the scheduler
   or continuous live follow.
 
-- Active ChatGPT same-route mutation and staged re-enablement repair:
+- Completed ChatGPT same-route mutation and staged re-enablement repair:
   [docs/dev/plans/0180-2026-08-01-chatgpt-same-route-mutation-and-staged-reenablement.md](docs/dev/plans/0180-2026-08-01-chatgpt-same-route-mutation-and-staged-reenablement.md)
   Supporting execution campaign:
   [docs/dev/plans/0182-2026-08-03-chatgpt-live-follow-collision-suffix-repair-and-bounded-proof.md](docs/dev/plans/0182-2026-08-03-chatgpt-live-follow-collision-suffix-repair-and-bounded-proof.md).
@@ -24,13 +24,14 @@ Lane: P01
   [docs/dev/plans/0183-2026-08-03-chatgpt-installed-native-identity-decision-proof.md](docs/dev/plans/0183-2026-08-03-chatgpt-installed-native-identity-decision-proof.md).
   Closed provider-free successor:
   [docs/dev/plans/0184-2026-08-03-chatgpt-intercepted-response-identity-parity.md](docs/dev/plans/0184-2026-08-03-chatgpt-intercepted-response-identity-parity.md).
-  Active explicitly authorized two-gate live successor:
+  Closed explicitly authorized two-gate live successor:
   [docs/dev/plans/0185-2026-08-04-chatgpt-two-gate-live-acceptance.md](docs/dev/plans/0185-2026-08-04-chatgpt-two-gate-live-acceptance.md).
   Plan 0185 preserves the two prior failures as history. Its sole fresh direct
-  proof is now green: one exact job materialized byte-identical TXT plus valid,
-  content-verified DOCX at 2/0. This unlocks exactly one new `maxPasses=1`
-  default canary. A canary failure is terminal; there is no repair, retry,
-  scheduler resume, or continuous-live edge in this packet.
+  proof materialized byte-identical TXT plus valid, content-verified DOCX at
+  2/0. Its conditional default canary then completed exactly one pass; the
+  owned job settled with 0 failures and zero duplicate same-route mutations.
+  Plans 0185 and 0180 are complete. Scheduler and retained completions remain
+  paused; continuous re-enablement is a separate operator decision.
   Plan 0184 repaired, validated, pushed, and installed the separate
   intercepted-response collision-suffix boundary without live work. Both
   filename gates now share one strict classifier and preserve provider-file URL
@@ -44,9 +45,9 @@ Lane: P01
   intercepted-response validator rejected catalog `...(7).txt` versus the
   unsuffixed response, leaving no `nativeIdentity.*` counter. The DOCX passed;
   the TXT was not published. The goal-wide live-failure ceiling is exhausted
-  at 2/2, the conditional canary did not run, and M5 remains open. Any successor
-  begins provider-free at that intercepted-response validator and requires new
-  explicit live authority.
+  at 2/2 and the Plan 0183 conditional canary did not run. Closed Plan 0185
+  later supplied distinct explicit authority and completed the remaining M5
+  gates without rewriting that history.
   Plan 0182 is closed at its configured first-live-failure stop. Its repair is
   pushed, validated, and installed byte-identically, but the sole fresh direct
   job again ended 1 materialized / 1 failed on catalog `...(6).txt` versus

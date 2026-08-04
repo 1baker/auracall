@@ -20314,3 +20314,14 @@ browser-stage lifecycle observability, not transcript truncation.
   acceptance to full remaining stem, extension, bytes, and content. In the
   fresh control, one exact job produced byte-identical TXT and a separately
   verified DOCX at 2 materialized / 0 failed without substitution.
+
+## 2026-08-04 | Browser diagnostics must bind the intended service explicitly
+
+- A generic `browser-tools doctor --url-contains chatgpt` invocation can still
+  resolve the configured default service first and launch its managed browser;
+  URL filtering is tab selection, not service-profile authority.
+- Before diagnostic execution, bind the exact AuraCall runtime profile,
+  browser profile, and service using the command's supported selector shape.
+  If that shape is not confirmed, prefer canonical completion/status evidence
+  and do not launch. Close any agent-created wrong-service process by exact PID
+  and exclude its output from acceptance evidence.

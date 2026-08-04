@@ -43218,3 +43218,22 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - No retry or replacement ran. Active history jobs returned to zero. The
   direct gate unlocks exactly one default `maxPasses=1` canary; it does not
   authorize scheduler or retained-completion resume.
+
+## 2026-08-04 | Plan 0185 one-pass canary closes Plan 0180 M5
+
+- Bounded completion `acctmirror_completion_fc68b6da-1f08-44f6-8351-5f3572a99dc4`
+  completed with `maxPasses=1`, `passCount=1`, and no error. Sole owned job
+  `hmj_f1a648290a414190bb0f1a24611e5642` ran once, matched all four provider-
+  session dimensions, and settled skipped at 0 materialized / 3 skipped / 0
+  failed / 0 duplicate aliases because no selected asset needed downloading.
+- Mutation evidence shows one ChatGPT target open plus one governed payload
+  reload and zero duplicate same-route attempts. No guard, CAPTCHA,
+  verification, or rate-limit signal appeared.
+- A diagnostic `browser-tools doctor` call omitted a service selector and
+  launched a new default/Grok Chrome PID `8738` rather than inspecting the
+  canary. It performed no prompt or click, supplied no acceptance evidence, and
+  was immediately closed by exact PID; no further browser-tools launch ran.
+- Final posture is scheduler paused, five retained completions paused, queued/
+  running completions 0/0, active jobs 0, default active completion and guard
+  null, and API PID `65381` healthy with zero restarts. Plans 0185 and 0180 are
+  complete; continuous re-enablement remains a separate operator decision.

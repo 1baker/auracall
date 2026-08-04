@@ -1,9 +1,24 @@
 # Plan 0180 ChatGPT Download-Route Fresh-Agent Handoff
 
 Date: 2026-08-02
-State: Plan 0185 explicitly authorized two-gate live acceptance
+State: Plans 0185 and 0180 complete; continuous re-enablement remains separate
 Governing plan: `docs/dev/plans/0180-2026-08-01-chatgpt-same-route-mutation-and-staged-reenablement.md`
 Scope: execute one fresh exact two-asset proof and one conditional one-pass canary; stop at the first failed live gate
+
+## 2026-08-04 Plan 0185 And Plan 0180 M5 Complete
+
+Conditional completion `acctmirror_completion_fc68b6da-1f08-44f6-8351-5f3572a99dc4`
+completed once with `maxPasses=1`, `passCount=1`, and no error. Its sole owned
+job `hmj_f1a648290a414190bb0f1a24611e5642` matched all four provider-session
+dimensions and settled skipped at 0 materialized / 3 skipped / 0 failed / 0
+duplicate aliases because selected assets required no new download.
+
+The canary produced zero duplicate same-route mutations and no provider safety
+signal. Final posture is scheduler paused, five retained completions paused,
+queued/running work and active jobs zero, default active completion and guard
+null, and API PID `65381` healthy with zero restarts. Historical failures remain
+recorded; they were not reset. Continuous scheduler/live-follow re-enablement is
+not authorized by this closure.
 
 ## 2026-08-04 Plan 0185 Direct Gate Passed
 
