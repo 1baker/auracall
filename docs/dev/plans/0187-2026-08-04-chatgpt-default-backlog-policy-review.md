@@ -140,4 +140,3 @@ canonical docs record it, audits pass, and runtime remains paused and unchanged.
   must close detail inventory before materialization or unattended policy is
   reconsidered.
 - `next_action_or_stop_reason`: stop complete with all runtime pauses preserved.
-
