@@ -43106,3 +43106,16 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - No browser/provider action occurred. Installed probes 2/2 and code repair
   1/1 are consumed; install/restart, prompt, direct job, and canary budgets
   remain untouched.
+
+## 2026-08-03 | Plan 0183 installed identity gate passes
+
+- Pushed repair commit `5bf02331`, then spent the sole install/restart attempt.
+  Source and installed adapter hashes match at `2cf60aa...`.
+- API PID `56881` started after the installed adapter mtime, is active/running,
+  and has zero restarts. Scheduler state/posture are paused, foreground work is
+  inactive, queued/running completions are 0/0 with five paused, active history
+  jobs are zero, default active completion is null, and all ChatGPT guards are
+  clear.
+- No prompt, provider interaction, materialization job, completion start, guard
+  action, scheduler resume, or retained-completion resume occurred. W5 may now
+  spend exactly one fresh prompt and one two-item direct job.

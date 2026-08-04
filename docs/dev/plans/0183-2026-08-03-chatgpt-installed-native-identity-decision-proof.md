@@ -158,7 +158,7 @@ canary only if both exact assets materialize with zero failures.
 - [x] Sanitized telemetry proves which native identity decision executed and
   strict cross-asset/extension/complete-stem rejection remains green.
 - [x] Targeted, adjacent, broad, type/build/lint/audit, and review gates pass.
-- [ ] Repair is committed, pushed, installed, and loaded by a post-mtime healthy
+- [x] Repair is committed, pushed, installed, and loaded by a post-mtime healthy
   process with paused zero-work parity.
 - [ ] One final direct proof materializes exact TXT and DOCX with zero failures.
 - [ ] One conditional `maxPasses=1` default canary satisfies Plan 0180 M5.
@@ -248,3 +248,27 @@ configured stop and Plan 0180 M5 remains open.
 - `next_action_or_stop_reason`: commit and push the validated slice, then spend
   the sole install/restart attempt and require exact installed hash, post-mtime
   healthy PID, and paused zero-work parity before any provider action.
+
+## Checkpoint 4
+
+- `plan_version`: 1
+- `state_transition`: provider-free validated -> pushed repair installed and
+  loaded with paused zero-work parity.
+- `progress_classification`: acceptance_movement
+- `evidence`: commit `5bf02331` is pushed to `origin/main`; the sole install
+  attempt completed. Source and installed `chatgptAdapter.js` share SHA-256
+  `2cf60aa247cf05158e1d7344abe4d0d92146ac677fb2b303689218579b7558ec`.
+  Installed mtime is `2026-08-03 22:50:08 CDT`; API PID `56881` started at
+  `22:50:15 CDT`, is active/running, and has `NRestarts=0`. Scheduler
+  state/posture are paused, foreground work is inactive, completion metrics
+  are queued 0/running 0/paused 5, active history jobs are zero, default
+  `activeCompletionId` is null, and all four ChatGPT guards are clear.
+- `subagent_status`: `not_spawned`; delegation remains prohibited and direct
+  installed readback supplies the acceptance evidence.
+- `budget_consumption`: installed probes 2/2; code repair 1/1; review rework
+  0/1; install/restart 1/1; prompts 0/1; direct jobs 0/1; completion starts 0/1;
+  owned canary jobs 0/1; goal live failures 1/2; live stages 0/2.
+- `remaining_criteria`: W5-W6 and three remaining acceptance items.
+- `next_action_or_stop_reason`: enter W5 exactly once with the canonical
+  fixture, one unique root slug, one prompt, and one `maxItems=2` job; any
+  failed asset closes the successor terminally and prevents W6.
