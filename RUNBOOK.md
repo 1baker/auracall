@@ -16042,3 +16042,22 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   pass 4 with its prior cursor, queued/running mirrors 0/0, foreground work
   inactive, active jobs 0, and scoped guard clear. Plan 0193 stops complete;
   no retry or other live/control action ran.
+
+## Turn 362 | 2026-08-05
+
+- The operator's `ok go` authorizes Plan 0194, the recommended provider-free
+  post-canary inventory reassessment. It will compare exact asset-unit recovery
+  classifications with one in-memory conversation-unit funnel after Plan
+  0193's single materialization.
+- Canonical packet:
+  `docs/dev/plans/0194-2026-08-05-post-canary-provider-free-inventory-reassessment.md`.
+- Scope is read-only installed status/cache/archive/job evidence plus one
+  in-memory `maxItems=0` calculation. Runtime job creation, provider/browser
+  work, install/restart/build, retry, and all completion/scheduler/guard/config
+  actions remain zero-authority.
+- Preflight is clean and synchronized at `9a0bf444`. The latest accepted
+  readback has healthy API PID 4278, all scheduler/completion pauses retained,
+  zero active work/jobs, and a clear scoped guard.
+- CodeGraph is healthy and identifies the planner and in-memory service seams.
+  Critical path is serialized and direct; no subagent was spawned. Next: push
+  this authority packet, then collect the bounded evidence once.

@@ -64,6 +64,11 @@ Lane: P01
   admitted and selected one of 31 conversations, materialized one canvas text
   artifact, and failed/skipped nothing. Scheduler and completions remain
   paused; no unattended continuation is authorized.
+  Active provider-free post-canary reassessment:
+  [docs/dev/plans/0194-2026-08-05-post-canary-provider-free-inventory-reassessment.md](docs/dev/plans/0194-2026-08-05-post-canary-provider-free-inventory-reassessment.md).
+  Plan 0194 may only re-read current status, recovery classifications, and one
+  in-memory `maxItems=0` candidate funnel. It cannot create a runtime job,
+  contact a provider, mutate runtime state, or resume any paused control.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,
