@@ -34,20 +34,14 @@ Lane: P01
   [docs/dev/plans/0188-2026-08-04-chatgpt-default-controlled-detail-inventory-closure.md](docs/dev/plans/0188-2026-08-04-chatgpt-default-controlled-detail-inventory-closure.md).
   Closed provider-free selection diagnosis:
   [docs/dev/plans/0189-2026-08-04-chatgpt-materialization-selection-diagnosis.md](docs/dev/plans/0189-2026-08-04-chatgpt-materialization-selection-diagnosis.md).
-  Active observability/install/default-proof successor:
+  Closed observability/install/default-proof successor:
   [docs/dev/plans/0190-2026-08-04-chatgpt-materialization-candidate-observability-and-default-proof.md](docs/dev/plans/0190-2026-08-04-chatgpt-materialization-candidate-observability-and-default-proof.md).
-  Plan 0190 may add provider-free eligible/selected candidate observability,
-  install the accepted runtime, and run exactly one default-account
-  artifacts+files reconciliation job at `maxItems=1`. It cannot resume the
-  scheduler or any completion, and even a positive proof requires a separate
-  explicit operator decision before unattended live-follow authority.
-  Plan 0189 proved that the 62 metadata-current missing-local assets are a
-  global inventory, while reconciliation independently selects a bounded set
-  of routeable, eligible, nonterminal catalog candidates. The latest job's
-  seven entries were terminal skips with zero retryable failures, so retry
-  budget was not the limiting resource. The next gate is a separately
-  authorized provider-free regression/observability repair; live continuation
-  remains excluded.
+  Plan 0190 added explicit eligible/selected candidate observability, passed the
+  full provider-free gate, installed the pushed runtime with exact parity, and
+  consumed its sole default-account proof. The job reported eligible 0,
+  selected 0, materialized 0, skipped 0, and failed 0, so the plan closed
+  `COMPLETE_AUTHORITY_WITHHELD`. Scheduler and six completions remain paused;
+  any further live or unattended action requires new explicit authority.
   Plan 0188 used two of three permitted one-at-a-time controls and stopped early
   at zero detail surfaces with metadata complete. Both jobs were clean but
   materialized nothing; combined with Plan 0186, four jobs total 0 materialized

@@ -43406,3 +43406,24 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   sole production build, scoped lint, completion-hydration and live-follow-
   health smokes, plan/goal audits, and diff hygiene pass. Provider-free
   acceptance is green; install parity remains the next serialized gate.
+
+## 2026-08-04 | Plan 0190 installs and closes authority withheld
+
+- Provider-free commits `ae7b9e71` and `eb61fa9f` were pushed before the sole
+  install. The prebuilt runtime installed with six-of-six emitted-file parity;
+  API PID changed from `1091` to `3892` with zero restarts and retained the
+  paused, zero-work posture.
+- Sole job `hmj_f4b10eef7bca43228144c0acfa8eac92` exactly matched the configured
+  ChatGPT/default identity and fixed artifacts+files, reconciliation,
+  `maxItems=1`, no-refresh, no-force scope. It settled skipped without retry at
+  eligible 0, selected 0, materialized 0, skipped 0, failed 0, and duplicate
+  aliases 0. No provider session opened.
+- The exact job proves the new candidate-count contract. `/status` also
+  hydrates explicit legacy 0/0 counts on the existing default completion, but
+  the direct job correctly did not mutate that paused completion cursor.
+  Scheduler and all six completions remain paused, default pass count remains
+  4, active jobs and queued/running work are zero, and the guard remains null.
+- Plan 0190 therefore closes `COMPLETE_AUTHORITY_WITHHELD`. Candidate
+  observability is installed and proved, but zero eligible/selected candidates
+  cannot support unattended continuation; any further live action needs new
+  explicit authority.

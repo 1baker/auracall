@@ -1,8 +1,9 @@
 # ChatGPT Materialization Candidate Observability And Default Proof | 0190-2026-08-04
 
-State: OPEN
+State: CLOSED
 Lane: P01
-Plan version: 1
+Plan version: 2
+Outcome: COMPLETE_AUTHORITY_WITHHELD
 Governing objective: implement Plan 0189's observability successor, install it,
 and require one bounded default-account materialization proof with explicit
 eligible/selected counts before granting any unattended live-follow authority.
@@ -113,13 +114,13 @@ grant that authority.
   fields, including zero defaults for older persisted operations.
 - [x] Focused tests, full provider-free validation, typecheck, build, scoped
   lint, planning/goal audits, and diff hygiene pass; operator docs are current.
-- [ ] The accepted commit is pushed and installed with exact source/runtime
+- [x] The accepted commit is pushed and installed with exact source/runtime
   parity while scheduler, completions, guards, and active-work posture remain
   fail-closed.
-- [ ] Exactly one bounded default-account materialization job settles without
+- [x] Exactly one bounded default-account materialization job settles without
   retry and its exact job and `/status` readbacks show explicit eligible and
   selected counts plus final materialized/skipped/failed disposition.
-- [ ] Final authority classification is evidence-derived; no unattended
+- [x] Final authority classification is evidence-derived; no unattended
   live-follow, scheduler, or completion authority is granted inside this plan.
 
 ## Hard Stops And Non-Goals
@@ -199,3 +200,54 @@ unattended authority to remain withheld.
 - `next_action_or_stop_reason`: commit and push the accepted provider-free
   slice, then run the single permitted install/restart and verify parity before
   any live proof.
+
+## Checkpoint 4 | Installed
+
+- `plan_version`: 1
+- `state_transition`: `PROVIDER_FREE_GREEN` -> `INSTALLED`.
+- `progress_classification`: outcome_progress
+- `evidence`: commits `ae7b9e71` and `eb61fa9f` are pushed on `origin/main`;
+  the accepted build installed once with `--skip-build`; API PID changed from
+  `1091` to `3892` with zero restarts; all six emitted contract files match the
+  installed runtime byte-for-byte. Pre/post readback preserved the paused
+  scheduler, six paused completions, default completion paused at pass 4, zero
+  queued/running completion work, zero active history jobs, zero foreground
+  work, and a null default guard. Legacy default completion hydration exposes
+  explicit candidate counts at 0/0.
+- `subagent_status`: `not_spawned`; install and readback are primary-agent
+  evidence.
+- `budget_consumption`: CodeGraph 21/24; source 6/6; red/green 2/2; review
+  rework 0/1; builds 1/1; installs 1/1; live jobs 0/1; forbidden actions 0/0.
+- `remaining_criteria`: sole default proof and final authority classification.
+- `next_action_or_stop_reason`: queue exactly one fixed-scope job and poll only
+  that identifier to terminal; stop without retry regardless of disposition.
+
+## Final Checkpoint | Complete Authority Withheld
+
+- `plan_version`: 2
+- `state_transition`: `INSTALLED` -> `PROOF_SETTLED` ->
+  `COMPLETE_AUTHORITY_WITHHELD`.
+- `progress_classification`: accepted_completion
+- `evidence`: sole job `hmj_f4b10eef7bca43228144c0acfa8eac92`
+  settled `skipped` without retry. Its request was `chatgpt/default`, exact
+  configured identity, reconciliation, artifacts+files, `maxItems=1`, no
+  snapshot refresh, and no force. Exact result metrics are conversations 0,
+  eligible 0, selected 0, materialized 0, skipped 0, failed 0, and duplicate
+  aliases 0. No provider session opened. `/status` independently preserves
+  explicit 0/0 candidate counts on the existing default completion outcome;
+  the direct proof did not and was not authorized to move that completion's
+  cursor. Final readback shows scheduler and six completions paused, default
+  completion at pass 4, queued/running work 0/0, active history jobs 0, null
+  default guard, duplicate same-route attempts 0, and healthy PID `3892` with
+  zero restarts.
+- `subagent_status`: `not_spawned`; all proof and final judgment are
+  primary-agent evidence.
+- `budget_consumption`: CodeGraph 21/24; source 6/6; red/green 2/2; review
+  rework 0/1; builds 1/1; installs 1/1; live jobs 1/1; retries 0/0; provider
+  prompts 0/0; completion actions 0/0; scheduler actions 0/0; guard actions
+  0/0.
+- `remaining_criteria`: none inside Plan 0190.
+- `next_action_or_stop_reason`: terminal stop. Candidate counts were explicit
+  but not positive, so the proof rejects unattended live-follow authority.
+  Any further live action requires a new explicit operator decision and a new
+  bounded plan.

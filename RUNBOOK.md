@@ -15908,3 +15908,20 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   sole production build, scoped lint, completion-hydration and live-follow-
   health smokes, plan/goal audits, and diff hygiene also pass. Next: commit/push
   this accepted provider-free slice, then the single install/restart gate.
+- Planning commit `ae7b9e71` and implementation commit `eb61fa9f` were pushed.
+  The accepted build installed once with `--skip-build`; API PID changed from
+  `1091` to `3892` with zero restarts, and all six emitted contract files match
+  the installed runtime byte-for-byte. Pre/post readback preserved scheduler
+  and six completion pauses, pass 4 on the default completion, zero active
+  history jobs, zero foreground work, and a null default guard.
+- Sole job `hmj_f4b10eef7bca43228144c0acfa8eac92` used the exact configured
+  `chatgpt/default` identity, artifacts+files reconciliation, `maxItems=1`, no
+  refresh, and no force. It settled `skipped` without retry at eligible 0,
+  selected 0, materialized 0, skipped 0, failed 0, and duplicate aliases 0;
+  no provider session opened.
+- Final `/status` preserves explicit legacy completion counts at 0/0, while
+  the direct job remains separate from the paused completion cursor. Scheduler
+  and all six completions are paused, queued/running work and active jobs are
+  zero, the guard is null, duplicate same-route attempts are zero, and PID
+  `3892` is healthy. Plan 0190 closes `COMPLETE_AUTHORITY_WITHHELD`; no
+  unattended live-follow authority is granted.
