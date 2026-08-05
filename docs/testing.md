@@ -1891,6 +1891,14 @@
   rows as 1 eligible and 30 `noSelectedAssetEvidence`, with zero
   `identityMismatch`, both funnel equations true, zero provider calls, and zero
   runtime writes.
+  Filtered archive-backed reads now apply stable persisted filters (`kind`,
+  provider, AuraCall runtime profile, project, agent/team, response/batch, and
+  status) before refreshing local-file metadata. Availability and text-query
+  filters still run after hydration. The provider-free regression is
+  `pnpm vitest run tests/runtime.archiveService.test.ts --maxWorkers 1 -t
+  "hydrates only items that can match stable list filters"`; it proves both
+  single and batched filtered reads ignore an unrelated path that would throw
+  if opened.
 - ChatGPT user-uploaded-file response-shape coverage is provider-free in
   `tests/browser/chatgptAdapter.test.ts`. It verifies that a `files-download`
   JSON string and bounded shallow/nested signed-URL fields resolve, while an

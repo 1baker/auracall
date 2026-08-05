@@ -251,10 +251,13 @@ export function createRunArchiveService(deps: RunArchiveServiceDeps = {}): RunAr
   const indexStore = deps.indexStore ?? createRunArchiveIndexStore();
   const evidenceStore = deps.evidenceStore ?? createRunArchiveEvidenceStore();
   const now = deps.now ?? (() => new Date());
-  async function readIndexedItems(): Promise<RunArchiveItem[]> {
+  async function readIndexedItems(
+    scope: (item: RunArchiveItem) => boolean = () => true,
+  ): Promise<RunArchiveItem[]> {
     const index = await indexStore.readIndex();
     if (index) {
-      return refreshIndexedFileMetadata(index.items, {
+      const scopedItems = index.items.filter(scope);
+      return refreshIndexedFileMetadata(scopedItems, {
         indexStore,
         updatedAt: now().toISOString(),
       });
@@ -271,10 +274,24 @@ export function createRunArchiveService(deps: RunArchiveServiceDeps = {}): RunAr
   }
   return {
     async listItems(request = {}) {
-      return createRunArchiveListResult(await readIndexedItems(), request, now().toISOString());
+      const normalizedRequest = {
+        ...request,
+        kind: normalizeKind(request.kind),
+      };
+      return createRunArchiveListResult(
+        await readIndexedItems((item) => matchesStableRequest(item, normalizedRequest)),
+        request,
+        now().toISOString(),
+      );
     },
     async listItemsBatch(requests) {
-      const items = await readIndexedItems();
+      const normalizedRequests = requests.map((request) => ({
+        ...request,
+        kind: normalizeKind(request.kind),
+      }));
+      const items = await readIndexedItems((item) =>
+        normalizedRequests.some((request) => matchesStableRequest(item, request))
+      );
       const generatedAt = now().toISOString();
       return requests.map((request) => createRunArchiveListResult(items, request, generatedAt));
     },
@@ -1182,7 +1199,10 @@ function readBatchMetadata(record: ExecutionRunStoredRecord): {
   };
 }
 
-function matchesRequest(item: RunArchiveItem, request: RunArchiveListRequest & { kind: RunArchiveItemKind | 'all' }): boolean {
+function matchesStableRequest(
+  item: RunArchiveItem,
+  request: RunArchiveListRequest & { kind: RunArchiveItemKind | 'all' },
+): boolean {
   if (request.kind !== 'all' && item.kind !== request.kind) return false;
   if (request.provider && item.provider !== request.provider) return false;
   if (request.runtimeProfile && item.runtimeProfile !== request.runtimeProfile) return false;
@@ -1192,6 +1212,11 @@ function matchesRequest(item: RunArchiveItem, request: RunArchiveListRequest & {
   if (request.responseId && item.responseId !== request.responseId) return false;
   if (request.batchId && item.batchId !== request.batchId) return false;
   if (request.status && item.status !== request.status && item.runtimeState !== request.status) return false;
+  return true;
+}
+
+function matchesRequest(item: RunArchiveItem, request: RunArchiveListRequest & { kind: RunArchiveItemKind | 'all' }): boolean {
+  if (!matchesStableRequest(item, request)) return false;
   if (typeof request.fileAvailable === 'boolean' && item.fileAvailable !== request.fileAvailable) return false;
   if (request.assetAvailability === 'available' && item.fileAvailable !== true) return false;
   if (request.assetAvailability === 'unavailable' && item.fileAvailable !== false) return false;

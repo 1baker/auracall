@@ -43584,3 +43584,18 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Scope permits one source/test red-green cycle, one build/install/restart, and
   provider-free installed recovery proof. Browser/provider jobs and every
   scheduler/completion/guard action remain excluded. No subagent was spawned.
+
+## 2026-08-05 | Plan 0195 source repair reaches green
+
+- A deterministic directory-backed poison row reproduced the ordering defect:
+  a filtered ChatGPT/default list rejected with `EISDIR` while hydrating an
+  unrelated Gemini row. The fixture requires both single and batch reads to
+  return only the matching item.
+- `readIndexedItems` now accepts a scope predicate. List reads normalize their
+  stable filters and apply their union before filesystem metadata refresh;
+  final availability/query filtering and metrics are unchanged.
+- The focused archive suite is 8/8, search/history projection is 79/79,
+  typecheck and scoped lint pass. The full suite reached 2,715 passes with one
+  unrelated concurrent HTTP pause/resume timing miss; that exact test passes
+  alone in 315 ms. The sole production build passes; runtime metadata remains
+  untouched pending the controlled service stop and migration.

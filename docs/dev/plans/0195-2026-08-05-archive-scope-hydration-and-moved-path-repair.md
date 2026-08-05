@@ -136,3 +136,24 @@ recovery read completes provider-free, and every operator pause remains intact.
 - `remaining_criteria`: all six acceptance items.
 - `next_action_or_stop_reason`: wire and push this authority packet, then add
   the single deterministic red regression before implementation.
+
+## Checkpoint 2 | Red To Source Green
+
+- `plan_version`: 1
+- `state_transition`: READY -> RED -> SOURCE_GREEN.
+- `progress_classification`: source_repair_validated
+- `evidence`: the new deterministic fixture failed on `EISDIR` while a
+  ChatGPT/default/generated-artifact request hydrated an unrelated
+  Gemini/gemini-pro upload directory. After stable-field pre-scoping, the
+  single and batch assertions pass and the complete archive suite is 8/8.
+- `evidence`: search projection plus history materialization are 79/79;
+  typecheck and scoped Biome lint pass. The full suite recorded 2,715 passes
+  and one unrelated concurrent HTTP pause/resume timing miss; the exact test
+  then passed alone in 315 ms. The sole production build passed.
+- `subagent_status`: `not_spawned`.
+- `budget_consumption`: CodeGraph 6/6; source 1/1; test 1/1; red-green 1/1;
+  build/install/restart/runtime metadata/provider/live/control actions 0.
+- `remaining_criteria`: exact three-file path migration; install, restart,
+  installed provider-free proofs, final full validation and closeout.
+- `next_action_or_stop_reason`: commit/push the accepted source slice, then stop
+  the local API for exact path migration before the authorized install/restart.

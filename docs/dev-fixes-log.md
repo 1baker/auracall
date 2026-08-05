@@ -20428,6 +20428,11 @@ browser-stage lifecycle observability, not transcript truncation.
   one inaccessible unrelated path. Apply provider/runtime/tenant/kind filters
   before filesystem hydration where possible; otherwise classify an
   inaccessible item locally and continue with explicit degraded evidence.
+- Plan 0195 implements this ordering for both single and batched archive list
+  reads. Stable persisted filters pre-scope hydration; availability and query
+  filters remain post-hydration so their result and metric semantics do not
+  change. A directory-backed poison fixture locks the former `EISDIR`/`ENODEV`
+  failure class without depending on a mounted drive.
 - Mutation proofs must exclude known ambient writers such as retained managed
   browsers and API heartbeat records. Fingerprint the governed cache, archive,
   job, config, guard, and completion surfaces directly instead of treating all

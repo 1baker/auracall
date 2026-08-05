@@ -27,6 +27,60 @@ describe('run archive service', () => {
     setAuracallHomeDirOverrideForTest(null);
   });
 
+  test('hydrates only items that can match stable list filters', async () => {
+    const inaccessiblePath = await mkdtemp(path.join(os.tmpdir(), 'auracall-run-archive-filter-scope-'));
+    const readIndex = vi.fn(async () => ({
+      object: 'run_archive_index' as const,
+      version: 1,
+      updatedAt: '2026-08-05T18:00:00.000Z',
+      itemCount: 2,
+      items: [
+        createArchiveItemFixture({
+          id: 'generated-artifact:chatgpt-default',
+          kind: 'generated_artifact',
+          provider: 'chatgpt',
+          runtimeProfile: 'default',
+        }),
+        createArchiveItemFixture({
+          id: 'upload:unrelated-inaccessible-path',
+          kind: 'upload',
+          provider: 'gemini',
+          runtimeProfile: 'gemini-pro',
+          localPath: inaccessiblePath,
+          fileAvailable: false,
+        }),
+      ],
+    }));
+    const indexStore = {
+      readIndex,
+      writeIndex: vi.fn(),
+      upsertItems: vi.fn(),
+      readItem: vi.fn(),
+      listItems: vi.fn(),
+    } as unknown as RunArchiveIndexStore;
+    const service = createRunArchiveService({
+      indexStore,
+      now: () => new Date('2026-08-05T18:00:00.000Z'),
+    });
+    const request = {
+      provider: 'chatgpt',
+      runtimeProfile: 'default',
+      kind: 'generated_artifact' as const,
+      limit: 500,
+    };
+
+    await expect(service.listItems(request)).resolves.toMatchObject({
+      items: [{ id: 'generated-artifact:chatgpt-default' }],
+      metrics: { total: 1 },
+    });
+    await expect(service.listItemsBatch?.([request])).resolves.toMatchObject([
+      {
+        items: [{ id: 'generated-artifact:chatgpt-default' }],
+        metrics: { total: 1 },
+      },
+    ]);
+  });
+
   test('batches filtered archive lists through one index snapshot', async () => {
     const readIndex = vi.fn(async () => ({
       object: 'run_archive_index' as const,
