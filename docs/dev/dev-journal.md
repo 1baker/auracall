@@ -43441,3 +43441,33 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   history-materialization result interface, validates it against public service
   behavior, and uses the current cache only for readback. It cannot change
   eligibility behavior, install, or run provider/live/control actions.
+
+## 2026-08-05 | Plan 0191 identifies the zero-candidate cause
+
+- Broad reconciliation results now expose an exclusive conversation-unit
+  `candidateFunnel` without changing eligible/selected totals, selection order,
+  budgets, terminal-family evidence, or materialization dispositions.
+- The public tracer preserves three eligible / two selected candidates and
+  classifies the remaining eligible row as a within-job duplicate family. An
+  adjacent fixture accounts for one already-complete row, one terminal-family
+  row, and one eligible/selected row.
+- Provider-free current-cache execution used the cached 31-conversation catalog,
+  read-only archive/job snapshots, an in-memory job store, and `maxItems=0`.
+  It accounted for all 31 rows as `identityMismatch`, with both arithmetic
+  invariants true, zero provider calls, and zero runtime writes.
+- The request bound identity is a plain 20-character account identity while the
+  cached catalog entry uses a 74-character composite account-binding identity.
+  Exact string comparison therefore rejects the whole catalog entry before
+  routeability, selected-manifest, or terminal-family classification. The 14
+  retrievable missing-local assets are not “zero”; they currently have zero
+  admitted conversation owners under this mismatched identity-key contract.
+- Plan 0191 stops at the authorized observability boundary. Canonical identity
+  matching or request-key propagation needs a separately reviewed semantic
+  successor before any install or provider work.
+- Validation closes provider-free: the touched service file passes 73/73,
+  typecheck/scoped lint/diff hygiene/build pass, and the plan audit reports 191
+  candidates with zero errors. The full suite passed 2,713 tests with one
+  unrelated handoff CLI timeout; that exact test passed isolated in 13.2s.
+- Final installed-state readback remains scheduler paused, six completions
+  paused, queued/running completions 0/0, active materialization jobs 0, and
+  the `chatgpt/default` guard clear. No install or runtime mutation ran.

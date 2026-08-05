@@ -632,7 +632,13 @@ Terminology note:
   job ceiling, while selected candidates were actually admitted after
   within-job family deduplication and budgets. A selected candidate may still
   settle as a terminal skip, and neither count is the global missing-local
-  asset inventory.
+  asset inventory. Broad reconciliation results also expose a conversation-unit
+  `candidateFunnel`. Its exclusive pre-eligibility reasons account for every
+  discovered catalog conversation row, and its exclusive post-eligibility
+  reasons account for every eligible row before selection. In particular,
+  `identityMismatch` means the request's bound identity key did not exactly
+  match the catalog entry's bound identity key; it does not mean the underlying
+  assets are absent or unavailable.
   Direct single-conversation materialization readback includes
   `scrapeTelemetry` on successful results, and stale timeout recovery attaches
   the last progress snapshot to the failed job. Use it to verify that direct

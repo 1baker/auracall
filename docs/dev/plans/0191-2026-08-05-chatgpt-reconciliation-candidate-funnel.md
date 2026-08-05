@@ -1,7 +1,7 @@
 # ChatGPT Reconciliation Candidate Funnel | 0191-2026-08-05
 
-State: OPEN
-Lane: P01
+State: CLOSED
+Lane: COMPLETE
 Plan version: 1
 Governing objective: explain the default-account 62-missing / 14-retrievable /
 zero-eligible contradiction with a deterministic provider-free reconciliation
@@ -97,15 +97,15 @@ remaining semantic repair instead of weakening terminal evidence blindly.
 
 ## Acceptance Criteria
 
-- [ ] A public-service red/green regression exposes the conversation-unit
+- [x] A public-service red/green regression exposes the conversation-unit
   candidate funnel on reconciliation results.
-- [ ] Pre-eligibility and post-eligibility reason counts are mutually exclusive,
+- [x] Pre-eligibility and post-eligibility reason counts are mutually exclusive,
   deterministic, and satisfy both arithmetic invariants.
-- [ ] Existing eligible/selected counts, selection order, budgets, terminal
+- [x] Existing eligible/selected counts, selection order, budgets, terminal
   exclusions, job status, and materialization dispositions remain unchanged.
-- [ ] A provider-free current-cache readback explains all 31 conversations and
+- [x] A provider-free current-cache readback explains all 31 conversations and
   names why the 14 retrievable assets produce zero eligible conversations.
-- [ ] README/testing/fix log, roadmap/runbook/journal, full validation, plan
+- [x] README/testing/fix log, roadmap/runbook/journal, full validation, plan
   audit, commit/push, remote parity, and paused-runtime preservation are current.
 
 ## Hard Stops And Non-Goals
@@ -124,6 +124,20 @@ the zero selection without changing behavior, and current cached evidence names
 the next semantic gate. Provider-free observability completion does not grant
 install or live authority.
 
+## Outcome
+
+- Broad reconciliation results expose the exclusive conversation-unit funnel.
+  Existing candidate totals, order, budgets, terminal-family evidence, and
+  dispositions are unchanged.
+- Provider-free current-cache readback accounts for all 31 conversations as
+  `identityMismatch`. The request uses a plain 20-character account identity;
+  the cached catalog uses a 74-character composite account-binding identity.
+  Exact comparison rejects the catalog entry before all asset-selection gates.
+- The 14 retrievable missing-local assets are an asset-unit inventory, not zero.
+  They currently have zero admitted conversation owners under the mismatched
+  identity-key contract. Canonical matching or request-key propagation is a
+  separately reviewed semantic successor.
+
 ## Checkpoint 1 | Authorized Ready
 
 - `plan_version`: 1
@@ -140,3 +154,34 @@ install or live authority.
 - `remaining_criteria`: all five acceptance items.
 - `next_action_or_stop_reason`: wire and commit this plan, then add one failing
   public-result expectation before implementation.
+
+## Checkpoint 2 | Provider-Free Complete
+
+- `plan_version`: 1
+- `state_transition`: RED -> PROVIDER_FREE_GREEN ->
+  CURRENT_CAUSE_IDENTIFIED -> COMPLETE.
+- `progress_classification`: blocker_removed
+- `evidence`: the exact tracer passes at three eligible / two selected with one
+  post-eligibility duplicate; the adjacent fixture passes with one complete,
+  one terminal-family, and one eligible row. Current cached execution reports
+  discovered 31, identity mismatch 31, eligible 0, selected 0, both arithmetic
+  invariants true, provider calls 0, and runtime writes 0.
+- `subagent_status`: `not_spawned`.
+- `budget_consumption`: CodeGraph 11/12; red/green 1/2 plus one bounded
+  incremental green invariant; source 1/1; tests 1/1; builds 1/1;
+  install/live/control/retry actions 0/0.
+- `remaining_criteria`: none for Plan 0191.
+- `next_action_or_stop_reason`: terminal stop before identity semantics or any
+  runtime/provider action; the next repair requires a separately reviewed plan.
+
+## Validation Receipt
+
+- Public tracer: one passed, 72 skipped; adjacent exclusion fixture: one passed,
+  72 skipped; full touched file: 73 passed.
+- Full suite: 303 files / 2,713 tests passed with one unrelated 15-second
+  handoff CLI timeout; the exact timed-out test passed 1/1 isolated in 13.2
+  seconds. Typecheck, scoped lint, diff hygiene, and the production build pass.
+- Plan audit: 191 candidates, 0 validation errors.
+- Installed-state readback: API healthy; scheduler paused; six completions
+  paused; queued/running completions 0/0; active materialization jobs 0;
+  `chatgpt/default` guard clear. No install or runtime mutation occurred.

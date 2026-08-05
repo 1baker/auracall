@@ -252,6 +252,7 @@ export interface HistoryMaterializationResult {
 		conversations: number;
 		eligibleCandidates?: number;
 		selectedCandidates?: number;
+		candidateFunnel?: HistoryMaterializationCandidateFunnel;
 		materialized: number;
 		duplicateAliases?: number;
 		skipped: number;
@@ -259,6 +260,30 @@ export interface HistoryMaterializationResult {
 	};
 	phases?: HistoryMaterializationPhases | null;
 	message: string;
+}
+
+export interface HistoryMaterializationCandidateFunnel {
+	unit: "conversation";
+	discovered: number;
+	preEligibilityExclusions: {
+		identityMismatch: number;
+		missingConversationId: number;
+		ignoredProviderRoute: number;
+		terminalConversationEvidence: number;
+		ineligibleSelectedManifest: number;
+		noSelectedAssetEvidence: number;
+		assetsAlreadyComplete: number;
+		missingTarget: number;
+		terminalAssetFamilies: number;
+	};
+	eligible: number;
+	postEligibilityExclusions: {
+		duplicateAssetFamilies: number;
+		targetBudget: number;
+		assetBudget: number;
+		providerGuard: number;
+	};
+	selected: number;
 }
 
 export interface HistoryMaterializationJob {
@@ -2192,6 +2217,8 @@ async function materializeReconciliation(input: {
 	const results: HistoryMaterializationResult[] = [];
 	let eligibleCandidates = 0;
 	let selectedCandidates = 0;
+	const candidateFunnel =
+		selectedConversationIds.length === 0 ? createHistoryMaterializationCandidateFunnel() : null;
 	let consumedTargetBudget = 0;
 	let remainingAssetBudget = maxTargets;
 	const selectedConversationIdSet = new Set(selectedConversationIds);
@@ -2348,11 +2375,23 @@ async function materializeReconciliation(input: {
 			if (
 				input.request.boundIdentityKey &&
 				entry.boundIdentityKey !== input.request.boundIdentityKey
-			)
+			) {
+				if (candidateFunnel) {
+					candidateFunnel.discovered += entry.manifests.conversations.length;
+					candidateFunnel.preEligibilityExclusions.identityMismatch +=
+						entry.manifests.conversations.length;
+				}
 				continue;
+			}
 			for (const item of entry.manifests.conversations) {
+				if (candidateFunnel) candidateFunnel.discovered += 1;
 				const conversationId = readCatalogStringField(item, ["id", "conversationId"]);
-				if (!conversationId) continue;
+				if (!conversationId) {
+					if (candidateFunnel) {
+						candidateFunnel.preEligibilityExclusions.missingConversationId += 1;
+					}
+					continue;
+				}
 				const assetFamilySignatures = catalogEntriesConversationAssetFamilySignatures(
 					catalog.entries,
 					conversationId,
@@ -2360,7 +2399,7 @@ async function materializeReconciliation(input: {
 					entry.provider,
 					input.request.boundIdentityKey ?? null,
 				);
-				const priority = catalogConversationMaterializationPriority(
+				const classification = classifyCatalogConversationMaterialization(
 					item,
 					selectedKinds,
 					{
@@ -2373,13 +2412,21 @@ async function materializeReconciliation(input: {
 						refreshSnapshot: input.request.refreshSnapshot === true,
 					},
 				);
-				if (priority === null) continue;
+				if (classification.priority === null) {
+					if (candidateFunnel && classification.exclusionReason) {
+						candidateFunnel.preEligibilityExclusions[classification.exclusionReason] += 1;
+					}
+					continue;
+				}
 				const target = targetFromCatalogConversation(entry, item, conversationId);
-				if (!target) continue;
+				if (!target) {
+					if (candidateFunnel) candidateFunnel.preEligibilityExclusions.missingTarget += 1;
+					continue;
+				}
 				candidates.push({
 					target,
 					assetFamilySignatures,
-					priority,
+					priority: classification.priority,
 					sequence,
 				});
 				sequence += 1;
@@ -2388,22 +2435,43 @@ async function materializeReconciliation(input: {
 		candidates.sort(
 			(left, right) => left.priority - right.priority || left.sequence - right.sequence,
 		);
-		eligibleCandidates += candidates.filter(
-			(candidate) =>
-				candidate.assetFamilySignatures.length === 0 ||
-				!candidate.assetFamilySignatures.every((signature) =>
+		const selectionCandidates = candidates.filter((candidate) => {
+			const terminalAssetFamilies =
+				candidate.assetFamilySignatures.length > 0 &&
+				candidate.assetFamilySignatures.every((signature) =>
 					attemptedAssetFamilySignatures.has(signature),
-				),
-		).length;
-		for (const candidate of candidates) {
-			if (consumedTargetBudget >= maxTargets) break;
-			if (remainingAssetBudget <= 0) break;
+				);
+			if (terminalAssetFamilies && candidateFunnel) {
+				candidateFunnel.preEligibilityExclusions.terminalAssetFamilies += 1;
+			}
+			return !terminalAssetFamilies;
+		});
+		eligibleCandidates += selectionCandidates.length;
+		if (candidateFunnel) candidateFunnel.eligible += selectionCandidates.length;
+		for (const [candidateIndex, candidate] of selectionCandidates.entries()) {
+			if (consumedTargetBudget >= maxTargets) {
+				if (candidateFunnel) {
+					candidateFunnel.postEligibilityExclusions.targetBudget +=
+						selectionCandidates.length - candidateIndex;
+				}
+				break;
+			}
+			if (remainingAssetBudget <= 0) {
+				if (candidateFunnel) {
+					candidateFunnel.postEligibilityExclusions.assetBudget +=
+						selectionCandidates.length - candidateIndex;
+				}
+				break;
+			}
 			if (
 				candidate.assetFamilySignatures.length > 0 &&
 				candidate.assetFamilySignatures.every((signature) =>
 					attemptedAssetFamilySignatures.has(signature),
 				)
 			) {
+				if (candidateFunnel) {
+					candidateFunnel.postEligibilityExclusions.duplicateAssetFamilies += 1;
+				}
 				continue;
 			}
 			// Collector-reused conversations may be broad reconciliation candidates even
@@ -2431,7 +2499,14 @@ async function materializeReconciliation(input: {
 			});
 			results.push(result);
 			selectedCandidates += 1;
-			if (historyMaterializationResultHasProviderGuard(result)) break;
+			if (candidateFunnel) candidateFunnel.selected += 1;
+			if (historyMaterializationResultHasProviderGuard(result)) {
+				if (candidateFunnel) {
+					candidateFunnel.postEligibilityExclusions.providerGuard +=
+						selectionCandidates.length - candidateIndex - 1;
+				}
+				break;
+			}
 			remainingAssetBudget =
 				decrementRemaining(remainingAssetBudget, countAttemptedReconciliationAssetBudget(result)) ??
 				0;
@@ -2463,6 +2538,7 @@ async function materializeReconciliation(input: {
 		...summarizeEntries(entries, results.length),
 		eligibleCandidates,
 		selectedCandidates,
+		...(candidateFunnel ? { candidateFunnel } : {}),
 	};
 	const status = resolveHistoryMaterializationResultStatus(metrics);
 	return {
@@ -4392,7 +4468,40 @@ function defaultAssetKindsForCatalogKind(
 	return ["artifacts", "files"];
 }
 
-function catalogConversationMaterializationPriority(
+type CatalogConversationPreEligibilityExclusion =
+	| "ignoredProviderRoute"
+	| "terminalConversationEvidence"
+	| "ineligibleSelectedManifest"
+	| "noSelectedAssetEvidence"
+	| "assetsAlreadyComplete";
+
+function createHistoryMaterializationCandidateFunnel(): HistoryMaterializationCandidateFunnel {
+	return {
+		unit: "conversation",
+		discovered: 0,
+		preEligibilityExclusions: {
+			identityMismatch: 0,
+			missingConversationId: 0,
+			ignoredProviderRoute: 0,
+			terminalConversationEvidence: 0,
+			ineligibleSelectedManifest: 0,
+			noSelectedAssetEvidence: 0,
+			assetsAlreadyComplete: 0,
+			missingTarget: 0,
+			terminalAssetFamilies: 0,
+		},
+		eligible: 0,
+		postEligibilityExclusions: {
+			duplicateAssetFamilies: 0,
+			targetBudget: 0,
+			assetBudget: 0,
+			providerGuard: 0,
+		},
+		selected: 0,
+	};
+}
+
+function classifyCatalogConversationMaterialization(
 	item: unknown,
 	selectedKinds: HistoryMaterializationAssetKind[] = ["artifacts", "files"],
 	manifestEvidence: {
@@ -4404,7 +4513,10 @@ function catalogConversationMaterializationPriority(
 		force?: boolean;
 		refreshSnapshot?: boolean;
 	} = {},
-): number | null {
+): {
+	priority: number | null;
+	exclusionReason: CatalogConversationPreEligibilityExclusion | null;
+} {
 	const record = isRecord(item) ? item : {};
 	const metadata = isRecord(record.metadata) ? record.metadata : {};
 	if (
@@ -4415,13 +4527,13 @@ function catalogConversationMaterializationPriority(
 			metadata,
 		)
 	) {
-		return null;
+		return { priority: null, exclusionReason: "ignoredProviderRoute" };
 	}
 	if (!options.force && catalogConversationHasTerminalEvidence(record, metadata)) {
-		return null;
+		return { priority: null, exclusionReason: "terminalConversationEvidence" };
 	}
 	if (options.force && options.refreshSnapshot) {
-		return 0;
+		return { priority: 0, exclusionReason: null };
 	}
 	const freshnessState =
 		readConversationFreshnessString(record, metadata, "state") ??
@@ -4478,7 +4590,7 @@ function catalogConversationMaterializationPriority(
 		(selectedKinds.includes("files") ? manifestCounts.files : 0) +
 		(selectedKinds.includes("media") ? manifestCounts.media : 0);
 	if (selectedRawManifestCount > 0 && selectedEligibleManifestCount === 0) {
-		return null;
+		return { priority: null, exclusionReason: "ineligibleSelectedManifest" };
 	}
 	const hasSelectedAssets =
 		(selectedKinds.includes("artifacts") && artifactCount > 0) ||
@@ -4488,19 +4600,23 @@ function catalogConversationMaterializationPriority(
 				? rowMediaCount > 0 || rowArtifactCount > 0
 				: mediaCount > 0 || artifactCount > 0)) ||
 		hasFreshnessAssetEvidence;
-	if (!hasSelectedAssets) return refreshOnlyCandidate ? 2 : null;
+	if (!hasSelectedAssets) {
+		return refreshOnlyCandidate
+			? { priority: 2, exclusionReason: null }
+			: { priority: null, exclusionReason: "noSelectedAssetEvidence" };
+	}
 	if (
 		!options.force &&
 		catalogConversationAssetsAlreadyComplete(record, metadata, freshnessState)
 	) {
-		return null;
+		return { priority: null, exclusionReason: "assetsAlreadyComplete" };
 	}
 	const hasMissingLocalAssetEvidence =
 		freshnessMissingLocalCount > 0 ||
 		(assetCompleteness === "partial" && hasFreshnessAssetEvidence) ||
 		(freshnessState === "missing_assets" && hasFreshnessAssetEvidence);
-	if (hasMissingLocalAssetEvidence) return 0;
-	return 1;
+	if (hasMissingLocalAssetEvidence) return { priority: 0, exclusionReason: null };
+	return { priority: 1, exclusionReason: null };
 }
 
 function catalogConversationHasIgnoredProviderRoute(

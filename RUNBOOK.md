@@ -15944,3 +15944,25 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   one test file, two red/green cycles, and one build. Install, live jobs,
   provider/browser work, completion/scheduler/guard actions, and retries remain
   zero-authority.
+- The public-result tracer went red only because `candidateFunnel` was absent,
+  then green with the existing three eligible / two selected outcome unchanged.
+  Its third eligible candidate is now explicitly classified as a within-job
+  duplicate family. An adjacent fixture also accounts for already-complete and
+  terminal-family pre-eligibility exclusions.
+- Provider-free current-cache execution accounted for all 31 catalog
+  conversations as `identityMismatch`; both funnel equations passed. The
+  request carries a plain 20-character account identity, while the catalog
+  entry carries a 74-character composite account-binding identity. Exact key
+  comparison rejects the entry before routeability or asset-family selection,
+  explaining how 14 retrievable assets produce zero admitted conversations.
+- The readback used cached local API data, read-only archive/job snapshots, an
+  in-memory job store, and `maxItems=0`: provider calls 0 and runtime writes 0.
+  Plan 0191 stops at observability; identity canonicalization/request-key
+  propagation requires a separately reviewed successor.
+- Final validation: touched service tests 73/73, typecheck/scoped lint/diff
+  hygiene/build green, plan audit 191 candidates / 0 errors. The full suite
+  passed 2,713 tests with one unrelated 15-second handoff CLI timeout; the exact
+  test passed isolated in 13.2 seconds.
+- Installed state remains API healthy, scheduler paused, six completions paused,
+  queued/running completions 0/0, active materialization jobs 0, and scoped
+  `chatgpt/default` guard clear. No install or runtime mutation ran.

@@ -20379,3 +20379,21 @@ browser-stage lifecycle observability, not transcript truncation.
 - A selected candidate can still produce a terminal skip. Preserve those
   dispositions, clamp persisted/compact selected counts not to exceed eligible,
   and default legacy missing counts to zero rather than fabricating eligibility.
+
+## 2026-08-05 | Explain candidate zeroes in their own unit
+
+- A global missing-local asset count and a reconciliation candidate count are
+  different projections. Do not summarize `eligibleCandidates=0` as “nothing
+  actionable” while the asset recovery planner still classifies retrievable
+  missing-local assets.
+- Broad reconciliation results must account for every catalog conversation row
+  with mutually exclusive pre-eligibility reasons, then account for every
+  eligible row with mutually exclusive post-eligibility reasons. Preserve the
+  arithmetic `discovered = exclusions + eligible` and
+  `eligible = exclusions + selected` without changing selection behavior.
+- Current default-account evidence exposed an exact-key contract mismatch: the
+  request carried a plain account identity while the catalog carried a
+  composite account-binding identity, so all 31 conversation rows failed the
+  exact bound-identity comparison before routeability or asset-family gates.
+  Treat identity canonicalization as a separate semantic repair; do not weaken
+  terminal evidence or spend provider work to compensate for the mismatch.

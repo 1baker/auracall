@@ -1874,7 +1874,11 @@
   `pnpm vitest run tests/accountMirror/chatgptMetadataCollector.test.ts tests/runtime.historyMaterializationService.test.ts tests/runtime.historyArchiveItems.test.ts tests/runtime.searchProjectionService.test.ts tests/cli/apiHistoryMaterializationCommand.test.ts tests/mcp.historyMaterialization.test.ts tests/http.responsesServer.test.ts tests/mcp.server.test.ts --maxWorkers 1 --testNamePattern "history materialization|account history materialization|history-backed|history-materialized|mcp server service wiring|ChatGPT account mirror metadata collector"`.
   Candidate-observability coverage additionally locks a fixture with seven
   globally missing-local assets, three eligible conversation candidates, and
-  two selected candidates after within-job family deduplication/budget. Run
+  two selected candidates after within-job family deduplication/budget. The
+  same public-result fixture locks the conversation-unit `candidateFunnel`,
+  including exclusive pre/post reason counts and both arithmetic invariants;
+  an adjacent fixture distinguishes already-complete rows from terminal
+  asset-family rows. Run
   `pnpm vitest run tests/runtime.historyMaterializationService.test.ts tests/accountMirror/completionService.test.ts tests/cli/apiStatusCommand.test.ts`
   to verify result metrics, completion hydration/persistence, legacy zero
   defaults, and CLI `/status` projection without provider work.
