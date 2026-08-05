@@ -1,8 +1,9 @@
 # Canonical Identity Installed Canary | 0193-2026-08-05
 
-State: OPEN
-Lane: P01
+State: CLOSED
+Lane: COMPLETE
 Plan version: 1
+Outcome: COMPLETE_BOUNDED_CANARY_SUCCEEDED
 Governing objective: install the pushed Plan 0192 canonical-identity repair and
 run exactly one bounded `chatgpt/default` artifacts-and-files reconciliation
 canary against the newly admitted candidate.
@@ -81,16 +82,16 @@ terminal result. Stop after that one job regardless of disposition.
 
 ## Acceptance Criteria
 
-- [ ] The pushed Plan 0192 build is installed once with exact relevant
+- [x] The pushed Plan 0192 build is installed once with exact relevant
   source/runtime parity and one healthy service restart.
-- [ ] Scheduler and all six completions remain paused before and after install;
+- [x] Scheduler and all six completions remain paused before and after install;
   no pre-existing queued/running mirror or active materialization job exists.
-- [ ] Exactly one canary uses the frozen request contract and reaches a terminal
+- [x] Exactly one canary uses the frozen request contract and reaches a terminal
   state without retry.
-- [ ] Exact result readback reports candidate funnel, eligible/selected counts,
+- [x] Exact result readback reports candidate funnel, eligible/selected counts,
   materialized/skipped/failed dispositions, provider-session evidence, and any
   durable output/manifest paths that exist.
-- [ ] Final API/guard/work posture, plan/runbook/journal, audit, commit/push,
+- [x] Final API/guard/work posture, plan/runbook/journal, audit, commit/push,
   and remote parity are truthful and current.
 
 ## Hard Stops And Non-Goals
@@ -149,3 +150,39 @@ created by completion of this plan.
   docs/audits, commit/push, and remote parity.
 - `next_action_or_stop_reason`: create exactly one frozen-contract job, record
   its id, and poll only that id to its first terminal result.
+
+## Final Checkpoint | Complete Bounded Canary Succeeded
+
+- `plan_version`: 1
+- `state_transition`: INSTALLED -> CANARY_RUNNING -> CANARY_SETTLED -> COMPLETE.
+- `progress_classification`: accepted_completion
+- `evidence`: sole job `hmj_b8134a340aa441118894432f1ebe08cc`
+  settled `succeeded` on attempt 1 from `2026-08-05T15:05:24.902Z` to
+  `2026-08-05T15:07:46.971Z`. Its request exactly preserved
+  `chatgpt/default`, bound identity `ecochran76@gmail.com`, reconciliation,
+  artifacts+files, `maxItems=1`, 300,000 ms provider-work timeout, no refresh,
+  and no force.
+- `evidence`: result metrics are 31 discovered, zero identity mismatches, 30
+  `noSelectedAssetEvidence`, one eligible, one selected, one conversation, one
+  materialized, zero skipped, zero failed, and zero duplicate aliases. Provider
+  session proof matched email, plan, structure, and account-level dimensions.
+- `evidence`: conversation `67ccf9d7-9310-8004-b5e1-478dba6eab3a`
+  materialized canvas artifact `Che4470 Exam Guide` by `canvas-content-text` as
+  a 3,362-byte text file with SHA-256
+  `514d0ddc7425970fbc48bd3c9a84a7fc4234a0a1ebfa836f8b6f77795d37fe2d`.
+  The durable manifest is under the conversation's
+  `~/.auracall/cache/providers/chatgpt/.../artifact-fetch-manifest.json` path;
+  archive and job-store readback bind both paths to the canary id.
+- `evidence`: final API remains healthy at PID 4278 with zero crash restarts;
+  scheduler and all six completions are paused, the default completion remains
+  paused at pass 4 with its prior cursor unchanged, queued/running mirrors are
+  0/0, foreground work is inactive, active jobs are zero, and the scoped guard
+  is clear.
+- `subagent_status`: `not_spawned`.
+- `budget_consumption`: builds 0/0; installs 1/1; live jobs 1/1; polls 8/30;
+  retries/provider prompts/browser diagnostics/completion/scheduler/guard
+  actions and additional jobs 0/0; review/rework 0/1.
+- `remaining_criteria`: none inside Plan 0193.
+- `next_action_or_stop_reason`: terminal stop complete. The canary proves the
+  installed canonical matcher can select and materialize the admitted asset;
+  it grants no broader or unattended authority.

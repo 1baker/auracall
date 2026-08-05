@@ -56,12 +56,14 @@ Lane: P01
   eligible conversation plus 30 rows with no selected asset evidence. This
   packet closed provider-free; install and all live/control actions remain
   excluded.
-  Active installed-canary successor:
+  Closed installed-canary successor:
   [docs/dev/plans/0193-2026-08-05-canonical-identity-installed-canary.md](docs/dev/plans/0193-2026-08-05-canonical-identity-installed-canary.md).
   The operator explicitly authorized one installation of the pushed Plan 0192
   build followed by one `chatgpt/default` artifacts+files reconciliation
-  canary at `maxItems=1`, no refresh, no force, and no retry. Scheduler and
-  completions remain paused; no unattended continuation is authorized.
+  canary at `maxItems=1`, no refresh, no force, and no retry. The sole canary
+  admitted and selected one of 31 conversations, materialized one canvas text
+  artifact, and failed/skipped nothing. Scheduler and completions remain
+  paused; no unattended continuation is authorized.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,

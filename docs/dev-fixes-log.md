@@ -20412,3 +20412,8 @@ browser-stage lifecycle observability, not transcript truncation.
 - Apply the same predicate to every catalog-entry admission path that consumes
   the bound identity. Keep archive/job keys and unrelated selection semantics
   unchanged unless their own persisted contract is separately reviewed.
+- Installed proof matters: the bounded default-account canary moved from 31
+  false identity mismatches to one eligible/selected conversation and one
+  materialized canvas artifact, while all 30 other rows retained their truthful
+  `noSelectedAssetEvidence` exclusion. This confirms canonical admission fixes
+  the identity gate without widening downstream selection semantics.

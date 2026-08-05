@@ -16027,3 +16027,18 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   queued/running mirrors 0/0, foreground work inactive, active materialization
   jobs 0, the exact default identity, and a clear scoped guard. The single
   canary gate is now ready.
+- Sole job `hmj_b8134a340aa441118894432f1ebe08cc` preserved the frozen request
+  and settled `succeeded` on attempt 1 in about 142 seconds. The exclusive
+  funnel reports 31 discovered, zero identity mismatches, 30 without selected
+  asset evidence, one eligible, and one selected.
+- The job processed one conversation and materialized one canvas text artifact
+  with zero skipped, failed, or duplicate aliases. `Che4470 Exam Guide` is
+  3,362 bytes with SHA-256
+  `514d0ddc7425970fbc48bd3c9a84a7fc4234a0a1ebfa836f8b6f77795d37fe2d`;
+  durable job-store, archive, file, and manifest evidence all bind to the job.
+- Provider-session proof matched email, plan, structure, and account-level
+  dimensions. Final posture remains API PID 4278 healthy with zero crash
+  restarts, scheduler and six completions paused, default completion still at
+  pass 4 with its prior cursor, queued/running mirrors 0/0, foreground work
+  inactive, active jobs 0, and scoped guard clear. Plan 0193 stops complete;
+  no retry or other live/control action ran.

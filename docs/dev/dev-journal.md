@@ -43534,3 +43534,18 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Post-install readback preserves the paused scheduler, all six paused
   completions, queued/running mirrors 0/0, foreground work inactive, active
   materialization jobs 0, exact default identity, and clear scoped guard.
+- Sole canary `hmj_b8134a340aa441118894432f1ebe08cc` used the frozen request and
+  settled `succeeded` on attempt 1 after about 142 seconds. The candidate funnel
+  advanced from the old false zero to 31 discovered, zero identity mismatches,
+  30 without selected asset evidence, one eligible, and one selected.
+- One conversation materialized one 3,362-byte canvas text artifact with zero
+  skips, failures, or duplicate aliases. Durable job-store/archive evidence,
+  the materialized file, its manifest, and SHA-256
+  `514d0ddc7425970fbc48bd3c9a84a7fc4234a0a1ebfa836f8b6f77795d37fe2d`
+  agree. Provider-session proof matched email, plan, structure, and
+  account-level dimensions.
+- Final readback remains fail-closed: API PID 4278 healthy with zero crash
+  restarts, scheduler and six completions paused, default completion unchanged
+  at pass 4, queued/running mirrors 0/0, foreground inactive, active jobs 0,
+  and scoped guard clear. The single-job authority is exhausted; no retry,
+  second job, refresh, force, browser diagnosis, or control action ran.
