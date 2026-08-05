@@ -43427,3 +43427,17 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   observability is installed and proved, but zero eligible/selected candidates
   cannot support unattended continuation; any further live action needs new
   explicit authority.
+
+## 2026-08-05 | Plan 0191 opens truthful candidate-funnel diagnosis
+
+- The operator correctly challenged the claim that 62 missing assets implied
+  nothing actionable. Provider-free recovery planning reports 14 retrievable
+  missing-local assets and 48 account-library metadata-only assets, while the
+  latest reconciliation reports zero eligible conversations.
+- The current catalog has 31 conversations and no terminal conversation
+  evidence. The unexplained zero therefore sits in manifest/asset-family
+  selection history, not in a proven absence of recoverable assets.
+- Plan 0191 adds an exclusive conversation-unit funnel inside the existing
+  history-materialization result interface, validates it against public service
+  behavior, and uses the current cache only for readback. It cannot change
+  eligibility behavior, install, or run provider/live/control actions.

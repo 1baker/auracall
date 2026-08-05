@@ -15925,3 +15925,22 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   zero, the guard is null, duplicate same-route attempts are zero, and PID
   `3892` is healthy. Plan 0190 closes `COMPLETE_AUTHORITY_WITHHELD`; no
   unattended live-follow authority is granted.
+
+## Turn 359 | 2026-08-05
+
+- The operator rejected the opaque `62 missing / 0 eligible` explanation and
+  authorized the recommended provider-free funnel repair with `ok go`.
+- Current cached recovery planning gives the asset-unit breakdown that was
+  missing from the handoff: 62 remote-known missing-local assets consist of 14
+  classified retrievable (6 artifacts, 8 files) and 48 account-library
+  metadata-only (24 artifacts, 24 files). The latter all need browser detail;
+  40 have a library-file detail route and 8 remain route-unknown.
+- Current cached catalog has 31 conversations, 35 artifacts, and 33 files.
+  Conversation routeability is 5 routeable / 26 unknown with zero terminal
+  conversation evidence, so the Plan 0190 zero-eligible job exposes a real
+  recovery-planner/selector contradiction.
+- Opened Plan 0191 to add an exclusive conversation-unit candidate funnel while
+  keeping the asset inventory separate. This packet permits one source module,
+  one test file, two red/green cycles, and one build. Install, live jobs,
+  provider/browser work, completion/scheduler/guard actions, and retries remain
+  zero-authority.

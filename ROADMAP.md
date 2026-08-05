@@ -36,6 +36,13 @@ Lane: P01
   [docs/dev/plans/0189-2026-08-04-chatgpt-materialization-selection-diagnosis.md](docs/dev/plans/0189-2026-08-04-chatgpt-materialization-selection-diagnosis.md).
   Closed observability/install/default-proof successor:
   [docs/dev/plans/0190-2026-08-04-chatgpt-materialization-candidate-observability-and-default-proof.md](docs/dev/plans/0190-2026-08-04-chatgpt-materialization-candidate-observability-and-default-proof.md).
+  Active provider-free candidate-funnel successor:
+  [docs/dev/plans/0191-2026-08-05-chatgpt-reconciliation-candidate-funnel.md](docs/dev/plans/0191-2026-08-05-chatgpt-reconciliation-candidate-funnel.md).
+  Plan 0191 must keep asset and conversation units separate while explaining
+  the current contradiction: 62 missing assets include 14 classified
+  retrievable and 48 metadata-only, but reconciliation reports zero eligible
+  conversations. It may add provider-free result observability and inspect the
+  current cache; install and all live/control actions remain excluded.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,
