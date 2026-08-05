@@ -16019,3 +16019,11 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   `maxItems=1`, provider timeout 300,000 ms, no refresh, and no force.
 - Critical path is serialized and direct; no subagent was spawned. Hard stop
   after the first terminal canary result regardless of disposition.
+- Planning commit `9ad8136a` is pushed. The accepted prebuilt runtime installed
+  once with `--skip-build`; the sole service restart moved API PID 3892 to 4278
+  with zero crash restarts, and recursive `dist/` comparison found exact
+  source/installed parity.
+- Post-install readback preserves scheduler and all six completion pauses,
+  queued/running mirrors 0/0, foreground work inactive, active materialization
+  jobs 0, the exact default identity, and a clear scoped guard. The single
+  canary gate is now ready.

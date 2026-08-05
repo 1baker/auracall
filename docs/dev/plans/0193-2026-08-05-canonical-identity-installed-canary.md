@@ -129,3 +129,23 @@ created by completion of this plan.
 - `remaining_criteria`: all five acceptance items.
 - `next_action_or_stop_reason`: wire and push this authority packet, then run
   the sole install/restart and recheck parity plus paused posture.
+
+## Checkpoint 2 | Installed
+
+- `plan_version`: 1
+- `state_transition`: READY -> INSTALLED.
+- `progress_classification`: outcome_progress
+- `evidence`: the accepted prebuilt runtime installed once with `--skip-build`;
+  the API service performed its sole restart and is healthy at PID 4278 with
+  zero crash restarts. Recursive `dist/` comparison found no source/installed
+  differences. Scheduler and all six completions remain paused, queued/running
+  mirrors are 0/0, foreground work is inactive, active materialization jobs are
+  zero, the exact default identity is present, and its scoped guard is clear.
+- `subagent_status`: `not_spawned`.
+- `budget_consumption`: builds 0/0; installs 1/1; live jobs 0/1; polls 0/30;
+  retries/provider prompts/browser diagnostics/completion/scheduler/guard
+  actions 0/0.
+- `remaining_criteria`: sole canary settlement, exact outcome/final posture,
+  docs/audits, commit/push, and remote parity.
+- `next_action_or_stop_reason`: create exactly one frozen-contract job, record
+  its id, and poll only that id to its first terminal result.

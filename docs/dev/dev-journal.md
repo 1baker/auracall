@@ -43527,3 +43527,10 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   zero restarts; scheduler and six completions remain paused with no active
   materialization jobs, no queued/running mirror work, and a clear scoped
   guard.
+- Planning commit `9ad8136a` was pushed before installation. The accepted
+  prebuilt runtime installed once with `--skip-build`; the sole service restart
+  moved API PID 3892 to 4278 with zero crash restarts. Recursive comparison of
+  source and installed `dist/` reports no differences.
+- Post-install readback preserves the paused scheduler, all six paused
+  completions, queued/running mirrors 0/0, foreground work inactive, active
+  materialization jobs 0, exact default identity, and clear scoped guard.
