@@ -16003,3 +16003,19 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   scheduler paused, all six completions paused, queued/running mirrors 0/0,
   foreground work inactive, active materialization jobs 0, and the scoped
   `chatgpt/default` provider guard clear. No install or runtime mutation ran.
+
+## Turn 361 | 2026-08-05
+
+- The operator's `ok go` authorizes Plan 0193: install the pushed Plan 0192
+  build once, then run exactly one bounded `chatgpt/default` artifacts+files
+  reconciliation canary at `maxItems=1`, no refresh, no force, and no retry.
+- Preflight is clean and synchronized at `b1a6ab25`. The accepted build contains
+  the canonical matcher while the installed runtime does not yet contain it.
+  Installed API PID 3892 is healthy with zero restarts; scheduler and all six
+  completions are paused, foreground and queued/running mirror work are zero,
+  active materialization jobs are zero, and the scoped guard is clear.
+- Prior job `hmj_f4b10eef7bca43228144c0acfa8eac92` supplies the frozen request:
+  bound identity `ecochran76@gmail.com`, reconciliation, artifacts+files,
+  `maxItems=1`, provider timeout 300,000 ms, no refresh, and no force.
+- Critical path is serialized and direct; no subagent was spawned. Hard stop
+  after the first terminal canary result regardless of disposition.

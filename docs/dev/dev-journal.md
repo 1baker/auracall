@@ -43512,3 +43512,18 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   scheduler paused, all six completions paused, queued/running mirrors 0/0,
   foreground work inactive, active materialization jobs 0, and scoped
   `chatgpt/default` guard clear.
+
+## 2026-08-05 | Plan 0193 opens one installed canonical-identity canary
+
+- The operator explicitly authorized the prior best recommendation: one
+  installation of the pushed Plan 0192 build followed by one bounded
+  `chatgpt/default` artifacts+files reconciliation canary.
+- The frozen job contract is bound identity `ecochran76@gmail.com`,
+  `maxItems=1`, provider-work timeout 300,000 ms, no refresh, no force, and no
+  retry. Scheduler/completion/guard actions, browser diagnosis, a second job,
+  and unattended continuation remain excluded.
+- Preflight is clean at synchronized commit `b1a6ab25`. Accepted build output
+  contains the matcher while the installed runtime does not. API PID 3892 has
+  zero restarts; scheduler and six completions remain paused with no active
+  materialization jobs, no queued/running mirror work, and a clear scoped
+  guard.
