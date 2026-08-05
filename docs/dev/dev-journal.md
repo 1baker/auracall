@@ -43484,3 +43484,31 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - The packet is bounded to two source files, two test files, two red/green
   cycles, and one build. Install/restart, provider/browser work, live jobs,
   completion/scheduler/guard control, force, and retries remain excluded.
+
+## 2026-08-05 | Plan 0192 closes canonical identity admission
+
+- Added a positive provider-aware match predicate to the tenant-binding module.
+  It requires present, comparable, canonically equal identities and therefore
+  does not inherit the unsafe missing/incomparable behavior that negating the
+  existing mismatch predicate would produce.
+- History materialization now uses that predicate consistently for catalog-entry
+  admission. Archive/job identity contracts and downstream routeability,
+  manifest, freshness, terminal-family, ordering, budget, and provider behavior
+  remain unchanged.
+- The public regression first failed with zero materialization calls for an
+  equivalent plain/composite ChatGPT identity, then passed with its existing
+  three eligible / two selected result. Tenant-binding coverage rejects
+  conflicts, missing values, malformed composites, and incomparable Grok
+  email/handle classes.
+- Provider-free current-cache execution accounts for all 31 catalog rows as
+  zero `identityMismatch`, one eligible, and 30 `noSelectedAssetEvidence`.
+  `maxItems=0` holds the eligible row at `targetBudget`; both arithmetic
+  invariants pass with zero provider calls and zero runtime writes.
+- Validation: focused tests 112/112, typecheck, scoped lint, diff hygiene, and
+  the sole production build pass. The full suite passes 304 files / 2,715 tests
+  with 65 opt-in/live skips. No install, provider, live job, retry, completion,
+  scheduler, or guard action ran.
+- Final read-only runtime posture is unchanged: API healthy at PID 3892,
+  scheduler paused, all six completions paused, queued/running mirrors 0/0,
+  foreground work inactive, active materialization jobs 0, and scoped
+  `chatgpt/default` guard clear.

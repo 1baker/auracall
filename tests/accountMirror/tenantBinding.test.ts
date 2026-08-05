@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import {
+	accountMirrorIdentityKeysMatch,
 	accountMirrorIdentityKeysMismatch,
 	createAccountMirrorBindingKey,
 	createAccountMirrorTenantKey,
@@ -56,6 +57,47 @@ describe("account mirror tenant binding keys", () => {
 				detectedIdentityKey: "other@example.com",
 			}),
 		).toBe(true);
+	});
+
+	test("matches equivalent provider identities while rejecting absent or incomparable evidence", () => {
+		const compositeIdentity =
+			"service-account:chatgpt:operator@example.com|plan=plus|structure=personal";
+
+		expect(
+			accountMirrorIdentityKeysMatch({
+				provider: "chatgpt",
+				expectedIdentityKey: " Operator@Example.COM ",
+				detectedIdentityKey: compositeIdentity,
+			}),
+		).toBe(true);
+		expect(
+			accountMirrorIdentityKeysMatch({
+				provider: "chatgpt",
+				expectedIdentityKey: "operator@example.com",
+				detectedIdentityKey: "other@example.com",
+			}),
+		).toBe(false);
+		expect(
+			accountMirrorIdentityKeysMatch({
+				provider: "chatgpt",
+				expectedIdentityKey: "operator@example.com",
+				detectedIdentityKey: null,
+			}),
+		).toBe(false);
+		expect(
+			accountMirrorIdentityKeysMatch({
+				provider: "chatgpt",
+				expectedIdentityKey: "operator@example.com",
+				detectedIdentityKey: "service-account:chatgpt:|plan=plus",
+			}),
+		).toBe(false);
+		expect(
+			accountMirrorIdentityKeysMatch({
+				provider: "grok",
+				expectedIdentityKey: "operator@example.com",
+				detectedIdentityKey: "@operator",
+			}),
+		).toBe(false);
 	});
 
 	test("keeps provider-specific identity normalization on the shared path", () => {

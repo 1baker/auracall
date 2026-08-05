@@ -1878,10 +1878,19 @@
   same public-result fixture locks the conversation-unit `candidateFunnel`,
   including exclusive pre/post reason counts and both arithmetic invariants;
   an adjacent fixture distinguishes already-complete rows from terminal
-  asset-family rows. Run
+  asset-family rows. The fixture also binds a plain ChatGPT request identity to
+  an equivalent composite catalog identity. Provider-aware tenant-binding
+  coverage separately rejects conflicting, missing, malformed, and
+  incomparable identities. Run
   `pnpm vitest run tests/runtime.historyMaterializationService.test.ts tests/accountMirror/completionService.test.ts tests/cli/apiStatusCommand.test.ts`
   to verify result metrics, completion hydration/persistence, legacy zero
   defaults, and CLI `/status` projection without provider work.
+  For a current-cache admission readback, use the cached catalog plus read-only
+  archive/job snapshots, an in-memory job store, `maxItems=0`, and a provider
+  callback that throws if invoked. The Plan 0192 receipt accounted for all 31
+  rows as 1 eligible and 30 `noSelectedAssetEvidence`, with zero
+  `identityMismatch`, both funnel equations true, zero provider calls, and zero
+  runtime writes.
 - ChatGPT user-uploaded-file response-shape coverage is provider-free in
   `tests/browser/chatgptAdapter.test.ts`. It verifies that a `files-download`
   JSON string and bounded shallow/nested signed-URL fields resolve, while an

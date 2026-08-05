@@ -5081,7 +5081,8 @@ describe("history materialization service", () => {
 					provider: "chatgpt" as const,
 					runtimeProfileId: "wsl-chrome-3",
 					browserProfileId: "wsl-chrome-3",
-					boundIdentityKey: "user@example.com",
+					boundIdentityKey:
+						"service-account:chatgpt:user@example.com|tier=plus|workspace=personal",
 					status: "eligible" as const,
 					reason: "eligible" as const,
 					mirrorCompleteness: {

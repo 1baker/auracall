@@ -15982,3 +15982,24 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   must remain fail-closed.
 - Critical path is direct and serialized; no subagent was spawned. Next: one
   public-service red tracer, then the minimal tenant-binding/history repair.
+- The public regression failed with zero materialization calls when the request
+  used a plain ChatGPT identity and the catalog used its equivalent composite
+  service-account identity. The repair adds a positive tenant-binding match
+  predicate and applies it consistently to catalog-entry admission paths.
+- Tenant-binding tests prove equivalent ChatGPT forms match while conflicting,
+  missing, malformed, and incomparable Grok identities remain fail-closed. The
+  public regression preserves its existing three eligible / two selected order
+  and dispositions.
+- Provider-free current-cache readback now accounts for all 31 conversations as
+  zero identity mismatches, one eligible row, and 30 rows with no selected asset
+  evidence. With `maxItems=0`, the eligible row stops at `targetBudget`; both
+  funnel equations pass with zero provider calls and zero runtime writes.
+- Validation closes green: focused account-mirror/history tests 112/112,
+  typecheck, scoped lint, diff hygiene, and the sole production build pass; the
+  full suite passes 304 files / 2,715 tests with 65 opt-in/live skips. Plan 0192
+  closes provider-free; install and all runtime/live/control actions remain a
+  separate authority gate.
+- Final read-only installed-state evidence remains API healthy at PID 3892,
+  scheduler paused, all six completions paused, queued/running mirrors 0/0,
+  foreground work inactive, active materialization jobs 0, and the scoped
+  `chatgpt/default` provider guard clear. No install or runtime mutation ran.

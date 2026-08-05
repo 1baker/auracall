@@ -1,7 +1,7 @@
 # Account Mirror Canonical Identity Admission | 0192-2026-08-05
 
-State: OPEN
-Lane: P01
+State: CLOSED
+Lane: COMPLETE
 Plan version: 1
 Governing objective: plan and execute the semantic successor to Plan 0191 so
 equivalent plain and composite account identities admit the same cached tenant
@@ -90,15 +90,15 @@ identity-mismatch gate without provider work.
 
 ## Acceptance Criteria
 
-- [ ] Public-service red/green proof admits equivalent ChatGPT plain/composite
+- [x] Public-service red/green proof admits equivalent ChatGPT plain/composite
   identities and preserves candidate selection semantics.
-- [ ] Provider-aware identity tests reject conflicts, missing values, malformed
+- [x] Provider-aware identity tests reject conflicts, missing values, malformed
   composites, and incomparable Grok identity classes.
-- [ ] Current cached readback accounts for all 31 conversations with zero false
+- [x] Current cached readback accounts for all 31 conversations with zero false
   identity mismatches and names the next candidate/exclusion breakdown.
-- [ ] Existing routeability, manifest, freshness, terminal-family, ordering,
+- [x] Existing routeability, manifest, freshness, terminal-family, ordering,
   budget, and provider-guard tests remain green.
-- [ ] README/testing/fix log, roadmap/runbook/journal, full validation, audit,
+- [x] README/testing/fix log, roadmap/runbook/journal, full validation, audit,
   commit/push, remote parity, and paused-runtime preservation are current.
 
 ## Hard Stops And Non-Goals
@@ -133,3 +133,29 @@ completion does not imply installed or live execution authority.
 - `remaining_criteria`: all five acceptance items.
 - `next_action_or_stop_reason`: wire and publish this plan, then add one failing
   public reconciliation regression before implementation.
+
+## Checkpoint 2 | Complete
+
+- `plan_version`: 1
+- `state_transition`: READY -> RED -> PROVIDER_FREE_GREEN ->
+  CURRENT_CACHE_ADVANCED -> COMPLETE.
+- `progress_classification`: blocker_reduction
+- `evidence`: the public tracer failed with zero materialization calls before
+  the repair and passed afterward with three eligible / two selected unchanged;
+  tenant-binding invariants reject unsafe identity cases. Current-cache
+  readback accounts for 31 rows as zero identity mismatches, one eligible, and
+  30 without selected asset evidence; both funnel equations pass with zero
+  provider calls and zero runtime writes.
+- `subagent_status`: `not_spawned`.
+- `budget_consumption`: CodeGraph 5/8; red/green 2/2; source 2/2; tests 2/2;
+  review/rework 1/1; build 1/1; install/restart 0/0; live jobs 0/0;
+  provider/completion/scheduler/guard/retry actions 0/0.
+- `validation`: focused tests 112/112; typecheck, scoped lint, diff hygiene, and
+  production build green; full suite 304 files / 2,715 tests passed with 65
+  opt-in/live skips; plan audit 192 candidates / 0 errors. Final read-only
+  installed state remains API healthy at PID 3892, scheduler and six
+  completions paused, queued/running mirrors 0/0, foreground work inactive,
+  active materialization jobs 0, and scoped `chatgpt/default` guard clear.
+- `remaining_criteria`: none inside the provider-free Plan 0192 contract.
+- `next_action_or_stop_reason`: stop complete at the source boundary. Any
+  install or bounded live proof requires separately reviewed authority.

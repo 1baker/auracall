@@ -636,9 +636,11 @@ Terminology note:
   `candidateFunnel`. Its exclusive pre-eligibility reasons account for every
   discovered catalog conversation row, and its exclusive post-eligibility
   reasons account for every eligible row before selection. In particular,
-  `identityMismatch` means the request's bound identity key did not exactly
-  match the catalog entry's bound identity key; it does not mean the underlying
-  assets are absent or unavailable.
+  `identityMismatch` means the request and catalog entry did not identify the
+  same provider account under Aura-Call's canonical tenant-binding rules. Plain
+  and composite `service-account:<provider>:` forms can match; conflicting,
+  missing, malformed, or incomparable identity evidence remains excluded. The
+  reason does not mean the underlying assets are absent or unavailable.
   Direct single-conversation materialization readback includes
   `scrapeTelemetry` on successful results, and stale timeout recovery attaches
   the last progress snapshot to the failed job. Use it to verify that direct

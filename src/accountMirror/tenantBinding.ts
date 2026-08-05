@@ -72,6 +72,31 @@ export function accountMirrorIdentityKeysComparable(input: {
 	return false;
 }
 
+export function accountMirrorIdentityKeysMatch(input: {
+	provider: AccountMirrorProvider;
+	expectedIdentityKey: string | null | undefined;
+	detectedIdentityKey: string | null | undefined;
+}): boolean {
+	const expectedIdentityKey = providerIdentityComparisonKey(
+		input.provider,
+		input.expectedIdentityKey,
+	);
+	const detectedIdentityKey = providerIdentityComparisonKey(
+		input.provider,
+		input.detectedIdentityKey,
+	);
+	return Boolean(
+		expectedIdentityKey &&
+			detectedIdentityKey &&
+			expectedIdentityKey === detectedIdentityKey &&
+			accountMirrorIdentityKeysComparable({
+				provider: input.provider,
+				expectedIdentityKey,
+				detectedIdentityKey,
+			}),
+	);
+}
+
 export function accountMirrorIdentityKeysMismatch(input: {
 	provider: AccountMirrorProvider;
 	expectedIdentityKey: string | null | undefined;

@@ -20397,3 +20397,18 @@ browser-stage lifecycle observability, not transcript truncation.
   exact bound-identity comparison before routeability or asset-family gates.
   Treat identity canonicalization as a separate semantic repair; do not weaken
   terminal evidence or spend provider work to compensate for the mismatch.
+
+## 2026-08-05 | Raw identity equality must not bypass canonical tenant binding
+
+- Provider account identity can be represented as either a plain identity or a
+  qualified `service-account:<provider>:` binding. Comparing those persisted
+  forms directly can reject the same tenant before any recovery-selection rule
+  runs.
+- Use a positive provider-aware match predicate at the tenant-binding boundary.
+  A match requires both identities to be present, comparable for the provider,
+  and canonically equal. Do not implement positive matching by negating a
+  mismatch predicate, because missing or incomparable evidence must remain
+  fail-closed.
+- Apply the same predicate to every catalog-entry admission path that consumes
+  the bound identity. Keep archive/job keys and unrelated selection semantics
+  unchanged unless their own persisted contract is separately reviewed.

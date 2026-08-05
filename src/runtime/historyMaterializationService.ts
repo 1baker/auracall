@@ -19,6 +19,7 @@ import {
 	type AccountMirrorCatalogService,
 	createAccountMirrorCatalogService,
 } from "../accountMirror/catalogService.js";
+import { accountMirrorIdentityKeysMatch } from "../accountMirror/tenantBinding.js";
 import { createLlmService } from "../browser/llmService/providers/index.js";
 import type { ConversationArtifact, FileRef, ProviderId } from "../browser/providers/domain.js";
 import {
@@ -1395,10 +1396,7 @@ async function directConversationAssetFamiliesAreTerminal(input: {
 		terminalSignatures.add(signature);
 	}
 	for (const entry of catalog.entries) {
-		if (
-			input.request.boundIdentityKey &&
-			entry.boundIdentityKey !== input.request.boundIdentityKey
-		) {
+		if (!catalogEntryMatchesBoundIdentity(entry, input.request.boundIdentityKey)) {
 			continue;
 		}
 		for (const item of entry.manifests.conversations) {
@@ -1655,8 +1653,7 @@ async function buildAccountLibraryReconciliationPreview(input: {
 	};
 	let sequence = 0;
 	for (const entry of catalog.entries) {
-		if (input.request.boundIdentityKey && entry.boundIdentityKey !== input.request.boundIdentityKey)
-			continue;
+		if (!catalogEntryMatchesBoundIdentity(entry, input.request.boundIdentityKey)) continue;
 		for (const item of entry.manifests.files) {
 			metrics.catalogFiles += 1;
 			if (entry.status === "blocked") {
@@ -2226,11 +2223,7 @@ async function materializeReconciliation(input: {
 	const selectedCatalogAssetFamilySignatures = new Map<string, string[]>();
 	if (selectedConversationIdSet.size > 0) {
 		for (const entry of catalog.entries) {
-			if (
-				input.request.boundIdentityKey &&
-				entry.boundIdentityKey !== input.request.boundIdentityKey
-			)
-				continue;
+			if (!catalogEntryMatchesBoundIdentity(entry, input.request.boundIdentityKey)) continue;
 			for (const item of entry.manifests.conversations) {
 				const conversationId = readCatalogStringField(item, ["id", "conversationId"]);
 				if (
@@ -2276,11 +2269,7 @@ async function materializeReconciliation(input: {
 			attemptedAssetFamilySignatures.add(signature);
 		}
 		for (const entry of catalog.entries) {
-			if (
-				input.request.boundIdentityKey &&
-				entry.boundIdentityKey !== input.request.boundIdentityKey
-			)
-				continue;
+			if (!catalogEntryMatchesBoundIdentity(entry, input.request.boundIdentityKey)) continue;
 			for (const item of entry.manifests.conversations) {
 				const conversationId = readCatalogStringField(item, ["id", "conversationId"]);
 				if (!conversationId || !catalogConversationHasCompleteSelectedAssets(item)) continue;
@@ -2372,10 +2361,7 @@ async function materializeReconciliation(input: {
 		}> = [];
 		let sequence = 0;
 		for (const entry of catalog.entries) {
-			if (
-				input.request.boundIdentityKey &&
-				entry.boundIdentityKey !== input.request.boundIdentityKey
-			) {
+			if (!catalogEntryMatchesBoundIdentity(entry, input.request.boundIdentityKey)) {
 				if (candidateFunnel) {
 					candidateFunnel.discovered += entry.manifests.conversations.length;
 					candidateFunnel.preEligibilityExclusions.identityMismatch +=
@@ -2854,7 +2840,7 @@ function buildCatalogConversationCandidates(
 ): CatalogConversationCandidate[] {
 	const candidates: CatalogConversationCandidate[] = [];
 	for (const entry of catalog.entries) {
-		if (request.boundIdentityKey && entry.boundIdentityKey !== request.boundIdentityKey) continue;
+		if (!catalogEntryMatchesBoundIdentity(entry, request.boundIdentityKey)) continue;
 		const mediaCounts = countCatalogMediaByConversation(entry.manifests.media);
 		for (const item of entry.manifests.conversations) {
 			const rawConversationId = readCatalogStringField(item, ["id", "conversationId"]);
@@ -4805,7 +4791,7 @@ function catalogEntriesConversationAssetFamilySignatures(
 	const signatures = new Set<string>();
 	for (const entry of entries) {
 		if (entry.provider !== provider) continue;
-		if (boundIdentityKey && entry.boundIdentityKey !== boundIdentityKey) continue;
+		if (!catalogEntryMatchesBoundIdentity(entry, boundIdentityKey)) continue;
 		for (const signature of catalogConversationAssetFamilySignatures(
 			entry.manifests,
 			conversationId,
@@ -4827,6 +4813,18 @@ function catalogEntriesConversationAssetFamilySignatures(
 		}
 	}
 	return Array.from(signatures);
+}
+
+function catalogEntryMatchesBoundIdentity(
+	entry: AccountMirrorCatalogEntry,
+	boundIdentityKey: string | null | undefined,
+): boolean {
+	if (!boundIdentityKey) return true;
+	return accountMirrorIdentityKeysMatch({
+		provider: entry.provider,
+		expectedIdentityKey: boundIdentityKey,
+		detectedIdentityKey: entry.boundIdentityKey,
+	});
 }
 
 function catalogConversationItemAssetFamilySignatures(
