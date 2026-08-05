@@ -65,8 +65,10 @@ grant that authority.
 - `max_red_green_cycles: 2`; one exact red regression and one green rerun.
 - `max_codegraph_calls: 24`; structural discovery/impact only, with direct source
   validation after writes while the index refreshes.
-- `max_source_files: 4`; history selection/result plus completion hydration and
-  persistence unless a test-discovered type boundary requires one more.
+- `max_source_files: 6`; history selection/result plus completion hydration,
+  persistence, shared status type, HTTP projection, and CLI normalization. The
+  initial four-file estimate expanded once when typecheck proved both compact
+  status normalization boundaries were part of the public contract.
 - `max_review_rework_cycles: 1`; one consolidated audit and one repair pass.
 - `max_builds: 1`, `max_install_restarts: 1`, `max_live_jobs: 1`,
   `max_provider_prompts: 0`, `max_completion_actions: 0`,
@@ -102,14 +104,14 @@ grant that authority.
 
 ## Acceptance Criteria
 
-- [ ] A provider-free red/green regression proves global missing-local backlog
+- [x] A provider-free red/green regression proves global missing-local backlog
   and reconciliation eligible/selected counts are separate denominators.
-- [ ] Terminal-family exclusions, within-job deduplication, and `maxItems`
+- [x] Terminal-family exclusions, within-job deduplication, and `maxItems`
   retain their behavior while result metrics report deterministic nonnegative
   counts with selected not above eligible.
-- [ ] Compact job monitoring plus completion hydration/persistence expose both
+- [x] Compact job monitoring plus completion hydration/persistence expose both
   fields, including zero defaults for older persisted operations.
-- [ ] Focused tests, full provider-free validation, typecheck, build, scoped
+- [x] Focused tests, full provider-free validation, typecheck, build, scoped
   lint, planning/goal audits, and diff hygiene pass; operator docs are current.
 - [ ] The accepted commit is pushed and installed with exact source/runtime
   parity while scheduler, completions, guards, and active-work posture remain
@@ -157,3 +159,43 @@ unattended authority to remain withheld.
 - `next_action_or_stop_reason`: wire this plan into canonical authority, commit
   the planning slice, then add and run the exact red regression before source
   implementation.
+
+## Checkpoint 2 | Provider-Free Contract Implemented
+
+- `plan_version`: 1
+- `state_transition`: `READY` -> `RED` -> provider-free implementation green;
+  full validation still active before `PROVIDER_FREE_GREEN` is granted.
+- `progress_classification`: outcome_progress
+- `evidence`: the exact regression failed at both missing fields, then the
+  focused history/completion/CLI packet passed 151/151 with typecheck. The
+  fixture distinguishes seven global missing-local assets, three eligible
+  candidates, and two selected candidates while retaining family dedupe and
+  remaining budget. Legacy persistence defaults to 0/0 and clamps selected to
+  eligible. The first full suite reached 2,713 passes and one unrelated HTTP
+  background-drain timing miss; the exact miss passed 1/1 on isolated rerun.
+- `subagent_status`: `not_spawned`.
+- `budget_consumption`: CodeGraph 21/24; source 6/6; red/green 2/2; review
+  rework 0/1; builds 0/1; installs 0/1; live jobs 0/1; forbidden actions 0/0.
+- `remaining_criteria`: clean full-suite/build/lint/audits; commit/push; install
+  parity and paused posture; sole proof; final authority classification.
+- `next_action_or_stop_reason`: rerun the clean full-suite gate after docs,
+  execute the sole production build and scoped lint/audits, then commit/push.
+
+## Checkpoint 3 | Provider-Free Green
+
+- `plan_version`: 1
+- `state_transition`: implementation green -> `PROVIDER_FREE_GREEN`.
+- `progress_classification`: outcome_progress
+- `evidence`: clean rerun passed 304 files / 2,714 tests with 65 skips;
+  typecheck, sole production build, nine-file scoped Biome lint, completion
+  hydration smoke, live-follow-health parity smoke, plan audit with zero
+  validation errors, goal-policy audit, and diff hygiene pass. The prior lone
+  background-drain timing miss passed isolated and did not recur.
+- `subagent_status`: `not_spawned`; all validation is primary-agent evidence.
+- `budget_consumption`: CodeGraph 21/24; source 6/6; red/green 2/2; review
+  rework 0/1; builds 1/1; installs 0/1; live jobs 0/1; forbidden actions 0/0.
+- `remaining_criteria`: commit/push; installed source/runtime parity and paused
+  zero-work posture; sole default proof; final authority classification.
+- `next_action_or_stop_reason`: commit and push the accepted provider-free
+  slice, then run the single permitted install/restart and verify parity before
+  any live proof.

@@ -173,6 +173,8 @@ export interface AccountMirrorCompletionMaterializationOutcome {
 	jobStatus: string;
 	completedAt: string | null;
 	conversationsAttempted: number;
+	eligibleCandidates: number;
+	selectedCandidates: number;
 	materialized: number;
 	skipped: number;
 	failed: number;
@@ -319,6 +321,8 @@ interface AccountMirrorHistoryMaterializationJobReadResult {
 	result?: {
 		metrics?: {
 			conversations?: number | null;
+			eligibleCandidates?: number | null;
+			selectedCandidates?: number | null;
 			materialized?: number | null;
 			skipped?: number | null;
 			failed?: number | null;
@@ -1654,12 +1658,19 @@ function summarizeMaterializationOutcome(
 	const snapshotRefreshes = Array.isArray(result?.snapshotRefreshes)
 		? result.snapshotRefreshes
 		: [];
+	const eligibleCandidates = normalizeOutcomeCount(metrics.eligibleCandidates);
+	const selectedCandidates = Math.min(
+		eligibleCandidates,
+		normalizeOutcomeCount(metrics.selectedCandidates),
+	);
 	return {
 		jobId: job.id,
 		jobStatus: job.status,
 		completedAt:
 			typeof job.completedAt === "string" && job.completedAt.trim() ? job.completedAt.trim() : null,
 		conversationsAttempted: normalizeOutcomeCount(metrics.conversations),
+		eligibleCandidates,
+		selectedCandidates,
 		materialized: normalizeOutcomeCount(metrics.materialized),
 		skipped: normalizeOutcomeCount(metrics.skipped),
 		failed: normalizeOutcomeCount(metrics.failed),

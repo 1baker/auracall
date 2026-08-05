@@ -7063,6 +7063,8 @@ function summarizeLiveFollowMaterializationOutcome(
 	return {
 		jobStatus: outcome.jobStatus,
 		conversationsAttempted: outcome.conversationsAttempted,
+		eligibleCandidates: outcome.eligibleCandidates,
+		selectedCandidates: outcome.selectedCandidates,
 		materialized: outcome.materialized,
 		checksumCount: outcome.checksumCount,
 		dispositionCounts: outcome.dispositionCounts ?? {},

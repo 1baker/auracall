@@ -5065,7 +5065,7 @@ describe("history materialization service", () => {
 		});
 	});
 
-	it("deduplicates repeated reconciliation asset families and carries a remaining asset budget", async () => {
+	it("reports eligible and selected candidates separately from global missing-local metadata", async () => {
 		const homeDir = await fs.mkdtemp(
 			path.join(os.tmpdir(), "auracall-history-materialize-reconcile-dedupe-"),
 		);
@@ -5260,6 +5260,8 @@ describe("history materialization service", () => {
 			result: {
 				metrics: {
 					conversations: 2,
+					eligibleCandidates: 3,
+					selectedCandidates: 2,
 					materialized: 4,
 				},
 			},

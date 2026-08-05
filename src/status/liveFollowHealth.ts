@@ -179,6 +179,8 @@ export interface LiveFollowTargetAccountSummary {
 	materializationOutcome: {
 		jobStatus: string | null;
 		conversationsAttempted: number;
+		eligibleCandidates: number;
+		selectedCandidates: number;
 		materialized: number;
 		checksumCount: number;
 		dispositionCounts: Record<string, number>;

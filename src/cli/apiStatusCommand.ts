@@ -859,6 +859,8 @@ function summarizeLiveFollowTargetAccount(value: unknown) {
 			? {
 					jobStatus: readString(materializationOutcome.jobStatus),
 					conversationsAttempted: readNumber(materializationOutcome.conversationsAttempted) ?? 0,
+					eligibleCandidates: readNumber(materializationOutcome.eligibleCandidates) ?? 0,
+					selectedCandidates: readNumber(materializationOutcome.selectedCandidates) ?? 0,
 					materialized: readNumber(materializationOutcome.materialized) ?? 0,
 					checksumCount: readNumber(materializationOutcome.checksumCount) ?? 0,
 					dispositionCounts: isRecord(materializationOutcome.dispositionCounts)

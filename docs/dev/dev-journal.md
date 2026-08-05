@@ -43387,3 +43387,22 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   artifacts+files, reconciliation, `maxItems=1`, no force, and no snapshot
   refresh. Any unattended authority remains withheld unless a later explicit
   operator decision follows qualifying proof evidence.
+
+## 2026-08-04 | Plan 0190 provider-free observability is green
+
+- The exact regression failed before implementation because reconciliation
+  result metrics and completion hydration omitted both candidate counts. It now
+  proves seven globally missing-local fixture assets produce three eligible and
+  two selected candidates while preserving family dedupe and remaining budget.
+- Reconciliation result/compact-job monitoring, completion outcome hydration,
+  persistence, HTTP target summary, and CLI `/status` now preserve explicit
+  counts. Legacy missing fields become 0/0 and selected is clamped to eligible.
+- Focused validation passes 151/151 plus typecheck. The first full suite reached
+  2,713 passes with one unrelated background-drain timing miss; the exact
+  failing test passed 1/1 on immediate isolated rerun. No provider/runtime
+  action has run. A clean full-suite gate, build, audit, commit, and install
+  remain before the sole live proof.
+- The subsequent full rerun passed 304 files / 2,714 tests with 65 skips. The
+  sole production build, scoped lint, completion-hydration and live-follow-
+  health smokes, plan/goal audits, and diff hygiene pass. Provider-free
+  acceptance is green; install parity remains the next serialized gate.

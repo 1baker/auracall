@@ -15897,3 +15897,14 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
 - CodeGraph localized the implementation to reconciliation result metrics,
   compact job monitoring, and completion outcome hydration/persistence. Next:
   provider-free red regression before implementation.
+- The red regression then failed exactly at missing result/hydration fields.
+  Implementation now reports seven global fixture assets, three eligible
+  candidates, and two selected after dedupe/budget; completion persistence and
+  CLI/status parity preserve the counts with legacy 0/0 defaults.
+- Focused tests pass 151/151 and typecheck passes. The initial full suite reached
+  2,713 passes with one unrelated background-drain timing miss; that exact test
+  passed 1/1 on isolated rerun. No build, install, or live action has run.
+- The clean full rerun then passed 304 files / 2,714 tests with 65 skips. The
+  sole production build, scoped lint, completion-hydration and live-follow-
+  health smokes, plan/goal audits, and diff hygiene also pass. Next: commit/push
+  this accepted provider-free slice, then the single install/restart gate.

@@ -250,6 +250,8 @@ export interface HistoryMaterializationResult {
 	providerSessionProof?: ProviderSessionProofSummary | null;
 	metrics: {
 		conversations: number;
+		eligibleCandidates?: number;
+		selectedCandidates?: number;
 		materialized: number;
 		duplicateAliases?: number;
 		skipped: number;
@@ -2188,6 +2190,8 @@ async function materializeReconciliation(input: {
 		limit: catalogLimit,
 	});
 	const results: HistoryMaterializationResult[] = [];
+	let eligibleCandidates = 0;
+	let selectedCandidates = 0;
 	let consumedTargetBudget = 0;
 	let remainingAssetBudget = maxTargets;
 	const selectedConversationIdSet = new Set(selectedConversationIds);
@@ -2272,7 +2276,15 @@ async function materializeReconciliation(input: {
 			selectedKinds.includes("files") ||
 			selectedKinds.includes("media"))
 	) {
-		for (const conversationId of selectedConversationIds) {
+		const eligibleConversationIds = selectedConversationIds.filter((conversationId) => {
+			const assetFamilySignatures = selectedCatalogAssetFamilySignatures.get(conversationId) ?? [];
+			return !(
+				assetFamilySignatures.length > 0 &&
+				assetFamilySignatures.every((signature) => attemptedAssetFamilySignatures.has(signature))
+			);
+		});
+		eligibleCandidates += eligibleConversationIds.length;
+		for (const conversationId of eligibleConversationIds) {
 			if (consumedTargetBudget >= maxTargets) break;
 			const assetFamilySignatures = selectedCatalogAssetFamilySignatures.get(conversationId) ?? [];
 			if (
@@ -2314,6 +2326,7 @@ async function materializeReconciliation(input: {
 				},
 			});
 			results.push(result);
+			selectedCandidates += 1;
 			if (historyMaterializationResultHasProviderGuard(result)) break;
 			if (consumesReconciliationTargetBudget(result)) {
 				consumedTargetBudget += 1;
@@ -2375,6 +2388,13 @@ async function materializeReconciliation(input: {
 		candidates.sort(
 			(left, right) => left.priority - right.priority || left.sequence - right.sequence,
 		);
+		eligibleCandidates += candidates.filter(
+			(candidate) =>
+				candidate.assetFamilySignatures.length === 0 ||
+				!candidate.assetFamilySignatures.every((signature) =>
+					attemptedAssetFamilySignatures.has(signature),
+				),
+		).length;
 		for (const candidate of candidates) {
 			if (consumedTargetBudget >= maxTargets) break;
 			if (remainingAssetBudget <= 0) break;
@@ -2410,6 +2430,7 @@ async function materializeReconciliation(input: {
 				},
 			});
 			results.push(result);
+			selectedCandidates += 1;
 			if (historyMaterializationResultHasProviderGuard(result)) break;
 			remainingAssetBudget =
 				decrementRemaining(remainingAssetBudget, countAttemptedReconciliationAssetBudget(result)) ??
@@ -2424,20 +2445,25 @@ async function materializeReconciliation(input: {
 		consumedTargetBudget < maxTargets &&
 		selectedConversationIds.length === 0
 	) {
-		results.push(
-			...(await materializeMediaGenerationReconciliation({
-				...input,
-				catalog,
-				maxTargets: maxTargets - consumedTargetBudget,
-			})),
-		);
+		const mediaReconciliation = await materializeMediaGenerationReconciliation({
+			...input,
+			catalog,
+			maxTargets: maxTargets - consumedTargetBudget,
+		});
+		results.push(...mediaReconciliation.results);
+		eligibleCandidates += mediaReconciliation.eligibleCandidates;
+		selectedCandidates += mediaReconciliation.selectedCandidates;
 	}
 	const generatedAt = input.now().toISOString();
 	const entries = results.flatMap((result) => result.entries);
 	const archiveItems = results.flatMap((result) => result.archiveItems);
 	const manifestPaths = Array.from(new Set(results.flatMap((result) => result.manifestPaths)));
 	const snapshotRefreshes = results.flatMap((result) => snapshotRefreshesFromResult(result));
-	const metrics = summarizeEntries(entries, results.length);
+	const metrics = {
+		...summarizeEntries(entries, results.length),
+		eligibleCandidates,
+		selectedCandidates,
+	};
 	const status = resolveHistoryMaterializationResultStatus(metrics);
 	return {
 		object: "history_materialization_result",
@@ -2547,7 +2573,11 @@ async function materializeMediaGenerationReconciliation(input: {
 	) => Promise<MediaGenerationResponse>;
 	maxTargets: number;
 	now: () => Date;
-}): Promise<HistoryMaterializationResult[]> {
+}): Promise<{
+	results: HistoryMaterializationResult[];
+	eligibleCandidates: number;
+	selectedCandidates: number;
+}> {
 	const archive = await input.runArchiveService.listItems({
 		kind: "generated_artifact",
 		provider: input.request.provider ?? null,
@@ -2620,7 +2650,11 @@ async function materializeMediaGenerationReconciliation(input: {
 			}
 		}
 	}
-	return results;
+	return {
+		results,
+		eligibleCandidates: candidates.length,
+		selectedCandidates: results.length,
+	};
 }
 
 type MediaGenerationReconciliationCandidate = {

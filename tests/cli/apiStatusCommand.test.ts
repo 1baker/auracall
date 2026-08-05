@@ -245,6 +245,15 @@ const statusPayload = {
 						files: 3,
 						media: 0,
 					},
+					materializationOutcome: {
+						jobStatus: "skipped",
+						conversationsAttempted: 2,
+						eligibleCandidates: 9,
+						selectedCandidates: 2,
+						materialized: 0,
+						checksumCount: 0,
+						dispositionCounts: { no_materializable_assets: 2 },
+					},
 				},
 				{
 					provider: "grok",
@@ -429,6 +438,12 @@ describe("api status CLI helpers", () => {
 							activeCompletionId: "acctmirror_paused",
 							metadataCounts: {
 								conversations: 10,
+							},
+							materializationOutcome: {
+								jobStatus: "skipped",
+								eligibleCandidates: 9,
+								selectedCandidates: 2,
+								materialized: 0,
 							},
 						},
 						{

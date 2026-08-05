@@ -369,6 +369,11 @@ function parseMaterializationOutcome(
 	if (!isRecord(value)) return null;
 	const jobId = typeof value.jobId === "string" && value.jobId.trim() ? value.jobId.trim() : "";
 	if (!jobId) return null;
+	const eligibleCandidates = Math.max(0, Math.floor(readNumber(value.eligibleCandidates) ?? 0));
+	const selectedCandidates = Math.min(
+		eligibleCandidates,
+		Math.max(0, Math.floor(readNumber(value.selectedCandidates) ?? 0)),
+	);
 	return {
 		jobId,
 		jobStatus:
@@ -377,6 +382,8 @@ function parseMaterializationOutcome(
 				: "unknown",
 		completedAt: normalizeIsoString(value.completedAt),
 		conversationsAttempted: Math.max(0, Math.floor(readNumber(value.conversationsAttempted) ?? 0)),
+		eligibleCandidates,
+		selectedCandidates,
 		materialized: Math.max(0, Math.floor(readNumber(value.materialized) ?? 0)),
 		skipped: Math.max(0, Math.floor(readNumber(value.skipped) ?? 0)),
 		failed: Math.max(0, Math.floor(readNumber(value.failed) ?? 0)),

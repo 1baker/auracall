@@ -837,6 +837,33 @@ describe("account mirror completion service", () => {
 			});
 			expect(await store.listOperations({ activeOnly: false, limit: null })).toHaveLength(1);
 			expect(await store.listOperations({ activeOnly: true, limit: null })).toHaveLength(0);
+
+			const completed = await store.readOperation("acctmirror_persisted");
+			if (!completed) throw new Error("Expected persisted completion.");
+			await store.writeOperation({
+				...completed,
+				id: "acctmirror_legacy_materialization_counts",
+				materializationOutcome: {
+					jobId: "hmj_legacy_counts",
+					jobStatus: "skipped",
+					completedAt: "2026-04-30T12:00:01.000Z",
+					conversationsAttempted: 0,
+					materialized: 0,
+					skipped: 1,
+					failed: 0,
+					checksumCount: 0,
+					manifestPaths: [],
+					terminalRouteabilityCounts: {},
+					message: "Legacy outcome without candidate counts.",
+				} as unknown as AccountMirrorCompletionOperation["materializationOutcome"],
+			});
+			expect(
+				(await store.readOperation("acctmirror_legacy_materialization_counts"))
+					?.materializationOutcome,
+			).toMatchObject({
+				eligibleCandidates: 0,
+				selectedCandidates: 0,
+			});
 		} finally {
 			await fs.rm(tmp, { recursive: true, force: true });
 		}
@@ -3099,6 +3126,8 @@ describe("account mirror completion service", () => {
 			result: {
 				metrics: {
 					conversations: 5,
+					eligibleCandidates: 12,
+					selectedCandidates: 5,
 					materialized: 4,
 					skipped: 1,
 					failed: 0,
@@ -3180,6 +3209,8 @@ describe("account mirror completion service", () => {
 				jobStatus: "succeeded",
 				completedAt: "2026-04-30T12:00:08.000Z",
 				conversationsAttempted: 5,
+				eligibleCandidates: 12,
+				selectedCandidates: 5,
 				materialized: 4,
 				skipped: 1,
 				failed: 0,

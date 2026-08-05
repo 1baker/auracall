@@ -20370,3 +20370,12 @@ browser-stage lifecycle observability, not transcript truncation.
   (`no-materializable-*`, already terminal/outside selection, or unmatched
   media) and failures are zero, increasing passes or retry budget is unsupported;
   diagnose the projection and eligibility contract first.
+
+## 2026-08-04 | Candidate observability must preserve selection semantics
+
+- Report `eligibleCandidates` before the current job ceiling and
+  `selectedCandidates` after within-job family deduplication and budgets. Keep
+  both distinct from global missing-local assets and from materialized bytes.
+- A selected candidate can still produce a terminal skip. Preserve those
+  dispositions, clamp persisted/compact selected counts not to exceed eligible,
+  and default legacy missing counts to zero rather than fabricating eligibility.

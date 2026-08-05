@@ -1872,6 +1872,12 @@
   a materialization job completes, without provider or browser work.
 - History-backed materialization unit coverage is deterministic and browser-free:
   `pnpm vitest run tests/accountMirror/chatgptMetadataCollector.test.ts tests/runtime.historyMaterializationService.test.ts tests/runtime.historyArchiveItems.test.ts tests/runtime.searchProjectionService.test.ts tests/cli/apiHistoryMaterializationCommand.test.ts tests/mcp.historyMaterialization.test.ts tests/http.responsesServer.test.ts tests/mcp.server.test.ts --maxWorkers 1 --testNamePattern "history materialization|account history materialization|history-backed|history-materialized|mcp server service wiring|ChatGPT account mirror metadata collector"`.
+  Candidate-observability coverage additionally locks a fixture with seven
+  globally missing-local assets, three eligible conversation candidates, and
+  two selected candidates after within-job family deduplication/budget. Run
+  `pnpm vitest run tests/runtime.historyMaterializationService.test.ts tests/accountMirror/completionService.test.ts tests/cli/apiStatusCommand.test.ts`
+  to verify result metrics, completion hydration/persistence, legacy zero
+  defaults, and CLI `/status` projection without provider work.
 - ChatGPT user-uploaded-file response-shape coverage is provider-free in
   `tests/browser/chatgptAdapter.test.ts`. It verifies that a `files-download`
   JSON string and bounded shallow/nested signed-URL fields resolve, while an

@@ -626,6 +626,13 @@ Terminology note:
   browser-backed provider work for explicit proofs; MCP parity is
   `history_materialization_create`, `history_materialization_job`,
   `history_materialization_jobs`, and `history_materialization_cancel`.
+  Reconciliation job-result metrics expose `eligibleCandidates` separately
+  from `selectedCandidates`: eligible candidates passed cached routeability,
+  selected-kind, freshness, and persisted terminal-family gates before the
+  job ceiling, while selected candidates were actually admitted after
+  within-job family deduplication and budgets. A selected candidate may still
+  settle as a terminal skip, and neither count is the global missing-local
+  asset inventory.
   Direct single-conversation materialization readback includes
   `scrapeTelemetry` on successful results, and stale timeout recovery attaches
   the last progress snapshot to the failed job. Use it to verify that direct
@@ -901,8 +908,10 @@ Terminology note:
   `/status.accountMirrorCompletions` reports completion metrics plus active and
   recent records. Completion readback hydrates terminal materialization job
   status into `materializationOutcome`, including attempted conversations,
-  materialized/skipped/failed counts, checksum counts, manifest paths, and
-  routeability counts when the handoff job is terminal. Account-mirror status
+  eligible/selected candidate counts, materialized/skipped/failed counts,
+  checksum counts, manifest paths, and routeability counts when the handoff job
+  is terminal. Older persisted outcomes default both candidate counts to zero,
+  and selected is clamped not to exceed eligible. Account-mirror status
   separates `metadataEvidence.countEvidence.observedThisPass`,
   `retainedFromCache`, and `mergedTotal`; unscanned Gemini conversation asset
   detail is reported through `assetInventory.state = deferred|unknown` instead
