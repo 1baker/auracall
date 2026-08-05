@@ -43572,3 +43572,15 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - The broad home-directory fingerprint detected ambient managed-browser and API
   heartbeat writes, so zero whole-runtime writes is not claimed. Plan 0194
   stops fail-closed; no job or provider/browser/control action was initiated.
+
+## 2026-08-05 | Plan 0195 opens archive-scope and moved-path repair
+
+- File Searcher proved the May 16 transcript was moved rather than deleted. A
+  live Everything hit plus direct stat/hash identifies its current My Drive
+  path beneath `Archive 2026 Spring/03-seminars`.
+- The operator authorized both remedies: make stable archive filters apply
+  before filesystem metadata hydration, and update the exact stale path in the
+  archive index plus its owning response bundle/record.
+- Scope permits one source/test red-green cycle, one build/install/restart, and
+  provider-free installed recovery proof. Browser/provider jobs and every
+  scheduler/completion/guard action remain excluded. No subagent was spawned.

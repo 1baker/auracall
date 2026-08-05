@@ -16081,3 +16081,21 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   `STOPPED_FAIL_CLOSED_READ_PATH_BLOCKED` without a job or live/control action.
   Next: provider-free archive/search filtering repair, then repeat the
   reassessment with a mutation fingerprint scoped away from ambient processes.
+
+## Turn 363 | 2026-08-05
+
+- The operator's `ok do both` authorizes Plan 0195: repair archive list scoping
+  before filesystem hydration and migrate the one stale transcript path across
+  its exact durable runtime records.
+- File Searcher's live Everything index located the moved 20,016-byte DOCX
+  under `Archive 2026 Spring/03-seminars/Seminars/Drew Wetterlind`; direct stat
+  and SHA-256 confirm it. The obsolete path occurs in exactly the archive index
+  and the owning response's bundle/record JSON files.
+- CodeGraph confirms the cause: `listItems` refreshes file metadata for the
+  entire archive before the final provider/runtime/kind filter. The repair is
+  bounded to one source file, one test file, one red/green cycle, one build,
+  one install/restart, and provider-free readback.
+- Preflight remains healthy and paused at synchronized `9ff757ab`: API PID 4278
+  has zero crash restarts; scheduler and six completions are paused; queued/
+  running work is zero; default pass 4 is unchanged; foreground is inactive;
+  and the scoped guard is clear. No subagent was spawned.
