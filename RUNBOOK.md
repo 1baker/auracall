@@ -16061,3 +16061,23 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
 - CodeGraph is healthy and identifies the planner and in-memory service seams.
   Critical path is serialized and direct; no subagent was spawned. Next: push
   this authority packet, then collect the bounded evidence once.
+- Readback preserved healthy PID 4278 with zero crash restarts, paused scheduler
+  and six paused completions, zero queued/running completions, inactive
+  foreground work, 73 terminal and zero active default-account materialization
+  jobs, the unchanged default pass-4 cursor, and a clear scoped guard.
+- Catalog remains 31 conversations / 35 artifacts / 33 files. The exact Plan
+  0193 canvas now has a `fileAvailable=true` archive row. Relative to Plan
+  0191's confirmed baseline, this supports a derived post-canary expectation of
+  61 missing = 13 retrievable + 48 metadata-only, but it is not a successful
+  planner result.
+- The public recovery planner returned HTTP 500. Its authenticated error body
+  is `ENODEV` for an unrelated unavailable `wsl-chrome-3` `/mnt/h` upload even
+  though the request filters `chatgpt/default`. The one in-memory `maxItems=0`
+  calculation likewise failed before a candidate funnel while invoking zero
+  provider callbacks.
+- A whole-`~/.auracall` fingerprint also changed because an already-running
+  `wsl-chrome-3` managed browser and the API runner heartbeat continued writing;
+  no catalog/archive/job/config/control file changed. Plan 0194 closes
+  `STOPPED_FAIL_CLOSED_READ_PATH_BLOCKED` without a job or live/control action.
+  Next: provider-free archive/search filtering repair, then repeat the
+  reassessment with a mutation fingerprint scoped away from ambient processes.

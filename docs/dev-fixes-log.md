@@ -20417,3 +20417,18 @@ browser-stage lifecycle observability, not transcript truncation.
   materialized canvas artifact, while all 30 other rows retained their truthful
   `noSelectedAssetEvidence` exclusion. This confirms canonical admission fixes
   the identity gate without widening downstream selection semantics.
+
+## 2026-08-05 | Filter archive rows before hydrating local paths
+
+- A provider/runtime-filtered recovery read can still fail on an unrelated
+  archive item if search projection hydrates or opens local paths before the
+  requested filter is effective. Here a `chatgpt/default` read aborted on
+  `ENODEV` for a stale `wsl-chrome-3` `/mnt/h` upload.
+- Provider-free inventory and reconciliation must not be globally poisoned by
+  one inaccessible unrelated path. Apply provider/runtime/tenant/kind filters
+  before filesystem hydration where possible; otherwise classify an
+  inaccessible item locally and continue with explicit degraded evidence.
+- Mutation proofs must exclude known ambient writers such as retained managed
+  browsers and API heartbeat records. Fingerprint the governed cache, archive,
+  job, config, guard, and completion surfaces directly instead of treating all
+  of `~/.auracall` as quiescent while services remain healthy.

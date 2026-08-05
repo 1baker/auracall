@@ -1,9 +1,9 @@
 # Post-Canary Provider-Free Inventory Reassessment | 0194-2026-08-05
 
-State: OPEN
-Lane: EVIDENCE
+State: CLOSED
+Lane: STOPPED_FAIL_CLOSED
 Plan version: 1
-Outcome: PENDING
+Outcome: STOPPED_FAIL_CLOSED_READ_PATH_BLOCKED
 Governing objective: quantify the exact remaining `chatgpt/default`
 missing-local inventory and reconciliation candidate funnel after Plan 0193's
 single successful materialization, without creating work or contacting the
@@ -102,6 +102,41 @@ The exact post-canary inventory and funnel are reconciled from provider-free
 evidence, zero runtime mutation is proved, and one concrete next gate is
 identified without creating live or unattended authority.
 
+## Outcome
+
+- Installed posture remains safe: API PID 4278 is active with zero crash
+  restarts; scheduler and all six retained completions are paused; queued and
+  running completions are zero; foreground work is inactive; the default
+  completion remains at pass 4 with its prior materialization cursor; 73
+  retained default-account jobs are terminal with zero active; and the scoped
+  guard is clear.
+- The raw catalog remains 31 conversations / 35 artifacts / 33 files and, as
+  designed, does not apply archive availability. Direct archive metadata binds
+  the Plan 0193 canvas id exactly to one current `fileAvailable=true`
+  `generated_artifact` row. Against Plan 0191's confirmed 30-artifact / 32-file
+  missing-local baseline, the defensible derived post-canary expectation is 29
+  artifacts + 32 files = 61 missing, split as 5 artifacts + 8 files = 13
+  retrievable and the unchanged 24 artifacts + 24 files = 48 account-library
+  metadata-only. This is arithmetic evidence, not a successful current planner
+  readback.
+- The public recovery-planner request fails HTTP 500. Authenticated error-body
+  readback identifies `ENODEV` while opening an unrelated unavailable
+  `wsl-chrome-3` upload source under `/mnt/h/My Drive/...Transcript.docx`.
+  The requested filter was `chatgpt/default`, proving the local archive/search
+  projection touches the unrelated row before or outside effective filtering.
+- The sole in-memory `maxItems=0` calculation read 1,862 persisted jobs, used
+  only an in-memory store, and invoked zero provider callbacks, but settled
+  failed before producing `candidateFunnel`; therefore no post-canary
+  conversation classification or arithmetic invariant is claimed.
+- The initial whole-`~/.auracall` fingerprint changed during the pass. Changed
+  paths were confined to an already-running `wsl-chrome-3` managed browser
+  profile and the healthy API runner heartbeat records; no catalog, archive,
+  job-store, config, guard, or completion file was observed changing. Because
+  the plan promised zero broad runtime writes, that promise is not marked met.
+- No job, provider callback, browser action, install, restart, build, retry,
+  refresh, or completion/scheduler/guard/config action ran. Plan 0194 stops
+  rather than masking either blocker or fabricating the missing funnel.
+
 ## Checkpoint 1 | Authorized Ready
 
 - `plan_version`: 1
@@ -119,3 +154,29 @@ identified without creating live or unattended authority.
 - `remaining_criteria`: all five acceptance items.
 - `next_action_or_stop_reason`: commit/push this authority packet, then collect
   the bounded provider-free evidence once.
+
+## Final Checkpoint | Stopped Fail-Closed
+
+- `plan_version`: 1
+- `state_transition`: READY -> EVIDENCE_COLLECTED -> STOPPED_FAIL_CLOSED.
+- `progress_classification`: blocker_identified
+- `evidence`: safe paused runtime posture; exact canary archive/catalog binding;
+  derived 61/13/48 post-canary asset expectation; public planner HTTP 500 with
+  exact unrelated `ENODEV`; in-memory calculation failed before a funnel with
+  provider callbacks 0; ambient managed-browser and runner-heartbeat writes
+  invalidate the broad zero-write fingerprint.
+- `subagent_status`: `not_spawned`.
+- `budget_consumption`: CodeGraph 8/8; read-only runtime/cache commands 30/12
+  after the planner error triggered an overlong diagnostic cascade;
+  in-memory reassessments 1/1; review/rework 1/1; live jobs, provider callbacks,
+  browser actions, installs, restarts, builds, retries, control actions, and
+  config writes 0/0. The recovery route was read three times total, including
+  two unbudgeted local diagnostic reattempts; neither contacted a provider.
+- `remaining_criteria`: direct recovery-planner counts, post-canary candidate
+  funnel and invariants, and a correctly scoped zero-mutation proof remain
+  unmet.
+- `next_action_or_stop_reason`: terminal stop. The next eligible slice is a
+  provider-free source regression and repair that filters archive/search rows
+  before local-path hydration (or degrades inaccessible unrelated rows
+  individually), followed by the same read-only reassessment with browser
+  profiles and runner heartbeats excluded from its mutation fingerprint.

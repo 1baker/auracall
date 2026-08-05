@@ -43561,3 +43561,14 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Runtime job creation, browser/provider work, refresh, install/restart/build,
   semantic repair, retries, and every completion/scheduler/guard/config action
   remain excluded. No subagent was spawned.
+- The installed posture stayed safe and paused, but the recovery planner cannot
+  currently return a post-canary result: it fails HTTP 500 on `ENODEV` while
+  opening an unrelated unavailable `wsl-chrome-3` `/mnt/h` upload before the
+  `chatgpt/default` filter protects the request.
+- Direct catalog/archive evidence supports a derived 61 missing / 13
+  retrievable / 48 metadata-only expectation after the one canvas artifact,
+  but the sole in-memory `maxItems=0` calculation also failed before emitting a
+  candidate funnel. Provider callbacks remained zero.
+- The broad home-directory fingerprint detected ambient managed-browser and API
+  heartbeat writes, so zero whole-runtime writes is not claimed. Plan 0194
+  stops fail-closed; no job or provider/browser/control action was initiated.
