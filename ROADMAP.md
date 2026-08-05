@@ -72,12 +72,14 @@ Lane: P01
   source before returning current classifications. No live/control action ran.
   The next gate is a provider-free archive/search filtering repair, not another
   materialization job.
-  Active archive-scope and moved-path repair:
+  Completed archive-scope and moved-path repair:
   [docs/dev/plans/0195-2026-08-05-archive-scope-hydration-and-moved-path-repair.md](docs/dev/plans/0195-2026-08-05-archive-scope-hydration-and-moved-path-repair.md).
-  The operator authorized both the provider-free source repair and one exact
-  durable path migration after File Searcher located the moved transcript.
-  One build/install/restart and read-only recovery proof are bounded inside the
-  packet; provider jobs and all browser/control actions remain excluded.
+  Stable archive filters now apply before filesystem hydration, the exact moved
+  transcript path is repaired across its three durable records, and the
+  installed provider-free proofs pass. Current default recovery is 62 missing /
+  14 retrievable / 48 metadata-only; the conversation funnel is 31 discovered,
+  one eligible, zero selected under `maxItems=0`. Scheduler and six completions
+  remain paused; no further materialization is authorized.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,

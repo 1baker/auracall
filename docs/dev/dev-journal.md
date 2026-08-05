@@ -43599,3 +43599,17 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   unrelated concurrent HTTP pause/resume timing miss; that exact test passes
   alone in 315 ms. The sole production build passes; runtime metadata remains
   untouched pending the controlled service stop and migration.
+
+## 2026-08-05 | Plan 0195 installed closeout
+
+- The stopped-service migration replaced 24 exact old-path occurrences across
+  only three authorized JSON files. Installed archive hydration now reads the
+  moved 20,016-byte DOCX, records its expected SHA-256, and marks it available.
+- The installed default recovery planner returns 62 remote-known missing-local,
+  split into 14 retrievable and 48 metadata-only. The in-memory `maxItems=0`
+  funnel accounts for 31 conversations with one eligible/target-budget row,
+  30 no-evidence exclusions, zero selected, zero provider callbacks, and both
+  arithmetic invariants true.
+- Source/runtime parity, API health, six paused completions, paused scheduler,
+  zero active history jobs, the sole build, and the serialized 304-file / 2,716-
+  test suite are green. No provider/browser/control action or durable job ran.

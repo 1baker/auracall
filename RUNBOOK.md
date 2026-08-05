@@ -16099,3 +16099,24 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   has zero crash restarts; scheduler and six completions are paused; queued/
   running work is zero; default pass 4 is unchanged; foreground is inactive;
   and the scoped guard is clear. No subagent was spawned.
+
+## Turn 364 | 2026-08-05
+
+- Plan 0195 closes `COMPLETE_PROVIDER_FREE_REPAIR_INSTALLED`. Archive list
+  reads now apply stable filters before file hydration; the deterministic
+  unrelated-directory regression is red under the old ordering and green for
+  both single and batched reads under the repair.
+- With the API stopped, 24 exact old-path occurrences across only the archive
+  index and owning response bundle/record moved to File Searcher's verified
+  path. Installed readback makes the 20,016-byte DOCX available with SHA-256
+  `af15c06cb7aca655c224b47a9f6d443a8b97fb30578bd1ae52ae9f3f6748370a`.
+- The pushed source was built and installed once with exact `archiveService.js`
+  parity. API PID 57927 is healthy with zero crash restarts; scheduler and all
+  six completions remain paused at the same default pass-4 cursor; active
+  history jobs are zero.
+- Provider-free recovery now returns 62 missing = 14 retrievable + 48
+  metadata-only. The in-memory `maxItems=0` funnel accounts for 31 conversations
+  as 30 no-evidence + one eligible/target-budget, both equations true, provider
+  callbacks zero. Full serialized validation passes 304 files / 2,716 tests.
+- No provider, browser, history job, completion, scheduler, or guard action ran.
+  No further materialization is authorized by this packet.

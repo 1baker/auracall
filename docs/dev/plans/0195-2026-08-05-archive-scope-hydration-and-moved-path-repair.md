@@ -1,9 +1,9 @@
 # Archive Scope Hydration And Moved-Path Repair | 0195-2026-08-05
 
-State: OPEN
+State: CLOSED
 Lane: IMPLEMENTATION
 Plan version: 1
-Outcome: PENDING
+Outcome: COMPLETE_PROVIDER_FREE_REPAIR_INSTALLED
 Governing objective: prevent unrelated archive paths from poisoning filtered
 reads, migrate the one moved transcript path across its exact durable records,
 and prove the installed provider-free recovery read.
@@ -86,19 +86,19 @@ without creating provider work.
 
 ## Acceptance Criteria
 
-- [ ] A deterministic regression fails because an unrelated archive row is
+- [x] A deterministic regression fails because an unrelated archive row is
   hydrated before a filtered list result and passes after the minimal repair.
-- [ ] Single and batch archive list reads pre-scope only stable persisted fields
+- [x] Single and batch archive list reads pre-scope only stable persisted fields
   while retaining final availability/query filters and metrics.
-- [ ] Exactly three authorized runtime files replace the obsolete path with the
+- [x] Exactly three authorized runtime files replace the obsolete path with the
   File Searcher/direct-stat verified path; JSON, response identity, size, and
   SHA-256 read back correctly.
-- [ ] Focused tests, typecheck, scoped lint, diff hygiene, full suite, and the
+- [x] Focused tests, typecheck, scoped lint, diff hygiene, full suite, and the
   sole build pass.
-- [ ] One install/restart reaches source/runtime parity, preserves every pause,
+- [x] One install/restart reaches source/runtime parity, preserves every pause,
   and the installed provider-free recovery planner plus in-memory funnel return
   exact current counts with zero provider calls/jobs.
-- [ ] Docs, plan audit, commit/push, clean worktree, and remote parity are
+- [x] Docs, plan audit, commit/push, clean worktree, and remote parity are
   current.
 
 ## Hard Stops And Non-Goals
@@ -157,3 +157,39 @@ recovery read completes provider-free, and every operator pause remains intact.
   installed provider-free proofs, final full validation and closeout.
 - `next_action_or_stop_reason`: commit/push the accepted source slice, then stop
   the local API for exact path migration before the authorized install/restart.
+
+## Checkpoint 3 | Installed Complete
+
+- `plan_version`: 1
+- `state_transition`: SOURCE_GREEN -> PATH_MIGRATED -> INSTALLED -> COMPLETE.
+- `progress_classification`: acceptance_outcome_achieved
+- `evidence`: with the API stopped, all 24 exact old-path occurrences across
+  only the authorized archive index and owning bundle/record changed to the
+  File Searcher path. All three JSON files parse, the old path is absent from
+  the runtime tree, and the installed archive read refreshed the target row to
+  `fileAvailable=true`, size 20,016, and SHA-256
+  `af15c06cb7aca655c224b47a9f6d443a8b97fb30578bd1ae52ae9f3f6748370a`.
+- `evidence`: source and installed `archiveService.js` share SHA-256
+  `8efcbb00d6b8df239aa3d7d161aabb2928728d4a7798aa4be3a0ae66da524c5a`;
+  API PID 57927 is healthy with zero crash restarts after the sole service
+  cycle. Scheduler and all six completions remain paused, default pass 4 is
+  unchanged, and active history-materialization jobs remain zero.
+- `evidence`: installed recovery planning now returns 62 remote-known
+  missing-local assets = 14 retrievable + 48 metadata-only and one eligible
+  policy-completion candidate. The in-memory `maxItems=0` reassessment reads
+  1,862 persisted jobs, invokes zero provider callbacks, and accounts for all
+  31 conversations as 30 `noSelectedAssetEvidence`, one eligible, one
+  `targetBudget`, and zero selected; both funnel equations are true.
+- `evidence`: focused archive 8/8, search/history 79/79, typecheck, scoped lint,
+  diff hygiene, sole build, and serialized full suite 304 files / 2,716 tests
+  pass with 65 opt-in/live skips. The earlier concurrent full run's sole
+  pause/resume timing miss passed both alone and in the serialized suite.
+- `subagent_status`: `not_spawned`.
+- `budget_consumption`: CodeGraph 6/6; source 1/1; test 1/1; red-green 1/1;
+  build 1/1; install 1/1; service restart cycle 1/1; runtime metadata files
+  3/3; provider calls, live jobs, browser, completion, scheduler, and guard
+  actions 0.
+- `remaining_criteria`: final repo audit, closeout commit/push, clean worktree,
+  and remote parity readback only.
+- `next_action_or_stop_reason`: seal the completed plan and report the next
+  bounded provider-free decision surface; do not start another materialization.
