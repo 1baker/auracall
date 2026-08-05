@@ -43371,3 +43371,19 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   provider, browser, job, completion, or scheduler mutation ran. The safe next
   slice is a separately authorized provider-free regression/observability
   repair exposing eligible and selected counts alongside the global backlog.
+
+## 2026-08-04 | Plan 0190 opens candidate observability and default proof
+
+- The active goal authorizes Plan 0189's provider-free observability successor,
+  one build/install/restart, and exactly one bounded default-account
+  materialization proof. It grants no scheduler, completion, guard, prompt,
+  retry, force, or unattended-live-follow action.
+- `eligibleCandidates` will represent candidates passing cached preselection
+  gates before the job ceiling. `selectedCandidates` will represent candidates
+  admitted after within-job family deduplication and budgets; a selected
+  candidate can still settle as a terminal skip. Neither count aliases the 62
+  global missing-local assets.
+- The sole live proof is fixed at `chatgpt/default`, exact configured identity,
+  artifacts+files, reconciliation, `maxItems=1`, no force, and no snapshot
+  refresh. Any unattended authority remains withheld unless a later explicit
+  operator decision follows qualifying proof evidence.

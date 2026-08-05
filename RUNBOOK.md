@@ -15879,3 +15879,21 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   installed runtime, browser/provider, job, completion, or scheduler mutation.
   The next gate is a provider-free red regression plus explicit eligible and
   selected candidate observability under separate authority.
+
+## Turn 358 | 2026-08-04
+
+- Opened Plan 0190 under the active goal's explicit authority for Plan 0189's
+  provider-free observability successor, one accepted build/install/restart,
+  and one bounded default-account materialization proof.
+  Canonical packet:
+  `docs/dev/plans/0190-2026-08-04-chatgpt-materialization-candidate-observability-and-default-proof.md`.
+- The result/monitoring contract will expose `eligibleCandidates` separately
+  from `selectedCandidates`; neither is the global missing-local count, and a
+  selected candidate may still terminate as a truthful skip.
+- The sole live allowance is one `chatgpt/default` artifacts+files
+  reconciliation job with exact configured identity, `maxItems=1`, no force,
+  no snapshot refresh, and no retry. Scheduler/completion/guard actions remain
+  zero-authority.
+- CodeGraph localized the implementation to reconciliation result metrics,
+  compact job monitoring, and completion outcome hydration/persistence. Next:
+  provider-free red regression before implementation.

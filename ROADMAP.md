@@ -34,6 +34,13 @@ Lane: P01
   [docs/dev/plans/0188-2026-08-04-chatgpt-default-controlled-detail-inventory-closure.md](docs/dev/plans/0188-2026-08-04-chatgpt-default-controlled-detail-inventory-closure.md).
   Closed provider-free selection diagnosis:
   [docs/dev/plans/0189-2026-08-04-chatgpt-materialization-selection-diagnosis.md](docs/dev/plans/0189-2026-08-04-chatgpt-materialization-selection-diagnosis.md).
+  Active observability/install/default-proof successor:
+  [docs/dev/plans/0190-2026-08-04-chatgpt-materialization-candidate-observability-and-default-proof.md](docs/dev/plans/0190-2026-08-04-chatgpt-materialization-candidate-observability-and-default-proof.md).
+  Plan 0190 may add provider-free eligible/selected candidate observability,
+  install the accepted runtime, and run exactly one default-account
+  artifacts+files reconciliation job at `maxItems=1`. It cannot resume the
+  scheduler or any completion, and even a positive proof requires a separate
+  explicit operator decision before unattended live-follow authority.
   Plan 0189 proved that the 62 metadata-current missing-local assets are a
   global inventory, while reconciliation independently selects a bounded set
   of routeable, eligible, nonterminal catalog candidates. The latest job's
