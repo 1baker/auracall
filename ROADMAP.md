@@ -46,6 +46,13 @@ Lane: P01
   the current contract. Identity canonicalization or request-key propagation is
   the next separately reviewed semantic gate; install and live/control actions
   remain excluded.
+  Active canonical identity-admission successor:
+  [docs/dev/plans/0192-2026-08-05-account-mirror-canonical-identity-admission.md](docs/dev/plans/0192-2026-08-05-account-mirror-canonical-identity-admission.md).
+  Plan 0192 replaces reconciliation's raw identity equality with the existing
+  provider-aware tenant-binding semantics. It must admit equivalent plain and
+  composite ChatGPT identities while rejecting conflicts, missing identities,
+  malformed composites, and incomparable Grok identity classes. This packet is
+  provider-free; install and all live/control actions remain excluded.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,

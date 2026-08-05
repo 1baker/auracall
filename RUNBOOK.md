@@ -15966,3 +15966,19 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
 - Installed state remains API healthy, scheduler paused, six completions paused,
   queued/running completions 0/0, active materialization jobs 0, and scoped
   `chatgpt/default` guard clear. No install or runtime mutation ran.
+
+## Turn 360 | 2026-08-05
+
+- The active `plan and execute` goal opens Plan 0192 for the semantic successor
+  to Plan 0191. Scope is provider-free source/tests/docs/build/audit/commit/push;
+  install, browser/provider work, live jobs, and control actions remain excluded.
+- CodeGraph is healthy at 875 files / 16,486 nodes / 55,776 edges. The canonical
+  comparison seam already exists in `tenantBinding.ts`: it normalizes provider
+  identities and extracts the qualified identity from composite
+  `service-account:<provider>:` keys.
+- The repair will add a positive match predicate requiring present, comparable,
+  canonically equal identities. It will not negate the existing mismatch
+  predicate, because missing and incomparable identities are not mismatches and
+  must remain fail-closed.
+- Critical path is direct and serialized; no subagent was spawned. Next: one
+  public-service red tracer, then the minimal tenant-binding/history repair.

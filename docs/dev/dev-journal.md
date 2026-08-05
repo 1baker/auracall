@@ -43471,3 +43471,16 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Final installed-state readback remains scheduler paused, six completions
   paused, queued/running completions 0/0, active materialization jobs 0, and
   the `chatgpt/default` guard clear. No install or runtime mutation ran.
+
+## 2026-08-05 | Plan 0192 opens canonical identity admission
+
+- The active goal authorizes the provider-free semantic successor to Plan 0191:
+  make history reconciliation use the repo's provider-aware tenant identity
+  semantics instead of raw string equality.
+- The existing tenant-binding module already normalizes plain and composite
+  service-account identities. A new positive match predicate must require both
+  identities to be present, comparable, and canonically equal; simply negating
+  mismatch would unsafely admit missing or incomparable identity evidence.
+- The packet is bounded to two source files, two test files, two red/green
+  cycles, and one build. Install/restart, provider/browser work, live jobs,
+  completion/scheduler/guard control, force, and retries remain excluded.
