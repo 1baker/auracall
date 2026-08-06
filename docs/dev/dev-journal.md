@@ -43643,3 +43643,17 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - No installed or live action has run; scheduler, completions,
   provider/browser, and job controls remain untouched. The pushed source/docs
   checkpoint is the gate before the single installed cycle.
+
+## 2026-08-05 | Plan 0196 installed closeout
+
+- Source checkpoint `f9b01a77` was pushed before the sole no-build runtime
+  install and API-service restart. Source/installed archive-service hashes are
+  identical and the new API PID 1212 is healthy with zero crash restarts.
+- A normal filtered archive read persisted the known 20,016-byte transcript as
+  available with the expected checksum and asset link. Direct readback confirms
+  `unavailableReason`, `missingLocalPath`, and `materialization` are absent;
+  unified search projects the row as available with null materialization status.
+- Recovery planning remains 62 missing / 14 retrievable / 48 metadata-only.
+  Scheduler and all six completions are paused, default pass 4 is unchanged,
+  the provider guard is null, browser mutations are zero, and queued/running
+  history jobs are 0/0. No live, control, direct-JSON, or retry action ran.

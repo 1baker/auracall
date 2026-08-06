@@ -1,10 +1,10 @@
 # Archive Availability Metadata Normalization | 0196-2026-08-05
 
-State: OPEN
+State: CLOSED
 Lane: IMPLEMENTATION
 Plan version: 1
-Outcome: PENDING
-Goal execution state: AWAITING_INSTALL_GATE
+Outcome: COMPLETE_PROVIDER_FREE_NORMALIZATION_INSTALLED
+Goal execution state: COMPLETE
 
 ## Stable Goal Objective
 
@@ -24,9 +24,9 @@ version or bounded successor rather than silent scope expansion.
 - The repaired transcript archive row currently has authoritative
   `fileAvailable=true`, an asset link, size 20,016, and SHA-256
   `af15c06cb7aca655c224b47a9f6d443a8b97fb30578bd1ae52ae9f3f6748370a`.
-- Its nested metadata remains contradictory: `unavailableReason` is
-  `local-file-missing`, `missingLocalPath` points to the now-readable file, and
-  `materialization` still records the refresh-owned unavailable object.
+- The installed filtered read now keeps the row available while removing
+  `unavailableReason`, `missingLocalPath`, and the refresh-owned unavailable
+  materialization object from both the response and persisted archive index.
 - CodeGraph localizes the cause to `enrichFileMetadata()`: successful hydration
   spreads the prior metadata before adding current availability fields, but it
   never removes refresh-owned unavailable evidence. `fileMetadataChanged()`
@@ -166,9 +166,9 @@ For an archive upload or generated artifact after hydration:
 - [x] Focused suites, typecheck, scoped lint, diff hygiene, full suite, and the
   sole build pass with one-source/one-test scope preserved.
 - [x] Source is committed/pushed before one bounded install/restart.
-- [ ] Installed filtered readback normalizes the known row without direct JSON
+- [x] Installed filtered readback normalizes the known row without direct JSON
   editing, provider callbacks, durable jobs, or control actions.
-- [ ] API health, recovery planning, scheduler/completion pauses, zero active
+- [x] API health, recovery planning, scheduler/completion pauses, zero active
   history jobs, docs, plan audit, clean worktree, and remote parity are current.
 
 ## Hard Stops And Non-Goals
@@ -252,3 +252,26 @@ unchanged, and all six acceptance criteria have current evidence.
   search readback, pause/job/API verification, closeout audit, and remote parity.
 - `next_action_or_stop_reason`: revalidate the runtime gate, then perform the
   sole install/restart and provider-free installed proof.
+
+## Checkpoint 4 | Installed Goal Complete
+
+- `plan_version`: 1
+- `checkpoint_id`: `P0196-C04`
+- `state_transition`: AWAITING_INSTALL_GATE -> COMPLETE.
+- `progress_classification`: acceptance_complete
+- `owned_changes`: one no-build user-runtime install, one API-service install/
+  restart, one filtered archive write-through normalization, and closeout docs.
+- `evidence`: API PID 1212 active/running with `NRestarts=0`; source/installed
+  `archiveService.js` SHA-256 parity at
+  `de5a585bd37af7c0e9679c04e1f00d8720188fb3be263d35fadb3fff79ef691a`;
+  known row available with 20,016 bytes, expected SHA-256 and asset link; direct
+  persisted readback has no unavailable reason, missing path, or materialization
+  key; search returns one available row with null materialization status;
+  recovery stays 62 missing / 14 retrievable / 48 metadata-only.
+- `subagent_status`: `not_spawned`.
+- `budget_consumption`: implementation packets 3/3; CodeGraph 3/4; source/test
+  1/1 each; red-green 1/1; review rework 1/1; build/install/restart 1/1 each;
+  provider/browser/live-job/completion/scheduler/guard/direct-JSON actions 0.
+- `remaining_criteria`: none.
+- `next_action_or_stop_reason`: close the `/goal`; retain all pauses and grant
+  no follow-on materialization authority.

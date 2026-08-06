@@ -16156,3 +16156,20 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   any install or service restart.
 - No installed runtime, provider/browser, history job, scheduler, completion,
   or guard action has run. No subagent was spawned.
+
+## Turn 367 | 2026-08-05
+
+- Plan 0196 closes `COMPLETE_PROVIDER_FREE_NORMALIZATION_INSTALLED`. The source
+  checkpoint `f9b01a77` was pushed before the single no-build runtime install
+  and API-service restart; source and installed `archiveService.js` hashes are
+  identical.
+- The normal filtered archive read persisted the repaired row with
+  `fileAvailable=true`, 20,016 bytes, expected SHA-256 and asset link, while
+  all three stale metadata-key checks are false. Unified search returns one
+  available row with null materialization status.
+- Recovery planning remains 62 remote-known missing-local / 14 retrievable /
+  48 metadata-only. API PID 1212 is active with zero crash restarts; scheduler
+  and six completions remain paused, default pass 4 is unchanged, provider
+  guard and browser mutations are clear, and queued/running jobs are 0/0.
+- No provider/browser callback, durable job, direct JSON edit, completion,
+  scheduler, or guard action ran. No further materialization is authorized.
