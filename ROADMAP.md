@@ -80,6 +80,13 @@ Lane: P01
   14 retrievable / 48 metadata-only; the conversation funnel is 31 discovered,
   one eligible, zero selected under `maxItems=0`. Scheduler and six completions
   remain paused; no further materialization is authorized.
+  Active availability-metadata normalization goal:
+  [docs/dev/plans/0196-2026-08-05-archive-availability-metadata-normalization.md](docs/dev/plans/0196-2026-08-05-archive-availability-metadata-normalization.md).
+  The installed repaired row is readable and authoritative at the top level,
+  but its nested refresh-owned metadata still says unavailable. Plan 0196 is
+  planning-only at `AWAITING_GATE`; implementation requires a later explicit
+  `ok go`, remains one source/test/build/install slice, and grants no provider,
+  job, browser, scheduler, completion, or guard authority.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,

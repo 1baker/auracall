@@ -43613,3 +43613,16 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Source/runtime parity, API health, six paused completions, paused scheduler,
   zero active history jobs, the sole build, and the serialized 304-file / 2,716-
   test suite are green. No provider/browser/control action or durable job ran.
+
+## 2026-08-05 | Plan 0196 availability-normalization goal opens
+
+- The `/goal` objective is stable: successful archive hydration must clear only
+  refresh-owned stale unavailable evidence while preserving missing-file truth,
+  successful provenance, Plan 0195 pre-hydration filtering, and every pause.
+- CodeGraph shows `enrichFileMetadata` spreads prior metadata without deleting
+  `unavailableReason`, `missingLocalPath`, or its own unavailable
+  materialization object. `fileMetadataChanged` already detects those fields,
+  keeping the future repair within one source file and one test file.
+- Three serialized packets cover red proof, minimal source/full provider-free
+  validation, and one installed readback. This turn changes planning docs only;
+  implementation remains at `AWAITING_GATE` until explicit authority.

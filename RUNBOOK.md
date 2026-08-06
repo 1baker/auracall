@@ -16120,3 +16120,22 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   callbacks zero. Full serialized validation passes 304 files / 2,716 tests.
 - No provider, browser, history job, completion, scheduler, or guard action ran.
   No further materialization is authorized by this packet.
+
+## Turn 365 | 2026-08-05
+
+- The operator requested a multi-step `/goal`. The stable objective is to make
+  successful archive hydration remove refresh-owned stale unavailable metadata
+  while preserving Plan 0195 filtering, missing-file truth, successful
+  provenance, and all operational pauses.
+- Canonical packet:
+  `docs/dev/plans/0196-2026-08-05-archive-availability-metadata-normalization.md`.
+  It defines three serialized packets: deterministic contract/red proof,
+  minimal source repair plus validation, and one installed provider-free
+  readback/closeout.
+- Current evidence at clean synchronized `5618e674`: API PID 57927 is healthy;
+  the known row is available with current checksum/size/link but retains
+  `local-file-missing`, `missingLocalPath`, and the refresh-owned unavailable
+  materialization object. CodeGraph localizes the cause and write-through seam.
+- This turn is planning-only. Plan 0196 remains `AWAITING_GATE`; no source,
+  runtime, service, provider, browser, job, scheduler, completion, or guard
+  mutation is authorized. No subagent was spawned.
