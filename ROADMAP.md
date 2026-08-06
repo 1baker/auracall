@@ -117,13 +117,14 @@ Lane: P01
   `READY_EXPLICIT_APPROVAL_REQUIRED`; historical jobs, account-library
   admission, selection order, and all live/control surfaces remain unchanged,
   and no canary ran.
-  Active exact one-canary successor:
+  Completed exact one-canary successor:
   [docs/dev/plans/0200-2026-08-06-exact-cone-cross-section-one-canary.md](docs/dev/plans/0200-2026-08-06-exact-cone-cross-section-one-canary.md).
-  The operator authorized only the frozen ChatGPT/default cone cross-section
-  artifact. Plan 0200 permits one exact catalog-item job, one provider attempt,
-  at most one accepted asset, and monitoring to its first terminal state. It
-  forbids retry, substitute targets, snapshot refresh, force, browser-tools,
-  scheduler/completion/guard actions, and any loop resume.
+  Sole job `hmj_36a5e33bebda40b7961cba2750a8ac9a` matched every frozen field
+  and settled `skipped` on attempt 1. Provider identity matched all four
+  dimensions, but the exact artifact yielded zero download attempts and no
+  local/archive asset. Plan 0200 closes `COMPLETE_TERMINAL_NO_MATERIALIZATION`;
+  no retry, substitute target, refresh, force, browser-tools, control action,
+  or loop resume ran.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,

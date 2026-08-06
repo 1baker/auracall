@@ -16319,3 +16319,19 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   foreground and active history work are zero, and the scoped guard is clear.
 - No runtime mutation or provider/browser action has run under Plan 0200 yet.
   Planning must be audited, committed, and pushed before the sole job creation.
+- Planning checkpoint `46fd7e2c` was pushed first. Sole job
+  `hmj_36a5e33bebda40b7961cba2750a8ac9a` was created with `reused=false`; its
+  persisted request exactly matches the frozen catalog item, artifacts-only
+  `maxItems=1`, 300,000-ms provider timeout, no reconcile/refresh/force, and
+  attempt count 1.
+- The job ran from `15:21:55.047Z` to `15:22:21.172Z` and settled `skipped`.
+  Provider-session proof matched email, plan, structure, and account-level
+  dimensions. The exact manifest records one skipped cone artifact, no local
+  path/checksum/size/archive ID, and downloads attempted/succeeded/failed
+  `0/0/0`; result metrics are one conversation, 0 materialized, 1 skipped,
+  0 failed, and 0 duplicate aliases.
+- Post-terminal state is API PID 66366 healthy, scheduler and six completions
+  paused, default pass 4 unchanged, foreground idle, active history jobs zero,
+  and scoped guard clear. No archive row appeared. Plan 0200 closes
+  `COMPLETE_TERMINAL_NO_MATERIALIZATION`; no retry, alternate target, refresh,
+  force, browser-tools/manual interaction, or runtime-control action ran.

@@ -20494,3 +20494,18 @@ browser-stage lifecycle observability, not transcript truncation.
   can remain relevant risk evidence without being rewritten as readable or
   volatile-missing terminal proof; freeze one exact item and require fresh
   approval rather than starting materialization from the reselection packet.
+
+## 2026-08-06 | Exact catalog identity does not prove a live download route
+
+- One exact catalog-item canary can pass canonical provider-session identity
+  across email, plan, structure, and account level yet still settle skipped.
+  Preserve the distinction between account authorization, catalog selection,
+  live route/control availability, and accepted materialization.
+- For the cone cross-section sandbox artifact, telemetry reached the scoped
+  artifact transfer, provider invocation, and connected materializer, but
+  recorded zero download attempts. The durable manifest contains one skipped
+  exact item and no local path, checksum, size, or archive ID.
+- Stop after the authorized terminal result. Treat the next slice as
+  provider-free diagnosis of exact selected-asset-to-live-control resolution;
+  do not retry the same volatile route, substitute an asset, or resume a loop
+  merely because provider identity matched.

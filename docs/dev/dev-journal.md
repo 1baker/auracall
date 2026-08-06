@@ -43797,3 +43797,18 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   4, foreground zero, active history jobs zero, and scoped guard clear.
 - The plan/docs checkpoint precedes the one authorized job. No provider/browser
   or runtime mutation has run under Plan 0200 yet; no subagent was spawned.
+
+## 2026-08-06 | Plan 0200 sole canary stops skipped
+
+- Planning checkpoint `46fd7e2c` was pushed before job
+  `hmj_36a5e33bebda40b7961cba2750a8ac9a`. Its request exactly matches the frozen
+  catalog item and bounds; `reused=false`, attempt count 1, no refresh/force.
+- Provider-session proof matched email, plan, structure, and account-level
+  dimensions. The exact artifact reached the scoped provider materializer, but
+  downloads attempted remained zero. Its manifest records one skipped entry
+  with no local path, checksum, size, or archive ID; result metrics are one
+  conversation / 0 materialized / 1 skipped / 0 failed.
+- Scheduler and six completions remain paused, default pass 4 is unchanged,
+  foreground is idle, active history jobs are zero, and the scoped guard is
+  clear. Plan 0200 closes `COMPLETE_TERMINAL_NO_MATERIALIZATION`; no retry,
+  alternate target, refresh, force, manual/browser-tools, or control action ran.

@@ -1,11 +1,11 @@
 # Exact Cone Cross-Section One-Canary | 0200-2026-08-06
 
-State: OPEN
+State: CLOSED
 Lane: IMPLEMENTATION
 Plan version: 1
-Outcome: PENDING
-Goal execution state: READY_TO_CREATE_CANARY
-Gate state: AUTHORIZED_ONE_EXACT_ATTEMPT
+Outcome: COMPLETE_TERMINAL_NO_MATERIALIZATION
+Goal execution state: COMPLETE_TERMINAL_NO_MATERIALIZATION
+Gate state: CONSUMED_STOP_NO_RETRY
 
 ## Stable Goal Objective
 
@@ -17,7 +17,8 @@ conversation, refresh the snapshot, force provider work, or resume any loop.
 
 ## Current State
 
-- The operator's `ok go` explicitly authorizes the frozen Plan 0199 canary.
+- The operator's `ok go` explicitly authorized and consumed the frozen Plan
+  0199 canary.
 - Source and remote are synchronized at `40befc6e`. Source and installed
   `historyMaterializationService.js` share SHA-256
   `4762aa03ae4ba3522f6dc9c7eadd5660875df8cf68f652bf92006510b5e60f76`.
@@ -28,6 +29,10 @@ conversation, refresh the snapshot, force provider work, or resume any loop.
 - Fresh installed catalog readback resolves the exact item as eligible for the
   canonical ChatGPT/default service-account tenant and conversation
   `67ccf9d7-9310-8004-b5e1-478dba6eab3a`.
+- Sole job `hmj_36a5e33bebda40b7961cba2750a8ac9a` settled `skipped` on
+  attempt 1. Provider-session email, plan, structure, and account-level
+  dimensions all matched, but the exact artifact produced no download attempt
+  and no local/archive asset.
 
 ## Authority And Ownership
 
@@ -98,16 +103,17 @@ conversation, refresh the snapshot, force provider work, or resume any loop.
 
 ## Acceptance Criteria
 
-- [ ] Planning checkpoint is pushed before the sole live mutation.
-- [ ] The created job request exactly matches every frozen field and only one
+- [x] Planning checkpoint is pushed before the sole live mutation.
+- [x] The created job request exactly matches every frozen field and only one
   durable job is created.
-- [ ] Only the returned job ID is monitored and it reaches one terminal state
+- [x] Only the returned job ID is monitored and it reaches one terminal state
   without retry or target substitution.
-- [ ] Any materialized asset is exact-identity-bound and supported by consistent
-  job, archive, local-file, size, checksum, and provider-session evidence.
-- [ ] Scheduler and six completions remain paused, default pass 4 is unchanged,
+- [x] No materialized asset is claimed: the exact manifest records one skipped
+  entry, with zero download attempts, zero archive items, and no local path,
+  size, or checksum; provider-session evidence is a four-dimension match.
+- [x] Scheduler and six completions remain paused, default pass 4 is unchanged,
   active work/jobs return to zero, and no excluded control action runs.
-- [ ] Plan, ROADMAP, RUNBOOK, journal, plan audit, git cleanliness, and remote
+- [x] Plan, ROADMAP, RUNBOOK, journal, plan audit, git cleanliness, and remote
   parity truthfully record the first terminal outcome.
 
 ## Hard Stops And Non-Goals
@@ -145,3 +151,34 @@ completion pauses remain intact, and repo/runtime authorities are current.
 - `remaining_criteria`: all six acceptance items.
 - `next_action_or_stop_reason`: audit, commit, and push this planning checkpoint,
   then repeat the read-only preflight and create exactly one frozen job.
+
+## Checkpoint 2 | First Terminal Result And Stop
+
+- `plan_version`: 1
+- `checkpoint_id`: `P0200-C02`
+- `state_transition`: READY_TO_CREATE_CANARY -> CANARY_RUNNING ->
+  COMPLETE_TERMINAL_NO_MATERIALIZATION.
+- `progress_classification`: outcome_progress
+- `owned_changes`: sole durable canary job, exact job/manifest/runtime
+  adjudication, and closeout docs. No source or installed-runtime change.
+- `evidence`: pushed planning checkpoint `46fd7e2c`; sole created job
+  `hmj_36a5e33bebda40b7961cba2750a8ac9a`, `reused=false`, exact frozen request,
+  attempt count 1, started `2026-08-06T15:21:55.047Z`, completed
+  `2026-08-06T15:22:21.172Z`, status `skipped`. Provider-session proof matched
+  email, plan, structure, and account-level dimensions. The exact item manifest
+  contains one skipped entry with no local path, checksum, size, or archive ID.
+  Scrape telemetry reports one scoped artifact transfer and provider invocation,
+  `materializeArtifact.connected=1`, but downloads attempted/succeeded/failed
+  are `0/0/0`. Result metrics are one conversation, zero materialized, one
+  skipped, zero failed, and zero duplicate aliases. Post-terminal readback shows
+  scheduler and six completions paused, default pass 4, foreground idle, active
+  jobs zero, scoped guard clear, API PID 66366 healthy, and no archive row.
+- `subagent_status`: `not_spawned`.
+- `budget_consumption`: packets 1/1; durable jobs 1/1; provider attempts 1/1;
+  browser/provider operations 1/1; materialized assets 0/1; job polls 2/40;
+  retries/alternate assets/refreshes/force/installs/restarts/manual browser/
+  scheduler/completion/guard/config/direct-JSON actions 0.
+- `remaining_criteria`: none inside Plan 0200.
+- `next_action_or_stop_reason`: stop permanently for this canary at
+  `CONSUMED_STOP_NO_RETRY`. Any diagnosis or repair is a provider-free successor;
+  another live attempt requires a new exact approval gate.
