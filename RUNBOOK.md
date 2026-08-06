@@ -16227,5 +16227,24 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
 - Focused history coverage passes 73/73; the adjacent provider-free packet
   passes 314/314; typecheck, scoped lint, diff hygiene, the serialized full
   suite (304 files / 2,716 tests; 21 files / 65 tests skipped), and the sole
-  production build pass. Next gate: commit/push accepted source before the one
-  installed-parity cycle.
+  production build pass.
+- Source checkpoint `c2ed21ef` was pushed before the sole no-build install and
+  API restart. Source and installed history-materialization bundles share
+  SHA-256 `c8746acfdf3199d5361d0a71803baf55ed727b43a6cb9b32df6b4ba001efe871`;
+  API PID 811 is active with zero restarts.
+- The broad provider-free simulation now excludes the canonical canvas before
+  `maxItems=1`. The exact simulation binds the next artifact, `Generated image`
+  (`2af065f6-0a6e-43ea-a0fb-1d79e8a5e675:image:file-service://file-SZiAKACzbxAnLLpvjh2VUr`),
+  and stops at the disabled materialization boundary.
+- That image is already a readable 1,245,306-byte terminal asset with SHA-256
+  `2ccf18dca7d0dcbf703842806f54725591e8663293fa85e194ef4a8e7537d76b`.
+  Archive terminal admission compares a plain requested identity with its
+  stored composite identity as raw strings; the older successful job has no
+  request identity. Plan 0198 therefore closes
+  `NOT_READY_DUPLICATE_ASSET_SELECTION` instead of skipping forward ad hoc.
+- The governed-state fingerprint remains
+  `b4c9f41ac6bbb75e60c8e7132555fd02a3284e795125e747a9182137b34bb1f6`.
+  Scheduler and all six completions are paused, default pass 4 is unchanged,
+  foreground and queued/running work are zero, active history jobs are zero,
+  and the scoped `chatgpt/default` guard is clear. No canary, provider/browser
+  contact, durable job, materialization, retry, or control action ran.

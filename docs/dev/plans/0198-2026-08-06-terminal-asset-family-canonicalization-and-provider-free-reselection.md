@@ -1,10 +1,11 @@
 # Terminal Asset-Family Canonicalization And Provider-Free Reselection | 0198-2026-08-06
 
-State: OPEN
+State: CLOSED
 Lane: IMPLEMENTATION
 Plan version: 1
-Outcome: PENDING
-Goal execution state: AWAITING_INSTALL
+Outcome: COMPLETE_PROVIDER_FREE_CANARY_WITHHELD
+Goal execution state: COMPLETE_CANARY_WITHHELD
+Gate state: NOT_READY_DUPLICATE_ASSET_SELECTION
 
 ## Stable Goal Objective
 
@@ -133,14 +134,14 @@ scheduler or completion.
 - [x] Existing family aliases and fail-closed unknown behavior remain green.
 - [x] Focused/adjacent/full provider-free validation, typecheck, scoped lint,
   diff hygiene, and one production build pass.
-- [ ] Pushed source and installed runtime have exact parity after one bounded
+- [x] Pushed source and installed runtime have exact parity after one bounded
   install/restart.
-- [ ] Fresh `maxItems=1` simulation suppresses the Plan 0193 canvas before the
+- [x] Fresh `maxItems=1` simulation suppresses the Plan 0193 canvas before the
   item ceiling and invokes zero provider callbacks.
-- [ ] The exact post-repair selection is adjudicated against current
+- [x] The exact post-repair selection is adjudicated against current
   catalog/archive/job evidence and the canary gate is truthfully ready or
   withheld; no canary runs.
-- [ ] Scheduler and six completions remain paused; active work/jobs remain
+- [x] Scheduler and six completions remain paused; active work/jobs remain
   zero; docs, plan audit, clean worktree, and remote parity are current.
 
 ## Hard Stops And Non-Goals
@@ -217,3 +218,40 @@ truthful but unconsumed, and all runtime pauses remain intact.
   fresh exact simulation, gate adjudication, pause verification, and closeout.
 - `next_action_or_stop_reason`: commit and push accepted source/docs, then
   re-read the runtime gate before the single install/restart.
+
+## Checkpoint 4 | Installed Reselection Closed Fail-Closed
+
+- `plan_version`: 1
+- `checkpoint_id`: `P0198-C04`
+- `state_transition`: AWAITING_INSTALL -> COMPLETE_CANARY_WITHHELD.
+- `progress_classification`: blocker_reduction
+- `owned_changes`: one installed-parity cycle, two provider-disabled in-memory
+  simulations, exact archive/job/file adjudication, and closeout docs.
+- `evidence`: source and installed history-materialization bundles share SHA-256
+  `c8746acfdf3199d5361d0a71803baf55ed727b43a6cb9b32df6b4ba001efe871`.
+  The broad simulation seeded all 1,862 persisted jobs and passed both
+  `artifact:canvas:che4470 exam guide` and its legacy unknown alias to the
+  disabled provider boundary, so the Plan 0193 canvas no longer consumes the
+  asset ceiling. The exact simulation then selected artifact
+  `2af065f6-0a6e-43ea-a0fb-1d79e8a5e675:image:file-service://file-SZiAKACzbxAnLLpvjh2VUr`,
+  title `Generated image`, in conversation
+  `67ccf9d7-9310-8004-b5e1-478dba6eab3a`. Durable history and archive evidence
+  show that same artifact already materialized as a readable 1,245,306-byte
+  file with SHA-256
+  `2ccf18dca7d0dcbf703842806f54725591e8663293fa85e194ef4a8e7537d76b`.
+  Archive exclusion compares the plain request identity to the stored
+  composite service-account identity as raw strings, while the older successful
+  job has a null request identity; both terminal routes are therefore skipped.
+  The governed-state fingerprint remained
+  `b4c9f41ac6bbb75e60c8e7132555fd02a3284e795125e747a9182137b34bb1f6`
+  before and after simulation.
+- `subagent_status`: `not_spawned`.
+- `budget_consumption`: packets 3/3; source/test/red-green/build/install/restart
+  1/1 each; in-memory simulations 2/2; provider/browser/live jobs/materialized
+  assets/snapshot refreshes/retries/control actions 0.
+- `remaining_criteria`: none inside Plan 0198. A separately reviewed
+  provider-free successor must canonicalize archive terminal admission before
+  any canary can become ready.
+- `next_action_or_stop_reason`: stop at
+  `NOT_READY_DUPLICATE_ASSET_SELECTION`; do not skip the duplicate ad hoc, run
+  a canary, resume the scheduler, or resume a completion.

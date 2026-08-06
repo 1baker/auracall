@@ -98,15 +98,16 @@ Lane: P01
   catalog calls it `canvas`; the one-canary gate is therefore prepared but
   `NOT_READY_DUPLICATE_ASSET_SELECTION`. Scheduler and six completions remain
   paused, and no materialization job or provider/browser/control action ran.
-  Active provider-free terminal-family successor:
+  Closed provider-free terminal-family successor:
   [docs/dev/plans/0198-2026-08-06-terminal-asset-family-canonicalization-and-provider-free-reselection.md](docs/dev/plans/0198-2026-08-06-terminal-asset-family-canonicalization-and-provider-free-reselection.md).
-  Plan 0198's expected red proved that terminal canvas evidence still emitted
-  `unknown`; the one-line namespace repair is green across 73 focused history
+  Plan 0198's one-line namespace repair is green across 73 focused history
   tests, 314 adjacent tests, typecheck, lint, the serialized 304-file / 2,716-
-  test suite, and the sole build. Source is awaiting its pushed checkpoint
-  before one installed-parity cycle and fresh exact simulation. It cannot
-  create or run a canary, resume a completion or scheduler, or perform
-  provider/browser work.
+  test suite, and the sole build. Installed hash parity is exact. Provider-free
+  reselection now skips the canvas, but the exact next image is also already
+  readable locally; raw plain-versus-composite identity comparison excludes its
+  archive evidence. The gate closes `NOT_READY_DUPLICATE_ASSET_SELECTION` with
+  scheduler and six completions paused and no durable job, provider/browser
+  contact, or materialization.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,

@@ -43707,3 +43707,27 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - No installed, provider/browser, materialization-job, scheduler, completion,
   guard, snapshot-refresh, force, or retry action has run yet. Source must be
   committed and pushed before the single installed-parity cycle.
+
+## 2026-08-06 | Plan 0198 installed reselection closes canary gate
+
+- Pushed source checkpoint `c2ed21ef` installed once with one API restart.
+  Source and installed history-materialization bundles have identical SHA-256
+  `c8746acfdf3199d5361d0a71803baf55ed727b43a6cb9b32df6b4ba001efe871`;
+  API PID 811 is active with zero restarts.
+- Broad provider-free `maxItems=1` now excludes the terminal canvas under its
+  canonical source. The exact follow-up simulation binds `Generated image`,
+  then fails intentionally at the disabled materialization callback. Both
+  simulations used an in-memory store seeded from all 1,862 persisted jobs.
+- The exact image is already a readable 1,245,306-byte terminal asset with
+  SHA-256 `2ccf18dca7d0dcbf703842806f54725591e8663293fa85e194ef4a8e7537d76b`.
+  It survives exclusion because the archive route compares plain and composite
+  bound identities directly, while the successful historical job has a null
+  request identity. This is a separate fail-closed admission repair, not an ad
+  hoc skip inside Plan 0198.
+- Governed state retained fingerprint
+  `b4c9f41ac6bbb75e60c8e7132555fd02a3284e795125e747a9182137b34bb1f6`.
+  Scheduler and all six completions remain paused, default pass 4 is unchanged,
+  foreground/queued/running work and active jobs are zero, and the scoped guard
+  is clear. No canary, durable job, provider/browser contact, materialization,
+  retry, or control action ran. The gate closes
+  `NOT_READY_DUPLICATE_ASSET_SELECTION`.

@@ -20479,3 +20479,8 @@ browser-stage lifecycle observability, not transcript truncation.
 - Lock the contract with a readable terminal fixture and assert the exact
   source-qualified exclusion passed to provider work. Provider-free current-
   cache simulation remains required before any one-canary approval.
+- Terminal archive admission must use the same provider-aware identity matcher
+  as catalog admission. A raw comparison between a plain identity and the same
+  tenant's composite service-account identity can hide a readable archive asset
+  and expose it again as the next `maxItems=1` candidate. Treat that as a new
+  reviewed repair boundary; do not skip the duplicate ad hoc.
