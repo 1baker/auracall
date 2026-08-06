@@ -1,11 +1,11 @@
 # Cone Sandbox Live-Control Provider-Free Diagnosis | 0201-2026-08-06
 
-State: OPEN
+State: CLOSED
 Lane: DIAGNOSIS
 Plan version: 1
-Outcome: PENDING_DIAGNOSIS
-Goal execution state: DIAGNOSING_PROVIDER_FREE
-Gate state: LIVE_RETRY_WITHHELD
+Outcome: COMPLETE_DIAGNOSED_REPAIR_WITHHELD
+Goal execution state: COMPLETE_DIAGNOSED_REPAIR_WITHHELD
+Gate state: REPAIR_APPROVAL_REQUIRED_LIVE_RETRY_WITHHELD
 
 ## Stable Goal Objective
 
@@ -32,6 +32,12 @@ the repair, retry the canary, start materialization, or resume any loop.
 - Scheduler and all six completions remain paused; default completion pass 4
   is unchanged; foreground work and active history jobs are zero; the scoped
   ChatGPT/default guard is clear.
+- Diagnosis proves a live-control admission gap. The fresh context retained
+  nine provider-payload artifacts and appended two DOM download probes to make
+  eleven merged artifacts. The exact cone is payload-only and has a
+  `messageId` but no `messageIndex`, `turnId`, or `buttonIndex`; the two visible
+  controls are unrelated later DOCX downloads. No availability marker excludes
+  the unmatched payload download before provider materialization.
 
 ## Authority And Ownership
 
@@ -93,17 +99,17 @@ proves that branch?
 
 ## Acceptance Criteria
 
-- [ ] The indexed source trace identifies selection, live candidate discovery,
+- [x] The indexed source trace identifies selection, live candidate discovery,
   identity/control binding, download-attempt accounting, and skipped returns.
-- [ ] Persisted exact-item, job, manifest, and telemetry evidence is reconciled
+- [x] Persisted exact-item, job, manifest, and telemetry evidence is reconciled
   against that trace without provider/browser contact.
-- [ ] The cause is proved provider-free or bounded to one exact unresolved
+- [x] The cause is proved provider-free or bounded to one exact unresolved
   branch; facts and hypotheses are explicitly separated.
-- [ ] The narrow repair seam and provider-free red/green acceptance contract
+- [x] The narrow repair seam and provider-free red/green acceptance contract
   are named without changing source or tests.
-- [ ] Scheduler and six completions remain paused, default pass 4 is unchanged,
+- [x] Scheduler and six completions remain paused, default pass 4 is unchanged,
   no active history job appears, and no excluded action runs.
-- [ ] Plan, ROADMAP, RUNBOOK, journal, fixes log if durable, plan audit, git
+- [x] Plan, ROADMAP, RUNBOOK, journal, fixes log if durable, plan audit, git
   cleanliness, and remote parity truthfully record the diagnosis.
 
 ## Hard Stops And Non-Goals
@@ -139,3 +145,86 @@ and every scheduler and completion pause remains intact.
 - `remaining_criteria`: all six acceptance items.
 - `next_action_or_stop_reason`: audit, commit, and push this boundary, then
   trace the exact pre-download skip path and reconcile persisted evidence.
+
+## Diagnosis
+
+### Proved Cause
+
+1. `readChatgptConversationContextWithClient` independently extracts payload
+   artifacts and visible DOM download probes, then merges them. Plan 0200's
+   telemetry and persisted fresh context agree exactly: payload 9 + DOM
+   downloads 2 + images/canvas 0 = merged 11.
+2. The cone remains a payload-only artifact:
+   `kind=download`, `uri=sandbox:/mnt/data/plt_4.png`,
+   `messageId=ec160eac-e457-4ae8-abb1-dfeaae5e8bec`, with no live-control
+   `turnId` or `buttonIndex`. The only DOM download artifacts are two later
+   exam-DOCX controls with different message IDs, titles, URIs, and turn IDs.
+3. The merge preserves the unmatched cone without a live-control availability
+   state. Generic materializable selection therefore admits it and consumes
+   the exact `maxItems=1` slot.
+4. `tagChatgptArtifactButtonWithClient` requires a title/URI match and preserves
+   the expected message/turn scope. No current control can match the cone. The
+   helper exhausts its 10-second tagging window and returns false; the download
+   branch returns null before `recordBrowserScrapeDownloadAttempt`.
+5. This explains all terminal evidence: provider identity and connection pass,
+   `Browser.setDownloadBehavior=1`, downloads `0/0/0`, one skipped manifest
+   entry, and no file/archive row.
+
+### Fact And Hypothesis Boundary
+
+- Proved: the current provider payload still advertises the cone sandbox
+  artifact while the current visible conversation has no matching actionable
+  download control; AuraCall admits that mismatch as materializable.
+- Not proved: whether the underlying sandbox object expired, the old response
+  stopped rendering its control for another provider-side reason, or a hidden
+  provider route could regenerate it. No repair should claim link expiry.
+
+## Withheld Repair Contract
+
+The next bounded provider-free implementation should:
+
+1. Extract one pure ChatGPT payload-download-to-DOM-control resolver and use it
+   both when merging context artifacts and when tagging a materialization
+   control, so identity/scoping rules cannot drift.
+2. Preserve unmatched payload artifacts for historical catalog evidence but
+   mark sandbox downloads with an explicit non-actionable live-control state.
+   `selectMaterializableConversationArtifacts` must reject that state before
+   the provider callback and emit a specific `missing_live_control` disposition.
+3. Enrich positively correlated payload downloads with the DOM probe's
+   `turnId`, `buttonIndex`, message index, and actionable route while preserving
+   canonical payload ID/URI identity.
+4. Add red/green fixtures for: this exact cone plus two unrelated DOCX probes;
+   a positively correlated payload/DOM pair; mismatched-message title
+   collision; DOM-native download admission; and provider-callback-disabled
+   `maxItems=1` selection that skips the missing cone without waiting ten
+   seconds or contacting a provider.
+
+## Checkpoint 2 | Cause Proved, Repair Withheld
+
+- `plan_version`: 1
+- `checkpoint_id`: `P0201-C02`
+- `state_transition`: DIAGNOSING_PROVIDER_FREE ->
+  COMPLETE_DIAGNOSED_REPAIR_WITHHELD.
+- `progress_classification`: outcome_progress_with_read_only_budget_exception
+- `owned_changes`: diagnosis and governing docs only; no source, test, runtime,
+  installed, or live mutation.
+- `evidence`: CodeGraph source trace through context merge, materializable
+  selection, control tagging, and pre-attempt null return; persisted fresh
+  context with 9 payload / 2 DOM / 11 merged artifacts; exact payload-only cone
+  identity; unrelated two DOM DOCX controls; exact job/manifest downloads
+  `0/0/0`; 134/134 existing ChatGPT adapter tests pass. Current status readback
+  is API PID 66366 healthy on port 18095, scheduler paused, foreground inactive,
+  six active completions all paused, default pass 4, scoped guard clear, and
+  active history-materialization jobs zero.
+- `subagent_status`: `not_spawned`.
+- `budget_consumption`: packets 2/2; CodeGraph calls 9/8; focused test commands
+  1/2; provider-free simulations 0/1; source/test writes, provider/browser
+  operations, jobs, assets, installs, restarts, scheduler/completion/guard/
+  config/direct-JSON actions 0. The ninth read-only graph call was a process
+  exception used to confirm the merge-admission seam; it changed no state and
+  does not widen repair or live authority.
+- `remaining_criteria`: none inside Plan 0201.
+- `next_action_or_stop_reason`: stop with source repair and all live retry
+  withheld. A separately authorized provider-free successor may implement only
+  the shared resolver, non-actionable admission state, and red/green fixtures;
+  another live canary requires a later exact approval gate.

@@ -43824,3 +43824,22 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   runtime mutation, and every scheduler/completion/guard action.
 - CodeGraph is healthy at 875 files, 16,499 nodes, and 55,870 edges. Planning
   is the only owned change so far; no subagent was spawned.
+
+## 2026-08-06 | Plan 0201 proves unmatched payload-control admission gap
+
+- Fresh canary context contains nine payload artifacts plus two DOM download
+  probes, yielding eleven merged artifacts. The cone is payload-only with a
+  message ID and sandbox URI; both actionable controls are unrelated later
+  DOCX downloads with different title/URI/message/turn identity.
+- Context merge retains the unmatched payload download without a non-actionable
+  state. It therefore survives generic materializable selection, consumes the
+  exact item slot, and waits in scoped button tagging. With no matching control,
+  tagging returns false after ten seconds and the provider returns null before
+  download-attempt accounting. Provider authorization was not the failure.
+- Underlying sandbox expiry is not proved. The withheld repair is a shared pure
+  payload-to-DOM resolver plus explicit `missing_live_control` admission state,
+  positive correlation enrichment, and provider-free red/green fixtures.
+- Existing ChatGPT adapter tests pass 134/134. API PID 66366 is healthy on port
+  18095; scheduler and six completions are paused, default pass 4 is unchanged,
+  foreground is idle, guard clear, and active history jobs zero. No source,
+  test, provider/browser, runtime, job, or control mutation ran.

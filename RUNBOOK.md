@@ -16353,3 +16353,16 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   telemetry with downloads `0/0/0`; CodeGraph is healthy at 875 files, 16,499
   nodes, and 55,870 edges. The planning boundary must be audited, committed,
   and pushed before substantive diagnosis.
+- Planning checkpoint `38301388` was audited and pushed first. Indexed source
+  and the fresh persisted context prove a live-control admission gap: nine
+  payload artifacts, including the cone, were merged with two unrelated DOM
+  DOCX controls without marking the unmatched cone non-actionable.
+- The cone has only payload `messageId` and sandbox URI identity; it has no DOM
+  `turnId` or `buttonIndex`. The materializer's scoped title/URI/message matcher
+  therefore exhausts its 10-second tagging window and returns null before the
+  download-attempt counter. Underlying sandbox expiry remains unproved.
+- Existing ChatGPT adapter tests pass 134/134. No source/test/live/runtime
+  mutation ran. Current readback is API PID 66366 healthy on port 18095,
+  scheduler paused, six completions paused, default pass 4, foreground idle,
+  guard clear, and zero active history jobs. Plan 0201 closes
+  `COMPLETE_DIAGNOSED_REPAIR_WITHHELD`.

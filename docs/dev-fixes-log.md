@@ -20509,3 +20509,12 @@ browser-stage lifecycle observability, not transcript truncation.
   provider-free diagnosis of exact selected-asset-to-live-control resolution;
   do not retry the same volatile route, substitute an asset, or resume a loop
   merely because provider identity matched.
+- Reconcile payload-derived sandbox downloads against the current visible DOM
+  control inventory before calling them materializable. A context can retain a
+  historical payload artifact while exposing no matching button; concatenating
+  unmatched payload and DOM artifacts makes a non-actionable asset consume an
+  item ceiling and defer the truth until a live 10-second tagging timeout.
+- Preserve unmatched payload entries as historical catalog evidence, but carry
+  an explicit `missing_live_control` state that provider-free selection rejects.
+  Use one shared pure resolver for merge-time correlation and click-time
+  tagging, and enrich positive matches with turn/button identity.
