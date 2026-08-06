@@ -20525,3 +20525,16 @@ browser-stage lifecycle observability, not transcript truncation.
   broaden a same-title match. Reject the missing state before `maxItems` and
   provider callbacks, and emit the exact history reason without creating a
   manifest or live attempt.
+
+## 2026-08-06 | Exact context refreshes need a bounded terminal receipt
+
+- An installed `conversations context get --refresh --json-only` against one
+  exact ChatGPT conversation can remain alive and silent for more than thirty
+  minutes without committing a refreshed context cache.
+- A silent live read is indeterminate evidence. Do not reinterpret the prior
+  cache as current `missing_live_control` proof, retry the provider, inspect the
+  live DOM, or advance a canary gate from that state.
+- Future live-read packets should require an explicit elapsed-time ceiling and
+  a durable terminal receipt that distinguishes success, provider guard,
+  browser failure, timeout, and operator interrupt before requesting another
+  provider attempt.

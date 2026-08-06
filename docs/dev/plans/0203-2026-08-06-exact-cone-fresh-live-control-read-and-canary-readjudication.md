@@ -1,10 +1,10 @@
 # Exact Cone Fresh Live-Control Read And Canary Readjudication | 0203-2026-08-06
 
-State: OPEN
+State: CLOSED
 Lane: OPERATIONS
 Plan version: 1
-Outcome: PENDING_FRESH_CONTEXT_READ
-Goal execution state: AWAITING_FRESH_CONTEXT_READ
+Outcome: STOPPED_FAIL_CLOSED
+Goal execution state: STOPPED_FAIL_CLOSED
 Gate state: CANARY_WITHHELD
 
 ## Stable Goal Objective
@@ -31,6 +31,15 @@ resume any scheduler/completion loop.
 - API PID 87441 is active/running; the scheduler is paused; all six active
   completions are paused; `chatgpt/default` remains paused at pass 4; foreground
   is idle; the scoped guard is clear; active history jobs are zero.
+- The sole installed refresh remained silent and pending for more than thirty
+  minutes. A local process readback confirmed the original Node process was
+  still alive; the owned CLI process was then interrupted once and exited 130.
+  No retry or browser diagnostic ran.
+- The provider-free cache adjudication found the unchanged eleven-artifact
+  context. The exact cone is still payload-only with null `turnId`,
+  `buttonIndex`, `liveControlState`, and live-control linkage. Because no
+  complete fresh receipt was committed, this is an indeterminate read rather
+  than current `missing_live_control` proof.
 
 ## Authority And Ownership
 
@@ -127,17 +136,17 @@ resume any scheduler/completion loop.
 
 ## Acceptance Criteria
 
-- [ ] Planning boundary is audited, committed, pushed, and clean before live
+- [x] Planning boundary is audited, committed, pushed, and clean before live
   read authority is spent.
-- [ ] Preflight binds the exact conversation/account/runtime and confirms
+- [x] Preflight binds the exact conversation/account/runtime and confirms
   scheduler/completion pauses, default pass 4, idle foreground, clear scoped
   guard, zero active history jobs, and installed Plan 0202 parity.
-- [ ] Exactly one fresh context-read command runs, with no retry, prompt,
+- [x] Exactly one fresh context-read command runs, with no retry, prompt,
   download, materialization callback, job, or control action.
-- [ ] Exact cone evidence is classified `available`, `missing`, or fail-closed
-  from the refreshed context without substituting another artifact.
-- [ ] The final one-canary gate is frozen truthfully and no canary runs.
-- [ ] ROADMAP, RUNBOOK, journal, plan audit, commits, worktree cleanliness,
+- [x] Exact cone evidence is classified fail-closed from the terminal command
+  and cache evidence without substituting another artifact.
+- [x] The final one-canary gate is frozen truthfully and no canary runs.
+- [x] ROADMAP, RUNBOOK, journal, plan audit, commits, worktree cleanliness,
   remote parity, and final runtime readback agree.
 
 ## Hard Stops And Non-Goals
@@ -150,9 +159,11 @@ resume any scheduler/completion loop.
 
 ## Definition Of Done
 
-One fresh exact-conversation read has produced a durable current-control
-classification for the cone, the canary gate is frozen at the resulting state,
-all runtime pauses are preserved, and no canary/job/materialization ran.
+The sole fresh exact-conversation read has either produced a durable
+current-control classification or terminated fail-closed with its first
+evidence preserved. The canary gate is frozen truthfully, all runtime pauses
+are preserved, and no canary/job/materialization ran. This execution satisfies
+the fail-closed branch: no complete fresh context was committed.
 
 ## Checkpoint 1 | Fresh Read Authorized
 
@@ -177,3 +188,42 @@ all runtime pauses are preserved, and no canary/job/materialization ran.
   no new candidate finding and no open accepted blocker.
 - `next_action_or_stop_reason`: audit/commit/push this boundary, then perform
   the exact frozen-runtime preflight before spending the sole context read.
+
+## Checkpoint 2 | Indeterminate Refresh Stops Fail-Closed
+
+- `plan_version`: 1
+- `checkpoint_id`: `P0203-C02`
+- `state_transition`: AWAITING_FRESH_CONTEXT_READ -> READING_FRESH_CONTEXT ->
+  STOPPED_FAIL_CLOSED.
+- `progress_classification`: blocker_discovery
+- `owned_changes`: planning commit `ead6463a`; one exact installed read-only
+  refresh attempt; one local process readback; one owned CLI interrupt after
+  more than thirty silent minutes; one provider-free cache adjudication; final
+  frozen-runtime readback; terminal docs. No prompt, download, callback, job,
+  materialization, retry, browser diagnostic, substitute, or loop/control
+  action ran.
+- `evidence`: planning boundary audited with 203 retained plans and zero
+  validation errors, committed, pushed, and clean before provider contact;
+  four source/runtime SHA-256 pairs match; the sole refresh produced no output
+  and exited 130 after the bounded interrupt; cached context remains eleven
+  artifacts and the exact cone remains payload-only with all live-control
+  fields null. Final API PID 87441 is healthy, scheduler and six completions
+  are paused, default pass 4 is unchanged, foreground is idle, scoped guard is
+  clear, and active history jobs are zero.
+- `subagent_status`: `not_spawned`.
+- `budget_consumption`: plan versions 1/1; execution packets 1/1; planning
+  commits 1/1; closeout commits 0/1 before the terminal docs commit; CodeGraph
+  calls 1/1; provider context refresh commands 1/1; provider conversations
+  touched 1/1; provider refresh retries 0/0; provider-free adjudications 1/1;
+  installs, restarts, jobs, callbacks, downloads, prompts, assets,
+  scheduler/completion/guard actions, and direct JSON edits 0.
+- `remaining_criteria`: terminal plan audit, one docs commit/push, clean
+  worktree, and remote parity only.
+- `authority_classification`: bounded read authority consumed; no further live
+  read, canary, materialization, browser, or control authority remains.
+- `review_disposition_summary`: terminal evidence is indeterminate, not
+  current missing-control proof. The closed-world gate therefore resolves to
+  fail-closed without a substitute or retry.
+- `next_action_or_stop_reason`: stop. Keep the one-canary gate withheld until a
+  separately approved repair adds a bounded context-read timeout/terminal
+  receipt and a later authority packet permits new live evidence.

@@ -43895,3 +43895,21 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - No prompt, download, materialization callback, job, substitute asset,
   install/restart, or scheduler/completion/guard action is authorized. Planning
   is the only owned change; no subagent was spawned.
+
+## 2026-08-06 | Plan 0203 exact refresh stops indeterminate
+
+- Planning commit `ead6463a` was audited and pushed before provider contact;
+  installed/source parity and the frozen-runtime preflight were green.
+- The sole exact `chatgpt/default` context refresh remained silent for more
+  than thirty minutes. The original Node process was still alive at local
+  readback; the owned CLI process was interrupted once and exited 130. No retry,
+  DOM/browser diagnostic, prompt, download, callback, job, materialization,
+  substitute, or loop/control action ran.
+- The one provider-free adjudication found the unchanged eleven-artifact cache.
+  The cone still has only payload identity and null turn/button/live-control
+  fields, so no complete fresh receipt was committed and current control state
+  remains unproved. Plan 0203 closes `STOPPED_FAIL_CLOSED` with the one-canary
+  gate withheld.
+- Final API PID 87441 is healthy; scheduler and six completions remain paused;
+  default pass 4 is unchanged; foreground is idle; scoped guard is clear; and
+  active history jobs are zero. No subagent was spawned.
