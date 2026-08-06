@@ -43881,3 +43881,17 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   findings remain. The read-only CodeGraph call ceiling was exceeded before it
   was recognized and is recorded as a process exception; no later graph call
   ran. No subagent was spawned.
+
+## 2026-08-06 | Plan 0203 opens one exact fresh-control read
+
+- A new explicit `ok go` authorizes one read-only refresh of the exact Plan
+  0200 cone conversation under `chatgpt/default`. The installed CLI supports an
+  exact `conversations context get --refresh` command, so no list sweep or
+  unrelated conversation read is needed.
+- The sole outcome is current-control classification for the exact cone and a
+  frozen one-canary gate. A positive result may prepare a separately approvable
+  canary but cannot run it; missing, absent, ambiguous, identity, or blocking
+  evidence stops fail-closed with no retry.
+- No prompt, download, materialization callback, job, substitute asset,
+  install/restart, or scheduler/completion/guard action is authorized. Planning
+  is the only owned change; no subagent was spawned.

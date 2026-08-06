@@ -16399,3 +16399,21 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   guard clear. Plan 0202 closes `COMPLETE_PROVIDER_FREE_LIVE_WITHHELD`; the old
   cone canary is invalidated and no substitute canary, job, materialization,
   provider/browser action, or loop resume is authorized.
+
+## Turn 374 | 2026-08-06
+
+- The operator's new `ok go` separately authorizes Plan 0203 after Plan 0202
+  invalidated the old cone canary for missing current live-control evidence.
+- Canonical packet:
+  `docs/dev/plans/0203-2026-08-06-exact-cone-fresh-live-control-read-and-canary-readjudication.md`.
+  It permits one installed read-only context refresh for exact conversation
+  `67ccf9d7-9310-8004-b5e1-478dba6eab3a`, followed by provider-free exact cone
+  classification and a frozen canary gate.
+- No prompt, `Answer now`, download, materialization callback, job, canary,
+  substitute asset, retry, install/restart, guard/control action, or loop resume
+  is authorized. The planning boundary must be audited, committed, and pushed
+  before the sole provider read.
+- Opening state is clean synchronized `ac329944`; CodeGraph is healthy at 876
+  files / 16,518 nodes / 55,969 edges; goal-policy audit is green. API PID
+  87441 is healthy, scheduler and six completions are paused, default pass 4,
+  foreground idle, scoped guard clear, and active history jobs zero.

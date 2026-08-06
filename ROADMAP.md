@@ -143,6 +143,12 @@ Lane: P01
   zero provider callbacks. The prior cone canary is therefore invalidated, not
   approved; scheduler and six completions remain paused and no job or
   materialization ran.
+  Active exact fresh-control read successor:
+  [docs/dev/plans/0203-2026-08-06-exact-cone-fresh-live-control-read-and-canary-readjudication.md](docs/dev/plans/0203-2026-08-06-exact-cone-fresh-live-control-read-and-canary-readjudication.md).
+  It authorizes one read-only refresh of the exact cone conversation and a
+  provider-free gate adjudication. It forbids a canary job, download,
+  materialization, retry, substitute target, or loop/control action regardless
+  of the read outcome.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,
