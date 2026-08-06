@@ -36,6 +36,11 @@ import {
 	resolveProviderCacheKey,
 	resolveProviderCachePath,
 } from "../providers/cache.js";
+import {
+	CHATGPT_MISSING_LIVE_CONTROL_REASON,
+	isChatgptArtifactMissingLiveControl,
+	reconcileChatgptPayloadDownloadControls,
+} from "../providers/chatgptArtifactControls.js";
 import type {
 	Conversation,
 	ConversationArtifact,
@@ -752,16 +757,16 @@ export abstract class LlmService {
 		const port = target?.port ?? overrides.port;
 		const attachResolvedServiceTab = shouldAttachResolvedServiceTab(overrides);
 		const providerSessionContext: ProviderSessionContext = {
-				providerId: this.providerId,
-				auracallRuntimeProfile: this.resolveActiveProfileName(),
-				browserProfile: target?.browserProfile ?? null,
-				sourceBrowserProfile: target?.sourceBrowserProfile ?? null,
-				managedBrowserProfile: target?.managedBrowserProfile ?? null,
-				browserProcessId: target?.browserProcessId ?? null,
-				browserTargetId:
-					overrides.tabTargetId ?? (attachResolvedServiceTab ? target?.tab?.targetId : null) ?? null,
-				devtoolsHost: target?.host ?? overrides.host ?? null,
-				devtoolsPort: target?.port ?? overrides.port ?? null,
+			providerId: this.providerId,
+			auracallRuntimeProfile: this.resolveActiveProfileName(),
+			browserProfile: target?.browserProfile ?? null,
+			sourceBrowserProfile: target?.sourceBrowserProfile ?? null,
+			managedBrowserProfile: target?.managedBrowserProfile ?? null,
+			browserProcessId: target?.browserProcessId ?? null,
+			browserTargetId:
+				overrides.tabTargetId ?? (attachResolvedServiceTab ? target?.tab?.targetId : null) ?? null,
+			devtoolsHost: target?.host ?? overrides.host ?? null,
+			devtoolsPort: target?.port ?? overrides.port ?? null,
 		};
 		const providerSessionExpectation =
 			this.providerSessionAuthority.resolveExpectation(providerSessionContext);
@@ -1602,10 +1607,15 @@ export abstract class LlmService {
 				candidates: ConversationArtifact[],
 			) => boolean;
 		},
-	): Promise<{ artifacts: ConversationArtifact[]; files: FileRef[]; manifestPath: string | null }> {
-		if (!this.provider.materializeConversationArtifact) {
-			throw new Error(`Conversation artifact fetch is not supported for ${this.providerId}.`);
-		}
+	): Promise<{
+		artifacts: ConversationArtifact[];
+		files: FileRef[];
+		manifestPath: string | null;
+		unavailableArtifacts: Array<{
+			artifact: ConversationArtifact;
+			reason: typeof CHATGPT_MISSING_LIVE_CONTROL_REASON;
+		}>;
+	}> {
 		const listOptions = this.scopeConversationListOptions(
 			await this.buildListOptions(options?.listOptions, { ensurePort: true }),
 			options?.projectId,
@@ -1619,16 +1629,29 @@ export abstract class LlmService {
 				refresh: options?.refresh ?? true,
 				listOptions,
 			});
+			const contextArtifacts = Array.isArray(context.artifacts) ? context.artifacts : [];
+			const reconciledArtifactCandidates =
+				this.providerId === "chatgpt"
+					? reconcileChatgptPayloadDownloadControls(contextArtifacts)
+					: contextArtifacts;
 			const eligibleArtifactCandidates = selectEligibleConversationArtifacts(
 				this.providerId,
-				Array.isArray(context.artifacts) ? context.artifacts : [],
+				reconciledArtifactCandidates,
 			);
 			const selectedArtifactCandidates = eligibleArtifactCandidates.filter(
 				(artifact) => options?.excludeArtifact?.(artifact, eligibleArtifactCandidates) !== true,
 			);
+			const unavailableArtifacts = selectedArtifactCandidates
+				.filter(isChatgptArtifactMissingLiveControl)
+				.map((artifact) => ({
+					artifact,
+					reason: CHATGPT_MISSING_LIVE_CONTROL_REASON,
+				}));
 			const artifactCandidates = selectMaterializableConversationArtifacts(
 				this.providerId,
-				selectedArtifactCandidates,
+				selectedArtifactCandidates.filter(
+					(artifact) => !isChatgptArtifactMissingLiveControl(artifact),
+				),
 			);
 			const artifacts = limitItems(artifactCandidates, options?.maxItems);
 			if (listOptions.useProviderSession === true) {
@@ -1645,7 +1668,10 @@ export abstract class LlmService {
 				artifacts.length,
 			);
 			if (artifacts.length === 0) {
-				return { artifacts: [], files: [], manifestPath: null };
+				return { artifacts: [], files: [], manifestPath: null, unavailableArtifacts };
+			}
+			if (!this.provider.materializeConversationArtifact) {
+				throw new Error(`Conversation artifact fetch is not supported for ${this.providerId}.`);
 			}
 			recordBrowserScrapeProviderAction(
 				listOptions,
@@ -1789,7 +1815,7 @@ export abstract class LlmService {
 				entries: manifestEntries,
 			};
 			await fs.writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
-			return { artifacts, files: materialized, manifestPath };
+			return { artifacts, files: materialized, manifestPath, unavailableArtifacts };
 		} finally {
 			if (shouldCloseProviderSession) {
 				await closeScopedProviderSession(listOptions);

@@ -608,16 +608,13 @@ export function createHistoryMaterializationService(
 					onProviderSessionProof: jobContext.onProviderSessionProof,
 				}
 			: jobContext;
-		return (
-		deps.materializeConversation
+		return deps.materializeConversation
 			? request.interactionPolicy ||
 				workContext?.excludedAssetFamilySignatures?.length ||
 				workContext?.selectedCatalogAsset
 				? deps.materializeConversation(target, request, jobId, {
 						...context,
-						interactionGovernor:
-							context.interactionGovernor ??
-							jobContext.interactionGovernor,
+						interactionGovernor: context.interactionGovernor ?? jobContext.interactionGovernor,
 					})
 				: deps.materializeConversation(target, request, jobId)
 			: materializeConversationTarget({
@@ -631,8 +628,7 @@ export function createHistoryMaterializationService(
 					excludedAssetFamilySignatures: workContext?.excludedAssetFamilySignatures ?? [],
 					selectedCatalogAsset: workContext?.selectedCatalogAsset,
 					onProviderSessionProof: context.onProviderSessionProof,
-				})
-		);
+				});
 	};
 	const refreshConversationSnapshot = (
 		target: HistoryMaterializationTarget,
@@ -640,15 +636,9 @@ export function createHistoryMaterializationService(
 		jobId: string,
 	) => {
 		const context = providerWorkContext(jobId, request);
-		return (
-		deps.refreshConversationSnapshot
+		return deps.refreshConversationSnapshot
 			? request.interactionPolicy
-				? deps.refreshConversationSnapshot(
-						target,
-						request,
-						jobId,
-					context,
-					)
+				? deps.refreshConversationSnapshot(target, request, jobId, context)
 				: deps.refreshConversationSnapshot(target, request, jobId)
 			: refreshConversationSnapshotTarget({
 					config: deps.config,
@@ -658,8 +648,7 @@ export function createHistoryMaterializationService(
 					now,
 					interactionGovernor: context.interactionGovernor,
 					onProviderSessionProof: context.onProviderSessionProof,
-				})
-		);
+				});
 	};
 	const accountMirrorPersistence = createAccountMirrorPersistence({
 		config: deps.config as Record<string, unknown>,
@@ -3794,6 +3783,10 @@ async function materializeConversationTarget(input: {
 			artifacts: ConversationArtifact[];
 			files: FileRef[];
 			manifestPath: string | null;
+			unavailableArtifacts: Array<{
+				artifact: ConversationArtifact;
+				reason: "missing_live_control";
+			}>;
 		} | null = null;
 		let fileFetch: {
 			conversationFiles: FileRef[];
@@ -3826,7 +3819,12 @@ async function materializeConversationTarget(input: {
 						)),
 					);
 					if (artifactFetch.artifacts.length === 0 && manifestEntries.length === 0) {
-						entries.push(noMaterializableEntry("artifact", input.target));
+						const unavailableArtifact = artifactFetch.unavailableArtifacts[0];
+						entries.push(
+							unavailableArtifact
+								? missingLiveControlEntry(unavailableArtifact.artifact)
+								: noMaterializableEntry("artifact", input.target),
+						);
 					}
 					for (const file of artifactFetch.files) {
 						const manifestEntry = findArtifactManifestForFile(manifestEntries, file);
@@ -5503,6 +5501,27 @@ function noMaterializableEntry(
 		size: null,
 		materializationMethod: null,
 		reason: `no-materializable-${kind}: provider detail exposed no downloadable ${kind} assets for conversation ${target.conversationId}`,
+		archiveItemId: null,
+		assetRoute: null,
+	};
+}
+
+function missingLiveControlEntry(
+	artifact: ConversationArtifact,
+): HistoryMaterializationManifestEntry {
+	return {
+		kind: "artifact",
+		providerId: artifact.id,
+		title: artifact.title,
+		status: "skipped",
+		localPath: null,
+		remoteUrl: artifact.uri ?? null,
+		cacheKey: null,
+		checksumSha256: null,
+		mimeType: null,
+		size: null,
+		materializationMethod: null,
+		reason: "missing_live_control",
 		archiveItemId: null,
 		assetRoute: null,
 	};

@@ -68,6 +68,10 @@ import {
 	resolveChatgptProjectUrl,
 	serializeChatgptGridRowsToCsv,
 } from "../../src/browser/providers/chatgptAdapter.js";
+import {
+	reconcileChatgptPayloadDownloadControls,
+	resolveChatgptArtifactControlCandidate,
+} from "../../src/browser/providers/chatgptArtifactControls.js";
 import type { FileRef } from "../../src/browser/providers/domain.js";
 import { normalizeProjectMemoryMode } from "../../src/browser/providers/domain.js";
 import { createProviderSessionAuthority } from "../../src/browser/providers/providerSessionAuthority.js";
@@ -798,18 +802,18 @@ describe("downloadChatgptConversationFilesWithClient", () => {
 				},
 			},
 		});
-		expect(JSON.stringify(summarizeChatgptDownloadJsonShape({ url: "?token=secret" }))).not.toContain(
-			"secret",
-		);
+		expect(
+			JSON.stringify(summarizeChatgptDownloadJsonShape({ url: "?token=secret" })),
+		).not.toContain("secret");
 	});
 
 	test("normalizes the live snake-case file-not-found download envelope", () => {
 		const providerError = summarizeChatgptDownloadProviderError({
-				error_code: "file_not_found",
-				error_type: "GetDownloadLinkError",
-				status: "error",
-				error_message: null,
-			});
+			error_code: "file_not_found",
+			error_type: "GetDownloadLinkError",
+			status: "error",
+			error_message: null,
+		});
 		expect(providerError).toEqual({
 			code: "file_not_found",
 			type: "GetDownloadLinkError",
@@ -1237,9 +1241,7 @@ describe("downloadChatgptConversationFilesWithClient", () => {
 					"const isSignedContent = /\\/backend-api\\/estuary\\/content/.test(text)",
 				);
 				expect(expression).toContain("if (candidate.ok) {");
-				expect(expression).toContain(
-					"captureError = selectDownloadFailure(captureError, next)",
-				);
+				expect(expression).toContain("captureError = selectDownloadFailure(captureError, next)");
 				expect(expression).toContain("HTMLAnchorElement.prototype.click = originalAnchorClick");
 				expect(expression).toContain("window.open = originalWindowOpen");
 				expect(expression).toContain("providerErrorShape");
@@ -2994,7 +2996,7 @@ describe("normalizeChatgptConversationDownloadArtifactProbes", () => {
 });
 
 describe("mergeChatgptConversationArtifacts", () => {
-	test("keeps payload artifacts authoritative and appends DOM-only artifacts", () => {
+	test("preserves canonical payload identity while attaching a matching live DOM control", () => {
 		expect(
 			mergeChatgptConversationArtifacts(
 				[
@@ -3013,6 +3015,12 @@ describe("mergeChatgptConversationArtifacts", () => {
 						kind: "download",
 						uri: "chatgpt://download-button/turn-1/0",
 						messageIndex: 2,
+						messageId: "assist-dom-1",
+						metadata: {
+							extraction: "dom-behavior-button",
+							turnId: "turn-1",
+							buttonIndex: 0,
+						},
 					},
 					{
 						id: "download-dom:turn-2:0",
@@ -3022,6 +3030,7 @@ describe("mergeChatgptConversationArtifacts", () => {
 						messageIndex: 4,
 					},
 				],
+				{ reconcileDownloadControls: true },
 			),
 		).toEqual([
 			{
@@ -3030,6 +3039,14 @@ describe("mergeChatgptConversationArtifacts", () => {
 				kind: "download",
 				uri: "sandbox:/mnt/data/comment_demo.docx",
 				messageIndex: 2,
+				messageId: "assist-dom-1",
+				metadata: {
+					liveControlState: "available",
+					liveControlUri: "chatgpt://download-button/turn-1/0",
+					liveControlArtifactId: "download-dom:turn-1:0",
+					turnId: "turn-1",
+					buttonIndex: 0,
+				},
 			},
 			{
 				id: "download-dom:turn-2:0",
@@ -3039,6 +3056,140 @@ describe("mergeChatgptConversationArtifacts", () => {
 				messageIndex: 4,
 			},
 		]);
+	});
+});
+
+describe("ChatGPT payload live-control reconciliation", () => {
+	test("keeps the exact cone asset visible but marks it unavailable beside unrelated DOCX controls", () => {
+		const result = reconcileChatgptPayloadDownloadControls([
+			{
+				id: "cone-payload",
+				title: "Download the exact cone.docx",
+				kind: "download",
+				uri: "sandbox:/mnt/data/exact_cone.docx",
+				messageIndex: 7,
+				messageId: "cone-message",
+			},
+			{
+				id: "download-dom:other-turn:0",
+				title: "Download another.docx",
+				kind: "download",
+				uri: "chatgpt://download-button/other-turn/0",
+				messageIndex: 8,
+				messageId: "other-message",
+				metadata: { extraction: "dom-behavior-button", turnId: "other-turn", buttonIndex: 0 },
+			},
+			{
+				id: "download-dom:last-turn:0",
+				title: "Download final.docx",
+				kind: "download",
+				uri: "chatgpt://download-button/last-turn/0",
+				messageIndex: 9,
+				messageId: "last-message",
+				metadata: { extraction: "dom-behavior-button", turnId: "last-turn", buttonIndex: 0 },
+			},
+		]);
+
+		expect(result.map((artifact) => artifact.id)).toEqual([
+			"cone-payload",
+			"download-dom:other-turn:0",
+			"download-dom:last-turn:0",
+		]);
+		expect(result[0]).toMatchObject({
+			id: "cone-payload",
+			uri: "sandbox:/mnt/data/exact_cone.docx",
+			metadata: {
+				liveControlState: "missing",
+				liveControlReason: "missing_live_control",
+			},
+		});
+	});
+
+	test("does not broaden a same-title match across message scope", () => {
+		const result = reconcileChatgptPayloadDownloadControls([
+			{
+				id: "scoped-payload",
+				title: "Download report.docx",
+				kind: "download",
+				uri: "sandbox:/mnt/data/report.docx",
+				messageIndex: 2,
+				messageId: "expected-message",
+			},
+			{
+				id: "download-dom:wrong-turn:0",
+				title: "Download report.docx",
+				kind: "download",
+				uri: "chatgpt://download-button/wrong-turn/0",
+				messageIndex: 3,
+				messageId: "wrong-message",
+				metadata: { extraction: "dom-behavior-button", turnId: "wrong-turn", buttonIndex: 0 },
+			},
+		]);
+
+		expect(result[0]?.metadata).toMatchObject({
+			liveControlState: "missing",
+			liveControlReason: "missing_live_control",
+		});
+		expect(result[1]?.id).toBe("download-dom:wrong-turn:0");
+	});
+
+	test("leaves DOM-native controls and non-download artifacts unchanged", () => {
+		const artifacts = [
+			{
+				id: "download-dom:turn-1:0",
+				title: "Download live.docx",
+				kind: "download" as const,
+				uri: "chatgpt://download-button/turn-1/0",
+				metadata: { extraction: "dom-behavior-button", turnId: "turn-1", buttonIndex: 0 },
+			},
+			{
+				id: "canvas:1",
+				title: "Canvas",
+				kind: "canvas" as const,
+				uri: "chatgpt://canvas/1",
+			},
+			{
+				id: "spreadsheet:1",
+				title: "Workbook.xlsx",
+				kind: "spreadsheet" as const,
+				uri: "sandbox:/mnt/data/workbook.xlsx",
+			},
+		];
+		expect(reconcileChatgptPayloadDownloadControls(artifacts)).toEqual(artifacts);
+	});
+
+	test("uses the same scoped resolver contract for provider-free and click-time candidates", () => {
+		expect(
+			resolveChatgptArtifactControlCandidate(
+				{
+					title: "Report.docx",
+					uri: "sandbox:/mnt/data/report.docx",
+					uriFileName: "report.docx",
+					turnId: "turn-2",
+					messageId: null,
+					messageIndex: 4,
+					buttonIndex: 0,
+				},
+				[
+					{
+						title: "Report.docx",
+						href: "",
+						turnId: "turn-1",
+						messageId: "message-1",
+						messageIndex: 3,
+						buttonIndex: 0,
+					},
+					{
+						title: "Report.docx",
+						href: "",
+						turnId: "turn-2",
+						messageId: "message-2",
+						messageIndex: 4,
+						buttonIndex: 0,
+					},
+				],
+			),
+		).toMatchObject({ turnId: "turn-2", messageId: "message-2" });
 	});
 });
 

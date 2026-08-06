@@ -766,12 +766,14 @@ describe("llmService project file cache writes", () => {
 				title: "Artifact One",
 				kind: "download",
 				uri: "sandbox:/mnt/data/artifact-one.zip",
+				metadata: { liveControlState: "available" },
 			},
 			{
 				id: "artifact-2",
 				title: "Artifact Two",
 				kind: "spreadsheet",
 				uri: "sandbox:/mnt/data/artifact-two.xlsx",
+				metadata: { liveControlState: "available" },
 			},
 		];
 		const provider = {
@@ -1014,7 +1016,14 @@ describe("llmService project file cache writes", () => {
 			expect(provider.materializeConversationArtifact).toHaveBeenCalledTimes(1);
 			expect(provider.materializeConversationArtifact).toHaveBeenCalledWith(
 				"conversation-123",
-				expect.objectContaining({ id: "download-dom:turn-1:0" }),
+				expect.objectContaining({
+					id: "turn-1:download:sandbox:/mnt/data/report.docx",
+					uri: "sandbox:/mnt/data/report.docx",
+					metadata: expect.objectContaining({
+						liveControlState: "available",
+						liveControlUri: "chatgpt://download-button/turn-1/0",
+					}),
+				}),
 				expect.any(String),
 				undefined,
 				expect.objectContaining({ useProviderSession: true }),
@@ -1026,10 +1035,83 @@ describe("llmService project file cache writes", () => {
 			expect(manifest.artifactCount).toBe(1);
 			expect(manifest.entries).toEqual([
 				expect.objectContaining({
-					artifactId: "download-dom:turn-1:0",
+					artifactId: "turn-1:download:sandbox:/mnt/data/report.docx",
 					status: "materialized",
 				}),
 			]);
+		} finally {
+			await rm(homeDir, { recursive: true, force: true });
+		}
+	});
+
+	test("materializeConversationArtifacts excludes an exact missing-control asset before maxItems and a disabled provider callback", async () => {
+		const homeDir = await mkdtemp(path.join(os.tmpdir(), "auracall-llm-missing-control-"));
+		setAuracallHomeDirOverrideForTest(homeDir);
+		const cacheContext: ProviderCacheContext = {
+			provider: "chatgpt",
+			userConfig: {} as ProviderCacheContext["userConfig"],
+			listOptions: {},
+			identityKey: "cache-test@example.com",
+		};
+		const coneArtifact: ConversationArtifact = {
+			id: "cone:download:sandbox:/mnt/data/exact_cone.docx",
+			title: "Download exact_cone.docx",
+			kind: "download",
+			uri: "sandbox:/mnt/data/exact_cone.docx",
+			messageIndex: 7,
+			messageId: "cone-message",
+		};
+		const provider = {
+			id: "chatgpt",
+			config: { id: "chatgpt", selectors: {} as never },
+			readConversationContext: vi.fn(async () => ({
+				provider: "chatgpt",
+				conversationId: "exact-conversation",
+				messages: [{ role: "assistant", text: "done" }],
+				artifacts: [
+					coneArtifact,
+					{
+						id: "download-dom:other-turn:0",
+						title: "Download unrelated-one.docx",
+						kind: "download",
+						uri: "chatgpt://download-button/other-turn/0",
+						messageIndex: 8,
+						messageId: "other-message",
+						metadata: {
+							extraction: "dom-behavior-button",
+							turnId: "other-turn",
+							buttonIndex: 0,
+						},
+					},
+				],
+			})),
+		};
+		const service = new TestLlmService(provider as never, new JsonCacheStore(), cacheContext);
+
+		try {
+			const result = await service.materializeConversationArtifacts("exact-conversation", {
+				listOptions: {},
+				refresh: true,
+				maxItems: 1,
+				excludeArtifact: (artifact) => artifact.id !== coneArtifact.id,
+			});
+			expect(result).toEqual({
+				artifacts: [],
+				files: [],
+				manifestPath: null,
+				unavailableArtifacts: [
+					{
+						artifact: expect.objectContaining({
+							id: coneArtifact.id,
+							metadata: expect.objectContaining({
+								liveControlState: "missing",
+								liveControlReason: "missing_live_control",
+							}),
+						}),
+						reason: "missing_live_control",
+					},
+				],
+			});
 		} finally {
 			await rm(homeDir, { recursive: true, force: true });
 		}
@@ -1153,18 +1235,21 @@ describe("llmService project file cache writes", () => {
 				title: "Mason_Cochran_AHS_Acceleration_Form_PreCalculus_TestOut.pdf",
 				kind: "download",
 				uri: "sandbox:/mnt/data/Mason_Cochran_AHS_Acceleration_Form_PreCalculus_TestOut.pdf",
+				metadata: { liveControlState: "available" },
 			},
 			{
 				id: "bd8a65b0-4d5c-41b5-a49b-ab8fe39629b6:download:sandbox:/mnt/data/Mason_Cochran_AHS_Acceleration_Form_PreCalculus_TestOut_clean_2page.pdf",
 				title: "Mason_Cochran_AHS_Acceleration_Form_PreCalculus_TestOut_clean_2page.pdf",
 				kind: "download",
 				uri: "sandbox:/mnt/data/Mason_Cochran_AHS_Acceleration_Form_PreCalculus_TestOut_clean_2page.pdf",
+				metadata: { liveControlState: "available" },
 			},
 			{
 				id: "1e21c0ad-f520-4037-bc13-55ebef81154a:download:sandbox:/mnt/data/Mason_Cochran_AHS_Acceleration_Form_PreCalculus_TestOut_revised_MYAP.pdf",
 				title: "Mason_Cochran_AHS_Acceleration_Form_PreCalculus_TestOut_revised_MYAP.pdf",
 				kind: "download",
 				uri: "sandbox:/mnt/data/Mason_Cochran_AHS_Acceleration_Form_PreCalculus_TestOut_revised_MYAP.pdf",
+				metadata: { liveControlState: "available" },
 			},
 		];
 		const provider = {
@@ -1242,12 +1327,14 @@ describe("llmService project file cache writes", () => {
 				title: "Recovered Guide",
 				kind: "download",
 				uri: "sandbox:/mnt/data/recovered_guide.pdf",
+				metadata: { liveControlState: "available" },
 			},
 			{
 				id: "artifact_2:download:sandbox:/mnt/data/new_guide.zip",
 				title: "New Guide",
 				kind: "download",
 				uri: "sandbox:/mnt/data/new_guide.zip",
+				metadata: { liveControlState: "available" },
 			},
 		];
 		const provider = {
