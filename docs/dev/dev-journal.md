@@ -43731,3 +43731,38 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   is clear. No canary, durable job, provider/browser contact, materialization,
   retry, or control action ran. The gate closes
   `NOT_READY_DUPLICATE_ASSET_SELECTION`.
+
+## 2026-08-06 | Plan 0199 archive identity-admission repair opens
+
+- The operator authorized the provider-free successor recommended by Plan
+  0198. It will replace raw plain-versus-composite identity equality only at
+  readable archive family admission, prove installed parity, and rerun exact
+  `maxItems=1` selection with provider implementations disabled.
+- CodeGraph confirms the narrow seam and the existing positive matcher.
+  Missing, malformed, incomparable, and provider-unknown archive identities
+  remain fail-closed; historical jobs, account-library admission, and
+  selection order remain outside this packet.
+- Starting state is synchronized `45558077`, API PID 811 healthy, scheduler and
+  six completions paused, default pass 4, and foreground/queued/running/history
+  work zero. Canary execution, durable jobs, provider/browser contact,
+  materialization, refresh, force, retry, and control actions remain forbidden.
+
+## 2026-08-06 | Plan 0199 deterministic archive-admission red
+
+- The existing archived-family fixture now represents one tenant in its two
+  persisted forms: plain request identity and composite archive identity.
+- The focused test failed once because raw equality skipped the readable
+  archive row. The archive-backed conversation reached materialization without
+  provider-work context, proving the expected missing
+  `artifact:download:recovered guide` exclusion before source repair.
+
+## 2026-08-06 | Plan 0199 source repair is green
+
+- Readable archive families now require a known normalized provider, agreement
+  with the request provider when present, and positive canonical tenant
+  matching through `accountMirrorIdentityKeysMatch()`.
+- Focused green passes 1/1, the adjacent provider-free packet passes 314/314,
+  typecheck, scoped lint, and diff hygiene pass, and the serialized full suite
+  passes 304 files / 2,716 tests with 21 files / 65 opt-in live tests skipped.
+- Provider/browser callbacks, durable jobs, materialization, scheduler and
+  completion controls, refresh, retry, and canary execution remain untouched.

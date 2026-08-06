@@ -5531,7 +5531,7 @@ describe("history materialization service", () => {
 		});
 	});
 
-	it("excludes archived families when a stale ChatGPT conversation still has new assets", async () => {
+	it("excludes archived families across canonical same-tenant identity forms", async () => {
 		const homeDir = await fs.mkdtemp(
 			path.join(os.tmpdir(), "auracall-history-materialize-archive-family-skip-"),
 		);
@@ -5713,7 +5713,8 @@ describe("history materialization service", () => {
 						runtimeProfile: "wsl-chrome-3",
 						browserProfile: "wsl-chrome-3",
 						projectId: null,
-						boundIdentityKey: "user@example.com",
+						boundIdentityKey:
+							"service-account:chatgpt:user@example.com|plan=team|structure=workspace",
 						agentId: null,
 						teamId: null,
 						responseId: null,

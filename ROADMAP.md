@@ -108,6 +108,13 @@ Lane: P01
   archive evidence. The gate closes `NOT_READY_DUPLICATE_ASSET_SELECTION` with
   scheduler and six completions paused and no durable job, provider/browser
   contact, or materialization.
+  Active provider-free archive identity-admission successor:
+  [docs/dev/plans/0199-2026-08-06-archive-terminal-identity-admission-and-provider-free-reselection.md](docs/dev/plans/0199-2026-08-06-archive-terminal-identity-admission-and-provider-free-reselection.md).
+  Plan 0199 applies the existing positive provider-aware identity matcher only
+  to readable archive family evidence, then reruns installed `maxItems=1` with
+  provider implementations disabled. Historical jobs, account-library
+  admission, selection order, and all live/control surfaces remain excluded;
+  no canary may run in this packet.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,

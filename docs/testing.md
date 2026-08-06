@@ -1890,6 +1890,14 @@
   provider ID starts `canvas:` must emit the same `artifact:canvas:<title>`
   exclusion as the current catalog before `maxItems` is consumed; unknown
   namespaces remain fail-closed as `unknown`.
+  Readable archive-family admission uses the same positive provider-aware
+  tenant matcher as current-catalog admission. The archived-family fixture
+  binds a plain request identity to the same tenant's composite
+  service-account identity and requires the readable family exclusion before
+  provider work. Missing, malformed, incomparable, conflicting-provider, and
+  provider-unknown identity evidence remains fail-closed; the adjacent
+  `tests/accountMirror/tenantBinding.test.ts` contract locks those matcher
+  boundaries without provider work.
   For a current-cache admission readback, use the cached catalog plus read-only
   archive/job snapshots, an in-memory job store, `maxItems=0`, and a provider
   callback that throws if invoked. The Plan 0192 receipt accounted for all 31

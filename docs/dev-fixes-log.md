@@ -20484,3 +20484,8 @@ browser-stage lifecycle observability, not transcript truncation.
   tenant's composite service-account identity can hide a readable archive asset
   and expose it again as the next `maxItems=1` candidate. Treat that as a new
   reviewed repair boundary; do not skip the duplicate ad hoc.
+- Admit the archive family only after its normalized provider is known,
+  consistent with any requested provider, and both identities positively match.
+  This preserves fail-closed behavior for absent, malformed, incomparable, or
+  provider-unknown evidence while allowing equivalent plain/composite tenant
+  forms to suppress already-readable assets before the item ceiling.

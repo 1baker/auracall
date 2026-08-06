@@ -16248,3 +16248,33 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   foreground and queued/running work are zero, active history jobs are zero,
   and the scoped `chatgpt/default` guard is clear. No canary, provider/browser
   contact, durable job, materialization, retry, or control action ran.
+
+## Turn 370 | 2026-08-06
+
+- The operator's `ok go` authorizes Plan 0199, the separately reviewed
+  provider-free archive identity-admission repair recommended by Plan 0198.
+  The canary itself, durable jobs, provider/browser work, materialization,
+  refresh, retry, and all scheduler/completion/guard actions remain excluded.
+- Canonical packet:
+  `docs/dev/plans/0199-2026-08-06-archive-terminal-identity-admission-and-provider-free-reselection.md`.
+- CodeGraph localizes the defect to raw bound-identity equality in
+  `materializedArchiveAssetFamilySignatures()`. The catalog path already uses
+  `accountMirrorIdentityKeysMatch()` for positive same-tenant admission.
+- The packet permits one source/test red-green cycle, one build and installed-
+  parity restart, then at most two provider-disabled in-memory simulations. It
+  explicitly leaves null-identity historical jobs, account-library admission,
+  and selection order unchanged. No subagent was spawned.
+- Starting posture is synchronized `45558077`: API PID 811 active with zero
+  restarts, scheduler and six completions paused, default pass 4, foreground
+  and queued/running work zero, active history jobs zero, and governed runtime
+  fingerprint `b4c9f41ac6bbb75e60c8e7132555fd02a3284e795125e747a9182137b34bb1f6`.
+- The deterministic fixture then failed exactly under old behavior: a readable
+  composite-identity archive row contributed no exclusion to the plain-
+  identity request, leaving the first provider-work context undefined instead
+  of containing `artifact:download:recovered guide`.
+- The minimal repair normalizes the archive provider, requires provider
+  consistency, and delegates positive identity admission to
+  `accountMirrorIdentityKeysMatch()`. Focused green passes 1/1, the adjacent
+  provider-free packet passes 314/314, typecheck/scoped lint/diff hygiene pass,
+  and the serialized full suite passes 304 files / 2,716 tests with 21 files /
+  65 opt-in live tests skipped.

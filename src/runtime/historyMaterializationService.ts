@@ -4863,8 +4863,19 @@ async function materializedArchiveAssetFamilySignatures(input: {
 	});
 	const signatures = new Set<string>();
 	for (const item of archive.items) {
-		if (input.request.boundIdentityKey && item.boundIdentityKey !== input.request.boundIdentityKey)
+		const provider = normalizeProviderId(item.provider);
+		if (
+			input.request.boundIdentityKey &&
+			(!provider ||
+				(input.request.provider && provider !== input.request.provider) ||
+				!accountMirrorIdentityKeysMatch({
+					provider,
+					expectedIdentityKey: input.request.boundIdentityKey,
+					detectedIdentityKey: item.boundIdentityKey,
+				}))
+		) {
 			continue;
+		}
 		const signature = archiveItemAssetFamilySignature(item, input.selectedKinds);
 		if (signature) signatures.add(signature);
 	}
