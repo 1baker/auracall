@@ -43766,3 +43766,21 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   passes 304 files / 2,716 tests with 21 files / 65 opt-in live tests skipped.
 - Provider/browser callbacks, durable jobs, materialization, scheduler and
   completion controls, refresh, retry, and canary execution remain untouched.
+
+## 2026-08-06 | Plan 0199 exact canary gate is prepared, not consumed
+
+- Pushed source `639327ee` installed once with exact source/installed history-
+  service hash parity; API PID 66366 is healthy with zero crash restarts.
+- Broad installed `maxItems=1` now excludes the prior canvas and Generated-
+  image duplicates. The exact second simulation binds the cone cross-section
+  download in conversation `67ccf9d7-9310-8004-b5e1-478dba6eab3a` and stops
+  intentionally at `PROVIDER_CALLBACK_DISABLED:materializeConversation`.
+- No readable archive/local copy exists. All 42 historical mentions carry null
+  request identity: 37 old account-session-drift failures and five generic
+  skips, with no materialized/duplicate file or volatile-missing terminal
+  reason. Plan 0199 closes provider-free at
+  `READY_EXPLICIT_APPROVAL_REQUIRED` with the exact item frozen.
+- Scheduler and six completions remain paused, default pass 4 is unchanged,
+  foreground and active history work are zero, and the scoped provider guard is
+  clear. No canary, durable job, provider/browser contact, materialization,
+  refresh, force, retry, or runtime-control action ran.

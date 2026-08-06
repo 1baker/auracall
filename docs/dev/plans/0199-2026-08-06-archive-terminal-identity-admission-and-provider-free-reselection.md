@@ -1,11 +1,11 @@
 # Archive Terminal Identity Admission And Provider-Free Reselection | 0199-2026-08-06
 
-State: OPEN
+State: CLOSED
 Lane: IMPLEMENTATION
 Plan version: 1
-Outcome: PENDING
-Goal execution state: AWAITING_INSTALL
-Gate state: NOT_READY_DUPLICATE_ASSET_SELECTION
+Outcome: READY_AWAITING_CANARY_APPROVAL
+Goal execution state: AWAITING_CANARY_APPROVAL
+Gate state: READY_EXPLICIT_APPROVAL_REQUIRED
 
 ## Stable Goal Objective
 
@@ -31,10 +31,11 @@ completion.
   string equality. The catalog path already uses
   `accountMirrorIdentityKeysMatch()`, so the same tenant is admitted by one
   path and rejected by the other.
-- Source and installed runtime are synchronized at `45558077`. API PID 811 is
-  healthy with zero crash restarts. Scheduler and all six completions are
-  paused; default pass count is 4; foreground, queued/running completions, and
-  active history-materialization jobs are zero.
+- Source checkpoint `639327ee` is pushed and installed with exact history-
+  service hash parity. API PID 66366 is healthy with zero crash restarts.
+  Scheduler and all six completions remain paused; default pass count is 4;
+  foreground, queued/running completions, and active history-materialization
+  jobs are zero.
 
 ## Authority And Ownership
 
@@ -144,14 +145,14 @@ completion.
   evidence remains fail-closed; existing catalog matching stays green.
 - [x] Focused/adjacent/full provider-free validation, typecheck, scoped lint,
   diff hygiene, plan audit, and one production build pass.
-- [ ] Pushed source and installed runtime have exact parity after one bounded
+- [x] Pushed source and installed runtime have exact parity after one bounded
   install/restart.
-- [ ] Fresh `maxItems=1` simulation suppresses the already-readable Generated
+- [x] Fresh `maxItems=1` simulation suppresses the already-readable Generated
   image before the item ceiling and invokes zero provider implementations.
-- [ ] The exact post-repair selection is adjudicated against current
+- [x] The exact post-repair selection is adjudicated against current
   catalog/archive/job/file evidence and the canary gate is truthfully ready or
   withheld; no canary runs.
-- [ ] Scheduler and six completions remain paused; active work/jobs remain
+- [x] Scheduler and six completions remain paused; active work/jobs remain
   zero; docs, plan audit, clean worktree, and remote parity are current.
 
 ## Hard Stops And Non-Goals
@@ -240,3 +241,56 @@ intact.
   paused runtime, and closeout.
 - `next_action_or_stop_reason`: audit and push the accepted source checkpoint,
   reconfirm quiescence, then perform the sole no-build install/API restart.
+
+## Frozen One-Canary Approval Packet
+
+- Provider / AuraCall runtime profile: `chatgpt/default`.
+- Bound identity: `ecochran76@gmail.com`; current catalog identity is the same
+  canonical tenant as
+  `service-account:chatgpt:ecochran76@gmail.com|plan=team|structure=workspace`.
+- Conversation: `67ccf9d7-9310-8004-b5e1-478dba6eab3a`.
+- Exact catalog kind / item:
+  `artifacts` /
+  `ec160eac-e457-4ae8-abb1-dfeaae5e8bec:download:sandbox:/mnt/data/plt_4.png`.
+- Exact asset: `cross-section of cone with labeled r, h and z_cm=3h/4`,
+  `kind=download`, `uri=sandbox:/mnt/data/plt_4.png`.
+- Bounds: exact catalog item, `maxItems=1`, provider-work timeout 300,000 ms,
+  `refreshSnapshot=false`, `force=false`, one attempt, no retry. Keep the
+  scheduler and all completions paused before, during, and after the canary;
+  stop at its first terminal disposition.
+- Approval requirement: a new explicit operator authorization is required.
+  This Plan 0199 packet does not create or run the job.
+
+## Checkpoint 4 | Installed Reselection And Approval Gate
+
+- `plan_version`: 1
+- `checkpoint_id`: `P0199-C04`
+- `state_transition`: AWAITING_INSTALL -> AWAITING_CANARY_APPROVAL.
+- `progress_classification`: blocker_reduction
+- `owned_changes`: accepted installed archive-admission repair, two in-memory
+  provider-disabled simulations, exact asset adjudication, and frozen canary
+  contract; no canary or durable job.
+- `evidence`: pushed source checkpoint `639327ee`; source/installed history-
+  service SHA-256 both
+  `4762aa03ae4ba3522f6dc9c7eadd5660875df8cf68f652bf92006510b5e60f76`;
+  API PID 66366 active with zero restarts. Broad `maxItems=1` selected
+  conversation `67ccf9d7-9310-8004-b5e1-478dba6eab3a`, excluded both canonical
+  canvas and Generated-image families, and invoked only the throwing
+  `materializeConversation` seam. The exact second simulation bound artifact
+  `ec160eac-e457-4ae8-abb1-dfeaae5e8bec:download:sandbox:/mnt/data/plt_4.png`
+  and stopped at the same disabled seam. Archive and filesystem searches find
+  no readable copy. Forty-two historical mentions have null request identity:
+  37 old account-session-drift failures and five generic skips, with no
+  materialized/duplicate file and no volatile-missing terminal reason. The
+  scoped nine-file runtime digest remained
+  `206fd32e6c15038b4cc82f8afd9d1dc4c94975af28db08ec48e703845e1c0195`
+  before and after both simulations.
+- `subagent_status`: `not_spawned`.
+- `budget_consumption`: packets 3/3; source/test/red-green/build/install/restart
+  1/1 each; in-memory simulations 2/2; provider/browser/live jobs/materialized
+  assets/snapshot refreshes/retries/scheduler/completion/guard actions 0.
+- `remaining_criteria`: none inside Plan 0199. The frozen one-canary packet
+  requires a new explicit approval and separate execution authority.
+- `next_action_or_stop_reason`: stop at `READY_EXPLICIT_APPROVAL_REQUIRED`.
+  Do not create or run the canary, resume the scheduler/completions, or spend a
+  retry under this plan.

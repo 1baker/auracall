@@ -20489,3 +20489,8 @@ browser-stage lifecycle observability, not transcript truncation.
   This preserves fail-closed behavior for absent, malformed, incomparable, or
   provider-unknown evidence while allowing equivalent plain/composite tenant
   forms to suppress already-readable assets before the item ceiling.
+- A newly exposed exact asset is canary-ready only after provider-free catalog,
+  archive, historical-job, and filesystem adjudication. Old nonterminal failures
+  can remain relevant risk evidence without being rewritten as readable or
+  volatile-missing terminal proof; freeze one exact item and require fresh
+  approval rather than starting materialization from the reselection packet.

@@ -16278,3 +16278,24 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   provider-free packet passes 314/314, typecheck/scoped lint/diff hygiene pass,
   and the serialized full suite passes 304 files / 2,716 tests with 21 files /
   65 opt-in live tests skipped.
+- Source checkpoint `639327ee` was pushed before the single no-build install
+  and API restart. Source and installed history-service bundles share SHA-256
+  `4762aa03ae4ba3522f6dc9c7eadd5660875df8cf68f652bf92006510b5e60f76`;
+  API PID 66366 is active with zero crash restarts.
+- The broad installed provider-free simulation now excludes both the canonical
+  canvas and Generated-image families before `maxItems=1`. The exact second
+  simulation binds artifact
+  `ec160eac-e457-4ae8-abb1-dfeaae5e8bec:download:sandbox:/mnt/data/plt_4.png`,
+  the cone cross-section download in conversation
+  `67ccf9d7-9310-8004-b5e1-478dba6eab3a`, and stops at the disabled provider
+  callback.
+- No archive row or local file exists for that exact asset. Forty-two historical
+  mentions have null request identity: 37 old account-session-drift failures
+  and five generic skips, but no materialized/duplicate file and no volatile-
+  missing terminal reason. The exact one-canary packet is therefore frozen at
+  `READY_EXPLICIT_APPROVAL_REQUIRED`, not executed.
+- The scoped nine-file digest remained `206fd32e...1c0195` across simulations.
+  Scheduler and six completions remain paused, default pass 4 is unchanged,
+  foreground and active history work are zero, and `chatgpt/default` guard is
+  clear. No durable job, canary, provider/browser contact, materialization,
+  refresh, force, retry, or runtime-control action ran.
