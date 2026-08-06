@@ -43784,3 +43784,16 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   foreground and active history work are zero, and the scoped provider guard is
   clear. No canary, durable job, provider/browser contact, materialization,
   refresh, force, retry, or runtime-control action ran.
+
+## 2026-08-06 | Plan 0200 exact one-canary opens
+
+- Explicit operator approval authorizes only the frozen ChatGPT/default cone
+  cross-section artifact: exact catalog item, artifacts only, `maxItems=1`,
+  300,000-ms provider timeout, no reconcile, refresh, force, retry, substitute,
+  or runtime-control action.
+- Fresh installed readback preserves source/runtime hash parity and resolves the
+  exact item as eligible for the canonical tenant and known conversation. API
+  PID 66366 is healthy; scheduler and six completions are paused; default pass
+  4, foreground zero, active history jobs zero, and scoped guard clear.
+- The plan/docs checkpoint precedes the one authorized job. No provider/browser
+  or runtime mutation has run under Plan 0200 yet; no subagent was spawned.

@@ -16299,3 +16299,23 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   foreground and active history work are zero, and `chatgpt/default` guard is
   clear. No durable job, canary, provider/browser contact, materialization,
   refresh, force, retry, or runtime-control action ran.
+
+## Turn 371 | 2026-08-06
+
+- The operator's `ok go` consumes the Plan 0199 human gate for exactly one
+  frozen ChatGPT/default canary. It does not authorize scheduler/completion
+  resume, retry, alternate targets, refresh, force, browser-tools, manual
+  interaction, or broader materialization.
+- Canonical packet:
+  `docs/dev/plans/0200-2026-08-06-exact-cone-cross-section-one-canary.md`.
+  Exact item is
+  `ec160eac-e457-4ae8-abb1-dfeaae5e8bec:download:sandbox:/mnt/data/plt_4.png`
+  in conversation `67ccf9d7-9310-8004-b5e1-478dba6eab3a`, artifacts only,
+  `maxItems=1`, 300,000-ms provider timeout, no reconcile/refresh/force/retry.
+- Starting posture is clean synchronized `40befc6e`; source/installed history-
+  service hash is `4762aa03...b5e60f76`; API PID 66366 is healthy with zero
+  restarts. The exact catalog row is eligible for the canonical tenant,
+  scheduler and six completions are paused, default pass 4 is unchanged,
+  foreground and active history work are zero, and the scoped guard is clear.
+- No runtime mutation or provider/browser action has run under Plan 0200 yet.
+  Planning must be audited, committed, and pushed before the sole job creation.
