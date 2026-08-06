@@ -4883,7 +4883,9 @@ describe("history materialization service", () => {
 		);
 		setAuracallHomeDirOverrideForTest(homeDir);
 		const priorMaterializedPath = path.join(homeDir, "prior-materialized.pdf");
+		const priorCanvasPath = path.join(homeDir, "che4470-exam-guide.txt");
 		await fs.writeFile(priorMaterializedPath, "already materialized");
+		await fs.writeFile(priorCanvasPath, "already materialized canvas");
 		let scheduled: (() => Promise<void>) | undefined;
 		const store = createInMemoryHistoryMaterializationJobStore([
 			buildHistoryMaterializationJob({
@@ -4915,6 +4917,22 @@ describe("history materialization service", () => {
 							mimeType: "application/pdf",
 							size: 20,
 							materializationMethod: "captured-anchor-fetch",
+							reason: null,
+							archiveItemId: null,
+							assetRoute: null,
+						},
+						{
+							kind: "artifact",
+							providerId: "canvas:67ccf9fbca7c81918873702a1d607c72",
+							title: "Che4470 Exam Guide",
+							status: "materialized",
+							localPath: priorCanvasPath,
+							remoteUrl: "chatgpt://canvas/67ccf9fbca7c81918873702a1d607c72",
+							cacheKey: null,
+							checksumSha256: "prior-canvas",
+							mimeType: "text/plain",
+							size: 27,
+							materializationMethod: "canvas-content-text",
 							reason: null,
 							archiveItemId: null,
 							assetRoute: null,
@@ -5054,7 +5072,10 @@ describe("history materialization service", () => {
 
 		expect(materializeConversation).toHaveBeenCalledTimes(1);
 		expect(materializeConversation.mock.calls[0]?.[3]).toMatchObject({
-			excludedAssetFamilySignatures: expect.arrayContaining(["artifact:download:oa_ocr"]),
+			excludedAssetFamilySignatures: expect.arrayContaining([
+				"artifact:download:oa_ocr",
+				"artifact:canvas:che4470 exam guide",
+			]),
 		});
 		await expect(service.readJob("hmj_exact_id_terminal_exclusions")).resolves.toMatchObject({
 			status: "skipped",

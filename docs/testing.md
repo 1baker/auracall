@@ -1885,6 +1885,11 @@
   `pnpm vitest run tests/runtime.historyMaterializationService.test.ts tests/accountMirror/completionService.test.ts tests/cli/apiStatusCommand.test.ts`
   to verify result metrics, completion hydration/persistence, legacy zero
   defaults, and CLI `/status` projection without provider work.
+  Terminal-family coverage in the same history-materialization suite also
+  binds explicit provider asset namespaces. A readable terminal entry whose
+  provider ID starts `canvas:` must emit the same `artifact:canvas:<title>`
+  exclusion as the current catalog before `maxItems` is consumed; unknown
+  namespaces remain fail-closed as `unknown`.
   For a current-cache admission readback, use the cached catalog plus read-only
   archive/job snapshots, an in-memory job store, `maxItems=0`, and a provider
   callback that throws if invoked. The Plan 0192 receipt accounted for all 31

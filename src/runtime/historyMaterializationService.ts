@@ -5185,6 +5185,7 @@ function readAssetFamilySourceFromId(value: string | null): string | null {
 		.map((part) => part.trim().toLowerCase())
 		.filter(Boolean);
 	if (parts.includes("download")) return "download";
+	if (parts.includes("canvas")) return "canvas";
 	if (parts.includes("deep-research")) return "deep-research";
 	if (parts.includes("conversation")) return "conversation";
 	if (parts.includes("chatgpt-library")) return "chatgpt-library";

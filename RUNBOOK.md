@@ -16203,3 +16203,29 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   and explicit operator approval. The governed runtime fingerprint was
   unchanged before/after both simulations, and no job, asset, provider/browser,
   install/restart, scheduler/completion/guard, force, or retry action ran.
+
+## Turn 369 | 2026-08-06
+
+- The operator's `ok go` authorizes Plan 0198, the bounded provider-free
+  terminal-family repair and exact reselection successor. A canary itself,
+  provider/browser work, durable jobs, materialization, snapshot refresh, and
+  all scheduler/completion/guard actions remain excluded.
+- Canonical packet:
+  `docs/dev/plans/0198-2026-08-06-terminal-asset-family-canonicalization-and-provider-free-reselection.md`.
+- CodeGraph localizes the mismatch to `readAssetFamilySourceFromId()` feeding
+  `historyEntryAssetFamilySignatures()`. Persisted Plan 0193 evidence confirms
+  the exact terminal provider ID is `canvas:67ccf9fbca7c81918873702a1d607c72`,
+  while the parser lacks the explicit `canvas` namespace.
+- The serialized packet permits one source/test red-green cycle, one build and
+  installed-parity restart, then at most two provider-disabled in-memory
+  simulations. No subagent was spawned.
+- The deterministic fixture failed once with the exact old output:
+  `artifact:unknown:che4470 exam guide` was present while
+  `artifact:canvas:che4470 exam guide` was absent. Adding `canvas` to the
+  existing colon-delimited provider-ID source parser made the fixture green
+  without changing title, kind, terminal, or tenant rules.
+- Focused history coverage passes 73/73; the adjacent provider-free packet
+  passes 314/314; typecheck, scoped lint, diff hygiene, the serialized full
+  suite (304 files / 2,716 tests; 21 files / 65 tests skipped), and the sole
+  production build pass. Next gate: commit/push accepted source before the one
+  installed-parity cycle.

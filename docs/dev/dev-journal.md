@@ -43679,3 +43679,31 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   before and after both simulations. Scheduler and six completions remain
   paused; active work remains zero; no durable job, provider/browser call,
   materialization, install/restart, control action, force, or retry ran.
+
+## 2026-08-06 | Plan 0198 terminal canvas-family repair opens
+
+- The operator authorized the provider-free successor recommended by Plan
+  0197. It will canonicalize explicit `canvas:` terminal provider IDs, validate
+  source and installed parity, and rerun exact `maxItems=1` selection with all
+  provider callbacks disabled.
+- CodeGraph and persisted Plan 0193 evidence bind the defect to the existing
+  provider-ID source parser: the current terminal entry is explicitly
+  `canvas:67ccf9fbca7c81918873702a1d607c72`, but the parser falls through to
+  `unknown`.
+- The canary remains unapproved and cannot run in this packet. Scheduler and
+  all six completions remain paused; durable job, provider/browser,
+  materialization, snapshot-refresh, guard, force, and retry authority remain
+  zero.
+
+## 2026-08-06 | Plan 0198 source contract reaches installed gate
+
+- The regression reproduced the defect exactly: the prior terminal canvas
+  contributed only `artifact:unknown:che4470 exam guide`. The accepted repair
+  adds the explicit `canvas` namespace to the shared provider-ID parser; all
+  other source aliases and unknown fallback remain unchanged.
+- Focused history tests pass 73/73, adjacent provider-free coverage passes
+  314/314, and typecheck, scoped lint, diff hygiene, planning audit, the
+  serialized 304-file / 2,716-test suite, and one production build pass.
+- No installed, provider/browser, materialization-job, scheduler, completion,
+  guard, snapshot-refresh, force, or retry action has run yet. Source must be
+  committed and pushed before the single installed-parity cycle.

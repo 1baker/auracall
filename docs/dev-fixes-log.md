@@ -20465,3 +20465,17 @@ browser-stage lifecycle observability, not transcript truncation.
 - Freeze a one-canary request by exact `catalogItemId` only after provider-free
   simulation proves that item is non-local and non-terminal. Keep scheduler and
   completion controls paused and require a single terminal stop with no retry.
+
+## 2026-08-06 | Terminal provider IDs must retain explicit asset namespaces
+
+- A materialized history entry can carry its only durable family-source signal
+  in `providerId`. Treating `canvas:<id>` as unknown makes terminal evidence
+  disagree with a current catalog row whose source is explicitly `canvas`, so
+  an already-readable asset can survive exclusion and consume `maxItems=1`.
+- Parse established colon-delimited provider namespaces at the shared family
+  boundary. Preserve the asset kind and normalized full title, retain unknown
+  for unrecognized namespaces, and do not weaken terminal-evidence or tenant
+  qualification.
+- Lock the contract with a readable terminal fixture and assert the exact
+  source-qualified exclusion passed to provider work. Provider-free current-
+  cache simulation remains required before any one-canary approval.
