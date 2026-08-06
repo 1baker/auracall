@@ -89,6 +89,15 @@ Lane: P01
   Recovery remains 62 missing / 14 retrievable / 48 metadata-only. Scheduler
   and six completions remain paused, jobs remain zero, and no provider/browser
   or control action ran.
+  Closed provider-free next-conversation/asset resolution and one-canary gate:
+  [docs/dev/plans/0197-2026-08-06-provider-free-next-asset-resolution-and-one-canary-gate.md](docs/dev/plans/0197-2026-08-06-provider-free-next-asset-resolution-and-one-canary-gate.md).
+  Two in-memory `maxItems=1` simulations with provider callbacks disabled bind
+  conversation `67ccf9d7-9310-8004-b5e1-478dba6eab3a` and canvas
+  `canvas:67ccf9fbca7c81918873702a1d607c72`. That canvas is already readable from
+  Plan 0193, but current terminal evidence calls its family `unknown` while the
+  catalog calls it `canvas`; the one-canary gate is therefore prepared but
+  `NOT_READY_DUPLICATE_ASSET_SELECTION`. Scheduler and six completions remain
+  paused, and no materialization job or provider/browser/control action ran.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,

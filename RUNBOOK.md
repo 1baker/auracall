@@ -16173,3 +16173,33 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   guard and browser mutations are clear, and queued/running jobs are 0/0.
 - No provider/browser callback, durable job, direct JSON edit, completion,
   scheduler, or guard action ran. No further materialization is authorized.
+
+## Turn 368 | 2026-08-06
+
+- The operator authorized Plan 0197 as a provider-free exact-selection and
+  one-canary-gate packet. Scheduler resume, policy-completion start/resume,
+  durable materialization, provider/browser work, and retries remain excluded.
+- Installed recovery remains 62 remote-known missing-local / 14 retrievable /
+  48 metadata-only, with one eligible policy-completion target. API PID 1212 is
+  healthy with zero restarts; scheduler and all six active completions are
+  paused; queued/running completions and history jobs are zero.
+- A broad in-memory `maxItems=1` simulation read all 1,862 persisted jobs,
+  selected conversation `67ccf9d7-9310-8004-b5e1-478dba6eab3a`, reached the
+  materialization boundary once, and stopped intentionally at
+  `PROVIDER_CALLBACK_DISABLED`.
+- Current cache ordering and an independent exact catalog-item simulation bind
+  the first asset to canvas `canvas:67ccf9fbca7c81918873702a1d607c72`,
+  `Che4470 Exam Guide`. The exact simulation exposed that asset in
+  `selectedCatalogAsset` and stopped at the same disabled boundary.
+- Durable archive/job evidence proves the selected canvas is already readable:
+  3,362 bytes with SHA-256
+  `514d0ddc7425970fbc48bd3c9a84a7fc4234a0a1ebfa836f8b6f77795d37fe2d`.
+  Terminal history calls the family `artifact:unknown:che4470 exam guide`,
+  while the current catalog selection calls it
+  `artifact:canvas:che4470 exam guide`; the mismatch permits duplicate replay.
+- Plan 0197 closes `COMPLETE_PROVIDER_FREE_CANARY_WITHHELD`. The one-canary
+  contract is prepared but `NOT_READY_DUPLICATE_ASSET_SELECTION`; it requires a
+  separately reviewed provider-free identity repair, a fresh exact simulation,
+  and explicit operator approval. The governed runtime fingerprint was
+  unchanged before/after both simulations, and no job, asset, provider/browser,
+  install/restart, scheduler/completion/guard, force, or retry action ran.

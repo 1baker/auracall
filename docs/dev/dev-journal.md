@@ -43657,3 +43657,25 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   Scheduler and all six completions are paused, default pass 4 is unchanged,
   the provider guard is null, browser mutations are zero, and queued/running
   history jobs are 0/0. No live, control, direct-JSON, or retry action ran.
+
+## 2026-08-06 | Plan 0197 resolves the exact next selection provider-free
+
+- Two in-memory `maxItems=1` simulations used the current catalog/archive and
+  all 1,862 persisted jobs while every provider-capable callback failed closed.
+  The broad pass selected conversation
+  `67ccf9d7-9310-8004-b5e1-478dba6eab3a`; the exact catalog-item pass bound
+  canvas `canvas:67ccf9fbca7c81918873702a1d607c72`, `Che4470 Exam Guide`.
+- That canvas is already a readable Plan 0193 archive asset: 3,362 bytes with
+  SHA-256
+  `514d0ddc7425970fbc48bd3c9a84a7fc4234a0a1ebfa836f8b6f77795d37fe2d`.
+  Current terminal history identifies its family as `unknown`, while current
+  cache selection identifies it as `canvas`, so broad `maxItems=1` would spend
+  its only asset budget on a duplicate replay.
+- Plan 0197 prepares but withholds the one-canary gate. A provider-free family-
+  identity repair and fresh exact simulation must select a non-local,
+  non-terminal asset before explicit canary approval can be effective.
+- The scoped governed-runtime fingerprint remained
+  `602a49da1435826172f033a9923b4638ca1531983cac6c6610a6b432a101f14e`
+  before and after both simulations. Scheduler and six completions remain
+  paused; active work remains zero; no durable job, provider/browser call,
+  materialization, install/restart, control action, force, or retry ran.

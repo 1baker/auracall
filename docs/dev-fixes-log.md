@@ -20451,3 +20451,17 @@ browser-stage lifecycle observability, not transcript truncation.
   attachments, provider manifests, history materialization, or unknown future
   sources. Bind both the returned row and persisted index in the regression so
   write-through cannot retain the contradiction invisibly.
+
+## 2026-08-06 | Candidate eligibility does not prove the first asset is new
+
+- A provider-free broad `maxItems=1` reconciliation can identify one eligible
+  conversation while still selecting an already-readable first asset inside
+  that conversation. Resolve both units before approving provider work.
+- Terminal-family identity must preserve enough asset kind/source information
+  to match the current catalog family. Here terminal evidence recorded
+  `artifact:unknown:che4470 exam guide` while the current cached canvas resolves
+  to `artifact:canvas:che4470 exam guide`, allowing a duplicate replay through
+  the family exclusion.
+- Freeze a one-canary request by exact `catalogItemId` only after provider-free
+  simulation proves that item is non-local and non-terminal. Keep scheduler and
+  completion controls paused and require a single terminal stop with no retry.
