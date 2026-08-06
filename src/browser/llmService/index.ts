@@ -1,4 +1,4 @@
-export { LlmService } from './llmService.js';
+export { DEFAULT_CONVERSATION_CONTEXT_TIMEOUT_MS, LlmService } from './llmService.js';
 export { createLlmService } from './providers/index.js';
 export type {
   LlmCapabilities,

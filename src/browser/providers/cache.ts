@@ -38,6 +38,23 @@ export interface CacheNameMatch<T> {
   candidates: T[];
 }
 
+export type ConversationContextReadOutcome = 'succeeded' | 'failed' | 'timed_out' | 'aborted';
+
+export interface ConversationContextReadReceipt {
+  object: 'conversation_context_read_receipt';
+  version: 1;
+  provider: ProviderId;
+  accountScopeHash: string;
+  conversationId: string;
+  outcome: ConversationContextReadOutcome;
+  timeoutMs: number;
+  elapsedMs: number;
+  attemptCount: number;
+  lastStage: string;
+  completedAt: string;
+  errorCode: string | null;
+}
+
 export function resolveProviderCacheKey(context: ProviderCacheContext): string {
   const identityKey = resolveIdentityKey(context);
   const sanitized = identityKey.replace(/[\\/]/g, '_');
@@ -143,6 +160,25 @@ export async function writeConversationContextCache(
   payload: ConversationContext,
 ): Promise<void> {
   await writeProviderCache(context, `contexts/${conversationId}.json`, payload);
+}
+
+export async function readConversationContextReadReceipt(
+  context: ProviderCacheContext,
+  conversationId: string,
+): Promise<CacheReadResult<ConversationContextReadReceipt | null>> {
+  return readProviderCache<ConversationContextReadReceipt | null>(
+    context,
+    `context-read-receipts/${conversationId}.json`,
+    null,
+  );
+}
+
+export async function writeConversationContextReadReceipt(
+  context: ProviderCacheContext,
+  conversationId: string,
+  receipt: ConversationContextReadReceipt,
+): Promise<void> {
+  await writeProviderCache(context, `context-read-receipts/${conversationId}.json`, receipt);
 }
 
 export async function readConversationFilesCache(

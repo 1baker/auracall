@@ -118,6 +118,8 @@ export class BrowserAutomationClient {
       projectId?: string;
       refresh?: boolean;
       cacheOnly?: boolean;
+      allowCacheFallback?: boolean;
+      timeoutMs?: number;
       listOptions?: BrowserProviderListOptions;
     },
   ): Promise<ConversationContext> {

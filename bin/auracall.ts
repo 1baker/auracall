@@ -292,7 +292,11 @@ import {
   resolveBrowserFeaturesBaseline,
   writeBrowserFeaturesSnapshot,
 } from '../src/browser/featureDiscovery.js';
-import { LlmService, createLlmService } from '../src/browser/llmService/index.js';
+import {
+  DEFAULT_CONVERSATION_CONTEXT_TIMEOUT_MS,
+  LlmService,
+  createLlmService,
+} from '../src/browser/llmService/index.js';
 import { resolveBrowserConfig } from '../src/browser/config.js';
 import { resolveManagedProfileDirForUserConfig } from '../src/browser/profileStore.js';
 import type { BrowserAttachment, BrowserLogger, BrowserRunOptions } from '../src/browser/types.js';
@@ -3945,6 +3949,12 @@ conversationContextCommand
   .option('--history-since <date>', 'Stop once History entries are older than this date (YYYY-MM-DD or ISO).')
   .option('--refresh', 'Force live refresh (default).')
   .option('--cache-only', 'Read from cache only (skip live browser retrieval).')
+  .option(
+    '--timeout-ms <ms>',
+    'Maximum live context-read time in milliseconds.',
+    parseIntOption,
+    DEFAULT_CONVERSATION_CONTEXT_TIMEOUT_MS,
+  )
   .option('--json-only', 'Suppress CLI intro banner and print JSON payload only.')
   .action(async (id, commandOptions, command) => {
     const parentOptions = command.parent?.parent?.opts?.() ?? {};
@@ -4001,6 +4011,8 @@ conversationContextCommand
       projectId,
       refresh,
       cacheOnly: Boolean(commandOptions.cacheOnly),
+      allowCacheFallback: command.getOptionValueSource?.('refresh') === 'cli' ? false : undefined,
+      timeoutMs: commandOptions.timeoutMs,
       listOptions,
     });
     console.log(JSON.stringify(context, null, 2));
@@ -5137,6 +5149,7 @@ cacheContextCommand
       fetchedAt: result.fetchedAt,
       stale: result.stale,
       context: result.context,
+      terminalReceipt: result.terminalReceipt,
     };
     const requestedOutput = (commandOptions.out ?? commandOptions.output) as string | undefined;
     if (typeof requestedOutput === 'string' && requestedOutput.trim().length > 0) {

@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { clearTimeout as cancelTimer, setTimeout as scheduleTimer } from "node:timers";
 import {
 	type BrowserInteractionGovernor,
 	createBrowserInteractionGovernor,
@@ -33,8 +34,12 @@ import {
 	matchConversationByTitle,
 	matchProjectByName,
 	PROVIDER_CACHE_TTL_MS,
+	type ConversationContextReadOutcome,
+	type ConversationContextReadReceipt,
+	readConversationContextReadReceipt,
 	resolveProviderCacheKey,
 	resolveProviderCachePath,
+	writeConversationContextReadReceipt,
 } from "../providers/cache.js";
 import {
 	CHATGPT_MISSING_LIVE_CONTROL_REASON,
@@ -53,6 +58,7 @@ import type {
 	ProviderId,
 } from "../providers/domain.js";
 import {
+	createBrowserScrapeTelemetryRecorder,
 	recordBrowserScrapeCandidateCount,
 	recordBrowserScrapeProviderAction,
 	snapshotBrowserScrapeTelemetry,
@@ -94,6 +100,7 @@ import type {
 } from "./types.js";
 
 const DEFAULT_HISTORY_LIMIT = 2000;
+export const DEFAULT_CONVERSATION_CONTEXT_TIMEOUT_MS = 120_000;
 const CHATGPT_RATE_LIMIT_RETRY_BASE_MS = 2_000;
 const CHATGPT_RATE_LIMIT_RETRY_STEP_MS = 3_000;
 const CHATGPT_RATE_LIMIT_RETRY_JITTER_MS = 1_500;
@@ -108,6 +115,70 @@ const GEMINI_POST_COMMIT_QUIET_MS = 12_000;
 const GEMINI_MUTATION_MIN_INTERVAL_MS = 25_000;
 const GROK_RATE_LIMIT_COOLDOWN_MS = 5 * 60_000;
 const GROK_RATE_LIMIT_AUTO_WAIT_MAX_MS = 30_000;
+
+export class ConversationContextReadError extends Error {
+	readonly code: "conversation_context_timeout" | "conversation_context_aborted";
+	readonly outcome: "timed_out" | "aborted";
+
+	constructor(input: {
+		provider: ProviderId;
+		conversationId: string;
+		timeoutMs: number;
+		outcome: "timed_out" | "aborted";
+	}) {
+		const code =
+			input.outcome === "timed_out"
+				? "conversation_context_timeout"
+				: "conversation_context_aborted";
+		super(
+			input.outcome === "timed_out"
+				? `${input.provider} conversation context read timed out after ${input.timeoutMs}ms for "${input.conversationId}".`
+				: `${input.provider} conversation context read was aborted for "${input.conversationId}".`,
+		);
+		this.name = "ConversationContextReadError";
+		this.code = code;
+		this.outcome = input.outcome;
+	}
+}
+
+function resolveConversationContextTimeoutMs(value: number | undefined): number {
+	if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
+		return DEFAULT_CONVERSATION_CONTEXT_TIMEOUT_MS;
+	}
+	return Math.max(1, Math.floor(value));
+}
+
+function readTerminalErrorCode(error: unknown): string | null {
+	if (error && typeof error === "object" && "code" in error) {
+		const code = (error as { code?: unknown }).code;
+		if (typeof code === "string" && code.trim()) return code.trim();
+	}
+	return error instanceof Error && error.name ? error.name : null;
+}
+
+function waitForPromiseWithAbort<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
+	if (signal.aborted) {
+		return Promise.reject(signal.reason ?? new Error("Operation aborted."));
+	}
+	return new Promise<T>((resolve, reject) => {
+		const onAbort = () => {
+			cleanup();
+			reject(signal.reason ?? new Error("Operation aborted."));
+		};
+		const cleanup = () => signal.removeEventListener("abort", onAbort);
+		signal.addEventListener("abort", onAbort, { once: true });
+		promise.then(
+			(value) => {
+				cleanup();
+				resolve(value);
+			},
+			(error) => {
+				cleanup();
+				reject(error);
+			},
+		);
+	});
+}
 const GROK_POST_COMMIT_QUIET_MS = 8_000;
 const GROK_MUTATION_MIN_INTERVAL_MS = 12_000;
 const SCOPED_CONVERSATION_FILE_LIST_TIMEOUT_MS = 15_000;
@@ -2450,6 +2521,7 @@ export abstract class LlmService {
 			refresh?: boolean;
 			cacheOnly?: boolean;
 			allowCacheFallback?: boolean;
+			timeoutMs?: number;
 			listOptions?: BrowserProviderListOptions;
 		},
 	): Promise<ConversationContext> {
@@ -2461,7 +2533,6 @@ export abstract class LlmService {
 			: await this.buildListOptions(options?.listOptions, {
 					ensurePort: !options?.cacheOnly,
 				});
-		recordBrowserScrapeProviderAction(listOptions, "llmService.getConversationContext");
 		const cacheContext = await this.resolveCacheContext(
 			listOptions,
 			listOptions.accountMirrorInventory === true ? { detect: false, prompt: false } : {},
@@ -2478,22 +2549,113 @@ export abstract class LlmService {
 				);
 			}
 		}
+		const timeoutMs = resolveConversationContextTimeoutMs(options?.timeoutMs);
+		const startedAt = Date.now();
+		let attemptCount = 0;
+		let lastStage = "provider:readConversationContext.start";
+		let abortError: ConversationContextReadError | null = null;
+		const controller = new AbortController();
+		const callerSignal = listOptions.abortSignal;
+		const telemetry = listOptions.scrapeTelemetry ?? createBrowserScrapeTelemetryRecorder();
+		const originalTelemetryUpdate = telemetry.onUpdate;
+		let previousProviderActions = { ...telemetry.providerActions };
+		let previousCdpCalls = { ...telemetry.cdpCalls };
+		telemetry.onUpdate = () => {
+			for (const [action, count] of Object.entries(telemetry.providerActions)) {
+				if (count > (previousProviderActions[action] ?? 0)) {
+					lastStage = `provider:${action}`;
+				}
+			}
+			for (const [method, count] of Object.entries(telemetry.cdpCalls)) {
+				if (count > (previousCdpCalls[method] ?? 0)) {
+					lastStage = `cdp:${method}`;
+				}
+			}
+			previousProviderActions = { ...telemetry.providerActions };
+			previousCdpCalls = { ...telemetry.cdpCalls };
+			originalTelemetryUpdate?.();
+		};
+		const scopedListOptions: BrowserProviderListOptions = {
+			...listOptions,
+			abortSignal: controller.signal,
+			scrapeTelemetry: telemetry,
+		};
+		const onCallerAbort = () => {
+			abortError = new ConversationContextReadError({
+				provider: this.providerId,
+				conversationId,
+				timeoutMs,
+				outcome: "aborted",
+			});
+			controller.abort(abortError);
+		};
+		if (callerSignal?.aborted) {
+			onCallerAbort();
+		} else {
+			callerSignal?.addEventListener("abort", onCallerAbort, { once: true });
+		}
+		const deadlineTimer = scheduleTimer(() => {
+			if (controller.signal.aborted) return;
+			abortError = new ConversationContextReadError({
+				provider: this.providerId,
+				conversationId,
+				timeoutMs,
+				outcome: "timed_out",
+			});
+			controller.abort(abortError);
+		}, timeoutMs);
+		const writeReceipt = async (
+			outcome: ConversationContextReadOutcome,
+			error: unknown,
+		): Promise<ConversationContextReadReceipt> => {
+			const receipt: ConversationContextReadReceipt = {
+				object: "conversation_context_read_receipt",
+				version: 1,
+				provider: this.providerId,
+				accountScopeHash: createHash("sha256")
+					.update(resolveProviderCacheKey(cacheContext))
+					.digest("hex")
+					.slice(0, 16),
+				conversationId,
+				outcome,
+				timeoutMs,
+				elapsedMs: Math.max(0, Date.now() - startedAt),
+				attemptCount,
+				lastStage,
+				completedAt: new Date().toISOString(),
+				errorCode: readTerminalErrorCode(error),
+			};
+			await writeConversationContextReadReceipt(cacheContext, conversationId, receipt);
+			return receipt;
+		};
 		try {
+			recordBrowserScrapeProviderAction(scopedListOptions, "llmService.getConversationContext");
 			const context = await this.withRetry(
-				() =>
-					this.provider.readConversationContext?.(
+				() => {
+					attemptCount += 1;
+					return waitForPromiseWithAbort(
+						this.provider.readConversationContext?.(
 						conversationId,
 						options?.projectId,
-						listOptions,
-					) as Promise<unknown>,
+							scopedListOptions,
+						) as Promise<unknown>,
+						controller.signal,
+					);
+				},
 				{
 					action: "readConversationContext",
-					shouldRetry:
-						listOptions.accountMirrorInventory === true
-							? (error) => !isRateLimitBlockingSurfaceError(error)
-							: undefined,
+					abortSignal: controller.signal,
+					bypassProviderGuardFailure: (error) =>
+						error instanceof ConversationContextReadError,
+					shouldRetry: (error) => {
+						if (error instanceof ConversationContextReadError) return false;
+						return listOptions.accountMirrorInventory === true
+							? !isRateLimitBlockingSurfaceError(error)
+							: true;
+					},
 				},
 			);
+			lastStage = "provider:readConversationContext.complete";
 			let normalized = this.normalizeConversationContext(context, conversationId);
 			if (typeof options?.projectId === "string" && options.projectId.trim().length > 0) {
 				const cachedInstructions = await this.cacheStore.readProjectInstructions(
@@ -2508,17 +2670,30 @@ export abstract class LlmService {
 					);
 				}
 			}
+			lastStage = "cache:writeConversationContext";
 			await this.cacheStore.writeConversationContext(cacheContext, conversationId, normalized);
+			lastStage = "complete";
+			await writeReceipt("succeeded", null);
 			return normalized;
 		} catch (error) {
+			const terminalError = abortError ?? error;
+			const outcome: ConversationContextReadOutcome =
+				terminalError instanceof ConversationContextReadError
+					? terminalError.outcome
+					: "failed";
+			await writeReceipt(outcome, terminalError);
 			if (options?.allowCacheFallback === false) {
-				throw error;
+				throw terminalError;
 			}
 			const cached = await this.cacheStore.readConversationContext(cacheContext, conversationId);
 			if (cached.items.messages.length > 0) {
 				return cached.items;
 			}
-			throw error;
+			throw terminalError;
+		} finally {
+			cancelTimer(deadlineTimer);
+			callerSignal?.removeEventListener("abort", onCallerAbort);
+			telemetry.onUpdate = originalTelemetryUpdate;
 		}
 	}
 
@@ -2543,6 +2718,7 @@ export abstract class LlmService {
 		fetchedAt: string | null;
 		stale: boolean;
 		context: ConversationContext;
+		terminalReceipt: ConversationContextReadReceipt | null;
 	}> {
 		const listOptions =
 			options?.listOptions ?? (await this.buildListOptions(undefined, { ensurePort: false }));
@@ -2567,9 +2743,10 @@ export abstract class LlmService {
 			conversationId = match.match.id;
 		}
 		const cached = await this.cacheStore.readConversationContext(cacheContext, conversationId);
+		const terminalReceipt = await readConversationContextReadReceipt(cacheContext, conversationId);
 		if (!cached.items.messages.length) {
 			throw new Error(
-				`No cached context found for "${conversationId}". Run "oracle conversations context get ${conversationId} --target ${this.providerId}" first.`,
+				`No cached context found for "${conversationId}". Run "oracle conversations context get ${conversationId} --target ${this.providerId}" first.${terminalReceipt.items ? ` Last read outcome: ${terminalReceipt.items.outcome}.` : ""}`,
 			);
 		}
 		return {
@@ -2577,6 +2754,7 @@ export abstract class LlmService {
 			fetchedAt: cached.fetchedAt ? new Date(cached.fetchedAt).toISOString() : null,
 			stale: cached.stale,
 			context: cached.items,
+			terminalReceipt: terminalReceipt.items,
 		};
 	}
 
@@ -3240,28 +3418,49 @@ export abstract class LlmService {
 			skipPostCommitQuiet?: boolean;
 			beforeRetry?: (error: unknown, attempt: number) => Promise<void> | void;
 			shouldRetry?: (error: unknown) => boolean;
+			abortSignal?: AbortSignal;
+			bypassProviderGuardFailure?: (error: unknown) => boolean;
 		} = {
 			action: "operation",
 		},
 	): Promise<T> {
-		await this.enforceProviderGuard(options.action, {
+		if (options.abortSignal?.aborted) {
+			throw options.abortSignal.reason ?? new Error("Operation aborted.");
+		}
+		const guardPromise = this.enforceProviderGuard(options.action, {
 			skipPostCommitQuiet: options.skipPostCommitQuiet === true,
 		});
+		if (options.abortSignal) {
+			await waitForPromiseWithAbort(guardPromise, options.abortSignal);
+		} else {
+			await guardPromise;
+		}
 		const retries = typeof options.retries === "number" ? options.retries : 1;
 		for (let attempt = 0; ; attempt += 1) {
 			try {
+				if (options.abortSignal?.aborted) {
+					throw options.abortSignal.reason ?? new Error("Operation aborted.");
+				}
 				const result = await fn();
 				await this.noteProviderGuardSuccess(options.action);
 				return result;
 			} catch (error) {
 				const shouldRetry = options.shouldRetry?.(error) ?? true;
+				if (options.bypassProviderGuardFailure?.(error)) {
+					throw error;
+				}
 				const nextError = await this.handleProviderGuardFailure(options.action, error);
 				if (!shouldRetry || attempt >= retries || !this.isRetryableError(nextError)) {
 					throw nextError;
 				}
 				await options.beforeRetry?.(nextError, attempt);
 				const delayMs = this.getRetryDelayMs(attempt, nextError);
-				await this.delay(delayMs);
+				const delayPromise = this.delay(delayMs);
+				if (options.abortSignal) {
+					await waitForPromiseWithAbort(delayPromise, options.abortSignal);
+				} else {
+					await delayPromise;
+				}
 			}
 		}
 	}

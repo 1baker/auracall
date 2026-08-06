@@ -15,6 +15,7 @@ import type {
 	PromptResult,
 } from "../../src/browser/llmService/types.js";
 import type { ProviderCacheContext } from "../../src/browser/providers/cache.js";
+import { readConversationContextReadReceipt } from "../../src/browser/providers/cache.js";
 import type { ConversationContext } from "../../src/browser/providers/domain.js";
 import type { BrowserProviderListOptions } from "../../src/browser/providers/types.js";
 import type { ResolvedUserConfig } from "../../src/config.js";
@@ -211,10 +212,153 @@ describe("project-scoped conversation context normalization", () => {
 			expect(provider.readConversationContext).toHaveBeenCalledWith(
 				"conversation-ctx",
 				undefined,
-				{},
+				expect.objectContaining({
+					abortSignal: expect.any(AbortSignal),
+					scrapeTelemetry: expect.any(Object),
+				}),
 			);
 			const cached = await store.readConversationContext(cacheContext, "conversation-ctx");
 			expect(cached.items).toEqual(context);
+			const receipt = await readConversationContextReadReceipt(cacheContext, "conversation-ctx");
+			expect(receipt.items).toMatchObject({
+				outcome: "succeeded",
+				attemptCount: 1,
+				lastStage: "complete",
+				errorCode: null,
+			});
+		} finally {
+			await rm(homeDir, { recursive: true, force: true });
+		}
+	});
+
+	test("getConversationContext composes caller abort without retrying", async () => {
+		const homeDir = await mkdtemp(path.join(os.tmpdir(), "auracall-llm-context-abort-"));
+		setAuracallHomeDirOverrideForTest(homeDir);
+		const cacheContext: ProviderCacheContext = {
+			provider: "gemini",
+			userConfig: {} as ProviderCacheContext["userConfig"],
+			listOptions: {},
+			identityKey: "cache-test@example.com",
+		};
+		const store = new JsonCacheStore();
+		const callerController = new AbortController();
+		let markProviderEntered: (() => void) | undefined;
+		const providerEntered = new Promise<void>((resolve) => {
+			markProviderEntered = resolve;
+		});
+		const provider = {
+			id: "gemini",
+			config: { id: "gemini", selectors: {} as never },
+			readConversationContext: vi.fn(
+				async (
+					_conversationId: string,
+					_projectId: string | undefined,
+					options: BrowserProviderListOptions,
+				) => {
+					markProviderEntered?.();
+					await new Promise<void>((resolve) => {
+						options.abortSignal?.addEventListener("abort", () => resolve(), { once: true });
+					});
+					throw new Error("provider cleanup complete");
+				},
+			),
+		};
+		const service = new TestContextLlmService(provider as never, store, cacheContext);
+
+		try {
+			const read = service.getConversationContext("conversation-abort", {
+				refresh: true,
+				allowCacheFallback: false,
+				timeoutMs: 5_000,
+				listOptions: { abortSignal: callerController.signal },
+			});
+			await providerEntered;
+			callerController.abort();
+			await expect(read).rejects.toMatchObject({
+				code: "conversation_context_aborted",
+				outcome: "aborted",
+			});
+			expect(provider.readConversationContext).toHaveBeenCalledTimes(1);
+			const receipt = await readConversationContextReadReceipt(cacheContext, "conversation-abort");
+			expect(receipt.items).toMatchObject({
+				outcome: "aborted",
+				attemptCount: 1,
+				errorCode: "conversation_context_aborted",
+			});
+		} finally {
+			await rm(homeDir, { recursive: true, force: true });
+		}
+	});
+
+	test("getConversationContext times out a never-settling provider once and preserves a terminal receipt", async () => {
+		const homeDir = await mkdtemp(path.join(os.tmpdir(), "auracall-llm-context-timeout-"));
+		setAuracallHomeDirOverrideForTest(homeDir);
+		const cacheContext: ProviderCacheContext = {
+			provider: "chatgpt",
+			userConfig: {} as ProviderCacheContext["userConfig"],
+			listOptions: {},
+			identityKey: "cache-test@example.com",
+		};
+		const store = new JsonCacheStore();
+		await store.writeConversationContext(cacheContext, "conversation-timeout", {
+			provider: "chatgpt",
+			conversationId: "conversation-timeout",
+			messages: [{ role: "assistant", text: "stale cache must not mask timeout" }],
+		});
+		let providerSignal: AbortSignal | undefined;
+		const provider = {
+			id: "chatgpt",
+			config: { id: "chatgpt", selectors: {} as never },
+			readConversationContext: vi.fn(
+				async (
+					_conversationId: string,
+					_projectId: string | undefined,
+					options: BrowserProviderListOptions,
+				) => {
+					providerSignal = options.abortSignal;
+					const telemetry = options.scrapeTelemetry;
+					if (!telemetry) throw new Error("missing scrape telemetry");
+					telemetry.cdpCalls["Runtime.evaluate"] = 1;
+					telemetry.onUpdate?.();
+					await new Promise(() => {});
+				},
+			),
+		};
+		const service = new TestContextLlmService(provider as never, store, cacheContext);
+
+		try {
+			await expect(
+				service.getConversationContext("conversation-timeout", {
+					refresh: true,
+					allowCacheFallback: false,
+					timeoutMs: 25,
+					listOptions: {},
+				}),
+			).rejects.toMatchObject({
+				code: "conversation_context_timeout",
+				outcome: "timed_out",
+			});
+
+			expect(provider.readConversationContext).toHaveBeenCalledTimes(1);
+			expect(providerSignal?.aborted).toBe(true);
+			const receipt = await readConversationContextReadReceipt(
+				cacheContext,
+				"conversation-timeout",
+			);
+			expect(receipt.items).toMatchObject({
+				object: "conversation_context_read_receipt",
+				version: 1,
+				provider: "chatgpt",
+				accountScopeHash: expect.stringMatching(/^[0-9a-f]{16}$/),
+				conversationId: "conversation-timeout",
+				outcome: "timed_out",
+				timeoutMs: 25,
+				attemptCount: 1,
+				lastStage: "cdp:Runtime.evaluate",
+				errorCode: "conversation_context_timeout",
+			});
+			expect(receipt.items?.elapsedMs).toBeGreaterThanOrEqual(20);
+			expect(JSON.stringify(receipt.items)).not.toContain("messages");
 		} finally {
 			await rm(homeDir, { recursive: true, force: true });
 		}
