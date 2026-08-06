@@ -43913,3 +43913,17 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Final API PID 87441 is healthy; scheduler and six completions remain paused;
   default pass 4 is unchanged; foreground is idle; scoped guard is clear; and
   active history jobs are zero. No subagent was spawned.
+
+## 2026-08-06 | Plan 0204 opens bounded context-read repair
+
+- The exact Plan 0203 hang is reproducible provider-free at the shared service
+  seam: a never-settling `provider.readConversationContext(...)` leaves
+  `LlmService.getConversationContext(...)` pending because `withRetry(...)`
+  has no deadline and only reacts after rejection.
+- Plan 0204 owns one shared finite timeout, composed abort propagation,
+  non-retryable timeout semantics, and a bounded durable last-stage receipt,
+  plus exact tests/docs and at most one validated install/restart.
+- Another live refresh, provider/browser/DOM contact, prompt, download, job,
+  canary, materialization, substitute, or scheduler/completion/guard action
+  remains withheld. The primary agent owns the critical path; no subagent was
+  spawned.

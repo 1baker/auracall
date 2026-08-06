@@ -16433,3 +16433,23 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   active history jobs zero. Plan 0203 closes `STOPPED_FAIL_CLOSED`; the
   one-canary gate remains withheld and no job, download, materialization,
   callback, prompt, substitute, or control action ran.
+
+## Turn 375 | 2026-08-06
+
+- The operator's `ok go` authorizes Plan 0204's provider-free repair of the
+  unbounded shared conversation-context provider promise and at most one safe
+  validated user-runtime install/restart.
+- Canonical packet:
+  `docs/dev/plans/0204-2026-08-06-bounded-conversation-context-read-timeout-and-terminal-receipt.md`.
+  It requires a finite deadline, composed caller cancellation, non-retryable
+  timeout, and a bounded durable last-stage terminal receipt.
+- A fast real-seam harness is red because a never-settling provider leaves
+  `LlmService.getConversationContext(...)` pending. Existing context coverage
+  is green 7/7 but has no never-promise case. CodeGraph is healthy and maps the
+  shared blast radius to the direct CLI/client, account-mirror collector, and
+  history snapshot refresh.
+- Opening state is clean synchronized `1a6900c5`; goal-policy audit has no
+  problems. API PID 87441 is healthy, scheduler and six completions are paused,
+  default pass 4, foreground idle, scoped guard clear, and active jobs zero.
+- No provider/browser operation, live refresh, canary, job, materialization,
+  prompt, download, guard/control action, or loop resume is authorized.
