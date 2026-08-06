@@ -82,11 +82,13 @@ Lane: P01
   remain paused; no further materialization is authorized.
   Active availability-metadata normalization goal:
   [docs/dev/plans/0196-2026-08-05-archive-availability-metadata-normalization.md](docs/dev/plans/0196-2026-08-05-archive-availability-metadata-normalization.md).
-  The installed repaired row is readable and authoritative at the top level,
-  but its nested refresh-owned metadata still says unavailable. Plan 0196 is
-  planning-only at `AWAITING_GATE`; implementation requires a later explicit
-  `ok go`, remains one source/test/build/install slice, and grants no provider,
-  job, browser, scheduler, completion, or guard authority.
+  The deterministic contract is red under the prior behavior and green with a
+  one-helper source repair that clears only refresh-owned unavailable evidence
+  after successful hydration. Plan 0196 is at `AWAITING_INSTALL_GATE`: focused
+  and full provider-free validation, typecheck/lint, the sole build, and the
+  pushed source checkpoint are green. One bounded install/restart and installed
+  readback remain. No provider, job, browser, scheduler, completion, or guard
+  authority is granted.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,

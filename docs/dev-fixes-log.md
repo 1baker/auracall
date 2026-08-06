@@ -20437,3 +20437,17 @@ browser-stage lifecycle observability, not transcript truncation.
   browsers and API heartbeat records. Fingerprint the governed cache, archive,
   job, config, guard, and completion surfaces directly instead of treating all
   of `~/.auracall` as quiescent while services remain healthy.
+
+## 2026-08-05 | Available archive rows must clear refresh-owned unavailability
+
+- Successful file hydration can make top-level `fileAvailable=true` while
+  leaving stale nested `unavailableReason`, `missingLocalPath`, and an
+  `archive-read-refresh` unavailable materialization object behind. Adding
+  current availability fields does not remove prior contradictory keys.
+- Normalize the merged metadata only after a readable file is confirmed.
+  Remove the two unavailable keys and remove `materialization` only when its
+  status is `unavailable` and its owner is `archive-read-refresh`.
+- Preserve missing-file evidence and all successful provenance owned by cached
+  attachments, provider manifests, history materialization, or unknown future
+  sources. Bind both the returned row and persisted index in the regression so
+  write-through cannot retain the contradiction invisibly.

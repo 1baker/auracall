@@ -16139,3 +16139,20 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
 - This turn is planning-only. Plan 0196 remains `AWAITING_GATE`; no source,
   runtime, service, provider, browser, job, scheduler, completion, or guard
   mutation is authorized. No subagent was spawned.
+
+## Turn 366 | 2026-08-05
+
+- Active `/goal` authority advanced Plan 0196 through its deterministic red
+  proof: the recovered upload retained `unavailableReason=local-file-missing`
+  under the prior implementation.
+- One source helper now normalizes merged metadata only after confirmed file
+  availability. It removes `unavailableReason`, `missingLocalPath`, and only an
+  unavailable materialization object owned by `archive-read-refresh`.
+- The focused regression, full archive file, projection/history suites,
+  typecheck, scoped lint, serialized 304-file / 2,716-test suite, and the sole
+  production build are green. Missing-file truth and successful non-refresh
+  provenance remain bound by the fixture. Plan 0196 reaches
+  `AWAITING_INSTALL_GATE` only with this source/docs checkpoint pushed before
+  any install or service restart.
+- No installed runtime, provider/browser, history job, scheduler, completion,
+  or guard action has run. No subagent was spawned.

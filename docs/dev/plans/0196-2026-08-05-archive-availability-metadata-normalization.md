@@ -4,7 +4,7 @@ State: OPEN
 Lane: IMPLEMENTATION
 Plan version: 1
 Outcome: PENDING
-Goal execution state: AWAITING_GATE
+Goal execution state: AWAITING_INSTALL_GATE
 
 ## Stable Goal Objective
 
@@ -159,13 +159,13 @@ For an archive upload or generated artifact after hydration:
 
 ## Acceptance Criteria
 
-- [ ] A deterministic test proves the prior contradictory metadata and goes
+- [x] A deterministic test proves the prior contradictory metadata and goes
   green only when successful hydration removes refresh-owned stale evidence.
-- [ ] Still-missing evidence and non-refresh successful provenance remain
+- [x] Still-missing evidence and non-refresh successful provenance remain
   unchanged; Plan 0195's pre-hydration scoping regression remains green.
-- [ ] Focused suites, typecheck, scoped lint, diff hygiene, full suite, and the
+- [x] Focused suites, typecheck, scoped lint, diff hygiene, full suite, and the
   sole build pass with one-source/one-test scope preserved.
-- [ ] Source is committed/pushed before one bounded install/restart.
+- [x] Source is committed/pushed before one bounded install/restart.
 - [ ] Installed filtered readback normalizes the known row without direct JSON
   editing, provider callbacks, durable jobs, or control actions.
 - [ ] API health, recovery planning, scheduler/completion pauses, zero active
@@ -209,3 +209,46 @@ unchanged, and all six acceptance criteria have current evidence.
 - `remaining_criteria`: all six acceptance items.
 - `next_action_or_stop_reason`: audit and push the planning packet, then remain
   at `AWAITING_GATE` until explicit implementation authority.
+
+## Checkpoint 2 | Deterministic Red Proof
+
+- `plan_version`: 1
+- `checkpoint_id`: `P0196-C02`
+- `state_transition`: AWAITING_GATE -> ACTIVE_SOURCE -> AWAITING_REVIEW.
+- `progress_classification`: blocker_reduction
+- `owned_changes`: one deterministic archive-service regression fixture; no
+  source behavior was changed before the red proof.
+- `evidence`: the focused regression failed once at the recovered upload's
+  stale `unavailableReason=local-file-missing`, while the fixture also binds a
+  still-missing upload and non-refresh successful materialization provenance.
+- `subagent_status`: `not_spawned`.
+- `budget_consumption`: implementation packets 1/3; CodeGraph 3/4; test files
+  1/1; red-green cycles 1/1 red phase; source/build/install/restart/provider/
+  browser/job/control actions 0.
+- `remaining_criteria`: source repair, green/full validation, source
+  checkpoint, installed readback, and closeout.
+- `next_action_or_stop_reason`: apply the one-helper source repair and run the
+  single green phase plus provider-free validation.
+
+## Checkpoint 3 | Source Accepted
+
+- `plan_version`: 1
+- `checkpoint_id`: `P0196-C03`
+- `state_transition`: AWAITING_REVIEW -> AWAITING_INSTALL_GATE.
+- `progress_classification`: acceptance_progress
+- `owned_changes`: one normalization helper in `archiveService`, one extended
+  archive-service fixture, and the required plan/operator documentation.
+- `evidence`: expected red once; focused green once; archive 8/8;
+  projection/history 23/23; typecheck and scoped Biome lint pass after one
+  fixture-only nullability review correction; serialized full suite 304 files
+  and 2,716 tests passed with 21 files/65 tests skipped; diff hygiene and the
+  sole production build pass; source/docs checkpoint committed and pushed
+  before installed mutation.
+- `subagent_status`: `not_spawned`.
+- `budget_consumption`: implementation packets 2/3; CodeGraph 3/4; source/test
+  files 1/1 each; red-green 1/1 complete; review rework 1/1; build 1/1;
+  install/restart/provider/browser/job/control actions 0.
+- `remaining_criteria`: installed filtered normalization readback, recovery and
+  search readback, pause/job/API verification, closeout audit, and remote parity.
+- `next_action_or_stop_reason`: revalidate the runtime gate, then perform the
+  sole install/restart and provider-free installed proof.

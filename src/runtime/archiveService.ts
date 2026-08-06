@@ -1325,6 +1325,13 @@ async function enrichFileMetadata(items: RunArchiveItem[]): Promise<RunArchiveIt
         : null;
     const fileName = item.fileName ?? cachedConversationAsset?.name ?? (discoveredLocalPath ? path.basename(discoveredLocalPath) : null);
     const mimeType = item.mimeType ?? cachedConversationAsset?.mimeType ?? (fileName ? inferArchiveAssetMimeType(fileName) : null);
+    const currentMetadata = {
+      ...item.metadata,
+      ...(cachedConversationAsset?.metadata ?? {}),
+    };
+    const normalizedMetadata = fileAvailable === true
+      ? clearRefreshOwnedUnavailableMetadata(currentMetadata)
+      : currentMetadata;
     return {
       ...item,
       fileName,
@@ -1339,8 +1346,7 @@ async function enrichFileMetadata(items: RunArchiveItem[]): Promise<RunArchiveIt
         ...(fileAvailable === true ? { asset: `${runArchiveItemRoute(item.id)}/asset` } : {}),
       },
       metadata: {
-        ...item.metadata,
-        ...(cachedConversationAsset?.metadata ?? {}),
+        ...normalizedMetadata,
         ...(unavailableEvidence ? {
           ...unavailableEvidence,
           fileAvailable: false,
@@ -1360,6 +1366,22 @@ async function enrichFileMetadata(items: RunArchiveItem[]): Promise<RunArchiveIt
       },
     };
   }));
+}
+
+function clearRefreshOwnedUnavailableMetadata(metadata: Record<string, unknown>): Record<string, unknown> {
+  const normalized = { ...metadata };
+  delete normalized.unavailableReason;
+  delete normalized.missingLocalPath;
+
+  if (
+    isRecord(normalized.materialization) &&
+    normalized.materialization.status === 'unavailable' &&
+    normalized.materialization.source === 'archive-read-refresh'
+  ) {
+    delete normalized.materialization;
+  }
+
+  return normalized;
 }
 
 function buildGeneratedArtifactUnavailableEvidence(item: RunArchiveItem): Record<string, unknown> | null {

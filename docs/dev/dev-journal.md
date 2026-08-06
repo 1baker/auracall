@@ -43626,3 +43626,20 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Three serialized packets cover red proof, minimal source/full provider-free
   validation, and one installed readback. This turn changes planning docs only;
   implementation remains at `AWAITING_GATE` until explicit authority.
+
+## 2026-08-05 | Plan 0196 source contract reaches review
+
+- The deterministic regression failed once on the recovered upload's retained
+  `unavailableReason=local-file-missing`, establishing the intended red proof.
+  Its adjacent cases require a still-missing upload to keep unavailable
+  evidence and successful non-refresh materialization provenance to survive.
+- `enrichFileMetadata` now normalizes merged metadata only when the file is
+  confirmed available. One helper removes the two stale unavailable keys and
+  removes `materialization` only for the refresh-owned unavailable object.
+- The focused regression is green, the archive suite is 8/8, projection and
+  history-materialization coverage is 23/23, and typecheck/scoped lint pass
+  after one fixture-only nullability correction. The serialized full suite
+  passes 304 files / 2,716 tests and the sole production build is green.
+- No installed or live action has run; scheduler, completions,
+  provider/browser, and job controls remain untouched. The pushed source/docs
+  checkpoint is the gate before the single installed cycle.

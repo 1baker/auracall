@@ -740,6 +740,8 @@ describe('run archive service', () => {
     const homeDir = await mkdtemp(path.join(os.tmpdir(), 'auracall-run-archive-file-refresh-'));
     setAuracallHomeDirOverrideForTest(homeDir);
     const uploadPath = path.join(homeDir, 'late-upload.txt');
+    const missingUploadPath = path.join(homeDir, 'still-missing-upload.txt');
+    const missingUploadId = 'upload:resp_file_refresh:step:upload_missing';
     const generatedPath = path.join(homeDir, 'late-generated.json');
     const materializedOnlyId = 'generated-artifact:resp_file_refresh:artifact_2:download:sandbox:/mnt/data/materialized-only.json';
     const materializedOnlyPath = path.join(
@@ -778,6 +780,33 @@ describe('run archive service', () => {
         links: {},
         metadata: {
           fileAvailable: false,
+          unavailableReason: 'local-file-missing',
+          missingLocalPath: uploadPath,
+          materialization: {
+            status: 'unavailable',
+            source: 'archive-read-refresh',
+            method: 'local-file-missing',
+          },
+        },
+      }),
+      createArchiveItemFixture({
+        id: missingUploadId,
+        kind: 'upload',
+        responseId: 'resp_file_refresh',
+        artifactId: 'upload_missing',
+        fileName: 'still-missing-upload.txt',
+        localPath: missingUploadPath,
+        fileAvailable: false,
+        links: {},
+        metadata: {
+          fileAvailable: false,
+          unavailableReason: 'local-file-missing',
+          missingLocalPath: missingUploadPath,
+          materialization: {
+            status: 'unavailable',
+            source: 'archive-read-refresh',
+            method: 'local-file-missing',
+          },
         },
       }),
       createArchiveItemFixture({
@@ -791,6 +820,11 @@ describe('run archive service', () => {
         links: {},
         metadata: {
           fileAvailable: false,
+          materialization: {
+            status: 'materialized',
+            source: 'history-materialization',
+            method: 'provider-manifest',
+          },
         },
       }),
       createArchiveItemFixture({
@@ -908,22 +942,36 @@ describe('run archive service', () => {
       now: () => new Date('2026-05-16T20:00:00.000Z'),
     });
 
-    await expect(service.listItems({ kind: 'upload' })).resolves.toMatchObject({
-      items: [
-        expect.objectContaining({
-          id: 'upload:resp_file_refresh:step:upload_1',
-          fileAvailable: true,
-          cacheKey: expect.stringMatching(/^sha256:/),
-          checksumSha256: expect.stringMatching(/^[a-f0-9]{64}$/),
-          links: expect.objectContaining({
-            asset: expect.stringContaining('/asset'),
-          }),
-          metadata: expect.objectContaining({
-            fileAvailable: true,
-            fileSizeBytes: Buffer.byteLength('uploaded bytes'),
-          }),
+    const uploadItems = await service.listItems({ kind: 'upload' });
+    const refreshedUpload = uploadItems.items.find((item) => item.id === 'upload:resp_file_refresh:step:upload_1');
+    expect(refreshedUpload).toMatchObject({
+      fileAvailable: true,
+      cacheKey: expect.stringMatching(/^sha256:/),
+      checksumSha256: expect.stringMatching(/^[a-f0-9]{64}$/),
+      links: expect.objectContaining({
+        asset: expect.stringContaining('/asset'),
+      }),
+      metadata: expect.objectContaining({
+        fileAvailable: true,
+        fileSizeBytes: Buffer.byteLength('uploaded bytes'),
+      }),
+    });
+    expect(refreshedUpload?.metadata).not.toHaveProperty('unavailableReason');
+    expect(refreshedUpload?.metadata).not.toHaveProperty('missingLocalPath');
+    expect(refreshedUpload?.metadata).not.toHaveProperty('materialization');
+
+    expect(uploadItems.items.find((item) => item.id === missingUploadId)).toMatchObject({
+      fileAvailable: false,
+      metadata: expect.objectContaining({
+        unavailableReason: 'local-file-missing',
+        missingLocalPath: missingUploadPath,
+        fileAvailable: false,
+        materialization: expect.objectContaining({
+          status: 'unavailable',
+          source: 'archive-read-refresh',
+          method: 'local-file-missing',
         }),
-      ],
+      }),
     });
     await expect(service.readItem('generated-artifact:resp_file_refresh:artifact_1')).resolves.toMatchObject({
       item: {
@@ -936,6 +984,11 @@ describe('run archive service', () => {
         metadata: expect.objectContaining({
           fileAvailable: true,
           fileSizeBytes: Buffer.byteLength('{"ready":true}'),
+          materialization: {
+            status: 'materialized',
+            source: 'history-materialization',
+            method: 'provider-manifest',
+          },
         }),
       },
     });
@@ -1014,12 +1067,21 @@ describe('run archive service', () => {
         }),
       },
     });
-    await expect(readRunArchiveIndex()).resolves.toMatchObject({
+    const persistedIndex = await readRunArchiveIndex();
+    expect(persistedIndex).toMatchObject({
       items: expect.arrayContaining([
         expect.objectContaining({
           id: 'upload:resp_file_refresh:step:upload_1',
           fileAvailable: true,
           cacheKey: expect.stringMatching(/^sha256:/),
+        }),
+        expect.objectContaining({
+          id: missingUploadId,
+          fileAvailable: false,
+          metadata: expect.objectContaining({
+            unavailableReason: 'local-file-missing',
+            missingLocalPath: missingUploadPath,
+          }),
         }),
         expect.objectContaining({
           id: 'generated-artifact:resp_file_refresh:artifact_1',
@@ -1056,6 +1118,10 @@ describe('run archive service', () => {
         }),
       ]),
     });
+    const persistedUpload = persistedIndex?.items.find((item) => item.id === 'upload:resp_file_refresh:step:upload_1');
+    expect(persistedUpload?.metadata).not.toHaveProperty('unavailableReason');
+    expect(persistedUpload?.metadata).not.toHaveProperty('missingLocalPath');
+    expect(persistedUpload?.metadata).not.toHaveProperty('materialization');
   });
 });
 

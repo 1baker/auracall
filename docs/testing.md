@@ -1899,6 +1899,15 @@
   "hydrates only items that can match stable list filters"`; it proves both
   single and batched filtered reads ignore an unrelated path that would throw
   if opened.
+  The same archive-service suite also binds availability normalization: once a
+  readable file hydrates to `fileAvailable=true`, refresh-owned
+  `unavailableReason`, `missingLocalPath`, and an `archive-read-refresh`
+  unavailable materialization object are removed from both the returned row
+  and persisted index. Still-missing evidence and successful materialization
+  provenance owned by another source remain unchanged. Run
+  `pnpm vitest run tests/runtime.archiveService.test.ts --maxWorkers 1 -t
+  "refreshes indexed upload and generated artifact file metadata on archive
+  reads"` for the focused provider-free regression.
 - ChatGPT user-uploaded-file response-shape coverage is provider-free in
   `tests/browser/chatgptAdapter.test.ts`. It verifies that a `files-download`
   JSON string and bounded shallow/nested signed-URL fields resolve, while an
