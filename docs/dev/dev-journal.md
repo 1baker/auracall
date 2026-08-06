@@ -43812,3 +43812,15 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   foreground is idle, active history jobs are zero, and the scoped guard is
   clear. Plan 0200 closes `COMPLETE_TERMINAL_NO_MATERIALIZATION`; no retry,
   alternate target, refresh, force, manual/browser-tools, or control action ran.
+
+## 2026-08-06 | Plan 0201 provider-free live-control diagnosis opens
+
+- Explicit operator authority is diagnosis-only: trace why the exact selected
+  cone sandbox artifact reached a connected ChatGPT materializer but returned
+  skipped before any download attempt.
+- Plan 0201 permits indexed source inspection, persisted canary/cache evidence,
+  and bounded provider-free tests. It forbids source/test changes, live retry,
+  provider/browser contact, durable jobs, materialization, installs/restarts,
+  runtime mutation, and every scheduler/completion/guard action.
+- CodeGraph is healthy at 875 files, 16,499 nodes, and 55,870 edges. Planning
+  is the only owned change so far; no subagent was spawned.

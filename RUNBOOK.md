@@ -16335,3 +16335,21 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   and scoped guard clear. No archive row appeared. Plan 0200 closes
   `COMPLETE_TERMINAL_NO_MATERIALIZATION`; no retry, alternate target, refresh,
   force, browser-tools/manual interaction, or runtime-control action ran.
+
+## Turn 372 | 2026-08-06
+
+- The operator's next `ok go` authorizes Plan 0201 diagnosis only: determine
+  provider-free why the exact Plan 0200 cone sandbox artifact connected but
+  produced zero download attempts and settled skipped.
+- Canonical packet:
+  `docs/dev/plans/0201-2026-08-06-cone-sandbox-live-control-provider-free-diagnosis.md`.
+  Work is limited to CodeGraph source tracing, persisted exact-item/job/
+  manifest/telemetry readback, at most one provider-free simulation, and two
+  focused existing test commands.
+- No source/test implementation, provider/browser contact, durable job,
+  materialization, retry, refresh, force, install/restart, runtime mutation, or
+  scheduler/completion/guard action is authorized. Live retry remains withheld.
+- Opening evidence is the exact Plan 0200 manifest plus connected materializer
+  telemetry with downloads `0/0/0`; CodeGraph is healthy at 875 files, 16,499
+  nodes, and 55,870 edges. The planning boundary must be audited, committed,
+  and pushed before substantive diagnosis.

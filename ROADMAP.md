@@ -125,6 +125,12 @@ Lane: P01
   local/archive asset. Plan 0200 closes `COMPLETE_TERMINAL_NO_MATERIALIZATION`;
   no retry, substitute target, refresh, force, browser-tools, control action,
   or loop resume ran.
+  Active provider-free diagnosis successor:
+  [docs/dev/plans/0201-2026-08-06-cone-sandbox-live-control-provider-free-diagnosis.md](docs/dev/plans/0201-2026-08-06-cone-sandbox-live-control-provider-free-diagnosis.md).
+  It traces the exact selected cached sandbox artifact to live ChatGPT control
+  resolution and the pre-download skipped return. Source/test changes, live
+  retry, provider/browser contact, materialization, and loop/control actions
+  remain withheld.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,
