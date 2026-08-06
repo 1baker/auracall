@@ -16366,3 +16366,21 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   scheduler paused, six completions paused, default pass 4, foreground idle,
   guard clear, and zero active history jobs. Plan 0201 closes
   `COMPLETE_DIAGNOSED_REPAIR_WITHHELD`.
+
+## Turn 373 | 2026-08-06
+
+- The active goal authorizes planning and execution of Plan 0202: implement the
+  Plan 0201 provider-free live-control admission repair and its exact fixtures.
+- Canonical packet:
+  `docs/dev/plans/0202-2026-08-06-chatgpt-payload-live-control-admission-provider-free-repair.md`.
+  Scope is a shared pure resolver, positive DOM identity enrichment, explicit
+  `missing_live_control` rejection before provider callback, structured reason,
+  provider-free validation, and at most one safe install/restart after all
+  source gates pass.
+- Provider/browser contact, durable jobs, actual materialization, live retry,
+  refresh/force, scheduler/completion/guard action, and loop resume remain
+  forbidden. Planning must be audited, committed, and pushed before source work.
+- Opening state is clean synchronized `762e5a7e`; CodeGraph is healthy; policy
+  selection is `already-aligned`; goal audit is green. API PID 66366 is healthy
+  on port 18095, scheduler and six completions are paused, default pass 4,
+  foreground idle, guard clear, and active history jobs zero.

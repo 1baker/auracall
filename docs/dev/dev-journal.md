@@ -43843,3 +43843,16 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   18095; scheduler and six completions are paused, default pass 4 is unchanged,
   foreground is idle, guard clear, and active history jobs zero. No source,
   test, provider/browser, runtime, job, or control mutation ran.
+
+## 2026-08-06 | Plan 0202 provider-free admission repair opens
+
+- The active goal authorizes the exact Plan 0201 repair: shared payload/DOM
+  candidate resolution, explicit missing-live-control admission, positive DOM
+  identity enrichment, structured skip reason, and provider-free fixtures.
+- One install/restart is permitted only after the complete source gate passes
+  and only with scheduler/completion pauses preserved. No provider/browser
+  contact, durable job, materialization, live retry, or runtime control action
+  is authorized.
+- Source is clean and synchronized at `762e5a7e`; CodeGraph, policy selection,
+  and goal audit are green. Planning is the only owned change; no subagent was
+  spawned.

@@ -134,6 +134,12 @@ Lane: P01
   `COMPLETE_DIAGNOSED_REPAIR_WITHHELD`; source/test changes, live retry,
   provider/browser contact, materialization, and loop/control actions remain
   withheld.
+  Active provider-free implementation successor:
+  [docs/dev/plans/0202-2026-08-06-chatgpt-payload-live-control-admission-provider-free-repair.md](docs/dev/plans/0202-2026-08-06-chatgpt-payload-live-control-admission-provider-free-repair.md).
+  It introduces one shared payload-to-DOM control resolver, explicit
+  `missing_live_control` admission, positive DOM identity enrichment, and exact
+  provider-free fixtures. Live canary/materialization and scheduler/completion
+  resume remain withheld.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,
