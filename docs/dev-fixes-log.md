@@ -20518,3 +20518,10 @@ browser-stage lifecycle observability, not transcript truncation.
   an explicit `missing_live_control` state that provider-free selection rejects.
   Use one shared pure resolver for merge-time correlation and click-time
   tagging, and enrich positive matches with turn/button identity.
+- Apply this gate only to payload-derived sandbox `download` artifacts; do not
+  silently change spreadsheet, DOM-native, canvas, image, document, or
+  non-sandbox behavior. On a miss, clear only stale live-action linkage and
+  preserve original message/turn/button scope so later reconciliation cannot
+  broaden a same-title match. Reject the missing state before `maxItems` and
+  provider callbacks, and emit the exact history reason without creating a
+  manifest or live attempt.

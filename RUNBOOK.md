@@ -16384,3 +16384,18 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   selection is `already-aligned`; goal audit is green. API PID 66366 is healthy
   on port 18095, scheduler and six completions are paused, default pass 4,
   foreground idle, guard clear, and active history jobs zero.
+- Pushed source checkpoint `5b90d274` adds the shared resolver, positive DOM
+  control enrichment, pre-budget `missing_live_control` rejection, structured
+  history reason, and exact callback-disabled fixtures. Focused tests pass
+  181/181; affected tests pass 254/254; typecheck, touched lint, build, and diff
+  hygiene pass. The full suite passed 2,720 tests with one unrelated timing
+  failure whose exact isolated rerun passed.
+- Installed source/runtime hashes match across all four affected modules. The
+  installed exact cone simulation at `maxItems=1` returned zero materializable
+  items, one `missing_live_control` disposition, a null manifest, and zero
+  provider callback invocations. Active durable jobs remain zero.
+- Final runtime is API PID 87441 active/running, scheduler paused, six active
+  completions paused, default pass 4 unchanged, foreground idle, and scoped
+  guard clear. Plan 0202 closes `COMPLETE_PROVIDER_FREE_LIVE_WITHHELD`; the old
+  cone canary is invalidated and no substitute canary, job, materialization,
+  provider/browser action, or loop resume is authorized.

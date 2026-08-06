@@ -43856,3 +43856,28 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Source is clean and synchronized at `762e5a7e`; CodeGraph, policy selection,
   and goal audit are green. Planning is the only owned change; no subagent was
   spawned.
+
+## 2026-08-06 | Plan 0202 closes provider-free with the cone canary invalidated
+
+- Shared pure candidate resolution now owns payload/DOM correlation and
+  click-time control selection. Positive matches retain canonical payload
+  ID/URI and gain DOM action metadata; unmatched sandbox downloads remain
+  visible with `missing_live_control` but are excluded before `maxItems` and
+  provider callback admission.
+- Exact cone/unrelated-DOCX, positive, scope-collision, DOM-native,
+  spreadsheet-preservation, and callback-disabled fixtures pass. Focused
+  coverage is 181/181, affected coverage 254/254, type/build/touched lint pass,
+  and one unrelated full-suite timing failure passed its exact isolated rerun.
+- Source checkpoint `5b90d274` is pushed and installed. Four affected module
+  hashes match source/runtime. Installed `maxItems=1` returns one unavailable
+  cone, zero materializable items, null manifest, and zero provider callback
+  invocations; active durable jobs remain zero.
+- API PID 87441 is healthy with scheduler paused, six completions paused,
+  default pass 4, foreground idle, and scoped guard clear. No provider/browser
+  contact, job, materialization, or control action ran. The prior cone canary is
+  not approval-ready and no replacement target was inferred.
+- Closed-world review fixed spreadsheet overreach and preserved original
+  message/turn/button scope on missing-control classification. No blocking
+  findings remain. The read-only CodeGraph call ceiling was exceeded before it
+  was recognized and is recorded as a process exception; no later graph call
+  ran. No subagent was spawned.

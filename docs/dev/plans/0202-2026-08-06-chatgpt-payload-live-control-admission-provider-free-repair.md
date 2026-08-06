@@ -1,11 +1,11 @@
 # ChatGPT Payload Live-Control Admission Provider-Free Repair | 0202-2026-08-06
 
-State: OPEN
+State: CLOSED
 Lane: IMPLEMENTATION
 Plan version: 1
-Outcome: PENDING_IMPLEMENTATION
-Goal execution state: IMPLEMENTING_PROVIDER_FREE
-Gate state: LIVE_CANARY_WITHHELD
+Outcome: COMPLETE_PROVIDER_FREE_LIVE_WITHHELD
+Goal execution state: COMPLETE_PROVIDER_FREE_LIVE_WITHHELD
+Gate state: NOT_READY_MISSING_LIVE_CONTROL
 
 ## Stable Goal Objective
 
@@ -104,20 +104,20 @@ loops.
 
 ## Acceptance Criteria
 
-- [ ] One shared pure resolver owns payload/DOM and click-time candidate
+- [x] One shared pure resolver owns payload/DOM and click-time candidate
   matching without weakening message/turn/button scoping.
-- [ ] Unmatched payload sandbox downloads remain catalog-visible with explicit
+- [x] Unmatched payload sandbox downloads remain catalog-visible with explicit
   `missing_live_control` state and cannot reach a provider callback.
-- [ ] Positive matches preserve canonical payload identity and gain exact DOM
+- [x] Positive matches preserve canonical payload identity and gain exact DOM
   control identity; DOM-native and non-download artifact behavior is unchanged.
-- [ ] The exact cone/unrelated-DOCX, positive-match, scope-collision,
+- [x] The exact cone/unrelated-DOCX, positive-match, scope-collision,
   DOM-native, and callback-disabled `maxItems=1` fixtures pass provider-free.
-- [ ] Focused tests, typecheck, lint, affected/broad tests, build, and one
+- [x] Focused tests, typecheck, lint, affected/broad tests, build, and one
   closed-world review pass are green with no accepted blocking findings.
-- [ ] If installed, source/installed parity and a provider-disabled installed
+- [x] If installed, source/installed parity and a provider-disabled installed
   simulation pass while API readiness, scheduler/completion pauses, default
   pass 4, clear guard, and zero active jobs remain unchanged.
-- [ ] Plan, ROADMAP, RUNBOOK, journal, fixes log, audit, commits, git cleanliness,
+- [x] Plan, ROADMAP, RUNBOOK, journal, fixes log, audit, commits, git cleanliness,
   and remote parity truthfully record the terminal outcome and live gate.
 
 ## Hard Stops And Non-Goals
@@ -159,3 +159,81 @@ pass if installation remains safe, and all live/runtime gates stay frozen.
 - `next_action_or_stop_reason`: audit, commit, and push this boundary, then use
   CodeGraph to inspect the exact merge, matcher, admission, and result seams
   before writing the red fixture and implementation.
+
+## Checkpoint 2 | Source Repair Accepted
+
+- `plan_version`: 1
+- `checkpoint_id`: `P0202-C02`
+- `state_transition`: IMPLEMENTING_PROVIDER_FREE -> VALIDATING_PROVIDER_FREE ->
+  READY_TO_INSTALL.
+- `progress_classification`: outcome_progress
+- `owned_changes`: shared pure control resolver; context reconciliation;
+  fail-closed pre-budget admission; structured history disposition; exact
+  provider-free fixtures. Source checkpoint `5b90d274` is pushed.
+- `evidence`: ChatGPT adapter and LLM suites pass 181/181; the affected packet
+  including history passes 254/254; typecheck and production build pass;
+  touched lint has only the established CDP `Runtime` naming warning. The full
+  suite passed 2,720 tests before one unrelated background-drain timing case
+  observed `in_progress`; its exact isolated rerun passed 1/1. Final focused
+  repair coverage passed 181/181 after review correction.
+- `subagent_status`: `not_spawned`; parallel work was neither authorized nor
+  safe on the shared resolver/admission critical path.
+- `budget_consumption`: plan versions 1/1; execution packets 1/2; source
+  commits 1/1; review passes 1/1; remediation cycles 1/1; focused test commands
+  4/4; provider-free simulations 0/2. CodeGraph was used at least 12 times
+  against an 8-call local ceiling before the overrun was recognized; this was
+  a read-only process exception, no further graph call was made, and no runtime
+  or provider authority widened.
+- `remaining_criteria`: installed parity, installed callback-disabled proof,
+  frozen-runtime readback, governing-doc closeout, audit, and clean remote
+  synchronization.
+- `authority_classification`: in-envelope provider-free implementation and
+  validation; zero provider/browser operations, jobs, assets, or control
+  actions.
+- `review_disposition_summary`: accepted finding 1 narrowed gating to sandbox
+  `download` artifacts so spreadsheet behavior remains unchanged; accepted
+  finding 2 preserved original turn/button scope when live action metadata is
+  cleared. Both are closed. The unrelated full-suite timing flake is
+  nonblocking after exact green rerun. Formatter-only surrounding changes are
+  mechanically equivalent and covered by type/build/full-suite evidence.
+- `next_action_or_stop_reason`: install the accepted build once, restart the
+  API once, and run only the installed in-memory proof plus readbacks.
+
+## Checkpoint 3 | Installed Proof And Terminal Live Gate
+
+- `plan_version`: 1
+- `checkpoint_id`: `P0202-C03`
+- `state_transition`: READY_TO_INSTALL ->
+  COMPLETE_PROVIDER_FREE_LIVE_WITHHELD.
+- `progress_classification`: outcome_progress
+- `owned_changes`: one user-runtime install, one API service restart, installed
+  parity/readback, one in-memory provider-disabled proof, and documentation
+  closeout. No provider/browser, job, materialization, or control mutation.
+- `evidence`: source and installed SHA-256 match exactly for
+  `chatgptArtifactControls.js` (`dc0d1367...`), `chatgptAdapter.js`
+  (`270843ee...`), `llmService.js` (`f61f7de2...`), and
+  `historyMaterializationService.js` (`d1e426b8...`). Installed exact
+  conversation `67ccf9d7-9310-8004-b5e1-478dba6eab3a` / cone asset
+  `ec160eac-e457-4ae8-abb1-dfeaae5e8bec:download:sandbox:/mnt/data/plt_4.png`
+  at `maxItems=1` returned zero materializable items, one unavailable item with
+  `missing_live_control`, null manifest, and provider callback count zero even
+  though the callback was wired to throw `PROVIDER_CALLBACK_DISABLED`.
+- `evidence`: API PID 87441 is active/running with zero automatic restarts;
+  scheduler remains paused; foreground is idle; active completion metrics are
+  six paused / zero queued / zero running; `chatgpt/default` remains paused at
+  pass 4; its provider guard is clear; active history jobs are zero.
+- `subagent_status`: `not_spawned`.
+- `budget_consumption`: packets 2/2; provider-free simulations 1/2; installs
+  1/1; service restarts 1/1; provider/browser operations 0/0; durable jobs 0/0;
+  materialized assets 0/0; scheduler/completion/guard/direct-JSON actions 0/0.
+- `remaining_criteria`: none for Plan 0202 after final docs audit, push, and
+  clean-sync verification.
+- `authority_classification`: terminal provider-free completion. The old cone
+  canary is invalidated by current missing-control evidence and is not approval
+  ready; no substitute target is inferred.
+- `review_disposition_summary`: closed-world accepted ledger has two resolved
+  semantic findings and no open blocking finding. The CodeGraph ceiling
+  overrun remains recorded as a read-only process exception.
+- `next_action_or_stop_reason`: stop. Do not run the cone canary, choose another
+  asset, create a job, or resume scheduler/completion loops. Any future canary
+  requires fresh current live-control evidence and separate explicit approval.
