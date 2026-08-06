@@ -1959,6 +1959,19 @@
 - Cache-only commands such as `cache export`, `cache context list`, and
   `cache context get` should read provider cache state without resolving or
   launching a live browser target.
+- Bounded conversation-context regression:
+  `pnpm vitest run tests/browser/llmServiceContext.test.ts`. The suite must
+  prove the default/overridable deadline contract through a never-settling
+  provider stub, composed caller abort, exactly one timeout/abort attempt,
+  unchanged transient retry/cache behavior, and a metadata-only terminal
+  receipt. CLI help must expose the shared `--timeout-ms` option. Provider-free
+  installed validation may use the same never-promise service seam, but must
+  not run `conversations context get` against a real provider.
+- A live-attempt receipt is stored at
+  `context-read-receipts/<conversationId>.json` inside the resolved provider
+  cache. `cache context get <conversationId> --provider <provider>` returns it
+  as `terminalReceipt`; verify that it contains only bounded metadata and an
+  account-scope hash, never messages, titles, URLs, or transcript content.
 - Cache source catalog smoke: `pnpm tsx bin/auracall.ts cache sources list --provider grok --limit 10`.
 - Cache artifact catalog smoke: `pnpm tsx bin/auracall.ts cache artifacts list --provider grok --limit 10`.
 - Cache file catalog smoke: `pnpm tsx bin/auracall.ts cache files list --provider grok --limit 10`.

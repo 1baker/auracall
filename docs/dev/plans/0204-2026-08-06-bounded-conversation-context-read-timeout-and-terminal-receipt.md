@@ -1,10 +1,10 @@
 # Bounded Conversation Context Read Timeout And Terminal Receipt | 0204-2026-08-06
 
-State: OPEN
+State: CLOSED
 Lane: OPERATIONS
 Plan version: 1
-Outcome: PENDING_PROVIDER_FREE_REPAIR
-Goal execution state: IMPLEMENTING_PROVIDER_FREE
+Outcome: COMPLETE_PROVIDER_FREE_LIVE_WITHHELD
+Goal execution state: COMPLETE
 Gate state: LIVE_REFRESH_WITHHELD
 
 ## Stable Goal Objective
@@ -130,23 +130,23 @@ canary, materialization job, or scheduler/completion loop.
 
 ## Acceptance Criteria
 
-- [ ] Planning boundary is audited, committed, pushed, and clean before source
+- [x] Planning boundary is audited, committed, pushed, and clean before source
   changes.
-- [ ] A real-seam red regression proves a never-settling provider currently
+- [x] A real-seam red regression proves a never-settling provider currently
   leaves context reads pending.
-- [ ] The shared finite deadline composes caller abort, cancels provider work,
+- [x] The shared finite deadline composes caller abort, cancels provider work,
   rejects once, and never retries timeout/caller-abort outcomes.
-- [ ] A bounded durable receipt records provider, conversation, outcome,
+- [x] A bounded durable receipt records provider, conversation, outcome,
   deadline, elapsed time, attempt count, and last stage without private content.
-- [ ] Success, cache fallback, explicit live-required failure, and ordinary
+- [x] Success, cache fallback, explicit live-required failure, and ordinary
   transient retry semantics remain covered and unchanged except for the new
   finite bound.
-- [ ] Focused/affected tests, typecheck, lint, build, diff hygiene, and one
+- [x] Focused/affected tests, typecheck, lint, build, diff hygiene, and one
   closed-world review pass are green.
-- [ ] If installed, source/runtime parity and installed provider-free proof pass
+- [x] If installed, source/runtime parity and installed provider-free proof pass
   while scheduler/completion pauses, default pass 4, clear guard, idle
   foreground, and zero active jobs remain unchanged.
-- [ ] README, testing docs, fixes log, journal, ROADMAP, RUNBOOK, plan audit,
+- [x] README, testing docs, fixes log, journal, ROADMAP, RUNBOOK, plan audit,
   commits, clean worktree, remote parity, and the still-withheld live/canary
   gate agree.
 
@@ -194,3 +194,42 @@ no provider refresh, canary, job, or materialization ran.
   frozen reproducer; no broad discovery pass is reopened.
 - `next_action_or_stop_reason`: audit/commit/push this boundary, then add the
   exact red regression before implementing the shared timeout and receipt.
+
+## Checkpoint 2 | Provider-Free Repair Installed And Live Gate Withheld
+
+- `plan_version`: 1
+- `checkpoint_id`: `P0204-C02`
+- `state_transition`: IMPLEMENTING_PROVIDER_FREE -> VALIDATING_PROVIDER_FREE ->
+  READY_TO_INSTALL -> COMPLETE_PROVIDER_FREE_LIVE_WITHHELD.
+- `progress_classification`: outcome_achieved
+- `owned_changes`: one shared 120-second context-read deadline, composed caller
+  cancellation, non-retryable structured timeout/abort errors, bounded
+  last-stage receipt persistence/readback, direct CLI/client options, exact
+  provider-free tests, user/runtime docs, and one installed runtime.
+- `evidence`: planning commit `4ed9d431`; source commit `c1ba9408`; exact red
+  never-promise regression followed by 9/9 green context tests; affected cache/
+  CLI coverage 20/20; typecheck; lint with existing warnings only; production
+  build; full non-live suite 304 files / 2,723 tests with 65 opt-in tests
+  skipped; installed help; diff hygiene; source/runtime hash parity for service,
+  cache, and CLI; installed provider-free timeout/abort/receipt proof; API PID
+  `16737`; scheduler paused; six completions paused; queued/running/idle-waiting
+  `0/0/0`; default pass 4; foreground idle; ChatGPT guards null; active history
+  jobs zero.
+- `subagent_status`: `not_spawned`.
+- `budget_consumption`: plan versions 1/1; execution packets 2/2; planning,
+  source, and closeout commits 1/1 each after terminal commit; CodeGraph calls
+  3/3; review 1/1; remediation 1/1; focused commands 4/6; affected commands
+  1/3; full suite 1/1 after terminal validation; provider-free simulations
+  2/3; installs/restarts 1/1; provider/browser/live refreshes, durable jobs,
+  materialization callbacks, downloads, prompts, assets, scheduler/completion/
+  guard actions, and direct runtime JSON edits 0.
+- `remaining_criteria`: none inside Plan 0204; every live/canary/materialization
+  gate remains outside authority.
+- `authority_classification`: provider-free repair and conditional install
+  envelope completed; no live/provider or control authority inferred.
+- `review_disposition_summary`: the single closed-world review accepted the
+  shared-service design and fixed pre-provider abort ordering plus private
+  account-scope exposure by hashing the scope. No blocking finding remains.
+- `next_action_or_stop_reason`: stop complete. Do not rerun the exact provider
+  context read, approve a canary, start materialization, or resume any loop
+  without a new explicit successor authority.

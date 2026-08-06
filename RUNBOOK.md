@@ -16453,3 +16453,22 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   default pass 4, foreground idle, scoped guard clear, and active jobs zero.
 - No provider/browser operation, live refresh, canary, job, materialization,
   prompt, download, guard/control action, or loop resume is authorized.
+- Planning commit `4ed9d431` and source commit `c1ba9408` are pushed. The exact
+  never-promise regression changed from pending to a 25ms
+  `conversation_context_timeout`, one provider-stub call, propagated abort,
+  and a durable metadata-only receipt. Caller-abort, success, explicit
+  live-required failure, cache fallback, rate-limit hard stop, and transient
+  retry coverage are green.
+- Focused context coverage passes 9/9 and affected cache/CLI coverage passes
+  20/20. Typecheck, lint with existing warnings only, production build, CLI
+  help, diff hygiene, one closed-world review pass, and the full non-live suite
+  at 304 files / 2,723 tests with 65 opt-in tests skipped are green.
+- The sole authorized `install:user-runtime-service` completed and restarted
+  the API once. Source/installed hashes match for the shared service, receipt
+  cache, and CLI. The installed provider-free never-promise harness terminates
+  once, aborts its stub signal, and reads back the timeout receipt.
+- Final runtime is API PID `16737`, scheduler paused, six completions paused,
+  queued/running/idle-waiting `0/0/0`, default pass 4, foreground idle, all
+  ChatGPT guards clear, and active history jobs zero. Plan 0204 closes
+  `COMPLETE_PROVIDER_FREE_LIVE_WITHHELD`; no provider/browser/live refresh,
+  canary, job, materialization, prompt, download, or control action ran.

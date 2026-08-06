@@ -550,6 +550,14 @@ Terminology note:
   `retrievalFailed` means AuraCall did not obtain verified bytes and does not
   prove the provider asset is unavailable; only provider-confirmed 404/410 or
   explicit deleted/expired/not-found evidence is terminal unavailability.
+  Direct `conversations context get` reads have a shared finite 120-second
+  provider-work deadline, overridable with `--timeout-ms`. The deadline
+  composes caller cancellation into the provider signal; timeout and caller
+  abort are terminal, non-retryable outcomes. Each live attempt writes a
+  metadata-only terminal receipt under the provider cache with outcome,
+  elapsed time, attempt count, and last bounded scrape stage. `cache context
+  get` returns that receipt as `terminalReceipt` without contacting a browser.
+  An explicit `--refresh` never substitutes stale cached context for a timeout.
   History-backed materialization is an explicit separate job surface:
   `POST /v1/account-mirrors/materializations` queues a durable
   `history_materialization_job` by provider conversation id, account-mirror

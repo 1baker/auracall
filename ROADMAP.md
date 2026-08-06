@@ -150,12 +150,16 @@ Lane: P01
   receipt appeared. Provider-free adjudication therefore closes
   `STOPPED_FAIL_CLOSED`, with the one-canary gate withheld and zero jobs,
   downloads, materializations, retries, substitutes, or loop/control actions.
-  Active provider-free timeout/receipt successor:
+  Completed provider-free timeout/receipt successor:
   [docs/dev/plans/0204-2026-08-06-bounded-conversation-context-read-timeout-and-terminal-receipt.md](docs/dev/plans/0204-2026-08-06-bounded-conversation-context-read-timeout-and-terminal-receipt.md).
-  It repairs the shared unbounded provider-promise seam, adds abort propagation
-  and a bounded durable last-stage receipt, and permits one validated install.
-  Provider/browser contact, another live refresh, canary, materialization, and
-  scheduler/completion control remain withheld.
+  Plan 0204 installs one shared 120-second deadline, composed cancellation,
+  non-retryable timeout/abort errors, and a bounded durable last-stage receipt.
+  The never-promise regression and installed provider-free proof both terminate
+  once with propagated abort; source/runtime hashes match. API PID 16737 is
+  healthy with scheduler and six completions paused, default pass 4, idle
+  foreground, clear ChatGPT guards, and zero active history jobs. Provider/
+  browser contact, another live refresh, canary, materialization, and loop or
+  control action remain withheld.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,

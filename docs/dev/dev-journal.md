@@ -43927,3 +43927,28 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   canary, materialization, substitute, or scheduler/completion/guard action
   remains withheld. The primary agent owns the critical path; no subagent was
   spawned.
+
+## 2026-08-06 | Plan 0204 closes provider-free and installed
+
+- Planning commit `4ed9d431` and source checkpoint `c1ba9408` are pushed. The
+  shared context seam now has a finite 120-second default deadline, caller-abort
+  composition, stable non-retryable timeout/abort codes, adapter cancellation,
+  and provider/account/conversation-scoped metadata-only receipts.
+- The exact never-settling regression terminates at 25ms with one call,
+  propagated abort, `conversation_context_timeout`, and a durable receipt.
+  Caller abort, successful cache write, explicit no-fallback refresh, existing
+  cache fallback, rate-limit hard stop, and transient retry remain covered.
+- Focused tests pass 9/9; affected cache/CLI tests pass 20/20; typecheck, lint
+  with existing warnings only, production build, CLI help, diff hygiene, and
+  one closed-world review pass pass. The full non-live suite passes 304 files /
+  2,723 tests with 65 opt-in tests skipped.
+- The single authorized user-runtime install/service restart completed.
+  Source/runtime hashes match for the shared LLM service, provider receipt
+  cache, and CLI. An installed provider-free never-promise harness proves one
+  timeout, one stub call, propagated abort, and receipt readback.
+- Final API PID `16737` is healthy. Scheduler and six completions remain paused,
+  queued/running/idle-waiting are `0/0/0`, default pass 4 is unchanged,
+  foreground is idle, all ChatGPT guards are clear, and active history jobs are
+  zero. Plan 0204 closes `COMPLETE_PROVIDER_FREE_LIVE_WITHHELD`; no provider/
+  browser/live refresh, canary, job, materialization, prompt, download, or
+  runtime control action ran. No subagent was spawned.

@@ -1,3 +1,17 @@
+- 2026-08-06: A provider promise that never settles must not outlive the shared
+  conversation-context operation. `LlmService.getConversationContext(...)`
+  now applies one finite 120-second deadline across retries, composes any caller
+  abort into the adapter signal, skips provider-guard retry handling for timeout
+  and caller-abort outcomes, and clears its timer/listener on every terminal
+  path. Each live attempt writes a provider/account/conversation-scoped receipt
+  containing only outcome, deadline, elapsed time, attempt count, bounded last
+  stage, timestamp, and error code; account identity is represented by a short
+  SHA-256 scope hash. Explicit CLI `--refresh` disables stale-cache fallback,
+  `--timeout-ms` overrides the shared bound, and cache-only readback exposes the
+  receipt as `terminalReceipt`. Provider-free never-promise and abort fixtures
+  pass with exactly one call and propagated cancellation; no provider/browser
+  operation was used to validate the repair.
+
 - 2026-08-04: A live retry ceiling can execute correctly while provider-free
   coverage is still incomplete. Before spending the final live attempt, map and
   exercise every fail-closed gate that can terminate the observed path; proving
