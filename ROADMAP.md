@@ -176,6 +176,12 @@ Lane: P01
   parity. Provider/browser contact, another context refresh, canary, job,
   materialization, download, prompt, and scheduler/completion/guard or loop
   action remain withheld.
+  Active post-repair exact-read successor:
+  [docs/dev/plans/0207-2026-08-06-post-repair-bounded-context-read-and-canary-gate.md](docs/dev/plans/0207-2026-08-06-post-repair-bounded-context-read-and-canary-gate.md).
+  It authorizes one bounded installed context refresh for only the frozen
+  conversation, then provider-free classification of only the cone asset. No
+  retry, canary execution, job, materialization, prompt, download, or
+  scheduler/completion/guard/loop action is authorized.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,

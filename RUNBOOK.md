@@ -16554,3 +16554,24 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   are zero. Plan 0206 closes `COMPLETE_PROVIDER_FREE_LIVE_WITHHELD`; no context
   refresh, canary, job, materialization, download, prompt, or runtime-control
   action ran.
+
+## Turn 378 | 2026-08-06
+
+- The operator's new `ok go` separately authorizes Plan 0207: exactly one
+  installed bounded context refresh for conversation
+  `67ccf9d7-9310-8004-b5e1-478dba6eab3a`, followed by provider-free
+  classification of only the frozen cone asset.
+- Canonical packet:
+  `docs/dev/plans/0207-2026-08-06-post-repair-bounded-context-read-and-canary-gate.md`.
+- The command must use `--timeout-ms 120000` under a 150-second outer ceiling,
+  stop at its first exit, discard transcript stdout, and never retry or open
+  browser tools.
+- Positive current evidence may only prepare
+  `CANARY_READY_EXPLICIT_APPROVAL_REQUIRED`. Canary execution, jobs,
+  materialization, downloads, prompts, substitute assets, installs/restarts,
+  and all scheduler/completion/guard/loop actions remain withheld.
+- Opening state is clean synchronized `ae420d74`; installed/source repair hashes
+  match; API PID 44127 is active; scheduler and six completions are paused;
+  queued/running/idle-waiting are `0/0/0`; default pass 4 and null guard are
+  unchanged; background drain is idle; active history jobs are zero. Planning
+  must be audited, committed, and pushed before the sole provider read.

@@ -44041,3 +44041,17 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   zero. Plan 0206 closes `COMPLETE_PROVIDER_FREE_LIVE_WITHHELD`. No context
   refresh, canary, materialization, job, download, prompt, or control action
   ran; no subagent was spawned.
+
+## 2026-08-06 | Plan 0207 opens one post-repair exact read
+
+- A new explicit `ok go` authorizes exactly one installed read-only ChatGPT
+  context refresh for the frozen conversation after the installed Plan 0206
+  provenance repair. It uses the 120-second inner deadline under a 150-second
+  outer ceiling and stops after its first terminal exit with no retry.
+- Only the exact cone catalog item may be adjudicated provider-free afterward.
+  Positive evidence can prepare a separate approval gate but cannot create or
+  run a canary, job, materialization, prompt, download, or runtime-control
+  action.
+- Installed/source hashes match and the frozen runtime remains paused and idle.
+  Planning is the only owned change until the audited boundary is committed and
+  pushed; no subagent was spawned.
