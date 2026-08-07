@@ -1,10 +1,10 @@
 # Context Read Command Lifecycle Timeout And Receipt Repair | 0208-2026-08-07
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 1
-Outcome: IN_PROGRESS_PROVIDER_FREE
-Goal execution state: DIAGNOSING
+Outcome: COMPLETE_PROVIDER_FREE_LIVE_WITHHELD
+Goal execution state: COMPLETE_PROVIDER_FREE_LIVE_WITHHELD
 Gate state: CANARY_WITHHELD_NO_CURRENT_EVIDENCE
 
 ## Stable Goal Objective
@@ -121,18 +121,18 @@ materialization, or resume scheduler/completion loops.
 
 ## Acceptance Criteria
 
-- [ ] One fast deterministic full-command regression reproduces a pre-service
+- [x] One fast deterministic full-command regression reproduces a pre-service
   wait with zero provider/browser callbacks, then terminates within its inner
   deadline and persists one fresh terminal receipt after the repair.
-- [ ] Ranked hypotheses are resolved with structural evidence and the causal
+- [x] Ranked hypotheses are resolved with structural evidence and the causal
   boundary is documented without relying on the provider or live browser.
-- [ ] Existing service-level never-promise, caller-abort, provenance, explicit
+- [x] Existing service-level never-promise, caller-abort, provenance, explicit
   endpoint, and fail-closed authority coverage remains green.
-- [ ] Focused/affected tests, typecheck, lint, build, full non-live suite, diff
+- [x] Focused/affected tests, typecheck, lint, build, full non-live suite, diff
   hygiene, and closed-world review pass.
-- [ ] At most one install/restart produces source/runtime parity and one
+- [x] At most one install/restart produces source/runtime parity and one
   provider/browser-callback-disabled installed command-lifecycle proof.
-- [ ] Plan, ROADMAP, RUNBOOK, journal, fixes log, audits, git/remote state, and
+- [x] Plan, ROADMAP, RUNBOOK, journal, fixes log, audits, git/remote state, and
   final frozen-runtime readback agree; no live read, canary, job,
   materialization, or loop/control action occurs.
 
@@ -219,3 +219,50 @@ one-canary gate, materialization, scheduler, and completions remain frozen.
 - `next_action_or_stop_reason`: complete the closed-world source review, then
   commit/push and perform the sole install/restart only if no blocking finding
   remains.
+
+## Checkpoint 3 | Installed Lifecycle Repair Complete, Live Still Withheld
+
+- `plan_version`: 1
+- `checkpoint_id`: `P0208-C03`
+- `state_transition`: VALIDATING -> COMPLETE_PROVIDER_FREE_LIVE_WITHHELD.
+- `progress_classification`: outcome_achieved
+- `owned_changes`: planning commit `1ff3b8e0`; source/test/docs commit
+  `5d4533a5`; one user-runtime install and API restart; one installed local
+  preflight-hang proof; terminal docs.
+- `evidence`: source gates remain green at 11/11 focused tests, 76/76 affected
+  tests, 304 files / 2,727 full non-live tests with 65 opt-in tests skipped,
+  typecheck, lint, build, CLI help, diff hygiene, and closed-world review. The
+  installed proof returns `conversation_context_timeout`, aborts preflight,
+  invokes zero provider callbacks, and reads back attempt count zero with
+  `preflight:buildListOptions`. Source/installed SHA-256 parity is
+  `5e8c3360ae67d5e85788477902d37b6199a9ea2c960862a27bbef8a6afbb4893`
+  for the CLI and
+  `3602b6c33015d03ae2ef40c4905f5d8772c6899aea98df1b87887f3d04a57a00`
+  for the shared service. API PID 67435 is active/running with zero restarts;
+  browser PID 27835 remains alive; scheduler and six completions are paused;
+  queued/running/idle-waiting are `0/0/0`; default ChatGPT pass 4 is retained;
+  foreground and background drain are idle; active history jobs are zero. The
+  frozen context and receipt hashes remain
+  `0c71832d99b423ed3de9e496e43346ac917b1d2de27573632ebbf30f5762b7b4`
+  and `529a39994334256ae21201612bf40b0ce03201381d4f5e9f562537e5b3db1903`.
+- `subagent_status`: `not_spawned`.
+- `budget_consumption`: plan versions 1/1; execution packets 1/1; planning,
+  source, and closeout commits 1/1 each after terminal commit; installs/restarts
+  1/1; provider-free installed simulations 1; provider/browser commands,
+  context refreshes, provider callbacks, jobs, canaries, materialization,
+  downloads, prompts, assets, and scheduler/completion/guard actions zero.
+  CodeGraph calls closed 10/5 for the documented read-only truncation follow-up;
+  terminal audit adds one required closeout group beyond the local 2-group
+  planning ceiling, with no authority or external-effect expansion.
+- `remaining_criteria`: none inside Plan 0208.
+- `authority_classification`: provider-free repair/install envelope complete;
+  another live read, canary execution, materialization, and every scheduler/
+  completion/guard/loop action remain withheld.
+- `review_disposition_summary`: closed-world review found no blocking issue.
+  Verified same-service provenance reuse remains identity-based; manual/foreign
+  options still rebuild fail-closed; timeout/caller-abort remain non-retryable;
+  preflight receipt fallback uses only local configured identity and contains no
+  transcript data.
+- `next_action_or_stop_reason`: stop complete. Do not rerun the conversation,
+  execute the canary, start materialization, or resume any loop without a new
+  explicit successor authority.

@@ -44124,3 +44124,25 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   follow-ups. Scope, external effects, provider/browser contact, and runtime
   authority did not expand. Source review/commit and the one conditional
   install/restart remain; no subagent was spawned.
+
+## 2026-08-07 | Plan 0208 closes installed and provider-free
+
+- Planning commit `1ff3b8e0` and source/test/docs commit `5d4533a5` are pushed.
+  One authorized user-runtime install/API restart completed after every source
+  gate passed. Installed/source hashes match for both the CLI and shared
+  service.
+- The installed local hang harness confirms the lifecycle deadline covers
+  pre-provider target/list-option setup: it returns the stable timeout code,
+  aborts its signal, invokes zero provider callbacks, and reads a durable
+  receipt with attempt count zero and `preflight:buildListOptions`.
+- API PID 67435 is active/running with zero restarts. The existing managed
+  browser PID 27835 remains alive. Scheduler and all six active completions are
+  paused, queued/running/idle-waiting are `0/0/0`, default ChatGPT pass 4 is
+  retained, foreground/background drain are idle, and active history jobs are
+  zero.
+- The frozen exact context and receipt hashes are unchanged at
+  `0c71832d99b423ed3de9e496e43346ac917b1d2de27573632ebbf30f5762b7b4`
+  and `529a39994334256ae21201612bf40b0ce03201381d4f5e9f562537e5b3db1903`.
+  Plan 0208 closes `COMPLETE_PROVIDER_FREE_LIVE_WITHHELD`. No provider/browser
+  callback, live read, canary, job, materialization, prompt, download, or
+  scheduler/completion/guard action ran; no subagent was spawned.

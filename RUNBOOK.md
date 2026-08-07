@@ -16630,3 +16630,18 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   Typecheck, lint, production build, CLI help, and diff hygiene pass. Source
   review/commit, the sole conditional install/restart, installed provider-free
   proof, and terminal frozen-runtime readback remain.
+- Source/test/docs commit `5d4533a5` was pushed before the sole user-runtime
+  install/API restart. Installed/source hashes match for the CLI at
+  `5e8c3360ae67d5e85788477902d37b6199a9ea2c960862a27bbef8a6afbb4893`
+  and shared service at
+  `3602b6c33015d03ae2ef40c4905f5d8772c6899aea98df1b87887f3d04a57a00`.
+  The installed provider-free preflight hang exits on timeout, aborts its
+  signal, invokes zero provider callbacks, and preserves attempt count zero
+  with `preflight:buildListOptions` in the receipt.
+- Final API PID 67435 is active/running with zero restarts and browser PID 27835
+  remains alive. Scheduler and six completions remain paused;
+  queued/running/idle-waiting are `0/0/0`; default ChatGPT pass 4 is unchanged;
+  foreground/background drain are idle; active history jobs are zero. The exact
+  Plan 0197 context/receipt hashes remain unchanged. Plan 0208 closes
+  `COMPLETE_PROVIDER_FREE_LIVE_WITHHELD`; no live read, canary, job,
+  materialization, download, prompt, or runtime-control action ran.
