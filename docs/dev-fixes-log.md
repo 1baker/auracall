@@ -1,3 +1,17 @@
+- 2026-08-07: A context read deadline that begins only after browser target and
+  cache-identity setup is not a command deadline. Plan 0207's exact-ID command
+  exceeded its 120-second inner bound and produced no fresh receipt even though
+  the managed browser and conversation were healthy. The service now starts one
+  deadline before target/list-option and identity/feature preflight, propagates
+  the same abort signal through those stages, and uses a provider-free local
+  cache scope to preserve a terminal receipt if preflight never settles. The
+  exact-ID CLI path defers target resolution into that bounded service call.
+  Provider-free regressions separately hang list-option resolution and cache
+  identity resolution; both terminate at 25ms with attempt count zero, a
+  stage-specific receipt, and zero provider context callbacks. Never validate
+  this class of repair by retrying the live conversation: use the local hanging
+  seams and keep the canary/materialization gate separate.
+
 - 2026-08-06: A retained ChatGPT CDP target can expose matching account
   dimensions while still failing provider-session authority when its browser
   provenance is absent. Treat `provider_session_provenance_missing` as a

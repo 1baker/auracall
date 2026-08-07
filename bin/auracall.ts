@@ -3979,24 +3979,32 @@ conversationContextCommand
       typeof commandOptions.historySince === 'string' && commandOptions.historySince.trim().length > 0
         ? commandOptions.historySince.trim()
         : cacheDefaults?.historySince;
-    const listOptions = await llmService.buildListOptions({
+    const listOptionOverrides = {
       configuredUrl: userConfig.browser?.url ?? null,
       includeHistory: true,
       historyLimit,
       historySince,
-    });
-    if (typeof listOptions.historyLimit === 'number' && (!Number.isFinite(listOptions.historyLimit) || listOptions.historyLimit <= 0)) {
+    };
+    if (
+      typeof listOptionOverrides.historyLimit === 'number' &&
+      (!Number.isFinite(listOptionOverrides.historyLimit) || listOptionOverrides.historyLimit <= 0)
+    ) {
       throw new Error('history-limit must be a positive number.');
     }
-    if (listOptions.historySince && !Number.isFinite(Date.parse(listOptions.historySince))) {
+    if (listOptionOverrides.historySince && !Number.isFinite(Date.parse(listOptionOverrides.historySince))) {
       throw new Error('history-since must be a valid date (YYYY-MM-DD or ISO timestamp).');
     }
     const projectArg =
       commandOptions.projectId ?? parentOptions.projectId ?? userConfig.browser?.projectId;
+    const selector = String(id || '').trim();
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(selector);
+    const listOptions =
+      isUuid && !projectArg
+        ? listOptionOverrides
+        : await llmService.buildListOptions(listOptionOverrides);
     const projectId = projectArg ? await resolveProjectIdArg(llmService, projectArg, listOptions) : undefined;
     const scopedListOptions = projectId ? { ...listOptions, projectId } : listOptions;
-    const selector = String(id || '').trim();
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(selector);
     const conversationId = isUuid
       ? selector
       : (

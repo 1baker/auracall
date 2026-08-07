@@ -551,12 +551,18 @@ Terminology note:
   prove the provider asset is unavailable; only provider-confirmed 404/410 or
   explicit deleted/expired/not-found evidence is terminal unavailability.
   Direct `conversations context get` reads have a shared finite 120-second
-  provider-work deadline, overridable with `--timeout-ms`. The deadline
-  composes caller cancellation into the provider signal; timeout and caller
-  abort are terminal, non-retryable outcomes. Each live attempt writes a
+  command-lifecycle deadline, overridable with `--timeout-ms`. For an exact
+  conversation ID without project resolution, the deadline starts before
+  browser target/session resolution and cache identity/feature preflight, then
+  continues through provider work. The deadline composes caller cancellation
+  into each preflight/provider signal; timeout and caller abort are terminal,
+  non-retryable outcomes. Each live attempt writes a
   metadata-only terminal receipt under the provider cache with outcome,
-  elapsed time, attempt count, and last bounded scrape stage. `cache context
-  get` returns that receipt as `terminalReceipt` without contacting a browser.
+  elapsed time, attempt count, and last bounded preflight/scrape stage. If
+  target or identity preflight times out before detected identity is available,
+  AuraCall uses only configured local cache identity to place that receipt.
+  `cache context get` returns the receipt as `terminalReceipt` without
+  contacting a browser.
   An explicit `--refresh` never substitutes stale cached context for a timeout.
   History-backed materialization is an explicit separate job surface:
   `POST /v1/account-mirrors/materializations` queues a durable

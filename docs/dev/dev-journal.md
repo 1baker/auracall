@@ -44098,3 +44098,29 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   completions remain paused; queued/running/idle-waiting are `0/0/0`; default
   pass 4 is unchanged; background drain is idle; active history jobs are zero.
   The primary agent owns the critical path; no subagent was spawned.
+
+## 2026-08-07 | Plan 0208 pre-provider deadline repair is source-green
+
+- Planning commit `1ff3b8e0` was audited and pushed before source work. The new
+  list-option hang fixture reproduced the gap in 110ms: it remained pending
+  beyond the 25ms service deadline and never reached a provider callback.
+- The confirmed cause is lifecycle placement. Target/list-option resolution and
+  cache identity/feature preflight both ran before the deadline, controller,
+  telemetry stage, and terminal-receipt scope. A stale target can trigger that
+  wait, but the shared correctness defect does not depend on reproducing a live
+  target race.
+- One deadline now wraps both preflight stages and provider work. The service
+  creates a local configured-identity receipt context without provider/browser
+  callbacks, propagates its abort signal through preflight, and records bounded
+  `preflight:*` stages. The exact UUID/no-project CLI route defers target
+  resolution into the bounded service call.
+- Both 25ms preflight regressions pass with zero provider callbacks, attempt
+  count zero, propagated abort, and durable stage-specific receipts. Focused
+  tests pass 11/11; affected tests 76/76; typecheck, touched lint, build, CLI
+  help, and diff hygiene pass. The full serial non-live suite passes 304 files /
+  2,727 tests with 65 opt-in tests skipped.
+- CodeGraph exploration exceeded the local five-call planning ceiling by five
+  read-only calls because the large command/service results required bounded
+  follow-ups. Scope, external effects, provider/browser contact, and runtime
+  authority did not expand. Source review/commit and the one conditional
+  install/restart remain; no subagent was spawned.

@@ -31,11 +31,11 @@ import {
 } from "../chatgptRateLimitGuard.js";
 import { CHATGPT_URL, GEMINI_URL, GROK_URL } from "../constants.js";
 import {
+	type ConversationContextReadOutcome,
+	type ConversationContextReadReceipt,
 	matchConversationByTitle,
 	matchProjectByName,
 	PROVIDER_CACHE_TTL_MS,
-	type ConversationContextReadOutcome,
-	type ConversationContextReadReceipt,
 	readConversationContextReadReceipt,
 	resolveProviderCacheKey,
 	resolveProviderCachePath,
@@ -58,6 +58,13 @@ import type {
 	ProviderId,
 } from "../providers/domain.js";
 import {
+	assertProviderSessionAuthorization,
+	createProviderSessionAuthority,
+	type ProviderSessionAuthority,
+	type ProviderSessionContext,
+	type ProviderSessionProof,
+} from "../providers/providerSessionAuthority.js";
+import {
 	createBrowserScrapeTelemetryRecorder,
 	recordBrowserScrapeCandidateCount,
 	recordBrowserScrapeProviderAction,
@@ -70,13 +77,6 @@ import type {
 	BrowserProviderListOptions,
 	ProviderUserIdentity,
 } from "../providers/types.js";
-import {
-	assertProviderSessionAuthorization,
-	createProviderSessionAuthority,
-	type ProviderSessionAuthority,
-	type ProviderSessionContext,
-	type ProviderSessionProof,
-} from "../providers/providerSessionAuthority.js";
 import type { BrowserService } from "../service/browserService.js";
 import {
 	readSimpleProviderGuardState,
@@ -2529,40 +2529,20 @@ export abstract class LlmService {
 			throw new Error(`Conversation context retrieval is not supported for ${this.providerId}.`);
 		}
 		const providedListOptions = options?.listOptions;
-		const hasSameServiceSessionAuthorization =
-			providedListOptions?.browserService === this.browserService &&
-			providedListOptions.providerSessionAuthorization?.authority ===
-				this.providerSessionAuthority;
-		const listOptions =
-			providedListOptions?.useProviderSession || hasSameServiceSessionAuthorization
-				? providedListOptions
-				: await this.buildListOptions(providedListOptions, {
-					ensurePort: !options?.cacheOnly,
-					});
-		const cacheContext = await this.resolveCacheContext(
-			listOptions,
-			listOptions.accountMirrorInventory === true ? { detect: false, prompt: false } : {},
-		);
-		const refresh = options?.refresh !== false;
-		if (!refresh) {
-			const cached = await this.cacheStore.readConversationContext(cacheContext, conversationId);
-			if (cached.items.messages.length > 0) {
-				return cached.items;
-			}
-			if (options?.cacheOnly) {
-				throw new Error(
-					`No cached conversation context for "${conversationId}". Run without --cache-only to fetch live context.`,
-				);
-			}
-		}
 		const timeoutMs = resolveConversationContextTimeoutMs(options?.timeoutMs);
 		const startedAt = Date.now();
 		let attemptCount = 0;
-		let lastStage = "provider:readConversationContext.start";
+		let lastStage = "preflight:buildListOptions";
 		let abortError: ConversationContextReadError | null = null;
+		let listOptions: BrowserProviderListOptions = providedListOptions ?? {};
+		let cacheContext = await this.resolveCacheContext(
+			{ ...listOptions, skipFeatureSignature: true },
+			{ detect: false, prompt: false },
+		);
 		const controller = new AbortController();
-		const callerSignal = listOptions.abortSignal;
-		const telemetry = listOptions.scrapeTelemetry ?? createBrowserScrapeTelemetryRecorder();
+		const callerSignal = providedListOptions?.abortSignal;
+		const telemetry =
+			providedListOptions?.scrapeTelemetry ?? createBrowserScrapeTelemetryRecorder();
 		const originalTelemetryUpdate = telemetry.onUpdate;
 		let previousProviderActions = { ...telemetry.providerActions };
 		let previousCdpCalls = { ...telemetry.cdpCalls };
@@ -2580,11 +2560,6 @@ export abstract class LlmService {
 			previousProviderActions = { ...telemetry.providerActions };
 			previousCdpCalls = { ...telemetry.cdpCalls };
 			originalTelemetryUpdate?.();
-		};
-		const scopedListOptions: BrowserProviderListOptions = {
-			...listOptions,
-			abortSignal: controller.signal,
-			scrapeTelemetry: telemetry,
 		};
 		const onCallerAbort = () => {
 			abortError = new ConversationContextReadError({
@@ -2635,14 +2610,54 @@ export abstract class LlmService {
 			return receipt;
 		};
 		try {
+			const hasSameServiceSessionAuthorization =
+				providedListOptions?.browserService === this.browserService &&
+				providedListOptions.providerSessionAuthorization?.authority ===
+					this.providerSessionAuthority;
+			listOptions =
+				providedListOptions?.useProviderSession || hasSameServiceSessionAuthorization
+					? providedListOptions
+					: await waitForPromiseWithAbort(
+							this.buildListOptions(
+								{ ...providedListOptions, abortSignal: controller.signal },
+								{ ensurePort: !options?.cacheOnly },
+							),
+							controller.signal,
+						);
+			const scopedListOptions: BrowserProviderListOptions = {
+				...listOptions,
+				abortSignal: controller.signal,
+				scrapeTelemetry: telemetry,
+			};
+			lastStage = "preflight:resolveCacheContext";
+			cacheContext = await waitForPromiseWithAbort(
+				this.resolveCacheContext(
+					scopedListOptions,
+					listOptions.accountMirrorInventory === true ? { detect: false, prompt: false } : {},
+				),
+				controller.signal,
+			);
+			const refresh = options?.refresh !== false;
+			if (!refresh) {
+				const cached = await this.cacheStore.readConversationContext(cacheContext, conversationId);
+				if (cached.items.messages.length > 0) {
+					return cached.items;
+				}
+				if (options?.cacheOnly) {
+					throw new Error(
+						`No cached conversation context for "${conversationId}". Run without --cache-only to fetch live context.`,
+					);
+				}
+			}
+			lastStage = "provider:readConversationContext.start";
 			recordBrowserScrapeProviderAction(scopedListOptions, "llmService.getConversationContext");
 			const context = await this.withRetry(
 				() => {
 					attemptCount += 1;
 					return waitForPromiseWithAbort(
 						this.provider.readConversationContext?.(
-						conversationId,
-						options?.projectId,
+							conversationId,
+							options?.projectId,
 							scopedListOptions,
 						) as Promise<unknown>,
 						controller.signal,
@@ -2651,8 +2666,7 @@ export abstract class LlmService {
 				{
 					action: "readConversationContext",
 					abortSignal: controller.signal,
-					bypassProviderGuardFailure: (error) =>
-						error instanceof ConversationContextReadError,
+					bypassProviderGuardFailure: (error) => error instanceof ConversationContextReadError,
 					shouldRetry: (error) => {
 						if (error instanceof ConversationContextReadError) return false;
 						return listOptions.accountMirrorInventory === true
@@ -2684,9 +2698,7 @@ export abstract class LlmService {
 		} catch (error) {
 			const terminalError = abortError ?? error;
 			const outcome: ConversationContextReadOutcome =
-				terminalError instanceof ConversationContextReadError
-					? terminalError.outcome
-					: "failed";
+				terminalError instanceof ConversationContextReadError ? terminalError.outcome : "failed";
 			await writeReceipt(outcome, terminalError);
 			if (options?.allowCacheFallback === false) {
 				throw terminalError;

@@ -1961,12 +1961,15 @@
   launching a live browser target.
 - Bounded conversation-context regression:
   `pnpm vitest run tests/browser/llmServiceContext.test.ts`. The suite must
-  prove the default/overridable deadline contract through a never-settling
-  provider stub, composed caller abort, exactly one timeout/abort attempt,
-  unchanged transient retry/cache behavior, and a metadata-only terminal
-  receipt. CLI help must expose the shared `--timeout-ms` option. Provider-free
-  installed validation may use the same never-promise service seam, but must
-  not run `conversations context get` against a real provider.
+  prove the default/overridable deadline contract through never-settling
+  target/list-option, cache-identity, and provider stubs. Pre-provider fixtures
+  must terminate with attempt count zero, abort their local signal, invoke no
+  provider context callback, and persist a stage-specific metadata-only
+  receipt. The suite must also retain composed caller abort, exactly one
+  provider timeout/abort attempt, and unchanged transient retry/cache behavior.
+  CLI help must expose the shared `--timeout-ms` option. Provider-free installed
+  validation may use these same seams, but must not run `conversations context
+  get` against a real provider.
 - A live-attempt receipt is stored at
   `context-read-receipts/<conversationId>.json` inside the resolved provider
   cache. `cache context get <conversationId> --provider <provider>` returns it

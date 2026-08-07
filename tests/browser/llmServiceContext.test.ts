@@ -24,7 +24,7 @@ class TestContextLlmService extends LlmService {
 	constructor(
 		provider: LlmServiceAdapter,
 		cacheStore: CacheStore,
-		private readonly fixedCacheContext: ProviderCacheContext,
+		protected readonly fixedCacheContext: ProviderCacheContext,
 	) {
 		super({ browser: { cache: {} } } as ResolvedUserConfig, provider, {} as never, { cacheStore });
 	}
@@ -35,7 +35,10 @@ class TestContextLlmService extends LlmService {
 		return { ...overrides };
 	}
 
-	override async resolveCacheContext(): Promise<ProviderCacheContext> {
+	override async resolveCacheContext(
+		_listOptions: BrowserProviderListOptions = {},
+		_options: { prompt?: boolean; detect?: boolean } = {},
+	): Promise<ProviderCacheContext> {
 		return this.fixedCacheContext;
 	}
 
@@ -57,6 +60,38 @@ class TestContextLlmService extends LlmService {
 
 	async getUserIdentity() {
 		return null;
+	}
+}
+
+class HangingListOptionsContextLlmService extends TestContextLlmService {
+	listOptionsSignal: AbortSignal | undefined;
+
+	override async buildListOptions(
+		overrides: BrowserProviderListOptions = {},
+	): Promise<BrowserProviderListOptions> {
+		this.listOptionsSignal = overrides.abortSignal;
+		await new Promise(() => {});
+		return overrides;
+	}
+}
+
+class HangingCacheContextLlmService extends TestContextLlmService {
+	cacheContextSignal: AbortSignal | undefined;
+
+	override async resolveCacheContext(
+		listOptions: BrowserProviderListOptions = {},
+		options: { prompt?: boolean; detect?: boolean } = {},
+	): Promise<ProviderCacheContext> {
+		if (
+			options.detect === false &&
+			options.prompt === false &&
+			listOptions.skipFeatureSignature === true
+		) {
+			return this.fixedCacheContext;
+		}
+		this.cacheContextSignal = listOptions.abortSignal;
+		await new Promise(() => {});
+		return this.fixedCacheContext;
 	}
 }
 
@@ -359,6 +394,119 @@ describe("project-scoped conversation context normalization", () => {
 			});
 			expect(receipt.items?.elapsedMs).toBeGreaterThanOrEqual(20);
 			expect(JSON.stringify(receipt.items)).not.toContain("messages");
+		} finally {
+			await rm(homeDir, { recursive: true, force: true });
+		}
+	});
+
+	test("getConversationContext bounds pre-provider list-option resolution and preserves a terminal receipt", async () => {
+		const homeDir = await mkdtemp(
+			path.join(os.tmpdir(), "auracall-llm-context-preflight-timeout-"),
+		);
+		setAuracallHomeDirOverrideForTest(homeDir);
+		const cacheContext: ProviderCacheContext = {
+			provider: "chatgpt",
+			userConfig: {} as ProviderCacheContext["userConfig"],
+			listOptions: {},
+			identityKey: "cache-test@example.com",
+		};
+		const store = new JsonCacheStore();
+		const provider = {
+			id: "chatgpt",
+			config: { id: "chatgpt", selectors: {} as never },
+			readConversationContext: vi.fn(),
+		};
+		const service = new HangingListOptionsContextLlmService(provider as never, store, cacheContext);
+
+		try {
+			const outcome = await Promise.race([
+				service
+					.getConversationContext("conversation-preflight-timeout", {
+						refresh: true,
+						allowCacheFallback: false,
+						timeoutMs: 25,
+						listOptions: {},
+					})
+					.then(
+						() => ({ kind: "resolved" as const }),
+						(error: unknown) => ({ kind: "rejected" as const, error }),
+					),
+				new Promise<{ kind: "still-pending" }>((resolve) => {
+					setTimeout(() => resolve({ kind: "still-pending" }), 100);
+				}),
+			]);
+
+			expect(outcome).toMatchObject({
+				kind: "rejected",
+				error: {
+					code: "conversation_context_timeout",
+					outcome: "timed_out",
+				},
+			});
+			expect(service.listOptionsSignal?.aborted).toBe(true);
+			expect(provider.readConversationContext).not.toHaveBeenCalled();
+			const receipt = await readConversationContextReadReceipt(
+				cacheContext,
+				"conversation-preflight-timeout",
+			);
+			expect(receipt.items).toMatchObject({
+				provider: "chatgpt",
+				conversationId: "conversation-preflight-timeout",
+				outcome: "timed_out",
+				timeoutMs: 25,
+				attemptCount: 0,
+				lastStage: "preflight:buildListOptions",
+				errorCode: "conversation_context_timeout",
+			});
+		} finally {
+			await rm(homeDir, { recursive: true, force: true });
+		}
+	});
+
+	test("getConversationContext bounds pre-provider cache identity resolution and preserves a terminal receipt", async () => {
+		const homeDir = await mkdtemp(path.join(os.tmpdir(), "auracall-llm-context-identity-timeout-"));
+		setAuracallHomeDirOverrideForTest(homeDir);
+		const cacheContext: ProviderCacheContext = {
+			provider: "chatgpt",
+			userConfig: {} as ProviderCacheContext["userConfig"],
+			listOptions: {},
+			identityKey: "cache-test@example.com",
+		};
+		const store = new JsonCacheStore();
+		const provider = {
+			id: "chatgpt",
+			config: { id: "chatgpt", selectors: {} as never },
+			readConversationContext: vi.fn(),
+		};
+		const service = new HangingCacheContextLlmService(provider as never, store, cacheContext);
+
+		try {
+			await expect(
+				service.getConversationContext("conversation-identity-timeout", {
+					refresh: true,
+					allowCacheFallback: false,
+					timeoutMs: 25,
+					listOptions: {},
+				}),
+			).rejects.toMatchObject({
+				code: "conversation_context_timeout",
+				outcome: "timed_out",
+			});
+			expect(service.cacheContextSignal?.aborted).toBe(true);
+			expect(provider.readConversationContext).not.toHaveBeenCalled();
+			const receipt = await readConversationContextReadReceipt(
+				cacheContext,
+				"conversation-identity-timeout",
+			);
+			expect(receipt.items).toMatchObject({
+				provider: "chatgpt",
+				conversationId: "conversation-identity-timeout",
+				outcome: "timed_out",
+				timeoutMs: 25,
+				attemptCount: 0,
+				lastStage: "preflight:resolveCacheContext",
+				errorCode: "conversation_context_timeout",
+			});
 		} finally {
 			await rm(homeDir, { recursive: true, force: true });
 		}

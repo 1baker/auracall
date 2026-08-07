@@ -177,3 +177,45 @@ one-canary gate, materialization, scheduler, and completions remain frozen.
 - `next_action_or_stop_reason`: audit, commit, and push the planning boundary;
   then add the exact full-command provider-free regression before source
   diagnosis or repair.
+
+## Checkpoint 2 | Pre-Provider Deadline Repair Source-Green
+
+- `plan_version`: 1
+- `checkpoint_id`: `P0208-C02`
+- `state_transition`: AWAITING_FULL_COMMAND_REPRO -> DIAGNOSING -> REPAIRING ->
+  VALIDATING.
+- `progress_classification`: blocker_reduction
+- `owned_changes`: shared conversation-context lifecycle, exact-ID CLI
+  delegation, two provider-free regressions, README/testing/fix-log contracts,
+  journal/runbook, and this checkpoint.
+- `evidence`: planning commit `1ff3b8e0` pushed first; the list-option fixture
+  was red in 110ms as `still-pending`; source tracing showed both
+  `buildListOptions(...)` and `resolveCacheContext(...)` preceded the installed
+  deadline/receipt scope. After repair, separate 25ms list-option and cache-
+  identity hangs abort locally, call the provider zero times, record attempt
+  count zero, and persist `preflight:buildListOptions` or
+  `preflight:resolveCacheContext`. Focused tests pass 11/11; affected tests pass
+  76/76; typecheck, touched lint, build, CLI help, and diff hygiene pass. The
+  full serial non-live suite passes 304 files / 2,727 tests with 65 opt-in tests
+  skipped.
+- `subagent_status`: `not_spawned`.
+- `budget_consumption`: plan versions 1/1; planning commits 1/1; source commits
+  0/1; hypotheses 5/5; instrumentation rounds 1/2; focused commands 3;
+  affected commands 1; full suite 1; installs/restarts 0/1; provider/browser
+  commands, callbacks, refreshes, jobs, canaries, materialization, prompts,
+  downloads, and runtime-control counts zero. CodeGraph calls reached 10/5
+  because truncated exploration required bounded symbol/file follow-ups; this
+  was a read-only process-ceiling overrun with no authority or effect expansion.
+- `remaining_criteria`: closed-world source review; source commit/push; one
+  install/restart; installed provider-free proof and source/runtime parity;
+  frozen-runtime readback; terminal docs/audit/commit/push.
+- `authority_classification`: unchanged provider-free repair/install envelope;
+  no live read or effectful canary/materialization/control authority.
+- `review_disposition_summary`: cause 1 accepted: target/list-option and cache-
+  identity stages were outside the deadline and receipt scope. Stale target
+  rebinding remains a plausible trigger inside that stage but is not required
+  for the shared repair; option loss and provider-stage timeout failure are
+  rejected by CLI forwarding and the green original regression.
+- `next_action_or_stop_reason`: complete the closed-world source review, then
+  commit/push and perform the sole install/restart only if no blocking finding
+  remains.

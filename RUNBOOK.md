@@ -16614,3 +16614,19 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   completions remain paused; queued/running/idle-waiting are `0/0/0`; default
   pass 4 is unchanged; background drain is idle; active history jobs are zero.
   Planning must be audited, committed, and pushed before source/test edits.
+- Planning commit `1ff3b8e0` was audited and pushed before source work. A new
+  provider-free regression failed in 110ms because a never-settling
+  `buildListOptions(...)` remained pending beyond the 25ms context deadline.
+  Structural tracing confirmed both target/list-option and cache-identity
+  preflight ran before the existing deadline and receipt scope.
+- The repair starts one lifecycle deadline before both preflight stages, carries
+  its abort signal through them, and preserves a metadata-only receipt using
+  configured local cache scope when live identity is unavailable. The exact-ID
+  CLI path no longer resolves a target before entering that bounded service
+  call. Separate preflight hangs now terminate at 25ms with attempt count zero,
+  stage-specific receipts, and zero provider callbacks.
+- Focused coverage passes 11/11, affected coverage 76/76, and the full serial
+  non-live suite passes 304 files / 2,727 tests with 65 opt-in tests skipped.
+  Typecheck, lint, production build, CLI help, and diff hygiene pass. Source
+  review/commit, the sole conditional install/restart, installed provider-free
+  proof, and terminal frozen-runtime readback remain.
