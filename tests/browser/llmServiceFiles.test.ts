@@ -2080,6 +2080,132 @@ describe("llmService project file cache writes", () => {
 		expect(result.configuredUrl).toBe("https://grok.com/c/conversation-123");
 	});
 
+	test("getConversationContext preserves same-service resolved provider-session provenance", async () => {
+		const homeDir = await mkdtemp(path.join(os.tmpdir(), "auracall-context-provenance-"));
+		setAuracallHomeDirOverrideForTest(homeDir);
+		const browserService = {
+			resolveServiceTarget: vi.fn(async () => ({
+				host: "127.0.0.1",
+				port: 45011,
+				browserProfile: "default",
+				sourceBrowserProfile: "Default",
+				managedBrowserProfile: "/tmp/managed/chatgpt",
+				browserProcessId: 1234,
+				tab: { targetId: "retained-chatgpt-target", url: CHATGPT_URL },
+			})),
+		};
+		const provider = {
+			id: "chatgpt",
+			config: { id: "chatgpt", selectors: {} as never },
+			readConversationContext: vi.fn(
+				async (
+					conversationId: string,
+					_projectId: string | undefined,
+					options: BrowserProviderListOptions,
+				) => {
+					expect(options.providerSessionAuthorization?.context).toMatchObject({
+						browserProfile: "default",
+						sourceBrowserProfile: "Default",
+						managedBrowserProfile: "/tmp/managed/chatgpt",
+						browserProcessId: 1234,
+						browserTargetId: "retained-chatgpt-target",
+						devtoolsHost: "127.0.0.1",
+						devtoolsPort: 45011,
+					});
+					return { provider: "chatgpt", conversationId, messages: [] };
+				},
+			),
+		};
+		const service = new BuildListOptionsLlmService(
+			{
+				auracallProfile: "default",
+				browser: {
+					cache: { identityKey: "operator@example.com" },
+					chatgptUrl: CHATGPT_URL,
+				},
+			} as ResolvedUserConfig,
+			provider as never,
+			browserService,
+		);
+
+		try {
+			const resolved = await service.buildListOptions();
+			await service.getConversationContext("conversation-provenance", {
+				listOptions: resolved,
+				allowCacheFallback: false,
+			});
+
+			expect(browserService.resolveServiceTarget).toHaveBeenCalledTimes(1);
+			expect(provider.readConversationContext).toHaveBeenCalledTimes(1);
+		} finally {
+			await rm(homeDir, { recursive: true, force: true });
+		}
+	});
+
+	test("getConversationContext does not trust provider-session authorization from another service", async () => {
+		const homeDir = await mkdtemp(path.join(os.tmpdir(), "auracall-foreign-provenance-"));
+		setAuracallHomeDirOverrideForTest(homeDir);
+		const browserService = {
+			resolveServiceTarget: vi.fn(async () => ({
+				host: "127.0.0.1",
+				port: 45011,
+				browserProfile: "default",
+				managedBrowserProfile: "/tmp/managed/chatgpt",
+				browserProcessId: 1234,
+				tab: { targetId: "foreign-chatgpt-target", url: CHATGPT_URL },
+			})),
+		};
+		const config = {
+			auracallProfile: "default",
+			browser: {
+				cache: { identityKey: "operator@example.com" },
+				chatgptUrl: CHATGPT_URL,
+			},
+		} as ResolvedUserConfig;
+		const sourceService = new BuildListOptionsLlmService(
+			config,
+			{ id: "chatgpt", config: { id: "chatgpt", selectors: {} as never } } as never,
+			browserService,
+		);
+		const provider = {
+			id: "chatgpt",
+			config: { id: "chatgpt", selectors: {} as never },
+			readConversationContext: vi.fn(
+				async (
+					conversationId: string,
+					_projectId: string | undefined,
+					options: BrowserProviderListOptions,
+				) => {
+					expect(options.providerSessionAuthorization?.context).toMatchObject({
+						browserProfile: null,
+						managedBrowserProfile: null,
+						browserProcessId: null,
+						browserTargetId: "foreign-chatgpt-target",
+					});
+					return { provider: "chatgpt", conversationId, messages: [] };
+				},
+			),
+		};
+		const receivingService = new BuildListOptionsLlmService(
+			config,
+			provider as never,
+			browserService,
+		);
+
+		try {
+			const foreignOptions = await sourceService.buildListOptions();
+			await receivingService.getConversationContext("conversation-foreign", {
+				listOptions: foreignOptions,
+				allowCacheFallback: false,
+			});
+
+			expect(browserService.resolveServiceTarget).toHaveBeenCalledTimes(1);
+			expect(provider.readConversationContext).toHaveBeenCalledTimes(1);
+		} finally {
+			await rm(homeDir, { recursive: true, force: true });
+		}
+	});
+
 	test("buildListOptions attaches a shared ChatGPT browser interaction governor", async () => {
 		const browserService = {
 			resolveServiceTarget: vi.fn(async () => ({

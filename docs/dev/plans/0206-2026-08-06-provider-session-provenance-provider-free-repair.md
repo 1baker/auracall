@@ -157,3 +157,39 @@ materialization, scheduler, and completions remain frozen.
   broad discovery pass or delegated review.
 - `next_action_or_stop_reason`: audit, commit, and push the planning boundary;
   then create and run the exact provider-free regression before causal claims.
+
+## Checkpoint 2 | Double Normalization Reproduced And Repaired
+
+- `plan_version`: 1
+- `checkpoint_id`: `P0206-C02`
+- `state_transition`: AWAITING_PROVIDER_FREE_REPRO -> DIAGNOSING -> REPAIRING ->
+  VALIDATING.
+- `progress_classification`: blocker_reduction
+- `owned_changes`: source change in the shared LLM service, two exact fixtures,
+  fixes log, journal, runbook, and this checkpoint.
+- `evidence`: planning commit `1746af55` pushed first; the minimal real-seam
+  regression failed deterministically twice with complete first-pass provenance
+  becoming null profile/managed-profile/process fields on the context call;
+  structural trace showed the CLI passes its first resolved options directly.
+  The same-service identity predicate turns the positive fixture green while a
+  foreign-service authorization remains untrusted. Focused tests pass 69/69;
+  typecheck, touched-file Biome lint, build, and diff hygiene pass. Three MCP
+  stdio launch suites in an earlier concurrent build/test group transiently
+  failed to spawn Node; their exact serial rerun passed 4/4, and a clean serial
+  full suite passes 304 files / 2,725 tests with 65 opt-in tests skipped.
+- `subagent_status`: `not_spawned`.
+- `budget_consumption`: plan versions 1/1; planning commits 1/1; source commits
+  0/1 before the next commit; CodeGraph calls 4/4; hypotheses 4/5;
+  instrumentation rounds 1/2; installs/restarts 0/1; all provider, browser,
+  context refresh, job, callback, canary, materialization, prompt, download,
+  cache/receipt mutation, and runtime-control counts zero.
+- `remaining_criteria`: source commit/push; one install/restart; installed
+  provider-free proof and source/runtime parity;
+  final frozen-runtime readback; terminal docs/audit/commit/push.
+- `authority_classification`: unchanged provider-free repair/install envelope;
+  no live read or effectful canary/materialization/control authority.
+- `review_disposition_summary`: cause 1 accepted; causes 2-4 rejected by the
+  first-pass fixture, receipt shape, and call-path evidence. Closed-world
+  verification is limited to provenance retention and authority regressions.
+- `next_action_or_stop_reason`: run the full suite serially after the completed
+  build, then commit/push the source checkpoint only if all gates are green.

@@ -2528,11 +2528,17 @@ export abstract class LlmService {
 		if (!this.provider.readConversationContext) {
 			throw new Error(`Conversation context retrieval is not supported for ${this.providerId}.`);
 		}
-		const listOptions = options?.listOptions?.useProviderSession
-			? options.listOptions
-			: await this.buildListOptions(options?.listOptions, {
+		const providedListOptions = options?.listOptions;
+		const hasSameServiceSessionAuthorization =
+			providedListOptions?.browserService === this.browserService &&
+			providedListOptions.providerSessionAuthorization?.authority ===
+				this.providerSessionAuthority;
+		const listOptions =
+			providedListOptions?.useProviderSession || hasSameServiceSessionAuthorization
+				? providedListOptions
+				: await this.buildListOptions(providedListOptions, {
 					ensurePort: !options?.cacheOnly,
-				});
+					});
 		const cacheContext = await this.resolveCacheContext(
 			listOptions,
 			listOptions.accountMirrorInventory === true ? { detect: false, prompt: false } : {},

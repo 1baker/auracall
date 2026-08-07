@@ -16529,3 +16529,16 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   files / 16,532 nodes / 56,070 edges; policy selection is `already-aligned`;
   and the goal-policy audit has no problems. The planning boundary must be
   audited, committed, and pushed before source/test work.
+- Planning commit `1746af55` was audited and pushed before source work. The
+  real-seam regression was deterministically red twice: the first option build
+  held complete managed-session provenance and the context call's second build
+  kept only target/endpoint fields while nulling browser-profile,
+  managed-profile, and process fields.
+- The repair reuses options only when their browser-service and session-authority
+  objects are owned by the same `LlmService`. A cross-service negative fixture
+  proves foreign authorization is still discarded. Focused tests pass 69/69;
+  typecheck, touched-file lint, build, and diff hygiene pass. A clean serial
+  full non-live suite passes 304 files / 2,725 tests with 65 opt-in tests
+  skipped. An earlier build/test concurrency collision produced three transient
+  MCP launcher `ENOENT` failures; their exact rerun and the clean full rerun
+  both pass.

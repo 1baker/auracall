@@ -20561,3 +20561,24 @@ browser-stage lifecycle observability, not transcript truncation.
   a durable terminal receipt that distinguishes success, provider guard,
   browser failure, timeout, and operator interrupt before requesting another
   provider attempt.
+# 2026-08-06 | Preserve same-service provider-session provenance across context reads
+
+- Symptom: a direct conversation-context CLI read resolved the correct managed
+  ChatGPT target and account, then failed with
+  `provider_session_provenance_missing`; its authorization context retained the
+  target ID and DevTools endpoint but lost browser-profile, managed-profile,
+  and browser-process fields.
+- Cause: the CLI first called `buildListOptions(...)` successfully, then
+  `getConversationContext(...)` normalized that already-built object a second
+  time. The explicit host/port/target fields correctly suppressed target
+  rediscovery, but the second pass rebuilt provider-session authorization from
+  a null target and erased the previously verified provenance.
+- Fix: `getConversationContext(...)` now reuses prebuilt options only when both
+  their browser-service handle and provider-session authority are the exact
+  objects owned by the receiving `LlmService`. Manual explicit endpoints and
+  authorization from another service remain untrusted and are rebuilt
+  fail-closed.
+- Prevention: when options objects carry security provenance, distinguish an
+  internally resolved same-owner object from raw caller overrides. Do not
+  normalize verified provenance through a path that intentionally skips the
+  resolver, and do not accept endpoint or account equality as ownership proof.

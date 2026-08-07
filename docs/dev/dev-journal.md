@@ -44004,3 +44004,23 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   materialization, prompt, download, and all scheduler/completion/guard/loop
   actions remain withheld. One install/restart is conditional on all
   provider-free source gates passing; no subagent was spawned.
+
+## 2026-08-06 | Plan 0206 cause confirmed and source gate green
+
+- A minimal same-service fixture reproduced the exact Plan 0205 shape twice:
+  initial target resolution populated browser-profile, managed-profile,
+  process, target, and endpoint provenance; `getConversationContext(...)` then
+  rebuilt the options because `useProviderSession` was false, skipped target
+  discovery because endpoint/target fields were explicit, and nulled the first
+  three ownership fields.
+- The local repair recognizes already-built options only by exact
+  browser-service and provider-session-authority object identity. The positive
+  regression turns green and a foreign-service authorization fixture confirms
+  manual/cross-service options are not trusted.
+- Focused coverage passes 69/69, typecheck passes, touched-file Biome lint
+  passes, the production build passes, and diff hygiene is clean. Three MCP
+  stdio suites in the parallel full-suite/build group hit a transient Node
+  spawn `ENOENT`; the exact serial rerun passes 4/4, and a subsequent clean
+  serial full suite passes 304 files / 2,725 tests with 65 opt-in tests skipped.
+  Source commit/push, one conditional install/restart, and installed proof
+  remain. No provider/browser or frozen control action ran.
