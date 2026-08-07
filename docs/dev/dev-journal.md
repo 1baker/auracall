@@ -43989,3 +43989,18 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   remediation verification after the active-plan auditor caught lane/runbook
   wiring and the terminal library audit; all Plan 0205 findings are clear and
   no provider/runtime budget expanded.
+
+## 2026-08-06 | Plan 0206 opens provider-free provenance repair
+
+- Plan 0205 proved the account observation can match while the retained target
+  authorization context lacks browser-profile, managed-profile, and process
+  provenance. The authority correctly fails closed with
+  `provider_session_provenance_missing`.
+- Plan 0206 first requires a fast deterministic regression at the real local
+  construction seam, then ranked falsifiable diagnosis and a repair that
+  preserves already-resolved managed-session provenance without inferring
+  ownership from endpoint or account data.
+- Provider/browser contact, another context refresh, canary, job,
+  materialization, prompt, download, and all scheduler/completion/guard/loop
+  actions remain withheld. One install/restart is conditional on all
+  provider-free source gates passing; no subagent was spawned.

@@ -16511,3 +16511,21 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   lane/runbook wiring, both auditors were rerun after remediation, and the
   closed state required a final library audit. All Plan 0205 findings are clear;
   no extra provider/runtime action accompanied the audit overrun.
+
+## Turn 377 | 2026-08-06
+
+- The operator's `lk go` accepts the provider-free recommendation and opens
+  Plan 0206 to reproduce, diagnose, and repair the local provider-session
+  provenance construction failure from Plan 0205.
+- Canonical packet:
+  `docs/dev/plans/0206-2026-08-06-provider-session-provenance-provider-free-repair.md`.
+- Scope is one deterministic real-seam regression, ranked falsifiable diagnosis,
+  a safety-preserving source/test repair, full non-live validation, and at most
+  one green-gated user-runtime install/restart.
+- No provider/browser/DOM contact, context refresh, prompt, download, canary,
+  durable job, materialization callback, cache/receipt mutation, scheduler/
+  completion/guard action, or loop resume is authorized.
+- Opening state is clean synchronized `8fa0b2ff`; CodeGraph is healthy at 876
+  files / 16,532 nodes / 56,070 edges; policy selection is `already-aligned`;
+  and the goal-policy audit has no problems. The planning boundary must be
+  audited, committed, and pushed before source/test work.

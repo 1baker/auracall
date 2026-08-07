@@ -168,6 +168,13 @@ Lane: P01
   lacks current live-control evidence. Plan 0205 closes `STOPPED_FAIL_CLOSED`;
   no browser-tools follow-up, canary, job, materialization, download, prompt,
   scheduler/completion/guard action, or loop resume ran.
+  Active provider-free provenance repair:
+  [docs/dev/plans/0206-2026-08-06-provider-session-provenance-provider-free-repair.md](docs/dev/plans/0206-2026-08-06-provider-session-provenance-provider-free-repair.md).
+  It owns one deterministic local regression, repair of the managed-session
+  provenance construction path, provider-free validation, and at most one safe
+  install/restart. Provider/browser contact, another context refresh, canary,
+  job, materialization, download, prompt, and scheduler/completion/guard or loop
+  action remain withheld.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,
