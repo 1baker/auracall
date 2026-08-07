@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "rationale": "These named active-plan findings predate the current lane and dual-authority wiring grammar. Their state must be semantically reconciled from AuraCall evidence before changing historical plan text.",
+  "review_condition": "Re-evaluate each exact finding when its named plan is materially resumed, superseded, or closed; do not accept findings from new plans.",
+  "accepted_findings": [
+    "plan missing roadmap lane id: 0020-2026-04-21-deterministic-response-shape-contract.md",
+    "plan not wired in ROADMAP.md: 0020-2026-04-21-deterministic-response-shape-contract.md",
+    "plan not wired in RUNBOOK.md: 0020-2026-04-21-deterministic-response-shape-contract.md",
+    "plan missing roadmap lane id: 0064-2026-05-10-openai-agent-api-and-semantic-model-selectors.md",
+    "plan missing roadmap lane id: 0065-2026-05-10-db-backed-agent-registry.md",
+    "OPEN plan missing Current State section: 0068-2026-05-18-tenant-pool-response-batches.md",
+    "plan not wired in RUNBOOK.md: 0068-2026-05-18-tenant-pool-response-batches.md"
+  ]
+}
