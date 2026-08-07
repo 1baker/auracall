@@ -1,11 +1,11 @@
 # ChatGPT Visible-File Scan Timeout Repair | 0213-2026-08-07
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 1
-Outcome: ACTIVE_LOCAL_REPAIR
-Goal execution state: ACTIVE
-Gate state: PROVIDER_FREE_REPAIR
+Outcome: STOPPED_POST_REPAIR_MESSAGE_READ_TIMEOUT
+Goal execution state: BLOCKED
+Gate state: FAIL_CLOSED
 
 ## Stable Goal Objective
 
@@ -74,7 +74,7 @@ scheduler last. Preserve strict identity, guard, CAPTCHA, and no-prompt rules.
 
 - [x] Red/green regression proves one visible-file DOM collection after the
   existing surface-readiness gate; normalization behavior remains covered.
-- [ ] Focused and adjacent tests, typecheck, lint, and build pass; source and
+- [x] Focused and adjacent tests, typecheck, lint, and build pass; source and
   installed runtime hashes match after one restart; API is healthy.
 - [ ] `wsl-chrome-3` post-repair pass and child settle without context timeout,
   provider guard, identity failure, or failed materialization.
@@ -138,3 +138,39 @@ scheduler last. Preserve strict identity, guard, CAPTCHA, and no-prompt rules.
   removing repeated renderer work. No broader adapter finding is accepted.
 - `next_action_or_stop_reason`: commit and push the green repair, install once,
   restart once, and verify source/runtime parity before provider work.
+
+## Checkpoint 3 | Visible-File Fix Proved; Next Message-Read Stage Blocked
+
+- `plan_version`: 1
+- `checkpoint_id`: `P0213-C03`
+- `state_transition`: INSTALL_GATE -> STOPPED_POST_REPAIR_MESSAGE_READ_TIMEOUT.
+- `progress_classification`: blocker_reduction
+- `owned_changes`: installed Plan 0213 adapter repair and exact one-pass runtime
+  proof only; no second repair or provider retry.
+- `evidence`: repo and installed adapter SHA-256 both
+  `71d09b49c0857ee5f9116c24dbc514f4c1d25a098c47999be4c37f29413caef6`;
+  API PID 14919 is active with zero restarts; scheduler remained paused and
+  active history jobs were zero before the proof. The sole `wsl-chrome-3`
+  control advanced pass 40 to 41 and child
+  `hmj_2a91562f15de476baf6f6217cc9c927b` matched provider identity,
+  materialized/skipped/failed `2/4/1`, then stopped on the same large
+  conversation. Its fresh receipt moved the last stage from the repaired
+  `provider:chatgpt.readVisibleConversationFiles` seam to
+  `provider:chatgpt.readConversationMessages`, timing out after 117259 ms of
+  the 120000-ms context budget.
+- `subagent_status`: `not_spawned`.
+- `remaining_criteria`: clean `wsl-chrome-3` materialization; staged
+  `wsl-chrome-4`, default, and replacement `wsl-chrome-2`; scheduler-last
+  resume; four-target audit.
+- `authority_classification`: Plan 0213 exhausted its one repair, one install,
+  one restart, and one post-repair provider attempt. Its hard stop forbids a
+  second repair or retry in this execution window.
+- `review_disposition_summary`: the visible-file loop was a real defect and is
+  now bypassed in current runtime evidence. The new accepted blocking finding
+  is one unbounded `Runtime.evaluate` that reads every message's full
+  `innerText` and returns the complete large conversation by value; identity,
+  provider guard, transfer, and visible-file recurrence are rejected by the
+  current receipts.
+- `next_action_or_stop_reason`: close blocked. Keep all four intended
+  completions and the scheduler stopped; a separately authorized successor
+  must bound message extraction and provide a fresh one-canary gate.

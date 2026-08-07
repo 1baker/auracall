@@ -20702,3 +20702,20 @@ browser-stage lifecycle observability, not transcript truncation.
 - Fix: collect the ready visible-file surface once. Preserve the readiness
   gate, outer timeout, normalizer, identity checks, and hard stops. Regression
   coverage inspects the actual injected expression and requires one collection.
+
+## 2026-08-07 | Bound full-conversation message extraction separately
+
+- A fixed visible-file scan can reveal a later independent bottleneck on the
+  same large ChatGPT conversation. Stage receipts are the authority: after the
+  visible-file repair, the timeout moved to
+  `provider:chatgpt.readConversationMessages` rather than recurring at the
+  repaired seam.
+- The current message reader executes `innerText` over every role node and
+  returns all full message bodies through one `Runtime.evaluate` call. On a
+  very large conversation, DOM layout work plus by-value serialization can
+  consume the outer 120-second context budget even though identity and provider
+  health remain valid.
+- Treat this as a separate bounded repair. Do not weaken the context deadline
+  or retry live follow automatically; preserve full-content semantics through
+  chunked or otherwise interruptible extraction with its own regression and
+  exact canary gate.

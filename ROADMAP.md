@@ -229,7 +229,7 @@ Lane: P01
   pass 6 also settled cleanly. The next `wsl-chrome-2` resume failed before
   materialization with missing provider-session observation, so default was
   re-paused and wider resume stopped.
-  Active identity-observation successor:
+  Closed identity-observation successor:
   [docs/dev/plans/0212-2026-08-07-wsl-chrome-2-provider-session-observation-recovery.md](docs/dev/plans/0212-2026-08-07-wsl-chrome-2-provider-session-observation-recovery.md).
   It permitted one read-only inspection of the exact existing managed browser.
   The human login gate was cleared, exact authenticated Pro UI was observed,
@@ -241,15 +241,21 @@ Lane: P01
   `wsl-chrome-3` `run_one_pass` recovery while every other completion and the
   scheduler remain paused. The retry made one useful asset but repeated the
   same visible-file context timeout, so Plan 0212 closed fail-closed.
-  Active local-repair successor:
+  Closed local-repair successor:
   [docs/dev/plans/0213-2026-08-07-chatgpt-visible-file-scan-timeout-repair.md](docs/dev/plans/0213-2026-08-07-chatgpt-visible-file-scan-timeout-repair.md).
   It narrows repair to the injected 20-pass full-DOM visible-file scan, requires
   red/green provider-free proof and installed parity, and permits one exact
   post-repair `wsl-chrome-3` pass before any wider completion/scheduler resume.
-  The provider-free repair is green: the injected reader now performs exactly
-  one collection after its existing readiness gate; adapter tests pass 141/141,
-  adjacent suites 183/183, and typecheck/lint/build pass. Install parity and the
-  sole post-repair proof remain gated behind the pushed source checkpoint.
+  The provider-free repair is green and installed with exact source/runtime
+  hash parity: the injected reader now performs exactly one collection after
+  its existing readiness gate; adapter tests pass 141/141, adjacent suites
+  183/183, and typecheck/lint/build pass. The sole post-repair pass advanced
+  `wsl-chrome-3` to pass 41 and its child matched identity and made useful yield
+  `2/4/1`, proving the visible-file stage no longer owns the timeout. The same
+  large conversation now exhausts the context deadline later at
+  `provider:chatgpt.readConversationMessages`, whose single CDP expression
+  reads and returns every message's complete `innerText`. Plan 0213 therefore
+  closes fail-closed; no wider completion or scheduler resume ran.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,

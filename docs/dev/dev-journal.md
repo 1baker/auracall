@@ -44390,3 +44390,21 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   `183/183`; typecheck; zero-warning touched Biome; production build. No browser,
   provider, completion, scheduler, install, or restart action occurred in this
   provider-free packet.
+
+## 2026-08-07 | Installed visible-file fix exposes message-read timeout
+
+- The one install and one API restart preserved exact source/runtime adapter
+  hash parity. PID 14919 is active with zero restarts, the scheduler remained
+  operator-paused, and no history job was active before the exact proof.
+- The sole `wsl-chrome-3` pass advanced 40 to 41. Child
+  `hmj_2a91562f15de476baf6f6217cc9c927b` matched identity and yielded
+  materialized/skipped/failed `2/4/1`, but the same large conversation remained
+  retryable and blocked the parent.
+- Its receipt no longer times out in the repaired visible-file reader. It
+  reaches `provider:chatgpt.readConversationMessages` and spends 117259 ms of
+  the 120000-ms context ceiling there. The stage uses one unbounded CDP
+  expression that computes every message's full `innerText` and serializes the
+  complete conversation by value.
+- Plan 0213 closes on its configured post-repair hard stop. No second repair,
+  retry, later completion resume, or scheduler resume is authorized; active
+  history jobs are zero.

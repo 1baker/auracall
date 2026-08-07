@@ -16891,3 +16891,27 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   and completion tests pass 183/183. Typecheck, touched Biome with zero
   warnings, and production build pass. The next effect is one install/restart
   after this source checkpoint is committed and pushed.
+
+## Turn 392 | 2026-08-07
+
+- The one permitted runtime install completed with exact adapter SHA-256
+  parity at
+  `71d09b49c0857ee5f9116c24dbc514f4c1d25a098c47999be4c37f29413caef6`.
+  One API restart produced PID 14919, active/running with zero crash restarts;
+  scheduler diagnostics remained operator-paused and active ChatGPT history
+  jobs were zero before the proof.
+- The sole authorized `wsl-chrome-3` `run_one_pass` advanced pass 40 to 41.
+  Child `hmj_2a91562f15de476baf6f6217cc9c927b` matched all provider-session
+  identity dimensions and materialized/skipped/failed `2/4/1` before the
+  parent returned blocked with its force ceiling cleared.
+- The fresh exact-conversation receipt shows Plan 0213 removed the prior
+  visible-file bottleneck: the timeout stage is now
+  `provider:chatgpt.readConversationMessages`, elapsed 117259 ms against the
+  120000-ms context ceiling. That adapter expression calls `innerText` for
+  every message and returns the entire large conversation by value in one
+  uncancelled CDP evaluation.
+- Plan 0213 closes fail-closed because its one repair and one post-repair
+  attempt are spent. Default, replacement `wsl-chrome-2`, and `wsl-chrome-4`
+  remain paused; `wsl-chrome-3` remains blocked; scheduler remains paused; and
+  active jobs are zero. No Gemini/Grok, prompt, `Answer now`, click,
+  navigation, guard bypass, account-library apply, or wider control action ran.
