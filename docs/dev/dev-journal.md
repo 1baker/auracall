@@ -44146,3 +44146,21 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   Plan 0208 closes `COMPLETE_PROVIDER_FREE_LIVE_WITHHELD`. No provider/browser
   callback, live read, canary, job, materialization, prompt, download, or
   scheduler/completion/guard action ran; no subagent was spawned.
+
+## 2026-08-07 | Plan 0209 opens bounded live-follow re-enablement
+
+- A fast installed assertion is red exactly on the requested outcome: API PID
+  67435 is healthy with zero restarts, while the scheduler and all six retained
+  completions remain operator-paused and queued/running/idle-waiting are
+  `0/0/0`.
+- Four ChatGPT targets are configured enabled with authoritative identity,
+  zero consecutive failures, and clear guards. ChatGPT/default is the first
+  bounded resume candidate at pass 4 with a complete cycle and no error.
+- Gemini and Grok stay excluded: their targets are disabled or unconfigured,
+  Gemini identity is unknown and one target has a `google-sorry` guard, while
+  Grok/default retains 21 consecutive failures.
+- Plan 0209 owns at most ten goal turns with an ordered exact-read,
+  one-`maxItems=1`-canary, repair-if-evidenced, default-first resume, configured
+  ChatGPT expansion, and scheduler-last contract. No provider, canary,
+  materialization, download, source/runtime, or control action has run inside
+  the plan yet; no subagent was spawned.

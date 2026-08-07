@@ -193,6 +193,12 @@ Lane: P01
   active history jobs are zero. Provider/browser contact, another context
   refresh, canary, job, materialization, download, prompt, and scheduler/
   completion/guard/loop action remain withheld.
+  Active bounded live-follow re-enablement successor:
+  [docs/dev/plans/0209-2026-08-07-bounded-live-follow-reenablement.md](docs/dev/plans/0209-2026-08-07-bounded-live-follow-reenablement.md).
+  It owns at most ten goal turns: one current exact-conversation read, one
+  `maxItems=1` canary, evidence-driven repair if required, then staged resume
+  of only the four configured authoritative ChatGPT targets and the scheduler.
+  Gemini, Grok, guarded, disabled, and unconfigured targets remain excluded.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,

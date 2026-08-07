@@ -16645,3 +16645,23 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   Plan 0197 context/receipt hashes remain unchanged. Plan 0208 closes
   `COMPLETE_PROVIDER_FREE_LIVE_WITHHELD`; no live read, canary, job,
   materialization, download, prompt, or runtime-control action ran.
+
+## Turn 380 | 2026-08-07
+
+- The operator opened a bounded goal of at most ten turns to diagnose, repair,
+  and re-enable live follow. Canonical authority is Plan 0209 at
+  `docs/dev/plans/0209-2026-08-07-bounded-live-follow-reenablement.md`.
+- The installed readiness verifier is intentionally red: API PID 67435 is
+  healthy with zero restarts, but the scheduler and all six retained
+  completions are paused and queued/running/idle-waiting are `0/0/0`.
+- Only four ChatGPT targets are in the re-enablement set. They are configured
+  enabled with authoritative identity, zero consecutive failures, and clear
+  guards. ChatGPT/default is first because pass 4 has a complete evidence cycle
+  and no error. Gemini and Grok remain excluded because they are disabled,
+  unconfigured, identity-unknown, guarded, or failure-stale.
+- The ordered gate is one exact bounded conversation read, provider-free
+  adjudication of the frozen cone, exactly one `maxItems=1` canary with durable
+  useful-yield proof, one bounded default completion pass, the other three
+  configured ChatGPT completions, and scheduler resume last. No provider or
+  runtime-control action occurs before this plan is audited, committed, and
+  pushed.
