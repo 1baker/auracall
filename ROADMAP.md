@@ -183,6 +183,14 @@ Lane: P01
   stale payload-only cone is not promoted to current evidence, so Plan 0207
   closes `STOPPED_FAIL_CLOSED`; no retry, canary, job, materialization, prompt,
   download, or scheduler/completion/guard/loop action ran.
+  Active provider-free command-lifecycle repair successor:
+  [docs/dev/plans/0208-2026-08-07-context-read-command-lifecycle-timeout-receipt-repair.md](docs/dev/plans/0208-2026-08-07-context-read-command-lifecycle-timeout-receipt-repair.md).
+  It owns a deterministic full-command regression and the smallest shared
+  timeout/receipt repair needed to cover pre-provider target/session setup.
+  Provider/browser contact, another context refresh, canary, job,
+  materialization, download, prompt, and scheduler/completion/guard/loop action
+  remain withheld; one install/restart is conditional on all provider-free
+  source gates passing.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,

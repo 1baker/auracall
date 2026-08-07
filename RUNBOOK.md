@@ -16591,3 +16591,26 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   Plan 0207 closes `STOPPED_FAIL_CLOSED`. No browser-tools follow-up, retry,
   canary, job, materialization, download, prompt, install/restart, or runtime
   control action ran.
+
+## Turn 379 | 2026-08-07
+
+- Read-only agent-browser inspection confirms the exact managed ChatGPT
+  conversation is rendered, visible, interactive, and free of login, CAPTCHA,
+  dialog, or provider-error blockers. The live CDP target ID differs from the
+  AuraCall-persisted target ID, narrowing diagnosis to AuraCall's target/session
+  attachment and command lifecycle rather than browser health.
+- Plan 0208 opens the provider-free repair at
+  `docs/dev/plans/0208-2026-08-07-context-read-command-lifecycle-timeout-receipt-repair.md`.
+  The existing service-level never-promise suite passes 9/9, demonstrating it
+  does not cover the full command path that reached Plan 0207's outer ceiling
+  without a fresh receipt.
+- Scope is one deterministic full-command regression, ranked diagnosis,
+  minimal shared timeout/receipt repair, full non-live validation, and at most
+  one green-gated user-runtime install/restart. Provider/browser contact,
+  another context refresh, canary, job, materialization, prompt, download, and
+  all scheduler/completion/guard/loop actions remain withheld.
+- Opening state is clean synchronized `b1de9862`; source/runtime service hashes
+  match; API PID 44127 is active with zero restarts; scheduler and six active
+  completions remain paused; queued/running/idle-waiting are `0/0/0`; default
+  pass 4 is unchanged; background drain is idle; active history jobs are zero.
+  Planning must be audited, committed, and pushed before source/test edits.

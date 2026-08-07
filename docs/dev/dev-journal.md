@@ -44077,3 +44077,24 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   Plan 0207 closes `STOPPED_FAIL_CLOSED`. No canary, job, materialization,
   prompt, download, install/restart, or scheduler/completion/guard action ran;
   no subagent was spawned.
+
+## 2026-08-07 | Plan 0208 opens full-command timeout diagnosis
+
+- Agent-browser read-only inspection proves the exact ChatGPT conversation and
+  managed browser process are healthy. The page is rendered and interactive
+  with no login, CAPTCHA, dialog, or provider-error blocker; the live target ID
+  differs from AuraCall's persisted target ID.
+- The existing provider-free context suite passes 9/9 in 149ms, so Plan 0204's
+  service-level never-promise regression does not exercise the pre-service
+  command lifecycle that exceeded Plan 0207's inner deadline without a fresh
+  receipt.
+- Plan 0208 owns one deterministic full-command provider-free regression,
+  ranked structural diagnosis, the smallest shared timeout/receipt repair, full
+  non-live validation, and at most one green-gated install/restart. No further
+  provider/browser contact, context refresh, canary, job, materialization,
+  prompt, download, or scheduler/completion/guard/loop action is authorized.
+- Opening state is clean synchronized `b1de9862`; source/runtime hashes match;
+  API PID 44127 is active/running with zero restarts; scheduler and six
+  completions remain paused; queued/running/idle-waiting are `0/0/0`; default
+  pass 4 is unchanged; background drain is idle; active history jobs are zero.
+  The primary agent owns the critical path; no subagent was spawned.
