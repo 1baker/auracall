@@ -20689,3 +20689,16 @@ browser-stage lifecycle observability, not transcript truncation.
 - Such rows remain retryable and are not terminal asset-family evidence, but
   the parent completion must still stop fail-closed. Recovery is one explicit
   bounded `run_one_pass`, not automatic cadence or an unbounded retry loop.
+
+## 2026-08-07 | Do not poll a ready large conversation with full-DOM scans
+
+- Symptom: one large ChatGPT conversation repeatedly exhausted the 120-second
+  context deadline at `chatgpt.readVisibleConversationFiles`, even though the
+  helper had a nominal 10-second wrapper.
+- Cause: after the conversation surface was already ready, the injected async
+  expression could run the full user-message/file-tile DOM collection 20 times.
+  A wrapper rejection does not cancel the in-page CDP evaluation, so repeated
+  scans could keep the renderer occupied until the outer context deadline.
+- Fix: collect the ready visible-file surface once. Preserve the readiness
+  gate, outer timeout, normalizer, identity checks, and hard stops. Regression
+  coverage inspects the actual injected expression and requires one collection.

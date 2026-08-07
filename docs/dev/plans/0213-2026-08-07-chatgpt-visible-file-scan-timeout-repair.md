@@ -72,7 +72,7 @@ scheduler last. Preserve strict identity, guard, CAPTCHA, and no-prompt rules.
 
 ## Acceptance Criteria
 
-- [ ] Red/green regression proves one visible-file DOM collection after the
+- [x] Red/green regression proves one visible-file DOM collection after the
   existing surface-readiness gate; normalization behavior remains covered.
 - [ ] Focused and adjacent tests, typecheck, lint, and build pass; source and
   installed runtime hashes match after one restart; API is healthy.
@@ -115,3 +115,26 @@ scheduler last. Preserve strict identity, guard, CAPTCHA, and no-prompt rules.
   availability findings are rejected by current receipts.
 - `next_action_or_stop_reason`: audit, commit, and push this boundary, then add
   the focused red regression before editing the adapter.
+
+## Checkpoint 2 | Provider-Free Repair Is Green
+
+- `plan_version`: 1
+- `checkpoint_id`: `P0213-C02`
+- `state_transition`: PROVIDER_FREE_REPAIR -> INSTALL_GATE.
+- `progress_classification`: blocker_reduction
+- `owned_changes`: `chatgptAdapter.ts`, its focused regression, and canonical
+  plan/journal/fix evidence.
+- `evidence`: the regression failed before export/repair and passes after the
+  injected expression changed from up to 20 `collect()` calls to exactly one.
+  Adapter tests pass 141/141; adjacent context/materialization/completion tests
+  pass 183/183; typecheck, zero-warning touched Biome, and production build pass.
+- `subagent_status`: `not_spawned`.
+- `remaining_criteria`: source commit/push, one install/restart with parity,
+  exact post-repair `wsl-chrome-3` proof, staged remainder, scheduler-last audit.
+- `authority_classification`: provider-free local repair inside the successor's
+  frozen write surface.
+- `review_disposition_summary`: one ready-surface scan preserves the existing
+  readiness gate, normalizer, 10-second wrapper, identity, and hard stops while
+  removing repeated renderer work. No broader adapter finding is accepted.
+- `next_action_or_stop_reason`: commit and push the green repair, install once,
+  restart once, and verify source/runtime parity before provider work.

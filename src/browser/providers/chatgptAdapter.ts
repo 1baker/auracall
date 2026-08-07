@@ -9008,15 +9008,11 @@ async function readVisibleChatgptConversationFilesWithClient(
         });
         return items;
       };
-      for (let attempt = 0; attempt < 20; attempt += 1) {
-        const items = collect();
-        if (items.length > 0) {
-          return items;
-        }
-        await sleep(200);
-      }
-      return collect();
-    })()`,
+		// Conversation-surface readiness is established by the caller. Repeating
+		// this full-DOM scan can monopolize a large conversation's renderer after
+		// the outer CDP deadline has fired, so collect the ready surface once.
+		return collect();
+	})()`,
 			awaitPromise: true,
 			returnByValue: true,
 		}),
@@ -9028,6 +9024,9 @@ async function readVisibleChatgptConversationFilesWithClient(
 		: [];
 	return normalizeChatgptConversationFileProbes(conversationId, rawItems);
 }
+
+export const readVisibleChatgptConversationFilesWithClientForTest =
+	readVisibleChatgptConversationFilesWithClient;
 
 async function readChatgptLibraryItemsWithClient(
 	client: ChromeClient,

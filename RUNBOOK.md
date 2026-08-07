@@ -16877,3 +16877,17 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   DOM scan 20 times. It requires red/green provider-free validation,
   commit/push, one install/restart, and one exact post-repair pass before wider
   re-enablement.
+
+## Turn 391 | 2026-08-07
+
+- Plan 0213's focused regression was red against the prior adapter because the
+  visible-file test seam did not exist. After repair it proves the injected
+  expression invokes the full ready-surface `collect()` exactly once rather
+  than polling it up to 20 times.
+- The outer 10-second CDP timeout, conversation-surface readiness, file
+  normalization, provider identity, blocking-surface recovery, and hard stops
+  are unchanged. Only repeated full-DOM work was removed.
+- Adapter tests pass 141/141; adjacent LLM-context, history-materialization,
+  and completion tests pass 183/183. Typecheck, touched Biome with zero
+  warnings, and production build pass. The next effect is one install/restart
+  after this source checkpoint is committed and pushed.

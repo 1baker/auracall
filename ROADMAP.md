@@ -246,6 +246,10 @@ Lane: P01
   It narrows repair to the injected 20-pass full-DOM visible-file scan, requires
   red/green provider-free proof and installed parity, and permits one exact
   post-repair `wsl-chrome-3` pass before any wider completion/scheduler resume.
+  The provider-free repair is green: the injected reader now performs exactly
+  one collection after its existing readiness gate; adapter tests pass 141/141,
+  adjacent suites 183/183, and typecheck/lint/build pass. Install parity and the
+  sole post-repair proof remain gated behind the pushed source checkpoint.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,

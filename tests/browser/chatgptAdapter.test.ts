@@ -52,6 +52,7 @@ import {
 	normalizeChatgptProjectSourceProbes,
 	normalizeChatgptVisibleImageArtifactProbes,
 	readChatgptConversationPayloadWithClient,
+	readVisibleChatgptConversationFilesWithClientForTest,
 	recordChatgptTargetSessionForTest,
 	recoverVisibleChatgptBlockingSurfaceWithClientForTest,
 	resolveChatgptCanvasArtifactContentText,
@@ -243,6 +244,7 @@ describe("clickChatgptViewerDownloadButtonWithClient", () => {
 			return { result: { value: { ok: true, label: "Download" } } };
 		});
 		const clicked = await clickChatgptViewerDownloadButtonWithClientForTest(
+			// biome-ignore lint/style/useNamingConvention: CDP domain names are protocol-defined.
 			{ Runtime: { evaluate } } as never,
 			{ scrapeTelemetry: telemetry },
 		);
@@ -2515,6 +2517,24 @@ describe("normalizeChatgptConversationLinkProbes", () => {
 });
 
 describe("normalizeChatgptConversationFileProbes", () => {
+	test("collects the ready conversation file DOM only once", async () => {
+		let expression = "";
+		const evaluate = vi.fn(async (input: { expression?: string }) => {
+			expression = input.expression ?? "";
+			return { result: { value: [] } };
+		});
+
+		await expect(
+			readVisibleChatgptConversationFilesWithClientForTest(
+				// biome-ignore lint/style/useNamingConvention: CDP domain names are protocol-defined.
+				{ Runtime: { evaluate } } as never,
+				"6a563289-d5d8-83ea-9a2b-0e89e7078dff",
+			),
+		).resolves.toEqual([]);
+		expect(evaluate).toHaveBeenCalledTimes(1);
+		expect(expression.match(/\bcollect\(\)/g) ?? []).toHaveLength(1);
+	});
+
 	test("emits stable conversation file refs from user-turn probes", () => {
 		expect(
 			normalizeChatgptConversationFileProbes("69c95f14-2ca0-8329-9d3a-be5d1a1967ab", [

@@ -44376,3 +44376,17 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   repair, focused validation, one install/restart, and one exact post-repair
   `wsl-chrome-3` proof. Default and replacement `wsl-chrome-2` remain paused,
   `wsl-chrome-3` blocked, `wsl-chrome-4` paused, and scheduler paused.
+
+## 2026-08-07 | Visible-file ready-surface scan is bounded to one collection
+
+- A focused adapter regression first failed against the prior source. It now
+  calls the visible-file test seam with a provider-free fake CDP client and
+  requires exactly one `collect()` invocation in the injected expression.
+- The repair removes the 20-pass polling loop after conversation-surface
+  readiness and returns one normalized collection. It preserves the outer
+  10-second timeout, identity and guard logic, recovery wrapper, and file
+  normalization semantics.
+- Validation: adapter `141/141`; adjacent context/materialization/completion
+  `183/183`; typecheck; zero-warning touched Biome; production build. No browser,
+  provider, completion, scheduler, install, or restart action occurred in this
+  provider-free packet.
