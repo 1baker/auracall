@@ -4,8 +4,8 @@ State: OPEN
 Lane: P01
 Plan version: 2
 Outcome: IN_PROGRESS
-Goal execution state: CANARY_READY
-Gate state: EXACT_ARTIFACT_FROZEN
+Goal execution state: RESUMING_DEFAULT
+Gate state: DEFAULT_ONE_BOUNDED_PASS
 
 ## Stable Goal Objective
 
@@ -164,7 +164,7 @@ transport/job status as useful-yield proof.
 - [x] Provider-free simulation selects exactly one nonterminal artifact in the
   exact conversation after the stale file lane is rejected, with zero provider
   callbacks and zero durable writes.
-- [ ] One exact `maxItems=1` canary proves one readable local asset with matching
+- [x] One exact `maxItems=1` canary proves one readable local asset with matching
   checksum, manifest, and archive evidence, or stops truthfully without retry.
 - [ ] ChatGPT/default completes one bounded resumed pass with authoritative
   identity, clear guard, finite budget, and monotonic progress.
@@ -294,3 +294,41 @@ progress, no unexpected jobs, and no excluded-target activation.
 - `next_action_or_stop_reason`: run goal/library audits and commit/push this
   exact gate. Only then create one durable canary with the frozen request and
   stop after its first terminal disposition.
+
+## Checkpoint 4 | Canary Proved Useful Yield
+
+- `plan_version`: 2
+- `checkpoint_id`: `P0210-C04`
+- `state_transition`: CANARY_READY -> CANARY_PROVING -> RESUMING_DEFAULT.
+- `progress_classification`: acceptance_criterion_met
+- `owned_changes`: exactly one durable history-materialization job and one
+  provider materialization/download action for the frozen asset. No retry,
+  substitute, prompt, completion/scheduler control, install, or restart.
+- `evidence`: job `hmj_59ae632ddc2a4b9c93835ed0d5ca7c3e` ran attempt 1
+  and succeeded with materialized/skipped/failed `1/0/0`. All four provider
+  session dimensions matched. The archive canonical item is readable and
+  available as a 218,312-byte, 2048x528 RGBA PNG at SHA-256
+  `6a6aa3f0e6461372e7ddd4d3c881a55944b36d2ef0a6ff763919caa72183b4fe`.
+  The one-entry artifact manifest records `estuary-image-fetch`, one attempted
+  and successful download, zero failed downloads, and has SHA-256
+  `2609209f765cd2dc6cb46fd836f9247e228b037d997ffabacaa5d56a95b4a803`.
+  Provider-free recovery decreased retrievable artifacts/total from `6/13` to
+  `5/12`, while local materialized artifacts/total increased from `5/6` to
+  `6/7`. Active history jobs returned to zero.
+- `subagent_status`: `not_spawned`.
+- `budget_consumption`: campaign turns 3/10; plan versions 2/2; provider
+  callbacks 1; durable jobs 1/1; canaries 1/1; materialization callbacks 1/1;
+  downloads 1/1 successful; provider retries 0/0; completion actions 0/4;
+  scheduler actions 0/1; prompts 0; installs 0; restarts 0.
+- `remaining_criteria`: one bounded default pass; the other three configured
+  ChatGPT targets; scheduler-last observation; final audits and readbacks.
+- `authority_classification`: useful-yield evidence satisfies the committed
+  gate and opens only the planned default completion `run-one-pass` packet.
+- `review_disposition_summary`: hypothesis 4 is confirmed. The provider and
+  exact identity are healthy for a stable generated-image pointer; the prior
+  failure is isolated to unavailable stale file objects, not the browser or
+  materialization engine as a whole.
+- `next_action_or_stop_reason`: after audit/commit/push, invoke
+  `run-one-pass` exactly once on retained ChatGPT/default completion
+  `acctmirror_completion_db1266f9-7b50-41d5-bf32-1adaddb735b3`; stop and
+  re-pause on guard, identity drift, uncontrolled fanout, or no progress.

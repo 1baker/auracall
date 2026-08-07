@@ -16765,3 +16765,20 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
 - The exact artifact canary is frozen but has not run. Scheduler and all six
   completions remain paused; no job, materialization, download, prompt,
   completion/scheduler control, install, or restart has occurred in Plan 0210.
+
+## Turn 385 | 2026-08-07
+
+- The frozen Plan 0210 artifact canary was created only after commit
+  `5a50f295` was pushed. Job `hmj_59ae632ddc2a4b9c93835ed0d5ca7c3e`
+  ran exactly one attempt with the frozen conversation/artifact identity,
+  `assetKinds=artifacts`, `maxItems=1`, no refresh, no force, and no retry.
+- It matched all four provider-session identity dimensions and succeeded with
+  materialized/skipped/failed `1/0/0`. The local PNG is 218,312 bytes,
+  2048x528 RGBA, and has SHA-256
+  `6a6aa3f0e6461372e7ddd4d3c881a55944b36d2ef0a6ff763919caa72183b4fe`.
+  Archive readback is available and canonical; the one-entry manifest records
+  `estuary-image-fetch` and download attempts/successes/failures `1/1/0`.
+- Recovery moved monotonically from retrievable artifacts/total `6/13` to
+  `5/12` and local materialized artifacts/total `5/6` to `6/7`. Active history
+  jobs are zero. Scheduler and six completions remain paused pending the
+  audited one-pass default checkpoint.

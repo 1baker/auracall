@@ -44265,3 +44265,19 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   `df7270ec9161fc0496425311e3440ef4a78daaf5b1a59ab6b5be86e13d87b86d`.
   The artifact canary is ready only after this gate passes audit, commit, and
   push; scheduler and completions remain paused.
+
+## 2026-08-07 | Plan 0210 artifact canary proves useful yield
+
+- After pushed gate `5a50f295`, exactly one job
+  (`hmj_59ae632ddc2a4b9c93835ed0d5ca7c3e`) ran exactly one attempt for the
+  frozen generated image. It matched all four provider-session identity
+  dimensions and ended materialized/skipped/failed `1/0/0` without retry.
+- The output is a readable 218,312-byte, 2048x528 RGBA PNG at SHA-256
+  `6a6aa3f0e6461372e7ddd4d3c881a55944b36d2ef0a6ff763919caa72183b4fe`.
+  Canonical archive readback is available and the one-entry artifact manifest
+  records `estuary-image-fetch` with downloads `1/1/0`.
+- Recovery advanced by one artifact: retrievable artifacts/total are `5/12`
+  and local materialized artifacts/total are `6/7`. Active history jobs are
+  zero. The next bounded packet is exactly one default completion pass after
+  this checkpoint is audited, committed, and pushed; scheduler and all
+  completions remain paused meanwhile.

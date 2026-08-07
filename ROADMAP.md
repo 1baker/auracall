@@ -214,8 +214,10 @@ Lane: P01
   provider-free selection freezes one never-attempted generated-image pointer
   in the same conversation. Its exact archive/job/filesystem readbacks are
   zero and the durable index is unchanged; only this audited/pushed
-  `maxItems=1` artifact gate may create one canary. Useful yield remains
-  mandatory before default-first completion and scheduler-last resume.
+  `maxItems=1` artifact gate may create one canary. That canary succeeded on
+  attempt 1 with one 218,312-byte PNG, matching checksum/manifest/archive
+  evidence, and zero skipped/failed items. Plan 0210 now permits exactly one
+  bounded default completion pass before any wider target or scheduler resume.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,
