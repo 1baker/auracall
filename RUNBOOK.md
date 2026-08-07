@@ -16915,3 +16915,19 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   remain paused; `wsl-chrome-3` remains blocked; scheduler remains paused; and
   active jobs are zero. No Gemini/Grok, prompt, `Answer now`, click,
   navigation, guard bypass, account-library apply, or wider control action ran.
+
+## Turn 393 | 2026-08-07
+
+- The operator explicitly authorized a bounded successor for chunked or
+  interruptible ChatGPT message extraction, provider-free validation, and one
+  prepared `wsl-chrome-3` canary. Plan 0214 freezes that envelope and excludes
+  install, restart, provider/browser work, all completion controls, and all
+  scheduler controls.
+- The primary hypothesis is the single full-conversation `innerText` plus
+  by-value CDP response. The red regression must require fixed-size message
+  pages, non-layout `textContent`, ordered full-body aggregation, message-ID
+  preservation, and a timeout boundary on each page.
+- The future canary is frozen but not authorized to run: completion
+  `acctmirror_completion_fb93ed6c-c57b-40cd-b5dc-ba6322f75446`, one
+  `run-one-pass`, expected pass 41 to 42, exactly one child, scheduler paused,
+  and all other intended completions paused.

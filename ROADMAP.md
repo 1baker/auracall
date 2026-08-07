@@ -256,6 +256,13 @@ Lane: P01
   `provider:chatgpt.readConversationMessages`, whose single CDP expression
   reads and returns every message's complete `innerText`. Plan 0213 therefore
   closes fail-closed; no wider completion or scheduler resume ran.
+  Active provider-free message-extraction successor:
+  [docs/dev/plans/0214-2026-08-07-chatgpt-message-extraction-chunking-and-canary-gate.md](docs/dev/plans/0214-2026-08-07-chatgpt-message-extraction-chunking-and-canary-gate.md).
+  It permits one red/green repair that pages visible message nodes, removes
+  layout-sensitive `innerText`, and places a timeout boundary around every
+  page while preserving full ordered content. Install, restart, provider work,
+  completion controls, and scheduler controls are excluded. The final artifact
+  is a frozen pass-42 `wsl-chrome-3` canary for a later explicit effect gate.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,

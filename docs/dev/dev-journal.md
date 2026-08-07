@@ -44408,3 +44408,14 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Plan 0213 closes on its configured post-repair hard stop. No second repair,
   retry, later completion resume, or scheduler resume is authorized; active
   history jobs are zero.
+
+## 2026-08-07 | Message extraction successor authorized provider-free
+
+- Plan 0214 owns one red/green repair of the exact
+  `provider:chatgpt.readConversationMessages` stage. The intended seam pages a
+  fixed number of message nodes per CDP call, uses `textContent` rather than
+  layout-sensitive `innerText`, aggregates complete ordered bodies and IDs, and
+  times out every page independently.
+- Provider and runtime effects remain excluded. The successor may only prepare
+  a future exact `wsl-chrome-3` pass-42 canary; it may not install, restart,
+  invoke the provider, control a completion, or control the scheduler.
