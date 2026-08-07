@@ -1,3 +1,12 @@
+- 2026-08-06: A retained ChatGPT CDP target can expose matching account
+  dimensions while still failing provider-session authority when its browser
+  provenance is absent. Treat `provider_session_provenance_missing` as a
+  terminal identity-safety stop: do not convert observed email/plan/structure
+  into authorization, do not reuse stale context as fresh evidence, and do not
+  retry or launch browser diagnostics under a one-read packet. Preserve the
+  metadata-only terminal receipt and require a separately reviewed provenance
+  repair before another live read.
+
 - 2026-08-06: A provider promise that never settles must not outlive the shared
   conversation-context operation. `LlmService.getConversationContext(...)`
   now applies one finite 120-second deadline across retries, composes any caller

@@ -1,10 +1,10 @@
 # Bounded Exact Cone Context Refresh And Canary Readjudication | 0205-2026-08-06
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 1
-Outcome: PENDING_BOUNDED_LIVE_READ
-Goal execution state: AWAITING_BOUNDED_CONTEXT_READ
+Outcome: STOPPED_FAIL_CLOSED
+Goal execution state: STOPPED_FAIL_CLOSED
 Gate state: CANARY_WITHHELD
 
 ## Stable Goal Objective
@@ -112,18 +112,18 @@ create a job, start materialization, or resume any scheduler/completion loop.
 
 ## Acceptance Criteria
 
-- [ ] Planning boundary is audited, committed, and pushed before provider
+- [x] Planning boundary is audited, committed, and pushed before provider
   contact; the unowned baseline remains untouched and cannot mask Plan 0205.
-- [ ] Preflight binds the exact installed runtime, account, conversation, cache,
+- [x] Preflight binds the exact installed runtime, account, conversation, cache,
   paused scheduler/completions, default pass 4, idle foreground, clear guard,
   and zero active history jobs.
-- [ ] Exactly one bounded installed refresh command reaches its first terminal
+- [x] Exactly one bounded installed refresh command reaches its first terminal
   exit with no retry and a durable receipt.
-- [ ] Only the frozen cone is classified from the terminal receipt and fresh
+- [x] Only the frozen cone is classified from the terminal receipt and terminal
   cache; no alternate asset or conversation is inferred.
-- [ ] The one-canary gate is frozen truthfully and no canary, job,
+- [x] The one-canary gate is frozen truthfully and no canary, job,
   materialization, download, prompt, or control action runs.
-- [ ] Plan, ROADMAP, RUNBOOK, journal, planning audit, owned git state, remote
+- [x] Plan, ROADMAP, RUNBOOK, journal, planning audit, owned git state, remote
   parity, and final frozen-runtime readback agree.
 
 ## Hard Stops And Non-Goals
@@ -166,3 +166,53 @@ runs.
   pass is reopened.
 - `next_action_or_stop_reason`: audit/commit/push this boundary, then run the
   exact frozen-runtime preflight before spending the sole bounded read.
+
+## Checkpoint 2 | Provenance Gate Stops The Sole Read
+
+- `plan_version`: 1
+- `checkpoint_id`: `P0205-C02`
+- `state_transition`: AWAITING_BOUNDED_CONTEXT_READ ->
+  READING_BOUNDED_CONTEXT -> STOPPED_FAIL_CLOSED.
+- `progress_classification`: blocker_discovery
+- `owned_changes`: planning commit `ff49f686`; one exact installed read-only
+  refresh command; its normal metadata-only terminal receipt; provider-free
+  receipt/cache/runtime adjudication; terminal docs. No source, installed
+  runtime, job, materialization, prompt, download, canary, or control change.
+- `evidence`: planning audits reported zero Plan 0205 problems and the planning
+  boundary was pushed before provider contact. Preflight source/runtime hashes
+  matched and the frozen runtime was green. The sole command used inner
+  `timeoutMs=120000` and the 150-second outer ceiling, then exited 1 without
+  retry on `provider_session_provenance_missing`. The receipt records
+  `outcome=failed`, `attemptCount=1`, `elapsedMs=9964`,
+  `lastStage=cdp:Runtime.enable`, and the same stable error code. Provider
+  identity dimensions were observed, but browser profile, managed browser
+  profile, and browser-process provenance were absent, so authorization failed
+  closed. The context file remains timestamped 2026-08-06 10:22 local with
+  SHA-256 `0c71832d99b423ed3de9e496e43346ac917b1d2de27573632ebbf30f5762b7b4`;
+  it still has eleven artifacts and the cone remains payload-only with all
+  live-control fields null. Final API PID 16737 is healthy, scheduler and six
+  completions are paused, queued/running/idle-waiting are `0/0/0`, default pass
+  4 is unchanged, foreground is idle, default guard is null, and active history
+  jobs are zero.
+- `subagent_status`: `not_spawned`.
+- `budget_consumption`: plan versions 1/1; execution packets 1/1; planning
+  commits 1/1; closeout commits 0/1 before this terminal commit; provider
+  context refresh commands 1/1; conversations 1/1; retries 0/0; inner timeout
+  120000/120000 ms; outer ceiling 150/150 seconds configured; provider-free
+  adjudications 1/1; planning-audit executions 5/2 across three command groups
+  after the stricter auditor required one wiring remediation and the closed
+  state required a terminal library audit (bounded process exception); installs,
+  restarts, jobs,
+  materialization callbacks, downloads, prompts, assets, scheduler/completion/
+  guard actions, direct JSON edits, and CodeGraph calls 0.
+- `remaining_criteria`: terminal docs commit/push and owned remote parity only;
+  current canary evidence remains unavailable.
+- `authority_classification`: the separately explicit one-read authority is
+  consumed. No further provider read, provenance repair, canary,
+  materialization, browser diagnostic, or control authority remains.
+- `review_disposition_summary`: the terminal provenance failure is accepted as
+  blocking current-control evidence. The stale payload-only cache is not
+  promoted to a current classification, and no substitute or retry is opened.
+- `next_action_or_stop_reason`: stop fail-closed. A future successor must first
+  review how retained browser targets acquire bound browser-profile and process
+  provenance; this plan cannot diagnose live or rerun the read.

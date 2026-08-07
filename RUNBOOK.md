@@ -16489,3 +16489,25 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   downloads, prompts, guard actions, browser-tools follow-up, retry, and loop
   resume remain forbidden. One unowned legacy planning-baseline file present at
   turn start is preserved untouched and cannot exempt Plan 0205 from audit.
+- Planning commit `ff49f686` was audited and pushed before provider contact.
+  The frozen preflight passed source/runtime parity, scheduler/completion pauses,
+  default pass 4, idle foreground, null guard, and zero active jobs.
+- The sole exact installed refresh used `--timeout-ms 120000` under a 150-second
+  outer ceiling and exited 1 without retry on
+  `provider_session_provenance_missing`. The retained target observed account
+  dimensions but lacked bound browser-profile, managed-profile, and process
+  provenance, so authorization stopped before a fresh context write.
+- The terminal receipt records `failed`, attempt 1, 9,964ms elapsed,
+  `cdp:Runtime.enable`, and the stable provenance error code. The context file
+  remains unchanged at eleven artifacts; the cone is still payload-only with
+  null live-control fields. Final API PID 16737 is healthy with scheduler and
+  six completions paused, `0/0/0` queued/running/idle-waiting, default pass 4,
+  foreground idle, null guard, and zero active history jobs.
+- Plan 0205 closes `STOPPED_FAIL_CLOSED`. No retry, browser-tools follow-up,
+  canary, job, materialization, download, prompt, control action, or loop resume
+  ran.
+- Process exception: the two-audit ceiling counted five audit executions across
+  three bounded command groups because the stricter active-plan audit caught
+  lane/runbook wiring, both auditors were rerun after remediation, and the
+  closed state required a final library audit. All Plan 0205 findings are clear;
+  no extra provider/runtime action accompanied the audit overrun.

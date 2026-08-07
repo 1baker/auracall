@@ -43965,3 +43965,27 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Policy selection is `already-aligned` and the goal-policy audit is green. An
   unrelated untracked legacy planning baseline existed at turn start; it is
   preserved untouched and cannot mask the new Plan 0205 audit.
+
+## 2026-08-06 | Plan 0205 stops at provider-session provenance
+
+- Planning commit `ff49f686` was audited and pushed before provider contact.
+  The exact installed/source hashes and frozen runtime preflight passed.
+- Exactly one refresh command ran for conversation
+  `67ccf9d7-9310-8004-b5e1-478dba6eab3a`, with the 120-second inner deadline
+  and 150-second outer ceiling. It exited 1 without retry on
+  `provider_session_provenance_missing` because the retained browser target
+  lacked bound browser-profile, managed-profile, and process provenance.
+- The metadata-only receipt records one failed attempt, 9,964ms elapsed,
+  `cdp:Runtime.enable`, and the stable error code. No fresh context was written;
+  the prior eleven-artifact cache and payload-only cone remain unchanged.
+- Final API PID 16737 is healthy. Scheduler and six completions remain paused,
+  queued/running/idle-waiting are `0/0/0`, default pass 4 is unchanged,
+  foreground is idle, the default guard is null, and active history jobs are
+  zero. No retry, browser-tools follow-up, canary, job, materialization,
+  download, prompt, scheduler/completion/guard action, or loop resume ran. Plan
+  0205 closes `STOPPED_FAIL_CLOSED`; no subagent was spawned.
+- Process exception: five audit executions ran across three bounded command
+  groups against a two-audit ceiling. The extra executions were the closed-world
+  remediation verification after the active-plan auditor caught lane/runbook
+  wiring and the terminal library audit; all Plan 0205 findings are clear and
+  no provider/runtime budget expanded.

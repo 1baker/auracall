@@ -160,13 +160,14 @@ Lane: P01
   foreground, clear ChatGPT guards, and zero active history jobs. Provider/
   browser contact, another live refresh, canary, materialization, and loop or
   control action remain withheld.
-  Active bounded exact-read successor:
+  Closed bounded exact-read successor:
   [docs/dev/plans/0205-2026-08-06-bounded-exact-cone-context-refresh-and-canary-readjudication.md](docs/dev/plans/0205-2026-08-06-bounded-exact-cone-context-refresh-and-canary-readjudication.md).
-  The operator authorizes one installed 120-second exact-conversation refresh
-  with a 150-second outer ceiling, followed by provider-free classification of
-  only the frozen cone. No retry, browser-tools follow-up, canary, job,
-  materialization, scheduler/completion/guard action, or loop resume is
-  authorized.
+  The sole installed exact-conversation refresh exited 1 without retry on
+  `provider_session_provenance_missing`. Its terminal receipt records one
+  failed attempt and the cached context remains unchanged, so the cone still
+  lacks current live-control evidence. Plan 0205 closes `STOPPED_FAIL_CLOSED`;
+  no browser-tools follow-up, canary, job, materialization, download, prompt,
+  scheduler/completion/guard action, or loop resume ran.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,
