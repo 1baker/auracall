@@ -16827,3 +16827,18 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   local observation repair before any retry. No browser click/navigation,
   prompt, `Answer now`, guard bypass, cookie move, or later-target resume is
   authorized before that classification.
+
+## Turn 388 | 2026-08-07
+
+- After audited/pushed Plan 0212 boundary `5baa0104`, agent-browser attached
+  read-only to the already-running `wsl-chrome-2` managed browser on DevTools
+  port 45013. Exactly one tab exists at `https://chatgpt.com/`, title `ChatGPT`.
+- The visible page is signed out: it says `Log in to get answers based on saved
+  chats` and exposes Log in/Sign up controls. No account identity is available,
+  fully explaining the prior `provider_session_observation_missing` result.
+- This is a human authentication gate, not a local capture or observation-code
+  defect. No click, navigation, sign-in attempt, cookie move, provider retry,
+  prompt, `Answer now`, install, restart, later-target resume, or scheduler
+  action ran. Default, `wsl-chrome-3`, and `wsl-chrome-4` remain paused;
+  `wsl-chrome-2` remains terminal-failed; scheduler remains paused; active
+  materialization jobs are zero.

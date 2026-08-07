@@ -3,9 +3,9 @@
 State: OPEN
 Lane: P01
 Plan version: 1
-Outcome: IN_PROGRESS
-Goal execution state: DIAGNOSING_IDENTITY_OBSERVATION
-Gate state: READ_ONLY_BROWSER_INSPECTION
+Outcome: BLOCKED_HUMAN_LOGIN_REQUIRED
+Goal execution state: AWAITING_HUMAN_GATE
+Gate state: HUMAN_LOGIN_REQUIRED
 
 ## Stable Goal Objective
 
@@ -73,7 +73,7 @@ account identity, CAPTCHA, provider-guard, and no-prompt boundaries.
 
 ## Acceptance Criteria
 
-- [ ] Exact managed-browser inspection distinguishes healthy expected account
+- [x] Exact managed-browser inspection distinguishes healthy expected account
   from sign-in/challenge/identity drift without mutation.
 - [ ] If local code is at fault, focused regression and affected validation
   pass, committed and installed runtime hashes match, and the API is healthy.
@@ -114,3 +114,29 @@ account identity, CAPTCHA, provider-guard, and no-prompt boundaries.
   the sole accepted blocking finding.
 - `next_action_or_stop_reason`: audit, commit, and push this boundary, then use
   the one read-only exact-profile inspection.
+
+## Checkpoint 2 | Exact Browser Is Signed Out
+
+- `plan_version`: 1
+- `checkpoint_id`: `P0212-C02`
+- `state_transition`: READ_ONLY_BROWSER_INSPECTION -> AWAITING_HUMAN_GATE.
+- `progress_classification`: blocker_reduction
+- `owned_changes`: read-only exact managed-browser inspection and durable
+  evidence only; no source, runtime, browser, or provider mutation.
+- `evidence`: agent-browser attached to existing DevTools port 45013 and found
+  exactly one tab at `https://chatgpt.com/`, title `ChatGPT`. Visible body text
+  includes `Log in to get answers based on saved chats`, `Log in`, and `Sign up
+  for free`; no authenticated account identity is present. There was no click,
+  navigation, login attempt, CAPTCHA bypass, prompt, model selection, or
+  `Answer now` action.
+- `subagent_status`: `not_spawned`.
+- `remaining_criteria`: a human must log the existing `wsl-chrome-2` managed
+  browser into the configured `consult@polymerconsultinggroup.com` personal Pro
+  account; after explicit confirmation, re-read identity and continue the
+  bounded one-target proof.
+- `authority_classification`: human authentication is a pre-existing security
+  gate and is not delegated to automation.
+- `review_disposition_summary`: local code defect rejected; the observed
+  signed-out page fully explains `provider_session_observation_missing`.
+- `next_action_or_stop_reason`: stop without retry or later-target resume until
+  the operator completes login in the existing managed browser.

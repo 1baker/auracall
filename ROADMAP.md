@@ -233,7 +233,11 @@ Lane: P01
   [docs/dev/plans/0212-2026-08-07-wsl-chrome-2-provider-session-observation-recovery.md](docs/dev/plans/0212-2026-08-07-wsl-chrome-2-provider-session-observation-recovery.md).
   It permits one read-only inspection of the exact existing managed browser,
   then either stops for human sign-in/challenge or gates an evidence-driven
-  local observation repair before any bounded retry.
+  local observation repair before any bounded retry. The inspection found one
+  healthy ChatGPT tab on port 45013, but it is signed out and exposes no account
+  identity. Plan 0212 is awaiting human login to the configured
+  `consult@polymerconsultinggroup.com` personal Pro account; all completions and
+  the scheduler remain paused/failed closed until that gate is cleared.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,

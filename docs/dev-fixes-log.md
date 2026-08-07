@@ -7,6 +7,14 @@
   account does not authorize `wsl-chrome-2`; stop and re-pause on missing
   observation evidence before later targets or scheduler resume.
 
+- 2026-08-07: `provider_session_observation_missing` can be the correct result
+  for a healthy managed browser that is simply signed out. Inspect the exact
+  existing DevTools target read-only before changing observation code: a
+  normal ChatGPT landing page with Log in/Sign up controls supplies no account
+  authority. Treat that state as a human authentication gate; do not navigate,
+  click login, copy cookies, retry the completion, or infer identity from the
+  configured account alone.
+
 - 2026-08-07: A context read deadline that begins only after browser target and
   cache-identity setup is not a command deadline. Plan 0207's exact-ID command
   exceeded its 120-second inner bound and produced no fresh receipt even though

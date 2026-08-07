@@ -44321,3 +44321,16 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Plan 0212 makes the next unit one read-only exact-profile browser inspection.
   A logged-out, challenged, ambiguous, or wrong account is a human gate; only
   visibly healthy expected-account evidence can justify local code diagnosis.
+
+## 2026-08-07 | WSL Chrome 2 is healthy but signed out
+
+- Agent-browser attached read-only to the existing managed Chrome on port
+  45013. It found one `https://chatgpt.com/` tab with title `ChatGPT`; the page
+  is responsive and displays normal signed-out Log in/Sign up UI.
+- No account identity is observable, so
+  `provider_session_observation_missing` is the correct fail-closed result.
+  This does not implicate the installed capture repair or default browser.
+- Plan 0212 now waits for a human to authenticate the existing managed browser
+  as configured `consult@polymerconsultinggroup.com` personal Pro. Automation
+  did not click, navigate, sign in, move cookies, retry the completion, or
+  resume any later target/scheduler control.
