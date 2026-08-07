@@ -44024,3 +44024,20 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   serial full suite passes 304 files / 2,725 tests with 65 opt-in tests skipped.
   Source commit/push, one conditional install/restart, and installed proof
   remain. No provider/browser or frozen control action ran.
+
+## 2026-08-06 | Plan 0206 closes installed and provider-free
+
+- Planning commit `1746af55` and source commit `a0383298` are pushed. One
+  authorized user-runtime install/API restart completed after all source gates
+  passed. Source and installed `llmService.js` hashes match at
+  `2bf2ea406e0209ff435c41dcca0d21c62f4d921249665ec82575f89b23c1e0a9`.
+- An installed local harness resolves the managed target once, calls only a
+  local adapter stub, makes zero live provider/browser calls, and preserves
+  browser profile, source browser profile, managed browser profile, process ID,
+  target ID, DevTools host, and DevTools port through context retrieval.
+- Final API PID 44127 is active/running; scheduler and six completions remain
+  paused; queued/running/idle-waiting are `0/0/0`; default ChatGPT pass 4 and
+  null guard are unchanged; background drain is idle; active history jobs are
+  zero. Plan 0206 closes `COMPLETE_PROVIDER_FREE_LIVE_WITHHELD`. No context
+  refresh, canary, materialization, job, download, prompt, or control action
+  ran; no subagent was spawned.

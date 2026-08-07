@@ -16542,3 +16542,15 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   skipped. An earlier build/test concurrency collision produced three transient
   MCP launcher `ENOENT` failures; their exact rerun and the clean full rerun
   both pass.
+- Source commit `a0383298` was pushed before the sole install/restart. Source
+  and installed `llmService.js` hashes match at
+  `2bf2ea406e0209ff435c41dcca0d21c62f4d921249665ec82575f89b23c1e0a9`.
+  The installed provider-free harness retained all seven provenance fields with
+  one resolver call and one local adapter-stub call, and made zero live
+  provider/browser calls.
+- Final API PID 44127 is active/running. Scheduler and six completions remain
+  paused, queued/running/idle-waiting are `0/0/0`, default ChatGPT pass 4 and
+  null guard are unchanged, background drain is idle, and active history jobs
+  are zero. Plan 0206 closes `COMPLETE_PROVIDER_FREE_LIVE_WITHHELD`; no context
+  refresh, canary, job, materialization, download, prompt, or runtime-control
+  action ran.

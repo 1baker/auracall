@@ -1,10 +1,10 @@
 # Provider Session Provenance Provider-Free Repair | 0206-2026-08-06
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 1
-Outcome: IN_PROGRESS
-Goal execution state: ACTIVE
+Outcome: COMPLETE_PROVIDER_FREE_LIVE_WITHHELD
+Goal execution state: COMPLETE_PROVIDER_FREE_LIVE_WITHHELD
 Gate state: CANARY_WITHHELD
 
 ## Stable Goal Objective
@@ -104,18 +104,18 @@ materialization, or resume any scheduler/completion loop.
 
 ## Acceptance Criteria
 
-- [ ] One fast, deterministic, agent-runnable regression reproduces the exact
+- [x] One fast, deterministic, agent-runnable regression reproduces the exact
   null provenance construction and turns green after the repair.
-- [ ] The causal path is recorded from ranked falsifiable hypotheses and
+- [x] The causal path is recorded from ranked falsifiable hypotheses and
   structural evidence; the fix uses resolved managed-session provenance rather
   than endpoint/account inference.
-- [ ] Existing incomplete, conflicting, and stale session cases remain
+- [x] Existing incomplete, conflicting, and stale session cases remain
   fail-closed with stable authority semantics.
-- [ ] Focused/affected tests, typecheck, lint, build, full non-live suite, diff
+- [x] Focused/affected tests, typecheck, lint, build, full non-live suite, diff
   hygiene, and closed-world review pass.
-- [ ] At most one install/restart produces source/runtime parity and one
+- [x] At most one install/restart produces source/runtime parity and one
   provider-callback-disabled installed proof.
-- [ ] Plan, ROADMAP, RUNBOOK, journal, fixes log, audits, git/remote state, and
+- [x] Plan, ROADMAP, RUNBOOK, journal, fixes log, audits, git/remote state, and
   final frozen-runtime readback agree; no live read, canary, job,
   materialization, or loop/control action occurs.
 
@@ -193,3 +193,44 @@ materialization, scheduler, and completions remain frozen.
   verification is limited to provenance retention and authority regressions.
 - `next_action_or_stop_reason`: run the full suite serially after the completed
   build, then commit/push the source checkpoint only if all gates are green.
+
+## Checkpoint 3 | Installed Provenance Repair Complete, Live Still Withheld
+
+- `plan_version`: 1
+- `checkpoint_id`: `P0206-C03`
+- `state_transition`: VALIDATING -> COMPLETE_PROVIDER_FREE_LIVE_WITHHELD.
+- `progress_classification`: blocker_reduction
+- `owned_changes`: planning commit `1746af55`; source/test/docs commit
+  `a0383298`; one user-runtime install and API restart; installed local stub
+  proof; terminal docs.
+- `evidence`: targeted tests pass 69/69; clean full non-live suite passes 304
+  files / 2,725 tests with 65 opt-in tests skipped; typecheck, touched-file
+  Biome lint, production build, and diff hygiene pass. The installed and source
+  build `llmService.js` hashes both equal
+  `2bf2ea406e0209ff435c41dcca0d21c62f4d921249665ec82575f89b23c1e0a9`.
+  The installed provider-free harness resolves once, invokes one local adapter
+  stub, makes zero live provider/browser calls, and retains all seven profile,
+  process, target, and endpoint fields. Final API PID 44127 is active/running;
+  scheduler paused; six active completions paused; queued/running/idle-waiting
+  `0/0/0`; default ChatGPT pass 4 and null guard unchanged; background drain
+  idle; active history jobs zero.
+- `subagent_status`: `not_spawned`.
+- `budget_consumption`: plan versions 1/1; execution packets 1/1; planning,
+  source, and closeout commits 1/1 each after the terminal commit; CodeGraph
+  calls 4/4; hypotheses 4/5; instrumentation rounds 1/2; installs/restarts 1/1;
+  local adapter stub calls 1; live provider/browser commands, context refreshes,
+  durable jobs, provider callbacks, canary executions, materialization
+  callbacks, downloads, prompts, cache/receipt mutations, and scheduler/
+  completion/guard actions all 0.
+- `remaining_criteria`: terminal audit, closeout commit/push, and remote parity
+  only before this plan is handed off.
+- `authority_classification`: provider-free repair/install authority completed;
+  another live context read, canary, materialization, and all control/loop
+  actions remain separately gated and withheld.
+- `review_disposition_summary`: closed-world verification accepts the
+  same-service provenance retention fix; the cross-service negative fixture and
+  existing authority suite reject any endpoint/account inference or verifier
+  weakening. No blocking finding remains inside this packet.
+- `next_action_or_stop_reason`: close and stop. A future explicit successor may
+  authorize one bounded live read to validate current context, but this packet
+  cannot contact the provider or approve/run the canary.
