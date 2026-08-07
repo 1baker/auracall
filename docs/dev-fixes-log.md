@@ -1,3 +1,12 @@
+- 2026-08-07: A blocked live-follow completion cannot be cleared with
+  `resume`; the supported control contract exposes only `run_one_pass` for a
+  blocked live-follow operation. Treat a returned unchanged object with no
+  lifecycle event as a no-op, not recovery. After the bounded pass settles,
+  validate its child materialization job independently before staging another
+  target. Provider-session health is browser-profile-specific: a green default
+  account does not authorize `wsl-chrome-2`; stop and re-pause on missing
+  observation evidence before later targets or scheduler resume.
+
 - 2026-08-07: A context read deadline that begins only after browser target and
   cache-identity setup is not a command deadline. Plan 0207's exact-ID command
   exceeded its 120-second inner bound and produced no fresh receipt even though

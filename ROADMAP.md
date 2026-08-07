@@ -221,12 +221,19 @@ Lane: P01
   neighboring `.docx` response for a requested `.txt`. The late identity guard
   prevented wrong bytes, blocked the default completion, and stopped all wider
   target/scheduler resume.
-  Active capture-repair successor:
+  Closed capture-repair successor:
   [docs/dev/plans/0211-2026-08-07-chatgpt-cross-asset-capture-repair-and-live-follow-recovery.md](docs/dev/plans/0211-2026-08-07-chatgpt-cross-asset-capture-repair-and-live-follow-recovery.md).
   It moves exact/collision/provider-ID validation into the signed-content
   candidate loop so an unrelated successful response cannot win the capture
-  race. Source regressions are green; install, exact repaired-lane proof, and
-  all completion/scheduler re-enablement remain gated.
+  race. Installed parity and the exact repaired-lane proof are green; default
+  pass 6 also settled cleanly. The next `wsl-chrome-2` resume failed before
+  materialization with missing provider-session observation, so default was
+  re-paused and wider resume stopped.
+  Active identity-observation successor:
+  [docs/dev/plans/0212-2026-08-07-wsl-chrome-2-provider-session-observation-recovery.md](docs/dev/plans/0212-2026-08-07-wsl-chrome-2-provider-session-observation-recovery.md).
+  It permits one read-only inspection of the exact existing managed browser,
+  then either stops for human sign-in/challenge or gates an evidence-driven
+  local observation repair before any bounded retry.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,

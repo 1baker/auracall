@@ -16803,3 +16803,27 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   gates commit/push, one install/restart, one exact repaired-lane proof, and
   staged re-enablement. No post-repair provider action or scheduler/other-
   completion resume has run.
+
+## Turn 387 | 2026-08-07
+
+- Commit `a8f4eddf` is pushed and installed with exact source/runtime adapter
+  hash parity. API PID 57978 is active with zero restarts. Exact canary
+  `hmj_7ab8c79b07d24985a7c35c26b3d82287` materialized only the requested
+  505-byte ASCII `.txt` at SHA-256
+  `5d17e7ec1b61d4c6eaaefbb3bfd8ae542bb5a373113a506c681ade0aa641044b`;
+  downloads were `1/1/0`, provider identity matched, and the neighboring
+  `.docx` did not win.
+- The blocked default requires `run_one_pass`; `resume` is intentionally a
+  no-op outside `paused`. Its bounded pass advanced `5 -> 6`, then child job
+  `hmj_3fad88788cb24a2bb275dbe06e5980fb` succeeded with materialized/skipped/
+  failed `1/6/0`, matching identity and no guard. Default reached
+  `idle_waiting` with zero active jobs.
+- The next staged target, `wsl-chrome-2`, failed before materialization with
+  `provider_session_observation_missing` on managed browser PID 16464/port
+  45013. Default was re-paused immediately. `wsl-chrome-3`, `wsl-chrome-4`,
+  and scheduler remain paused; active jobs are zero.
+- Plan 0211 closes fail-closed. Plan 0212 permits one read-only exact-profile
+  agent-browser inspection, then either a human sign-in stop or an audited
+  local observation repair before any retry. No browser click/navigation,
+  prompt, `Answer now`, guard bypass, cookie move, or later-target resume is
+  authorized before that classification.

@@ -44302,3 +44302,22 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   exact, collision-suffix, and provider-ID-bound responses retain their prior
   acceptance semantics. Adapter tests pass 140/140, adjacent tests 141/141,
   and typecheck passes. Plan 0211 now owns install and exact live proof.
+
+## 2026-08-07 | Capture repair proves exact; staged identity gate stops wider resume
+
+- The pushed/installed capture repair passed its exact failed-lane proof. Job
+  `hmj_7ab8c79b07d24985a7c35c26b3d82287` accepted only the requested `.txt`,
+  wrote 505-byte ASCII at SHA-256
+  `5d17e7ec1b61d4c6eaaefbb3bfd8ae542bb5a373113a506c681ade0aa641044b`,
+  and reported one attempted/successful download with all provider-session
+  identity dimensions matching.
+- Default pass 6 and child job `hmj_3fad88788cb24a2bb275dbe06e5980fb`
+  then settled cleanly: materialized/skipped/failed `1/6/0`, no guard, no
+  error, and zero active jobs.
+- `wsl-chrome-2` did not pass the next identity boundary. Its fresh managed
+  browser existed, but provider-session authorization failed with
+  `provider_session_observation_missing` before materialization. Default was
+  re-paused and no later target or scheduler was resumed.
+- Plan 0212 makes the next unit one read-only exact-profile browser inspection.
+  A logged-out, challenged, ambiguous, or wrong account is a human gate; only
+  visibly healthy expected-account evidence can justify local code diagnosis.

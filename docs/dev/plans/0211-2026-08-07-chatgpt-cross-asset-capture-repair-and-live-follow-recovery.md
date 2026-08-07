@@ -1,11 +1,11 @@
 # ChatGPT Cross-Asset Capture Repair And Live-Follow Recovery | 0211-2026-08-07
 
-State: OPEN
+State: CLOSED
 Lane: P01
-Plan version: 1
-Outcome: IN_PROGRESS
-Goal execution state: REPAIRING_CAPTURE_IDENTITY
-Gate state: SOURCE_VALIDATION
+Plan version: 2
+Outcome: STOPPED_FAIL_CLOSED
+Goal execution state: SUCCESSOR_REQUIRED
+Gate state: CLOSED
 
 ## Stable Goal Objective
 
@@ -83,7 +83,7 @@ unobserved materialization excluded.
 - `max_plan_versions: 2`; `max_source_commits: 1`; `max_closeout_commits: 2`;
   `max_installs: 1`; `max_service_restarts: 1`; `max_live_transfer_attempts: 1`;
   `max_live_transfer_items: 1`; `max_provider_retries: 0`;
-  `max_substitute_assets: 0`; `max_completion_control_actions: 4`;
+  `max_substitute_assets: 0`; `max_completion_control_actions: 5`;
   `max_emergency_completion_pauses: 4`; `max_scheduler_resume_actions: 1`;
   `max_scheduler_pause_actions: 1`; `max_prompt_submissions: 0`;
   `max_answer_now_clicks: 0`; `max_guard_bypass_actions: 0`;
@@ -96,11 +96,11 @@ unobserved materialization excluded.
   rejected while exact, collision-suffix, and provider-ID-bound captures stay
   accepted.
 - [x] Focused and adjacent non-live tests plus typecheck pass.
-- [ ] Build, lint baseline, audits, diff review, commit, and push pass.
-- [ ] Installed source/runtime hashes match after exactly one restart.
-- [ ] One exact live repaired-lane proof yields only the requested `.txt` or
+- [x] Build, lint baseline, audits, diff review, commit, and push pass.
+- [x] Installed source/runtime hashes match after exactly one restart.
+- [x] One exact live repaired-lane proof yields only the requested `.txt` or
   stops without accepting a neighboring response.
-- [ ] Default completion becomes stable with no guard, identity drift, failure,
+- [x] Default completion becomes stable with no guard, identity drift, failure,
   retry, or unexpected materialization fanout.
 - [ ] Only the four intended ChatGPT targets and scheduler are re-enabled;
   excluded targets remain unchanged.
@@ -135,3 +135,96 @@ unobserved materialization excluded.
   successor under the unchanged operator-approved live-follow objective.
 - `next_action_or_stop_reason`: finish build/lint/audits and review, then commit
   and push before the sole install/restart.
+
+## Checkpoint 2 | Installed Runtime Parity
+
+- `plan_version`: 1
+- `checkpoint_id`: `P0211-C02`
+- `state_transition`: SOURCE_VALIDATION -> INSTALLED_PARITY.
+- `progress_classification`: blocker_reduction
+- `owned_changes`: committed capture-identity source/test repair, installed
+  user runtime, and governing docs.
+- `evidence`: commit `a8f4eddf` is pushed; adapter tests pass 140/140,
+  adjacent materialization/completion/MCP tests pass 141/141, typecheck and
+  build pass, lint has zero errors at the existing 207-warning baseline, and
+  goal/library audits report zero problems. The user runtime was installed
+  once and the API restarted once. Source and installed adapter SHA-256 both
+  equal `33cc470930170882f92a8d06de553ce427a1a7f45f19abb7978dbf6992c7cde4`;
+  API PID 57978 is active with zero restarts.
+- `remaining_criteria`: exact repaired-lane proof; staged completion and
+  scheduler recovery; final audits/readbacks.
+- `subagent_status`: `not_spawned`.
+- `authority_classification`: one green-gated install/restart under Plan 0211.
+- `review_disposition_summary`: focused and adjacent closed-world validation
+  accepted; no new broad discovery.
+- `next_action_or_stop_reason`: spend the sole exact `.txt` live proof only
+  after provider-free catalog and retained-job readback confirms the target.
+
+## Checkpoint 3 | Exact Repaired-Lane Proof Passed
+
+- `plan_version`: 1
+- `checkpoint_id`: `P0211-C03`
+- `state_transition`: INSTALLED_PARITY -> STAGED_RECOVERY.
+- `progress_classification`: blocker_reduction
+- `owned_changes`: exact installed-runtime canary and retained checksum/
+  identity evidence only.
+- `evidence`: exact catalog job `hmj_7ab8c79b07d24985a7c35c26b3d82287`
+  ran one attempt with `catalogKind=files`, `assetKinds=files`, `maxItems=1`,
+  no refresh, and no force. It materialized only
+  `auracall-m5-source-20260802T185953Z(7).txt`, with downloads `1/1/0`,
+  materialized/skipped/failed `1/0/0`, and all four provider-session identity
+  dimensions matching. The retained output is 505-byte ASCII with SHA-256
+  `5d17e7ec1b61d4c6eaaefbb3bfd8ae542bb5a373113a506c681ade0aa641044b`.
+  Telemetry records `capturedIdentity.collisionSuffixMatch.v1`; the neighboring
+  `.docx` did not win the capture.
+- `remaining_criteria`: bounded default completion pass; resume the other
+  three intended ChatGPT completions; scheduler last; final audits/readbacks.
+- `subagent_status`: `not_spawned`.
+- `authority_classification`: sole exact repaired-lane proof under Plan 0211.
+- `review_disposition_summary`: the exact target identity and checksum are
+  accepted as sufficient closed-world proof of the repaired capture branch.
+- `next_action_or_stop_reason`: clear the retained blocked default through its
+  supported bounded control and observe it before enabling another target.
+
+## Version 2 Control-Budget Correction
+
+- A `resume` request against the blocked default completion returned the
+  operation unchanged and created no lifecycle event or provider work. Source
+  and dashboard contracts confirm blocked live-follow exposes only
+  `run_one_pass`; `resume` applies only to `paused`.
+- Count the verified no-op as a control request and raise only
+  `max_completion_control_actions` from `4` to `5`. All effect, provider,
+  retry, substitute, install, restart, and scheduler bounds remain unchanged.
+- `max_live_transfer_attempts` and `max_live_transfer_items` govern the exact
+  repaired-lane proof packet. Staged live-follow recovery remains bounded by
+  one control per intended completion, the completions' retained limits, the
+  hard stops above, and emergency re-pause authority.
+
+## Checkpoint 4 | Default Recovered, Next Identity Gate Failed Closed
+
+- `plan_version`: 2
+- `checkpoint_id`: `P0211-C04`
+- `state_transition`: STAGED_RECOVERY -> STOPPED_FAIL_CLOSED.
+- `progress_classification`: blocker_reduction
+- `owned_changes`: Plan 0211 runtime controls and durable evidence only; no
+  additional source change.
+- `evidence`: the supported default `run_one_pass` advanced pass `5 -> 6` and
+  settled `idle_waiting` with no guard or error. Child job
+  `hmj_3fad88788cb24a2bb275dbe06e5980fb` matched provider identity and ended
+  succeeded with materialized/skipped/failed `1/6/0`; active jobs returned to
+  zero. The next one-at-a-time resume for `wsl-chrome-2` failed before
+  materialization with `provider_session_observation_missing` against managed
+  browser profile `wsl-chrome-2/chatgpt`. The default completion was
+  immediately re-paused at pass 6; `wsl-chrome-3`, `wsl-chrome-4`, and the
+  scheduler remain paused.
+- `subagent_status`: `not_spawned`.
+- `remaining_criteria`: diagnose the exact `wsl-chrome-2` browser/account
+  observation failure; recover that target if safe; then stage the remaining
+  intended targets and scheduler.
+- `authority_classification`: fail-closed handoff to bounded successor Plan
+  0212 under the unchanged operator-approved live-follow objective.
+- `review_disposition_summary`: no new drift-discovery pass; the runtime
+  identity failure is accepted as blocking for wider resume.
+- `next_action_or_stop_reason`: Plan 0211 stops on its identity hard stop.
+  Plan 0212 may perform one read-only inspection of the exact managed browser
+  profile; it must stop for human sign-in if the expected account is absent.
