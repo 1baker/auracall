@@ -239,7 +239,13 @@ Lane: P01
   downloads `0/0/0`; full receipt evidence classifies both as retryable rather
   than terminal asset families. Version 2 permits exactly one blocked
   `wsl-chrome-3` `run_one_pass` recovery while every other completion and the
-  scheduler remain paused. A repeated timeout stops the packet again.
+  scheduler remain paused. The retry made one useful asset but repeated the
+  same visible-file context timeout, so Plan 0212 closed fail-closed.
+  Active local-repair successor:
+  [docs/dev/plans/0213-2026-08-07-chatgpt-visible-file-scan-timeout-repair.md](docs/dev/plans/0213-2026-08-07-chatgpt-visible-file-scan-timeout-repair.md).
+  It narrows repair to the injected 20-pass full-DOM visible-file scan, requires
+  red/green provider-free proof and installed parity, and permits one exact
+  post-repair `wsl-chrome-3` pass before any wider completion/scheduler resume.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,

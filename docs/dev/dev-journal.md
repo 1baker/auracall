@@ -44358,3 +44358,21 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Plan 0212 version 2 narrows the next effect to one blocked
   `wsl-chrome-3` `run_one_pass`. Other completion controls and scheduler resume
   remain prohibited until its completion cycle and child receipt settle cleanly.
+
+## 2026-08-07 | WSL Chrome 3 retry isolates visible-file scan timeout
+
+- The sole Plan 0212 retry advanced `wsl-chrome-3` to pass 40. Child
+  `hmj_a6e870bf2f384b8abf076e7869cc15b0` matched provider identity and
+  materialized/skipped/failed `1/6/1`, proving useful yield but not a clean gate.
+- Full detail shows the remaining failed row repeats the same conversation's
+  120000-ms context timeout, with no provider asset ID or local path. The fresh
+  context-read receipt records `attemptCount=1` and last stage
+  `provider:chatgpt.readVisibleConversationFiles`.
+- The visible-file reader runs only after conversation-surface readiness, yet
+  its injected browser expression can repeat the full conversation DOM scan up
+  to 20 times. A timed-out CDP evaluation can therefore continue occupying the
+  renderer until the outer context deadline.
+- Plan 0212 closes fail-closed. Plan 0213 owns one provider-free loop-bound
+  repair, focused validation, one install/restart, and one exact post-repair
+  `wsl-chrome-3` proof. Default and replacement `wsl-chrome-2` remain paused,
+  `wsl-chrome-3` blocked, `wsl-chrome-4` paused, and scheduler paused.

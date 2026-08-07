@@ -16861,3 +16861,19 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   history jobs zero. Plan 0212 version 2 permits exactly one retryable
   `wsl-chrome-3` `run_one_pass` after this boundary is audited and pushed; a
   repeated timeout is a fail-closed stop.
+
+## Turn 390 | 2026-08-07
+
+- Pushed Plan 0212 gate `0eaad59e` permitted one blocked `wsl-chrome-3`
+  `run_one_pass`. Pass 40 child `hmj_a6e870bf2f384b8abf076e7869cc15b0`
+  matched provider identity and made useful yield `1/6/1`, but repeated the
+  same 120-second context timeout on one conversation.
+- The fresh context-read receipt records one attempt and last stage
+  `provider:chatgpt.readVisibleConversationFiles`. The failed row has no
+  provider asset ID or local path; the parent is blocked with its force ceiling
+  cleared. No later target or scheduler control ran.
+- Plan 0212 closes fail-closed. Plan 0213 limits the local repair to the
+  adapter's injected visible-file reader, which can repeat a full ready-surface
+  DOM scan 20 times. It requires red/green provider-free validation,
+  commit/push, one install/restart, and one exact post-repair pass before wider
+  re-enablement.

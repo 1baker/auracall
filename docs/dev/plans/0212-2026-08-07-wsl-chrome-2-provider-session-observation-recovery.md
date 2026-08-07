@@ -1,11 +1,11 @@
 # WSL Chrome 2 Provider-Session Observation Recovery | 0212-2026-08-07
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 2
-Outcome: PAUSED_RETRYABLE_WSL_CHROME_3_TIMEOUT
-Goal execution state: RECOVERY_RETRY_GATE
-Gate state: WSL_CHROME_3_ONE_PASS_RETRY
+Outcome: STOPPED_RETRYABLE_TIMEOUT_REPEATED
+Goal execution state: SUCCESSOR_REQUIRED
+Gate state: PLAN_0213_LOCAL_REPAIR
 
 ## Stable Goal Objective
 
@@ -212,3 +212,27 @@ account identity, CAPTCHA, provider-guard, and no-prompt boundaries.
 - `next_action_or_stop_reason`: audit, commit, and push this boundary, then run
   exactly one `run_one_pass` on the blocked `wsl-chrome-3` completion while all
   other completion controls and the scheduler remain paused.
+
+## Checkpoint 5 | Sole Retry Makes Yield But Repeats Timeout
+
+- `plan_version`: 2
+- `checkpoint_id`: `P0212-C05`
+- `state_transition`: WSL_CHROME_3_ONE_PASS_RETRY -> STOPPED_RETRYABLE_TIMEOUT_REPEATED.
+- `progress_classification`: blocker_reduction
+- `owned_changes`: one `run_one_pass` and full-detail terminal readback only.
+- `evidence`: pass 40 child `hmj_a6e870bf2f384b8abf076e7869cc15b0`
+  matched identity and materialized/skipped/failed `1/6/1`. The remaining row
+  repeats the same conversation's 120000-ms timeout. Its context-read receipt
+  records `attemptCount=1` and last stage
+  `provider:chatgpt.readVisibleConversationFiles`; it has no provider asset ID
+  or local path. The parent is blocked with force ceiling cleared.
+- `subagent_status`: `not_spawned`.
+- `remaining_criteria`: local visible-file scan repair, installed proof,
+  `wsl-chrome-3`, `wsl-chrome-4`, scheduler-last resume, and final audit.
+- `authority_classification`: repeated-invariant drift guard ends Plan 0212;
+  ordinary local repair continues only through bounded successor Plan 0213.
+- `review_disposition_summary`: the retry produced one asset but repeated the
+  accepted timeout finding. Automatic retry is rejected; the local scan loop
+  becomes the sole blocking repair target.
+- `next_action_or_stop_reason`: open Plan 0213 provider-free, commit/push its
+  boundary, then add a red regression before changing the adapter.
