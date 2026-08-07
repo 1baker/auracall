@@ -9686,22 +9686,77 @@ function resolveChatgptConversationProviderFileId(fileId: string, file?: FileRef
 	return direct ? normalizeUiText(direct) : null;
 }
 
-function readChatgptContentDispositionFileName(value: unknown): string | null {
-	if (typeof value !== "string" || !value.trim()) return null;
-	const encoded = value.match(/filename\*\s*=\s*UTF-8''([^;]+)/i)?.[1];
-	const quoted = value.match(/filename\s*=\s*"([^"]+)"/i)?.[1];
-	const bare = value.match(/filename\s*=\s*([^;]+)/i)?.[1];
-	const candidate = encoded ?? quoted ?? bare ?? null;
-	if (!candidate) return null;
-	const normalized = candidate.trim().replace(/^['"]|['"]$/g, "");
-	try {
-		return normalizeUiText(decodeURIComponent(normalized)) || null;
-	} catch {
-		return normalizeUiText(normalized) || null;
+type ChatgptCapturedFileIdentityDecision = "providerFileIdMatch" | ChatgptFileNameIdentityDecision;
+
+function classifyChatgptCapturedFileIdentityValues(input: {
+	capturedUrl: string | null;
+	contentDisposition: string | null;
+	targetProviderFileId: string | null;
+	targetName: string | null;
+}): {
+	decision: ChatgptCapturedFileIdentityDecision | null;
+	failure: string | null;
+} {
+	const normalize = (value: string | null | undefined): string =>
+		typeof value === "string" ? value.replace(/\s+/g, " ").trim() : "";
+	const capturedUrl = normalize(input.capturedUrl);
+	if (
+		input.targetProviderFileId &&
+		/\/backend-api\/files\/download\//.test(capturedUrl) &&
+		capturedUrl.includes(encodeURIComponent(input.targetProviderFileId))
+	) {
+		return { decision: "providerFileIdMatch", failure: null };
 	}
+	const disposition = normalize(input.contentDisposition);
+	const encoded = disposition.match(/filename\*\s*=\s*UTF-8''([^;]+)/i)?.[1];
+	const quoted = disposition.match(/filename\s*=\s*"([^"]+)"/i)?.[1];
+	const bare = disposition.match(/filename\s*=\s*([^;]+)/i)?.[1];
+	const candidate = (encoded ?? quoted ?? bare ?? "").trim().replace(/^['"]|['"]$/g, "");
+	let responseName = "";
+	if (candidate) {
+		try {
+			responseName = normalize(decodeURIComponent(candidate));
+		} catch {
+			responseName = normalize(candidate);
+		}
+	}
+	if (input.targetName && responseName) {
+		const normalizeName = (value: string): string => normalize(value).toLowerCase();
+		if (normalizeName(responseName) === normalizeName(input.targetName)) {
+			return { decision: "exactMatch", failure: null };
+		}
+		const readExtension = (value: string): string => {
+			const index = value.lastIndexOf(".");
+			return index >= 0 ? value.slice(index) : "";
+		};
+		const actualExtension = readExtension(responseName);
+		const targetExtension = readExtension(input.targetName);
+		if (actualExtension.toLowerCase() !== targetExtension.toLowerCase()) {
+			return {
+				decision: "extensionMismatch",
+				failure: `captured_asset_identity_mismatch: requested=${input.targetName} response=${responseName}`,
+			};
+		}
+		const actualStem = responseName.slice(0, responseName.length - actualExtension.length);
+		const targetStem = input.targetName.slice(0, input.targetName.length - targetExtension.length);
+		const normalizeCollisionStem = (value: string): string =>
+			normalizeName(value.replace(/\s?\(\d+\)$/, ""));
+		if (normalizeCollisionStem(actualStem) === normalizeCollisionStem(targetStem)) {
+			return { decision: "collisionSuffixMatch", failure: null };
+		}
+		return {
+			decision: "stemMismatch",
+			failure: `captured_asset_identity_mismatch: requested=${input.targetName} response=${responseName}`,
+		};
+	}
+	return {
+		decision: null,
+		failure: `captured_asset_identity_mismatch: requested=${input.targetName ?? input.targetProviderFileId ?? "unknown"} response=${responseName || capturedUrl || "unknown"}`,
+	};
 }
 
-type ChatgptCapturedFileIdentityDecision = "providerFileIdMatch" | ChatgptFileNameIdentityDecision;
+export const classifyChatgptCapturedFileIdentityValuesForTest =
+	classifyChatgptCapturedFileIdentityValues;
 
 function classifyChatgptCapturedFileIdentity(input: {
 	captured: Record<string, unknown>;
@@ -9711,31 +9766,15 @@ function classifyChatgptCapturedFileIdentity(input: {
 	decision: ChatgptCapturedFileIdentityDecision | null;
 	failure: string | null;
 } {
-	const capturedUrl = normalizeUiText(
-		typeof input.captured.url === "string" ? input.captured.url : null,
-	);
-	if (
-		input.targetProviderFileId &&
-		/\/backend-api\/files\/download\//.test(capturedUrl) &&
-		capturedUrl.includes(encodeURIComponent(input.targetProviderFileId))
-	) {
-		return { decision: "providerFileIdMatch", failure: null };
-	}
-	const responseName = readChatgptContentDispositionFileName(input.captured.contentDisposition);
-	if (input.targetName && responseName) {
-		const decision = classifyChatgptFileNameIdentity(responseName, input.targetName);
-		if (decision === "exactMatch" || decision === "collisionSuffixMatch") {
-			return { decision, failure: null };
-		}
-		return {
-			decision,
-			failure: `captured_asset_identity_mismatch: requested=${input.targetName} response=${responseName}`,
-		};
-	}
-	return {
-		decision: null,
-		failure: `captured_asset_identity_mismatch: requested=${input.targetName ?? input.targetProviderFileId ?? "unknown"} response=${responseName ?? (capturedUrl || "unknown")}`,
-	};
+	return classifyChatgptCapturedFileIdentityValues({
+		capturedUrl: typeof input.captured.url === "string" ? input.captured.url : null,
+		contentDisposition:
+			typeof input.captured.contentDisposition === "string"
+				? input.captured.contentDisposition
+				: null,
+		targetProviderFileId: input.targetProviderFileId,
+		targetName: input.targetName,
+	});
 }
 
 export function resolveChatgptDownloadUrlFromJson(
@@ -10041,9 +10080,10 @@ async function downloadChatgptConversationFileWithClient(
           };
           const providerErrorShape = ${summarizeChatgptDownloadProviderError.toString()};
           const resolveDownloadUrlFromJson = ${resolveChatgptDownloadUrlFromJson.toString()};
-          const summarizeDownloadJsonShape = ${summarizeChatgptDownloadJsonShape.toString()};
-          const selectDownloadFailure = ${selectChatgptDownloadFailure.toString()};
-          const waitForCaptureProgress = ${waitForChatgptCaptureProgress.toString()};
+	          const summarizeDownloadJsonShape = ${summarizeChatgptDownloadJsonShape.toString()};
+	          const selectDownloadFailure = ${selectChatgptDownloadFailure.toString()};
+	          const classifyCapturedFileIdentity = ${classifyChatgptCapturedFileIdentityValues.toString()};
+	          const waitForCaptureProgress = ${waitForChatgptCaptureProgress.toString()};
           const awaitDownloadPromiseWithTimeout = ${awaitChatgptDownloadPromiseWithTimeout.toString()};
           const downloadStageTimeoutMs = 10_000;
           const fetchWithTimeout = (url, init, stage) => {
@@ -10267,11 +10307,24 @@ async function downloadChatgptConversationFileWithClient(
 	          };
 	          const recordCaptureCandidate = (candidate, captureTransport) => {
 	            const next = { ...candidate, captureTransport };
-	            if (candidate.ok) {
+	            const identity = candidate.ok ? classifyCapturedFileIdentity({
+	              capturedUrl: typeof candidate.url === 'string' ? candidate.url : null,
+	              contentDisposition: typeof candidate.contentDisposition === 'string'
+	                ? candidate.contentDisposition
+	                : null,
+	              targetProviderFileId,
+	              targetName,
+	            }) : null;
+	            if (candidate.ok && !identity?.failure) {
 	              captured = next;
 	              return;
 	            }
-	            captureError = selectDownloadFailure(captureError, next);
+	            captureError = selectDownloadFailure(
+	              captureError,
+	              identity?.failure
+	                ? { ...next, ok: false, reason: identity.failure, identityDecision: identity.decision }
+	                : next,
+	            );
 	          };
 	          const originalAnchorClick = HTMLAnchorElement.prototype.click;
 	          const originalWindowOpen = window.open;

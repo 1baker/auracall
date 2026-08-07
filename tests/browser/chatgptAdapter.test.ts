@@ -3,6 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { describe, expect, test, vi } from "vitest";
 import {
+	awaitChatgptDownloadPromiseWithTimeout,
 	beforeChatgptBrowserInteractionForTest,
 	bindChatgptProviderSessionConnectionForTest,
 	buildChatgptAuthSessionIdentityExpression,
@@ -10,8 +11,8 @@ import {
 	buildChatgptPayloadDirectRetryOptionsForTest,
 	buildChatgptUrlRouteExpressionForTest,
 	classifyChatgptBlockingSurfaceProbe,
+	classifyChatgptCapturedFileIdentityValuesForTest,
 	classifyChatgptFileRetrievalFailure,
-	awaitChatgptDownloadPromiseWithTimeout,
 	clickChatgptViewerDownloadButtonWithClientForTest,
 	closeChatgptTabConnectionForTest,
 	createChatgptAdapter,
@@ -56,17 +57,17 @@ import {
 	resolveChatgptCanvasArtifactContentText,
 	resolveChatgptConversationUrl,
 	resolveChatgptDownloadUrlFromJson,
-	selectChatgptDownloadFailure,
-	summarizeChatgptDownloadJsonShape,
-	summarizeChatgptDownloadProviderError,
-	waitForChatgptCaptureProgress,
 	resolveChatgptProjectCreateConfirmLabelsForTest,
 	resolveChatgptProjectMemoryLabel,
 	resolveChatgptProjectMemoryLabelCandidates,
 	resolveChatgptProjectSettingsCommitLabelsForTest,
 	resolveChatgptProjectSourceUploadActionLabelsForTest,
 	resolveChatgptProjectUrl,
+	selectChatgptDownloadFailure,
 	serializeChatgptGridRowsToCsv,
+	summarizeChatgptDownloadJsonShape,
+	summarizeChatgptDownloadProviderError,
+	waitForChatgptCaptureProgress,
 } from "../../src/browser/providers/chatgptAdapter.js";
 import {
 	reconcileChatgptPayloadDownloadControls,
@@ -415,6 +416,48 @@ async function runNativeConversationDownloadIdentityScenario(
 }
 
 describe("downloadChatgptConversationFilesWithClient", () => {
+	test("keeps waiting when a signed-content capture belongs to a neighboring file tile", () => {
+		expect(
+			classifyChatgptCapturedFileIdentityValuesForTest({
+				capturedUrl: "https://chatgpt.com/backend-api/estuary/content?id=file_neighbor",
+				contentDisposition: 'attachment; filename="auracall-m5-20260802T185953Z(7).docx"',
+				targetProviderFileId: "file_requested_txt",
+				targetName: "auracall-m5-source-20260802T185953Z(7).txt",
+			}),
+		).toEqual({
+			decision: "extensionMismatch",
+			failure:
+				"captured_asset_identity_mismatch: requested=auracall-m5-source-20260802T185953Z(7).txt response=auracall-m5-20260802T185953Z(7).docx",
+		});
+	});
+
+	test("accepts exact, collision-suffixed, and provider-id-bound captures", () => {
+		expect(
+			classifyChatgptCapturedFileIdentityValuesForTest({
+				capturedUrl: "https://chatgpt.com/backend-api/estuary/content?id=file_requested",
+				contentDisposition: 'attachment; filename="report.txt"',
+				targetProviderFileId: "file_requested",
+				targetName: "report.txt",
+			}),
+		).toEqual({ decision: "exactMatch", failure: null });
+		expect(
+			classifyChatgptCapturedFileIdentityValuesForTest({
+				capturedUrl: "https://chatgpt.com/backend-api/estuary/content?id=file_requested",
+				contentDisposition: 'attachment; filename="report.txt"',
+				targetProviderFileId: "file_requested",
+				targetName: "report(7).txt",
+			}),
+		).toEqual({ decision: "collisionSuffixMatch", failure: null });
+		expect(
+			classifyChatgptCapturedFileIdentityValuesForTest({
+				capturedUrl: "https://chatgpt.com/backend-api/files/download/file_requested?inline=true",
+				contentDisposition: 'attachment; filename="neighbor.docx"',
+				targetProviderFileId: "file_requested",
+				targetName: "report.txt",
+			}),
+		).toEqual({ decision: "providerFileIdMatch", failure: null });
+	});
+
 	test("accepts an unsuffixed captured response for a collision-suffixed catalog name", async () => {
 		const tempDir = await fs.mkdtemp(
 			path.join(os.tmpdir(), "auracall-chatgpt-captured-catalog-suffix-"),
@@ -764,6 +807,8 @@ describe("downloadChatgptConversationFilesWithClient", () => {
 			expect(downloadExpression).toContain("summarizeChatgptDownloadJsonShape");
 			expect(downloadExpression).toContain("summarizeChatgptDownloadProviderError");
 			expect(downloadExpression).toContain("selectChatgptDownloadFailure");
+			expect(downloadExpression).toContain("classifyCapturedFileIdentity");
+			expect(downloadExpression).toContain("candidate.ok && !identity?.failure");
 			expect(downloadExpression).toContain("waitForChatgptCaptureProgress");
 			expect(downloadExpression).toContain("awaitChatgptDownloadPromiseWithTimeout");
 			expect(downloadExpression).toContain("'signed-follow-fetch'");
@@ -1240,8 +1285,8 @@ describe("downloadChatgptConversationFilesWithClient", () => {
 				expect(expression).toContain(
 					"const isSignedContent = /\\/backend-api\\/estuary\\/content/.test(text)",
 				);
-				expect(expression).toContain("if (candidate.ok) {");
-				expect(expression).toContain("captureError = selectDownloadFailure(captureError, next)");
+				expect(expression).toContain("if (candidate.ok && !identity?.failure) {");
+				expect(expression).toContain("identity?.failure");
 				expect(expression).toContain("HTMLAnchorElement.prototype.click = originalAnchorClick");
 				expect(expression).toContain("window.open = originalWindowOpen");
 				expect(expression).toContain("providerErrorShape");

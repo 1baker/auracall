@@ -20645,3 +20645,20 @@ browser-stage lifecycle observability, not transcript truncation.
   underlying API is requested with `detail=full`.
 - Do not substitute or resume a loop after zero useful yield. A new asset needs
   its own provider-free selection and explicit effect gate.
+
+## 2026-08-07 | Gate signed-content capture identity before selecting a winner
+
+- Symptom: a ChatGPT conversation file transfer requested a collision-suffixed
+  `.txt` tile but captured the similarly named neighboring `.docx` response.
+  The existing final identity check correctly rejected the bytes, yet the
+  materialization job failed because capture had already stopped waiting.
+- Cause: the in-page fetch hook treated every successful
+  `/backend-api/estuary/content` response as the winning candidate. Asset
+  identity was checked only after the injected capture routine returned.
+- Fix: apply the exact/collision-suffix/provider-ID classifier inside
+  `recordCaptureCandidate`. A successful but mismatched response is retained as
+  diagnostic failure evidence and the same bounded capture window continues;
+  only an identity-valid response becomes the winner.
+- Prevention: generic signed-content URLs are transport evidence, not asset
+  identity. Gate candidates before first-success selection and retain a final
+  identity check as defense in depth.

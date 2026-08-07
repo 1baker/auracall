@@ -1,11 +1,11 @@
 # Live-Follow Successor Canary And Staged Re-enablement | 0210-2026-08-07
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 2
-Outcome: IN_PROGRESS
-Goal execution state: RESUMING_DEFAULT
-Gate state: DEFAULT_ONE_BOUNDED_PASS
+Outcome: STOPPED_FAIL_CLOSED
+Goal execution state: SUCCESSOR_REPAIR_REQUIRED
+Gate state: DEFAULT_PASS_MATERIALIZATION_FAILED
 
 ## Stable Goal Objective
 
@@ -49,6 +49,14 @@ transport/job status as useful-yield proof.
   has no retained attempt or accepted local/archive evidence. Version 2 pivots
   only the asset kind inside the same conversation and tenant so a second
   provider-disabled simulation can adjudicate that candidate.
+- The one bounded default completion pass advanced from pass 4 to pass 5 with
+  authoritative four-dimension identity and no provider guard, but its retained
+  `full_missing_assets` policy spawned reconciliation job
+  `hmj_57c42114cf43475f82d36d63ec23c6db`. The job materialized one 505-byte
+  `.txt` file and then captured the neighboring `.docx` response while
+  requesting a second `.txt`, producing `captured_asset_identity_mismatch`.
+  The default completion is blocked, the other three intended ChatGPT
+  completions remain paused, and the scheduler remains paused.
 
 ## Authority And Ownership
 
@@ -167,7 +175,8 @@ transport/job status as useful-yield proof.
 - [x] One exact `maxItems=1` canary proves one readable local asset with matching
   checksum, manifest, and archive evidence, or stops truthfully without retry.
 - [ ] ChatGPT/default completes one bounded resumed pass with authoritative
-  identity, clear guard, finite budget, and monotonic progress.
+  identity, clear guard, finite budget, monotonic progress, and no failed or
+  uncontrolled materialization.
 - [ ] Only the four configured enabled ChatGPT targets become active or
   idle-waiting; excluded targets remain unchanged.
 - [ ] The scheduler completes one observed wake/pass without guard, identity
@@ -332,3 +341,43 @@ progress, no unexpected jobs, and no excluded-target activation.
   `run-one-pass` exactly once on retained ChatGPT/default completion
   `acctmirror_completion_db1266f9-7b50-41d5-bf32-1adaddb735b3`; stop and
   re-pause on guard, identity drift, uncontrolled fanout, or no progress.
+
+## Checkpoint 5 | Default Pass Failed Closed On Cross-Asset Capture
+
+- `plan_version`: 2
+- `checkpoint_id`: `P0210-C05`
+- `state_transition`: RESUMING_DEFAULT -> STOPPED_FAIL_CLOSED.
+- `progress_classification`: blocker_identified
+- `owned_changes`: one `run-one-pass` action on the retained default
+  completion; one resulting configured reconciliation job; read-only runtime,
+  durable-job, filesystem, and agent-browser inspection; local source/test
+  repair. No other completion or scheduler resume, retry, prompt, `Answer
+  now`, guard bypass, install, or service restart.
+- `evidence`: pass count advanced `4 -> 5`; provider identity matched email,
+  plan, structure, and account-level, and provider guard remained null. Job
+  `hmj_57c42114cf43475f82d36d63ec23c6db` attempted four conversations with
+  eligible/selected `40/4`, materialized/skipped/failed `1/5/1`, and left the
+  default completion blocked. The durable result identifies the failure as
+  requested `auracall-m5-source-20260802T185953Z(7).txt` receiving
+  `auracall-m5-20260802T185953Z(7).docx`. Agent-browser independently read an
+  authenticated interactive ChatGPT root with no dialog, CAPTCHA, or `Answer
+  now`, isolating the fault from browser/account health.
+- `subagent_status`: `not_spawned`.
+- `budget_consumption`: completion actions 1/4; scheduler actions 0/1; provider
+  retries 0/0; prompts 0; service installs/restarts 0. The child reconciliation
+  inherited retained `maxItems=6`, so the no-broad-fanout gate failed even
+  though only two transfers settled and only one file materialized.
+- `remaining_criteria`: installed repair proof; one exact repaired-lane
+  regression; stable default completion; other three ChatGPT targets;
+  scheduler-last observation; final audits/readbacks.
+- `authority_classification`: the bounded packet hit its explicit
+  uncontrolled-materialization/failure hard stop. The standing re-enablement
+  goal remains active, but further effects move to successor Plan 0211.
+- `review_disposition_summary`: browser and identity hypotheses are rejected.
+  The confirmed defect is first-successful signed-content capture winning
+  before asset identity is checked. The post-capture guard prevented wrong
+  bytes from being written, but could not continue waiting for the requested
+  response.
+- `next_action_or_stop_reason`: close this execution window. Plan 0211 owns the
+  validated source repair, single install/restart, exact repaired-lane proof,
+  and any later staged re-enablement.

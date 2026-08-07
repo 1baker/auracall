@@ -16782,3 +16782,24 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   `5/12` and local materialized artifacts/total `5/6` to `6/7`. Active history
   jobs are zero. Scheduler and six completions remain paused pending the
   audited one-pass default checkpoint.
+
+## Turn 386 | 2026-08-07
+
+- The one default completion pass advanced `4 -> 5` with matching email, plan,
+  structure, and account-level proof and no provider guard. Its configured
+  child job `hmj_57c42114cf43475f82d36d63ec23c6db` then materialized one file
+  and failed one, leaving the default completion blocked. The other intended
+  ChatGPT completions and scheduler remain paused; none was resumed.
+- Exact durable evidence shows the failed transfer requested
+  `auracall-m5-source-20260802T185953Z(7).txt` but captured neighboring
+  `auracall-m5-20260802T185953Z(7).docx`. Agent-browser separately confirmed
+  authenticated, interactive ChatGPT with no dialog, CAPTCHA, or `Answer now`.
+- The cause is an in-page capture race: the first successful generic
+  `estuary/content` response won before the existing identity check ran. The
+  repair applies the same exact/collision/provider-ID gate to each candidate;
+  mismatches remain diagnostics while the bounded window continues.
+- Adapter tests pass 140/140, adjacent materialization/completion/MCP tests
+  pass 141/141, and typecheck passes. Plan 0210 closes fail-closed; Plan 0211
+  gates commit/push, one install/restart, one exact repaired-lane proof, and
+  staged re-enablement. No post-repair provider action or scheduler/other-
+  completion resume has run.

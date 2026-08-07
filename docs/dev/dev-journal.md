@@ -44281,3 +44281,24 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   zero. The next bounded packet is exactly one default completion pass after
   this checkpoint is audited, committed, and pushed; scheduler and all
   completions remain paused meanwhile.
+
+## 2026-08-07 | Default live-follow pass exposes a cross-asset capture race
+
+- The bounded default pass advanced from 4 to 5 with authoritative identity
+  and no provider guard, then spawned retained-policy job
+  `hmj_57c42114cf43475f82d36d63ec23c6db`. It materialized one 505-byte `.txt`
+  and failed one transfer, blocking only the default completion; the other
+  intended ChatGPT completions and scheduler remain paused.
+- The failed target was
+  `auracall-m5-source-20260802T185953Z(7).txt`, but the first successful signed
+  response was neighboring `auracall-m5-20260802T185953Z(7).docx`. The
+  post-capture identity guard prevented wrong bytes but could not resume the
+  capture loop.
+- Agent-browser read the live managed page as authenticated and interactive,
+  with no dialog, CAPTCHA, provider error, or `Answer now`, ruling out browser
+  and account health.
+- The repair validates each successful signed-content candidate before it can
+  win. Mismatches remain bounded diagnostic evidence while capture continues;
+  exact, collision-suffix, and provider-ID-bound responses retain their prior
+  acceptance semantics. Adapter tests pass 140/140, adjacent tests 141/141,
+  and typecheck passes. Plan 0211 now owns install and exact live proof.

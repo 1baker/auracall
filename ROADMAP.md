@@ -205,7 +205,7 @@ Lane: P01
   `GetDownloadLinkError`. Materialized output is zero, so staged completion
   and scheduler resume did not run and require a new explicit canary gate.
   Gemini, Grok, guarded, disabled, and unconfigured targets remain excluded.
-  Active bounded successor:
+  Closed fail-closed bounded successor:
   [docs/dev/plans/0210-2026-08-07-live-follow-successor-canary-and-staged-reenablement.md](docs/dev/plans/0210-2026-08-07-live-follow-successor-canary-and-staged-reenablement.md).
   Goal governance treats Plan 0209's hard stop as the end of that bounded
   execution window, not revocation of the operator-approved re-enablement
@@ -216,8 +216,17 @@ Lane: P01
   zero and the durable index is unchanged; only this audited/pushed
   `maxItems=1` artifact gate may create one canary. That canary succeeded on
   attempt 1 with one 218,312-byte PNG, matching checksum/manifest/archive
-  evidence, and zero skipped/failed items. Plan 0210 now permits exactly one
-  bounded default completion pass before any wider target or scheduler resume.
+  evidence, and zero skipped/failed items. Its one default pass advanced
+  metadata and matched identity, but retained-policy materialization captured a
+  neighboring `.docx` response for a requested `.txt`. The late identity guard
+  prevented wrong bytes, blocked the default completion, and stopped all wider
+  target/scheduler resume.
+  Active capture-repair successor:
+  [docs/dev/plans/0211-2026-08-07-chatgpt-cross-asset-capture-repair-and-live-follow-recovery.md](docs/dev/plans/0211-2026-08-07-chatgpt-cross-asset-capture-repair-and-live-follow-recovery.md).
+  It moves exact/collision/provider-ID validation into the signed-content
+  candidate loop so an unrelated successful response cannot win the capture
+  race. Source regressions are green; install, exact repaired-lane proof, and
+  all completion/scheduler re-enablement remain gated.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,
