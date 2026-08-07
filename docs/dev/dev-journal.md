@@ -44055,3 +44055,25 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Installed/source hashes match and the frozen runtime remains paused and idle.
   Planning is the only owned change until the audited boundary is committed and
   pushed; no subagent was spawned.
+
+## 2026-08-06 | Plan 0207 stops at the outer ceiling
+
+- Planning commit `a35e414e` was audited and pushed before provider contact.
+  The final provider-free preflight passed exact installed/source hash parity,
+  the frozen cache identity, scheduler/completion pauses, default pass 4, idle
+  background drain, clear default guard, and zero active history jobs.
+- Exactly one installed refresh ran with `--timeout-ms 120000` under the
+  150-second outer ceiling. It discarded stdout and reached exit 124 after
+  143.90 measured seconds. No retry or browser-tools follow-up ran.
+- The command did not preserve a fresh terminal receipt or context. The receipt
+  remains the older Plan 0205 `provider_session_provenance_missing` record; the
+  context remains timestamped 2026-08-06 10:22 local at SHA-256
+  `0c71832d99b423ed3de9e496e43346ac917b1d2de27573632ebbf30f5762b7b4`
+  with eleven artifacts. The exact cone still has null turn, button, and
+  live-control fields, so the stale cache is not promoted to current evidence.
+- Final API PID 44127 is active/running; scheduler and six completions remain
+  paused; queued/running/idle-waiting are `0/0/0`; default pass 4 and the clear
+  guard are unchanged; background drain is idle; active history jobs are zero.
+  Plan 0207 closes `STOPPED_FAIL_CLOSED`. No canary, job, materialization,
+  prompt, download, install/restart, or scheduler/completion/guard action ran;
+  no subagent was spawned.

@@ -16575,3 +16575,19 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   queued/running/idle-waiting are `0/0/0`; default pass 4 and null guard are
   unchanged; background drain is idle; active history jobs are zero. Planning
   must be audited, committed, and pushed before the sole provider read.
+- Planning commit `a35e414e` was audited and pushed before provider contact.
+  The sole command used `--timeout-ms 120000` under the 150-second outer
+  ceiling, discarded stdout, and reached exit 124 after 143.90 measured seconds
+  with no retry.
+- No fresh receipt or context was preserved. The retained receipt is still the
+  older Plan 0205 provenance failure; the context hash remains
+  `0c71832d99b423ed3de9e496e43346ac917b1d2de27573632ebbf30f5762b7b4`
+  with eleven artifacts, and the exact cone still has null turn, button, and
+  live-control fields. Stale evidence is not promoted to a current
+  classification.
+- Final API PID 44127 is active/running; scheduler and six completions remain
+  paused; queued/running/idle-waiting are `0/0/0`; default pass 4 and the clear
+  guard are unchanged; background drain is idle; active history jobs are zero.
+  Plan 0207 closes `STOPPED_FAIL_CLOSED`. No browser-tools follow-up, retry,
+  canary, job, materialization, download, prompt, install/restart, or runtime
+  control action ran.

@@ -176,12 +176,13 @@ Lane: P01
   parity. Provider/browser contact, another context refresh, canary, job,
   materialization, download, prompt, and scheduler/completion/guard or loop
   action remain withheld.
-  Active post-repair exact-read successor:
+  Closed post-repair exact-read successor:
   [docs/dev/plans/0207-2026-08-06-post-repair-bounded-context-read-and-canary-gate.md](docs/dev/plans/0207-2026-08-06-post-repair-bounded-context-read-and-canary-gate.md).
-  It authorizes one bounded installed context refresh for only the frozen
-  conversation, then provider-free classification of only the cone asset. No
-  retry, canary execution, job, materialization, prompt, download, or
-  scheduler/completion/guard/loop action is authorized.
+  Its sole installed context refresh reached outer-ceiling exit 124 after
+  143.90 measured seconds and did not preserve a fresh receipt or context. The
+  stale payload-only cone is not promoted to current evidence, so Plan 0207
+  closes `STOPPED_FAIL_CLOSED`; no retry, canary, job, materialization, prompt,
+  download, or scheduler/completion/guard/loop action ran.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,

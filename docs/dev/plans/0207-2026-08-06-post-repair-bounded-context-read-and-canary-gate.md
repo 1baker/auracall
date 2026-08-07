@@ -1,11 +1,11 @@
 # Post-Repair Bounded Context Read And Canary Gate | 0207-2026-08-06
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 1
-Outcome: IN_PROGRESS
-Goal execution state: AWAITING_BOUNDED_CONTEXT_READ
-Gate state: CANARY_WITHHELD
+Outcome: STOPPED_FAIL_CLOSED
+Goal execution state: STOPPED_FAIL_CLOSED
+Gate state: CANARY_WITHHELD_NO_CURRENT_EVIDENCE
 
 ## Stable Goal Objective
 
@@ -31,8 +31,11 @@ create a job, start materialization, or resume scheduler/completion loops.
 - Fresh opening readback: API PID 44127 active/running; scheduler paused; six
   completions paused; queued/running/idle-waiting `0/0/0`; default ChatGPT pass
   4; null provider guard; background drain idle; active history jobs zero.
-- Repo state is clean and synchronized at `ae420d74`. No install, restart, or
-  source change is needed in this packet.
+- Planning commit `a35e414e` was audited and pushed before provider contact.
+  The sole installed command reached outer-ceiling exit 124 after 143.90
+  measured seconds. It did not emit a fresh terminal receipt or context cache,
+  so the retained Plan 0205 failed receipt and 2026-08-06 10:22 local context
+  remain the only durable files. This plan stops fail-closed without retry.
 
 ## Authority And Ownership
 
@@ -111,17 +114,19 @@ create a job, start materialization, or resume scheduler/completion loops.
 
 ## Acceptance Criteria
 
-- [ ] Planning boundary is audited, committed, and pushed before provider
+- [x] Planning boundary is audited, committed, and pushed before provider
   contact.
-- [ ] Preflight binds the exact installed runtime, conversation/cache identity,
+- [x] Preflight binds the exact installed runtime, conversation/cache identity,
   and frozen scheduler/completion/guard/job posture.
-- [ ] Exactly one bounded installed refresh reaches its first terminal exit,
-  with no retry and one terminal receipt.
-- [ ] Only the frozen cone is classified from the terminal receipt/context; no
-  alternative asset or conversation is inferred.
-- [ ] The one-canary gate is frozen truthfully and no canary, job,
+- [x] Exactly one bounded installed refresh reaches its first terminal exit
+  with no retry; terminal readback truthfully records that no fresh receipt was
+  preserved.
+- [x] Only the frozen cone is adjudicated from the terminal readback; the old
+  receipt/cache are treated as stale and no alternative asset or conversation
+  is inferred.
+- [x] The one-canary gate is frozen truthfully and no canary, job,
   materialization, download, prompt, or control action runs.
-- [ ] Plan, ROADMAP, RUNBOOK, journal, audits, git/remote state, and final runtime
+- [x] Plan, ROADMAP, RUNBOOK, journal, audits, git/remote state, and final runtime
   readback agree.
 
 ## Hard Stops And Non-Goals
@@ -133,10 +138,10 @@ create a job, start materialization, or resume scheduler/completion loops.
 
 ## Definition Of Done
 
-The sole exact refresh terminates within the installed bound, preserves one
-terminal receipt, and yields either a current exact cone classification or a
-truthful fail-closed stop. The one-canary gate is frozen, all scheduler and
-completion pauses remain intact, and no canary/materialization runs.
+The sole exact refresh reaches its first terminal exit and the terminal
+readback either preserves a current receipt/classification or truthfully stops
+on their absence. The one-canary gate is frozen, all scheduler and completion
+pauses remain intact, and no canary/materialization runs.
 
 ## Checkpoint 1 | One Post-Repair Read Authorized
 
@@ -161,3 +166,53 @@ completion pauses remain intact, and no canary/materialization runs.
   pass is reopened.
 - `next_action_or_stop_reason`: audit, commit, and push this boundary; then run
   the exact frozen preflight before spending the sole read.
+
+## Checkpoint 2 | Outer Ceiling Stops Without A Fresh Receipt
+
+- `plan_version`: 1
+- `checkpoint_id`: `P0207-C02`
+- `state_transition`: AWAITING_BOUNDED_CONTEXT_READ ->
+  READING_BOUNDED_CONTEXT -> STOPPED_FAIL_CLOSED.
+- `progress_classification`: blocker_discovery
+- `owned_changes`: planning commit `a35e414e`; one exact installed read-only
+  refresh command; provider-free receipt/cache/runtime readback; terminal docs.
+  No source, installed runtime, job, materialization, prompt, download, canary,
+  browser-tools, or control change.
+- `evidence`: the pushed-plan preflight passed at source/runtime hash
+  `2bf2ea406e0209ff435c41dcca0d21c62f4d921249665ec82575f89b23c1e0a9`,
+  API PID 44127, scheduler paused, six completions paused, default pass 4,
+  background drain idle, clear default guard, and zero active history jobs.
+  The one command used `--timeout-ms 120000` beneath `timeout 150s`, discarded
+  stdout, and reached exit 124 after 143.90 measured seconds. No retry ran. The
+  receipt file is still the Plan 0205 receipt, timestamped 2026-08-06 19:19:57
+  local with SHA-256
+  `529a39994334256ae21201612bf40b0ce03201381d4f5e9f562537e5b3db1903`;
+  it records the older `completedAt=2026-08-07T00:19:57.061Z`, 9,964ms
+  provenance failure rather than this attempt. The context remains timestamped
+  2026-08-06 10:22 local with SHA-256
+  `0c71832d99b423ed3de9e496e43346ac917b1d2de27573632ebbf30f5762b7b4`,
+  eleven artifacts, and one exact cone whose turn, button, and live-control
+  fields are all null. Final API PID 44127 is active/running; scheduler and six
+  completions remain paused; queued/running/idle-waiting are `0/0/0`; default
+  pass 4 and clear guard are unchanged; background drain is idle; active
+  history jobs are zero.
+- `subagent_status`: `not_spawned`.
+- `budget_consumption`: plan versions 1/1; execution packets 1/1; planning
+  commits 1/1; closeout commits 0/1 before this terminal commit; provider
+  context refresh commands 1/1; conversations 1/1; retries 0/0; inner timeout
+  120000/120000 ms configured; outer ceiling 150/150 seconds configured;
+  provider-free adjudications 1/1; audit command groups 1/2 before the terminal
+  audit; installs, restarts, jobs, materialization callbacks, canaries,
+  downloads, prompts, scheduler/completion/guard actions, direct JSON edits,
+  and CodeGraph calls 0.
+- `remaining_criteria`: terminal audit, closeout commit/push, and remote parity
+  only; current cone control evidence remains unavailable.
+- `authority_classification`: the separately explicit one-read authority is
+  consumed. No further provider read, canary, materialization, browser
+  diagnostic, or runtime-control authority remains.
+- `review_disposition_summary`: timeout plus absence of a fresh receipt is an
+  accepted fail-closed blocker. The retained stale receipt/cache are not
+  promoted to a current classification, and no substitute or retry is opened.
+- `next_action_or_stop_reason`: stop fail-closed. Any successor should first
+  reproduce provider-free why the installed inner deadline did not return a
+  fresh terminal receipt before considering another live read.
