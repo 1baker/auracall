@@ -16706,3 +16706,24 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   materialization, download, prompt, completion, scheduler, or guard action
   has run. The next permitted effect is the single exact no-retry canary after
   this version-2 boundary is audited, committed, and pushed.
+
+## Turn 382 | 2026-08-07
+
+- Plan 0209 version 2 was audited, committed as `85a2038a`, and pushed before
+  provider work. Active history jobs were zero at the boundary.
+- Exactly one job, `hmj_1da9c86b60dc45a388e71d1829c2b0fd`, ran attempt 1
+  for only the approved catalog file with `assetKinds=files`, `maxItems=1`, no
+  force, no snapshot refresh, and a 300-second provider-work timeout. No retry
+  or substitute ran.
+- The job matched the exact tile and all four provider-session identity
+  dimensions, then ChatGPT returned HTTP 200 JSON with `file_not_found`,
+  `GetDownloadLinkError`, and `status=error`. AuraCall correctly recorded
+  `provider_unavailable`, `retryable=false`, materialized/skipped/failed
+  `0/0/1`, and download attempts/successes/failures `1/0/1`. Manifest SHA-256
+  is `d96ab7ff7c7d26add23ebb3a631f94cbff838e2560525bd9ca5e343ed1d3e325`;
+  no local file or archive item exists.
+- Plan 0209 closes `STOPPED_FAIL_CLOSED`. API PID 33299 remains active with
+  zero restarts; active history jobs are zero; the scheduler and all six
+  completions remain paused. No completion, scheduler, provider-guard, prompt,
+  `Answer now`, install, or restart action ran. Another asset would require a
+  new explicit one-canary gate.

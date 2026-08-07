@@ -1,11 +1,11 @@
 # Bounded Live-Follow Re-enablement | 0209-2026-08-07
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 2
-Outcome: IN_PROGRESS
-Goal execution state: CANARY_READY
-Gate state: PROVIDER_FREE_SUCCESSOR_READY
+Outcome: STOPPED_FAIL_CLOSED
+Goal execution state: STOPPED_FAIL_CLOSED
+Gate state: CANARY_FAILED_PROVIDER_UNAVAILABLE
 
 ## Stable Goal Objective
 
@@ -65,6 +65,11 @@ useful-yield proof.
   selection reached only the named file with one disabled callback. A
   read-only agent-browser inspection also proved the conversation rendered and
   interactive without login, CAPTCHA, dialog, provider error, or `Answer now`.
+- The sole canary then matched the exact tile and provider identity but received
+  structured provider `file_not_found` / `GetDownloadLinkError`. It ended
+  non-retryable `provider_unavailable` with materialized/skipped/failed
+  `0/0/1`. No output exists, active jobs returned to zero, and every completion
+  plus the scheduler remains paused. The useful-yield resume gate is closed.
 
 ## Authority And Ownership
 
@@ -201,7 +206,7 @@ useful-yield proof.
 - [x] One exact bounded context read produces a fresh terminal receipt and
   current classification, or a newly discovered local defect is repaired and
   accepted with at most one post-repair repeat.
-- [ ] Exactly one `maxItems=1` canary either proves one durable locally readable
+- [x] Exactly one `maxItems=1` canary either proves one durable locally readable
   asset with checksum/manifest evidence or stops truthfully without retry,
   substitute, force, or widened materialization.
 - [ ] ChatGPT/default completes one bounded resumed pass with authoritative
@@ -234,6 +239,9 @@ ChatGPT live-follow targets and scheduler are re-enabled in bounded stages,
 the readiness verifier is green, and current installed readback shows stable
 identity, clear guards, monotonic progress, no unexpected active jobs, and no
 resume of excluded targets.
+
+Not achieved. The sole canary ended `provider_unavailable` with zero durable
+output, so every resume gate remains closed.
 
 ## Checkpoint 1 | Re-enablement Diagnosis Opened
 
@@ -375,3 +383,55 @@ resume of excluded targets.
   `catalogKind=files`, `assetKinds=files`, `maxItems=1`, `force=false`,
   `refreshSnapshot=false`, and a 300000ms provider-work timeout. Stop after its
   first terminal disposition; never substitute or retry.
+
+## Checkpoint 4 | Sole Canary Provider-Unavailable Stop
+
+- `plan_version`: 2
+- `checkpoint_id`: `P0209-C04`
+- `state_transition`: CANARY_READY -> CANARY_PROVING -> STOPPED_FAIL_CLOSED.
+- `progress_classification`: blocker_discovery
+- `owned_changes`: exactly one durable history-materialization job and one
+  provider download action for the frozen version-2 catalog item; terminal
+  readbacks and closeout docs. No retry, substitute, prompt, `Answer now`,
+  completion resume, scheduler resume, guard change, install, or restart.
+- `evidence`: job `hmj_1da9c86b60dc45a388e71d1829c2b0fd` was created new,
+  ran attempt 1 from 19:30:48.693Z through 19:31:20.249Z, and ended `failed`
+  with materialized/skipped/failed `0/0/1`. Its exact request preserved the
+  approved provider, runtime/browser profiles, composite bound identity,
+  conversation, full catalog ID, `catalogKind=files`, `assetKinds=files`,
+  `maxItems=1`, `force=false`, `refreshSnapshot=false`, and 300000ms timeout.
+  Provider-session proof matched email, plan, structure, and account-level
+  dimensions. The exact tile matched, one provider batch download ran, and
+  ChatGPT returned HTTP 200 JSON with `file_not_found`,
+  `GetDownloadLinkError`, and `status=error`. AuraCall classified
+  `provider_unavailable`, `retryable=false`; downloads attempted/succeeded/
+  failed are `1/0/1`. Manifest SHA-256 is
+  `d96ab7ff7c7d26add23ebb3a631f94cbff838e2560525bd9ca5e343ed1d3e325`;
+  no exact local file or archive item exists. The compact monitoring endpoint
+  intentionally projects entry details; the durable job and manifest preserve
+  the full terminal evidence.
+- `subagent_status`: `not_spawned`.
+- `budget_consumption`: goal turns 2/10; plan versions 2/2; execution packets
+  3/5 entered and packets 4-5 withheld; durable jobs 1/1; canaries 1/1; canary
+  items 1/1; live materialization callbacks 1/1; downloads 1/1; provider
+  retries 0/0; substitutes 0/0; prompts 0/0; `Answer now` clicks 0/0;
+  completion resume actions 0/4; scheduler resume actions 0/1; installs/
+  restarts 1/2. CodeGraph read-only calls ended at 12/6 after three bounded
+  post-failure structural checks separated provider failure, result
+  persistence, and compact monitoring projection; no effect scope expanded.
+- `remaining_criteria`: useful durable canary yield, default bounded pass,
+  three-target expansion, scheduler observation, green readiness, and final
+  enabled-runtime closeout all remain unmet.
+- `authority_classification`: the authorized one-canary effect is exhausted.
+  Provider-unavailable evidence is terminal for this exact asset. A second
+  canary or substitute asset would be a new effect gate and is not inferred.
+- `review_disposition_summary`: hypothesis 4 is confirmed for both the old
+  cone and the version-2 successor; provider-current catalog identity does not
+  guarantee retained provider bytes. Hypothesis 1 is rejected because the
+  useful-yield gate is not met. Hypothesis 5 remains untested because no resume
+  action was safe. The compact status projection is intentional monitoring
+  behavior, not lost evidence; full evidence persists in the job index and
+  manifest.
+- `next_action_or_stop_reason`: stop fail-closed. Keep all completions and the
+  scheduler paused. Any successor must be provider-free first and obtain a new
+  explicit one-canary authority before another provider download action.

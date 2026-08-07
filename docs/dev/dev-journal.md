@@ -44213,3 +44213,22 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   Scheduler and completions remain paused. No durable job, materialization,
   download, prompt, runtime control, retry, or substitute has run; the next
   gate is exactly one committed no-retry canary.
+
+## 2026-08-07 | Plan 0209 sole canary stops provider-unavailable
+
+- The version-2 boundary passed goal/library audits and was pushed as
+  `85a2038a` before the only provider effect. Job
+  `hmj_1da9c86b60dc45a388e71d1829c2b0fd` preserved the exact approved request,
+  ran one attempt, and received matching email, plan, structure, and
+  account-level provider-session proof.
+- The exact current tile resolved, but ChatGPT returned `file_not_found` /
+  `GetDownloadLinkError` in HTTP 200 JSON. AuraCall recorded the asset as
+  non-retryable `provider_unavailable`, with materialized/skipped/failed
+  `0/0/1` and download attempts/successes/failures `1/0/1`. Manifest SHA-256
+  is `d96ab7ff7c7d26add23ebb3a631f94cbff838e2560525bd9ca5e343ed1d3e325`;
+  filesystem and archive readbacks contain no output.
+- This is terminal provider availability evidence, not a browser-health or
+  local response-classification defect. Plan 0209 closes fail-closed. API PID
+  33299 remains healthy, active history jobs are zero, and all six completions
+  plus the scheduler remain paused. No retry, substitute, prompt, completion,
+  scheduler, guard, install, or restart action ran after the canary.

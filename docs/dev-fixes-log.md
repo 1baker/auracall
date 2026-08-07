@@ -20631,3 +20631,17 @@ browser-stage lifecycle observability, not transcript truncation.
   account identity remain stable. Freeze the exact request only after current
   evidence and provider-free selection agree, and commit that gate before the
   one allowed provider effect.
+
+## 2026-08-07 | A current provider tile does not prove retained file bytes
+
+- An exact ChatGPT file can remain visible and catalog-eligible while its
+  authenticated download endpoint returns `file_not_found` and
+  `GetDownloadLinkError`. Treat that structured response as non-retryable
+  `provider_unavailable`, even when tile identity and all account dimensions
+  match.
+- Verify the durable full job record or manifest when adjudicating a canary.
+  The default history-job status route is a compact monitoring projection and
+  intentionally omits large result-entry and telemetry details unless the
+  underlying API is requested with `detail=full`.
+- Do not substitute or resume a loop after zero useful yield. A new asset needs
+  its own provider-free selection and explicit effect gate.
