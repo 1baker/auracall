@@ -209,10 +209,13 @@ Lane: P01
   [docs/dev/plans/0210-2026-08-07-live-follow-successor-canary-and-staged-reenablement.md](docs/dev/plans/0210-2026-08-07-live-follow-successor-canary-and-staged-reenablement.md).
   Goal governance treats Plan 0209's hard stop as the end of that bounded
   execution window, not revocation of the operator-approved re-enablement
-  objective. Plan 0210 first uses one provider-disabled simulation to select a
-  different current nonterminal file; only an audited/pushed exact version-2
-  gate may create one new `maxItems=1` canary. Useful yield remains mandatory
-  before default-first completion and scheduler-last resume.
+  objective. Version 2 rejects the next file because retained history carries
+  the same missing-download-URL invariant as the terminal ROMP file, then
+  provider-free selection freezes one never-attempted generated-image pointer
+  in the same conversation. Its exact archive/job/filesystem readbacks are
+  zero and the durable index is unchanged; only this audited/pushed
+  `maxItems=1` artifact gate may create one canary. Useful yield remains
+  mandatory before default-first completion and scheduler-last resume.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,

@@ -16744,3 +16744,24 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   audited exact successor canary at most. No provider callback, job,
   materialization, download, browser action, prompt, completion/scheduler
   control, install, or restart has run in the successor yet.
+
+## Turn 384 | 2026-08-07
+
+- Plan 0210 version 2 rejects the first provider-free file successor because
+  retained job evidence already carries the same `json_missing_download_url`
+  family as the terminal ROMP canary. No provider action was spent repeating
+  that invariant.
+- Closed-world artifact adjudication excludes the known readable and duplicate
+  families. A second installed-runtime in-memory simulation seeded all 1,864
+  retained jobs and selected only generated image
+  `e61f170a-0c9f-4718-a6e7-2c11000d0b46:image:sediment://file_00000000aac4722fab4d4237a9635539`
+  in the same exact conversation, with `assetKinds=artifacts`, `maxItems=1`,
+  no refresh, and no force.
+- Exactly one disabled local materialization seam was reached; provider/browser
+  callbacks and durable writes were zero. Exact archive asset, archive search,
+  retained-job, and filesystem readbacks are all zero. The durable 1,864-job
+  index stayed byte-identical at SHA-256
+  `df7270ec9161fc0496425311e3440ef4a78daaf5b1a59ab6b5be86e13d87b86d`.
+- The exact artifact canary is frozen but has not run. Scheduler and all six
+  completions remain paused; no job, materialization, download, prompt,
+  completion/scheduler control, install, or restart has occurred in Plan 0210.

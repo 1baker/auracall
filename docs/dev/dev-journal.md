@@ -44247,3 +44247,21 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   Plan 0210 starts with one callback-disabled, current-cache `maxItems=1`
   selection. No provider, job, browser, materialization, download, prompt,
   control, install, or restart action has run in the successor.
+
+## 2026-08-07 | Plan 0210 freezes an exact artifact successor provider-free
+
+- The first callback-disabled selection reached the February 26 transcript,
+  but retained history already records the same `json_missing_download_url`
+  family as the terminal ROMP file. The file lane is rejected without another
+  provider action.
+- Version 2 pivots within the same exact conversation to artifacts. The sole
+  remaining installed-runtime simulation seeded 1,864 retained jobs and bound
+  generated image
+  `e61f170a-0c9f-4718-a6e7-2c11000d0b46:image:sediment://file_00000000aac4722fab4d4237a9635539`
+  with `maxItems=1`, no refresh, no force, and exactly one disabled local seam
+  call. Provider/browser callbacks and durable writes were zero.
+- Exact archive asset/search, retained-job, and filesystem results are all
+  zero. The durable job index remains
+  `df7270ec9161fc0496425311e3440ef4a78daaf5b1a59ab6b5be86e13d87b86d`.
+  The artifact canary is ready only after this gate passes audit, commit, and
+  push; scheduler and completions remain paused.

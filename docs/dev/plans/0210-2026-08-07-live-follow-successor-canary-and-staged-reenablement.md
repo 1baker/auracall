@@ -2,10 +2,10 @@
 
 State: OPEN
 Lane: P01
-Plan version: 1
+Plan version: 2
 Outcome: IN_PROGRESS
-Goal execution state: SELECTING_PROVIDER_FREE_SUCCESSOR
-Gate state: PROVIDER_FREE_ONLY
+Goal execution state: CANARY_READY
+Gate state: EXACT_ARTIFACT_FROZEN
 
 ## Stable Goal Objective
 
@@ -35,6 +35,20 @@ transport/job status as useful-yield proof.
   `3838f3468011a9f99e5309db691932ba359670c15d29c1750b4118ba31d97bd3`.
   No additional provider context read or browser inspection is needed to select
   the next candidate.
+- The first callback-disabled `maxItems=1` simulation selected the next file,
+  `2025-02-26 Other Polymerization Chemistries-20250226_120627-Meeting
+  Transcript.docx`, without a durable write or provider callback. Retained job
+  `hmj_71011a4...` already records the same file and the same
+  `json_missing_download_url` response family as the now-terminal ROMP file.
+  That file is rejected as a useful successor instead of spending a provider
+  action on a repeated invariant.
+- Closed-world artifact readback shows five exact-conversation artifact
+  families are already materialized or duplicate aliases, while generated
+  image pointer
+  `e61f170a-0c9f-4718-a6e7-2c11000d0b46:image:sediment://file_00000000aac4722fab4d4237a9635539`
+  has no retained attempt or accepted local/archive evidence. Version 2 pivots
+  only the asset kind inside the same conversation and tenant so a second
+  provider-disabled simulation can adjudicate that candidate.
 
 ## Authority And Ownership
 
@@ -45,12 +59,13 @@ transport/job status as useful-yield proof.
   one bounded exact-canary window without changing provider, tenant,
   conversation, identity, objective, acceptance criteria, or safety controls.
 - Authorized: provider-free catalog/archive/job/cache readbacks; one
-  callback-disabled `maxItems=1` selection simulation; one exact new canary
+  callback-disabled `maxItems=1` selection simulation per asset-kind lane; one exact new canary
   only after its frozen gate is audited, committed, and pushed; evidence-driven
   local repair if the canary exposes a local defect; default-first staged
   completion resume; the other three configured ChatGPT targets; scheduler
   resume last; emergency re-pause; audit/commit/push.
-- Excluded: previously terminal assets; alternate conversations; more than one
+- Excluded: previously terminal assets; alternate conversations; stale file
+  successors sharing the retained missing-download-URL invariant; more than one
   successor asset/job/canary; retries; force; prompts; `Answer now`; direct
   runtime JSON edits; identity inference; CAPTCHA/guard bypass; Gemini, Grok,
   disabled, unconfigured, or unknown-identity targets; broad materialization
@@ -77,18 +92,22 @@ transport/job status as useful-yield proof.
 
 ## Execution Packets
 
-1. **Provider-free exact selection.** Seed an in-memory job store from all
-   retained history jobs, disable every provider callback, and simulate only
-   ChatGPT/default, the exact cached conversation, `assetKinds=files`, and
-   `maxItems=1`. Freeze the selected full catalog ID/provider file ID only when
-   it is different from both terminal Plan 0209 families.
+1. **Provider-free exact selection.** The completed file-lane simulation is
+   retained as negative evidence because its selected file already carries the
+   same missing-download-URL family. Seed the second in-memory job store from
+   all retained history jobs, disable every provider callback, and simulate
+   only ChatGPT/default, the exact cached conversation,
+   `assetKinds=artifacts`, and `maxItems=1`. Freeze the selected full catalog
+   ID/provider pointer only when it has no accepted terminal, local, archive,
+   or duplicate-family evidence.
 2. **Closed-world eligibility gate.** Require catalog eligibility, null local
    path/checksum, zero canonical archive result, no matching readable file,
-   and no accepted terminal family evidence. Update this plan to version 2,
-   audit, commit, and push the exact request before provider work.
+   and no accepted terminal family evidence. Version 2 freezes generated image
+   `e61f170a-0c9f-4718-a6e7-2c11000d0b46:image:sediment://file_00000000aac4722fab4d4237a9635539`;
+   audit, commit, and push this exact request before provider work.
 3. **One successor canary.** Create exactly one durable job with the frozen
    provider/runtime/browser/identity/conversation/catalog fields,
-   `catalogKind=files`, `assetKinds=files`, `maxItems=1`, `force=false`,
+   `catalogKind=artifacts`, `assetKinds=artifacts`, `maxItems=1`, `force=false`,
    `refreshSnapshot=false`, and 300000ms provider-work timeout. Stop after its
    first terminal disposition. Useful yield requires readable bytes, checksum,
    manifest, archive readback, and no unexpected fanout.
@@ -105,8 +124,8 @@ transport/job status as useful-yield proof.
   `max_source_commits: 1`; `max_closeout_commits: 2`;
   `max_ranked_hypotheses: 5`; `max_codegraph_calls: 2`;
   `max_provider_context_refresh_commands: 0`;
-  `max_browser_inspections: 0`; `max_provider_free_simulations: 1`;
-  `max_provider_free_successor_selections: 1`;
+  `max_browser_inspections: 0`; `max_provider_free_simulations: 2`;
+  `max_provider_free_successor_selections: 2`;
   `max_provider_callbacks_during_selection: 0`;
   `max_durable_jobs_created: 1`; `max_canary_executions: 1`;
   `max_canary_items: 1`; `max_materialization_callbacks: 1`;
@@ -142,8 +161,9 @@ transport/job status as useful-yield proof.
 
 ## Acceptance Criteria
 
-- [ ] Provider-free simulation selects exactly one current, nonterminal file in
-  the exact conversation with zero provider callbacks and zero durable writes.
+- [x] Provider-free simulation selects exactly one nonterminal artifact in the
+  exact conversation after the stale file lane is rejected, with zero provider
+  callbacks and zero durable writes.
 - [ ] One exact `maxItems=1` canary proves one readable local asset with matching
   checksum, manifest, and archive evidence, or stops truthfully without retry.
 - [ ] ChatGPT/default completes one bounded resumed pass with authoritative
@@ -156,7 +176,8 @@ transport/job status as useful-yield proof.
 
 ## Hard Stops And Non-Goals
 
-- Never retry either terminal Plan 0209 asset, submit a prompt, click `Answer
+- Never retry either terminal Plan 0209 asset or another file carrying the same
+  retained missing-download-URL invariant, submit a prompt, click `Answer
   now`, bypass a provider guard, or continue through CAPTCHA/human verification.
 - Never fuzzy-match identity, conversation, or asset; do not select an alternate
   conversation or create a second job/canary in this packet.
@@ -200,3 +221,76 @@ progress, no unexpected jobs, and no excluded-target activation.
 - `next_action_or_stop_reason`: run goal/library audits, commit and push this
   boundary, then perform exactly one provider-disabled in-memory selection
   simulation using the current cache and retained jobs.
+
+## Checkpoint 2 | File Invariant Rejected And Artifact Pivot Opened
+
+- `plan_version`: 2
+- `checkpoint_id`: `P0210-C02`
+- `state_transition`: SELECTING_PROVIDER_FREE_SUCCESSOR ->
+  SELECTING_PROVIDER_FREE_ARTIFACT.
+- `progress_classification`: blocker_reduction
+- `owned_changes`: provider-free catalog, retained-job, archive, cache, and
+  filesystem readbacks plus this version-2 planning revision. No provider or
+  browser callback, durable job, materialization, download, prompt, completion
+  or scheduler control, install, or restart.
+- `evidence`: the first simulation selected the February 26 file with one local
+  disabled seam call and zero provider callbacks/durable writes, but retained
+  job evidence already binds it to `json_missing_download_url`. Current
+  artifact adjudication excludes five readable/duplicate families and leaves
+  the exact `e61f170a...aac4722f...` generated-image pointer without a retained
+  attempt or accepted local/archive result.
+- `subagent_status`: `not_spawned`.
+- `budget_consumption`: campaign turns 3/10; plan versions 2/2; hypotheses 5/5;
+  CodeGraph calls 2/2; simulations 2/2; successor selections 2/2; all provider
+  callbacks, browser inspections, durable jobs, canaries, downloads, prompts,
+  completion actions, scheduler actions, installs, restarts, and source changes
+  zero.
+- `remaining_criteria`: the canary and all staged re-enablement acceptance
+  items.
+- `authority_classification`: same provider, runtime profile, browser profile,
+  authoritative tenant, conversation, objective, and safety controls. This is
+  an evidence-driven asset-kind pivot, not an alternate conversation or scope
+  expansion.
+- `review_disposition_summary`: hypothesis 1 is rejected for the file lane;
+  hypothesis 2 is rejected for the conversation as a whole because one
+  generated-image family remains unadjudicated. Hypotheses 3-5 remain open.
+- `next_action_or_stop_reason`: audit, commit, and push this exact frozen gate,
+  then create the sole no-retry canary.
+
+## Checkpoint 3 | Exact Artifact Canary Ready
+
+- `plan_version`: 2
+- `checkpoint_id`: `P0210-C03`
+- `state_transition`: SELECTING_PROVIDER_FREE_ARTIFACT -> CANARY_READY.
+- `progress_classification`: blocker_reduction
+- `owned_changes`: one installed-runtime, in-memory, callback-disabled exact
+  catalog-item simulation and closed-world readbacks only. No durable runtime
+  write or provider/browser action occurred.
+- `evidence`: the simulation seeded all 1,864 persisted jobs and invoked the
+  disabled `materializeConversation` seam exactly once for ChatGPT/default,
+  the authoritative service-account tenant, conversation
+  `67ccf9d7-9310-8004-b5e1-478dba6eab3a`, catalog kind/artifact kind
+  `artifacts`, and `maxItems=1`. `selectedCatalogAsset` is exactly generated
+  image `e61f170a-0c9f-4718-a6e7-2c11000d0b46:image:sediment://file_00000000aac4722fab4d4237a9635539`,
+  URI `sediment://file_00000000aac4722fab4d4237a9635539`. Exact archive asset
+  lookup, archive text search, retained-job lookup, and filesystem lookup each
+  return zero. The durable job index SHA-256 is unchanged before/after at
+  `df7270ec9161fc0496425311e3440ef4a78daaf5b1a59ab6b5be86e13d87b86d`.
+- `subagent_status`: `not_spawned`.
+- `budget_consumption`: campaign turns 3/10; plan versions 2/2; planning
+  commits 1/2 before this boundary; CodeGraph calls 2/2; simulations 2/2;
+  successor selections 2/2; provider callbacks 0, browser inspections 0,
+  durable jobs 0/1, canaries 0/1, downloads 0/1, completion actions 0/4,
+  scheduler actions 0/1, prompts 0, installs 0, restarts 0.
+- `remaining_criteria`: the exact artifact canary; one bounded default pass;
+  the other three configured ChatGPT targets; scheduler-last observation; final
+  audits and readbacks.
+- `authority_classification`: exact no-retry canary under the unchanged standing
+  goal and version-2 effect boundary. Provider, runtime/browser profile,
+  authoritative tenant, conversation, asset, and limits are frozen.
+- `review_disposition_summary`: the file lane is rejected as a repeated
+  provider-unavailable invariant. The artifact lane now satisfies all
+  provider-free and closed-world admission checks; hypothesis 4 leads.
+- `next_action_or_stop_reason`: run goal/library audits and commit/push this
+  exact gate. Only then create one durable canary with the frozen request and
+  stop after its first terminal disposition.
