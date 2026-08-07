@@ -1967,6 +1967,9 @@
   provider context callback, and persist a stage-specific metadata-only
   receipt. The suite must also retain composed caller abort, exactly one
   provider timeout/abort attempt, and unchanged transient retry/cache behavior.
+  For an already authorized provider session, the cache-identity preflight must
+  skip duplicate live identity and feature detection, reach the provider
+  context callback once, and leave live identity assertion to the adapter.
   CLI help must expose the shared `--timeout-ms` option. Provider-free installed
   validation may use these same seams, but must not run `conversations context
   get` against a real provider.

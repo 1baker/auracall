@@ -20596,3 +20596,23 @@ browser-stage lifecycle observability, not transcript truncation.
   internally resolved same-owner object from raw caller overrides. Do not
   normalize verified provenance through a path that intentionally skips the
   resolver, and do not accept endpoint or account equality as ownership proof.
+
+## 2026-08-07 | Authorized context reads must not repeat live cache identity detection
+
+- Symptom: after the full-command deadline repair, one exact ChatGPT context
+  read terminated correctly at 120 seconds but never invoked the main context
+  adapter. Its fresh metadata receipt had `attemptCount=0` and last telemetry
+  stage `provider:chatgpt.connectTab.ready`.
+- Cause: after building a provider-session-authorized target, the shared
+  context service resolved its cache scope with live identity and feature
+  detection enabled. That redundant preflight opened ChatGPT and could consume
+  the entire command deadline before the actual context attempt.
+- Fix: when provider-session authorization is present, cache resolution uses
+  configured local identity, disables prompting, and skips live feature
+  detection. The provider adapter still observes and asserts the expected live
+  account before reading content, so the change removes duplicate provider work
+  without weakening account authorization.
+- Prevention: provider-session authorization and cache placement are separate
+  concerns. Use configured identity for deterministic cache scope, require the
+  adapter's bound live identity proof for provider access, and cover the seam
+  with a hanging identity detector that must never be invoked.

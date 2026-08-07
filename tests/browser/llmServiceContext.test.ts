@@ -135,6 +135,14 @@ class InventoryContextLlmService extends LlmService {
 	}
 }
 
+class HangingAuthorizedCacheIdentityLlmService extends InventoryContextLlmService {
+	override async getUserIdentity(): Promise<never> {
+		this.identityReads += 1;
+		await new Promise(() => {});
+		throw new Error("unreachable");
+	}
+}
+
 describe("project-scoped conversation context normalization", () => {
 	afterEach(() => {
 		setAuracallHomeDirOverrideForTest(null);
@@ -507,6 +515,56 @@ describe("project-scoped conversation context normalization", () => {
 				lastStage: "preflight:resolveCacheContext",
 				errorCode: "conversation_context_timeout",
 			});
+		} finally {
+			await rm(homeDir, { recursive: true, force: true });
+		}
+	});
+
+	test("getConversationContext does not repeat live cache identity detection for an authorized provider session", async () => {
+		const homeDir = await mkdtemp(
+			path.join(os.tmpdir(), "auracall-llm-context-authorized-cache-identity-"),
+		);
+		setAuracallHomeDirOverrideForTest(homeDir);
+		const store = new JsonCacheStore();
+		const context: ConversationContext = {
+			provider: "chatgpt",
+			conversationId: "conversation-authorized-cache-identity",
+			messages: [{ role: "assistant", text: "bounded context" }],
+		};
+		const provider = {
+			id: "chatgpt",
+			config: { id: "chatgpt", selectors: {} as never },
+			getFeatureSignature: vi.fn(async () => {
+				await new Promise(() => {});
+				throw new Error("unreachable");
+			}),
+			readConversationContext: vi.fn(async () => context),
+		};
+		const service = new HangingAuthorizedCacheIdentityLlmService(provider as never, store);
+		const providerSessionAuthorization = {
+			authority: {},
+			context: { providerId: "chatgpt" },
+			expectation: {
+				providerId: "chatgpt",
+				configuredIdentity: { email: "inventory@example.com" },
+				configuredServiceAccountId: "service-account:chatgpt:inventory@example.com",
+				source: "runtime-profile",
+			},
+		} as never;
+
+		try {
+			await expect(
+				service.getConversationContext("conversation-authorized-cache-identity", {
+					refresh: true,
+					allowCacheFallback: false,
+					timeoutMs: 25,
+					listOptions: { providerSessionAuthorization },
+				}),
+			).resolves.toEqual(context);
+
+			expect(service.identityReads).toBe(0);
+			expect(provider.getFeatureSignature).not.toHaveBeenCalled();
+			expect(provider.readConversationContext).toHaveBeenCalledTimes(1);
 		} finally {
 			await rm(homeDir, { recursive: true, force: true });
 		}

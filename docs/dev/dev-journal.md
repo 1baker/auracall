@@ -44164,3 +44164,26 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   ChatGPT expansion, and scheduler-last contract. No provider, canary,
   materialization, download, source/runtime, or control action has run inside
   the plan yet; no subagent was spawned.
+
+## 2026-08-07 | Plan 0209 cache-identity blocker is source-green
+
+- Planning commit `d7f6a79c` was pushed before the one initial exact read. The
+  command exited once at 120.90 seconds with a fresh timeout receipt rather
+  than reaching the 150-second outer ceiling. The receipt records attempt zero
+  and `provider:chatgpt.connectTab.ready`; the frozen context remained
+  unchanged.
+- Diagnosis showed the connection belonged to a duplicate live identity and
+  feature probe during cache-scope resolution after provider-session
+  authorization. The main context adapter never began.
+- A deterministic hanging identity detector reproduced the defect in 43ms and
+  turned green after authorized cache scoping reused configured identity and
+  skipped live feature detection. The ChatGPT adapter still observes and
+  asserts the expected account before reading content.
+- Focused context coverage passes 12/12; affected context/file/tab coverage
+  passes 64/64; typecheck, touched lint, and production build pass. Three MCP
+  stdio suites in a parallel build/test run hit a transient pinned-Node
+  `ENOENT`; their isolated rerun passes 4/4 and a clean serial full non-live
+  suite passes 304 files / 2,728 tests with 65 opt-in tests skipped.
+- No install/restart, post-repair read, canary, job, materialization, download,
+  prompt, completion, scheduler, or guard action has run yet; no subagent was
+  spawned.

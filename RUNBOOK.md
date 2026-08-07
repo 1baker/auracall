@@ -16665,3 +16665,16 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   configured ChatGPT completions, and scheduler resume last. No provider or
   runtime-control action occurs before this plan is audited, committed, and
   pushed.
+- Planning commit `d7f6a79c` was audited and pushed. The sole initial exact
+  read terminated correctly at 120.90 seconds but its fresh receipt showed
+  `attemptCount=0` after `provider:chatgpt.connectTab.ready`, proving the main
+  context attempt never began.
+- The confirmed local cause is a duplicate live identity/feature probe during
+  cache-scope resolution after provider-session authorization. A 25ms hanging
+  detector regression was red before the repair and green after authorized
+  cache scoping became provider-free; the adapter's bound live identity
+  assertion remains required.
+- Focused tests pass 12/12, affected tests 64/64, and the clean serial full
+  non-live suite passes 304 files / 2,728 tests with 65 opt-in tests skipped.
+  Typecheck, touched lint, and build pass. Source review/commit and one
+  green-gated install/restart remain before the sole post-repair exact read.

@@ -2629,11 +2629,18 @@ export abstract class LlmService {
 				abortSignal: controller.signal,
 				scrapeTelemetry: telemetry,
 			};
+			const hasProviderSessionAuthorization = Boolean(
+				scopedListOptions.providerSessionAuthorization,
+			);
 			lastStage = "preflight:resolveCacheContext";
 			cacheContext = await waitForPromiseWithAbort(
 				this.resolveCacheContext(
-					scopedListOptions,
-					listOptions.accountMirrorInventory === true ? { detect: false, prompt: false } : {},
+					hasProviderSessionAuthorization
+						? { ...scopedListOptions, skipFeatureSignature: true }
+						: scopedListOptions,
+					listOptions.accountMirrorInventory === true || hasProviderSessionAuthorization
+						? { detect: false, prompt: false }
+						: {},
 				),
 				controller.signal,
 			);

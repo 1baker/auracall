@@ -4,8 +4,8 @@ State: OPEN
 Lane: P01
 Plan version: 1
 Outcome: IN_PROGRESS
-Goal execution state: DIAGNOSING
-Gate state: AWAITING_CURRENT_EXACT_CONTEXT
+Goal execution state: VALIDATING
+Gate state: REPAIR_SOURCE_GREEN_INSTALL_PENDING
 
 ## Stable Goal Objective
 
@@ -247,3 +247,54 @@ resume of excluded targets.
 - `next_action_or_stop_reason`: run plan and goal audits, commit and push this
   planning boundary, then perform the final frozen preflight before the sole
   initial exact context read.
+
+## Checkpoint 2 | Redundant Live Cache Identity Preflight Repaired
+
+- `plan_version`: 1
+- `checkpoint_id`: `P0209-C02`
+- `state_transition`: DIAGNOSING -> READING_CURRENT_CONTEXT -> REPAIRING ->
+  VALIDATING.
+- `progress_classification`: blocker_reduction
+- `owned_changes`: one exact installed read; shared authorized-session cache
+  preflight; one deterministic regression; README/testing/fix-log contracts;
+  plan, journal, and runbook evidence. Scheduler, completions, canary, jobs,
+  materialization, and downloads remain unchanged.
+- `evidence`: planning commit `d7f6a79c` was pushed before provider contact.
+  The sole initial exact read exited once in 120.90 seconds with
+  `conversation_context_timeout`; its new metadata receipt SHA-256 is
+  `546c79008d20655d0ebcf6cc941b4d50aa6621c36d32fedac5b747864446477d`,
+  `attemptCount=0`, and last stage `provider:chatgpt.connectTab.ready`, while
+  the context hash remained unchanged. Structural tracing located the live
+  identity/feature detector in the second cache-scope preflight after
+  provider-session authorization. The new hanging detector regression was red
+  in 43ms without invoking the context adapter, then green after cache scoping
+  reused configured identity and skipped live feature detection only when
+  authorization exists. The adapter's live account assertion remains intact.
+  Focused tests pass 12/12; affected context/file/tab tests pass 64/64;
+  typecheck, touched lint, build, and diff hygiene pass. A parallel build/test
+  run had three MCP launcher `ENOENT` failures; their isolated rerun passes 4/4
+  and the clean serial full suite passes 304 files / 2,728 tests with 65
+  opt-in tests skipped.
+- `subagent_status`: `not_spawned`.
+- `budget_consumption`: goal turns 1/10; plan versions 1/2; execution packets
+  2/5; planning commits 1/1; source commits 0/2; provider context reads 1/2;
+  post-repair repeats 0/1; provider conversations 1/1; retries 0/0; context
+  deadline 120000/120000 ms; installs/restarts 0/2; canaries, jobs,
+  materialization callbacks, downloads, prompts, completion actions, and
+  scheduler actions zero. CodeGraph calls reached 7/6 because the broad method
+  response was truncated and required one exact-symbol read-only follow-up;
+  scope and external effects did not expand.
+- `remaining_criteria`: closed-world review; source commit/push; one
+  install/restart; installed provider-free proof; sole post-repair exact read;
+  exact-cone adjudication; one canary; staged ChatGPT completion and scheduler
+  resume; terminal audits and closeout.
+- `authority_classification`: unchanged bounded re-enablement authority; the
+  first context read is consumed and only one same-conversation post-repair
+  acceptance read remains.
+- `review_disposition_summary`: hypothesis 3 is refined and accepted as a
+  redundant live cache-identity preflight after successful target attachment;
+  hypothesis 1 remains contingent on installed acceptance. The frozen-cone and
+  resume-control hypotheses remain open.
+- `next_action_or_stop_reason`: finish closed-world review, commit and push the
+  source boundary, then install/restart once and prove the installed
+  provider-free authorized-session preflight before the sole post-repair read.

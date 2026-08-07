@@ -561,6 +561,11 @@ Terminology note:
   elapsed time, attempt count, and last bounded preflight/scrape stage. If
   target or identity preflight times out before detected identity is available,
   AuraCall uses only configured local cache identity to place that receipt.
+  When target resolution supplies a provider-session authorization, cache
+  scoping reuses that configured identity and skips a second live identity or
+  feature probe; the provider adapter still observes and asserts the bound
+  account before reading conversation content. This keeps cache placement
+  provider-free without weakening live account authorization.
   `cache context get` returns the receipt as `terminalReceipt` without
   contacting a browser.
   An explicit `--refresh` never substitutes stale cached context for a timeout.
