@@ -20679,3 +20679,13 @@ browser-stage lifecycle observability, not transcript truncation.
 - Prevention: generic signed-content URLs are transport evidence, not asset
   identity. Gate candidates before first-success selection and retain a final
   identity check as defense in depth.
+
+## 2026-08-07 | Context timeout is retryable but still stops live follow
+
+- Diagnose a completion-owned reconciliation failure from full job detail
+  before treating it as an asset or identity failure. A conversation-context
+  timeout can create a failed snapshot row with no provider asset ID, no local
+  path, matching provider-session identity, and zero download attempts.
+- Such rows remain retryable and are not terminal asset-family evidence, but
+  the parent completion must still stop fail-closed. Recovery is one explicit
+  bounded `run_one_pass`, not automatic cadence or an unbounded retry loop.

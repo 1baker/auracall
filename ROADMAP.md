@@ -231,13 +231,15 @@ Lane: P01
   re-paused and wider resume stopped.
   Active identity-observation successor:
   [docs/dev/plans/0212-2026-08-07-wsl-chrome-2-provider-session-observation-recovery.md](docs/dev/plans/0212-2026-08-07-wsl-chrome-2-provider-session-observation-recovery.md).
-  It permits one read-only inspection of the exact existing managed browser,
-  then either stops for human sign-in/challenge or gates an evidence-driven
-  local observation repair before any bounded retry. The inspection found one
-  healthy ChatGPT tab on port 45013, but it is signed out and exposes no account
-  identity. Plan 0212 is awaiting human login to the configured
-  `consult@polymerconsultinggroup.com` personal Pro account; all completions and
-  the scheduler remain paused/failed closed until that gate is cleared.
+  It permitted one read-only inspection of the exact existing managed browser.
+  The human login gate was cleared, exact authenticated Pro UI was observed,
+  and replacement `wsl-chrome-2` plus default produced four clean child
+  receipts with matching identity and zero failures. The staged
+  `wsl-chrome-3` child then stopped on two 120-second context-read timeouts with
+  downloads `0/0/0`; full receipt evidence classifies both as retryable rather
+  than terminal asset families. Version 2 permits exactly one blocked
+  `wsl-chrome-3` `run_one_pass` recovery while every other completion and the
+  scheduler remain paused. A repeated timeout stops the packet again.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,

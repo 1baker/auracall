@@ -2,10 +2,10 @@
 
 State: OPEN
 Lane: P01
-Plan version: 1
-Outcome: BLOCKED_HUMAN_LOGIN_REQUIRED
-Goal execution state: AWAITING_HUMAN_GATE
-Gate state: HUMAN_LOGIN_REQUIRED
+Plan version: 2
+Outcome: PAUSED_RETRYABLE_WSL_CHROME_3_TIMEOUT
+Goal execution state: RECOVERY_RETRY_GATE
+Gate state: WSL_CHROME_3_ONE_PASS_RETRY
 
 ## Stable Goal Objective
 
@@ -26,6 +26,19 @@ account identity, CAPTCHA, provider-guard, and no-prompt boundaries.
 - Default was re-paused at pass 6. `wsl-chrome-3` and `wsl-chrome-4` remain
   paused, `wsl-chrome-2` is terminal-failed at pass 31, the scheduler is
   paused, active history jobs are zero, and no guard is active.
+- The operator completed the human login. Exact read-only browser evidence then
+  showed the configured Personal Pro account, and replacement completion
+  `acctmirror_completion_bc68cd94-3f8e-4c2d-bd40-fc4299a5e591` passed identity
+  and two live-follow cycles. Its first two children succeeded with
+  materialized/skipped/failed `4/3/0` and `2/5/0`.
+- Default advanced to pass 7 and its child ended skipped with identity match and
+  materialized/skipped/failed `0/7/0`. `wsl-chrome-3` advanced to pass 39, but
+  child `hmj_a5a0e6beb28742e98f5e199b9f7bfcfd` failed `0/5/2`. Full receipt
+  evidence identifies two independent 120-second conversation-context timeouts,
+  with identity match and zero download attempts.
+- The rollout stopped at that gate. Default and the replacement `wsl-chrome-2`
+  completion are paused, `wsl-chrome-3` is blocked, `wsl-chrome-4` remains
+  paused, the scheduler remains paused, and active history jobs are zero.
 
 ## Authority And Scope
 
@@ -58,6 +71,12 @@ account identity, CAPTCHA, provider-guard, and no-prompt boundaries.
 4. **Staged remainder.** Resume `wsl-chrome-3`, then `wsl-chrome-4`, observe
    each, and resume the scheduler last. Re-pause plan-owned controls on any
    identity, guard, CAPTCHA, failure, or uncontrolled-fanout signal.
+5. **Version-2 timeout recovery.** Because the failed rows have no provider
+   asset identity, no transfer attempt, and are classified retryable rather
+   than terminal family evidence, permit exactly one `run_one_pass` recovery
+   on the blocked `wsl-chrome-3` completion. Keep every other completion and
+   the scheduler paused until its completion cycle and child job settle. Stop
+   on any repeated timeout, failure, identity/guard signal, or missing receipt.
 
 ## Local Goal Bounds
 
@@ -65,8 +84,9 @@ account identity, CAPTCHA, provider-guard, and no-prompt boundaries.
   `max_read_only_browser_inspections: 1`; `max_browser_clicks: 0`;
   `max_browser_navigations: 0`; `max_prompt_submissions: 0`;
   `max_answer_now_clicks: 0`; `max_provider_retries_before_repair: 0`;
-  `max_wsl_chrome_2_recovery_attempts: 1`; `max_installs: 1`;
-  `max_service_restarts: 1`; `max_completion_control_actions: 3`;
+  `max_wsl_chrome_2_recovery_attempts: 1`;
+  `max_wsl_chrome_3_timeout_recovery_attempts: 1`; `max_installs: 1`;
+  `max_service_restarts: 1`; `max_completion_control_actions: 4`;
   `max_emergency_completion_pauses: 4`; `max_scheduler_resume_actions: 1`;
   `max_scheduler_pause_actions: 1`; `max_guard_bypass_actions: 0`;
   `max_direct_runtime_json_edits: 0`; `max_subagents: 0`.
@@ -77,7 +97,7 @@ account identity, CAPTCHA, provider-guard, and no-prompt boundaries.
   from sign-in/challenge/identity drift without mutation.
 - [ ] If local code is at fault, focused regression and affected validation
   pass, committed and installed runtime hashes match, and the API is healthy.
-- [ ] `wsl-chrome-2` reaches a stable live-follow state with authoritative
+- [x] `wsl-chrome-2` reaches a stable live-follow state with authoritative
   provider-session identity and no guard or materialization failure.
 - [ ] Default, `wsl-chrome-2`, `wsl-chrome-3`, and `wsl-chrome-4` are the only
   enabled ChatGPT completion targets; scheduler is resumed last.
@@ -93,6 +113,9 @@ account identity, CAPTCHA, provider-guard, and no-prompt boundaries.
   is committed/pushed/installed.
 - Do not resume another completion or the scheduler until `wsl-chrome-2` is
   authoritative and stable.
+- After the version-2 gate, do not resume `wsl-chrome-4` or the scheduler until
+  the sole `wsl-chrome-3` recovery pass and its child receipt are terminal and
+  clean. A repeated timeout is a new fail-closed stop, not authority to retry.
 
 ## Checkpoint 1 | Successor Opened Fail-Closed
 
@@ -140,3 +163,52 @@ account identity, CAPTCHA, provider-guard, and no-prompt boundaries.
   signed-out page fully explains `provider_session_observation_missing`.
 - `next_action_or_stop_reason`: stop without retry or later-target resume until
   the operator completes login in the existing managed browser.
+
+## Checkpoint 3 | Human Gate Cleared And WSL Chrome 2 Recovered
+
+- `plan_version`: 2
+- `checkpoint_id`: `P0212-C03`
+- `state_transition`: AWAITING_HUMAN_GATE -> STAGED_REENABLEMENT.
+- `progress_classification`: acceptance_progress
+- `owned_changes`: exact read-only authentication readback, one replacement
+  `wsl-chrome-2` completion, and staged completion controls only.
+- `evidence`: visible authenticated `Consulting PCG` / `ChatGPT Pro` UI on the
+  existing managed browser; replacement pass 1 child materialized/skipped/
+  failed `4/3/0`; pass 2 child `2/5/0`; both provider-session verdicts match.
+  Default pass 7 child ended `0/7/0` with identity match.
+- `subagent_status`: `not_spawned`.
+- `remaining_criteria`: clean `wsl-chrome-3` and `wsl-chrome-4` cycles, then
+  scheduler resume and final target readback.
+- `authority_classification`: standing re-enablement authority after the human
+  authentication gate was explicitly cleared.
+- `review_disposition_summary`: the signed-out account was the complete
+  `wsl-chrome-2` observation cause; no observation-code repair was required.
+- `next_action_or_stop_reason`: continue one target at a time and stop on the
+  first failed child receipt.
+
+## Checkpoint 4 | WSL Chrome 3 Stops On Retryable Context Timeouts
+
+- `plan_version`: 2
+- `checkpoint_id`: `P0212-C04`
+- `state_transition`: STAGED_REENABLEMENT -> WSL_CHROME_3_ONE_PASS_RETRY.
+- `progress_classification`: blocker_reduction
+- `owned_changes`: emergency completion pauses, full-detail receipt diagnosis,
+  and this narrowed one-pass recovery boundary only.
+- `evidence`: `wsl-chrome-3` pass 39 itself reached `idle_waiting`, then child
+  `hmj_a5a0e6beb28742e98f5e199b9f7bfcfd` ended failed with provider identity
+  match and materialized/skipped/failed `0/5/2`. Both failed rows are snapshot
+  refreshes that timed out after 120000 ms; neither row has provider asset
+  identity or a local path, and scrape telemetry records downloads `0/0/0`.
+  Installed classification treats timeout as `retryable`; timeout rows are not
+  terminal asset-family evidence. Active history jobs are zero.
+- `subagent_status`: `not_spawned`.
+- `remaining_criteria`: one clean `wsl-chrome-3` recovery pass and child,
+  `wsl-chrome-4`, scheduler-last resume, and final target audit.
+- `authority_classification`: one bounded retry after evidence-based transient
+  classification; no generic retry loop or terminal-evidence weakening.
+- `review_disposition_summary`: identity drift, transfer failure, provider
+  unavailability, and cross-asset capture are rejected by the receipt. The
+  remaining issue is two retryable context-read timeouts.
+- `next_action_or_stop_reason`: audit, commit, and push this boundary, then run
+  exactly one `run_one_pass` on the blocked `wsl-chrome-3` completion while all
+  other completion controls and the scheduler remain paused.

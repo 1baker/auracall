@@ -44334,3 +44334,27 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   as configured `consult@polymerconsultinggroup.com` personal Pro. Automation
   did not click, navigate, sign in, move cookies, retry the completion, or
   resume any later target/scheduler control.
+
+## 2026-08-07 | Human login recovers WSL Chrome 2; WSL Chrome 3 times out
+
+- Exact read-only browser recheck after the operator login showed authenticated
+  `Consulting PCG` / `ChatGPT Pro` UI on the existing `wsl-chrome-2` managed
+  browser, without dialog, CAPTCHA, challenge, or `Answer now`.
+- Replacement completion
+  `acctmirror_completion_bc68cd94-3f8e-4c2d-bd40-fc4299a5e591` passed two
+  cycles. Its children ended materialized/skipped/failed `4/3/0` and `2/5/0`,
+  both with provider-session verdict `match`. Default advanced to pass 7; its
+  child ended `0/7/0` with the same identity verdict.
+- `wsl-chrome-3` advanced from pass 38 to 39, then child
+  `hmj_a5a0e6beb28742e98f5e199b9f7bfcfd` failed `0/5/2`. Full receipt detail
+  identifies two independent 120-second conversation-context timeouts. Both
+  rows lack provider asset identity and local output; scrape telemetry records
+  downloads attempted/succeeded/failed `0/0/0`.
+- This is retryable context-read evidence, not account drift, terminal provider
+  unavailability, transfer failure, or recurrence of the cross-asset capture
+  race. Emergency controls paused default and replacement `wsl-chrome-2`;
+  `wsl-chrome-3` is blocked, `wsl-chrome-4` remains paused, scheduler remains
+  paused, and active history jobs are zero.
+- Plan 0212 version 2 narrows the next effect to one blocked
+  `wsl-chrome-3` `run_one_pass`. Other completion controls and scheduler resume
+  remain prohibited until its completion cycle and child receipt settle cleanly.

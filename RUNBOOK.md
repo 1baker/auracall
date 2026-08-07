@@ -16842,3 +16842,22 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   action ran. Default, `wsl-chrome-3`, and `wsl-chrome-4` remain paused;
   `wsl-chrome-2` remains terminal-failed; scheduler remains paused; active
   materialization jobs are zero.
+
+## Turn 389 | 2026-08-07
+
+- The operator cleared the human login gate. Read-only agent-browser evidence
+  on the existing port-45013 browser showed authenticated `Consulting PCG` /
+  `ChatGPT Pro` UI without dialog, CAPTCHA, challenge, or `Answer now`.
+- Replacement `wsl-chrome-2` completion
+  `acctmirror_completion_bc68cd94-3f8e-4c2d-bd40-fc4299a5e591` reached pass 2;
+  its first two children ended `4/3/0` and `2/5/0`. Default reached pass 7 and
+  its child ended `0/7/0`. All three receipts matched provider identity.
+- `wsl-chrome-3` reached pass 39, but child
+  `hmj_a5a0e6beb28742e98f5e199b9f7bfcfd` ended `0/5/2`. Full authenticated
+  readback shows two separate 120-second conversation-context timeouts, no
+  provider asset IDs or local paths, identity match, and downloads `0/0/0`.
+- Emergency stop left default and replacement `wsl-chrome-2` paused,
+  `wsl-chrome-3` blocked, `wsl-chrome-4` paused, scheduler paused, and active
+  history jobs zero. Plan 0212 version 2 permits exactly one retryable
+  `wsl-chrome-3` `run_one_pass` after this boundary is audited and pushed; a
+  repeated timeout is a fail-closed stop.
