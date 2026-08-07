@@ -16727,3 +16727,20 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   completions remain paused. No completion, scheduler, provider-guard, prompt,
   `Answer now`, install, or restart action ran. Another asset would require a
   new explicit one-canary gate.
+
+## Turn 383 | 2026-08-07
+
+- The active ten-turn re-enablement goal continues through bounded successor
+  Plan 0210. Goal policy clarifies that Plan 0209's terminal packet ended that
+  execution window but did not revoke standing authority or itself create a
+  new human gate.
+- Current state is clean synchronized `4fb7da3c`; API PID 33299 is healthy with
+  zero restarts; scheduler and six completions remain paused; enabled/running/
+  paused ChatGPT targets are `4/0/4`; active history jobs are zero.
+- Provider-free recovery now reports 13 retrievable missing assets, including 6
+  files, and 1 failed-terminal file. This is the expected one-file reduction
+  from Plan 0209 and proves its `file_not_found` family is no longer eligible.
+- Plan 0210 permits one callback-disabled current-cache selection, then one
+  audited exact successor canary at most. No provider callback, job,
+  materialization, download, browser action, prompt, completion/scheduler
+  control, install, or restart has run in the successor yet.

@@ -205,6 +205,14 @@ Lane: P01
   `GetDownloadLinkError`. Materialized output is zero, so staged completion
   and scheduler resume did not run and require a new explicit canary gate.
   Gemini, Grok, guarded, disabled, and unconfigured targets remain excluded.
+  Active bounded successor:
+  [docs/dev/plans/0210-2026-08-07-live-follow-successor-canary-and-staged-reenablement.md](docs/dev/plans/0210-2026-08-07-live-follow-successor-canary-and-staged-reenablement.md).
+  Goal governance treats Plan 0209's hard stop as the end of that bounded
+  execution window, not revocation of the operator-approved re-enablement
+  objective. Plan 0210 first uses one provider-disabled simulation to select a
+  different current nonterminal file; only an audited/pushed exact version-2
+  gate may create one new `maxItems=1` canary. Useful yield remains mandatory
+  before default-first completion and scheduler-last resume.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,
