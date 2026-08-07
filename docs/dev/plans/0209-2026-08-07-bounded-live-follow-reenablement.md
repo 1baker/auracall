@@ -2,10 +2,10 @@
 
 State: OPEN
 Lane: P01
-Plan version: 1
+Plan version: 2
 Outcome: IN_PROGRESS
-Goal execution state: VALIDATING
-Gate state: REPAIR_SOURCE_GREEN_INSTALL_PENDING
+Goal execution state: CANARY_READY
+Gate state: PROVIDER_FREE_SUCCESSOR_READY
 
 ## Stable Goal Objective
 
@@ -27,7 +27,10 @@ useful-yield proof.
   for the shared service. Its installed provider-free preflight-hang proof
   terminates, aborts, invokes zero provider callbacks, and records attempt
   count zero with `preflight:buildListOptions`.
-- API PID 67435 is active/running with zero restarts. The fast installed
+- API PID 33299 is active/running with zero restarts after the one authorized
+  install/restart. Source and installed `llmService.js` hashes match at
+  `2279e2da723cc299bd05d54fdae442953c63dc5af42a74e7718213b1d016b230`.
+  The fast installed
   readiness assertion is deliberately red: the scheduler is operator-paused,
   all six retained completions are paused, and queued/running/idle-waiting are
   `0/0/0`. There is no concurrent foreground work or active materialization
@@ -41,15 +44,27 @@ useful-yield proof.
   with unknown identity, `auracall-gemini-pro` retains a `google-sorry` guard,
   and Grok/default is disabled after 21 consecutive failures. Their retained
   paused completions must not be resumed.
-- The exact Plan 0197 conversation is
-  `67ccf9d7-9310-8004-b5e1-478dba6eab3a`. Its frozen cone catalog item is
-  `ec160eac-e457-4ae8-abb1-dfeaae5e8bec:download:sandbox:/mnt/data/plt_4.png`.
-  The retained eleven-artifact context and terminal receipt are stale at
-  SHA-256
-  `0c71832d99b423ed3de9e496e43346ac917b1d2de27573632ebbf30f5762b7b4`
-  and `529a39994334256ae21201612bf40b0ce03201381d4f5e9f562537e5b3db1903`.
-  A read-only agent-browser inspection already proved the exact conversation
-  rendered and interactive without login, CAPTCHA, dialog, or provider error.
+- The sole post-repair exact read succeeded in 17.24 seconds for conversation
+  `67ccf9d7-9310-8004-b5e1-478dba6eab3a`; the fresh receipt and context hashes
+  are `8a9cb55afb41e8d6d92ad444000a65a7d5eb72b7d1fc349755cf8c9d86b0bf45`
+  and `3838f3468011a9f99e5309db691932ba359670c15d29c1750b4118ba31d97bd3`.
+  The current context has 11 messages, 2 artifacts, and 9 files. The frozen
+  cone is absent, so it cannot remain the exact canary asset.
+- Version 2 selects one provider-free successor inside that same exact
+  conversation: catalog file
+  `67ccf9d7-9310-8004-b5e1-478dba6eab3a:7a6f8f84-990f-4bd6-8bda-fc9bb937776d:1:2025-03-03 ROMP, Polymer Spatial Extent-20250303_120522-Meeting Transcript.docx`,
+  provider file `file-JDW8WW7tqtwQu1gF1S4kWP`. The catalog classifies it
+  `eligible` with null local path/checksum; exact archive queries and filesystem
+  lookup return zero. Its only retained history is a 2026-08-01 broad
+  `maxItems=6` retrieval failure with no local output, not accepted terminal
+  materialization.
+- Two in-memory simulations seeded all 1,863 retained jobs, disabled every
+  provider callback, and left the durable job-index SHA-256 unchanged at
+  `175c9d81b2dc34f0e0bf88ec12224cb3d51b8d6bc13031b2b9bc30e4adc40a69`.
+  Broad `maxItems=1` selection reached the exact conversation; exact catalog
+  selection reached only the named file with one disabled callback. A
+  read-only agent-browser inspection also proved the conversation rendered and
+  interactive without login, CAPTCHA, dialog, provider error, or `Answer now`.
 
 ## Authority And Ownership
 
@@ -65,8 +80,9 @@ useful-yield proof.
   green-gated installs/restarts; individually bounded ChatGPT completion
   resumes; one scheduler resume after completion proof; observation and
   emergency re-pause; audit/commit/push.
-- Excluded: prompts; `Answer now`; alternate conversations; more than one
-  canary asset or job; force; direct runtime JSON edits; identity inference;
+- Excluded: prompts; `Answer now`; alternate conversations; assets other than
+  the version-2 exact successor; more than one canary asset or job; force;
+  direct runtime JSON edits; identity inference;
   CAPTCHA/guard bypass; enabling Gemini, Grok, disabled, or unconfigured
   targets; broad materialization before the canary; and unattended retry
   loops.
@@ -98,12 +114,13 @@ useful-yield proof.
    refresh for only the exact conversation using the 120-second inner deadline
    under a 150-second outer ceiling. Stop at its first terminal exit and do not
    retry.
-2. **Exact one-canary gate.** Adjudicate only the frozen cone from the current
-   receipt/cache. If it has one unambiguous live control, create exactly one
-   durable ChatGPT/default job with `maxItems=1`, no force, no snapshot-wide
-   refresh, and no substitute. Observe its first terminal disposition and
-   verify durable useful yield by canonical local readback, checksum, and
-   manifest—not job status alone.
+2. **Exact one-canary gate.** The current read disproved the frozen cone, so
+   version 2 permits exactly one provider-free successor selection in the same
+   conversation. Create one durable ChatGPT/default job for only catalog file
+   `file-JDW8WW7tqtwQu1gF1S4kWP`, with `assetKinds=files`, `maxItems=1`, no
+   force, no snapshot-wide refresh, and no substitute. Observe its first
+   terminal disposition and verify durable useful yield by canonical local
+   readback, checksum, and manifest—not job status alone.
 3. **Repair only on evidence.** If packet 1 or 2 exposes a local defect, build a
    fast deterministic red-capable fixture at that seam, test the ranked cause
    one variable at a time, make the smallest safety-preserving repair, run
@@ -137,7 +154,8 @@ useful-yield proof.
   `max_browser_inspections: 1`; `max_durable_jobs_created: 1`;
   `max_canary_executions: 1`; `max_canary_items: 1`;
   `max_materialization_callbacks: 1`; `max_download_actions: 1`;
-  `max_substitute_assets: 0`; `max_prompt_submissions: 0`;
+  `max_provider_free_successor_selections: 1`; `max_substitute_assets: 0`;
+  `max_prompt_submissions: 0`;
   `max_answer_now_clicks: 0`; `max_installs: 2`;
   `max_service_restarts: 2`; `max_completion_resume_actions: 4`;
   `max_emergency_completion_pause_actions: 4`;
@@ -158,7 +176,8 @@ useful-yield proof.
 1. `DIAGNOSING -> READING_CURRENT_CONTEXT` after the audited and pushed plan
    plus final provider-free preflight.
 2. `READING_CURRENT_CONTEXT -> CANARY_READY` only on a fresh successful receipt
-   with one exact unambiguous live-control correlation.
+   plus one exact provider-free successor selection inside the same
+   conversation when the frozen asset is absent.
 3. `CANARY_READY -> CANARY_PROVING` only for one exact `maxItems=1` job.
 4. `CANARY_PROVING -> RESUMING_DEFAULT` only after durable useful yield and
    unchanged safety controls. A terminal no-control or no-yield disposition
@@ -179,7 +198,7 @@ useful-yield proof.
 - [ ] The deterministic readiness verifier is initially red and becomes green
   only when the scheduler and intended ChatGPT completions are genuinely
   re-enabled.
-- [ ] One exact bounded context read produces a fresh terminal receipt and
+- [x] One exact bounded context read produces a fresh terminal receipt and
   current classification, or a newly discovered local defect is repaired and
   accepted with at most one post-repair repeat.
 - [ ] Exactly one `maxItems=1` canary either proves one durable locally readable
@@ -298,3 +317,61 @@ resume of excluded targets.
 - `next_action_or_stop_reason`: finish closed-world review, commit and push the
   source boundary, then install/restart once and prove the installed
   provider-free authorized-session preflight before the sole post-repair read.
+
+## Checkpoint 3 | Current Context And Provider-Free Successor Gate
+
+- `plan_version`: 2
+- `checkpoint_id`: `P0209-C03`
+- `state_transition`: VALIDATING -> READING_CURRENT_CONTEXT ->
+  SELECTING_PROVIDER_FREE_SUCCESSOR -> CANARY_READY.
+- `progress_classification`: blocker_reduction
+- `owned_changes`: one installed acceptance read of the already-authorized
+  conversation; one read-only agent-browser inspection; local catalog,
+  archive, retained-job, and filesystem readbacks; two provider-disabled
+  in-memory simulations; and the version-2 exact-successor gate. Scheduler,
+  completions, durable jobs, materialization, and downloads remain unchanged.
+- `evidence`: commit `7861540e` is pushed and installed; source/runtime
+  `llmService.js` hashes match at
+  `2279e2da723cc299bd05d54fdae442953c63dc5af42a74e7718213b1d016b230`.
+  The sole post-repair read succeeded in 17.24 seconds with fresh receipt hash
+  `8a9cb55afb41e8d6d92ad444000a65a7d5eb72b7d1fc349755cf8c9d86b0bf45`
+  and context hash
+  `3838f3468011a9f99e5309db691932ba359670c15d29c1750b4118ba31d97bd3`.
+  The exact page is authenticated and interactive with no CAPTCHA, dialog,
+  provider error, or `Answer now`. The old cone is absent. Exact successor
+  catalog item
+  `67ccf9d7-9310-8004-b5e1-478dba6eab3a:7a6f8f84-990f-4bd6-8bda-fc9bb937776d:1:2025-03-03 ROMP, Polymer Spatial Extent-20250303_120522-Meeting Transcript.docx`
+  is `eligible`, provider file `file-JDW8WW7tqtwQu1gF1S4kWP`, with null local
+  path/checksum. Exact archive queries and filesystem lookup return zero. One
+  old broad failed job contains no local output. Both provider-disabled
+  simulations invoke only the expected disabled callback; the exact simulation
+  selects this file alone and the durable 1,863-job index hash remains
+  `175c9d81b2dc34f0e0bf88ec12224cb3d51b8d6bc13031b2b9bc30e4adc40a69`.
+- `subagent_status`: `not_spawned`.
+- `budget_consumption`: goal turns 2/10; plan versions 2/2; execution packets
+  3/5; planning commits 1/1; source commits 1/2; provider context reads 2/2;
+  post-repair repeats 1/1; provider conversations 1/1; provider retries 0/0;
+  browser inspections 1/1; provider-free successor selections 1/1;
+  simulations 2; harness launches 3 including one pre-load wrong-path failure;
+  installs/restarts 1/2; durable jobs, canaries, live materialization callbacks,
+  downloads, prompts, completion actions, and scheduler actions remain zero.
+  CodeGraph calls are 9/6 cumulatively: the version-1 truncation exception used
+  seven and version 2 used two bounded read-only structural calls; no effect or
+  scope expanded.
+- `remaining_criteria`: commit/push this version-2 boundary; run the one exact
+  no-retry `maxItems=1` canary; prove durable useful yield; resume and prove one
+  bounded default pass; stage the other three ChatGPT completions; resume the
+  scheduler last; observe stable progress; terminal audits and closeout.
+- `authority_classification`: standing goal authority permits this bounded
+  same-conversation successor because current evidence disproved the frozen
+  asset. No alternate conversation, substitute after job creation, retry,
+  force, or wider materialization is authorized.
+- `review_disposition_summary`: hypothesis 3 is closed by installed acceptance;
+  hypothesis 4 is confirmed for the old cone and resolved by one provider-free
+  same-conversation successor. Hypothesis 1 now leads; resume-control
+  hypothesis 5 remains open until the canary and staged completion proof.
+- `next_action_or_stop_reason`: audit, commit, and push version 2, then create
+  exactly one ChatGPT/default job with the full catalog ID above,
+  `catalogKind=files`, `assetKinds=files`, `maxItems=1`, `force=false`,
+  `refreshSnapshot=false`, and a 300000ms provider-work timeout. Stop after its
+  first terminal disposition; never substitute or retry.

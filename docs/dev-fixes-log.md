@@ -20616,3 +20616,18 @@ browser-stage lifecycle observability, not transcript truncation.
   concerns. Use configured identity for deterministic cache scope, require the
   adapter's bound live identity proof for provider access, and cover the seam
   with a hanging identity detector that must never be invoked.
+
+## 2026-08-07 | Revalidate a frozen canary asset before creating its job
+
+- Symptom: a previously selected exact sandbox image was absent from the first
+  successful current conversation context after lifecycle repairs, so its old
+  cache identity could no longer authorize a live materialization attempt.
+- Resolution: invalidate the stale asset, stay inside the same exact
+  conversation and tenant, and use callback-disabled `maxItems=1` simulation
+  against a store seeded from retained jobs to resolve one current successor.
+  Confirm eligibility with catalog, archive, retained-job, and filesystem
+  readbacks before creating a durable job.
+- Prevention: treat asset identity as time-sensitive even when conversation and
+  account identity remain stable. Freeze the exact request only after current
+  evidence and provider-free selection agree, and commit that gate before the
+  one allowed provider effect.

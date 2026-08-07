@@ -195,9 +195,13 @@ Lane: P01
   completion/guard/loop action remain withheld.
   Active bounded live-follow re-enablement successor:
   [docs/dev/plans/0209-2026-08-07-bounded-live-follow-reenablement.md](docs/dev/plans/0209-2026-08-07-bounded-live-follow-reenablement.md).
-  It owns at most ten goal turns: one current exact-conversation read, one
-  `maxItems=1` canary, evidence-driven repair if required, then staged resume
-  of only the four configured authoritative ChatGPT targets and the scheduler.
+  Version 2 records the successful 17.24-second post-repair exact read and a
+  provider-free successor gate after the frozen cone disappeared from current
+  context. Two callback-disabled simulations select exactly one current file
+  in the same conversation and leave the durable 1,863-job index unchanged.
+  The next effect is one no-retry `maxItems=1` canary for provider file
+  `file-JDW8WW7tqtwQu1gF1S4kWP`; only durable useful yield permits staged resume
+  of the four configured authoritative ChatGPT targets and scheduler last.
   Gemini, Grok, guarded, disabled, and unconfigured targets remain excluded.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and

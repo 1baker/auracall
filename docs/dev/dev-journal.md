@@ -44187,3 +44187,29 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - No install/restart, post-repair read, canary, job, materialization, download,
   prompt, completion, scheduler, or guard action has run yet; no subagent was
   spawned.
+
+## 2026-08-07 | Plan 0209 provider-free successor gate is ready
+
+- Commit `7861540e` is pushed and installed at API PID 33299 with zero
+  restarts. Source/runtime `llmService.js` hashes match at
+  `2279e2da723cc299bd05d54fdae442953c63dc5af42a74e7718213b1d016b230`.
+- The sole post-repair exact read succeeded in 17.24 seconds with current
+  receipt/context hashes
+  `8a9cb55afb41e8d6d92ad444000a65a7d5eb72b7d1fc349755cf8c9d86b0bf45`
+  and `3838f3468011a9f99e5309db691932ba359670c15d29c1750b4118ba31d97bd3`.
+  Current evidence has 11 messages, 2 artifacts, and 9 files; the old cone is
+  absent. Agent-browser independently confirmed the exact managed page remains
+  authenticated and interactive with no CAPTCHA, dialog, provider error, or
+  `Answer now` surface.
+- Plan 0209 version 2 selects one successor in the same conversation:
+  `2025-03-03 ROMP, Polymer Spatial Extent-20250303_120522-Meeting Transcript.docx`
+  (`file-JDW8WW7tqtwQu1gF1S4kWP`). Catalog status is eligible with null local
+  path/checksum; exact archive and filesystem queries return zero. One retained
+  broad failure has no local output and is not accepted terminal evidence.
+- Two provider-disabled in-memory `maxItems=1` simulations seeded all 1,863
+  retained jobs, selected the exact conversation/file, and left the durable
+  index unchanged at SHA-256
+  `175c9d81b2dc34f0e0bf88ec12224cb3d51b8d6bc13031b2b9bc30e4adc40a69`.
+  Scheduler and completions remain paused. No durable job, materialization,
+  download, prompt, runtime control, retry, or substitute has run; the next
+  gate is exactly one committed no-retry canary.

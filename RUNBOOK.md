@@ -16678,3 +16678,31 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   non-live suite passes 304 files / 2,728 tests with 65 opt-in tests skipped.
   Typecheck, touched lint, and build pass. Source review/commit and one
   green-gated install/restart remain before the sole post-repair exact read.
+
+## Turn 381 | 2026-08-07
+
+- Commit `7861540e` is pushed and installed under API PID 33299 with zero
+  restarts. Source and installed `llmService.js` hashes match at
+  `2279e2da723cc299bd05d54fdae442953c63dc5af42a74e7718213b1d016b230`.
+- The sole post-repair exact context read succeeded in 17.24 seconds. Fresh
+  receipt/context hashes are
+  `8a9cb55afb41e8d6d92ad444000a65a7d5eb72b7d1fc349755cf8c9d86b0bf45`
+  and `3838f3468011a9f99e5309db691932ba359670c15d29c1750b4118ba31d97bd3`;
+  current content has 11 messages, 2 artifacts, and 9 files. Read-only
+  agent-browser inspection confirms the exact page is authenticated and
+  interactive without CAPTCHA, dialog, provider error, or `Answer now`.
+- The frozen cone is absent. Plan 0209 version 2 selects one provider-free
+  successor inside the same conversation: file
+  `2025-03-03 ROMP, Polymer Spatial Extent-20250303_120522-Meeting Transcript.docx`,
+  provider ID `file-JDW8WW7tqtwQu1gF1S4kWP`. It is catalog-eligible with null
+  local path/checksum; exact archive and filesystem lookups return zero. The
+  only retained match is one old broad failed job with no local output.
+- Two in-memory `maxItems=1` simulations seeded all 1,863 retained jobs and
+  disabled every provider callback. Broad selection reached the exact
+  conversation and exact selection reached only the successor file. The
+  durable job index stayed byte-identical at SHA-256
+  `175c9d81b2dc34f0e0bf88ec12224cb3d51b8d6bc13031b2b9bc30e4adc40a69`.
+  Scheduler and six completions remain paused; no durable job, live
+  materialization, download, prompt, completion, scheduler, or guard action
+  has run. The next permitted effect is the single exact no-retry canary after
+  this version-2 boundary is audited, committed, and pushed.
