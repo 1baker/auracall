@@ -16472,3 +16472,20 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   ChatGPT guards clear, and active history jobs zero. Plan 0204 closes
   `COMPLETE_PROVIDER_FREE_LIVE_WITHHELD`; no provider/browser/live refresh,
   canary, job, materialization, prompt, download, or control action ran.
+
+## Turn 376 | 2026-08-06
+
+- The operator's new `ok go` separately authorizes Plan 0205: exactly one
+  installed bounded context refresh for conversation
+  `67ccf9d7-9310-8004-b5e1-478dba6eab3a`, then provider-free adjudication of
+  only the frozen cone asset.
+- Canonical packet:
+  `docs/dev/plans/0205-2026-08-06-bounded-exact-cone-context-refresh-and-canary-readjudication.md`.
+- The command must use the installed Plan 0204 `--timeout-ms 120000` contract
+  under a 150-second outer process ceiling and stop after its first terminal
+  exit. Transcript stdout is discarded; the durable cache and metadata-only
+  terminal receipt are the evidence surfaces.
+- Scheduler/completions, canary execution, durable jobs, materialization,
+  downloads, prompts, guard actions, browser-tools follow-up, retry, and loop
+  resume remain forbidden. One unowned legacy planning-baseline file present at
+  turn start is preserved untouched and cannot exempt Plan 0205 from audit.

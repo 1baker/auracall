@@ -43952,3 +43952,16 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   zero. Plan 0204 closes `COMPLETE_PROVIDER_FREE_LIVE_WITHHELD`; no provider/
   browser/live refresh, canary, job, materialization, prompt, download, or
   runtime control action ran. No subagent was spawned.
+
+## 2026-08-06 | Plan 0205 opens one bounded exact cone refresh
+
+- A new explicit `ok go` authorizes exactly one installed read-only ChatGPT
+  refresh for conversation `67ccf9d7-9310-8004-b5e1-478dba6eab3a`, using the
+  installed 120-second inner deadline and a 150-second outer process ceiling.
+- Only the frozen cone catalog item may be classified provider-free after the
+  terminal exit. Even positive evidence can only prepare a separately approved
+  canary; no job, materialization, download, prompt, retry, browser-tools
+  follow-up, or scheduler/completion/guard action is authorized.
+- Policy selection is `already-aligned` and the goal-policy audit is green. An
+  unrelated untracked legacy planning baseline existed at turn start; it is
+  preserved untouched and cannot mask the new Plan 0205 audit.

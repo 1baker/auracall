@@ -160,6 +160,13 @@ Lane: P01
   foreground, clear ChatGPT guards, and zero active history jobs. Provider/
   browser contact, another live refresh, canary, materialization, and loop or
   control action remain withheld.
+  Active bounded exact-read successor:
+  [docs/dev/plans/0205-2026-08-06-bounded-exact-cone-context-refresh-and-canary-readjudication.md](docs/dev/plans/0205-2026-08-06-bounded-exact-cone-context-refresh-and-canary-readjudication.md).
+  The operator authorizes one installed 120-second exact-conversation refresh
+  with a 150-second outer ceiling, followed by provider-free classification of
+  only the frozen cone. No retry, browser-tools follow-up, canary, job,
+  materialization, scheduler/completion/guard action, or loop resume is
+  authorized.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,
