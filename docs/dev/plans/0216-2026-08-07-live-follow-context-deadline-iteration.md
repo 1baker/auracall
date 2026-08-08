@@ -1,10 +1,10 @@
 # Live-Follow Context Deadline Iteration | 0216-2026-08-07
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 1
-Outcome: ITERATIVE_PROVIDER_FREE_REPAIR_READY
-Goal execution state: READY_PROVIDER_FREE
+Outcome: PROVIDER_FREE_REPAIR_COMPLETE_CANARY_PREPARED
+Goal execution state: COMPLETE
 Gate state: LIVE_EFFECT_WITHHELD
 
 ## Stable Goal Objective
@@ -219,12 +219,12 @@ not execute one fresh `wsl-chrome-3` canary gate.
 - [x] Complete ordered message bodies/IDs, payload and artifact association,
   visible-file/artifact readers, outer timeout, identity, guard, and fail-closed
   semantics remain covered and green.
-- [ ] Focused and adjacent suites, typecheck, touched lint, production build,
+- [x] Focused and adjacent suites, typecheck, touched lint, production build,
   plan audit, and diff check pass; source/docs commits are pushed.
 - [x] Default remains paused/pass 7, replacement `wsl-chrome-2` paused/pass 2,
   `wsl-chrome-4` paused/pass 34, `wsl-chrome-3` blocked/pass 42, scheduler
   paused, and active jobs zero throughout provider-free work.
-- [ ] One exact pass-43 canary gate is prepared for separate approval, with no
+- [x] One exact pass-43 canary gate is prepared for separate approval, with no
   install, restart, browser/provider action, completion control, materialization
   start, wider resume, or scheduler control executed by Plan 0216.
 
@@ -345,3 +345,34 @@ not execute one fresh `wsl-chrome-3` canary gate.
   effect gate without executing it.
 - `next_action_or_stop_reason`: commit and push the proven provider-free repair,
   then close Plan 0216 only after the separate canary plan is frozen.
+
+## Checkpoint 4 | Closed-World Closeout And Canary Handoff
+
+- `plan_version`: 1
+- `checkpoint_id`: `P0216-C04`
+- `goal_turn`: 2 of 10 maximum.
+- `state_transition`: PROVIDER_FREE_REPAIR_GATE_GREEN ->
+  PROVIDER_FREE_REPAIR_COMPLETE_CANARY_PREPARED.
+- `progress_classification`: goal_complete_provider_free.
+- `closed_world_audit`: F01 resolved by full-job receipt promotion; F02 resolved
+  by browser/protocol/transport payload deadlines; F03 resolved by retained
+  session invalidation and awaited cleanup; F04 rejected because the exact
+  sequence and adjacent gate reveal no later independent blocker; F05 remains
+  protected by unchanged identity, guard, CAPTCHA, ordering, and full-content
+  contracts.
+- `verification`: integrated provider-free suites `303/303`; typecheck;
+  zero-warning touched Biome; production build; plan audit validation errors
+  zero; diff check clean. Source/docs commits `32382bcf` and `741d11b9` are
+  pushed.
+- `runtime_readback`: API PID 17440 active/running with zero restarts; scheduler
+  paused; active jobs zero; default paused/pass 7, `wsl-chrome-2` paused/pass 2,
+  `wsl-chrome-4` paused/pass 34, and `wsl-chrome-3` blocked/pass 42.
+- `effect_accounting`: installs 0, restarts 0, provider/browser calls 0,
+  completion controls 0, materialization starts 0, scheduler controls 0.
+- `successor_gate`:
+  [Plan 0217](0217-2026-08-07-chatgpt-context-deadline-installed-pass-43-canary.md)
+  freezes one install, one API restart, exact source/installed hash parity, one
+  pass `42 -> 43`, and one fresh child. It is prepared but not authorized.
+- `next_action_or_stop_reason`: stop with all live effects withheld. Await
+  separate explicit Plan 0217 approval; do not resume any scheduler or wider
+  completion.

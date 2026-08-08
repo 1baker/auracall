@@ -17040,3 +17040,18 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   scheduler paused; active history jobs zero; target states paused/pass 7,
   paused/pass 2, paused/pass 34, and blocked/pass 42. No provider or control
   effect ran.
+
+## Turn 400 | 2026-08-07
+
+- Closed-world Plan 0216 audit resolves F01 through receipt promotion, F02
+  through three-layer payload deadlines, and F03 through evicting/awaited abort
+  cleanup. F04 is rejected from the active blocker set; full-content, identity,
+  provider-guard, and fail-closed contracts remain green.
+- Plan 0216 closes provider-free after `303/303`, typecheck, touched Biome,
+  build, zero-error plan audit, clean diff, and pushed commits `32382bcf` and
+  `741d11b9`. Runtime remains PID 17440/zero restarts, scheduler paused, jobs
+  zero, and passes 7/2/34/42.
+- Plan 0217 is the prepared but unapproved effect gate: at most one install,
+  one API restart, parity to built adapter hash `1ccee21f...a7ed667`, and one
+  exact `wsl-chrome-3` pass 42 to 43 with one fresh child. No live effect ran;
+  wider completions and scheduler remain withheld.

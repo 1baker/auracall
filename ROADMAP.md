@@ -276,7 +276,7 @@ Lane: P01
   one successful refresh. The parent is blocked/pass 42 with its force ceiling
   cleared, no pass 43, active jobs zero, other completions unchanged, and the
   scheduler paused. Plan 0215 closes fail-closed with no retry or wider resume.
-  Active iterative provider-free live-follow repair successor:
+  Closed iterative provider-free live-follow repair successor:
   [docs/dev/plans/0216-2026-08-07-live-follow-context-deadline-iteration.md](docs/dev/plans/0216-2026-08-07-live-follow-context-deadline-iteration.md).
   It uses the retained per-conversation receipts to separate one successful
   16490-ms read, one timeout at `cdp:Runtime.evaluate`, and three later
@@ -292,7 +292,12 @@ Lane: P01
   Packets B-D then proved and repaired F02/F03: payload fetch/evaluation now has
   browser, protocol, and transport deadlines, and abort evicts and awaits a
   retained provider session before the next read. The integrated provider-free
-  gate passes `303/303`; F04 has no remaining evidence-backed blocker.
+  gate passes `303/303`; F04 has no remaining evidence-backed blocker. Plan
+  0216 is closed with no live effect. Prepared installed pass-43 canary gate:
+  [docs/dev/plans/0217-2026-08-07-chatgpt-context-deadline-installed-pass-43-canary.md](docs/dev/plans/0217-2026-08-07-chatgpt-context-deadline-installed-pass-43-canary.md).
+  It freezes one install, one API restart, parity, one `wsl-chrome-3` pass
+  `42 -> 43`, and one fresh child behind separate explicit approval. Wider
+  completion and scheduler resume remain excluded.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,
