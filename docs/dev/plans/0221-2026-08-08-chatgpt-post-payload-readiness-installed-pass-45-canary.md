@@ -1,10 +1,10 @@
 # ChatGPT Post-Payload Readiness Installed Pass-45 Canary | 0221-2026-08-08
 
-State: PLANNED
+State: OPEN
 Lane: P01
 Plan version: 1
-Gate state: PREPARED_AWAITING_EXPLICIT_APPROVAL
-Goal execution state: AWAITING_LIVE_EFFECT_GATE
+Gate state: EXACT_PASS45_EFFECT_AUTHORIZED
+Goal execution state: ACTIVE_FROZEN_EFFECT_PACKET
 
 ## Stable Goal Objective
 
@@ -40,9 +40,8 @@ another completion or the scheduler.
 
 ## Authority And Scope
 
-- This artifact prepares but does not authorize a live effect. A later
-  explicit operator approval is required before any install, restart,
-  provider/browser call, completion control, or materialization start.
+- The operator's 2026-08-08 instruction to resume with restored approval
+  budget explicitly activates this artifact's unchanged frozen effect packet.
 - If separately approved without revision, the effect envelope is exactly one
   user-runtime install, one AuraCall API restart, one adapter parity check, and
   one `run-one-pass` control on completion
@@ -108,7 +107,7 @@ another completion or the scheduler.
 
 - [x] Pushed provider-free repair and exact validation receipts are frozen.
 - [x] One exact install/restart/pass-45 packet is prepared without executing it.
-- [ ] Separate explicit operator approval activates this exact effect packet.
+- [x] Separate explicit operator approval activates this exact effect packet.
 - [ ] One install and one restart produce installed/source adapter parity and a
   healthy API while scheduler/target posture stays frozen.
 - [ ] The exact pass-45 canary creates one fresh child and both settle with the
@@ -148,3 +147,30 @@ another completion or the scheduler.
 - `next_action_or_stop_reason`: audit, commit, and push this prepared gate, then
   stop at the approval boundary. Execute nothing until the operator separately
   authorizes Plan 0221.
+
+## Checkpoint 2 | Exact Pass-45 Packet Authorized Before Effects
+
+- `checkpoint_id`: `P0221-C02`
+- `state_transition`: PASS45_EFFECT_GATE_PREPARED_AWAITING_APPROVAL ->
+  EXACT_PASS45_EFFECT_AUTHORIZED.
+- `progress_classification`: outcome_progress.
+- `authority_classification`: the operator explicitly resumed with restored
+  approval budget, activating the unchanged one-install, one-restart,
+  one-canary packet and none of its excluded wider controls.
+- `source_authority`: clean synchronized `main` at pushed commit `90ee5885`,
+  which contains repair commit `435b1cd8`; built adapter SHA-256 remains
+  `3917b2d213f3ee828117b0c2335f37980d1e2d0dc43881c0ff540465ba9e633d`.
+- `installed_runtime`: prior adapter SHA-256 remains
+  `688442b51b7769b80df67e860bd96b53e1ff350fbd4bca4f51750b94d77ef0b7`.
+- `runtime_readback`: API PID 9910 active/running with `NRestarts=0`;
+  scheduler state/posture paused; foreground idle; queued/running completions
+  zero; active history jobs zero; wider targets paused at `7/2/34`; target
+  blocked/pass 44 with force ceiling null; all four ChatGPT guards clear.
+- `effect_accounting`: installs 0, restarts 0, provider/browser calls 0,
+  completion controls 0, child jobs 0, scheduler controls 0.
+- `subagent_status`: not_spawned; `max_subagents=0`.
+- `review_disposition_summary`: frozen provider-free proof and hard stops are
+  unchanged; no new finding widens the packet.
+- `next_action_or_stop_reason`: commit and push this authority checkpoint,
+  then perform the sole install, parity check, sole API restart, posture
+  recheck, and sole pass-45 control in that order. Stop on the first hard stop.

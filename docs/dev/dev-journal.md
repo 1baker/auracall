@@ -44587,6 +44587,20 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   with one fresh child. It is prepared but not authorized; no provider,
   browser, materialization, completion-control, or scheduler-control action ran.
 
+## 2026-08-08 | Plan 0221 exact pass-45 packet authorized
+
+- Current focus: execute the unchanged one-install, one-restart, one-canary
+  packet and stop at its first hard-stop condition. The agent-browser safety
+  contract keeps manual browser inspection, clicks, navigation, prompts, and
+  `Answer now` outside this packet.
+- Authorization preflight is clean and synchronized at pushed commit
+  `90ee5885`. Built adapter SHA-256 is `3917b2d2...633d`; installed runtime
+  intentionally remains `688442b5...ef0b7` pending the sole install.
+- API PID 9910 is active/running with zero restarts, scheduler paused,
+  foreground and active jobs zero, wider passes `7/2/34`, and target
+  blocked/pass 44 with no force ceiling. No live effect has run at this
+  checkpoint.
+
 ## 2026-08-08 | Post-payload readiness evaluation is provider-free bounded
 
 - The minimized sequence now accounts for every preceding fake-CDP operation:

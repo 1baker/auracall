@@ -1,5 +1,21 @@
 # RUNBOOK
 
+## Turn 411 | 2026-08-08
+
+- The operator explicitly activated Plan 0221's unchanged frozen packet:
+  exactly one user-runtime install, one AuraCall API restart, and one
+  `wsl-chrome-3` pass `44 -> 45` control with read-only monitoring of its one
+  fresh child. No retry, other completion control, or scheduler control is
+  authorized.
+- Preflight is clean and synchronized at pushed commit `90ee5885`. Built
+  adapter hash is `3917b2d2...633d`; installed runtime intentionally remains
+  `688442b5...ef0b7` until the sole install.
+- API PID 9910 is active/running with zero restarts; scheduler is paused;
+  foreground, queued/running completion work, and active history jobs are
+  zero; wider targets remain paused at `7/2/34`; target remains blocked/pass
+  44 with force ceiling null; all scoped ChatGPT guards are clear. Effect
+  accounting is zero before the authority commit.
+
 ## Turn 410 | 2026-08-08
 
 - Plan 0220 closes provider-free at pushed repair commit `435b1cd8`; rebuilt
