@@ -1,5 +1,22 @@
 # RUNBOOK
 
+## Turn 416 | 2026-08-08
+
+- The sole Plan 0223 install produced exact adapter parity at
+  `919e2529...f4b9`; the sole restart produced healthy API PID 95638 with zero
+  restarts and unchanged stopped controls.
+- Canary attempt 1 advanced pass `45 -> 46` and created exactly child
+  `hmj_844540c7e0d94b45b50c5f092f74d22c`. It ran once and failed
+  conversations/materialized/skipped/failed `6/0/3/4`, eligible/selected
+  `102/6`; identity matched all four dimensions and guard exclusions were zero.
+- One context succeeded in 17076 ms. Two timeouts near 117.1 seconds ended at
+  `cdp:Runtime.evaluate` with pending operation null; two others ended after
+  `provider:chatgpt.skipSameRouteNavigation` with pending operation
+  `provider:chatgpt.readConversationPayload`.
+- Parent is blocked/pass 46 with force ceiling null; API remains healthy,
+  scheduler paused, active jobs and queued/running work zero, wider passes
+  `7/2/34`, and guards clear. Attempt 2 remains authorized and serialized.
+
 ## Turn 415 | 2026-08-08
 
 - The operator authorized preparation and execution of up to three fresh

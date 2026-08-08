@@ -90,7 +90,7 @@ Keep the scheduler and every wider completion paused.
 ## Acceptance Criteria
 
 - [ ] Plan artifact is audited, committed, and pushed before effects.
-- [ ] Exactly one install and one API restart produce source/runtime parity and
+- [x] Exactly one install and one API restart produce source/runtime parity and
   a healthy stopped-control preflight.
 - [ ] Between one and three fresh serialized `wsl-chrome-3` canaries settle;
   no fourth canary occurs.
@@ -146,3 +146,44 @@ Keep the scheduler and every wider completion paused.
   safety hard stop terminates the packet.
 - `next_action_or_stop_reason`: audit, commit, and push this gate before the
   sole install.
+
+## Checkpoint 2 | Canary Attempt 1 Failed With New Pending Evidence
+
+- `checkpoint_id`: `P0223-C02`.
+- `state_transition`: AUTHORIZED_GATE_PREPARED -> ATTEMPT_1_TERMINAL_FAILED.
+- `progress_classification`: blocker_reduction.
+- `activation_evidence`: the sole install produced source/installed adapter
+  parity at `919e2529f2c2e59ad7d29d0b48377eac82ddf7aa8c04009012082d6d9509f4b9`;
+  the sole restart produced API PID 95638 active/running with `NRestarts=0`
+  while stopped controls remained unchanged.
+- `canary`: the first control advanced pass `45 -> 46` and created exactly
+  child `hmj_844540c7e0d94b45b50c5f092f74d22c`. It ran attempt one only and
+  settled failed with conversations/materialized/skipped/failed `6/0/3/4`,
+  eligible/selected `102/6`.
+- `identity_and_guard`: provider session verdict `match`; email, plan,
+  structure, and account-level dimensions all matched; candidate-funnel
+  provider-guard exclusions were zero and all ChatGPT guards remained null.
+- `receipt_evidence`:
+  - one context succeeded in 17076 ms with `lastStage=complete` and
+    `pendingOperation=null`;
+  - conversation `6a568ccb-3938-83ea-a635-02dde7634d3f` timed out in 117084 ms
+    at `lastStage=cdp:Runtime.evaluate`, `pendingOperation=null`;
+  - conversation `6a563289-d5d8-83ea-9a2b-0e89e7078dff` timed out in 117094 ms
+    at `lastStage=cdp:Runtime.evaluate`, `pendingOperation=null`;
+  - conversation `6a5245ad-7180-83ea-a3e4-7d2e81015af9` timed out in 117084 ms
+    after `provider:chatgpt.skipSameRouteNavigation` with
+    `pendingOperation=provider:chatgpt.readConversationPayload`;
+  - conversation `6a5245f5-0b10-83ea-b8fd-fa664bb743c5` timed out in 116974 ms
+    after the same completed marker with the same pending payload operation.
+- `post_attempt_boundary`: parent is blocked/pass 46 with force ceiling null;
+  API PID 95638 remains healthy with zero restarts; scheduler is paused; active
+  jobs and queued/running work are zero; wider passes remain `7/2/34`; guards
+  remain null.
+- `effect_accounting`: installs 1/1, restarts 1/1, canaries 1/3, target
+  completion controls 1/3, scheduler controls 0, wider controls 0.
+- `subagent_status`: not_spawned; `max_subagents=0`.
+- `review_disposition_summary`: clean-canary proof is blocking and unmet;
+  attempt 1 newly localizes two failures to the payload read while two remain
+  only CDP-localized. No safety hard stop fired.
+- `next_action_or_stop_reason`: execute serialized attempt 2 under the
+  unchanged target, controls, and cumulative bounds.
