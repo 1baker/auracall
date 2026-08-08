@@ -44680,3 +44680,18 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   zero, intended passes `7/2/34/43`, and target force ceiling null. Provider,
   browser, installed-runtime, materialization, completion-control, and
   scheduler-control effects are excluded.
+
+## 2026-08-08 | Plan 0221 pass-45 canary fails closed
+
+- The exact one-install, one-restart, one-control packet was consumed without
+  fanout: installed/source adapter parity is `3917b2d2...633d`, API PID 13464
+  is healthy with zero restarts, pass advanced only `44 -> 45`, and the sole
+  child is `hmj_a3c6daa3e06d45a49889638047a4561f`.
+- Identity matched and provider-guard exclusions were zero, but terminal child
+  metrics were `6/0/3/4`. One context succeeded in 11350 ms; four one-attempt
+  reads timed out at 109085, 109095, 109088, and 109097 ms, each with last
+  promoted stage `provider:chatgpt.skipSameRouteNavigation`.
+- Parent settled blocked/pass 45 with no force ceiling. Scheduler remains
+  paused, wider passes remain `7/2/34`, active jobs are zero, and no retry,
+  pass 46, other completion control, scheduler control, or manual browser
+  action is authorized or performed.

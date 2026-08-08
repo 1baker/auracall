@@ -20850,3 +20850,17 @@ browser-stage lifecycle observability, not transcript truncation.
   provider wait whose CDP evaluation can block must bound the evaluation
   itself, and live effectiveness remains unproved until the separately gated
   installed canary succeeds.
+
+## 2026-08-08 | A new downstream marker does not prove the live stall reaches it
+
+- Plan 0221 installed the independently bounded post-payload readiness
+  evaluation with exact parity, but its sole pass-45 child still produced four
+  one-attempt context timeouts near 109 seconds whose last completed action was
+  `provider:chatgpt.skipSameRouteNavigation`.
+- The provider-free repair remains a valid operation bound, but the installed
+  canary disproved that repair as sufficient for this live failure. No receipt
+  showed `chatgpt.waitPostPayloadReadiness`, so the evidence does not establish
+  that the stalled live path reached the newly instrumented boundary.
+- Keep last-completed-action telemetry distinct from current-await causality.
+  A successor should first promote or reproduce the transition immediately
+  after the same-route marker before authorizing another live canary.

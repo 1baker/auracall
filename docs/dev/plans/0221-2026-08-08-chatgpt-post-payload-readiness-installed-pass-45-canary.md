@@ -1,10 +1,11 @@
 # ChatGPT Post-Payload Readiness Installed Pass-45 Canary | 0221-2026-08-08
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 1
-Gate state: EXACT_PASS45_EFFECT_AUTHORIZED
-Goal execution state: ACTIVE_FROZEN_EFFECT_PACKET
+Gate state: STOPPED_FAIL_CLOSED
+Goal execution state: FAILED_CLOSED
+Outcome: STOPPED_FAIL_CLOSED
 
 ## Stable Goal Objective
 
@@ -108,13 +109,14 @@ another completion or the scheduler.
 - [x] Pushed provider-free repair and exact validation receipts are frozen.
 - [x] One exact install/restart/pass-45 packet is prepared without executing it.
 - [x] Separate explicit operator approval activates this exact effect packet.
-- [ ] One install and one restart produce installed/source adapter parity and a
+- [x] One install and one restart produce installed/source adapter parity and a
   healthy API while scheduler/target posture stays frozen.
 - [ ] The exact pass-45 canary creates one fresh child and both settle with the
-  clean-canary proof; no pass 46 occurs.
-- [ ] Default, `wsl-chrome-2`, and `wsl-chrome-4` remain unchanged; scheduler
+  clean-canary proof; no pass 46 occurs. The one child settled failed with four
+  one-attempt context timeouts, so clean-canary proof was not obtained.
+- [x] Default, `wsl-chrome-2`, and `wsl-chrome-4` remain unchanged; scheduler
   stays paused and active jobs return zero.
-- [ ] Exact receipts are audited, committed, and pushed without wider resume.
+- [x] Exact receipts are audited, committed, and pushed without wider resume.
 
 ## Hard Stops
 
@@ -174,3 +176,43 @@ another completion or the scheduler.
 - `next_action_or_stop_reason`: commit and push this authority checkpoint,
   then perform the sole install, parity check, sole API restart, posture
   recheck, and sole pass-45 control in that order. Stop on the first hard stop.
+
+## Checkpoint 3 | Sole Pass-45 Canary Failed Closed
+
+- `checkpoint_id`: `P0221-C03`
+- `state_transition`: EXACT_PASS45_EFFECT_AUTHORIZED -> STOPPED_FAIL_CLOSED.
+- `progress_classification`: regression.
+- `authority_classification`: the exact approved packet was exhausted. No
+  retry, second install/restart, pass 46, other completion control, scheduler
+  control, or manual browser action is authorized.
+- `installed_runtime`: the sole `pnpm run install:user-runtime` produced exact
+  source/installed adapter SHA-256 parity at
+  `3917b2d213f3ee828117b0c2335f37980d1e2d0dc43881c0ff540465ba9e633d`.
+- `service_readback`: the sole API restart produced PID 13464,
+  active/running with `NRestarts=0`.
+- `canary_control`: the sole `run-one-pass` advanced pass `44 -> 45`, created
+  exactly child `hmj_a3c6daa3e06d45a49889638047a4561f`, and did not create a
+  second child or pass 46.
+- `child_outcome`: failed on attempt one at 2026-08-08T18:24:23.307Z with
+  conversations/materialized/skipped/failed `6/0/3/4`, eligible/selected
+  `102/6`, identity verdict match across all four dimensions, provider-guard
+  exclusions zero, and no manifests or checksums.
+- `promoted_receipts`: one context succeeded in 11350 ms at `complete`; four
+  contexts timed out once after 109085, 109095, 109088, and 109097 ms with
+  `conversation_context_timeout`, each retaining last stage
+  `provider:chatgpt.skipSameRouteNavigation`.
+- `parent_outcome`: blocked/pass 45 with force ceiling null and
+  `account_mirror_materialization_failed`; no clean-canary proof.
+- `stopped_posture`: API PID 13464 remains healthy; scheduler state/posture is
+  paused; foreground and queued/running work are zero; active history jobs are
+  zero; default, `wsl-chrome-2`, and `wsl-chrome-4` remain paused at passes
+  `7/2/34`; all four scoped ChatGPT guards remain clear.
+- `effect_accounting`: installs 1, restarts 1, completion controls 1, canary
+  attempts 1, child jobs 1, other completion controls 0, scheduler controls 0,
+  manual browser clicks/navigation/prompts/`Answer now` actions 0.
+- `subagent_status`: not_spawned; `max_subagents=0`.
+- `review_disposition_summary`: the failed clean-canary criterion is blocking;
+  installed effectiveness is disproven and the packet closes without retry.
+- `next_action_or_stop_reason`: stop. Any further diagnosis or canary requires
+  a new bounded successor; scheduler and wider completion resume remain
+  withheld.

@@ -1,5 +1,23 @@
 # RUNBOOK
 
+## Turn 412 | 2026-08-08
+
+- The sole Plan 0221 install produced exact source/installed adapter parity at
+  `3917b2d2...633d`; the sole API restart produced PID 13464 active/running
+  with zero crash restarts while stopped controls remained frozen.
+- The sole control advanced `wsl-chrome-3` pass `44 -> 45` and created exactly
+  child `hmj_a3c6daa3e06d45a49889638047a4561f`. Provider identity matched all
+  four dimensions and provider-guard exclusions were zero.
+- The child failed on attempt one with conversations/materialized/skipped/
+  failed `6/0/3/4`. One context succeeded in 11350 ms; four later contexts
+  timed out once after 109085, 109095, 109088, and 109097 ms, all retaining
+  last stage `provider:chatgpt.skipSameRouteNavigation` and error code
+  `conversation_context_timeout`.
+- Parent settled blocked/pass 45 with force ceiling null and no pass 46. Wider
+  targets remain paused at `7/2/34`, scheduler remains paused, active jobs are
+  zero, and API PID 13464 is healthy. Plan 0221 closes fail-closed; no retry,
+  other completion control, scheduler control, or manual browser action ran.
+
 ## Turn 411 | 2026-08-08
 
 - The operator explicitly activated Plan 0221's unchanged frozen packet:

@@ -343,9 +343,10 @@ Lane: P01
   emits its own stage marker. Integrated validation passes `387/387`, plus
   typecheck, build, lint, plan audit, and diff hygiene. Prepared pass-45 gate:
   [docs/dev/plans/0221-2026-08-08-chatgpt-post-payload-readiness-installed-pass-45-canary.md](docs/dev/plans/0221-2026-08-08-chatgpt-post-payload-readiness-installed-pass-45-canary.md).
-  It freezes one install, one restart, and one pass `44 -> 45` canary. The
-  operator has now authorized that exact unchanged packet; scheduler and wider
-  completions remain stopped, and the authority checkpoint precedes effects.
+  Its sole install/restart produced parity and a healthy API, but the sole pass
+  `44 -> 45` child failed `6/0/3/4`; four one-attempt contexts again timed out
+  near 109 seconds after the same-route marker. Plan 0221 is fail-closed with
+  no retry; scheduler and wider completions remain stopped.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,
