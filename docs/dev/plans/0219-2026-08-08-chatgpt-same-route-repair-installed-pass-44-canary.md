@@ -1,10 +1,11 @@
 # ChatGPT Same-Route Repair Installed Pass-44 Canary | 0219-2026-08-08
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 1
-Gate state: EXACT_PASS44_EFFECT_AUTHORIZED
-Goal execution state: ACTIVE_FROZEN_EFFECT_PACKET
+Outcome: STOPPED_FAIL_CLOSED_REPEATED_CONTEXT_TIMEOUTS
+Gate state: CONSUMED_FAILED_NO_RETRY
+Goal execution state: COMPLETE_FAIL_CLOSED
 
 ## Stable Goal Objective
 
@@ -102,13 +103,13 @@ completion or the scheduler.
 ## Acceptance Criteria
 
 - [x] Separate explicit operator approval activates this exact effect packet.
-- [ ] One install and one restart produce installed/source adapter parity and a
+- [x] One install and one restart produce installed/source adapter parity and a
   healthy API while scheduler/target posture stays frozen.
 - [ ] The exact pass-44 canary creates one fresh child and both settle with the
   clean-canary proof; no pass 45 occurs.
-- [ ] Default, `wsl-chrome-2`, and `wsl-chrome-4` remain unchanged; scheduler
+- [x] Default, `wsl-chrome-2`, and `wsl-chrome-4` remain unchanged; scheduler
   stays paused and active jobs return zero.
-- [ ] Exact receipts are audited, committed, and pushed without wider resume.
+- [x] Exact receipts are audited, committed, and pushed without wider resume.
 
 ## Hard Stops
 
@@ -168,3 +169,52 @@ completion or the scheduler.
 - `next_action_or_stop_reason`: audit, commit, and push this authority
   checkpoint; then run the single install/parity/restart/preflight/control
   sequence, stopping on the first mismatch.
+
+## Checkpoint 3 | Pass-44 Canary Failed Closed
+
+- `checkpoint_id`: `P0219-C03`
+- `state_transition`: EXACT_PASS44_EFFECT_AUTHORIZED ->
+  STOPPED_FAIL_CLOSED_REPEATED_CONTEXT_TIMEOUTS.
+- `progress_classification`: no_progress_on_clean_canary;
+  policy_success_on_hard_stop.
+- `install_and_parity`: the sole install completed successfully and source plus
+  installed adapter SHA-256 both equal
+  `688442b51b7769b80df67e860bd96b53e1ff350fbd4bca4f51750b94d77ef0b7`.
+- `service_restart`: the sole restart replaced API PID 81696 with PID 9910;
+  it remains active/running with `NRestarts=0`.
+- `canary_control`: the sole control was accepted at
+  `2026-08-08T14:33:29.150Z`; parent pass advanced exactly `43 -> 44`, no pass
+  45 occurred, and exactly one fresh child was created.
+- `child_terminal`: `hmj_fbbe8fa545fd4589b505706053b31f4d`
+  ran once from `2026-08-08T14:40:58.739Z` through
+  `2026-08-08T14:50:23.367Z` and failed. Conversations/materialized/skipped/
+  failed were `6/0/3/4`; eligible/selected candidates were `102/6`; provider
+  guard exclusions were zero.
+- `provider_identity`: verdict `match`; email, plan, structure, and
+  account-level dimensions all matched their expected fingerprints.
+- `context_receipts`: conversation
+  `6a5e4bf8-972c-83ea-ad2f-3ad57f2a153f` succeeded once in 14049 ms at stage
+  `complete`. Conversations `6a568ccb-3938-83ea-a635-02dde7634d3f`,
+  `6a563289-d5d8-83ea-9a2b-0e89e7078dff`,
+  `6a5245ad-7180-83ea-a3e4-7d2e81015af9`, and
+  `6a5245f5-0b10-83ea-b8fd-fa664bb743c5` each timed out on attempt one after
+  109618, 109526, 109513, and 109611 ms. All four receipts again end at
+  `provider:chatgpt.skipSameRouteNavigation` with
+  `errorCode=conversation_context_timeout`.
+- `parent_terminal`: blocked/pass 44, force ceiling null, error
+  `account_mirror_materialization_failed`; active history jobs returned to
+  zero.
+- `wider_state`: default paused/pass 7, `wsl-chrome-2` paused/pass 2, and
+  `wsl-chrome-4` paused/pass 34; scheduler remains paused. Adapter parity stays
+  exact and API PID 9910 remains healthy with zero crash restarts.
+- `effect_accounting`: installs 1/1, restarts 1/1, completion controls 1/1,
+  fresh child jobs 1/1, child attempts 1/1, other completion controls 0,
+  scheduler controls 0, retries 0, browser clicks 0, manual browser navigations
+  0, prompt submissions 0, `Answer now` clicks 0, guard bypass actions 0.
+- `review_disposition_summary`: the clean-canary criterion is blocking and
+  failed with exact retained evidence. Plan 0218's local duplicate-poll repair
+  remains valid for its deterministic contract but is rejected as the cause of
+  the installed repeated timeout. No additional repair is admitted by this
+  plan.
+- `next_action_or_stop_reason`: close and push this fail-closed receipt. Do not
+  retry, reinstall, restart, resume another completion, or resume the scheduler.

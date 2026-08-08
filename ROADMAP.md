@@ -321,6 +321,14 @@ Lane: P01
   `688442b5...ef0b7` / `1ccee21f...a7ed667`, API PID 81696, jobs zero,
   scheduler paused, and passes `7/2/34/43`. No live effect has run at this
   authority checkpoint.
+  Plan 0219 is now closed fail-closed. The sole install/restart produced exact
+  adapter parity and healthy API PID 9910; the sole control advanced pass
+  `43 -> 44` with exactly child `hmj_fbbe8fa545fd4589b505706053b31f4d`.
+  Identity matched, but the child again failed `4` of `6` contexts after four
+  one-attempt timeouts near 109.5 seconds at
+  `provider:chatgpt.skipSameRouteNavigation`. Parent is blocked/pass 44 with no
+  force ceiling, active jobs zero, wider passes `7/2/34`, and scheduler paused.
+  No retry or wider resume is authorized.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,

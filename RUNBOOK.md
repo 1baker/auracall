@@ -1,5 +1,23 @@
 # RUNBOOK
 
+## Turn 407 | 2026-08-08
+
+- The sole Plan 0219 install produced exact source/installed adapter parity at
+  `688442b5...ef0b7`; the sole API restart produced PID 9910 active/running
+  with zero crash restarts while stopped controls remained frozen.
+- The sole control advanced `wsl-chrome-3` pass `43 -> 44` and created exactly
+  child `hmj_fbbe8fa545fd4589b505706053b31f4d`. Provider identity matched all
+  four dimensions and provider-guard exclusions were zero.
+- The child ran once and failed with conversations/materialized/skipped/failed
+  `6/0/3/4`. One context succeeded in 14049 ms; four later contexts timed out
+  once after 109618, 109526, 109513, and 109611 ms, all again at
+  `provider:chatgpt.skipSameRouteNavigation` with
+  `conversation_context_timeout`.
+- Parent settled blocked/pass 44 with force ceiling null and no pass 45. Wider
+  targets remain paused at `7/2/34`, scheduler remains paused, active jobs are
+  zero, and API PID 9910 is healthy. Plan 0219 closes fail-closed; no retry,
+  second install/restart, other completion control, or scheduler control ran.
+
 ## Turn 406 | 2026-08-08
 
 - The operator explicitly authorized Plan 0219's unchanged frozen packet:

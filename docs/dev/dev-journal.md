@@ -44557,6 +44557,25 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   and active jobs are zero.
 - Current focus: durable fail-closed closeout only. Plan 0217 permits no retry,
   repair, second install/restart, other completion control, or scheduler resume.
+
+## 2026-08-08 | Plan 0219 pass-44 canary fails closed
+
+- The one install and restart produced exact adapter parity at
+  `688442b5...ef0b7` and healthy API PID 9910 with zero crash restarts. The
+  stopped scheduler and wider completion posture remained frozen.
+- The only control advanced pass 43 to 44 and created only child
+  `hmj_fbbe8fa545fd4589b505706053b31f4d`. Identity matched, provider-guard
+  exclusions were zero, and terminal metrics were `6/0/3/4` conversations/
+  materialized/skipped/failed.
+- Full receipts show one 14049-ms success at `complete`, followed by four
+  one-attempt timeouts after 109618, 109526, 109513, and 109611 ms, again at
+  `provider:chatgpt.skipSameRouteNavigation`. The local duplicate-readiness
+  repair did not resolve the installed end-to-end stall.
+- Parent is blocked/pass 44 with no force ceiling; scheduler remains paused,
+  wider passes remain `7/2/34`, jobs are zero, and API PID 9910 is healthy.
+  Plan 0219 permits no retry, repair, second install/restart, other completion
+  control, or scheduler resume.
+
 ## 2026-08-08 | Plan 0219 exact pass-44 packet authorized
 
 - Current focus: execute the unchanged one-install, one-restart, one-canary

@@ -20808,15 +20808,27 @@ browser-stage lifecycle observability, not transcript truncation.
 - Symptom: an installed canary completed one ChatGPT conversation context, then
   four later reads timed out near 110 seconds after recording
   `provider:chatgpt.skipSameRouteNavigation`.
-- Cause: `navigateAndSettle` had already proved route, document readiness, and
-  the conversation-ready predicate, but its caller immediately evaluated the
-  same ready predicate again. An individual CDP predicate evaluation has no
-  inner transport deadline, so the redundant call could consume the outer
-  context deadline; the older reload/reopen block could not handle an initial
-  failed settle because navigation already threw first.
+- Local cause: `navigateAndSettle` had already proved route, document readiness,
+  and the conversation-ready predicate, but its caller immediately evaluated
+  the same ready predicate again. The older reload/reopen block could not
+  handle an initial failed settle because navigation already threw first.
 - Fix: hand off directly after successful governed navigation. Preserve the
   no-navigation wait and every route/readiness predicate, fallback, mutation
   audit, interaction governor, provider guard, and outer deadline.
 - Prevention: make settle helpers' success contracts authoritative. Cover a
   ready same-route handoff with fake CDP that leaves the first unexpected
   evaluation unsettled, so any duplicate poll fails quickly and deterministically.
+
+## 2026-08-08 | A local same-route red does not prove the installed timeout cause
+
+- A fake-CDP regression can prove and remove a redundant readiness evaluation
+  while still failing to reproduce the installed conversation-context stall.
+  Treat that as a valid local contract repair, not end-to-end causal proof.
+- The pass-44 installed canary repeated the exact live signature after the
+  duplicate poll was removed: one context succeeded, then four timed out near
+  109.5 seconds with the same last completed provider action,
+  `chatgpt.skipSameRouteNavigation`.
+- Keep promoted terminal receipts authoritative. The telemetry action proves
+  governed navigation returned without mutation; it still does not identify
+  the later uninstrumented await. Any successor must instrument or reproduce
+  the operations after that marker provider-free before another canary.
