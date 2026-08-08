@@ -1,5 +1,17 @@
 # RUNBOOK
 
+## Turn 410 | 2026-08-08
+
+- Plan 0220 closes provider-free at pushed repair commit `435b1cd8`; rebuilt
+  adapter hash is `3917b2d2...633d`. Installed runtime intentionally remains
+  `688442b5...ef0b7`, proving no install or restart occurred.
+- Fresh readback remains API PID 9910 active/running with zero restarts,
+  scheduler paused, active jobs zero, wider passes `7/2/34`, and target
+  blocked/pass 44 with force ceiling null.
+- Plan 0221 prepares exactly one install, one API restart, parity proof, and
+  one pass `44 -> 45` `wsl-chrome-3` child. The gate is not authorized to run;
+  retries, other completion controls, and scheduler control remain excluded.
+
 ## Turn 409 | 2026-08-08
 
 - The corrected Plan 0220 fake-CDP sequence is red in 14 ms against the exact

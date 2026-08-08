@@ -1,10 +1,11 @@
 # ChatGPT Post-Navigation Context Stall Diagnosis And Repair | 0220-2026-08-08
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 1
-Goal execution state: ACTIVE_PROVIDER_FREE_CLOSEOUT
-Future canary gate: WITHHELD_UNTIL_PROVIDER_FREE_REPAIR_GREEN
+Outcome: COMPLETE_PROVIDER_FREE_CANARY_WITHHELD
+Goal execution state: COMPLETE_PROVIDER_FREE
+Future canary gate: PLAN_0221_PREPARED_AWAITING_EXPLICIT_APPROVAL
 
 ## Stable Goal Objective
 
@@ -112,10 +113,10 @@ only if every provider-free criterion is green.
   source repair.
 - [x] One proven seam is repaired and the exact red sequence becomes green
   without weakening content, identity, guard, or outer-deadline rules.
-- [ ] Integrated provider-free validation, plan audit, and diff hygiene pass.
-- [ ] Runtime readback remains stopped and unchanged except for independently
+- [x] Integrated provider-free validation, plan audit, and diff hygiene pass.
+- [x] Runtime readback remains stopped and unchanged except for independently
   changing read-only facts; any drift is reported rather than overwritten.
-- [ ] If provider-free proof is complete, one fresh canary plan is prepared and
+- [x] If provider-free proof is complete, one fresh canary plan is prepared and
   withheld. No install, restart, browser/provider call, materialization start,
   completion control, or scheduler control occurs.
 
@@ -207,3 +208,34 @@ only if every provider-free criterion is green.
 - `next_action_or_stop_reason`: finish lint, plan audit, diff hygiene, and
   runtime readback; commit and push this repair before closing Plan 0220 or
   preparing a fresh canary gate.
+
+## Checkpoint 4 | Provider-Free Repair Closed; Pass-45 Gate Withheld
+
+- `checkpoint_id`: `P0220-C04`
+- `state_transition`: POST_PAYLOAD_PROVIDER_FREE_REPAIR_GREEN ->
+  COMPLETE_PROVIDER_FREE_CANARY_WITHHELD.
+- `progress_classification`: verified_closeout_and_readiness_gain.
+- `source_authority`: repair commit `435b1cd8` is pushed; rebuilt adapter
+  SHA-256 is
+  `3917b2d213f3ee828117b0c2335f37980d1e2d0dc43881c0ff540465ba9e633d`.
+- `installed_runtime`: intentionally remains prior adapter SHA-256
+  `688442b51b7769b80df67e860bd96b53e1ff350fbd4bca4f51750b94d77ef0b7`;
+  no install or restart ran.
+- `verification`: seven integrated files pass `387/387`; typecheck, production
+  build, touched production/test lint, plan audit with zero validation errors,
+  and diff hygiene pass. The legacy browser-service test retains its existing
+  noncanonical formatter baseline; its focused lint and full test suite pass
+  without broad formatting churn.
+- `runtime_readback`: API PID 9910 active/running with zero restarts; scheduler
+  paused; active jobs zero; intended target passes `7/2/34/44`; target blocked
+  with force ceiling null.
+- `future_gate`: Plan 0221 freezes one install, one API restart, exact parity,
+  and one pass `44 -> 45` canary with one fresh child. It is prepared but not
+  authorized to execute.
+- `effect_accounting`: installs 0, restarts 0, provider/browser calls 0,
+  materialization starts 0, completion controls 0, scheduler controls 0.
+- `review_disposition_summary`: the deterministic provider-free sequence
+  accepts the narrow repair as a reproduced cause capability. Installed
+  end-to-end effectiveness remains unproved and belongs only to Plan 0221.
+- `next_action_or_stop_reason`: audit, commit, and push the closed repair and
+  prepared Plan 0221 gate, then stop for explicit approval.

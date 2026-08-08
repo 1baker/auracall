@@ -337,6 +337,14 @@ Lane: P01
   plan requires a tight red sequence before accepting that candidate, permits
   one provider-free repair seam, and keeps all installed/browser/control
   effects excluded.
+  Plan 0220 now closes provider-free at pushed repair commit `435b1cd8`. The
+  corrected eighth-call regression is red in 14 ms and green in 9 ms; the
+  post-payload readiness request now carries protocol and transport bounds and
+  emits its own stage marker. Integrated validation passes `387/387`, plus
+  typecheck, build, lint, plan audit, and diff hygiene. Prepared pass-45 gate:
+  [docs/dev/plans/0221-2026-08-08-chatgpt-post-payload-readiness-installed-pass-45-canary.md](docs/dev/plans/0221-2026-08-08-chatgpt-post-payload-readiness-installed-pass-45-canary.md).
+  It freezes one install, one restart, and one pass `44 -> 45` canary, but is
+  not authorized to execute. Scheduler and wider completions remain stopped.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,

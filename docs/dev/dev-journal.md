@@ -44576,6 +44576,17 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   Plan 0219 permits no retry, repair, second install/restart, other completion
   control, or scheduler resume.
 
+## 2026-08-08 | Plan 0220 closes with pass-45 gate withheld
+
+- Repair commit `435b1cd8` is pushed. Built adapter SHA-256 is
+  `3917b2d2...633d`; installed runtime intentionally remains
+  `688442b5...ef0b7` with API PID 9910 and zero restarts.
+- Scheduler is still paused, active jobs are zero, wider passes remain
+  `7/2/34`, and `wsl-chrome-3` remains blocked/pass 44 with no force ceiling.
+- Plan 0221 freezes one install, one restart, parity, and one pass-45 canary
+  with one fresh child. It is prepared but not authorized; no provider,
+  browser, materialization, completion-control, or scheduler-control action ran.
+
 ## 2026-08-08 | Post-payload readiness evaluation is provider-free bounded
 
 - The minimized sequence now accounts for every preceding fake-CDP operation:
