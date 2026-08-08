@@ -20733,3 +20733,17 @@ browser-stage lifecycle observability, not transcript truncation.
 - Treat cursor non-advancement and the page safety ceiling as errors. Never
   return a silently truncated transcript, and keep the outer context deadline
   plus identity and provider hard stops unchanged.
+
+## 2026-08-07 | A paged reader still requires an installed outer-context canary
+
+- Provider-free paging proves that each message DOM evaluation is bounded and
+  interruptible; it does not by itself prove that the complete provider
+  conversation-context pipeline finishes inside its outer deadline.
+- The installed pass-42 canary matched provider identity and refreshed one
+  conversation, then four distinct conversations each exhausted the 120000-ms
+  context deadline. The retained full job record reports only the outer
+  context failure for those rows, not a narrower stage.
+- Keep the live gate fail-closed and preserve full job detail. Before another
+  canary, add or recover source-grounded stage evidence and reproduce the
+  remaining deadline provider-free; do not infer that the last repaired seam
+  recurred from the outer timeout alone.

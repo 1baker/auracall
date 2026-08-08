@@ -44442,3 +44442,27 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Preflight preserves the stopped posture and zero active jobs. Any install
   mismatch, context/materialization failure, identity/guard/challenge issue,
   pass 43, or second child closes the plan fail-closed without retry.
+
+## 2026-08-07 | Pass-42 installed canary fails closed on repeated context deadlines
+
+- Current focus: close Plan 0215 on its exact hard stop while preserving the
+  paused scheduler and unchanged wider completion posture.
+- The sole install produced exact source/runtime adapter hash parity at
+  `11f31a...978`, and the sole API restart settled active/running at PID 17440
+  with zero crash restarts.
+- The sole `wsl-chrome-3` control advanced pass 41 to 42 and created exactly one
+  child, `hmj_a581131e7e844eb492f63612c4a33069`. Provider-session identity
+  matched; read-only CDP inspection showed five ordinary conversation pages
+  plus the ChatGPT root and no guard or challenge.
+- Terminal child metrics are conversations/materialized/skipped/failed
+  `6/0/3/4`. The retained full record shows one refreshed conversation followed
+  by four distinct 120000-ms conversation-context timeouts. It does not expose
+  a narrower substage for those four failures, so no claim is made that the
+  repaired message reader itself recurred.
+- The parent settled blocked/pass 42 with force ceiling cleared and no pass 43.
+  Default remains paused/pass 7, replacement `wsl-chrome-2` paused/pass 2,
+  `wsl-chrome-4` paused/pass 34, scheduler paused, and active jobs zero.
+- Blocker: the clean-canary criterion is unmet. Plan 0215 authorizes no retry,
+  repair, later completion, or scheduler control; any successor must first
+  isolate the repeated deadline provider-free and establish a fresh effect
+  gate.

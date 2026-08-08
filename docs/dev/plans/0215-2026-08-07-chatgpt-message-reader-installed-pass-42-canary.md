@@ -1,11 +1,11 @@
 # ChatGPT Message Reader Installed Pass-42 Canary | 0215-2026-08-07
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 1
-Outcome: ACTIVE_INSTALL_AND_CANARY_GATE
-Goal execution state: ACTIVE_RESUMED_SUCCESSOR
-Gate state: INSTALL_PENDING
+Outcome: FAILED_CANARY_CONTEXT_TIMEOUTS
+Goal execution state: BLOCKED_FAIL_CLOSED
+Gate state: CANARY_FAILED_STOPPED
 
 ## Stable Goal Objective
 
@@ -79,16 +79,16 @@ wider completion or the scheduler in this plan.
 
 ## Acceptance Criteria
 
-- [ ] One install and one restart produce installed/source adapter hash parity
+- [x] One install and one restart produce installed/source adapter hash parity
   and a healthy API while scheduler/target posture remains frozen.
 - [ ] The exact pass-42 canary creates exactly one fresh child and both settle
   without context timeout, materialization failure, identity mismatch, provider
   guard, challenge, or uncontrolled fanout.
-- [ ] Default stays paused/pass 7, replacement `wsl-chrome-2` paused/pass 2,
+- [x] Default stays paused/pass 7, replacement `wsl-chrome-2` paused/pass 2,
   `wsl-chrome-4` paused/pass 34, scheduler paused, and active jobs return zero.
-- [ ] No source, Gemini/Grok, prompt, `Answer now`, browser navigation/click,
+- [x] No source, Gemini/Grok, prompt, `Answer now`, browser navigation/click,
   account-library, wider completion, or scheduler effect occurs.
-- [ ] Exact receipts are recorded, audited, committed, and pushed.
+- [x] Exact receipts are recorded, audited, committed, and pushed.
 
 ## Hard Stops
 
@@ -122,3 +122,41 @@ wider completion or the scheduler in this plan.
   re-enablement and scheduler resume remain excluded.
 - `next_action_or_stop_reason`: audit, commit, and push this gate; then install
   once and verify parity before restarting the API once.
+
+## Checkpoint 2 | Canary Failed And Stopped
+
+- `checkpoint_id`: `P0215-C02`
+- `state_transition`: ACTIVE_INSTALL_AND_CANARY_GATE ->
+  FAILED_CANARY_CONTEXT_TIMEOUTS.
+- `progress_classification`: blocker_isolation.
+- `install_and_service`: the sole install produced exact source/installed
+  adapter hash parity at
+  `11f31a2e804a1ca7ff8856d053a61ab37d017500feb8a6e2fe2913306264b978`;
+  the sole API restart settled active/running at PID 17440 with zero crash
+  restarts.
+- `canary_control`: the sole control advanced
+  `acctmirror_completion_fb93ed6c-c57b-40cd-b5dc-ba6322f75446` from pass 41
+  to pass 42 and created exactly one fresh child,
+  `hmj_a581131e7e844eb492f63612c4a33069`.
+- `identity_and_browser`: the child matched all provider-session dimensions on
+  `wsl-chrome-3`. Read-only CDP inspection showed five conversation pages and
+  the ChatGPT root, with no guard, CAPTCHA, or challenge surface.
+- `terminal_receipt`: the child failed at `2026-08-08T00:31:25.055Z` with
+  conversations/materialized/skipped/failed `6/0/3/4`. The retained full job
+  record shows one refreshed conversation followed by four distinct
+  conversation-context timeouts at 120000 ms; the compact receipt does not
+  identify a narrower failing substage.
+- `parent_settlement`: the parent is blocked/pass 42 with force ceiling
+  cleared, error code `account_mirror_materialization_failed`, failed child
+  cursor settled, and no pass 43.
+- `frozen_posture`: default remains paused/pass 7, replacement
+  `wsl-chrome-2` paused/pass 2, and `wsl-chrome-4` paused/pass 34. Scheduler is
+  operator-paused, active history jobs are zero, and the API remains healthy.
+- `effects_withheld`: no retry, second install/restart, later completion
+  control, scheduler control, prompt, click, navigation, `Answer now`, or
+  wider materialization resume ran.
+- `remaining_criteria`: the clean-canary criterion is unmet. Any successor must
+  first isolate the repeated context deadline provider-free and authorize a
+  new exact effect gate; Plan 0215 grants no further live action.
+- `next_action_or_stop_reason`: stop fail-closed on the configured
+  materialization/context-timeout hard stop.

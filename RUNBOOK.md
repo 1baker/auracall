@@ -16969,3 +16969,23 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   identity, fail zero items, clear its force ceiling, and avoid pass 43. Any
   timeout, failure, guard, challenge, identity mismatch, or fanout stops the
   packet fail-closed.
+
+## Turn 396 | 2026-08-07
+
+- The sole install produced source/installed adapter hash parity at
+  `11f31a...978`; the sole API restart settled active/running at PID 17440 with
+  zero crash restarts. Scheduler and target posture stayed frozen before the
+  exact control.
+- The one `wsl-chrome-3` control advanced pass 41 to 42 and created only child
+  `hmj_a581131e7e844eb492f63612c4a33069`. Identity matched and read-only CDP
+  inspection showed ordinary ChatGPT conversation/root pages with no guard or
+  challenge.
+- The child nevertheless failed conversations/materialized/skipped/failed
+  `6/0/3/4`. Full retained evidence shows one refreshed conversation followed
+  by four 120000-ms conversation-context timeouts; the compact receipt does not
+  expose a narrower failed substage.
+- The parent settled blocked/pass 42 with force ceiling cleared and no pass 43.
+  Default remains paused/pass 7, replacement `wsl-chrome-2` paused/pass 2,
+  `wsl-chrome-4` paused/pass 34, scheduler paused, and active jobs zero. Plan
+  0215 closes fail-closed; no retry, repair, wider completion, or scheduler
+  control ran.
