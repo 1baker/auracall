@@ -17023,3 +17023,20 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   covered, the adjacent context and history-materialization suites pass `85/85`,
   typecheck passes, and touched Biome is zero-warning. No runtime or provider
   effect ran; Packet B is the next provider-free boundary.
+
+## Turn 399 | 2026-08-07
+
+- The pass-42-shaped provider-free red sequence confirmed both leading causes:
+  the authenticated payload evaluation had no inner deadline, and aborting a
+  borrowed retained session neither evicted it nor waited for cleanup.
+- The injected payload fetch now aborts at 9000 ms; `Runtime.evaluate` has a
+  10000-ms execution timeout and matching transport wait. Abort invalidates and
+  closes a retained ChatGPT session once, and the owning read remains unsettled
+  until that cleanup finishes before the next read starts.
+- Adapter/lifecycle pass `153/153`; the integrated adapter, lifecycle, context,
+  history-materialization, and completion gate passes `303/303`. Typecheck,
+  touched Biome, build, plan audit, and diff check pass.
+- Readback remains frozen: API PID 17440 active/running, zero restarts;
+  scheduler paused; active history jobs zero; target states paused/pass 7,
+  paused/pass 2, paused/pass 34, and blocked/pass 42. No provider or control
+  effect ran.

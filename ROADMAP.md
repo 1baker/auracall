@@ -289,6 +289,10 @@ Lane: P01
   Packet A is now provider-free green: caller receipt emission and complete-job
   retention pass on both success and timeout/failure paths, resolving F01
   without adding raw conversation content or account identity to job evidence.
+  Packets B-D then proved and repaired F02/F03: payload fetch/evaluation now has
+  browser, protocol, and transport deadlines, and abort evicts and awaits a
+  retained provider session before the next read. The integrated provider-free
+  gate passes `303/303`; F04 has no remaining evidence-backed blocker.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,

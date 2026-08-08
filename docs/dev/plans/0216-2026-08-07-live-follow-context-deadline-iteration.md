@@ -209,19 +209,19 @@ not execute one fresh `wsl-chrome-3` canary gate.
 - [x] Full provider-free history-materialization detail carries bounded
   per-conversation context-read receipts sufficient to distinguish exact
   terminal stages without private identity or raw-content leakage.
-- [ ] A deterministic red/green sequence reproduces the one-success,
+- [x] A deterministic red/green sequence reproduces the one-success,
   hanging-evaluate, next-conversation failure shape and proves cleanup is
   settled before the next selected conversation starts.
-- [ ] Every reproduced unbounded provider operation has an execution deadline
+- [x] Every reproduced unbounded provider operation has an execution deadline
   and transport deadline; injected fetch work also has a browser-side abort.
-- [ ] An aborted context read cannot retain or reuse poisoned CDP work, and the
+- [x] An aborted context read cannot retain or reuse poisoned CDP work, and the
   next conversation can complete independently in the provider-free sequence.
-- [ ] Complete ordered message bodies/IDs, payload and artifact association,
+- [x] Complete ordered message bodies/IDs, payload and artifact association,
   visible-file/artifact readers, outer timeout, identity, guard, and fail-closed
   semantics remain covered and green.
 - [ ] Focused and adjacent suites, typecheck, touched lint, production build,
   plan audit, and diff check pass; source/docs commits are pushed.
-- [ ] Default remains paused/pass 7, replacement `wsl-chrome-2` paused/pass 2,
+- [x] Default remains paused/pass 7, replacement `wsl-chrome-2` paused/pass 2,
   `wsl-chrome-4` paused/pass 34, `wsl-chrome-3` blocked/pass 42, scheduler
   paused, and active jobs zero throughout provider-free work.
 - [ ] One exact pass-43 canary gate is prepared for separate approval, with no
@@ -301,3 +301,47 @@ not execute one fresh `wsl-chrome-3` canary gate.
   closed-world audit; prepared separate pass-43 gate.
 - `next_action_or_stop_reason`: begin Packet B with ranked falsifiable F02-F04
   hypotheses and a short-deadline fake-CDP/provider-session sequence.
+
+## Checkpoint 3 | Payload Deadline And Abort Quiescence Proven
+
+- `plan_version`: 1
+- `checkpoint_id`: `P0216-C03`
+- `goal_turn`: 2 of 10 maximum.
+- `state_transition`: RECEIPT_PROMOTION_PROVEN ->
+  PROVIDER_FREE_REPAIR_GATE_GREEN.
+- `progress_classification`: blocker_reduction.
+- `finding_dispositions`:
+  - `P0216-F02` resolved. The red pass-42-shaped sequence proved the hanging
+    authenticated payload evaluation had no browser, protocol, or transport
+    deadline. It now uses a 9000-ms injected fetch abort and 10000-ms DevTools
+    execution plus transport deadlines.
+  - `P0216-F03` resolved. The red retained-session lifecycle test proved abort
+    returned without invoking session eviction or awaiting cleanup. Abort now
+    invalidates the retained session, closes it once, and the owning read waits
+    for cleanup before the next unit can begin.
+  - `P0216-F04` rejected from the active blocker set. The exact F02/F03 red
+    sequence is green and the full adjacent gate exposes no distinct later
+    unbounded reader; no speculative third repair was made.
+- `red_evidence`: payload evaluation lacked `timeout`, `AbortController`, and
+  transport settlement after the short fake deadline; retained-session abort
+  invoked zero session closes and allowed the first read to settle before
+  cleanup.
+- `green_evidence`: adapter and tab-lifecycle suites pass `153/153`; the full
+  provider-free integration gate across adapter, lifecycle, outer context,
+  history materialization, and completion passes `303/303`; typecheck,
+  zero-warning touched Biome, production build, plan audit with zero validation
+  errors, and diff check pass.
+- `runtime_readback`: API PID 17440 is active/running with `NRestarts=0`;
+  scheduler state/posture are paused; active history jobs are zero; default is
+  paused/pass 7, `wsl-chrome-2` paused/pass 2, `wsl-chrome-4` paused/pass 34,
+  and `wsl-chrome-3` blocked/pass 42 with force ceiling null. No control or
+  provider/browser operation occurred.
+- `built_source_adapter_hash`:
+  `1ccee21f39a8f1343eab9b56be2da10c064d5744e70bb539d8fb826c2a7ed667`;
+  installed runtime intentionally remains
+  `11f31a2e804a1ca7ff8856d053a61ab37d017500feb8a6e2fe2913306264b978`.
+- `remaining_criteria`: push this source/docs checkpoint, perform the
+  closed-world F01-F04 closeout audit, and prepare a separate exact pass-43
+  effect gate without executing it.
+- `next_action_or_stop_reason`: commit and push the proven provider-free repair,
+  then close Plan 0216 only after the separate canary plan is frozen.

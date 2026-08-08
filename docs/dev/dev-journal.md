@@ -44501,3 +44501,18 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   are green. Adjacent context/history suites pass `85/85`; typecheck and touched
   Biome pass. No install, restart, provider/browser work, materialization,
   completion, or scheduler control ran.
+
+## 2026-08-07 | Bound payload evaluation and await retained-session abort cleanup
+
+- A fake-CDP success/hang/next sequence proved the authenticated payload fetch
+  had no browser abort, DevTools execution timeout, or transport deadline. A
+  separate retained-session sequence proved abort returned before cleanup and
+  did not evict the borrowed session.
+- The payload fetch now aborts inside the page at 9000 ms; its evaluation has a
+  10000-ms protocol timeout and transport wait. Abort invalidates the retained
+  session immediately, closes it once, and the owning operation waits for that
+  close before the next selected read begins.
+- Full provider-free integration passes `303/303`, plus typecheck, touched
+  Biome, production build, and plan audit. Read-only runtime evidence remains
+  API PID 17440/zero restarts, scheduler paused, active jobs zero, and target
+  pass counts 7/2/34/42 unchanged.

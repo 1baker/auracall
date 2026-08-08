@@ -20775,3 +20775,16 @@ browser-stage lifecycle observability, not transcript truncation.
 - Keep the promoted object diagnostic-only: hashed account scope and bounded
   timing/stage fields are allowed; raw messages, files, artifacts, account
   identity, and error prose are not.
+
+## 2026-08-07 | Bound injected fetches and await abort-owned retained cleanup
+
+- A transport promise timeout alone does not stop an injected browser fetch or
+  terminate its DevTools evaluation. Put a shorter `AbortController` deadline
+  inside the page, an execution timeout on `Runtime.evaluate`, and a transport
+  wait around the CDP promise.
+- An abort listener that launches cleanup with `void` lets the owning read
+  settle while target disposal is still pending. Store the cleanup promise and
+  await it in the connection boundary's `finally` block.
+- Retained provider sessions need explicit abort invalidation. Close through
+  the retained session owner so its stored connection is cleared before any
+  later selected conversation can reuse it.

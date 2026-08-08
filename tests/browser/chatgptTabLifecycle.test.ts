@@ -121,6 +121,72 @@ describe("ChatGPT tab lifecycle", () => {
 		});
 	});
 
+	test("awaits retained-session eviction after abort before the next read begins", async () => {
+		const events: string[] = [];
+		let releaseCleanup: (() => void) | undefined;
+		const cleanupReleased = new Promise<void>((resolve) => {
+			releaseCleanup = resolve;
+		});
+		const retainedConnection = createConnection({
+			shouldClose: false,
+			clientClose: async () => {
+				events.push("cleanup-start");
+				await cleanupReleased;
+				events.push("cleanup-complete");
+			},
+		});
+		const borrowedConnection = {
+			...retainedConnection,
+			borrowedFromSession: true,
+			usedExisting: true,
+		};
+		const controller = new AbortController();
+		const options: Parameters<typeof runWithChatgptAbortBoundConnectionForTest>[1] = {
+			useProviderSession: true,
+			abortSignal: controller.signal,
+		};
+		const closeSession = vi.fn(async () => {
+			options.providerSession = undefined;
+			await retainedConnection.client.close();
+		});
+		options.providerSession = {
+			providerId: "chatgpt",
+			key: "chatgpt:127.0.0.1:45011:https://chatgpt.com/",
+			value: { connection: retainedConnection },
+			close: closeSession,
+		};
+		const firstRead = runWithChatgptAbortBoundConnectionForTest(
+			borrowedConnection as unknown as Parameters<
+				typeof runWithChatgptAbortBoundConnectionForTest
+			>[0],
+			options,
+			async () =>
+				new Promise<never>((_resolve, reject) => {
+					controller.signal.addEventListener("abort", () => reject(controller.signal.reason), {
+						once: true,
+					});
+				}),
+		);
+
+		controller.abort(new Error("conversation deadline exceeded"));
+		let firstSettled = false;
+		void firstRead.catch(() => {
+			firstSettled = true;
+		});
+		await Promise.resolve();
+		await Promise.resolve();
+
+		expect(closeSession).toHaveBeenCalledTimes(1);
+		expect(options.providerSession).toBeUndefined();
+		expect(events).toEqual(["cleanup-start"]);
+		expect(firstSettled).toBe(false);
+
+		releaseCleanup?.();
+		await expect(firstRead).rejects.toThrow("conversation deadline exceeded");
+		events.push("next-read-start");
+		expect(events).toEqual(["cleanup-start", "cleanup-complete", "next-read-start"]);
+	});
+
 	test("retains submitted or explicitly preserved tabs", async () => {
 		const submittedTab = createConnection({});
 		const preservedTab = createConnection({});

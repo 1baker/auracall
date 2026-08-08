@@ -403,6 +403,8 @@ const CHATGPT_DOWNLOAD_CAPTURE_STATE_KEY = "__auracallChatgptDownloadCapture";
 const CHATGPT_ARTIFACT_CAPTURED_FETCH_TIMEOUT_MS = 20_000;
 const CHATGPT_ARTIFACT_BROWSER_DOWNLOAD_TIMEOUT_MS = 30_000;
 const CHATGPT_VISIBLE_FILES_READ_TIMEOUT_MS = 10_000;
+const CHATGPT_CONVERSATION_PAYLOAD_FETCH_TIMEOUT_MS = 9_000;
+const CHATGPT_CONVERSATION_PAYLOAD_EVALUATE_TIMEOUT_MS = 10_000;
 const CHATGPT_CONVERSATION_MESSAGES_PAGE_SIZE = 8;
 const CHATGPT_CONVERSATION_MESSAGES_PAGE_TIMEOUT_MS = 10_000;
 const CHATGPT_CONVERSATION_MESSAGES_MAX_PAGES = 256;
@@ -2880,11 +2882,17 @@ export function extractChatgptConversationArtifactsFromPayload(
 
 function buildChatgptConversationPayloadExpression(conversationId: string): string {
 	return `(async () => {
-    try {
-      const response = await fetch(${JSON.stringify(`/backend-api/conversation/${conversationId}`)}, {
-        credentials: 'include',
-        headers: { accept: 'application/json' },
-      });
+	  const controller = new AbortController();
+	  const timeout = setTimeout(
+	    () => controller.abort(new Error('ChatGPT conversation payload fetch timed out.')),
+	    ${CHATGPT_CONVERSATION_PAYLOAD_FETCH_TIMEOUT_MS},
+	  );
+	  try {
+	    const response = await fetch(${JSON.stringify(`/backend-api/conversation/${conversationId}`)}, {
+	      credentials: 'include',
+	      headers: { accept: 'application/json' },
+	      signal: controller.signal,
+	    });
       const body = await response.text();
       return {
         ok: response.ok,
@@ -2899,9 +2907,11 @@ function buildChatgptConversationPayloadExpression(conversationId: string): stri
       return {
         ok: false,
         status: 0,
-        error: message,
-      };
-    }
+	    error: message,
+	  };
+	} finally {
+	  clearTimeout(timeout);
+	}
   })()`;
 }
 
@@ -2927,11 +2937,16 @@ export async function readChatgptConversationPayloadWithClient(
 		}
 	};
 
-	const { result } = await client.Runtime.evaluate({
-		expression: buildChatgptConversationPayloadExpression(conversationId),
-		awaitPromise: true,
-		returnByValue: true,
-	});
+	const { result } = await withChatgptTimeout(
+		client.Runtime.evaluate({
+			expression: buildChatgptConversationPayloadExpression(conversationId),
+			awaitPromise: true,
+			returnByValue: true,
+			timeout: CHATGPT_CONVERSATION_PAYLOAD_EVALUATE_TIMEOUT_MS,
+		}),
+		CHATGPT_CONVERSATION_PAYLOAD_EVALUATE_TIMEOUT_MS,
+		`Timed out reading ChatGPT conversation payload for ${conversationId} after ${CHATGPT_CONVERSATION_PAYLOAD_EVALUATE_TIMEOUT_MS}ms.`,
+	);
 	const value = isRecord(result?.value)
 		? (result.value as ChatgptConversationPayloadResponse)
 		: null;
@@ -4116,22 +4131,42 @@ export const shouldDisposeChatgptTabConnectionForTest = shouldDisposeChatgptTabC
 function bindChatgptAbortCleanup(
 	connection: ChatgptTabConnection,
 	options?: BrowserProviderListOptions,
-): (() => void) & { cleanupStarted: () => boolean } {
+): (() => void) & { cleanupStarted: () => boolean; waitForCleanup: () => Promise<void> } {
 	const signal = options?.abortSignal;
-	let cleanupStarted = false;
+	let cleanupPromise: Promise<void> | null = null;
 	const closeAbortedConnection = () => {
-		if (cleanupStarted) return;
-		cleanupStarted = true;
-		void closeChatgptTabConnection(connection, options);
+		if (cleanupPromise) return;
+		cleanupPromise = closeAbortedChatgptTabConnection(connection, options);
 	};
 	const unbind = (() => {
 		if (signal) signal.removeEventListener("abort", closeAbortedConnection);
-	}) as (() => void) & { cleanupStarted: () => boolean };
-	unbind.cleanupStarted = () => cleanupStarted;
+	}) as (() => void) & { cleanupStarted: () => boolean; waitForCleanup: () => Promise<void> };
+	unbind.cleanupStarted = () => cleanupPromise !== null;
+	unbind.waitForCleanup = () => cleanupPromise ?? Promise.resolve();
 	if (!signal) return unbind;
 	signal.addEventListener("abort", closeAbortedConnection, { once: true });
 	if (signal.aborted) closeAbortedConnection();
 	return unbind;
+}
+
+async function closeAbortedChatgptTabConnection(
+	connection: ChatgptTabConnection,
+	options?: BrowserProviderListOptions,
+): Promise<void> {
+	const providerSession = options?.providerSession;
+	const retainedConnection = (
+		providerSession?.value as Partial<ChatgptScopedTabSessionValue> | null | undefined
+	)?.connection;
+	if (
+		options?.useProviderSession &&
+		providerSession?.providerId === "chatgpt" &&
+		(connection.borrowedFromSession || retainedConnection === connection)
+	) {
+		options.providerSession = undefined;
+		await providerSession.close().catch(() => undefined);
+		return;
+	}
+	await closeChatgptTabConnection(connection, options);
 }
 
 export const bindChatgptAbortCleanupForTest = bindChatgptAbortCleanup;
@@ -4148,7 +4183,11 @@ async function runWithChatgptAbortBoundConnection<T>(
 	} finally {
 		const cleanupStarted = unbindAbortCleanup.cleanupStarted();
 		unbindAbortCleanup();
-		if (!cleanupStarted) await closeChatgptTabConnection(connection, options);
+		if (cleanupStarted) {
+			await unbindAbortCleanup.waitForCleanup();
+		} else {
+			await closeChatgptTabConnection(connection, options);
+		}
 	}
 }
 

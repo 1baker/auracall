@@ -1873,6 +1873,95 @@ describe("isRetryableConnectionError", () => {
 });
 
 describe("readChatgptConversationPayloadWithClient", () => {
+	test("bounds a hanging payload evaluation before the next selected conversation starts", async () => {
+		vi.useFakeTimers();
+		try {
+			const events: string[] = [];
+			const successfulClient = {
+				// biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names.
+				Runtime: {
+					evaluate: vi.fn(async () => {
+						events.push("first-complete");
+						return {
+							result: {
+								value: {
+									ok: true,
+									status: 200,
+									body: JSON.stringify({ mapping: { first: { message: { id: "first" } } } }),
+								},
+							},
+						};
+					}),
+				},
+			};
+			await expect(
+				readChatgptConversationPayloadWithClient(successfulClient as never, "conversation-first"),
+			).resolves.toMatchObject({ mapping: { first: { message: { id: "first" } } } });
+
+			const hangingEvaluate = vi.fn((_input: { expression: string; timeout?: number }) => {
+				events.push("second-evaluate-start");
+				return new Promise(() => {});
+			});
+			const hangingClient = {
+				// biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names.
+				Runtime: { evaluate: hangingEvaluate },
+			};
+			let hangingOutcome: { kind: "pending" | "resolved" | "rejected"; error?: unknown } = {
+				kind: "pending",
+			};
+			void readChatgptConversationPayloadWithClient(
+				hangingClient as never,
+				"conversation-hanging",
+			).then(
+				() => {
+					hangingOutcome = { kind: "resolved" };
+				},
+				(error: unknown) => {
+					hangingOutcome = { kind: "rejected", error };
+				},
+			);
+			await Promise.resolve();
+			await vi.advanceTimersByTimeAsync(10_001);
+
+			const evaluation = hangingEvaluate.mock.calls[0]?.[0] as
+				| { expression?: string; timeout?: number }
+				| undefined;
+			expect(evaluation).toMatchObject({ timeout: 10_000 });
+			expect(evaluation?.expression).toContain("AbortController");
+			expect(evaluation?.expression).toContain("signal: controller.signal");
+			expect(hangingOutcome).toMatchObject({
+				kind: "rejected",
+				error: expect.objectContaining({
+					message: expect.stringContaining("conversation-hanging"),
+				}),
+			});
+
+			const nextClient = {
+				// biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names.
+				Runtime: {
+					evaluate: vi.fn(async () => {
+						events.push("third-evaluate-start");
+						return {
+							result: {
+								value: {
+									ok: true,
+									status: 200,
+									body: JSON.stringify({ mapping: { third: { message: { id: "third" } } } }),
+								},
+							},
+						};
+					}),
+				},
+			};
+			await expect(
+				readChatgptConversationPayloadWithClient(nextClient as never, "conversation-third"),
+			).resolves.toMatchObject({ mapping: { third: { message: { id: "third" } } } });
+			expect(events).toEqual(["first-complete", "second-evaluate-start", "third-evaluate-start"]);
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
 	test("forces the settled payload retry onto the direct-fetch-only path", () => {
 		const interactionGovernor = { beforeInteraction: vi.fn(async () => undefined) };
 		expect(
