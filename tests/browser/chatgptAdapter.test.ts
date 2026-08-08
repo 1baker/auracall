@@ -17,6 +17,7 @@ import {
 	closeChatgptTabConnectionForTest,
 	createChatgptAdapter,
 	downloadChatgptConversationFilesWithClientForTest,
+	ensureChatgptConversationSurfaceReadyForReadForTest,
 	extractChatgptArtifactFileNameFromUriForTest,
 	extractChatgptConversationArtifactsFromPayload,
 	extractChatgptConversationIdFromUrl,
@@ -231,6 +232,45 @@ describe("recordChatgptTargetSession", () => {
 			`chatgpt.target.retain:${fingerprints[0]}`,
 			`chatgpt.target.reuse:${fingerprints[0]}`,
 		]);
+	});
+});
+
+describe("ensureChatgptConversationSurfaceReadyForRead", () => {
+	test("hands a ready same-route conversation directly to the context reader", async () => {
+		const conversationId = "same-route-context";
+		const url = `https://chatgpt.com/c/${conversationId}`;
+		const evaluate = vi.fn((_input: { expression?: string }) => {
+			const call = evaluate.mock.calls.length;
+			if (call === 1) {
+				return Promise.resolve({ result: { value: url } });
+			}
+			if (call <= 4) {
+				return Promise.resolve({ result: { value: true } });
+			}
+			return new Promise<never>(() => undefined);
+		});
+		const scrapeTelemetry = createBrowserScrapeTelemetryRecorder();
+
+		const outcome = await Promise.race([
+			ensureChatgptConversationSurfaceReadyForReadForTest(
+				{
+					// biome-ignore lint/style/useNamingConvention: CDP domain names are protocol-defined.
+					Page: { navigate: vi.fn() },
+					// biome-ignore lint/style/useNamingConvention: CDP domain names are protocol-defined.
+					Runtime: { evaluate },
+				} as never,
+				conversationId,
+				null,
+				{ allowNavigation: true, scrapeTelemetry },
+			).then(() => "ready" as const),
+			new Promise<"stalled">((resolve) => setTimeout(() => resolve("stalled"), 25)),
+		]);
+
+		expect(outcome).toBe("ready");
+		expect(evaluate).toHaveBeenCalledTimes(4);
+		expect(scrapeTelemetry.providerActions).toMatchObject({
+			"chatgpt.skipSameRouteNavigation": 1,
+		});
 	});
 });
 

@@ -8244,49 +8244,10 @@ async function ensureChatgptConversationSurfaceReadyForRead(
 		);
 	}
 	await navigateToChatgptConversation(client, conversationId, projectId, options);
-	let ready = await waitForReady(`ChatGPT conversation ${conversationId} surface ready`);
-	if (ready.ok) {
-		return;
-	}
-	await assertNoChatgptAccountMirrorHardStop(
-		client,
-		options,
-		`ChatGPT conversation ${conversationId} readiness`,
-	);
-	await reloadAndSettle(client, {
-		ignoreCache: true,
-		waitForDocumentReady: false,
-		fallbackToLocationReload: true,
-		interactionGovernor: options?.interactionGovernor,
-		interactionClass: "page-refresh",
-		mutationAudit: resolveMutationAudit(client),
-		mutationSource: resolveMutationSource(
-			client,
-			"provider:chatgpt",
-			"conversation-readiness-reload",
-		),
-	});
-	ready = await waitForReady(`ChatGPT conversation ${conversationId} surface ready after reload`);
-	if (ready.ok) {
-		return;
-	}
-	await assertNoChatgptAccountMirrorHardStop(
-		client,
-		options,
-		`ChatGPT conversation ${conversationId} readiness after reload`,
-	);
-	await navigateToChatgptConversation(client, conversationId, projectId, options);
-	ready = await waitForReady(`ChatGPT conversation ${conversationId} surface ready after reopen`);
-	if (ready.ok) {
-		return;
-	}
-	await assertNoChatgptAccountMirrorHardStop(
-		client,
-		options,
-		`ChatGPT conversation ${conversationId} readiness after reopen`,
-	);
-	throw new Error(`ChatGPT conversation ${conversationId} content not found`);
 }
+
+export const ensureChatgptConversationSurfaceReadyForReadForTest =
+	ensureChatgptConversationSurfaceReadyForRead;
 
 type ChatgptDeepResearchFrameProbe = {
 	title?: string | null;

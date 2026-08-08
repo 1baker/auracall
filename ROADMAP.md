@@ -310,6 +310,12 @@ Lane: P01
   prepare a fresh `wsl-chrome-3` canary behind separate approval. Install,
   restart, provider/browser work, materialization starts, completion controls,
   and scheduler controls remain excluded.
+  The exact fake-CDP regression was red on a fifth redundant readiness
+  evaluation after successful same-route settle and is now green with four
+  evaluations. Integrated adapter/lifecycle/context/history/completion tests
+  pass `304/304`; typecheck, touched lint, build, plan audit, and diff hygiene
+  pass. The repair remains provider-free pending its closeout and successor
+  canary artifact.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,

@@ -44557,6 +44557,21 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   and active jobs are zero.
 - Current focus: durable fail-closed closeout only. Plan 0217 permits no retry,
   repair, second install/restart, other completion control, or scheduler resume.
+## 2026-08-08 | Same-route handoff repair is provider-free green
+
+- The deterministic red sequence satisfied the same route, route predicate,
+  document readiness, and conversation surface readiness, recorded
+  `chatgpt.skipSameRouteNavigation`, then stalled on a fifth CDP evaluation.
+  It failed in 37 ms with `expected ready, received stalled`.
+- Navigation already proves the same surface predicate and throws after its
+  bounded fallbacks on failure. The caller now returns after that success;
+  its no-navigation branch and the shared route/readiness/guard/deadline
+  contracts are unchanged.
+- Focused red is green. The integrated provider-free gate passes `304/304`,
+  typecheck, zero-warning touched Biome, production build, plan audit with zero
+  validation errors, and diff hygiene. Runtime/provider/control effects remain
+  zero; closeout and a separately withheld canary artifact are next.
+
 ## 2026-08-08 | Plan 0218 opens provider-free same-route diagnosis
 
 - Current focus: build a tight fake-CDP red sequence around the successful

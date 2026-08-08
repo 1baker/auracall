@@ -1,5 +1,20 @@
 # RUNBOOK
 
+## Turn 404 | 2026-08-08
+
+- The Plan 0218 fake-CDP regression reproduced the pass-43-shaped handoff in
+  37 ms: same route, route ready, document ready, surface ready, telemetry
+  marker recorded, then a redundant fifth `Runtime.evaluate` remained
+  unsettled. That keeps the causal claim narrower than the outer live receipt.
+- `navigateToChatgptConversation` already returns only after proving the same
+  readiness contract or throwing. The caller now hands off immediately instead
+  of repeating readiness and retaining an unreachable reload/reopen block.
+- Exact red is green with four evaluations. Adapter, lifecycle, context,
+  history-materialization, and completion suites pass `304/304`; typecheck,
+  zero-warning touched Biome, build, plan audit, and diff check pass.
+- No install, restart, provider/browser call, materialization start, completion
+  control, or scheduler control ran. One fresh canary remains preparation-only.
+
 ## Turn 403 | 2026-08-08
 
 - Plan 0218 opens the bounded provider-free successor to the failed pass-43

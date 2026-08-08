@@ -101,12 +101,12 @@ and prepare a separate one-canary artifact with no live authorization.
 
 ## Acceptance Criteria
 
-- [ ] A deterministic provider-free sequence is red against current behavior
+- [x] A deterministic provider-free sequence is red against current behavior
   and reproduces the same-route handoff/stall boundary without provider calls.
-- [ ] Ranked hypotheses and predictions are recorded before source repair.
-- [ ] The proven seam is repaired by one narrow change and the exact red test
+- [x] Ranked hypotheses and predictions are recorded before source repair.
+- [x] The proven seam is repaired by one narrow change and the exact red test
   becomes green without weakening content, identity, guard, or deadline rules.
-- [ ] Integrated provider-free validation, plan audit, and diff hygiene pass.
+- [x] Integrated provider-free validation, plan audit, and diff hygiene pass.
 - [ ] Runtime readback remains PID 81696/zero restarts, scheduler paused, jobs
   zero, passes `7/2/34/43`, and target force ceiling null unless external state
   independently changes; any such change is reported, not overwritten.
@@ -141,3 +141,55 @@ and prepare a separate one-canary artifact with no live authorization.
 - `next_action_or_stop_reason`: commit and push this provider-free authority,
   then create and run the tight red fake-CDP sequence before publishing ranked
   hypotheses or changing source.
+
+## Checkpoint 2 | Exact Same-Route Handoff Reproduced Red
+
+- `checkpoint_id`: `P0218-C02`
+- `state_transition`: SAME_ROUTE_PROVIDER_FREE_DIAGNOSIS_ACTIVE ->
+  SAME_ROUTE_RED_PROVEN_NARROW_REPAIR_ACTIVE.
+- `progress_classification`: causal_evidence_gain.
+- `red_receipt`: focused Vitest regression failed in 37 ms with
+  `expected ready, received stalled`. Fake CDP returned the existing route and
+  satisfied route, document-ready, and surface-ready checks; the next, fifth
+  `Runtime.evaluate` was deliberately unsettled.
+- `ranked_hypotheses`: H1 redundant post-settle readiness evaluation; H2
+  individually unbounded shared predicate evaluation; H3 blocking telemetry
+  persistence; H4 later payload/extraction work. H1 predicts exactly the fifth
+  call and is admitted. H2 is a broader independent hardening concern but does
+  not remove the redundant call. H3 is contradicted by inert test telemetry;
+  H4 is contradicted because the handoff never reaches later context work.
+- `proven_seam`: `navigateToChatgptConversation` returns only after
+  `navigateAndSettle` has proved the requested route, document readiness, and
+  the same surface-ready predicate. Its caller immediately repeats that
+  predicate; its older reload/reopen fallback is unreachable on an initial
+  failed settle because navigation already throws.
+- `repair_packet`: remove only the duplicate post-navigation readiness/reload/
+  reopen block. Preserve the no-navigation branch and every predicate,
+  deadline, guard, mutation audit, and fallback inside `navigateAndSettle`.
+- `effect_accounting`: provider/browser calls 0, installs 0, restarts 0,
+  materialization starts 0, completion controls 0, scheduler controls 0.
+
+## Checkpoint 3 | Narrow Handoff Repair Green
+
+- `checkpoint_id`: `P0218-C03`
+- `state_transition`: SAME_ROUTE_RED_PROVEN_NARROW_REPAIR_ACTIVE ->
+  SAME_ROUTE_PROVIDER_FREE_REPAIR_GREEN.
+- `progress_classification`: verified_repair_gain.
+- `repair`: after navigation is allowed,
+  `ensureChatgptConversationSurfaceReadyForRead` now trusts the successful
+  `navigateToChatgptConversation` contract, which already proves route,
+  document readiness, and the conversation-ready predicate or throws. The
+  no-navigation branch and every settle predicate, timeout, fallback,
+  mutation audit, interaction governor, and hard stop remain intact.
+- `focused_red_green`: exact regression changed from
+  `expected ready, received stalled` with a fifth unsettled CDP evaluation to
+  green with exactly four evaluations and one same-route telemetry marker.
+- `verification`: ChatGPT adapter, tab lifecycle, context,
+  history-materialization, and completion suites pass `304/304`; typecheck;
+  zero-warning touched Biome; production build; plan audit validation errors
+  zero; diff check clean.
+- `effect_accounting`: provider/browser calls 0, installs 0, restarts 0,
+  materialization starts 0, completion controls 0, scheduler controls 0.
+- `next_action_or_stop_reason`: commit and push the repair receipt, re-read the
+  stopped runtime, close Plan 0218, and prepare but do not authorize the fresh
+  one-canary successor.
