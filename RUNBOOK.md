@@ -19,6 +19,11 @@
   materialization starts, completion controls, scheduler controls, prompts,
   clicks, and runtime JSON edits remain zero. A fresh `wsl-chrome-3` canary is
   not authorized by this packet.
+- Repair commit `77b8057b` is pushed. The rebuilt adapter is
+  `919e2529...f4b9` while installed runtime intentionally remains
+  `3917b2d2...633d`; API PID 13464 has zero restarts, scheduler is paused,
+  active jobs are zero, wider passes remain `7/2/34`, and the target remains
+  blocked/pass 45 with force ceiling null.
 
 ## Turn 413 | 2026-08-08
 

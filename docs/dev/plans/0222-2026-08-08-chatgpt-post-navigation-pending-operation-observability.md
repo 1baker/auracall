@@ -180,3 +180,22 @@ control, scheduler control, or another canary.
 - `next_action_or_stop_reason`: stop before effects. A fresh pass-46
   `wsl-chrome-3` canary requires a separate frozen effect artifact and explicit
   approval; scheduler and wider completion resume remain excluded.
+
+## Checkpoint 3 | Pushed Source And Stopped Runtime Readback
+
+- `checkpoint_id`: `P0222-C03`.
+- `repair_commit`: `77b8057b` (`fix(chatgpt): preserve pending context
+  operation`) is pushed to synchronized `main`.
+- `source_runtime_boundary`: rebuilt source adapter SHA-256 is
+  `919e2529f2c2e59ad7d29d0b48377eac82ddf7aa8c04009012082d6d9509f4b9`;
+  installed adapter remains the prior
+  `3917b2d213f3ee828117b0c2335f37980d1e2d0dc43881c0ff540465ba9e633d`.
+  The intentional mismatch independently proves no install occurred.
+- `service_readback`: API PID 13464 remains active/running with
+  `NRestarts=0`; scheduler state/posture is paused; queued/running work is
+  zero; active history-materialization jobs are zero.
+- `completion_readback`: default, `wsl-chrome-2`, and `wsl-chrome-4` remain
+  paused at passes `7/2/34`; `wsl-chrome-3` remains blocked/pass 45 with force
+  ceiling null and terminal child `hmj_a3c6daa3e06d45a49889638047a4561f`.
+- `stop_reason`: provider-free objective complete; live effectiveness remains
+  intentionally untested and no pass-46 or wider resume is authorized.

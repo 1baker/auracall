@@ -355,7 +355,9 @@ Lane: P01
   tests pass 235/235 and the adjacent gate passes 390/390 with typecheck,
   build, touched lint, plan audit, and diff hygiene. Installed runtime,
   browser/provider work, materialization, completion controls, and scheduler
-  controls remain excluded; a fresh canary requires a separate effect gate.
+  controls remain excluded; repair commit `77b8057b` is pushed while source and
+  installed adapter hashes intentionally differ. A fresh canary requires a
+  separate effect gate.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,

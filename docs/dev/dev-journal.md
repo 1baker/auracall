@@ -44726,3 +44726,8 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - No install, restart, provider/browser work, materialization, completion or
   scheduler control, prompt, click, or direct runtime edit ran. A fresh
   `wsl-chrome-3` canary remains a separately approved effect gate.
+- Repair commit `77b8057b` is pushed. The rebuilt adapter hash is
+  `919e2529...f4b9`, while installed runtime remains `3917b2d2...633d`; API PID
+  13464 has zero restarts, scheduler is paused, active jobs are zero, wider
+  passes remain `7/2/34`, and the target remains blocked/pass 45 with force
+  ceiling null.
