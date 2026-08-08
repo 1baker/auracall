@@ -1,5 +1,20 @@
 # RUNBOOK
 
+## Turn 415 | 2026-08-08
+
+- The operator authorized preparation and execution of up to three fresh
+  `wsl-chrome-3` canaries. Plan 0223 freezes one install, one API restart, and
+  serialized pass controls 46-48 at most, stopping early on clean proof.
+- Preflight is clean and synchronized at `c806d607`. Rebuilt adapter hash is
+  `919e2529...f4b9`; installed runtime intentionally remains
+  `3917b2d2...633d` until the sole install.
+- API PID 13464 is active/running with zero restarts; scheduler is paused;
+  queued/running work and active history jobs are zero; wider targets remain
+  paused at `7/2/34`; target remains blocked/pass 45 with force ceiling null;
+  all ChatGPT guards are clear.
+- No scheduler or wider completion control, manual browser navigation, prompt,
+  `Answer now`, guard bypass, second install, or second restart is authorized.
+
 ## Turn 414 | 2026-08-08
 
 - Plan 0222's real adapter-to-`LlmService` fake-CDP reproducer failed twice in

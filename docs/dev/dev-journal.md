@@ -44731,3 +44731,18 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   13464 has zero restarts, scheduler is paused, active jobs are zero, wider
   passes remain `7/2/34`, and the target remains blocked/pass 45 with force
   ceiling null.
+
+## 2026-08-08 | Plan 0223 opens authorized up-to-three canaries
+
+- The operator authorized up to three serialized `wsl-chrome-3` canaries.
+  Plan 0223 permits exactly one user-runtime install and one API restart before
+  passes 46-48 at most, stopping early on a clean result or immediately on a
+  safety hard stop.
+- Source is clean and synchronized at `c806d607`; rebuilt adapter hash is
+  `919e2529...f4b9`, while installed runtime remains `3917b2d2...633d` pending
+  the sole install.
+- API PID 13464 has zero restarts, scheduler is paused, active jobs and
+  queued/running work are zero, wider targets are paused at `7/2/34`, target is
+  blocked/pass 45 with force ceiling null, and all ChatGPT guards are clear.
+- Scheduler/wider controls, manual browser navigation, prompt/composer actions,
+  `Answer now`, guard bypasses, and direct runtime edits remain forbidden.

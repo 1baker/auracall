@@ -358,6 +358,11 @@ Lane: P01
   controls remain excluded; repair commit `77b8057b` is pushed while source and
   installed adapter hashes intentionally differ. A fresh canary requires a
   separate effect gate.
+  Authorized up-to-three-canary successor:
+  [docs/dev/plans/0223-2026-08-08-chatgpt-pending-operation-installed-up-to-three-canaries.md](docs/dev/plans/0223-2026-08-08-chatgpt-pending-operation-installed-up-to-three-canaries.md).
+  It freezes one install, one API restart, and one-at-a-time `wsl-chrome-3`
+  passes 46-48 at most. It stops early on clean proof or immediately on a
+  safety hard stop; scheduler and wider completion controls remain excluded.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,
