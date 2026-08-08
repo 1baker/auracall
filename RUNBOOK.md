@@ -1,5 +1,19 @@
 # RUNBOOK
 
+## Turn 406 | 2026-08-08
+
+- The operator explicitly authorized Plan 0219's unchanged frozen packet:
+  exactly one user-runtime install, one API restart, one `wsl-chrome-3`
+  `run-one-pass`, and read-only monitoring of its sole fresh child. Retries,
+  other completion controls, and scheduler control remain excluded.
+- Preflight is clean and synchronized at pushed commit `d5844da1`. Source
+  adapter hash is `688442b5...ef0b7`; installed runtime intentionally remains
+  `1ccee21f...a7ed667` until the sole authorized install.
+- API PID 81696 is active/running with zero restarts. Scheduler is paused,
+  active jobs are zero, wider targets remain paused at passes `7/2/34`, and
+  `wsl-chrome-3` remains blocked/pass 43 with no force ceiling. No live effect
+  has run at this checkpoint.
+
 ## Turn 405 | 2026-08-08
 
 - Plan 0218 closes provider-free at pushed repair commit `835f0dfb`. Built

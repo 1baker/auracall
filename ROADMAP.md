@@ -316,7 +316,11 @@ Lane: P01
   pass `304/304`; typecheck, touched lint, build, plan audit, and diff hygiene
   pass. Plan 0218 closes provider-free. Prepared pass-44 installed canary gate:
   [docs/dev/plans/0219-2026-08-08-chatgpt-same-route-repair-installed-pass-44-canary.md](docs/dev/plans/0219-2026-08-08-chatgpt-same-route-repair-installed-pass-44-canary.md).
-  It is awaiting separate explicit approval; no live effect has run.
+  The operator has explicitly authorized its unchanged frozen packet. Fresh
+  preflight is exact at clean pushed commit `d5844da1`, source/installed hashes
+  `688442b5...ef0b7` / `1ccee21f...a7ed667`, API PID 81696, jobs zero,
+  scheduler paused, and passes `7/2/34/43`. No live effect has run at this
+  authority checkpoint.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,

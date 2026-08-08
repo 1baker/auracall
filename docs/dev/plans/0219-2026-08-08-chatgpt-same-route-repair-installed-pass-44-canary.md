@@ -1,10 +1,10 @@
 # ChatGPT Same-Route Repair Installed Pass-44 Canary | 0219-2026-08-08
 
-State: PLANNED
+State: OPEN
 Lane: P01
 Plan version: 1
-Gate state: PREPARED_AWAITING_EXPLICIT_APPROVAL
-Goal execution state: NOT_STARTED_EFFECTS_WITHHELD
+Gate state: EXACT_PASS44_EFFECT_AUTHORIZED
+Goal execution state: ACTIVE_FROZEN_EFFECT_PACKET
 
 ## Stable Goal Objective
 
@@ -101,7 +101,7 @@ completion or the scheduler.
 
 ## Acceptance Criteria
 
-- [ ] Separate explicit operator approval activates this exact effect packet.
+- [x] Separate explicit operator approval activates this exact effect packet.
 - [ ] One install and one restart produce installed/source adapter parity and a
   healthy API while scheduler/target posture stays frozen.
 - [ ] The exact pass-44 canary creates one fresh child and both settle with the
@@ -139,3 +139,32 @@ completion or the scheduler.
   completion controls 0, materialization starts 0, scheduler controls 0.
 - `next_action_or_stop_reason`: stop at the approval boundary. Execute nothing
   until the operator separately authorizes Plan 0219.
+
+## Checkpoint 2 | Exact Pass-44 Effect Authorized
+
+- `checkpoint_id`: `P0219-C02`
+- `state_transition`: PASS44_EFFECT_GATE_PREPARED_AWAITING_APPROVAL ->
+  EXACT_PASS44_EFFECT_AUTHORIZED.
+- `progress_classification`: authority_gain.
+- `authority_classification`: the operator explicitly activated objective
+  `execute plan 219`; authority is limited to the unchanged frozen one-install,
+  one-restart, one-control packet and its read-only terminal monitoring.
+- `source_authority`: clean synchronized `main` at pushed commit `d5844da1`,
+  containing repair commit `835f0dfb`; rebuilt adapter SHA-256
+  `688442b51b7769b80df67e860bd96b53e1ff350fbd4bca4f51750b94d77ef0b7`.
+- `installed_runtime`: intentionally prior adapter SHA-256
+  `1ccee21f39a8f1343eab9b56be2da10c064d5744e70bb539d8fb826c2a7ed667`.
+- `runtime_readback`: API PID 81696 active/running with `NRestarts=0`;
+  scheduler paused; active history jobs zero; intended targets remain
+  paused/pass 7, paused/pass 2, paused/pass 34, and blocked/pass 43 with target
+  force ceiling null.
+- `effect_accounting`: installs 0/1, restarts 0/1, provider/browser calls 0,
+  completion controls 0/1, fresh child jobs 0/1, scheduler controls 0.
+- `subagent_status`: not spawned; delegation was not requested and Plan 0219
+  permits none.
+- `review_disposition_summary`: every frozen precondition matches; no hard stop
+  fired. The provider-free evidence is accepted only as install readiness, not
+  as live effectiveness proof.
+- `next_action_or_stop_reason`: audit, commit, and push this authority
+  checkpoint; then run the single install/parity/restart/preflight/control
+  sequence, stopping on the first mismatch.
