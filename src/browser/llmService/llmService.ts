@@ -2523,6 +2523,7 @@ export abstract class LlmService {
 			allowCacheFallback?: boolean;
 			timeoutMs?: number;
 			listOptions?: BrowserProviderListOptions;
+			onReceipt?: (receipt: ConversationContextReadReceipt) => void | Promise<void>;
 		},
 	): Promise<ConversationContext> {
 		if (!this.provider.readConversationContext) {
@@ -2607,6 +2608,11 @@ export abstract class LlmService {
 				errorCode: readTerminalErrorCode(error),
 			};
 			await writeConversationContextReadReceipt(cacheContext, conversationId, receipt);
+			try {
+				await options?.onReceipt?.(receipt);
+			} catch {
+				// Receipt observers are diagnostic sinks and must not change the read outcome.
+			}
 			return receipt;
 		};
 		try {

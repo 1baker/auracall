@@ -17010,3 +17010,16 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   history-materialization evidence. Later packets reproduce one success, one
   hang, cleanup settlement, and next-conversation independence before any
   targeted repair. A future pass-43 canary stays behind a separate effect gate.
+
+## Turn 398 | 2026-08-07
+
+- Packet A began with a provider-free red run: successful and timed-out outer
+  context reads did not emit their durable receipt to the caller, and a failed
+  snapshot refresh discarded an attached receipt from the complete job.
+- `getConversationContext` now offers a diagnostic receipt observer that cannot
+  alter the primary read outcome. History snapshot refresh captures the same
+  bounded receipt and retains it in both success and failure job phases.
+- The exact red assertions are green, complete success/failure job retention is
+  covered, the adjacent context and history-materialization suites pass `85/85`,
+  typecheck passes, and touched Biome is zero-warning. No runtime or provider
+  effect ran; Packet B is the next provider-free boundary.

@@ -21,18 +21,19 @@ import {
 } from "../accountMirror/catalogService.js";
 import { accountMirrorIdentityKeysMatch } from "../accountMirror/tenantBinding.js";
 import { createLlmService } from "../browser/llmService/providers/index.js";
+import type { ConversationContextReadReceipt } from "../browser/providers/cache.js";
 import type { ConversationArtifact, FileRef, ProviderId } from "../browser/providers/domain.js";
+import {
+	type ProviderSessionProof,
+	type ProviderSessionProofSummary,
+	summarizeProviderSessionProof,
+} from "../browser/providers/providerSessionAuthority.js";
 import {
 	type BrowserScrapeTelemetrySnapshot,
 	createBrowserScrapeTelemetryRecorder,
 	snapshotBrowserScrapeTelemetry,
 } from "../browser/providers/scrapeTelemetry.js";
 import type { BrowserProviderListOptions } from "../browser/providers/types.js";
-import {
-	summarizeProviderSessionProof,
-	type ProviderSessionProof,
-	type ProviderSessionProofSummary,
-} from "../browser/providers/providerSessionAuthority.js";
 import type { BrowserProcessOwnerAttribution } from "../browser/service/browserService.js";
 import { resolveRuntimeProfileUserConfig } from "../browser/service/profileConfig.js";
 import { resolveManagedBrowserLaunchContextFromResolvedConfig } from "../browser/service/profileResolution.js";
@@ -169,6 +170,7 @@ export interface HistoryMaterializationSnapshotRefresh {
 	fileCount: number | null;
 	sourceCount: number | null;
 	artifactCount: number | null;
+	contextReadReceipt?: ConversationContextReadReceipt | null;
 	error: string | null;
 	message: string;
 }
@@ -3481,25 +3483,37 @@ async function refreshConversationSnapshotTarget(input: {
 		...(input.interactionGovernor ? { interactionGovernor: input.interactionGovernor } : {}),
 		onProviderSessionProof: input.onProviderSessionProof,
 	};
-	const context = await llmService.getConversationContext(input.target.conversationId, {
-		projectId: input.target.projectId ?? undefined,
-		refresh: true,
-		allowCacheFallback: false,
-		listOptions,
-	});
-	return {
-		object: "history_materialization_snapshot_refresh",
-		generatedAt: input.now().toISOString(),
-		status: "refreshed",
-		target: input.target,
-		routeabilityState: "routeable",
-		messageCount: context.messages.length,
-		fileCount: context.files?.length ?? 0,
-		sourceCount: context.sources?.length ?? 0,
-		artifactCount: context.artifacts?.length ?? 0,
-		error: null,
-		message: `Conversation snapshot refreshed for ${input.target.provider} conversation ${input.target.conversationId}.`,
-	};
+	let contextReadReceipt: ConversationContextReadReceipt | null = null;
+	try {
+		const context = await llmService.getConversationContext(input.target.conversationId, {
+			projectId: input.target.projectId ?? undefined,
+			refresh: true,
+			allowCacheFallback: false,
+			listOptions,
+			onReceipt: (receipt) => {
+				contextReadReceipt = receipt;
+			},
+		});
+		return {
+			object: "history_materialization_snapshot_refresh",
+			generatedAt: input.now().toISOString(),
+			status: "refreshed",
+			target: input.target,
+			routeabilityState: "routeable",
+			messageCount: context.messages.length,
+			fileCount: context.files?.length ?? 0,
+			sourceCount: context.sources?.length ?? 0,
+			artifactCount: context.artifacts?.length ?? 0,
+			contextReadReceipt,
+			error: null,
+			message: `Conversation snapshot refreshed for ${input.target.provider} conversation ${input.target.conversationId}.`,
+		};
+	} catch (error) {
+		if (contextReadReceipt && error && typeof error === "object") {
+			Object.assign(error, { contextReadReceipt });
+		}
+		throw error;
+	}
 }
 
 function shouldRefreshSnapshot(request: HistoryMaterializationCreateRequest): boolean {
@@ -3572,9 +3586,26 @@ function failedSnapshotRefresh(input: {
 		fileCount: null,
 		sourceCount: null,
 		artifactCount: null,
+		contextReadReceipt: conversationContextReadReceiptFromError(input.error),
 		error: reason,
 		message: `Conversation snapshot refresh failed for ${input.target.provider} conversation ${input.target.conversationId}: ${reason}`,
 	};
+}
+
+function conversationContextReadReceiptFromError(
+	error: unknown,
+): ConversationContextReadReceipt | null {
+	if (!error || typeof error !== "object" || !("contextReadReceipt" in error)) return null;
+	const receipt = (error as { contextReadReceipt?: unknown }).contextReadReceipt;
+	if (
+		!receipt ||
+		typeof receipt !== "object" ||
+		(receipt as { object?: unknown }).object !== "conversation_context_read_receipt" ||
+		(receipt as { version?: unknown }).version !== 1
+	) {
+		return null;
+	}
+	return receipt as ConversationContextReadReceipt;
 }
 
 function evidenceFromSnapshotRefresh(

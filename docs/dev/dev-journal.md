@@ -44487,3 +44487,17 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Blocker: exact causality remains unproved until Packet A surfaces receipts in
   the job result and Packet B fails deterministically against the current
   sequential context lifecycle.
+
+## 2026-08-07 | Context-read receipts reach complete materialization evidence
+
+- Packet A's deterministic red baseline proved that the durable context receipt
+  stopped at the cache boundary and a failed snapshot refresh dropped even an
+  attached receipt from the full job result.
+- The outer reader now emits its already-bounded receipt through a diagnostic
+  observer, and snapshot refresh retains it on success or attaches it to the
+  propagated failure for full-job promotion. The observer cannot change the
+  provider read's result.
+- Success and timeout receipt emission plus success and failure job retention
+  are green. Adjacent context/history suites pass `85/85`; typecheck and touched
+  Biome pass. No install, restart, provider/browser work, materialization,
+  completion, or scheduler control ran.

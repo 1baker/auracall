@@ -206,7 +206,7 @@ not execute one fresh `wsl-chrome-3` canary gate.
 
 ## Acceptance Criteria
 
-- [ ] Full provider-free history-materialization detail carries bounded
+- [x] Full provider-free history-materialization detail carries bounded
   per-conversation context-read receipts sufficient to distinguish exact
   terminal stages without private identity or raw-content leakage.
 - [ ] A deterministic red/green sequence reproduces the one-success,
@@ -269,3 +269,35 @@ not execute one fresh `wsl-chrome-3` canary gate.
   have recurred from the outer timeout alone.
 - `next_action_or_stop_reason`: commit and push this authority boundary, then
   begin Packet A with a red provider-free receipt-projection regression.
+
+## Checkpoint 2 | Context-Read Receipts Reach Full Job Evidence
+
+- `plan_version`: 1
+- `checkpoint_id`: `P0216-C02`
+- `goal_turn`: 2 of 10 maximum.
+- `state_transition`: ITERATIVE_PROVIDER_FREE_REPAIR_READY ->
+  RECEIPT_PROMOTION_PROVEN.
+- `progress_classification`: blocker_reduction.
+- `finding_disposition`: `P0216-F01` resolved provider-free. The existing
+  bounded receipt now crosses a caller-owned observer seam into both successful
+  and failed snapshot-refresh evidence, and the complete job retains it through
+  `phases.snapshotRefresh` and `snapshotRefreshes`.
+- `red_evidence`: the focused pre-repair run failed three exact assertions:
+  successful and timed-out context reads emitted no caller receipt, and a
+  failed refresh dropped an attached receipt from the complete job result.
+- `green_evidence`: the same four success/timeout/job-success/job-failure
+  assertions pass; the full adjacent context and history-materialization suites
+  pass `85/85`; typecheck passes; touched Biome is zero-warning; diff check is
+  clean.
+- `bounded_evidence_contract`: object/version, provider, hashed account scope,
+  conversation ID, outcome, deadline/elapsed time, attempt count, last stage,
+  completion time, and error code only. Raw messages, files, artifacts, account
+  identity, and error prose are not added to the receipt.
+- `effect_readback`: no install, restart, provider/browser call, completion
+  control, materialization start, or scheduler control occurred. The stopped
+  runtime posture remains the controlling checkpoint.
+- `remaining_criteria`: provider-free pass-42-shaped sequential reproducer;
+  F02/F03 adjudication and evidence-selected repair; integration gate;
+  closed-world audit; prepared separate pass-43 gate.
+- `next_action_or_stop_reason`: begin Packet B with ranked falsifiable F02-F04
+  hypotheses and a short-deadline fake-CDP/provider-session sequence.

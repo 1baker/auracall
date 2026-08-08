@@ -20763,3 +20763,15 @@ browser-stage lifecycle observability, not transcript truncation.
   stage provider-free before changing it. Treat an unbounded payload
   evaluation and non-awaited retained-session abort cleanup as hypotheses until
   a red sequence proves causality.
+
+## 2026-08-07 | Promote terminal context receipts through the full job boundary
+
+- A durable cache receipt is insufficient when the owning job result drops it:
+  operators then see only a generic outer timeout even though exact stage,
+  elapsed time, attempt count, and error code already exist.
+- Emit the same bounded receipt through a non-disruptive caller observer. Carry
+  it into successful snapshot evidence, attach it to propagated failures, and
+  recover it into the failed snapshot row retained by the complete job.
+- Keep the promoted object diagnostic-only: hashed account scope and bounded
+  timing/stage fields are allowed; raw messages, files, artifacts, account
+  identity, and error prose are not.

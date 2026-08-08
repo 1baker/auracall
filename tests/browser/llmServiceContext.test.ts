@@ -248,9 +248,15 @@ describe("project-scoped conversation context normalization", () => {
 			readConversationContext: vi.fn(async () => context),
 		};
 		const service = new TestContextLlmService(provider as never, store, cacheContext);
+		const emittedReceipts: unknown[] = [];
 
 		try {
-			const result = await service.getConversationContext("conversation-ctx", { listOptions: {} });
+			const result = await service.getConversationContext("conversation-ctx", {
+				listOptions: {},
+				onReceipt: (receipt) => {
+					emittedReceipts.push(receipt);
+				},
+			});
 			expect(result).toEqual(context);
 			expect(provider.readConversationContext).toHaveBeenCalledWith(
 				"conversation-ctx",
@@ -269,6 +275,7 @@ describe("project-scoped conversation context normalization", () => {
 				lastStage: "complete",
 				errorCode: null,
 			});
+			expect(emittedReceipts).toEqual([receipt.items]);
 		} finally {
 			await rm(homeDir, { recursive: true, force: true });
 		}
@@ -368,6 +375,7 @@ describe("project-scoped conversation context normalization", () => {
 			),
 		};
 		const service = new TestContextLlmService(provider as never, store, cacheContext);
+		const emittedReceipts: unknown[] = [];
 
 		try {
 			await expect(
@@ -376,6 +384,9 @@ describe("project-scoped conversation context normalization", () => {
 					allowCacheFallback: false,
 					timeoutMs: 25,
 					listOptions: {},
+					onReceipt: (receipt) => {
+						emittedReceipts.push(receipt);
+					},
 				}),
 			).rejects.toMatchObject({
 				code: "conversation_context_timeout",
@@ -402,6 +413,7 @@ describe("project-scoped conversation context normalization", () => {
 			});
 			expect(receipt.items?.elapsedMs).toBeGreaterThanOrEqual(20);
 			expect(JSON.stringify(receipt.items)).not.toContain("messages");
+			expect(emittedReceipts).toEqual([receipt.items]);
 		} finally {
 			await rm(homeDir, { recursive: true, force: true });
 		}

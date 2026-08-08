@@ -286,6 +286,9 @@ Lane: P01
   unbounded payload/cleanup stages. Install, restart, provider/browser work,
   completion controls, materialization starts, and scheduler controls remain
   excluded; a pass-43 canary may only be prepared for a separate effect gate.
+  Packet A is now provider-free green: caller receipt emission and complete-job
+  retention pass on both success and timeout/failure paths, resolving F01
+  without adding raw conversation content or account identity to job evidence.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,

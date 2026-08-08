@@ -10,8 +10,6 @@ import type { RunArchiveItem, RunArchiveService } from "../src/runtime/archiveSe
 import {
 	createHistoryMaterializationService,
 	formatHistoryMaterializationFailureReason,
-	matchesHistoryMaterializationSelectedCatalogArtifact,
-	matchesHistoryMaterializationSelectedCatalogFile,
 	type HistoryAccountLibraryListInput,
 	type HistoryAccountLibraryMaterializeInput,
 	type HistoryMaterializationCreateRequest,
@@ -23,6 +21,8 @@ import {
 	type HistoryMaterializationTarget,
 	type HistoryMediaGenerationMaterializeInput,
 	type HistoryProjectSourcesMaterializeInput,
+	matchesHistoryMaterializationSelectedCatalogArtifact,
+	matchesHistoryMaterializationSelectedCatalogFile,
 	resolveHistoryMaterializationProviderListOptions,
 	resolveHistoryMaterializationResultStatus,
 } from "../src/runtime/historyMaterializationService.js";
@@ -2456,6 +2456,20 @@ describe("history materialization service", () => {
 			fileCount: 0,
 			sourceCount: 0,
 			artifactCount: 1,
+			contextReadReceipt: {
+				object: "conversation_context_read_receipt",
+				version: 1,
+				provider: "chatgpt",
+				accountScopeHash: "0123456789abcdef",
+				conversationId: "conv_refresh_1",
+				outcome: "succeeded",
+				timeoutMs: 120_000,
+				elapsedMs: 1_250,
+				attemptCount: 1,
+				lastStage: "complete",
+				completedAt: "2026-05-22T18:02:00.000Z",
+				errorCode: null,
+			},
 			error: null,
 			message: "Conversation snapshot refreshed.",
 		};
@@ -2564,6 +2578,10 @@ describe("history materialization service", () => {
 						status: "refreshed",
 						routeabilityState: "routeable",
 						artifactCount: 1,
+						contextReadReceipt: {
+							outcome: "succeeded",
+							lastStage: "complete",
+						},
 					},
 					materialization: {
 						status: "materialized",
@@ -2743,9 +2761,27 @@ describe("history materialization service", () => {
 		setAuracallHomeDirOverrideForTest(homeDir);
 		let scheduled: (() => Promise<void>) | undefined;
 		const refreshConversationSnapshot = vi.fn(async () => {
-			throw new Error(
-				"Gemini conversation content not found for deleted_conv. " +
-					'activeState={"href":"https://gemini.google.com/app","title":"Google Gemini","pathname":"/app","conversationId":null,"bodyTextLength":395}',
+			throw Object.assign(
+				new Error(
+					"Gemini conversation content not found for deleted_conv. " +
+						'activeState={"href":"https://gemini.google.com/app","title":"Google Gemini","pathname":"/app","conversationId":null,"bodyTextLength":395}',
+				),
+				{
+					contextReadReceipt: {
+						object: "conversation_context_read_receipt",
+						version: 1,
+						provider: "gemini",
+						accountScopeHash: "0123456789abcdef",
+						conversationId: "deleted_conv",
+						outcome: "timed_out",
+						timeoutMs: 120_000,
+						elapsedMs: 120_001,
+						attemptCount: 1,
+						lastStage: "provider:gemini.readConversationContext",
+						completedAt: "2026-05-22T18:03:01.000Z",
+						errorCode: "conversation_context_timeout",
+					},
+				},
 			);
 		});
 		const recordConversationEvidence = vi.fn(async () => undefined);
@@ -2800,6 +2836,11 @@ describe("history materialization service", () => {
 					snapshotRefresh: {
 						status: "failed",
 						routeabilityState: "not_found_or_unavailable",
+						contextReadReceipt: {
+							outcome: "timed_out",
+							lastStage: "provider:gemini.readConversationContext",
+							errorCode: "conversation_context_timeout",
+						},
 					},
 					materialization: null,
 				},
@@ -4975,16 +5016,16 @@ describe("history materialization service", () => {
 					},
 				} satisfies ProviderSessionProof);
 				return {
-				object: "history_materialization_result",
-				generatedAt: "2026-07-20T21:00:02.000Z",
-				status: "skipped",
-				target,
-				source: { type: "reconciliation", provider: "chatgpt" },
-				manifestPaths: [],
-				entries: [],
-				archiveItems: [],
-				metrics: { conversations: 1, materialized: 0, skipped: 0, failed: 0 },
-				message: "No new assets.",
+					object: "history_materialization_result",
+					generatedAt: "2026-07-20T21:00:02.000Z",
+					status: "skipped",
+					target,
+					source: { type: "reconciliation", provider: "chatgpt" },
+					manifestPaths: [],
+					entries: [],
+					archiveItems: [],
+					metrics: { conversations: 1, materialized: 0, skipped: 0, failed: 0 },
+					message: "No new assets.",
 				};
 			},
 		);
@@ -5102,8 +5143,7 @@ describe("history materialization service", () => {
 					provider: "chatgpt" as const,
 					runtimeProfileId: "wsl-chrome-3",
 					browserProfileId: "wsl-chrome-3",
-					boundIdentityKey:
-						"service-account:chatgpt:user@example.com|tier=plus|workspace=personal",
+					boundIdentityKey: "service-account:chatgpt:user@example.com|tier=plus|workspace=personal",
 					status: "eligible" as const,
 					reason: "eligible" as const,
 					mirrorCompleteness: {
@@ -6809,14 +6849,16 @@ describe("history materialization service", () => {
 				failureReason: null,
 				observedAt: "2026-05-24T02:20:00.000Z",
 				sessionFingerprint: "session-fingerprint",
-				dimensions: [{
-					dimension: "email",
-					state: "match",
-					expectedFingerprint: "sha256:expected",
-					observedFingerprint: "sha256:observed",
-					expectationSource: "runtime-profile",
-					observationSource: "auth-session",
-				}],
+				dimensions: [
+					{
+						dimension: "email",
+						state: "match",
+						expectedFingerprint: "sha256:expected",
+						observedFingerprint: "sha256:observed",
+						expectationSource: "runtime-profile",
+						observationSource: "auth-session",
+					},
+				],
 				provenance: {
 					providerId: "chatgpt",
 					auracallRuntimeProfile: "wsl-chrome-3",
