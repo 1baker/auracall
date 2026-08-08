@@ -1,5 +1,19 @@
 # RUNBOOK
 
+## Turn 408 | 2026-08-08
+
+- Plan 0220 opens the provider-free successor to the failed pass-44 canary.
+  The four retained receipts still establish only that same-route navigation
+  settled before a later context operation exhausted the outer deadline.
+- CodeGraph traces the next operations as bounded payload read, unconditional
+  post-payload `waitForPredicate`, then bounded message pages. The predicate
+  loop has a 10-second loop deadline, but an individual `Runtime.evaluate` has
+  no protocol or transport deadline and can prevent the loop from advancing.
+- This is a candidate, not yet the cause. Plan 0220 requires a fast fake-CDP
+  red sequence that completes payload work and stalls the next evaluation
+  before any production repair. Installed runtime, browser/provider work,
+  completion/scheduler controls, and materialization remain excluded.
+
 ## Turn 407 | 2026-08-08
 
 - The sole Plan 0219 install produced exact source/installed adapter parity at

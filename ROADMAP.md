@@ -329,6 +329,14 @@ Lane: P01
   `provider:chatgpt.skipSameRouteNavigation`. Parent is blocked/pass 44 with no
   force ceiling, active jobs zero, wider passes `7/2/34`, and scheduler paused.
   No retry or wider resume is authorized.
+  Open provider-free post-navigation diagnosis successor:
+  [docs/dev/plans/0220-2026-08-08-chatgpt-post-navigation-context-stall-diagnosis-and-repair.md](docs/dev/plans/0220-2026-08-08-chatgpt-post-navigation-context-stall-diagnosis-and-repair.md).
+  Structural evidence narrows the unobserved zone after the same-route marker
+  to a bounded payload read followed by an unconditional post-payload
+  readiness wait whose individual CDP evaluation is not interruptible. The
+  plan requires a tight red sequence before accepting that candidate, permits
+  one provider-free repair seam, and keeps all installed/browser/control
+  effects excluded.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,

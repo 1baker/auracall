@@ -44576,6 +44576,20 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   Plan 0219 permits no retry, repair, second install/restart, other completion
   control, or scheduler resume.
 
+## 2026-08-08 | Plan 0220 opens post-navigation provider-free diagnosis
+
+- Current focus: reproduce the first unobserved operation after
+  `chatgpt.skipSameRouteNavigation` with fake CDP before changing production
+  behavior.
+- Structural trace shows a bounded payload read, then an unconditional
+  post-payload readiness predicate, then bounded message pages. The predicate
+  loop is nominally 10 seconds, but its individual `Runtime.evaluate` has no
+  execution or transport deadline and can prevent the loop from advancing.
+- Plan 0220 treats that operation as a candidate only. It permits one
+  provider-free repair seam after a deterministic red and excludes install,
+  restart, browser/provider work, materialization, completion controls, and
+  scheduler controls.
+
 ## 2026-08-08 | Plan 0219 exact pass-44 packet authorized
 
 - Current focus: execute the unchanged one-install, one-restart, one-canary
