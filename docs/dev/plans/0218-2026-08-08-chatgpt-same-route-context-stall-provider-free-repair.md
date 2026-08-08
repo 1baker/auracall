@@ -1,10 +1,11 @@
 # ChatGPT Same-Route Context Stall Provider-Free Repair | 0218-2026-08-08
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 1
-Goal execution state: IN_PROGRESS_PROVIDER_FREE
-Future canary gate: NOT_PREPARED
+Outcome: COMPLETE_PROVIDER_FREE_CANARY_WITHHELD
+Goal execution state: COMPLETE_PROVIDER_FREE
+Future canary gate: PLAN_0219_PREPARED_AWAITING_EXPLICIT_APPROVAL
 
 ## Stable Goal Objective
 
@@ -107,10 +108,10 @@ and prepare a separate one-canary artifact with no live authorization.
 - [x] The proven seam is repaired by one narrow change and the exact red test
   becomes green without weakening content, identity, guard, or deadline rules.
 - [x] Integrated provider-free validation, plan audit, and diff hygiene pass.
-- [ ] Runtime readback remains PID 81696/zero restarts, scheduler paused, jobs
+- [x] Runtime readback remains PID 81696/zero restarts, scheduler paused, jobs
   zero, passes `7/2/34/43`, and target force ceiling null unless external state
   independently changes; any such change is reported, not overwritten.
-- [ ] One fresh `wsl-chrome-3` canary plan is prepared and withheld. No install,
+- [x] One fresh `wsl-chrome-3` canary plan is prepared and withheld. No install,
   restart, provider/browser call, materialization start, completion control, or
   scheduler control occurs.
 
@@ -193,3 +194,30 @@ and prepare a separate one-canary artifact with no live authorization.
 - `next_action_or_stop_reason`: commit and push the repair receipt, re-read the
   stopped runtime, close Plan 0218, and prepare but do not authorize the fresh
   one-canary successor.
+
+## Checkpoint 4 | Provider-Free Repair Closed; Pass-44 Gate Withheld
+
+- `checkpoint_id`: `P0218-C04`
+- `state_transition`: SAME_ROUTE_PROVIDER_FREE_REPAIR_GREEN ->
+  COMPLETE_PROVIDER_FREE_CANARY_WITHHELD.
+- `progress_classification`: verified_closeout_and_readiness_gain.
+- `source_authority`: repair commit `835f0dfb` is pushed; rebuilt adapter
+  SHA-256 is
+  `688442b51b7769b80df67e860bd96b53e1ff350fbd4bca4f51750b94d77ef0b7`.
+- `installed_runtime`: intentionally remains prior hash
+  `1ccee21f39a8f1343eab9b56be2da10c064d5744e70bb539d8fb826c2a7ed667`;
+  no install or restart ran.
+- `runtime_readback`: API PID 81696 active/running with zero restarts;
+  scheduler paused; active jobs zero; intended target states/pass counts
+  paused 7, paused 2, paused 34, and blocked 43; target force ceiling null.
+- `future_gate`: Plan 0219 freezes one install, one API restart, exact parity,
+  and one pass `43 -> 44` canary with one fresh child. It is prepared but not
+  authorized to execute.
+- `effect_accounting`: installs 0, restarts 0, provider/browser calls 0,
+  materialization starts 0, completion controls 0, scheduler controls 0.
+- `review_disposition_summary`: the deterministic causal regression and
+  integrated `304/304` gate accept the narrow repair provider-free. Installed
+  end-to-end effectiveness remains unproved and belongs only to Plan 0219.
+- `next_action_or_stop_reason`: stop at the Plan 0219 approval boundary. Do not
+  install, restart, run pass 44, retry, resume another completion, or resume the
+  scheduler.

@@ -44557,6 +44557,17 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   and active jobs are zero.
 - Current focus: durable fail-closed closeout only. Plan 0217 permits no retry,
   repair, second install/restart, other completion control, or scheduler resume.
+## 2026-08-08 | Plan 0218 closes with pass-44 gate withheld
+
+- Provider-free repair commit `835f0dfb` is pushed. Built adapter SHA-256 is
+  `688442b5...ef0b7`; installed runtime intentionally remains
+  `1ccee21f...a7ed667` with API PID 81696 and zero restarts.
+- Scheduler is still paused, active jobs are zero, wider passes remain
+  `7/2/34`, and `wsl-chrome-3` remains blocked/pass 43 with no force ceiling.
+- Plan 0219 freezes one install, one restart, parity, and one pass-44 canary
+  with one fresh child. It is prepared but not authorized; no provider,
+  browser, materialization, completion-control, or scheduler-control action ran.
+
 ## 2026-08-08 | Same-route handoff repair is provider-free green
 
 - The deterministic red sequence satisfied the same route, route predicate,

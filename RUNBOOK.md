@@ -1,5 +1,17 @@
 # RUNBOOK
 
+## Turn 405 | 2026-08-08
+
+- Plan 0218 closes provider-free at pushed repair commit `835f0dfb`. Built
+  adapter hash is `688442b5...ef0b7`; installed runtime intentionally remains
+  `1ccee21f...a7ed667` because no install or restart was authorized.
+- Fresh readback remains API PID 81696 active/running with zero restarts,
+  scheduler paused, active jobs zero, wider passes `7/2/34`, and target blocked
+  at pass 43 with force ceiling null.
+- Plan 0219 prepares exactly one install, one API restart, parity proof, and one
+  pass `43 -> 44` `wsl-chrome-3` child. The gate is not authorized to run;
+  retries, other completion controls, and scheduler control remain excluded.
+
 ## Turn 404 | 2026-08-08
 
 - The Plan 0218 fake-CDP regression reproduced the pass-43-shaped handoff in
