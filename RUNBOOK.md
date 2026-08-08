@@ -1,5 +1,20 @@
 # RUNBOOK
 
+## Turn 403 | 2026-08-08
+
+- Plan 0218 opens the bounded provider-free successor to the failed pass-43
+  canary. Four later context receipts ended near 110 seconds at
+  `provider:chatgpt.skipSameRouteNavigation`, but that action is treated only
+  as the last completed boundary until a fake-CDP red sequence localizes the
+  next unsettled operation.
+- Current readback is clean pushed source at `92348f35`, API PID 81696
+  active/running with zero restarts, scheduler paused, active jobs zero, wider
+  passes `7/2/34`, and `wsl-chrome-3` blocked/pass 43 with no force ceiling.
+- This packet authorizes deterministic tests and at most one proven source
+  seam. It excludes install, restart, provider/browser calls, durable jobs,
+  completion controls, and scheduler controls. A future canary may be prepared
+  but cannot run without separate explicit approval.
+
 ## Turn 401 | 2026-08-03
 
 - Installed pushed exact-flyout repair `ec81ed0d` with source/runtime adapter

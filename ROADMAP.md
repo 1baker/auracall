@@ -303,6 +303,13 @@ Lane: P01
   `provider:chatgpt.skipSameRouteNavigation`. The parent is blocked/pass 43
   with no force ceiling, jobs are zero, other passes remain `7/2/34`, and the
   scheduler remains paused. No retry or wider resume is authorized.
+  Active provider-free same-route diagnosis successor:
+  [docs/dev/plans/0218-2026-08-08-chatgpt-same-route-context-stall-provider-free-repair.md](docs/dev/plans/0218-2026-08-08-chatgpt-same-route-context-stall-provider-free-repair.md).
+  It requires a deterministic fake-CDP red sequence before any repair, permits
+  one proven source seam plus integrated provider-free validation, and may only
+  prepare a fresh `wsl-chrome-3` canary behind separate approval. Install,
+  restart, provider/browser work, materialization starts, completion controls,
+  and scheduler controls remain excluded.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,

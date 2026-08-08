@@ -44557,3 +44557,16 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   and active jobs are zero.
 - Current focus: durable fail-closed closeout only. Plan 0217 permits no retry,
   repair, second install/restart, other completion control, or scheduler resume.
+## 2026-08-08 | Plan 0218 opens provider-free same-route diagnosis
+
+- Current focus: build a tight fake-CDP red sequence around the successful
+  no-mutation conversation navigation handoff, then rank and falsify the later
+  context-stall hypotheses before changing source.
+- Pass-43 evidence remains one 14292-ms success followed by four one-attempt
+  timeouts near 110 seconds whose last promoted provider action is
+  `chatgpt.skipSameRouteNavigation`. The action proves the navigation settle
+  returned; it does not yet name the later unsettled await.
+- Readback remains API PID 81696/zero restarts, scheduler paused, active jobs
+  zero, intended passes `7/2/34/43`, and target force ceiling null. Provider,
+  browser, installed-runtime, materialization, completion-control, and
+  scheduler-control effects are excluded.
