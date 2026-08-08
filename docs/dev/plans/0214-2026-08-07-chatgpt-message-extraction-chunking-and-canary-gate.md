@@ -81,7 +81,7 @@ resume another completion, or resume the scheduler in this plan.
 
 - `max_plan_versions: 1`; `max_repair_iterations: 1`;
   `max_authority_commits: 1`; `max_source_commits: 1`;
-  `max_closeout_commits: 0`;
+  `max_closeout_commits: 1`;
   `max_provider_free_test_runs: 8`; `max_installs: 0`;
   `max_service_restarts: 0`; `max_provider_calls: 0`;
   `max_completion_control_actions: 0`; `max_scheduler_control_actions: 0`;
@@ -179,7 +179,7 @@ State: PREPARED_AWAITING_SEPARATE_INSTALL_EFFECT_GATE
   hypothesis 3 is rejected by the direct helper regression and exact stage
   receipt.
 - `runtime_readback`: built source adapter SHA-256
-  `f9ae3a5b3c475d31a0748e011c81ed20194053e8bf69e16342c925ff1e47e34b`;
+  `11f31a2e804a1ca7ff8856d053a61ab37d017500feb8a6e2fe2913306264b978`;
   installed adapter intentionally remains Plan 0213 hash
   `71d09b49c0857ee5f9116c24dbc514f4c1d25a098c47999be4c37f29413caef6`.
   API PID 14919 is active with zero restarts. Default is paused/pass 7,
