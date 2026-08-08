@@ -16,6 +16,7 @@ import type {
 } from "../../src/browser/llmService/types.js";
 import type { ProviderCacheContext } from "../../src/browser/providers/cache.js";
 import { readConversationContextReadReceipt } from "../../src/browser/providers/cache.js";
+import { readChatgptConversationContextWithClientForTest } from "../../src/browser/providers/chatgptAdapter.js";
 import type { ConversationContext } from "../../src/browser/providers/domain.js";
 import type { BrowserProviderListOptions } from "../../src/browser/providers/types.js";
 import type { ResolvedUserConfig } from "../../src/config.js";
@@ -355,6 +356,7 @@ describe("project-scoped conversation context normalization", () => {
 			conversationId: "conversation-timeout",
 			messages: [{ role: "assistant", text: "stale cache must not mask timeout" }],
 		});
+
 		let providerSignal: AbortSignal | undefined;
 		const provider = {
 			id: "chatgpt",
@@ -597,6 +599,7 @@ describe("project-scoped conversation context normalization", () => {
 			conversationId: "conversation-ctx",
 			messages: [{ role: "assistant", text: "stale cached context" }],
 		});
+
 		const provider = {
 			id: "gemini",
 			config: { id: "gemini", selectors: {} as never },
@@ -743,6 +746,79 @@ describe("project-scoped conversation context normalization", () => {
 			expect(provider.readConversationContext).toHaveBeenCalledTimes(2);
 		} finally {
 			timeoutSpy.mockRestore();
+			await rm(homeDir, { recursive: true, force: true });
+		}
+	});
+
+	test("getConversationContext preserves the pending ChatGPT payload operation separately from the last completed stage", async () => {
+		vi.useFakeTimers();
+		const homeDir = await mkdtemp(path.join(os.tmpdir(), "auracall-context-pending-payload-"));
+		setAuracallHomeDirOverrideForTest(homeDir);
+		const conversationId = "same-route-pending-payload";
+		const url = `https://chatgpt.com/c/${conversationId}`;
+		const cacheContext: ProviderCacheContext = {
+			provider: "chatgpt",
+			userConfig: {} as ProviderCacheContext["userConfig"],
+			listOptions: {},
+			identityKey: "cache-test@example.com",
+		};
+		const store = new JsonCacheStore();
+		const evaluate = vi.fn(() => {
+			const call = evaluate.mock.calls.length;
+			if (call <= 2) return Promise.resolve({ result: { value: [] } });
+			if (call === 3) return Promise.resolve({ result: { value: url } });
+			if (call <= 6) return Promise.resolve({ result: { value: true } });
+			if (call === 7) return new Promise<never>(() => undefined);
+			return Promise.resolve({ result: { value: [] } });
+		});
+		const client = {
+			// biome-ignore lint/style/useNamingConvention: CDP domain names are protocol-defined.
+			Page: { navigate: vi.fn() },
+			// biome-ignore lint/style/useNamingConvention: CDP domain names are protocol-defined.
+			Runtime: { evaluate },
+		};
+		const provider = {
+			id: "chatgpt",
+			config: { id: "chatgpt", selectors: {} as never },
+			readConversationContext: vi.fn(
+				async (id: string, _projectId: string | undefined, options: BrowserProviderListOptions) =>
+					readChatgptConversationContextWithClientForTest(
+						client as never,
+						id,
+						null,
+						undefined,
+						options,
+					),
+			),
+		};
+		const service = new TestContextLlmService(provider as never, store, cacheContext);
+
+		try {
+			const read = service.getConversationContext(conversationId, {
+				refresh: true,
+				allowCacheFallback: false,
+				timeoutMs: 25,
+				listOptions: { allowNavigation: true },
+			});
+			for (let index = 0; index < 20 && evaluate.mock.calls.length < 7; index += 1) {
+				await vi.advanceTimersByTimeAsync(0);
+			}
+			expect(evaluate).toHaveBeenCalledTimes(7);
+			await vi.advanceTimersByTimeAsync(25);
+			await expect(read).rejects.toMatchObject({
+				code: "conversation_context_timeout",
+				outcome: "timed_out",
+			});
+			const receipt = await readConversationContextReadReceipt(cacheContext, conversationId);
+			expect(receipt.items).toMatchObject({
+				outcome: "timed_out",
+				attemptCount: 1,
+				lastStage: "provider:chatgpt.skipSameRouteNavigation",
+				pendingOperation: "provider:chatgpt.readConversationPayload",
+			});
+		} finally {
+			await vi.advanceTimersByTimeAsync(10_001);
+			vi.useRealTimers();
 			await rm(homeDir, { recursive: true, force: true });
 		}
 	});

@@ -4,6 +4,7 @@ export interface BrowserScrapeTelemetrySnapshot {
 	providerActions: Record<string, number>;
 	cdpCalls: Record<string, number>;
 	candidates: Record<string, number>;
+	pendingOperation?: string | null;
 	downloads: {
 		attempted: number;
 		succeeded: number;
@@ -16,6 +17,15 @@ export interface BrowserScrapeTelemetryRecorder extends BrowserScrapeTelemetrySn
 	onUpdate?: () => void;
 }
 
+interface PendingOperationEntry {
+	operation: string;
+}
+
+const pendingOperationEntries = new WeakMap<
+	BrowserScrapeTelemetryRecorder,
+	PendingOperationEntry[]
+>();
+
 export function createBrowserScrapeTelemetryRecorder(options?: {
 	onUpdate?: () => void;
 }): BrowserScrapeTelemetryRecorder {
@@ -23,6 +33,7 @@ export function createBrowserScrapeTelemetryRecorder(options?: {
 		providerActions: {},
 		cdpCalls: {},
 		candidates: {},
+		pendingOperation: null,
 		downloads: {
 			attempted: 0,
 			succeeded: 0,
@@ -41,6 +52,7 @@ export function snapshotBrowserScrapeTelemetry(
 		providerActions: { ...telemetry.providerActions },
 		cdpCalls: { ...telemetry.cdpCalls },
 		candidates: { ...telemetry.candidates },
+		pendingOperation: telemetry.pendingOperation ?? null,
 		downloads: { ...telemetry.downloads },
 		notes: [...telemetry.notes],
 	};
@@ -53,6 +65,32 @@ export function recordBrowserScrapeProviderAction(
 	const telemetry = options?.scrapeTelemetry;
 	increment(telemetry?.providerActions, action);
 	notify(telemetry);
+}
+
+export async function withBrowserScrapePendingOperation<T>(
+	options: BrowserProviderListOptions | null | undefined,
+	operation: string,
+	task: () => Promise<T>,
+): Promise<T> {
+	const telemetry = options?.scrapeTelemetry;
+	if (!telemetry) return task();
+	const entries = pendingOperationEntries.get(telemetry) ?? [];
+	if (!pendingOperationEntries.has(telemetry)) {
+		pendingOperationEntries.set(telemetry, entries);
+	}
+	const entry = { operation };
+	entries.push(entry);
+	telemetry.pendingOperation = operation;
+	notify(telemetry);
+	try {
+		return await task();
+	} finally {
+		const entryIndex = entries.indexOf(entry);
+		if (entryIndex >= 0) entries.splice(entryIndex, 1);
+		telemetry.pendingOperation = entries.at(-1)?.operation ?? null;
+		if (entries.length === 0) pendingOperationEntries.delete(telemetry);
+		notify(telemetry);
+	}
 }
 
 export function recordBrowserScrapeCdpCall(

@@ -2778,6 +2778,7 @@ describe("history materialization service", () => {
 						elapsedMs: 120_001,
 						attemptCount: 1,
 						lastStage: "provider:gemini.readConversationContext",
+						pendingOperation: "provider:gemini.readConversationPayload",
 						completedAt: "2026-05-22T18:03:01.000Z",
 						errorCode: "conversation_context_timeout",
 					},
@@ -2839,6 +2840,7 @@ describe("history materialization service", () => {
 						contextReadReceipt: {
 							outcome: "timed_out",
 							lastStage: "provider:gemini.readConversationContext",
+							pendingOperation: "provider:gemini.readConversationPayload",
 							errorCode: "conversation_context_timeout",
 						},
 					},

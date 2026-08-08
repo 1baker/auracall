@@ -1,5 +1,25 @@
 # RUNBOOK
 
+## Turn 414 | 2026-08-08
+
+- Plan 0222's real adapter-to-`LlmService` fake-CDP reproducer failed twice in
+  51 ms and 48 ms: the outer timeout receipt retained
+  `provider:chatgpt.skipSameRouteNavigation` but could not name the pending
+  payload read.
+- Scrape telemetry now tracks a bounded, provider-owned `pendingOperation`
+  separately from completed action counters. The initial ChatGPT payload read
+  reports `provider:chatgpt.readConversationPayload`; token-owned entries
+  preserve nested and out-of-order settlement semantics and keep raw content
+  out of receipts.
+- The exact red is green in 42-46 ms. Focused tests pass 235/235 and the
+  seven-file adjacent gate passes 390/390; typecheck, build, full lint with 206
+  retained warnings, scoped Biome, temporary-marker scan, plan audit, and diff
+  hygiene pass.
+- Plan 0222 closes provider-free. Installs, restarts, provider/browser calls,
+  materialization starts, completion controls, scheduler controls, prompts,
+  clicks, and runtime JSON edits remain zero. A fresh `wsl-chrome-3` canary is
+  not authorized by this packet.
+
 ## Turn 413 | 2026-08-08
 
 - The operator approved a provider-free successor after Plan 0221 failed

@@ -1,10 +1,10 @@
 # ChatGPT Post-Navigation Pending-Operation Observability | 0222-2026-08-08
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 1
-Gate state: PROVIDER_FREE_DIAGNOSIS_ACTIVE
-Goal execution state: ACTIVE_BOUNDED_PACKET
+Gate state: COMPLETE_PROVIDER_FREE_EFFECT_GATE_WITHHELD
+Goal execution state: COMPLETE
 
 ## Stable Goal Objective
 
@@ -77,19 +77,19 @@ control, scheduler control, or another canary.
 
 ## Acceptance Criteria
 
-- [ ] One named, agent-runnable command is fast, deterministic, and red-capable
+- [x] One named, agent-runnable command is fast, deterministic, and red-capable
   for the exact missing-pending-operation symptom.
-- [ ] The minimized baseline run is captured red before production behavior
+- [x] The minimized baseline run is captured red before production behavior
   changes.
-- [ ] Three to five hypotheses are ranked with falsifiable predictions and
+- [x] Three to five hypotheses are ranked with falsifiable predictions and
   tested one variable at a time.
-- [ ] Timeout receipts distinguish the last completed action from the
+- [x] Timeout receipts distinguish the last completed action from the
   currently pending operation at the post-navigation boundary.
-- [ ] Any accepted repair is proven by the exact red turning green; otherwise
+- [x] Any accepted repair is proven by the exact red turning green; otherwise
   the plan closes diagnosis-only without speculative behavior changes.
-- [ ] Focused/adjacent provider-free validation, typecheck, lint, applicable
+- [x] Focused/adjacent provider-free validation, typecheck, lint, applicable
   build, plan audit, and diff hygiene pass.
-- [ ] Installed runtime and all live controls remain unchanged; exact evidence
+- [x] Installed runtime and all live controls remain unchanged; exact evidence
   is committed and pushed.
 
 ## Local Goal Bounds
@@ -135,3 +135,48 @@ control, scheduler control, or another canary.
   another live canary is rejected from this packet.
 - `next_action_or_stop_reason`: build and run the exact fast red before any
   production behavior change.
+
+## Checkpoint 2 | Deterministic Red, Bounded Repair, And Closeout
+
+- `checkpoint_id`: `P0222-C02`.
+- `state_transition`: PROVIDER_FREE_PENDING_OPERATION_DIAGNOSIS_ACTIVE ->
+  COMPLETE_PROVIDER_FREE_EFFECT_GATE_WITHHELD.
+- `progress_classification`: blocker_reduction_complete.
+- `exact_reproducer`:
+  `pnpm vitest run tests/browser/llmServiceContext.test.ts -t "preserves the pending ChatGPT payload operation separately"`.
+- `baseline_red`: the real adapter-to-`LlmService` fake-CDP sequence failed
+  twice in 51 ms and 48 ms because the timeout receipt retained
+  `provider:chatgpt.skipSameRouteNavigation` but had no `pendingOperation`.
+  All other expected receipt fields matched.
+- `ranked_hypothesis_disposition`:
+  1. confirmed blocking: scrape telemetry had no explicit pending-operation
+     state, so the outer receipt could only promote completed action/CDP
+     counters;
+  2. rejected: emitting a `.start` provider action would move `lastStage` but
+     still conflate completed and currently pending semantics;
+  3. rejected: CDP-only telemetry would report `Runtime.evaluate` and lose the
+     provider-owned payload boundary;
+  4. covered by the repair: outer abort may win before the underlying task
+     settles, so pending state remains until that task's own `finally`;
+  5. covered by the repair: token-owned entries prevent a settled operation
+     from clearing a newer operation or restoring an already-settled one.
+- `repair`: one generic scrape-telemetry pending-operation scope wraps the
+  initial ChatGPT payload read. Snapshot receipts now carry optional bounded
+  `pendingOperation` metadata while `lastStage` remains the last completed
+  marker. Token-owned entry tests prove nested and out-of-order settlement
+  semantics; no raw provider data is retained.
+- `exact_green`: the same reproducer passes in 42-46 ms and records
+  `lastStage=provider:chatgpt.skipSameRouteNavigation` plus
+  `pendingOperation=provider:chatgpt.readConversationPayload`.
+- `validation`: focused adapter/context/materialization tests pass 235/235;
+  the seven-file adjacent gate passes 390/390; TypeScript typecheck, production
+  build, full lint with 206 retained warnings, and zero-fix scoped Biome on the
+  six formatter-managed touched files pass; `[DEBUG-p0222]` marker scan is
+  empty; plan audit and diff hygiene pass at closeout.
+- `effect_accounting`: installs 0, restarts 0, provider/browser calls 0,
+  materialization starts 0, completion controls 0, scheduler controls 0,
+  browser clicks/navigations 0, prompts 0, `Answer now` clicks 0, guard bypasses
+  0, direct runtime JSON edits 0.
+- `next_action_or_stop_reason`: stop before effects. A fresh pass-46
+  `wsl-chrome-3` canary requires a separate frozen effect artifact and explicit
+  approval; scheduler and wider completion resume remain excluded.

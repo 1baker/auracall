@@ -51,6 +51,7 @@ export interface ConversationContextReadReceipt {
   elapsedMs: number;
   attemptCount: number;
   lastStage: string;
+  pendingOperation?: string | null;
   completedAt: string;
   errorCode: string | null;
 }

@@ -44707,3 +44707,22 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Effects remain zero by contract: no install, restart, browser/provider call,
   materialization, completion or scheduler control, manual navigation, prompt,
   click, or `Answer now`.
+
+## 2026-08-08 | Plan 0222 closes pending-operation observability provider-free
+
+- The exact real adapter-to-`LlmService` fake-CDP test failed twice in 51 ms
+  and 48 ms because the outer timeout receipt retained the last completed
+  `provider:chatgpt.skipSameRouteNavigation` marker but exposed no currently
+  pending operation.
+- A single generic telemetry scope now names
+  `provider:chatgpt.readConversationPayload` while that await is unsettled.
+  Token-owned entries preserve nesting and out-of-order settlement without a
+  late settle clearing newer state or restoring stale state; the receipt
+  remains bounded and contains no raw provider payload.
+- The exact test is green in 42-46 ms. Focused suites pass 235/235, the
+  seven-file adjacent gate passes 390/390, and typecheck, production build,
+  full lint with 206 retained warnings, scoped Biome, debug-marker scan, plan
+  audit, and diff hygiene pass.
+- No install, restart, provider/browser work, materialization, completion or
+  scheduler control, prompt, click, or direct runtime edit ran. A fresh
+  `wsl-chrome-3` canary remains a separately approved effect gate.

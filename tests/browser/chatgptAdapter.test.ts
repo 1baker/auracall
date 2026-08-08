@@ -80,7 +80,70 @@ import {
 import type { FileRef } from "../../src/browser/providers/domain.js";
 import { normalizeProjectMemoryMode } from "../../src/browser/providers/domain.js";
 import { createProviderSessionAuthority } from "../../src/browser/providers/providerSessionAuthority.js";
-import { createBrowserScrapeTelemetryRecorder } from "../../src/browser/providers/scrapeTelemetry.js";
+import {
+	createBrowserScrapeTelemetryRecorder,
+	withBrowserScrapePendingOperation,
+} from "../../src/browser/providers/scrapeTelemetry.js";
+
+describe("browser scrape pending-operation telemetry", () => {
+	test("restores the prior operation only after the nested operation settles", async () => {
+		const scrapeTelemetry = createBrowserScrapeTelemetryRecorder();
+		let releaseOuter: (() => void) | undefined;
+		const outer = withBrowserScrapePendingOperation(
+			{ scrapeTelemetry },
+			"provider:chatgpt.outer",
+			() =>
+				new Promise<void>((resolve) => {
+					releaseOuter = resolve;
+				}),
+		);
+		expect(scrapeTelemetry.pendingOperation).toBe("provider:chatgpt.outer");
+
+		await withBrowserScrapePendingOperation(
+			{ scrapeTelemetry },
+			"provider:chatgpt.inner",
+			async () => {
+				expect(scrapeTelemetry.pendingOperation).toBe("provider:chatgpt.inner");
+			},
+		);
+		expect(scrapeTelemetry.pendingOperation).toBe("provider:chatgpt.outer");
+
+		releaseOuter?.();
+		await outer;
+		expect(scrapeTelemetry.pendingOperation).toBeNull();
+	});
+
+	test("does not restore an earlier operation that settled before a newer operation", async () => {
+		const scrapeTelemetry = createBrowserScrapeTelemetryRecorder();
+		let releaseEarlier: (() => void) | undefined;
+		let releaseLater: (() => void) | undefined;
+		const earlier = withBrowserScrapePendingOperation(
+			{ scrapeTelemetry },
+			"provider:chatgpt.earlier",
+			() =>
+				new Promise<void>((resolve) => {
+					releaseEarlier = resolve;
+				}),
+		);
+		const later = withBrowserScrapePendingOperation(
+			{ scrapeTelemetry },
+			"provider:chatgpt.later",
+			() =>
+				new Promise<void>((resolve) => {
+					releaseLater = resolve;
+				}),
+		);
+		expect(scrapeTelemetry.pendingOperation).toBe("provider:chatgpt.later");
+
+		releaseEarlier?.();
+		await earlier;
+		expect(scrapeTelemetry.pendingOperation).toBe("provider:chatgpt.later");
+
+		releaseLater?.();
+		await later;
+		expect(scrapeTelemetry.pendingOperation).toBeNull();
+	});
+});
 
 describe("ChatGPT provider-session connection provenance", () => {
 	test("binds a disposable connection target before provider identity authorization", () => {

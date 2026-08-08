@@ -90,6 +90,7 @@ import {
 	recordBrowserScrapeDownloadSuccess,
 	recordBrowserScrapeNote,
 	recordBrowserScrapeProviderAction,
+	withBrowserScrapePendingOperation,
 } from "./scrapeTelemetry.js";
 import type {
 	BrowserProvider,
@@ -8566,11 +8567,10 @@ async function readChatgptConversationContextWithClient(
 				projectId,
 				options,
 			);
-			let payload = await readChatgptConversationPayloadWithClient(
-				client,
-				conversationId,
-				projectId,
+			let payload = await withBrowserScrapePendingOperation(
 				options,
+				"provider:chatgpt.readConversationPayload",
+				() => readChatgptConversationPayloadWithClient(client, conversationId, projectId, options),
 			).catch(() => null);
 			recordBrowserScrapeProviderAction(options, "chatgpt.waitPostPayloadReadiness");
 			await waitForPredicate(

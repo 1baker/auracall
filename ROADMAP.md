@@ -347,11 +347,15 @@ Lane: P01
   `44 -> 45` child failed `6/0/3/4`; four one-attempt contexts again timed out
   near 109 seconds after the same-route marker. Plan 0221 is fail-closed with
   no retry; scheduler and wider completions remain stopped.
-  Open provider-free pending-operation diagnosis:
+  Closed provider-free pending-operation observability diagnosis:
   [docs/dev/plans/0222-2026-08-08-chatgpt-post-navigation-pending-operation-observability.md](docs/dev/plans/0222-2026-08-08-chatgpt-post-navigation-pending-operation-observability.md).
-  It requires a fast red at the real adapter/receipt seam and may add at most
-  one proven observability/repair boundary. Installed runtime, browser/provider
-  work, completion controls, and scheduler controls remain excluded.
+  Its real adapter/receipt fake-CDP sequence is red twice because the receipt
+  can name only the last completed marker, then green after one bounded
+  telemetry seam separately records the pending payload operation. Focused
+  tests pass 235/235 and the adjacent gate passes 390/390 with typecheck,
+  build, touched lint, plan audit, and diff hygiene. Installed runtime,
+  browser/provider work, materialization, completion controls, and scheduler
+  controls remain excluded; a fresh canary requires a separate effect gate.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,

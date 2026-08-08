@@ -2604,6 +2604,7 @@ export abstract class LlmService {
 				elapsedMs: Math.max(0, Date.now() - startedAt),
 				attemptCount,
 				lastStage,
+				pendingOperation: telemetry.pendingOperation ?? null,
 				completedAt: new Date().toISOString(),
 				errorCode: readTerminalErrorCode(error),
 			};

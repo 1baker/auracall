@@ -20864,3 +20864,17 @@ browser-stage lifecycle observability, not transcript truncation.
 - Keep last-completed-action telemetry distinct from current-await causality.
   A successor should first promote or reproduce the transition immediately
   after the same-route marker before authorizing another live canary.
+
+## 2026-08-08 | Track pending operations separately from completed stages
+
+- A terminal timeout receipt that derives its stage only from completed action
+  and CDP counters cannot identify an unsettled provider operation. Adding a
+  `.start` action would merely rename `lastStage` and blur its semantics.
+- Keep a bounded `pendingOperation` alongside completed telemetry. Set it at
+  the provider-owned async boundary and retain token-owned entries while each
+  promise is unsettled. On settle, remove that exact entry and expose the
+  newest survivor so out-of-order completion cannot restore stale state.
+- Prove the behavior at the real adapter-to-receipt boundary with a never-
+  settling fake-CDP operation and an outer timeout. Also cover nested scopes so
+  a late `finally` cannot erase a newer operation. Never retain raw payload,
+  message, credential, or identity data in this field.
