@@ -295,9 +295,11 @@ Lane: P01
   gate passes `303/303`; F04 has no remaining evidence-backed blocker. Plan
   0216 is closed with no live effect. Prepared installed pass-43 canary gate:
   [docs/dev/plans/0217-2026-08-07-chatgpt-context-deadline-installed-pass-43-canary.md](docs/dev/plans/0217-2026-08-07-chatgpt-context-deadline-installed-pass-43-canary.md).
-  It freezes one install, one API restart, parity, one `wsl-chrome-3` pass
-  `42 -> 43`, and one fresh child behind separate explicit approval. Wider
-  completion and scheduler resume remain excluded.
+  The operator has now activated its unchanged packet: one install, one API
+  restart, parity, one `wsl-chrome-3` pass `42 -> 43`, and one fresh child.
+  Fresh preflight remains exactly stopped at passes `7/2/34/42`, scheduler
+  paused, and active jobs zero. Wider completion and scheduler resume remain
+  excluded.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,

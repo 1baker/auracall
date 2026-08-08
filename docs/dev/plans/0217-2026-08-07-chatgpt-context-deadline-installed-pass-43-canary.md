@@ -4,8 +4,8 @@ State: OPEN
 Lane: P01
 Plan version: 1
 Outcome: EXACT_CANARY_GATE_PREPARED
-Goal execution state: NOT_AUTHORIZED
-Gate state: LIVE_EFFECT_WITHHELD
+Goal execution state: ACTIVE
+Gate state: EXACT_PASS43_EFFECT_AUTHORIZED
 
 ## Stable Goal Objective
 
@@ -98,7 +98,7 @@ pass-43 canary. Do not resume any other completion or the scheduler.
 
 ## Acceptance Criteria
 
-- [ ] Separate explicit operator approval activates this exact effect packet.
+- [x] Separate explicit operator approval activates this exact effect packet.
 - [ ] One install and one restart produce source/installed adapter hash parity
   and a healthy API while the stopped scheduler/target posture stays frozen.
 - [ ] The exact pass-43 canary creates exactly one fresh child and both settle
@@ -135,3 +135,29 @@ pass-43 canary. Do not resume any other completion or the scheduler.
   completion controls 0, materialization starts 0, scheduler controls 0.
 - `next_action_or_stop_reason`: stop at the approval boundary. Execute nothing
   until the operator separately authorizes Plan 0217.
+
+## Checkpoint 2 | Exact Pass-43 Effect Authorized
+
+- `checkpoint_id`: `P0217-C02`
+- `state_transition`: PASS43_EFFECT_GATE_PREPARED_AWAITING_APPROVAL ->
+  EXACT_PASS43_EFFECT_AUTHORIZED.
+- `progress_classification`: authority_gain.
+- `authority_classification`: the operator activated Plan 0217 as the current
+  goal and then confirmed execution with `ok go`; authority is limited to the
+  unchanged frozen effect packet and its read-only monitoring.
+- `source_authority`: clean `main` at pushed commit `24efd6c9`, containing
+  repair commit `741d11b9`; rebuilt adapter SHA-256
+  `1ccee21f39a8f1343eab9b56be2da10c064d5744e70bb539d8fb826c2a7ed667`.
+- `runtime_readback`: installed adapter remains the intentionally prior hash
+  `11f31a2e804a1ca7ff8856d053a61ab37d017500feb8a6e2fe2913306264b978`;
+  API PID 17440 is active/running with zero restarts; scheduler is paused;
+  active history jobs are zero; default, `wsl-chrome-2`, `wsl-chrome-4`, and
+  `wsl-chrome-3` remain paused/pass 7, paused/pass 2, paused/pass 34, and
+  blocked/pass 42 respectively, all without a force ceiling.
+- `effect_accounting`: installs 0/1, restarts 0/1, provider/browser calls 0,
+  completion controls 0/1, fresh child jobs 0/1, scheduler controls 0.
+- `subagent_status`: not spawned; the operator did not request delegation and
+  the plan permits none.
+- `next_action_or_stop_reason`: commit and push this authority checkpoint, then
+  execute the frozen install/parity/restart/preflight/control sequence exactly
+  once, stopping fail-closed on the first mismatch.

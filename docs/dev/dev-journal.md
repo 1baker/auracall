@@ -44528,3 +44528,16 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   fresh `wsl-chrome-3` pass-43 child behind separate approval. No install,
   restart, provider/browser call, completion/materialization control, or
   scheduler control ran; stopped passes remain 7/2/34/42.
+
+## 2026-08-08 | Plan 0217 exact pass-43 packet authorized
+
+- Current focus: execute the unchanged one-install, one-restart, one-canary
+  packet and stop on its first hard-stop condition; wider completion and
+  scheduler resume remain outside authority.
+- Authorization preflight is clean at pushed commit `24efd6c9`. The rebuilt
+  source adapter is `1ccee21f...a7ed667` and the intentionally prior installed
+  adapter is `11f31a2e...978`.
+- Runtime posture remains API PID 17440/zero restarts, scheduler paused, active
+  history jobs zero, and target states paused/pass 7, paused/pass 2,
+  paused/pass 34, and blocked/pass 42. Effect accounting remains zero before
+  the authority commit.

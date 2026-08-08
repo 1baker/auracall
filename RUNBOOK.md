@@ -17055,3 +17055,19 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   one API restart, parity to built adapter hash `1ccee21f...a7ed667`, and one
   exact `wsl-chrome-3` pass 42 to 43 with one fresh child. No live effect ran;
   wider completions and scheduler remain withheld.
+
+## Turn 401 | 2026-08-08
+
+- The operator activated Plan 0217 and confirmed execution of its unchanged
+  frozen packet. Authority is exactly one user-runtime install, one API
+  restart, one `wsl-chrome-3` `run-one-pass`, and read-only monitoring of its
+  single fresh child; retries, other completion controls, and scheduler control
+  remain excluded.
+- Fresh preflight is clean and synchronized at pushed commit `24efd6c9`.
+  Rebuilt source adapter SHA-256 is `1ccee21f...a7ed667`; installed runtime
+  intentionally remains `11f31a2e...978` until the authorized install.
+- API PID 17440 is active/running with zero restarts. Default,
+  `wsl-chrome-2`, and `wsl-chrome-4` remain paused at passes 7, 2, and 34;
+  `wsl-chrome-3` remains blocked/pass 42 with no force ceiling. Scheduler is
+  paused and active history jobs are zero. No live effect has run at this
+  checkpoint.
