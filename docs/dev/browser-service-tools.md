@@ -69,6 +69,9 @@ Current active extraction plan:
 - `waitForPredicate(Runtime, expression, options)`
   - Generic polling primitive for truthy page predicates.
   - Returns attempts, elapsed time, and the last truthy value when a condition wins.
+  - Set `evaluationTimeoutMs` when one DevTools evaluation must be independently
+    interruptible. The helper then applies both a protocol execution timeout and
+    a transport-side deadline, capped by the remaining polling-loop budget.
   - Prefer this over ad hoc polling loops when the condition is not just a selector.
 
 - `armDownloadCapture(Runtime, options?)`

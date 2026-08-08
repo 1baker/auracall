@@ -1,5 +1,20 @@
 # RUNBOOK
 
+## Turn 409 | 2026-08-08
+
+- The corrected Plan 0220 fake-CDP sequence is red in 14 ms against the exact
+  eighth call: two recovery probes, four same-route settlement evaluations,
+  and one valid payload read complete before post-payload readiness remains
+  unsettled and the outer sentinel wins.
+- `waitForPredicate` now accepts an opt-in per-evaluation deadline that sets
+  the DevTools protocol timeout and an independent transport timer, capped by
+  the remaining loop budget. The ChatGPT post-payload wait opts into 10 seconds
+  and records `chatgpt.waitPostPayloadReadiness` before it begins.
+- The focused sequence is green in 9 ms and the browser-service primitive has
+  its own stalled-evaluation regression. Seven integrated files pass 387/387;
+  typecheck and production build pass. No installed/runtime/provider/control
+  effect ran.
+
 ## Turn 408 | 2026-08-08
 
 - Plan 0220 opens the provider-free successor to the failed pass-44 canary.

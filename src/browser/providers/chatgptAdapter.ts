@@ -8572,12 +8572,14 @@ async function readChatgptConversationContextWithClient(
 				projectId,
 				options,
 			).catch(() => null);
+			recordBrowserScrapeProviderAction(options, "chatgpt.waitPostPayloadReadiness");
 			await waitForPredicate(
 				client.Runtime,
 				buildConversationSurfaceReadyExpression(conversationId, projectId),
 				{
 					timeoutMs: 10_000,
-					description: `ChatGPT conversation ${conversationId} surface ready after payload sync`,
+					evaluationTimeoutMs: 10_000,
+					description: `ChatGPT conversation ${conversationId} post-payload readiness`,
 					interrupt: () =>
 						assertNoChatgptAccountMirrorHardStop(
 							client,
@@ -8718,6 +8720,9 @@ async function readChatgptConversationContextWithClient(
 		},
 	);
 }
+
+export const readChatgptConversationContextWithClientForTest =
+	readChatgptConversationContextWithClient;
 
 function applyChatgptConversationContextChunk(
 	context: ConversationContext,

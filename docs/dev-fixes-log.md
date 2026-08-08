@@ -20832,3 +20832,21 @@ browser-stage lifecycle observability, not transcript truncation.
   governed navigation returned without mutation; it still does not identify
   the later uninstrumented await. Any successor must instrument or reproduce
   the operations after that marker provider-free before another canary.
+
+## 2026-08-08 | Bound each predicate evaluation, not only its polling loop
+
+- Symptom: four installed ChatGPT context reads repeatedly exhausted the outer
+  deadline after `chatgpt.skipSameRouteNavigation`, even though the next
+  readiness polling loop declared a 10-second timeout.
+- Provider-free cause capability: after two recovery probes, four same-route
+  settlement evaluations, and a valid payload response, the next individual
+  `Runtime.evaluate` could remain unsettled forever. The polling loop could not
+  observe its own deadline while awaiting that call.
+- Fix: `waitForPredicate` accepts an opt-in per-evaluation deadline and applies
+  it to both the DevTools protocol request and an independent transport timer,
+  capped by the loop's remaining time. The ChatGPT post-payload readiness wait
+  opts into its existing 10-second budget and emits a named stage marker first.
+- Prevention: a polling-loop deadline is not an operation deadline. Any
+  provider wait whose CDP evaluation can block must bound the evaluation
+  itself, and live effectiveness remains unproved until the separately gated
+  installed canary succeeds.

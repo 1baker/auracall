@@ -510,6 +510,7 @@ export type WaitForPredicateOptions = {
   timeoutMs?: number;
   pollMs?: number;
   description?: string;
+  evaluationTimeoutMs?: number;
   interrupt?: () => Promise<void> | void;
   interruptPollMs?: number;
 };
@@ -921,10 +922,43 @@ export async function waitForPredicate(
   let lastInterruptAt = Number.NEGATIVE_INFINITY;
   while (Date.now() < deadline) {
     attempts += 1;
-    const { result } = await Runtime.evaluate({
+    const remainingMs = Math.max(1, deadline - Date.now());
+    const evaluationTimeoutMs = options.evaluationTimeoutMs
+      ? Math.max(1, Math.min(options.evaluationTimeoutMs, remainingMs))
+      : null;
+    const evaluation = Runtime.evaluate({
       expression,
       returnByValue: true,
+      ...(evaluationTimeoutMs ? { timeout: evaluationTimeoutMs } : {}),
     });
+    const { result } = evaluationTimeoutMs
+      ? await new Promise<Awaited<typeof evaluation>>((resolve, reject) => {
+          let settled = false;
+          const timer = setTimeout(() => {
+            if (settled) return;
+            settled = true;
+            reject(
+              new Error(
+                `Timed out waiting for ${options.description ?? 'predicate'} after ${evaluationTimeoutMs}ms.`,
+              ),
+            );
+          }, evaluationTimeoutMs);
+          evaluation.then(
+            (value) => {
+              if (settled) return;
+              settled = true;
+              clearTimeout(timer);
+              resolve(value);
+            },
+            (error: unknown) => {
+              if (settled) return;
+              settled = true;
+              clearTimeout(timer);
+              reject(error);
+            },
+          );
+        })
+      : await evaluation;
     lastValue = result?.value;
     if (result?.value) {
       return {

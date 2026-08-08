@@ -150,6 +150,38 @@ describe('browser-service ui wait helpers', () => {
     expect(result.elapsedMs).toBeGreaterThanOrEqual(0);
   });
 
+  test('terminates an unsettled predicate evaluation at its inner deadline', async () => {
+    vi.useFakeTimers();
+    try {
+      const runtime = {
+        evaluate: vi.fn(
+          (_request: { expression?: string; returnByValue?: boolean; timeout?: number }) =>
+            new Promise<never>(() => undefined),
+        ),
+      };
+      const pending = waitForPredicate(runtime as never, 'window.__ready', {
+        timeoutMs: 50,
+        evaluationTimeoutMs: 25,
+        description: 'bounded predicate',
+      });
+      const rejection = expect(pending).rejects.toThrow(
+        'Timed out waiting for bounded predicate after 25ms.',
+      );
+
+      await vi.advanceTimersByTimeAsync(25);
+      await rejection;
+
+      expect(runtime.evaluate).toHaveBeenCalledTimes(1);
+      expect(runtime.evaluate.mock.calls[0]?.[0]).toMatchObject({
+        expression: 'window.__ready',
+        returnByValue: true,
+        timeout: 25,
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   test('armDownloadCapture installs window-level capture hooks for the default state key', async () => {
     const runtime = createRuntime([true]);
 

@@ -3,7 +3,7 @@
 State: OPEN
 Lane: P01
 Plan version: 1
-Goal execution state: ACTIVE_PROVIDER_FREE_DIAGNOSIS
+Goal execution state: ACTIVE_PROVIDER_FREE_CLOSEOUT
 Future canary gate: WITHHELD_UNTIL_PROVIDER_FREE_REPAIR_GREEN
 
 ## Stable Goal Objective
@@ -106,11 +106,11 @@ only if every provider-free criterion is green.
 
 ## Acceptance Criteria
 
-- [ ] One deterministic, fast, agent-runnable provider-free command is red on
+- [x] One deterministic, fast, agent-runnable provider-free command is red on
   the exact post-marker stall boundary and records the precise stalled call.
-- [ ] Three to five ranked hypotheses and predictions are recorded before the
+- [x] Three to five ranked hypotheses and predictions are recorded before the
   source repair.
-- [ ] One proven seam is repaired and the exact red sequence becomes green
+- [x] One proven seam is repaired and the exact red sequence becomes green
   without weakening content, identity, guard, or outer-deadline rules.
 - [ ] Integrated provider-free validation, plan audit, and diff hygiene pass.
 - [ ] Runtime readback remains stopped and unchanged except for independently
@@ -148,3 +148,62 @@ only if every provider-free criterion is green.
 - `next_action_or_stop_reason`: commit and push this authority checkpoint, then
   build and run the exact provider-free red sequence before ranking hypotheses
   or modifying production behavior.
+
+## Checkpoint 2 | Exact Post-Payload Evaluation Reproduced Red
+
+- `checkpoint_id`: `P0220-C02`
+- `state_transition`: POST_NAVIGATION_PROVIDER_FREE_DIAGNOSIS_ACTIVE ->
+  POST_PAYLOAD_RED_PROVEN_NARROW_REPAIR_ACTIVE.
+- `progress_classification`: causal_evidence_gain.
+- `red_command`: `pnpm vitest run tests/browser/chatgptAdapter.test.ts -t
+  "interrupts a stalled post-payload readiness evaluation" --maxWorkers 1`.
+- `red_receipt`: failed deterministically in 14 ms with expected named inner
+  timeout but received `outer-stalled`. Fake CDP completed two blocking-surface
+  probes, four same-route settlement evaluations, and a valid bounded payload
+  response; its eighth call, the unconditional post-payload readiness
+  evaluation, remained unsettled.
+- `ranked_hypotheses`: H1 uninterruptible post-payload readiness evaluation;
+  H2 payload read; H3 message paging; H4 recovery/telemetry; H5 same-route
+  settlement. H1 predicts an inner 10-second failure when that exact
+  evaluation is bounded. H2 is contradicted by a completed valid payload; H3
+  is contradicted because message telemetry/evaluation is never reached; H4 is
+  contradicted by the completed recovery probe and inert telemetry; H5 is
+  contradicted by the no-mutation marker and completed settle predicates.
+- `proven_seam`: `readChatgptConversationContextWithClient` unconditionally
+  calls shared `waitForPredicate` after payload sync. The loop owns a deadline,
+  but an individual `Runtime.evaluate` can prevent the loop from observing it.
+- `repair_packet`: make the post-payload readiness evaluation itself
+  interruptible with the existing 10-second budget and emit a specific bounded
+  stage marker before it. Preserve the successful readiness requirement and
+  all later full-content reads.
+- `effect_accounting`: provider/browser calls 0, installs 0, restarts 0,
+  materialization starts 0, completion controls 0, scheduler controls 0.
+
+## Checkpoint 3 | Post-Payload Evaluation Bound Provider-Free
+
+- `checkpoint_id`: `P0220-C03`
+- `state_transition`: POST_PAYLOAD_RED_PROVEN_NARROW_REPAIR_ACTIVE ->
+  POST_PAYLOAD_PROVIDER_FREE_REPAIR_GREEN.
+- `progress_classification`: verified_repair_gain.
+- `repair`: browser-service `waitForPredicate` accepts an opt-in
+  `evaluationTimeoutMs`. Each opted-in CDP request carries a protocol timeout
+  and an independent transport timer, both capped by the polling loop's
+  remaining budget. Existing callers are unchanged unless they opt in.
+- `chatgpt_adoption`: the unconditional post-payload readiness wait uses its
+  existing 10000-ms budget as the evaluation deadline and records
+  `chatgpt.waitPostPayloadReadiness` before the call. Full readiness, message,
+  file, source, artifact, identity, guard, and outer-context semantics remain.
+- `focused_red_green`: corrected exact baseline failed in 14 ms with
+  `outer-stalled`; repaired source passes in 9 ms, the eighth CDP request has
+  `timeout=10000`, and the transport error names post-payload readiness.
+- `integrated_verification`: browser-service UI, ChatGPT adapter, tab lifecycle,
+  context, refresh, history-materialization, and completion suites pass
+  `387/387`; typecheck and production build pass.
+- `review_disposition_summary`: H1 is accepted as a provider-free reproduced
+  cause capability. It is not yet promoted to installed end-to-end cause;
+  prior canary evidence remains authoritative until a new gated canary settles.
+- `effect_accounting`: installs 0, restarts 0, provider/browser calls 0,
+  materialization starts 0, completion controls 0, scheduler controls 0.
+- `next_action_or_stop_reason`: finish lint, plan audit, diff hygiene, and
+  runtime readback; commit and push this repair before closing Plan 0220 or
+  preparing a fresh canary gate.

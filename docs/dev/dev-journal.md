@@ -44576,6 +44576,20 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   Plan 0219 permits no retry, repair, second install/restart, other completion
   control, or scheduler resume.
 
+## 2026-08-08 | Post-payload readiness evaluation is provider-free bounded
+
+- The minimized sequence now accounts for every preceding fake-CDP operation:
+  two recovery probes, four same-route settlement evaluations, and one valid
+  payload response complete before the exact eighth post-payload readiness
+  evaluation remains unsettled. Baseline fails in 14 ms with `outer-stalled`.
+- Browser-service `waitForPredicate` now has an opt-in evaluation deadline that
+  applies both protocol and transport bounds. ChatGPT uses the existing
+  10-second readiness budget and emits `chatgpt.waitPostPayloadReadiness` so a
+  future receipt identifies this boundary directly.
+- Focused red is green in 9 ms. Integrated browser-service, adapter,
+  retained-session, context, refresh, materialization, and completion suites
+  pass 387/387; typecheck and build pass. No live or installed effect ran.
+
 ## 2026-08-08 | Plan 0220 opens post-navigation provider-free diagnosis
 
 - Current focus: reproduce the first unobserved operation after

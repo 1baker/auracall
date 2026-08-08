@@ -52,6 +52,7 @@ import {
 	normalizeChatgptProjectId,
 	normalizeChatgptProjectSourceProbes,
 	normalizeChatgptVisibleImageArtifactProbes,
+	readChatgptConversationContextWithClientForTest,
 	readChatgptConversationPayloadWithClient,
 	readVisibleChatgptConversationFilesWithClientForTest,
 	readVisibleChatgptConversationMessagesWithClientForTest,
@@ -271,6 +272,75 @@ describe("ensureChatgptConversationSurfaceReadyForRead", () => {
 		expect(scrapeTelemetry.providerActions).toMatchObject({
 			"chatgpt.skipSameRouteNavigation": 1,
 		});
+	});
+
+	test("interrupts a stalled post-payload readiness evaluation", async () => {
+		vi.useFakeTimers();
+		try {
+			const conversationId = "same-route-post-payload-stall";
+			const url = `https://chatgpt.com/c/${conversationId}`;
+			const evaluate = vi.fn((_input: { expression?: string }) => {
+				const call = evaluate.mock.calls.length;
+				if (call <= 2) {
+					return Promise.resolve({ result: { value: [] } });
+				}
+				if (call === 3) {
+					return Promise.resolve({ result: { value: url } });
+				}
+				if (call <= 6) {
+					return Promise.resolve({ result: { value: true } });
+				}
+				if (call === 7) {
+					return Promise.resolve({
+						result: {
+							value: {
+								ok: true,
+								body: JSON.stringify({ mapping: {} }),
+							},
+						},
+					});
+				}
+				if (call === 8) {
+					return new Promise<never>(() => undefined);
+				}
+				return Promise.resolve({ result: { value: [] } });
+			});
+			const scrapeTelemetry = createBrowserScrapeTelemetryRecorder();
+			const outcome = Promise.race([
+				readChatgptConversationContextWithClientForTest(
+					{
+						// biome-ignore lint/style/useNamingConvention: CDP domain names are protocol-defined.
+						Page: { navigate: vi.fn() },
+						// biome-ignore lint/style/useNamingConvention: CDP domain names are protocol-defined.
+						Runtime: { evaluate },
+					} as never,
+					conversationId,
+					null,
+					undefined,
+					{ allowNavigation: true, scrapeTelemetry },
+				).then(
+					() => "completed",
+					(error: unknown) => (error instanceof Error ? error.message : String(error)),
+				),
+				new Promise<string>((resolve) => setTimeout(() => resolve("outer-stalled"), 10_001)),
+			]);
+
+			for (let index = 0; index < 20 && evaluate.mock.calls.length < 8; index += 1) {
+				await vi.advanceTimersByTimeAsync(0);
+			}
+			expect(evaluate).toHaveBeenCalledTimes(8);
+			await vi.advanceTimersByTimeAsync(10_001);
+			expect(await outcome).toBe(
+				`Timed out waiting for ChatGPT conversation ${conversationId} post-payload readiness after 10000ms.`,
+			);
+			expect(evaluate.mock.calls[7]?.[0]).toMatchObject({ timeout: 10_000 });
+			expect(scrapeTelemetry.providerActions).toMatchObject({
+				"chatgpt.skipSameRouteNavigation": 1,
+				"chatgpt.waitPostPayloadReadiness": 1,
+			});
+		} finally {
+			vi.useRealTimers();
+		}
 	});
 });
 
