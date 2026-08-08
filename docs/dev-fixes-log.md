@@ -20747,3 +20747,19 @@ browser-stage lifecycle observability, not transcript truncation.
   canary, add or recover source-grounded stage evidence and reproduce the
   remaining deadline provider-free; do not infer that the last repaired seam
   recurred from the outer timeout alone.
+
+## 2026-08-07 | Read retained context receipts before adding timeout instrumentation
+
+- The compact and full history-materialization projections can report only a
+  generic conversation-context timeout even when the provider cache already
+  retains a `ConversationContextReadReceipt` with elapsed time, attempt count,
+  last stage, and error code.
+- In the pass-42 failure, those receipts distinguish one timeout at
+  `cdp:Runtime.evaluate` from three later timeouts whose last recorded action
+  is `provider:chatgpt.skipSameRouteNavigation`. This is stronger routing
+  evidence than the aggregate failed count, but it still does not prove the
+  precise inner operation that failed.
+- Promote bounded receipts into full job evidence and reproduce the candidate
+  stage provider-free before changing it. Treat an unbounded payload
+  evaluation and non-awaited retained-session abort cleanup as hypotheses until
+  a red sequence proves causality.

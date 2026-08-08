@@ -16989,3 +16989,24 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   `wsl-chrome-4` paused/pass 34, scheduler paused, and active jobs zero. Plan
   0215 closes fail-closed; no retry, repair, wider completion, or scheduler
   control ran.
+
+## Turn 397 | 2026-08-07
+
+- Plan 0216 opens a ten-turn maximum iterative provider-free repair campaign;
+  this authority/evidence turn counts as turn one. Runtime/provider effects,
+  all completion controls, materialization starts, and scheduler controls are
+  excluded.
+- Retained context receipts sharpen the pass-42 failure: one conversation
+  succeeded in 16490 ms, one timed out in 116407 ms at
+  `cdp:Runtime.evaluate`, and three timed out near 116.4 seconds at
+  `provider:chatgpt.skipSameRouteNavigation`, all on attempt one.
+- CodeGraph identifies two evidence-backed candidates: the initial
+  authenticated payload `Runtime.evaluate` awaits an injected `fetch()` with
+  no protocol/transport/browser-side deadline, and abort cleanup is launched
+  without awaiting while retained provider-session connections can bypass
+  disposal. Neither is declared causal until a provider-free red reproducer
+  proves it.
+- The first packet promotes existing context-read receipts into full
+  history-materialization evidence. Later packets reproduce one success, one
+  hang, cleanup settlement, and next-conversation independence before any
+  targeted repair. A future pass-43 canary stays behind a separate effect gate.

@@ -44466,3 +44466,24 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   repair, later completion, or scheduler control; any successor must first
   isolate the repeated deadline provider-free and establish a fresh effect
   gate.
+
+## 2026-08-07 | Plan 0216 opens bounded live-follow repair iteration
+
+- Current focus: promote existing per-conversation receipts into full job
+  evidence, then provider-free reproduce the sequential timeout and cleanup
+  behavior before changing another browser seam.
+- Pass-42 retained receipts show one 16490-ms success, one 116407-ms timeout at
+  `cdp:Runtime.evaluate`, and three ~116.4-second timeouts at
+  `provider:chatgpt.skipSameRouteNavigation`, all on attempt one.
+- CodeGraph shows that the initial conversation-payload `Runtime.evaluate`
+  awaits an injected authenticated `fetch()` without its own deadline. It also
+  shows abort cleanup begins with `void` and retained provider-session
+  connections can bypass disposal. These are ranked candidates, not proven
+  causes.
+- Plan 0216 permits at most ten goal turns including this turn, three
+  evidence-backed provider-free repair iterations, and closed-world
+  verification. It excludes installs, restarts, provider/browser work,
+  completion/materialization controls, and scheduler controls.
+- Blocker: exact causality remains unproved until Packet A surfaces receipts in
+  the job result and Packet B fails deterministically against the current
+  sequential context lifecycle.

@@ -276,6 +276,16 @@ Lane: P01
   one successful refresh. The parent is blocked/pass 42 with its force ceiling
   cleared, no pass 43, active jobs zero, other completions unchanged, and the
   scheduler paused. Plan 0215 closes fail-closed with no retry or wider resume.
+  Active iterative provider-free live-follow repair successor:
+  [docs/dev/plans/0216-2026-08-07-live-follow-context-deadline-iteration.md](docs/dev/plans/0216-2026-08-07-live-follow-context-deadline-iteration.md).
+  It uses the retained per-conversation receipts to separate one successful
+  16490-ms read, one timeout at `cdp:Runtime.evaluate`, and three later
+  timeouts at `provider:chatgpt.skipSameRouteNavigation`. Across at most ten
+  goal turns including authority setup, it first promotes those receipts into
+  full job evidence, then provider-free reproduces and repairs only proven
+  unbounded payload/cleanup stages. Install, restart, provider/browser work,
+  completion controls, materialization starts, and scheduler controls remain
+  excluded; a pass-43 canary may only be prepared for a separate effect gate.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,
