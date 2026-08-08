@@ -1,5 +1,20 @@
 # RUNBOOK
 
+## Turn 413 | 2026-08-08
+
+- The operator approved a provider-free successor after Plan 0221 failed
+  closed. Plan 0222 opens one bounded packet to reproduce the exact receipt gap
+  after `provider:chatgpt.skipSameRouteNavigation` and make the pending
+  operation observable.
+- Current source updates `lastStage` only on provider-action or CDP telemetry.
+  `chatgpt.waitPostPayloadReadiness` is emitted only after the preceding
+  payload read settles, so the pass-45 receipt proves an unobserved gap but not
+  the currently blocked await.
+- The packet requires one fast deterministic red at the adapter/receipt seam,
+  three to five falsifiable hypotheses, and at most one proven repair seam. It
+  forbids install, restart, provider/browser work, materialization, completion
+  and scheduler controls, manual browser action, prompt, or `Answer now`.
+
 ## Turn 412 | 2026-08-08
 
 - The sole Plan 0221 install produced exact source/installed adapter parity at

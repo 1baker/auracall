@@ -44695,3 +44695,15 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   paused, wider passes remain `7/2/34`, active jobs are zero, and no retry,
   pass 46, other completion control, scheduler control, or manual browser
   action is authorized or performed.
+
+## 2026-08-08 | Plan 0222 opens pending-operation observability diagnosis
+
+- Current focus: reproduce provider-free why the outer context receipt remains
+  at `provider:chatgpt.skipSameRouteNavigation` and add bounded evidence for
+  the operation currently pending after that completed marker.
+- The accepted diagnostic seam spans adapter telemetry and the `LlmService`
+  timeout receipt. A valid red must exercise both; a shallow marker-count test
+  is insufficient.
+- Effects remain zero by contract: no install, restart, browser/provider call,
+  materialization, completion or scheduler control, manual navigation, prompt,
+  click, or `Answer now`.

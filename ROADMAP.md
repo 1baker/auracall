@@ -347,6 +347,11 @@ Lane: P01
   `44 -> 45` child failed `6/0/3/4`; four one-attempt contexts again timed out
   near 109 seconds after the same-route marker. Plan 0221 is fail-closed with
   no retry; scheduler and wider completions remain stopped.
+  Open provider-free pending-operation diagnosis:
+  [docs/dev/plans/0222-2026-08-08-chatgpt-post-navigation-pending-operation-observability.md](docs/dev/plans/0222-2026-08-08-chatgpt-post-navigation-pending-operation-observability.md).
+  It requires a fast red at the real adapter/receipt seam and may add at most
+  one proven observability/repair boundary. Installed runtime, browser/provider
+  work, completion controls, and scheduler controls remain excluded.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,
