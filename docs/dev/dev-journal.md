@@ -44419,3 +44419,17 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Provider and runtime effects remain excluded. The successor may only prepare
   a future exact `wsl-chrome-3` pass-42 canary; it may not install, restart,
   invoke the provider, control a completion, or control the scheduler.
+
+## 2026-08-07 | Message extraction is paged and interruptible
+
+- The red contract captured the exact old expression. The replacement reads
+  eight message nodes per CDP page with `textContent`, aggregates complete
+  ordered bodies and IDs, and applies a 10000-ms DevTools execution timeout plus
+  transport timeout to every page. Non-advancing cursors and more than 256 pages
+  throw instead of silently truncating.
+- Focused regressions prove two-page aggregation and interruption of a hanging
+  second page. Adapter `144/144`, adjacent context/materialization/completion
+  `195/195`, typecheck, touched Biome, build, plan audit, and diff check pass.
+- No install, restart, provider/browser call, completion control, or scheduler
+  control ran. The future pass-42 `wsl-chrome-3` canary is frozen behind a
+  separate install/effect gate.

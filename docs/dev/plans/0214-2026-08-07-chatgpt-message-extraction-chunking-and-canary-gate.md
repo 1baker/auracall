@@ -1,11 +1,11 @@
 # ChatGPT Message Extraction Chunking And Canary Gate | 0214-2026-08-07
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 1
-Outcome: ACTIVE_PROVIDER_FREE_REPAIR
-Goal execution state: ACTIVE_SUCCESSOR_PACKET
-Gate state: PROVIDER_FREE_ONLY
+Outcome: CANARY_PREPARED_AWAITING_INSTALL_GATE
+Goal execution state: AWAITING_RUNTIME_GATE
+Gate state: PREPARED_NOT_AUTHORIZED
 
 ## Stable Goal Objective
 
@@ -92,21 +92,21 @@ resume another completion, or resume the scheduler in this plan.
 
 ## Acceptance Criteria
 
-- [ ] A deterministic regression is red before repair and proves the final
+- [x] A deterministic regression is red before repair and proves the final
   reader pages message nodes, avoids `innerText`, preserves ordered full text
   and message IDs, and applies a timeout to every page.
-- [ ] Focused and adjacent tests, typecheck, touched lint, build, plan audit,
+- [x] Focused and adjacent tests, typecheck, touched lint, build, plan audit,
   and diff check pass provider-free.
-- [ ] Source/docs are committed and pushed with no install, restart, browser,
+- [x] Source/docs are committed and pushed with no install, restart, browser,
   provider, completion, or scheduler effect.
-- [ ] The exact pass-42 `wsl-chrome-3` canary request, preconditions, expected
+- [x] The exact pass-42 `wsl-chrome-3` canary request, preconditions, expected
   receipt, and hard stops are frozen for a later explicit effect gate.
-- [ ] Default, replacement `wsl-chrome-2`, `wsl-chrome-4`, and scheduler remain
+- [x] Default, replacement `wsl-chrome-2`, `wsl-chrome-4`, and scheduler remain
   paused; `wsl-chrome-3` remains blocked at pass 41; active jobs remain zero.
 
 ## Fresh Canary Gate
 
-State: NOT_READY_PROVIDER_FREE_REPAIR_PENDING
+State: PREPARED_AWAITING_SEPARATE_INSTALL_EFFECT_GATE
 
 - exact completion:
   `acctmirror_completion_fb93ed6c-c57b-40cd-b5dc-ba6322f75446`
@@ -149,3 +149,43 @@ State: NOT_READY_PROVIDER_FREE_REPAIR_PENDING
   receipts.
 - `next_action_or_stop_reason`: audit and push this authority boundary, then
   create the red provider-free regression before source repair.
+
+## Checkpoint 2 | Provider-Free Repair Green And Canary Frozen
+
+- `plan_version`: 1
+- `checkpoint_id`: `P0214-C02`
+- `state_transition`: ACTIVE_PROVIDER_FREE_REPAIR ->
+  CANARY_PREPARED_AWAITING_INSTALL_GATE.
+- `progress_classification`: blocker_reduction
+- `owned_changes`: `chatgptAdapter.ts`, its focused regression, Plan 0214, and
+  canonical roadmap/runbook/journal/fix evidence.
+- `evidence`: the focused source contract failed before repair on the embedded
+  all-message `innerText` expression. After repair, three focused message
+  reader tests pass: fixed-size page aggregation preserves ten ordered complete
+  bodies and IDs, every page carries DevTools and transport 10000-ms timeouts,
+  and a hanging second page rejects at offset 8. Full adapter passes 144/144;
+  adjacent context/materialization/completion passes 195/195; typecheck,
+  zero-warning touched Biome, production build, plan audit, and diff check pass.
+- `subagent_status`: `not_spawned`.
+- `remaining_criteria`: none inside provider-free scope. Installation, restart,
+  and the exact pass-42 canary require a separate effect gate.
+- `authority_classification`: completed provider-free successor; no runtime or
+  provider authority was inferred.
+- `review_disposition_summary`: hypothesis 1 is accepted. The reader now pages
+  eight nodes, uses `textContent`, preserves full ordered content, applies a
+  protocol execution timeout plus transport timeout to every page, rejects
+  non-advancing or over-256-page scans, and leaves the outer context deadline
+  unchanged. Hypothesis 2 is covered by removing layout work per page;
+  hypothesis 3 is rejected by the direct helper regression and exact stage
+  receipt.
+- `runtime_readback`: built source adapter SHA-256
+  `f9ae3a5b3c475d31a0748e011c81ed20194053e8bf69e16342c925ff1e47e34b`;
+  installed adapter intentionally remains Plan 0213 hash
+  `71d09b49c0857ee5f9116c24dbc514f4c1d25a098c47999be4c37f29413caef6`.
+  API PID 14919 is active with zero restarts. Default is paused/pass 7,
+  replacement `wsl-chrome-2` paused/pass 2, `wsl-chrome-4` paused/pass 34,
+  `wsl-chrome-3` blocked/pass 41 with no force ceiling, scheduler paused, and
+  active history jobs zero.
+- `next_action_or_stop_reason`: stop provider-free. The prepared canary is not
+  executable until a separate effect packet authorizes one install/restart,
+  proves installed hash parity, and revalidates every frozen precondition.

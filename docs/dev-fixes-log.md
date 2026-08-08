@@ -20719,3 +20719,17 @@ browser-stage lifecycle observability, not transcript truncation.
   or retry live follow automatically; preserve full-content semantics through
   chunked or otherwise interruptible extraction with its own regression and
   exact canary gate.
+
+## 2026-08-07 | Page message DOM reads and terminate each CDP evaluation
+
+- Reading all visible message `innerText` values in one `Runtime.evaluate`
+  combines forced layout, complete DOM traversal, and a large by-value response
+  into one uninterruptible unit. A JavaScript-side promise timeout alone does
+  not cancel that renderer work.
+- Read a fixed number of nodes per page with `textContent`, preserving full
+  ordered bodies and message IDs. Put both the DevTools protocol `timeout` and
+  a transport-side timeout on every page so Chrome can terminate execution and
+  the caller can stop waiting independently.
+- Treat cursor non-advancement and the page safety ceiling as errors. Never
+  return a silently truncated transcript, and keep the outer context deadline
+  plus identity and provider hard stops unchanged.

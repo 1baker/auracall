@@ -53,6 +53,7 @@ import {
 	normalizeChatgptVisibleImageArtifactProbes,
 	readChatgptConversationPayloadWithClient,
 	readVisibleChatgptConversationFilesWithClientForTest,
+	readVisibleChatgptConversationMessagesWithClientForTest,
 	recordChatgptTargetSessionForTest,
 	recoverVisibleChatgptBlockingSurfaceWithClientForTest,
 	resolveChatgptCanvasArtifactContentText,
@@ -2517,6 +2518,99 @@ describe("normalizeChatgptConversationLinkProbes", () => {
 });
 
 describe("normalizeChatgptConversationFileProbes", () => {
+	test("delegates message extraction to a non-layout paged reader", async () => {
+		const source = await fs.readFile(
+			path.resolve("src/browser/providers/chatgptAdapter.ts"),
+			"utf8",
+		);
+		const start = source.indexOf("async function readChatgptConversationContextWithClient(");
+		const end = source.indexOf("function applyChatgptConversationContextChunk(", start);
+		const contextReader = source.slice(start, end);
+
+		expect(start).toBeGreaterThanOrEqual(0);
+		expect(end).toBeGreaterThan(start);
+		expect(contextReader).toContain("readVisibleChatgptConversationMessagesWithClient(");
+		expect(contextReader).not.toContain("node.innerText");
+	});
+
+	test("pages and preserves complete ordered ChatGPT message bodies", async () => {
+		const firstPage = Array.from({ length: 8 }, (_, index) => ({
+			role: index % 2 === 0 ? "user" : "assistant",
+			text: `complete body ${index}`,
+			messageId: `message-${index}`,
+		}));
+		const secondPage = [
+			{ role: "user", text: "complete body 8", messageId: "message-8" },
+			{ role: "assistant", text: "complete body 9", messageId: "message-9" },
+		];
+		const requests: Array<{
+			expression?: string;
+			returnByValue?: boolean;
+			timeout?: number;
+		}> = [];
+		const evaluate = vi.fn(async (request: (typeof requests)[number]) => {
+			requests.push(request);
+			return requests.length === 1
+				? {
+						result: {
+							value: { messages: firstPage, nextOffset: 8, totalMessages: 10 },
+						},
+					}
+				: {
+						result: {
+							value: { messages: secondPage, nextOffset: null, totalMessages: 10 },
+						},
+					};
+		});
+
+		await expect(
+			readVisibleChatgptConversationMessagesWithClientForTest(
+				// biome-ignore lint/style/useNamingConvention: CDP domain names are protocol-defined.
+				{ Runtime: { evaluate } } as never,
+			),
+		).resolves.toEqual([...firstPage, ...secondPage]);
+		expect(evaluate).toHaveBeenCalledTimes(2);
+		expect(requests.map((request) => request.timeout)).toEqual([10_000, 10_000]);
+		expect(requests.map((request) => request.returnByValue)).toEqual([true, true]);
+		expect(requests[0]?.expression).toContain("const pageStart = 0;");
+		expect(requests[1]?.expression).toContain("const pageStart = 8;");
+		for (const request of requests) {
+			expect(request.expression).toContain("fallbackNodes.slice(pageStart, pageStart + pageSize)");
+			expect(request.expression).toContain("node.textContent");
+			expect(request.expression).not.toContain("node.innerText");
+		}
+	});
+
+	test("interrupts a stalled later message page", async () => {
+		vi.useFakeTimers();
+		try {
+			const evaluate = vi
+				.fn()
+				.mockResolvedValueOnce({
+					result: {
+						value: {
+							messages: [{ role: "user", text: "first page", messageId: "message-0" }],
+							nextOffset: 8,
+							totalMessages: 9,
+						},
+					},
+				})
+				.mockImplementationOnce(() => new Promise(() => undefined));
+			const pending = readVisibleChatgptConversationMessagesWithClientForTest(
+				// biome-ignore lint/style/useNamingConvention: CDP domain names are protocol-defined.
+				{ Runtime: { evaluate } } as never,
+			);
+			const rejection = expect(pending).rejects.toThrow(
+				"Timed out reading ChatGPT conversation messages page starting at 8 after 10000ms.",
+			);
+			await vi.advanceTimersByTimeAsync(10_000);
+			await rejection;
+			expect(evaluate).toHaveBeenCalledTimes(2);
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
 	test("collects the ready conversation file DOM only once", async () => {
 		let expression = "";
 		const evaluate = vi.fn(async (input: { expression?: string }) => {

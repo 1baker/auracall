@@ -16920,7 +16920,9 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
 
 - The operator explicitly authorized a bounded successor for chunked or
   interruptible ChatGPT message extraction, provider-free validation, and one
-  prepared `wsl-chrome-3` canary. Plan 0214 freezes that envelope and excludes
+  prepared `wsl-chrome-3` canary.
+  [Plan 0214](docs/dev/plans/0214-2026-08-07-chatgpt-message-extraction-chunking-and-canary-gate.md)
+  freezes that envelope and excludes
   install, restart, provider/browser work, all completion controls, and all
   scheduler controls.
 - The primary hypothesis is the single full-conversation `innerText` plus
@@ -16931,3 +16933,23 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   `acctmirror_completion_fb93ed6c-c57b-40cd-b5dc-ba6322f75446`, one
   `run-one-pass`, expected pass 41 to 42, exactly one child, scheduler paused,
   and all other intended completions paused.
+
+## Turn 394 | 2026-08-07
+
+- The exact regression was red against the all-message `innerText` expression.
+  The repaired helper now reads eight message nodes per page with
+  `textContent`, preserves complete ordered bodies and message IDs, and places
+  both a DevTools execution timeout and transport timeout around every page.
+  Non-advancing and over-256-page scans fail closed rather than truncate.
+- Three focused message-reader regressions pass, including a hanging second
+  page that terminates at offset 8. Full adapter passes 144/144; adjacent
+  context/materialization/completion suites pass 195/195; typecheck,
+  zero-warning touched Biome, production build, plan audit, and diff check pass.
+- Fresh readback preserves the gate: default paused/pass 7, replacement
+  `wsl-chrome-2` paused/pass 2, `wsl-chrome-4` paused/pass 34,
+  `wsl-chrome-3` blocked/pass 41 with no force ceiling, scheduler paused,
+  active jobs zero, and API PID 14919 unchanged with zero restarts.
+- Plan 0214 closes provider-free. The exact pass-42 canary is prepared but not
+  authorized to run. The installed adapter intentionally remains the Plan 0213
+  hash until a separate effect packet permits one install/restart and proves
+  parity before the single canary.

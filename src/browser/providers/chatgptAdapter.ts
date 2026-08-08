@@ -403,6 +403,9 @@ const CHATGPT_DOWNLOAD_CAPTURE_STATE_KEY = "__auracallChatgptDownloadCapture";
 const CHATGPT_ARTIFACT_CAPTURED_FETCH_TIMEOUT_MS = 20_000;
 const CHATGPT_ARTIFACT_BROWSER_DOWNLOAD_TIMEOUT_MS = 30_000;
 const CHATGPT_VISIBLE_FILES_READ_TIMEOUT_MS = 10_000;
+const CHATGPT_CONVERSATION_MESSAGES_PAGE_SIZE = 8;
+const CHATGPT_CONVERSATION_MESSAGES_PAGE_TIMEOUT_MS = 10_000;
+const CHATGPT_CONVERSATION_MESSAGES_MAX_PAGES = 256;
 const CHATGPT_RATE_LIMIT_RECOVERY_PAUSE_MS = 15_000;
 const CHATGPT_HOME_LOCATION = new URL(CHATGPT_HOME_URL);
 
@@ -8440,6 +8443,111 @@ async function readVisibleChatgptDeepResearchArtifactsFromTargets(
 	});
 }
 
+async function readVisibleChatgptConversationMessagesWithClient(
+	client: ChromeClient,
+	options?: BrowserProviderListOptions,
+): Promise<ChatgptConversationMessageProbe[]> {
+	recordBrowserScrapeProviderAction(options, "chatgpt.readConversationMessages");
+	const messages: ChatgptConversationMessageProbe[] = [];
+	let pageStart = 0;
+	for (let pageIndex = 0; pageIndex < CHATGPT_CONVERSATION_MESSAGES_MAX_PAGES; pageIndex += 1) {
+		recordBrowserScrapeCdpCall(options, "Runtime.evaluate");
+		const { result } = await withChatgptTimeout(
+			client.Runtime.evaluate({
+				expression: `(() => {
+          const normalize = (value) => String(value || '')
+            .replace(/\\r\\n/g, '\\n')
+            .replace(/\\r/g, '\\n')
+            .replace(/\\n{3,}/g, '\\n\\n')
+            .trim();
+          const roleNodes = Array.from(
+            document.querySelectorAll(
+              ${JSON.stringify(`${CHATGPT_CONVERSATION_TURN_SECTION_SELECTOR} ${CHATGPT_MESSAGE_AUTHOR_ROLE_SELECTOR}`)},
+            ),
+          ).filter((node) => !node.parentElement?.closest(${JSON.stringify(CHATGPT_MESSAGE_AUTHOR_ROLE_SELECTOR)}));
+          const fallbackNodes = roleNodes.length > 0
+            ? roleNodes
+            : Array.from(document.querySelectorAll(${JSON.stringify(CHATGPT_MESSAGE_AUTHOR_ROLE_SELECTOR)}))
+                .filter((node) => !node.parentElement?.closest(${JSON.stringify(CHATGPT_MESSAGE_AUTHOR_ROLE_SELECTOR)}));
+          const pageStart = ${pageStart};
+          const pageSize = ${CHATGPT_CONVERSATION_MESSAGES_PAGE_SIZE};
+          const pageNodes = fallbackNodes.slice(pageStart, pageStart + pageSize);
+          const messages = pageNodes
+            .map((node) => {
+              const role = String(node.getAttribute('data-message-author-role') || '').trim();
+              if (role !== 'user' && role !== 'assistant' && role !== 'system') return null;
+              // textContent avoids the forced layout work of innerText. Paging keeps
+              // both DOM traversal and by-value CDP serialization interruptible.
+              const text = normalize(node.textContent || '');
+              if (!text) return null;
+              const messageId = normalize(
+                node.getAttribute('data-message-id') ||
+                node.closest(${JSON.stringify(CHATGPT_CONVERSATION_TURN_SECTION_SELECTOR)})?.getAttribute('data-turn-id') ||
+                '',
+              );
+              return { role, text, messageId: messageId || null };
+            })
+            .filter(Boolean);
+          const observedThrough = pageStart + pageNodes.length;
+          return {
+            messages,
+            nextOffset: observedThrough < fallbackNodes.length ? observedThrough : null,
+            totalMessages: fallbackNodes.length,
+          };
+        })()`,
+				returnByValue: true,
+				timeout: CHATGPT_CONVERSATION_MESSAGES_PAGE_TIMEOUT_MS,
+			}),
+			CHATGPT_CONVERSATION_MESSAGES_PAGE_TIMEOUT_MS,
+			`Timed out reading ChatGPT conversation messages page starting at ${pageStart} after ${CHATGPT_CONVERSATION_MESSAGES_PAGE_TIMEOUT_MS}ms.`,
+		);
+		const value = result?.value as
+			| {
+					messages?: Array<{ role?: string; text?: string; messageId?: string | null }>;
+					nextOffset?: number | null;
+					totalMessages?: number;
+			  }
+			| undefined;
+		if (Array.isArray(value?.messages)) {
+			messages.push(
+				...value.messages
+					.filter((message): message is ChatgptConversationMessageProbe => {
+						return (
+							typeof message?.text === "string" &&
+							message.text.trim().length > 0 &&
+							(message.role === "user" || message.role === "assistant" || message.role === "system")
+						);
+					})
+					.map((message) => ({
+						role: message.role,
+						text: message.text,
+						messageId:
+							typeof message.messageId === "string" && message.messageId.trim()
+								? message.messageId.trim()
+								: undefined,
+					})),
+			);
+		}
+		if (value?.nextOffset === null) return messages;
+		if (
+			typeof value?.nextOffset !== "number" ||
+			!Number.isInteger(value.nextOffset) ||
+			value.nextOffset <= pageStart
+		) {
+			throw new Error(
+				`ChatGPT conversation message paging did not advance from offset ${pageStart}.`,
+			);
+		}
+		pageStart = value.nextOffset;
+	}
+	throw new Error(
+		`ChatGPT conversation message paging exceeded ${CHATGPT_CONVERSATION_MESSAGES_MAX_PAGES} pages.`,
+	);
+}
+
+export const readVisibleChatgptConversationMessagesWithClientForTest =
+	readVisibleChatgptConversationMessagesWithClient;
+
 async function readChatgptConversationContextWithClient(
 	client: ChromeClient,
 	conversationId: string,
@@ -8479,69 +8587,7 @@ async function readChatgptConversationContextWithClient(
 					interruptPollMs: 1_000,
 				},
 			);
-			const readMessages = async (): Promise<ChatgptConversationMessageProbe[]> => {
-				recordBrowserScrapeCdpCall(options, "Runtime.evaluate");
-				recordBrowserScrapeProviderAction(options, "chatgpt.readConversationMessages");
-				const { result } = await client.Runtime.evaluate({
-					expression: `(() => {
-          const normalize = (value) => String(value || '')
-            .replace(/\\r\\n/g, '\\n')
-            .replace(/\\r/g, '\\n')
-            .replace(/\\n{3,}/g, '\\n\\n')
-            .trim();
-          const roleNodes = Array.from(
-            document.querySelectorAll(
-              ${JSON.stringify(`${CHATGPT_CONVERSATION_TURN_SECTION_SELECTOR} ${CHATGPT_MESSAGE_AUTHOR_ROLE_SELECTOR}`)},
-            ),
-          ).filter((node) => !node.parentElement?.closest(${JSON.stringify(CHATGPT_MESSAGE_AUTHOR_ROLE_SELECTOR)}));
-          const fallbackNodes = roleNodes.length > 0
-            ? roleNodes
-            : Array.from(document.querySelectorAll(${JSON.stringify(CHATGPT_MESSAGE_AUTHOR_ROLE_SELECTOR)}))
-                .filter((node) => !node.parentElement?.closest(${JSON.stringify(CHATGPT_MESSAGE_AUTHOR_ROLE_SELECTOR)}));
-          const messages = fallbackNodes
-            .map((node) => {
-              const role = String(node.getAttribute('data-message-author-role') || '').trim();
-              if (role !== 'user' && role !== 'assistant' && role !== 'system') return null;
-              const text = normalize(node.innerText || node.textContent || '');
-              if (!text) return null;
-              const messageId = normalize(
-                node.getAttribute('data-message-id') ||
-                node.closest(${JSON.stringify(CHATGPT_CONVERSATION_TURN_SECTION_SELECTOR)})?.getAttribute('data-turn-id') ||
-                '',
-              );
-              return { role, text, messageId: messageId || null };
-            })
-            .filter(Boolean);
-          return { messages };
-        })()`,
-					returnByValue: true,
-				});
-				const value = result?.value as
-					| {
-							messages?: Array<{ role?: string; text?: string; messageId?: string | null }>;
-					  }
-					| undefined;
-				return Array.isArray(value?.messages)
-					? value.messages
-							.filter((message): message is ChatgptConversationMessageProbe => {
-								return (
-									typeof message?.text === "string" &&
-									message.text.trim().length > 0 &&
-									(message.role === "user" ||
-										message.role === "assistant" ||
-										message.role === "system")
-								);
-							})
-							.map((message) => ({
-								role: message.role,
-								text: message.text,
-								messageId:
-									typeof message.messageId === "string" && message.messageId.trim()
-										? message.messageId.trim()
-										: undefined,
-							}))
-					: [];
-			};
+			const readMessages = () => readVisibleChatgptConversationMessagesWithClient(client, options);
 
 			let messages = await readMessages();
 			if (messages.length === 0) {
