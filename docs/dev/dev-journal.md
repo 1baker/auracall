@@ -44541,3 +44541,19 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   history jobs zero, and target states paused/pass 7, paused/pass 2,
   paused/pass 34, and blocked/pass 42. Effect accounting remains zero before
   the authority commit.
+
+## 2026-08-08 | Plan 0217 pass-43 canary fails closed
+
+- The one install and restart produced exact adapter parity and healthy API PID
+  81696 with zero crash restarts. The stopped scheduler and wider completion
+  posture remained frozen before the canary.
+- The only control advanced `wsl-chrome-3` pass 42 to 43 and created only child
+  `hmj_91dddf3b7448457c8a82ccbe639cc958`. Identity matched, but terminal child
+  metrics were `6/0/3/4` conversations/materialized/skipped/failed.
+- Full retained receipts show one 14292-ms success at `complete`, followed by
+  four one-attempt context timeouts near 110 seconds at
+  `provider:chatgpt.skipSameRouteNavigation`. The parent is blocked/pass 43
+  with no force ceiling; scheduler remains paused, wider passes remain 7/2/34,
+  and active jobs are zero.
+- Current focus: durable fail-closed closeout only. Plan 0217 permits no retry,
+  repair, second install/restart, other completion control, or scheduler resume.

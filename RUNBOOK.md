@@ -17071,3 +17071,22 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   `wsl-chrome-3` remains blocked/pass 42 with no force ceiling. Scheduler is
   paused and active history jobs are zero. No live effect has run at this
   checkpoint.
+
+## Turn 402 | 2026-08-08
+
+- The sole install produced exact source/installed adapter parity at
+  `1ccee21f...a7ed667`; the sole restart produced API PID 81696,
+  active/running with zero crash restarts, without moving the stopped runtime.
+- The sole control advanced `wsl-chrome-3` pass 42 to 43 and created exactly
+  child `hmj_91dddf3b7448457c8a82ccbe639cc958`. Provider identity matched all
+  four dimensions and provider-guard exclusions were zero.
+- The child ran once and settled failed at conversations/materialized/skipped/
+  failed `6/0/3/4`. One context succeeded in 14292 ms; four later contexts
+  timed out once after 110057, 110065, 110091, and 110021 ms, all at
+  `provider:chatgpt.skipSameRouteNavigation` with
+  `conversation_context_timeout`.
+- The parent settled blocked/pass 43 with its force ceiling cleared and no pass
+  44. Default, `wsl-chrome-2`, and `wsl-chrome-4` remain paused at passes
+  7/2/34, scheduler remains paused, active jobs are zero, and API PID 81696 is
+  healthy. Plan 0217 closes fail-closed; no retry, second install/restart,
+  other completion control, or scheduler control ran.

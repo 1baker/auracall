@@ -1,11 +1,11 @@
 # ChatGPT Context Deadline Installed Pass-43 Canary | 0217-2026-08-07
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 1
-Outcome: EXACT_CANARY_GATE_PREPARED
-Goal execution state: ACTIVE
-Gate state: EXACT_PASS43_EFFECT_AUTHORIZED
+Outcome: STOPPED_FAIL_CLOSED_REPEATED_CONTEXT_TIMEOUTS
+Goal execution state: COMPLETE_FAIL_CLOSED
+Gate state: CONSUMED_FAILED_NO_RETRY
 
 ## Stable Goal Objective
 
@@ -30,6 +30,15 @@ pass-43 canary. Do not resume any other completion or the scheduler.
   replacement `wsl-chrome-2` paused/pass 2, `wsl-chrome-4` paused/pass 34,
   `wsl-chrome-3` blocked/pass 42 with no force ceiling, scheduler paused, and
   active history jobs zero.
+- The authorized install produced exact source/installed adapter parity at
+  `1ccee21f39a8f1343eab9b56be2da10c064d5744e70bb539d8fb826c2a7ed667`.
+  The one API restart produced PID 81696, active/running with zero crash
+  restarts, while the stopped scheduler and target posture stayed frozen.
+- The sole canary advanced pass 42 to 43 and created only child
+  `hmj_91dddf3b7448457c8a82ccbe639cc958`, but the child failed four of six
+  conversations after four one-attempt context timeouts. The parent is
+  blocked/pass 43 with its force ceiling cleared; the plan is closed with no
+  retry or wider resume.
 
 ## Authority And Scope
 
@@ -99,13 +108,13 @@ pass-43 canary. Do not resume any other completion or the scheduler.
 ## Acceptance Criteria
 
 - [x] Separate explicit operator approval activates this exact effect packet.
-- [ ] One install and one restart produce source/installed adapter hash parity
+- [x] One install and one restart produce source/installed adapter hash parity
   and a healthy API while the stopped scheduler/target posture stays frozen.
 - [ ] The exact pass-43 canary creates exactly one fresh child and both settle
   with clean-canary proof; no pass 44 occurs.
-- [ ] Default, replacement `wsl-chrome-2`, and `wsl-chrome-4` remain unchanged;
+- [x] Default, replacement `wsl-chrome-2`, and `wsl-chrome-4` remain unchanged;
   scheduler stays paused and active jobs return zero.
-- [ ] Exact receipts are recorded, audited, committed, and pushed without any
+- [x] Exact receipts are recorded, audited, committed, and pushed without any
   wider completion or scheduler resume.
 
 ## Hard Stops
@@ -161,3 +170,52 @@ pass-43 canary. Do not resume any other completion or the scheduler.
 - `next_action_or_stop_reason`: commit and push this authority checkpoint, then
   execute the frozen install/parity/restart/preflight/control sequence exactly
   once, stopping fail-closed on the first mismatch.
+
+## Checkpoint 3 | Pass-43 Canary Failed Closed
+
+- `checkpoint_id`: `P0217-C03`
+- `state_transition`: EXACT_PASS43_EFFECT_AUTHORIZED ->
+  STOPPED_FAIL_CLOSED_REPEATED_CONTEXT_TIMEOUTS.
+- `progress_classification`: no_progress_on_clean_canary; policy_success_on_hard_stop.
+- `installed_runtime`: the sole install completed at
+  `2026-08-08T13:28:05.536Z`; source and installed adapter SHA-256 both equal
+  `1ccee21f39a8f1343eab9b56be2da10c064d5744e70bb539d8fb826c2a7ed667`.
+- `service_restart`: the sole restart replaced API PID 17440 with PID 81696;
+  it remains active/running with `NRestarts=0`.
+- `canary_control`: the sole `run-one-pass` was accepted at
+  `2026-08-08T13:28:49.208Z`; parent pass advanced exactly `42 -> 43`, no
+  pass 44 occurred, and exactly one fresh child was created.
+- `child_terminal`: `hmj_91dddf3b7448457c8a82ccbe639cc958`
+  ran once from `2026-08-08T13:32:40.028Z` through
+  `2026-08-08T13:42:07.468Z` and failed. Conversations/materialized/skipped/
+  failed were `6/0/3/4`; eligible/selected candidates were `97/6`; provider
+  guard exclusions were zero.
+- `provider_identity`: verdict `match`; email, plan, structure, and
+  account-level dimensions all matched their expected fingerprints on the
+  managed `wsl-chrome-3` browser profile.
+- `context_receipts`: conversation
+  `6a5e4bf8-972c-83ea-ad2f-3ad57f2a153f` succeeded once in 14292 ms at stage
+  `complete`. Conversations `6a568ccb-3938-83ea-a635-02dde7634d3f`,
+  `6a563289-d5d8-83ea-9a2b-0e89e7078dff`,
+  `6a5245ad-7180-83ea-a3e4-7d2e81015af9`, and
+  `6a5245f5-0b10-83ea-b8fd-fa664bb743c5` each timed out on attempt one after
+  110057, 110065, 110091, and 110021 ms respectively. All four receipts end at
+  `provider:chatgpt.skipSameRouteNavigation` with
+  `errorCode=conversation_context_timeout`.
+- `parent_terminal`: blocked/pass 43 at `2026-08-08T13:42:13.164Z`, force
+  ceiling null, error `account_mirror_materialization_failed`; active history
+  jobs returned to zero.
+- `wider_state`: default paused/pass 7, `wsl-chrome-2` paused/pass 2, and
+  `wsl-chrome-4` paused/pass 34; scheduler state/posture remains paused. Adapter
+  parity remains exact and API PID 81696 remains healthy with zero crash
+  restarts.
+- `effect_accounting`: installs 1/1, restarts 1/1, completion controls 1/1,
+  fresh child jobs 1/1, child attempts 1/1, scheduler controls 0, other
+  completion controls 0, retries 0, browser clicks 0, browser navigations 0,
+  prompt submissions 0, `Answer now` clicks 0, guard bypass actions 0.
+- `review_disposition_summary`: the clean-canary acceptance criterion is
+  blocking and failed with exact retained evidence. No additional repair
+  hypothesis is admitted by this plan; any successor requires a new bounded
+  provider-free diagnosis and a fresh effect gate.
+- `next_action_or_stop_reason`: close and push this fail-closed receipt. Do not
+  retry, reinstall, restart, resume any completion, or resume the scheduler.

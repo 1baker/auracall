@@ -20788,3 +20788,18 @@ browser-stage lifecycle observability, not transcript truncation.
 - Retained provider sessions need explicit abort invalidation. Close through
   the retained session owner so its stored connection is cleared before any
   later selected conversation can reuse it.
+
+## 2026-08-08 | Payload and cleanup bounds do not resolve same-route context stalls
+
+- The installed payload-deadline and retained-session cleanup repair passed its
+  provider-free regressions, but the exact pass-43 canary still failed four
+  consecutive conversation contexts. Each promoted receipt ended near 110
+  seconds at `provider:chatgpt.skipSameRouteNavigation`, while the first
+  conversation completed normally and provider identity matched.
+- Do not treat a bounded candidate repair as end-to-end deadline proof. The
+  installed outer-context canary remains authoritative, and a repeated last
+  stage is routing evidence rather than proof of the precise inner blocking
+  operation.
+- Close the live gate fail-closed and preserve the stopped scheduler. Any
+  successor must reproduce the same-route stage provider-free and establish a
+  fresh one-canary gate; do not infer authority to retry or resume live follow.
