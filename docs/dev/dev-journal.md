@@ -44433,3 +44433,12 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - No install, restart, provider/browser call, completion control, or scheduler
   control ran. The future pass-42 `wsl-chrome-3` canary is frozen behind a
   separate install/effect gate.
+
+## 2026-08-07 | Pass-42 installed canary authorized
+
+- Plan 0215 owns exactly one install, one API restart, one parity check, and one
+  `wsl-chrome-3` pass-42 canary with a single child. It may monitor the exact
+  receipts but may not control another completion or the scheduler.
+- Preflight preserves the stopped posture and zero active jobs. Any install
+  mismatch, context/materialization failure, identity/guard/challenge issue,
+  pass 43, or second child closes the plan fail-closed without retry.

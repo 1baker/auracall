@@ -266,6 +266,12 @@ Lane: P01
   pass. Install, restart, provider work, completion controls, and scheduler
   controls did not run. The exact pass-42 `wsl-chrome-3` canary is frozen for a
   later explicit install/effect gate.
+  Active installed pass-42 canary successor:
+  [docs/dev/plans/0215-2026-08-07-chatgpt-message-reader-installed-pass-42-canary.md](docs/dev/plans/0215-2026-08-07-chatgpt-message-reader-installed-pass-42-canary.md).
+  It permits one user-runtime install, one API restart, exact installed hash
+  parity, and one frozen `wsl-chrome-3` `run-one-pass` expected to advance pass
+  41 to 42 and create exactly one child. All other completion controls and the
+  scheduler remain excluded regardless of canary outcome.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,

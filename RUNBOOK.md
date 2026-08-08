@@ -16953,3 +16953,19 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   authorized to run. The installed adapter intentionally remains the Plan 0213
   hash until a separate effect packet permits one install/restart and proves
   parity before the single canary.
+
+## Turn 395 | 2026-08-07
+
+- The operator authorized the exact Plan 0214 effect gate. Plan 0215 permits
+  one user-runtime install, one API restart, one source/installed adapter hash
+  parity check, and one existing `wsl-chrome-3` `run-one-pass`; no other
+  completion or scheduler control is allowed.
+- Fresh preflight remains frozen: source hash `11f31a...978`, installed hash
+  `71d09b...aef6`, API PID 14919 active with zero restarts, default paused/pass
+  7, replacement `wsl-chrome-2` paused/pass 2, `wsl-chrome-4` paused/pass 34,
+  `wsl-chrome-3` blocked/pass 41 with no force ceiling, scheduler paused, and
+  active jobs zero.
+- The canary must reach pass 42, create exactly one fresh child, match provider
+  identity, fail zero items, clear its force ceiling, and avoid pass 43. Any
+  timeout, failure, guard, challenge, identity mismatch, or fanout stops the
+  packet fail-closed.
