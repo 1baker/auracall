@@ -45134,3 +45134,18 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   wider-completion resume, guard control, prompt/click, direct runtime edit, or
   separate materialization start occurred. A successor must first own and
   validate downstream visible-download probe settlement provider-free.
+
+## 2026-08-09 | Plan 0235 opens exact download-artifact probe repair
+
+- Pass 50 moved the failure past payload settlement into
+  `provider:chatgpt.readVisibleDownloadArtifactProbes`. The probe awaits a raw,
+  unbounded `Runtime.evaluate` whose page function repeats full-conversation
+  artifact/layout collection up to 20 times.
+- Plan 0235 owns one exact red-to-green provider-free repair: export the real
+  probe seam, reproduce a never-settling evaluation, collect the already-ready
+  DOM once, add protocol and host deadlines plus pending-operation telemetry,
+  and run focused/adjacent validation.
+- The operator authorized the provider-free successor with `ok go`.
+  Installation, restart, browser/provider work, completion/materialization,
+  scheduler/guard control, direct runtime state, and wider resume remain
+  withheld behind a separate future gate.
