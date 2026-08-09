@@ -3980,7 +3980,7 @@ describe("history materialization service", () => {
 		).toBe(true);
 	});
 
-	it("skips an exact catalog artifact family already materialized in the archive", async () => {
+	it("skips exact catalog artifact and file families already materialized in the archive", async () => {
 		const homeDir = await fs.mkdtemp(
 			path.join(os.tmpdir(), "auracall-history-materialize-exact-archive-skip-"),
 		);
@@ -3988,7 +3988,7 @@ describe("history materialization service", () => {
 		const priorMaterializedPath = path.join(homeDir, "review.docx");
 		await fs.writeFile(priorMaterializedPath, "already readable");
 		let scheduled: (() => Promise<void>) | undefined;
-		const readItem = vi.fn(async () => ({
+		const readItem = vi.fn(async (request: { itemId: string }) => ({
 			object: "account_mirror_catalog_item" as const,
 			generatedAt: "2026-08-09T20:55:00.000Z",
 			provider: "chatgpt" as const,
@@ -3997,19 +3997,33 @@ describe("history materialization service", () => {
 			boundIdentityKey: "user@example.com",
 			status: "eligible" as const,
 			reason: "eligible" as const,
-			kind: "artifacts" as const,
-			itemId: "turn_1:download:sandbox:/mnt/data/review.docx",
-			item: {
-				id: "turn_1:download:sandbox:/mnt/data/review.docx",
-				title: "Download the editable review",
-				kind: "download" as const,
-				uri: "sandbox:/mnt/data/review.docx",
-				conversationId: "conv_exact_archive_backed",
-				metadata: {
-					conversationId: "conv_exact_archive_backed",
-					providerConversationUrl: "https://chatgpt.com/c/conv_exact_archive_backed",
-				},
-			},
+			kind: request.itemId === "file_exact_archive_backed" ? ("files" as const) : ("artifacts" as const),
+			itemId: request.itemId,
+			item:
+				request.itemId === "file_exact_archive_backed"
+					? {
+							id: "file_exact_archive_backed",
+							name: "review.txt",
+							conversationId: "conv_exact_archive_backed",
+							remoteUrl: "chatgpt://file/file_exact_archive_backed",
+							metadata: {
+								source: "conversation",
+								providerFileId: "file_exact_archive_backed",
+								conversationId: "conv_exact_archive_backed",
+								providerConversationUrl: "https://chatgpt.com/c/conv_exact_archive_backed",
+							},
+						}
+					: {
+							id: "turn_1:download:sandbox:/mnt/data/review.docx",
+							title: "Download the editable review",
+							kind: "download" as const,
+							uri: "sandbox:/mnt/data/review.docx",
+							conversationId: "conv_exact_archive_backed",
+							metadata: {
+								conversationId: "conv_exact_archive_backed",
+								providerConversationUrl: "https://chatgpt.com/c/conv_exact_archive_backed",
+							},
+						},
 		}));
 		const runArchiveService = {
 			listItems: vi.fn(async () => ({
@@ -4037,8 +4051,30 @@ describe("history materialization service", () => {
 						fileAvailable: true,
 						metadata: { artifactKind: "download" },
 					}),
+					buildArchiveItem({
+						id: "history-upload:exact-review",
+						kind: "upload",
+						source: "account_mirror",
+						status: "materialized",
+						provider: "chatgpt",
+						runtimeProfile: "wsl-chrome-3",
+						browserProfile: "wsl-chrome-3",
+						boundIdentityKey: "user@example.com",
+						providerConversationId: "conv_exact_archive_backed",
+						artifactId: "file_exact_archive_backed",
+						title: "review.txt",
+						fileName: "review.txt",
+						mimeType: "text/plain",
+						localPath: priorMaterializedPath,
+						checksumSha256: "already-readable",
+						fileAvailable: true,
+						metadata: { source: "conversation", providerFileId: "file_exact_archive_backed" },
+					}),
 				],
-				metrics: { total: 1, byKind: emptyArchiveKindCounts({ generated_artifact: 1 }) },
+				metrics: {
+					total: 2,
+					byKind: emptyArchiveKindCounts({ generated_artifact: 1, upload: 1 }),
+				},
 			})),
 		} as unknown as RunArchiveService;
 		const refreshConversationSnapshot = vi.fn();
@@ -4064,11 +4100,14 @@ describe("history materialization service", () => {
 			config: {},
 			catalogService: { readCatalog: vi.fn(), readItem },
 			runArchiveService,
-			generateId: () => "hmj_exact_archive_skip_1",
+			generateId: sequenceId(["hmj_exact_archive_skip_1", "hmj_exact_file_archive_skip_1"]),
 			now: sequenceNow([
 				"2026-08-09T20:55:00.000Z",
 				"2026-08-09T20:55:01.000Z",
 				"2026-08-09T20:55:02.000Z",
+				"2026-08-09T20:55:03.000Z",
+				"2026-08-09T20:55:04.000Z",
+				"2026-08-09T20:55:05.000Z",
 			]),
 			schedule: (work) => {
 				scheduled = work;
@@ -4094,6 +4133,33 @@ describe("history materialization service", () => {
 		expect(refreshConversationSnapshot).not.toHaveBeenCalled();
 		expect(materializeConversation).not.toHaveBeenCalled();
 		await expect(service.readJob("hmj_exact_archive_skip_1")).resolves.toMatchObject({
+			status: "skipped",
+			result: {
+				status: "skipped",
+				metrics: { conversations: 1, materialized: 0, skipped: 1, failed: 0 },
+			},
+		});
+
+		const artifactScheduled = scheduled;
+		await service.createJob({
+			catalogItemId: "file_exact_archive_backed",
+			provider: "chatgpt",
+			runtimeProfile: "wsl-chrome-3",
+			boundIdentityKey: "user@example.com",
+			catalogKind: "files",
+			assetKinds: ["files"],
+			maxItems: 1,
+			force: false,
+		});
+		if (!scheduled || scheduled === artifactScheduled) {
+			throw new Error("Expected exact file job to be scheduled.");
+		}
+		await scheduled();
+
+		expect(runArchiveService.listItems).toHaveBeenCalledTimes(2);
+		expect(refreshConversationSnapshot).not.toHaveBeenCalled();
+		expect(materializeConversation).not.toHaveBeenCalled();
+		await expect(service.readJob("hmj_exact_file_archive_skip_1")).resolves.toMatchObject({
 			status: "skipped",
 			result: {
 				status: "skipped",
