@@ -20920,3 +20920,16 @@ browser-stage lifecycle observability, not transcript truncation.
   negative output assertion before attaching to a live authenticated browser.
   If raw credentials reach output, hard-stop, close the exact browser, retain
   no values in artifacts, and require credential rotation before profile reuse.
+
+## 2026-08-08 | Keep request discovery and detail in one closed-world child boundary
+
+- Reducing only `network request <id>` is insufficient after a fresh reload:
+  discovering the new request ID with raw `network requests --json` can expose
+  the same headers before the safe detail reader starts.
+- Capture the filtered list internally, require exactly one exact-URL 2xx
+  candidate, and pass its request ID only in memory to one independently
+  bounded detail child. Public output should report candidate count and match
+  booleans, never the raw request ID, URL, headers, body, stderr, or child error.
+- Enforce both an outer deadline and a byte cap. Test the actual child-process
+  path with secret-bearing success, non-exiting, and oversize fixtures; mocked
+  classification tests alone do not prove process-level capture behavior.

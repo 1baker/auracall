@@ -1,16 +1,17 @@
 # Agent-Browser Network Metadata Redaction Harness | 0229-2026-08-08
 
-State: OPEN
+State: CLOSED
 Lane: P01
-Plan version: 1
-Gate state: AUTHORIZED_PROVIDER_FREE_REDACTING_PROBE_HARNESS
+Plan version: 2
+Gate state: COMPLETE_PROVIDER_FREE_REDACTION_GREEN_POST_ROTATION_PLAN_GATED
 Goal execution state: ACTIVE_TURN_2_OF_10
 
 ## Stable Goal Objective
 
 Build and validate a provider-free AuraCall diagnostic harness that can run one
-bounded agent-browser network-detail command, capture its raw result without
-forwarding child stdout or stderr, and emit only an allowlisted metadata result.
+bounded agent-browser exact-URL request-list selection followed by one network-
+detail command, capture both raw results without forwarding child stdout or
+stderr, and emit only an allowlisted metadata result.
 The harness must prove synthetic credentials, cookies, identities, query
 secrets, and response content cannot reach stdout, stderr, thrown errors, or a
 written artifact. Prepare—but do not execute—the separately gated post-rotation
@@ -40,10 +41,11 @@ response-body discrepancy continuation.
 - The child command boundary must capture stdout/stderr internally, impose a
   positive timeout and byte cap, parse JSON only after terminal settlement, and
   never interpolate raw output into errors or logs.
-- Output is closed-world and allowlisted: request-id match, expected-URL match,
-  response status, elapsed/retrieval outcome, body byte/character length,
-  JSON parse state, and mapping count. Raw URL, headers, cookies, bodies,
-  identity fields, and arbitrary child messages are forbidden.
+- Output is closed-world and allowlisted: exact candidate count, request-id
+  match, expected-URL match, response status, elapsed/retrieval outcome, body
+  byte/character length, JSON parse state, and mapping count. Raw request ID,
+  URL, headers, cookies, bodies, identity fields, and arbitrary child messages
+  are forbidden.
 - Synthetic fixtures must include authorization, cookie, identity, query-token,
   body-content, stderr, malformed-JSON, timeout, and oversize cases. Secret
   sentinel strings must be absent from every public result and error.
@@ -80,9 +82,10 @@ response-body discrepancy continuation.
    satisfy exact external-browser reuse plus content-free body metadata.
 3. Add the smallest real-seam deterministic test first. It must fail on the
    absence of the harness or on raw-output propagation using synthetic secrets.
-4. Implement one timeout/size-bounded child boundary and one pure closed-world
-   metadata reducer. Do not add provider-specific selectors or a second browser
-   ownership path.
+4. Implement one timeout/size-bounded child boundary, one pure exact-URL request
+   selector, and one pure closed-world detail reducer. The selected request ID
+   remains internal between child calls. Do not add provider-specific selectors
+   or a second browser ownership path.
 5. Prove success, child failure, malformed JSON, timeout, oversize, and nested
    secret fixtures. Scan captured test output and touched files for all sentinel
    values.
@@ -96,24 +99,25 @@ response-body discrepancy continuation.
 
 ## Acceptance Criteria
 
-- [ ] Authority artifact is audited, committed, and pushed before source edits.
-- [ ] One deterministic red-capable command reproduces the exact raw-output
+- [x] Authority artifact is audited, committed, and pushed before source edits.
+- [x] One deterministic red-capable command reproduces the exact raw-output
   leakage class using synthetic secret-bearing network JSON.
-- [ ] Public success and every terminal failure expose only the allowlisted
-  metadata/error vocabulary and no child output.
-- [ ] Headers, cookies, raw URL/query, identities, response content, stdout, and
+- [x] Public success and every terminal failure expose only the allowlisted
+  metadata/error vocabulary and no child output; exact request discovery never
+  returns the selected request ID.
+- [x] Headers, cookies, raw URL/query, identities, response content, stdout, and
   stderr sentinel values are absent from all public results and errors.
-- [ ] Timeout and size limits are independently tested at the child boundary.
-- [ ] Focused tests pass twice and proportional typecheck/build/lint/audit/diff
+- [x] Timeout and size limits are independently tested at the child boundary.
+- [x] Focused tests pass twice and proportional typecheck/build/lint/audit/diff
   validation is green.
-- [ ] Plan 0230 is prepared but no credential, browser, provider, runtime, or
+- [x] Plan 0230 is prepared but no credential, browser, provider, runtime, or
   scheduler effect occurs.
-- [ ] Final docs, checkpoint, commit, and push are complete.
+- [x] Final docs, checkpoint, commit, and push are complete.
 
 ## Local Goal Bounds
 
 - `max_source_seams: 2`; `max_new_scripts: 1`; `max_new_test_files: 1`;
-  `max_red_green_cycles: 2`; `max_focused_test_runs: 4`;
+  `max_red_green_cycles: 2`; `max_focused_test_runs: 6`;
   `max_service_contract_reads: 3`; `max_live_browser_launches: 0`;
   `max_agent_browser_attaches: 0`; `max_provider_requests: 0`;
   `max_installs: 0`; `max_api_restarts: 0`;
@@ -147,3 +151,59 @@ response-body discrepancy continuation.
   test ledger; H5 requires current no-launch contract proof before adoption.
 - `next_action_or_stop_reason`: audit, commit, and push this packet, then create
   and run the secret-bearing red-capable test before implementation.
+
+## Revision 2 | Fresh Request ID Discovery Added To The Safety Boundary
+
+- `revision_reason`: the post-rotation reload will create a fresh request ID;
+  reusing raw `network requests --json` outside the harness would repeat Plan
+  0228's header exposure before the safe detail command could run.
+- `scope_change`: the same script and source module now capture one exact-URL
+  request list, require exactly one 2xx candidate, keep its request ID internal,
+  and then run the existing bounded detail reduction.
+- `authority_change`: no live or runtime authority changes. Provider-free
+  focused-test capacity increases from four to six to cover the revised seam.
+- `progress_evidence`: the initial exact-envelope red exposed all synthetic
+  sentinels; the first reducer and real child timeout/output-cap tests pass
+  eight of eight before this revision.
+
+## Checkpoint 2 | Closed-World Discovery And Detail Harness Green
+
+- `checkpoint_id`: `P0229-C02`.
+- `state_transition`: P0229_AUTHORIZED_PROVIDER_FREE_REDACTING_PROBE_HARNESS ->
+  P0229_COMPLETE_PROVIDER_FREE_REDACTION_GREEN_POST_ROTATION_PLAN_GATED.
+- `progress_classification`: blocker_reduction.
+- `implementation`: one reusable module captures child stdout/stderr without
+  forwarding them, applies independent discovery/detail deadlines and an 8 MiB
+  default cap, selects exactly one exact-URL 2xx request internally, then emits
+  only candidate count, match booleans, status, elapsed time, and body-shape
+  metadata. One thin script exposes that contract for the later live packet.
+- `red_evidence`: the first focused run failed 1/1 because the received public
+  object contained every synthetic authorization, cookie, identity, query, and
+  body field from the real agent-browser envelope shape.
+- `green_evidence`: the final focused suite passes 10/10 after formatting. It
+  covers secret-bearing list/detail success, malformed and command-failure
+  envelopes, non-JSON and base64 body summaries, internal exact selection,
+  zero/ambiguous candidates, ignored stderr, injected timeout/output-cap/child
+  failures, and real child-process success/timeout/output-cap behavior.
+- `validation`: typecheck; production TypeScript/operator UI build; separately
+  read-back console UI build and vendor build; scoped Biome; plan audit
+  `230/230` with zero errors; diff hygiene; credential-pattern and debug-marker
+  scans all pass.
+- `artifact_hashes`: module
+  `43889bdca5c7d1b79ca62d28b8d688fa25b4a15e506ab74dc5c8cc0715f8c52e`;
+  script `680c4a261f0ebf39e7f432ce7a2bf2c0c96b0fd74677e50a10e9920a6e860d93`;
+  test `65e092d8555d37f957400a2c0d0600a72c206e92063b4e16bc5453a12bfba4d7`.
+- `agent_browser_contract`: installed 0.28.0 direct request detail contains raw
+  tracked headers and response body and awaits `Network.getResponseBody`
+  without an independent deadline. Its service capture cannot provide
+  content-free mapping metadata for this exact attached external browser, so
+  H5 is rejected for this slice.
+- `runtime_boundary`: no credential/profile write, browser launch/attach,
+  provider request, install/restart, materialization, completion/scheduler
+  control, or canary occurred. The stopped Plan 0228 boundary is preserved.
+- `subagent_status`: not_spawned; `max_subagents=0`.
+- `review_disposition_summary`: H1-H4 accepted and covered; H5 rejected on the
+  current contract. No unresolved provider-free blocking finding remains.
+- `next_action_or_stop_reason`: Plan 0230 is `PLANNED` behind credential
+  rotation, exact-profile reauthentication, fresh live approval, and a
+  committed `OPEN` transition. Stop before all browser/provider effects.

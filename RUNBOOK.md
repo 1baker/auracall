@@ -1,5 +1,24 @@
 # RUNBOOK
 
+## Turn 425 | 2026-08-08
+
+- Plan 0229's initial real-envelope test failed 1/1 because every synthetic
+  authorization, cookie, identity, query, and body field survived naive public
+  JSON output. The closed-world implementation now captures request-list and
+  request-detail child output internally, selects exactly one exact-URL 2xx
+  candidate, keeps its request ID internal, and emits only bounded metadata.
+- The final focused suite passes 10/10, including real child success, deadline,
+  and output-cap cases. Typecheck, production/operator build, console build,
+  vendor build, scoped Biome, plan audit `230/230`/zero errors, diff hygiene,
+  credential-pattern scan, and debug-marker scan pass.
+- Installed agent-browser 0.28.0 direct request detail still contains raw
+  headers/body and an independently unbounded `Network.getResponseBody`; raw
+  request commands remain prohibited for authenticated diagnostics.
+- Plan 0230 is prepared but remains `PLANNED` until credential rotation,
+  exact-profile reauthentication, fresh live approval, and a committed `OPEN`
+  transition. No browser/provider, install/restart, materialization,
+  completion/scheduler, or canary effect occurred.
+
 ## Turn 424 | 2026-08-08
 
 - Plan 0229 opens the provider-free prerequisite for continuing the response-

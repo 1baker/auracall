@@ -18,6 +18,41 @@ When targeting managed Aura-Call sessions through that wrapper, prefer
 same AuraCall runtime profile and managed browser profile that the real product
 path would use.
 
+## Metadata-only agent-browser network detail
+
+Do not print `agent-browser --json network requests` or
+`agent-browser --json network request <id>` from an authenticated browser.
+Those direct JSON contracts can contain complete request/response headers,
+cookies, URLs, identities, and response bodies.
+
+For an already attached named agent-browser session whose request tracking has
+already been cleared and whose page has already reloaded, use the provider-free
+validated reducer instead:
+
+```bash
+pnpm tsx scripts/browser-service/agent-browser-network-metadata.ts \
+  --session <named-session> \
+  --cdp <exact-live-port> \
+  --expected-url 'https://chatgpt.com/backend-api/conversation/<conversation-id>' \
+  --discovery-timeout-ms 5000 \
+  --timeout-ms 15000 \
+  --max-output-bytes 8388608
+```
+
+The helper captures one filtered request list internally, requires exactly one
+exact-URL 2xx candidate, keeps its request ID internal, then captures one full
+request-detail command under an independent deadline and output cap. Its public
+JSON is closed-world: outcome, exact candidate count, request-ID/URL match
+booleans, status, elapsed time, body presence/character length, JSON parse
+state, and mapping count. It never emits the selected request ID, URL, headers,
+cookies, body, stderr, or child error text.
+
+The helper does not launch, attach, navigate, reload, close, or repair a
+browser. Those effects require their own exact-profile gate and cleanup. A
+`timeout` can leave the agent-browser daemon awaiting its internal CDP command;
+the governing live plan must close the named session and exact browser process
+without retrying the detail read.
+
 `auracall features --target <provider> --json` is now the operator-facing
 consumer of this browser-service evidence for live provider feature discovery.
 `auracall features snapshot|diff ...` now layers anti-drift workflows on top of

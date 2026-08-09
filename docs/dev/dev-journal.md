@@ -44916,3 +44916,15 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   the service contract is insufficient.
 - Live effects remain zero. The affected `wsl-chrome-3` ChatGPT session remains
   unusable until credential rotation, and no Plan 0230 probe is authorized yet.
+
+## 2026-08-08 | Plan 0229 closes green; Plan 0230 remains externally gated
+
+- The exact-envelope red failed 1/1 by exposing all synthetic sensitive fields.
+  The final harness captures exact request discovery and detail internally,
+  keeps the selected request ID private, and returns only closed-world metadata.
+- Final focused tests pass 10/10 with real child-process success, timeout, and
+  output-cap coverage. Typecheck, all production build components, scoped
+  Biome, plan audit, diff hygiene, and sensitive/debug scans pass.
+- Plan 0230 is prepared for one post-rotation exact-profile discrepancy probe,
+  but is not live authority. Rotation, reauthentication, fresh approval, and a
+  committed `OPEN` transition remain mandatory before launch.
