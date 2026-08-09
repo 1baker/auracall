@@ -372,6 +372,10 @@ Lane: P01
   and one raw-content-free milestone probe against one repeatedly failing
   payload. It excludes conversation navigation, reload, materialization,
   completion/scheduler controls, install, restart, and retry.
+  Plan 0224 stopped before attachment when the exact browser selected live port
+  45044 instead of configured port 45015. Zero-additional-launch successor
+  [docs/dev/plans/0225-2026-08-08-chatgpt-payload-live-port-agent-browser-continuation.md](docs/dev/plans/0225-2026-08-08-chatgpt-payload-live-port-agent-browser-continuation.md)
+  binds the already-launched PID/port while preserving the one-payload bound.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,

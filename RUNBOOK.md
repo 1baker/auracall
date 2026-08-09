@@ -15,6 +15,11 @@
   work and active history jobs zero; wider ChatGPT passes `7/2/34`; target
   blocked/pass 48 with no force ceiling; ChatGPT guards clear. The plan must be
   audited, committed, and pushed before the sole launch.
+- The pushed Plan 0224 launch created exact-profile Chrome PID 81735, but stale
+  DevTools cleanup caused Chrome to select live port 45044 instead of configured
+  port 45015. No agent-browser attachment or payload GET ran. Plan 0224 stops at
+  that binding mismatch; Plan 0225 preserves the same browser and authorizes no
+  second launch or navigation before binding agent-browser to actual port 45044.
 
 ## Turn 418 | 2026-08-08
 

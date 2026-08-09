@@ -1,10 +1,10 @@
 # ChatGPT Payload Direct Agent-Browser Diagnostic | 0224-2026-08-08
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 1
-Gate state: AUTHORIZED_BOUNDED_DIRECT_BROWSER_DIAGNOSTIC
-Goal execution state: ACTIVE_BOUNDED_PACKET
+Gate state: HARD_STOP_PORT_DRIFT_SUCCESSOR_PREPARED
+Goal execution state: SUPERSEDED_BY_PLAN_0225
 
 ## Stable Goal Objective
 
@@ -107,8 +107,8 @@ materialization stop boundaries.
 
 ## Acceptance Criteria
 
-- [ ] Authority artifact is audited, committed, and pushed before effects.
-- [ ] Exactly one exact-profile browser launch and no unrelated browser effect
+- [x] Authority artifact is audited, committed, and pushed before effects.
+- [x] Exactly one exact-profile browser launch and no unrelated browser effect
   occurs.
 - [ ] Agent-browser attaches only to CDP 45015 and proves a healthy ChatGPT
   surface before the payload probe.
@@ -164,3 +164,29 @@ materialization stop boundaries.
   resolved through AuraCall-owned launch plus agent-browser CDP attachment.
 - `next_action_or_stop_reason`: audit, commit, and push this gate, then re-run
   stopped-state preflight before the sole launch.
+
+## Checkpoint 2 | Exact Profile Launched; Configured Port Drift Hard Stop
+
+- `checkpoint_id`: `P0224-C02`.
+- `state_transition`: P0224_AUTHORIZED_DIRECT_DIAGNOSTIC_PREPARED ->
+  P0224_HARD_STOP_PORT_DRIFT_SUCCESSOR_PREPARED.
+- `progress_classification`: blocker_reduction.
+- `launch_evidence`: AuraCall `browser-tools` launched exactly PID 81735 with
+  `/opt/google/chrome/chrome`, profile directory `Default`, and exact
+  `~/.auracall/browser-profiles/wsl-chrome-3/chatgpt` user-data directory. It
+  cleared stale DevTools state and selected live port 45044 rather than the
+  configured 45015.
+- `target_evidence`: DevTools 45044 is responsive and exposes exactly the
+  expected ChatGPT root page with target
+  `D810D7C32A8C7F80ED8556F3A6F87F04`, URL `https://chatgpt.com/`, and title
+  `ChatGPT`.
+- `effect_accounting`: browser launches 1/1, initial navigations 1/1, payload
+  GETs 0/1, agent-browser attaches 0/1, marker reads 0/2, browser closes 0/1;
+  all excluded effects zero.
+- `subagent_status`: not_spawned; `max_subagents=0`.
+- `review_disposition_summary`: port 45015 attachment is rejected because the
+  exact live browser selected port 45044. Closing and relaunching would consume
+  an unauthorized retry and add churn.
+- `next_action_or_stop_reason`: preserve the exact already-launched browser and
+  use zero-additional-launch Plan 0225 to bind the live PID/port before any
+  agent-browser attachment or payload GET.

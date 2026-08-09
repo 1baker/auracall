@@ -44809,3 +44809,15 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   queued/running and active history work zero, wider passes `7/2/34`, target
   blocked/pass 48 with force ceiling null, and ChatGPT guards clear. Effects
   remain zero pending plan audit/commit/push.
+
+## 2026-08-08 | Plan 0224 port drift stops before payload; Plan 0225 prepared
+
+- Pushed Plan 0224 launched exact AuraCall profile PID 81735 once. Chrome
+  cleared stale DevTools files and selected port 45044 rather than configured
+  port 45015; no agent-browser attachment or payload GET occurred.
+- DevTools 45044 is responsive and exposes the expected ChatGPT root target.
+  Closing/relaunching would add churn and violate the one-launch bound, so Plan
+  0224 closes at the port-binding hard stop.
+- Plan 0225 carries the unchanged diagnostic onto the current PID/port with
+  zero additional launch/navigation authority and the same one-payload,
+  raw-content-free, stop-after-one boundary.
