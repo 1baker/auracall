@@ -26,7 +26,8 @@ work.
 - Plan 0231 reproduced that boundary with a real provider-free child, added
   daemon-worker `--job-timeout-ms` values inside positive acquisition/transport
   envelopes, and made the terminal stage public without widening the redaction
-  surface. Focused validation is green at 13/13.
+  surface. Focused validation is green at 13/13; its closeout is pushed at
+  `c05edde8`.
 - The prior exact browser/session is closed. At Plan 0230 closeout, API PID
   32737 was healthy with zero restarts; target completion
   `acctmirror_completion_fb93ed6c-c57b-40cd-b5dc-ba6322f75446` remained
@@ -37,8 +38,8 @@ work.
 
 ## External Gates
 
-1. Plan 0231 is closed, audited, committed, and pushed with a clean/synchronized
-   worktree and exact focused validation: pending final closeout commit.
+1. Plan 0231 is closed, audited, committed, and pushed with exact focused
+   validation: satisfied by `c05edde8` on 2026-08-09.
 2. The operator gives fresh approval to consume exactly this one live browser
    canary after reviewing this frozen packet: not satisfied.
 3. Current readback proves healthy API, target blocked/pass 49/force null,
@@ -141,5 +142,5 @@ No browser or provider action is allowed while any gate remains unmet.
 - `evidence`: Plan 0230 exact live discrepancy and cleanup; Plan 0231 real-child
   red plus 13/13 green layered-deadline/redaction suite.
 - `subagent_status`: not_spawned; `max_subagents=0`.
-- `next_action_or_stop_reason`: stop. After Plan 0231 closeout is pushed, wait
-  for fresh operator approval, then reread all runtime gates before launch.
+- `next_action_or_stop_reason`: stop. Wait for fresh operator approval, then
+  reread all runtime gates before launch.
