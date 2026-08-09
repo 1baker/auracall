@@ -45217,3 +45217,17 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   remains healthy; scheduler is paused/idle; wider ChatGPT passes remain paused
   at `7/2/34`; guard is null. No retry, pass 52, second child, scheduler/wider
   resume, or separate materialization occurred.
+## 2026-08-09 | Plan 0237 opens exact-asset selection and one direct canary
+
+- Plan 0236's zero-failure skip proves the repaired context/probe path settles,
+  but it did not identify or download an asset. The operator authorized one
+  bounded successor with `ok go`.
+- Plan 0237 first reuses the real history-materialization selector with an
+  in-memory job store, `maxItems=1`, and every provider callback disabled. A
+  second exact catalog-item simulation must bind the same asset before any
+  live effect.
+- If and only if closed-world cache/archive/job/filesystem evidence proves the
+  frozen asset non-local and nonterminal, the packet permits one direct
+  `wsl-chrome-3` job and one attempt. Installs, restarts, scheduler controls,
+  completion controls, guard controls, snapshot refresh, retries, prompts,
+  clicks, second jobs, and wider materialization remain excluded.
