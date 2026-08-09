@@ -1,5 +1,21 @@
 # RUNBOOK
 
+## Turn 419 | 2026-08-08
+
+- The operator directed plan and execution of the proposed bounded direct
+  agent-browser payload diagnostic. Plan 0224 permits one exact-profile launch,
+  one attachment to port 45015, and one raw-content-free payload milestone
+  probe; all materialization and scheduler/completion controls remain excluded.
+- Preflight found agent-browser's named `wsl-chrome-3` directory is not the
+  AuraCall managed profile. The diagnostic therefore requires AuraCall
+  `browser-tools` to launch `~/.auracall/browser-profiles/wsl-chrome-3/chatgpt`
+  and agent-browser to attach to that exact CDP endpoint. No browser effect has
+  run yet.
+- API PID 95638 is healthy with zero restarts; scheduler paused; queued/running
+  work and active history jobs zero; wider ChatGPT passes `7/2/34`; target
+  blocked/pass 48 with no force ceiling; ChatGPT guards clear. The plan must be
+  audited, committed, and pushed before the sole launch.
+
 ## Turn 418 | 2026-08-08
 
 - Canary attempt 3 honored pacing, advanced pass `47 -> 48`, and created

@@ -44795,3 +44795,17 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   scheduler is paused; active jobs and queued/running work are zero; wider
   passes remain `7/2/34`; target is blocked/pass 48 with force ceiling null;
   guards are clear. Plan 0223 closes attempts-exhausted fail-closed.
+
+## 2026-08-08 | Plan 0224 opens exact-profile direct payload diagnosis
+
+- Current focus: attach agent-browser to one AuraCall-owned `wsl-chrome-3`
+  browser and replace another full canary with one milestone-instrumented,
+  raw-content-free payload probe against a known repeatedly failing context.
+- Preflight rejected agent-browser's same-named managed profile because it maps
+  to `~/.agent-browser`, not AuraCall's authoritative directory. AuraCall
+  `browser-tools` must launch the exact profile on port 45015 before
+  agent-browser attaches.
+- Runtime remains stopped: API PID 95638/zero restarts, scheduler paused,
+  queued/running and active history work zero, wider passes `7/2/34`, target
+  blocked/pass 48 with force ceiling null, and ChatGPT guards clear. Effects
+  remain zero pending plan audit/commit/push.

@@ -366,6 +366,12 @@ Lane: P01
   CDP-localized. Plan 0223 closes attempts-exhausted fail-closed at pass 48;
   scheduler and wider completions remain paused and no fourth canary is
   authorized.
+  Authorized bounded direct diagnostic:
+  [docs/dev/plans/0224-2026-08-08-chatgpt-payload-direct-agent-browser-diagnostic.md](docs/dev/plans/0224-2026-08-08-chatgpt-payload-direct-agent-browser-diagnostic.md).
+  It permits one exact AuraCall-profile launch, one agent-browser attachment,
+  and one raw-content-free milestone probe against one repeatedly failing
+  payload. It excludes conversation navigation, reload, materialization,
+  completion/scheduler controls, install, restart, and retry.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,
