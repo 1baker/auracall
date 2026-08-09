@@ -20906,3 +20906,17 @@ browser-stage lifecycle observability, not transcript truncation.
   to `getResponseBody` and retain the outer fallback deadline until that
   bounded operation settles. Prove the exact sequence red with fake CDP before
   changing installed behavior or authorizing a canary.
+
+## 2026-08-08 | Redact direct agent-browser network output before inspection
+
+- Agent-browser JSON network listings can include complete request and response
+  headers, including authentication material. JSON mode is serialization, not
+  redaction, and must never be treated as a metadata-only safety boundary.
+- For governed browser diagnostics, pipe network results directly through a
+  prevalidated reducer that discards headers, cookies, bodies, identities, and
+  query secrets before stdout or file retention. Prefer the service's bounded
+  metadata capture when it already exposes the required milestones.
+- Prove the reducer provider-free with synthetic secret-bearing fixtures and a
+  negative output assertion before attaching to a live authenticated browser.
+  If raw credentials reach output, hard-stop, close the exact browser, retain
+  no values in artifacts, and require credential rotation before profile reuse.

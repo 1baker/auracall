@@ -390,11 +390,16 @@ Lane: P01
   [docs/dev/plans/0227-2026-08-08-chatgpt-fallback-body-installed-pass-49-canary.md](docs/dev/plans/0227-2026-08-08-chatgpt-fallback-body-installed-pass-49-canary.md).
   One install/restart reached exact parity; the sole pass `48 -> 49` child
   failed `6/0/3/4`. Four timeouts near 115.1 seconds again named the pending
-  payload read. Prepared mandatory direct successor:
+  payload read. Closed mandatory direct successor:
   [docs/dev/plans/0228-2026-08-08-chatgpt-fallback-sequence-agent-browser-emulation.md](docs/dev/plans/0228-2026-08-08-chatgpt-fallback-sequence-agent-browser-emulation.md).
-  It permits one fresh exact-profile agent-browser session to compare direct
-  404, reload response selection, and bounded response-body retrieval before
-  any source change or canary.
+  Its sole direct request returned JSON 404 in 177 ms, while the sole reload
+  emitted exactly one 200 response for the conversation API, rejecting both
+  direct-path drift and the no-response hypothesis. The raw network listing
+  exposed sensitive authentication headers, so execution hard-stopped before
+  response-detail/body retrieval and the browser was closed. Credential
+  rotation plus a provider-free redaction-pipeline proof are prerequisites to
+  any separately authorized continuation; source, scheduler, wider completion,
+  materialization, and further canary effects remain withheld.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,

@@ -1,9 +1,9 @@
 # ChatGPT Fallback-Sequence Agent-Browser Emulation | 0228-2026-08-08
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 1
-Gate state: AUTHORIZED_EXACT_PROFILE_DIRECT_EMULATION
+Gate state: HARD_STOP_SENSITIVE_HEADER_EXPOSURE_BODY_UNTESTED
 Goal execution state: ACTIVE_TURN_1_OF_10
 
 ## Stable Goal Objective
@@ -108,18 +108,20 @@ control a completion, or resume the scheduler.
 
 ## Acceptance Criteria
 
-- [ ] Authority artifact is audited, committed, and pushed before effects.
-- [ ] Exactly one exact-profile browser is launched and agent-browser attaches
+- [x] Authority artifact is audited, committed, and pushed before effects.
+- [x] Exactly one exact-profile browser is launched and agent-browser attaches
   only to its actual live port.
-- [ ] Healthy authenticated ChatGPT and absence of challenge are proven before
+- [x] Healthy authenticated ChatGPT and absence of challenge are proven before
   the sequence.
 - [ ] One direct GET, one reload, one exact response selection, and at most one
   bounded response-detail request produce metadata-only terminal evidence.
-- [ ] At least one D1-D5 discrepancy prediction is accepted/rejected without
+  The response list exposed sensitive headers before the response-detail step,
+  so the required metadata-only boundary was not preserved.
+- [x] At least one D1-D5 discrepancy prediction is accepted/rejected without
   raw provider content retention.
-- [ ] Exact browser/session is closed and stopped runtime boundaries remain
+- [x] Exact browser/session is closed and stopped runtime boundaries remain
   unchanged.
-- [ ] Final docs, plan audit, diff hygiene, commit, and push are complete.
+- [x] Final docs, plan audit, diff hygiene, commit, and push are complete.
 
 ## Local Goal Bounds
 
@@ -164,3 +166,41 @@ control a completion, or resume the scheduler.
   live sequence outcomes; D5 is safety-only.
 - `next_action_or_stop_reason`: audit, commit, and push, then execute the one
   exact-profile metadata-only session and stop before source/canary work.
+
+## Checkpoint 2 | Direct And Reload Paths Distinguished; Safety Stop
+
+- `checkpoint_id`: `P0228-C02`.
+- `state_transition`: P0228_AUTHORIZED_EXACT_PROFILE_DIRECT_EMULATION ->
+  P0228_HARD_STOP_SENSITIVE_HEADER_EXPOSURE_BODY_UNTESTED.
+- `progress_classification`: blocker_reduction_with_safety_stop.
+- `browser_identity`: exact managed `wsl-chrome-3` ChatGPT directory, launched
+  PID 72446, actual DevTools port 45044, one named agent-browser attachment.
+- `surface_evidence`: authenticated ChatGPT Pro surface, conversation title
+  `Nacu Hernandez Associations`, composer present, and no challenge markers.
+- `direct_path`: an initial evaluation syntax rejection occurred before any
+  request. The sole actual direct GET then returned JSON 404 in 177 ms
+  (headers 176 ms, body 1 ms, length 168, parse successful, no mapping).
+  D4 is rejected: the quick direct-404 routing assumption remains current.
+- `reload_path`: after the sole network clear and reload, the request list
+  contained exactly one 200 response for the exact conversation API URL and a
+  distinct 200 text-document request. D2 is rejected: the reload does emit the
+  exact response required by the production fallback.
+- `hard_stop`: the direct network-list command printed request/response headers,
+  including sensitive authentication material, despite JSON mode. No header
+  values are retained here. Execution stopped before response-detail or body
+  retrieval; D1 and D3 remain unresolved.
+- `cleanup`: agent-browser detached; the exact browser-tools kill then removed
+  PID 72446 and its process group, and port 45044 closed.
+- `runtime_boundary`: API PID 32737 remains active/running with zero restarts;
+  target remains blocked/pass 49/force null; active jobs and queued/running
+  scheduler work remain zero; scheduler and wider completions remain paused at
+  `7/2/34`; guards remain null; no exact browser remains.
+- `effect_accounting`: launches 1/1, attaches 1/1, conversation navigations
+  1/1, direct GETs 1/1, network clears 1/1, reloads 1/1, response lists 1/1,
+  response details 0/1, exact browser closes 1/1; excluded effects zero.
+- `subagent_status`: not_spawned; `max_subagents=0`.
+- `next_action_or_stop_reason`: revoke or rotate the ChatGPT session used by
+  this managed browser profile before reuse. Then prove a provider-free
+  redacting network-output pipeline before any fresh, separately authorized
+  response-detail continuation. No scheduler, wider completion, source,
+  install/restart, materialization, or additional canary authority is granted.

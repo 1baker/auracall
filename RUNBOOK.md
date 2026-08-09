@@ -1,5 +1,25 @@
 # RUNBOOK
 
+## Turn 423 | 2026-08-08
+
+- Plan 0228 launched the exact `wsl-chrome-3` managed ChatGPT browser once as
+  PID 72446 on its selected DevTools port 45044 and attached agent-browser
+  once. The authenticated Pro conversation surface was healthy and showed no
+  challenge or verification state.
+- The sole actual direct payload GET returned parseable JSON 404 in 177 ms.
+  After the sole network clear and reload, exactly one 200 response appeared
+  for the exact conversation API URL, plus a distinct text-document response.
+  Direct-path drift and the no-exact-reload-response explanation are rejected.
+- Agent-browser's raw JSON network list included sensitive authentication
+  headers, so the session hard-stopped before response-detail/body retrieval.
+  No header values are retained in repo artifacts. The exact browser process
+  group and port are closed; the affected ChatGPT session must be revoked or
+  rotated before this managed browser profile is reused.
+- API PID 32737 remains active with zero restarts; the target remains
+  blocked/pass 49/force null; scheduler and wider completions remain paused at
+  `7/2/34`; jobs remain zero and guards null. A provider-free redaction-pipeline
+  proof is required before any separately authorized body-detail continuation.
+
 ## Turn 422 | 2026-08-08
 
 - Plan 0227 installed adapter hash `14668c68...6045`, restarted only the API to

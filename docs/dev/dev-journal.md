@@ -44886,3 +44886,21 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   comparison of direct 404, reload network response, and bounded response-body
   retrieval. It excludes source, install/restart, completion, materialization,
   and scheduler effects.
+
+## 2026-08-08 | Plan 0228 distinguishes reload response and stops safely
+
+- One exact `wsl-chrome-3` browser launch and one agent-browser attachment
+  proved a healthy authenticated ChatGPT Pro conversation surface without a
+  challenge. The actual DevTools port was again 45044.
+- The sole direct conversation GET returned parseable JSON 404 in 177 ms. The
+  sole reload then emitted exactly one 200 response for the exact conversation
+  API URL, rejecting direct-path drift and the no-response hypothesis.
+- Raw JSON network-list output included sensitive authentication headers.
+  Execution stopped before response-detail/body retrieval, no header values
+  were retained in repo artifacts, and the exact browser process group was
+  closed. The body-read transport question remains unresolved.
+- Runtime control stayed stopped: API PID 32737/zero restarts, target
+  blocked/pass 49/force null, scheduler and wider completions paused at
+  `7/2/34`, active jobs zero, and guards null. Revoke or rotate the affected
+  ChatGPT managed-profile session, then prove redaction provider-free before
+  any separately authorized continuation.
