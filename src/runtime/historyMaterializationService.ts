@@ -1271,6 +1271,23 @@ async function materializeHistoryRequest(input: {
 			assetKinds: request.assetKinds ?? defaultAssetKindsForCatalogKind(detail.kind),
 		};
 		const selectedCatalogAsset = selectedCatalogAssetFromCatalogItem(detail);
+		if (
+			request.force !== true &&
+			selectedCatalogAsset &&
+			(await selectedCatalogAssetFamilyIsTerminal({
+				detail,
+				request: scopedRequest,
+				runArchiveService: input.runArchiveService,
+				jobStore: input.jobStore,
+			}))
+		) {
+			return skippedResult({
+				now: input.now,
+				source: sourceFromCreateRequest(request),
+				target,
+				message: "Selected account mirror catalog asset family is already terminal in local evidence.",
+			});
+		}
 		return reconcileConversationTarget({
 			target,
 			request: scopedRequest,
@@ -1339,6 +1356,48 @@ async function materializeHistoryRequest(input: {
 	throw new HistoryMaterializationError(
 		"Provide conversationId with provider, projectId with provider, conversationIds with provider, catalogItemId, archiveItemId, or reconcile=true.",
 	);
+}
+
+async function selectedCatalogAssetFamilyIsTerminal(input: {
+	detail: AccountMirrorCatalogItemResult;
+	request: HistoryMaterializationCreateRequest;
+	runArchiveService: RunArchiveService;
+	jobStore: HistoryMaterializationJobStore;
+}): Promise<boolean> {
+	const manifestKind =
+		input.detail.kind === "artifacts"
+			? "artifact"
+			: input.detail.kind === "files"
+				? "file"
+				: input.detail.kind === "media"
+					? "media"
+					: null;
+	if (!manifestKind) return false;
+	const selectedSignature = catalogManifestAssetFamilySignature(manifestKind, input.detail.item);
+	if (!selectedSignature) return false;
+	const selectedKinds = normalizeAssetKinds(input.request.assetKinds);
+	const effectiveRequest: HistoryMaterializationCreateRequest = {
+		...input.request,
+		provider: input.request.provider ?? input.detail.provider,
+		runtimeProfile: input.request.runtimeProfile ?? input.detail.runtimeProfileId,
+		browserProfile: input.request.browserProfile ?? input.detail.browserProfileId,
+		boundIdentityKey: input.request.boundIdentityKey ?? input.detail.boundIdentityKey,
+	};
+	const terminalSignatures = new Set(
+		await materializedArchiveAssetFamilySignatures({
+			runArchiveService: input.runArchiveService,
+			request: effectiveRequest,
+			selectedKinds,
+		}),
+	);
+	for (const signature of await terminalVolatileAssetFamilySignatures({
+		jobStore: input.jobStore,
+		request: effectiveRequest,
+		selectedKinds,
+	})) {
+		terminalSignatures.add(signature);
+	}
+	return terminalSignatures.has(selectedSignature);
 }
 
 async function directConversationAssetFamiliesAreTerminal(input: {
