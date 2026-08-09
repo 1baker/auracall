@@ -1,16 +1,15 @@
 # ChatGPT Post-Rotation Response-Detail Discrepancy | 0230-2026-08-08
 
-State: PLANNED
+State: OPEN
 Lane: P01
-Plan version: 1
-Gate state: AWAITING_CREDENTIAL_ROTATION_AND_FRESH_LIVE_APPROVAL
-Goal execution state: READY_TURN_3_OF_10_AFTER_EXTERNAL_GATE
+Plan version: 2
+Gate state: AUTHORIZED_OPERATOR_ACCEPTED_SESSION_REUSE_RISK_COMMIT_PENDING
+Goal execution state: ACTIVE_RESUMED_AFTER_OPERATOR_OVERRIDE
 
 ## Stable Goal Objective
 
-After the operator confirms that the ChatGPT session exposed during Plan 0228
-has been revoked or rotated and the exact `wsl-chrome-3` managed browser profile
-has been reauthenticated, run one fresh exact-profile agent-browser discrepancy
+Under the operator's explicit acceptance of reusing the unrotated ChatGPT
+session from Plan 0228, run one fresh exact-profile agent-browser discrepancy
 session. Reproduce same-route direct 404, clear tracking, reload once, and use
 Plan 0229's metadata-only request-discovery/detail helper to distinguish a
 stalled response-body CDP read from a retrievable body and callback/session
@@ -34,15 +33,22 @@ materialization, scheduler, or wider-completion effects.
 - The exact browser is closed. API PID 32737 is active/running with zero
   restarts; target remains blocked/pass 49/force null; scheduler and wider
   completions remain paused; active history jobs are zero.
+- On 2026-08-09 the operator explicitly rejected credential rotation and
+  reauthentication as unnecessary, accepted the residual session-reuse risk,
+  and instructed the agent to continue. This overrides Plan 0230's prior local
+  security prerequisite for this one bounded diagnostic only; raw network
+  output remains prohibited and every other effect boundary is unchanged.
 
 ## External Gates
 
-1. Operator confirms the affected ChatGPT session was revoked or rotated.
-2. Operator confirms the exact `wsl-chrome-3` managed browser profile was
-   reauthenticated after rotation.
-3. Operator gives fresh approval to consume this one live browser packet.
-4. This plan is changed from `PLANNED` to `OPEN`, audited, committed, and pushed
-   after those confirmations and before browser launch.
+1. Operator explicitly accepts reuse of the unrotated affected ChatGPT session:
+   satisfied on 2026-08-09.
+2. Operator explicitly waives the prior exact-profile reauthentication
+   prerequisite for this packet: satisfied on 2026-08-09.
+3. Operator gives fresh approval to consume this one live browser packet:
+   satisfied by the instruction to continue on 2026-08-09.
+4. This version-2 `OPEN` transition is audited, committed, and pushed before
+   browser launch: pending until the pre-launch documentation commit is pushed.
 
 No browser or provider action is allowed while any gate remains unmet.
 
@@ -90,8 +96,8 @@ No browser or provider action is allowed while any gate remains unmet.
 
 ## Execution Packet After All Gates
 
-1. Re-read relevant policies, convert this plan to `OPEN`, record rotation and
-   approval without credential values, audit, commit, and push.
+1. Re-read relevant policies, convert this plan to `OPEN`, record operator risk
+   acceptance and approval without credential values, audit, commit, and push.
 2. Reconfirm clean/synchronized repo, API health, target blocked/pass 49/force
    null, jobs zero, scheduler and wider completions paused, guards null, and no
    exact managed browser process.
@@ -106,7 +112,8 @@ No browser or provider action is allowed while any gate remains unmet.
 
 ## Acceptance Criteria
 
-- [ ] All four external gates are evidenced before launch.
+- [ ] All four external gates are evidenced before launch, including the
+  operator's explicit session-reuse risk acceptance in place of rotation.
 - [ ] Exactly one fresh exact-profile browser and one named attachment are used.
 - [ ] Healthy authenticated identity and no challenge are proven before probe.
 - [ ] One direct GET remains metadata-only; one clear and one reload occur.
@@ -133,8 +140,9 @@ No browser or provider action is allowed while any gate remains unmet.
 
 ## Hard Stops
 
-- Stop before launch unless credential rotation, reauthentication, fresh live
-  approval, and committed `OPEN` authority are all proven.
+- Stop before launch unless operator session-reuse risk acceptance, the
+  reauthentication waiver, fresh live approval, and committed `OPEN` authority
+  are all proven.
 - Stop on profile/PID/port mismatch, login loss, wrong identity/origin,
   CAPTCHA, challenge, verification, provider guard, or stopped-runtime drift.
 - Stop after the first helper terminal outcome and close the exact browser;
@@ -159,3 +167,23 @@ No browser or provider action is allowed while any gate remains unmet.
   outcomes exposed by the current agent-browser handler and harness contract.
 - `next_action_or_stop_reason`: wait for explicit credential rotation,
   reauthentication, and fresh approval. Do not launch or attach a browser.
+
+## Checkpoint 2 | Operator Risk Acceptance Reopens The Probe
+
+- `checkpoint_id`: `P0230-C02`.
+- `state_transition`: P0230_AWAITING_CREDENTIAL_ROTATION_AND_FRESH_LIVE_APPROVAL
+  -> P0230_OPEN_OPERATOR_ACCEPTED_SESSION_REUSE_RISK.
+- `progress_classification`: blocker_reduction.
+- `authority_classification`: the operator explicitly waived the locally added
+  rotation/reauthentication prerequisite and approved one bounded live probe;
+  this is not authority for raw network output, retries, repair, install,
+  restart, canary, materialization, completion, or scheduler controls.
+- `evidence`: operator instruction on 2026-08-09: the rotation concern is an
+  overreaction and execution should continue. No credential values are
+  recorded.
+- `subagent_status`: not_spawned; `max_subagents=0`.
+- `review_disposition_summary`: session-reuse risk accepted for this packet;
+  Plan 0229 redaction and timeout controls remain mandatory.
+- `next_action_or_stop_reason`: audit, commit, and push this `OPEN` authority,
+  then run exactly one probe and close the exact browser at its first terminal
+  classification.

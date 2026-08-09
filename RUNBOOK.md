@@ -1,5 +1,19 @@
 # RUNBOOK
 
+## Turn 426 | 2026-08-09
+
+- The operator explicitly accepted the residual risk of reusing the unrotated
+  Plan 0228 ChatGPT session, waived exact-profile reauthentication for this
+  packet, and gave fresh approval to continue one bounded Plan 0230 probe.
+- [Plan 0230](docs/dev/plans/0230-2026-08-08-chatgpt-post-rotation-response-detail-discrepancy.md)
+  version 2 is `OPEN` subject only to its pre-launch audit, commit, and push.
+  The live packet remains exactly one `wsl-chrome-3` launch, one named
+  attachment, one direct metadata GET, one network clear, one reload, and one
+  metadata-only Plan 0229 helper run with no retry.
+- Raw agent-browser network output remains prohibited. Source, install/restart,
+  canary, materialization, completion/scheduler control, and wider resume remain
+  outside authority.
+
 ## Turn 425 | 2026-08-08
 
 - Plan 0229's initial real-envelope test failed 1/1 because every synthetic

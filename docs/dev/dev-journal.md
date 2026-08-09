@@ -44928,3 +44928,17 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Plan 0230 is prepared for one post-rotation exact-profile discrepancy probe,
   but is not live authority. Rotation, reauthentication, fresh approval, and a
   committed `OPEN` transition remain mandatory before launch.
+
+## 2026-08-09 | Operator accepts session-reuse risk; Plan 0230 opens
+
+- The operator explicitly rejected credential rotation and reauthentication as
+  unnecessary for this diagnostic, accepted the residual risk of reusing the
+  Plan 0228 ChatGPT session, and instructed execution to continue.
+- Plan 0230 version 2 records that override and authorizes exactly one
+  `wsl-chrome-3` metadata-only discrepancy probe after the `OPEN` transition is
+  audited, committed, and pushed. The Plan 0229 reducer remains the only
+  permitted request discovery/detail surface; raw child output is prohibited.
+- Current focus is the pre-launch documentation checkpoint, followed by one
+  launch/attach/direct-GET/clear/reload/helper sequence and immediate cleanup.
+  Source, install/restart, retry, canary, materialization, completion/scheduler
+  control, and wider resume remain excluded.
