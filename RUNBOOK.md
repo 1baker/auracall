@@ -1,5 +1,21 @@
 # RUNBOOK
 
+## Turn 417 | 2026-08-08
+
+- Canary attempt 2 honored the completion pacing guard, advanced pass
+  `46 -> 47`, and created exactly child
+  `hmj_602f46d472904c5b8b7b6146de9d9e66`. It ran once and again failed
+  `6/0/3/4`, eligible/selected `102/6`; all identity dimensions matched and
+  provider-guard exclusions were zero.
+- One context succeeded in 13974 ms. The same four conversations timed out in
+  116842, 116842, 116814, and 116775 ms; all four receipts retained the
+  same-route completed marker and named
+  `provider:chatgpt.readConversationPayload` as pending.
+- Parent is blocked/pass 47 with force ceiling null; API PID 95638 remains
+  healthy, scheduler paused, active jobs and queued/running work zero, wider
+  passes `7/2/34`, and guards clear. Attempt 3 is the final authorized probe;
+  no fourth attempt may run.
+
 ## Turn 416 | 2026-08-08
 
 - The sole Plan 0223 install produced exact adapter parity at

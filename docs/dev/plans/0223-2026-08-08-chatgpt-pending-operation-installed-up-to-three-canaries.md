@@ -187,3 +187,38 @@ Keep the scheduler and every wider completion paused.
   only CDP-localized. No safety hard stop fired.
 - `next_action_or_stop_reason`: execute serialized attempt 2 under the
   unchanged target, controls, and cumulative bounds.
+
+## Checkpoint 3 | Canary Attempt 2 Repeats Payload-Read Stall
+
+- `checkpoint_id`: `P0223-C03`.
+- `state_transition`: ATTEMPT_1_TERMINAL_FAILED ->
+  ATTEMPT_2_TERMINAL_FAILED.
+- `progress_classification`: blocker_reduction.
+- `canary`: the second control honored `nextAttemptAt`, advanced pass
+  `46 -> 47`, and created exactly child
+  `hmj_602f46d472904c5b8b7b6146de9d9e66`. It ran attempt one only and settled
+  failed with conversations/materialized/skipped/failed `6/0/3/4`,
+  eligible/selected `102/6`.
+- `identity_and_guard`: provider session verdict `match`; all four identity
+  dimensions matched; candidate-funnel provider-guard exclusions were zero and
+  all ChatGPT guards remained null.
+- `receipt_evidence`:
+  - one context succeeded in 13974 ms with `lastStage=complete` and
+    `pendingOperation=null`;
+  - the same four failed conversations timed out in 116842, 116842, 116814,
+    and 116775 ms;
+  - every timeout retained
+    `lastStage=provider:chatgpt.skipSameRouteNavigation` and
+    `pendingOperation=provider:chatgpt.readConversationPayload`.
+- `post_attempt_boundary`: parent is blocked/pass 47 with force ceiling null;
+  API PID 95638 remains healthy with zero restarts; scheduler is paused; active
+  jobs and queued/running work are zero; wider passes remain `7/2/34`; guards
+  remain null.
+- `effect_accounting`: installs 1/1, restarts 1/1, canaries 2/3, target
+  completion controls 2/3, scheduler controls 0, wider controls 0.
+- `subagent_status`: not_spawned; `max_subagents=0`.
+- `review_disposition_summary`: clean-canary proof remains blocking and unmet;
+  attempt 2 removes attempt 1's two CDP-only ambiguities by localizing all four
+  repeated timeouts to the payload read. No safety hard stop fired.
+- `next_action_or_stop_reason`: execute attempt 3 as the final bounded
+  variability probe. Stop afterward regardless of outcome; no fourth attempt.
