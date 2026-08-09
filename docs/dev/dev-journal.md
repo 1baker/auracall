@@ -44982,3 +44982,21 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   wider-resume effects remain zero. One fresh `wsl-chrome-3` canary plan may be
   prepared only after provider-free closure and will not itself authorize a
   live run.
+
+## 2026-08-09 | Plan 0231 closes green; Plan 0232 canary is withheld
+
+- The one real-child red failed at the intended seam: a 25-ms discovery
+  deadline killed a child whose acquisition delay was 60 ms even though its
+  request-list result was immediate. No provider or browser was involved.
+- Discovery and detail now receive agent-browser daemon-worker
+  `--job-timeout-ms` deadlines inside a separate positive acquisition/transport
+  allowance. Public `stage` distinguishes each worker from its caller command
+  envelope, including structured worker timeouts returned with a nonzero child
+  exit, while raw stdout/stderr remains private.
+- Final focused tests pass 13/13; typecheck, production build, and scoped Biome
+  validation pass. Provider/browser, install/restart, materialization,
+  completion/scheduler/guard, and wider-resume effects remain zero.
+- Plan 0232 prepares exactly one fresh `wsl-chrome-3` live helper canary but is
+  `PLANNED`, not live authority. It requires the pushed Plan 0231 closeout,
+  fresh operator approval, and current stopped-runtime readback before launch;
+  scheduler and wider completions remain outside its boundary.

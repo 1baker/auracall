@@ -1,10 +1,10 @@
 # Agent-Browser Layered Network Deadlines | 0231-2026-08-09
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 1
-Gate state: PROVIDER_FREE_REPRODUCTION_READY
-Goal execution state: ACTIVE_REPAIR_DISCOVERY_COMMAND_BOUNDARY
+Gate state: COMPLETE_LAYERED_DEADLINES_GREEN
+Goal execution state: COMPLETE_CANARY_GATE_PREPARED
 
 ## Stable Goal Objective
 
@@ -32,6 +32,21 @@ materialization, control a completion, or resume the scheduler in this plan.
 - API PID 32737 and all materialization/completion/scheduler boundaries remain
   stopped at the Plan 0230 closeout state. No live state needs to change for
   this packet.
+- The real-child red reproduced current behavior exactly: a fixture with a
+  60-ms acquisition delay and immediate request enumeration was killed by the
+  25-ms discovery deadline and returned `outcome=timeout` before selection.
+- The repaired helper passes discovery/detail deadlines to agent-browser as
+  daemon-worker `--job-timeout-ms` values and adds a positive 15-second default
+  acquisition/transport allowance to each caller envelope. Structured worker
+  timeouts from nonzero child exits are reduced internally without forwarding
+  their captured output.
+- Public metadata now distinguishes request-discovery/detail worker timeouts
+  from request-discovery/detail command-envelope timeouts. Final focused
+  validation passes 13/13; typecheck, the full production build, and scoped
+  Biome validation pass.
+- Plan 0232 is prepared in a non-authorizing state for one fresh exact-profile
+  live helper canary. No browser/provider, install/restart, materialization,
+  completion, scheduler, guard, or wider-resume effect occurred here.
 
 ## Authority And Effect Boundary
 
@@ -84,19 +99,19 @@ materialization, control a completion, or resume the scheduler in this plan.
 
 ## Acceptance Criteria
 
-- [ ] A current-source provider-free regression reproduces H1 at the real
+- [x] A current-source provider-free regression reproduces H1 at the real
   child-process boundary before production code changes.
-- [ ] Discovery and detail commands each receive their own daemon-worker
+- [x] Discovery and detail commands each receive their own daemon-worker
   deadline shorter than a separately positive caller command envelope.
-- [ ] Public metadata distinguishes acquisition/transport-envelope timeout,
+- [x] Public metadata distinguishes acquisition/transport-envelope timeout,
   request-discovery worker timeout, and response-detail worker timeout.
-- [ ] The safe reducer retains its closed-world redaction and output cap across
+- [x] The safe reducer retains its closed-world redaction and output cap across
   successful and failing child exits.
-- [ ] Focused tests, typecheck, production build, scoped formatting, marker
+- [x] Focused tests, typecheck, production build, scoped formatting, marker
   scan, plan audit, and diff hygiene pass.
-- [ ] Required plan/journal/fixes/operator docs are current and one successor
+- [x] Required plan/journal/fixes/operator docs are current and one successor
   canary plan is prepared without live authority.
-- [ ] No excluded runtime or provider effect occurs.
+- [x] No excluded runtime or provider effect occurs.
 
 ## Local Goal Bounds
 
@@ -136,3 +151,33 @@ materialization, control a completion, or resume the scheduler in this plan.
 - `review_disposition_summary`: H1-H3 accepted for one red/green cycle; a
   timeout increase without a worker deadline is rejected as insufficient.
 - `next_action_or_stop_reason`: add and run the one provider-free red test.
+
+## Checkpoint 2 | Layered Deadlines Green; Canary Withheld
+
+- `checkpoint_id`: `P0231-C02`.
+- `state_transition`: P0231_OPEN_PROVIDER_FREE_LAYERED_DEADLINE_REPAIR ->
+  P0231_CLOSED_LAYERED_DEADLINES_GREEN_CANARY_PREPARED.
+- `progress_classification`: outcome_progress.
+- `authority_classification`: provider-free implementation and validation are
+  complete; no live authority was inferred or consumed.
+- `red_evidence`: the one real-child regression failed 1/1 on current behavior
+  with `outcome=timeout`, null candidate selection, and the child killed at the
+  25-ms conflated discovery deadline before its 60-ms acquisition delay.
+- `green_evidence`: focused suite 13/13; the same child completes inside a
+  500-ms acquisition allowance while retaining a 25-ms daemon-worker
+  discovery deadline. Real nonzero worker-timeout children classify as
+  `request_discovery` and `response_detail`; caller timeouts classify as the
+  corresponding `*_command` stage. Typecheck, production build, and scoped
+  Biome validation pass.
+- `hypothesis_disposition`: H1 confirmed and repaired; H2 confirmed and
+  repaired; H3 rejected because the final contract adds daemon-worker
+  cancellation rather than only increasing the outer timeout.
+- `effect_accounting`: red cycles 1/1, implementation cycles 1/1, canary plans
+  prepared 1/1; browser launches, live attaches, provider calls, installs,
+  restarts, materialization starts, completion/scheduler/guard controls, and
+  wider resumes all 0.
+- `subagent_status`: not_spawned; direct CodeGraph exploration was required by
+  repo policy and the packet remained one narrow critical path.
+- `next_action_or_stop_reason`: Plan 0232 is prepared but not authorized. Stop
+  before live execution unless its exact gates are satisfied; never resume the
+  scheduler or wider completion from this result.

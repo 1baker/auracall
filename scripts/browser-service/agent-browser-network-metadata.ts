@@ -7,6 +7,7 @@ interface ParsedArguments {
 	cdpPort: number;
 	requestId?: string;
 	expectedUrl: string;
+	acquisitionTimeoutMs?: number;
 	discoveryTimeoutMs?: number;
 	timeoutMs?: number;
 	maxOutputBytes?: number;
@@ -39,6 +40,10 @@ export function parseAgentBrowserNetworkMetadataArguments(args: string[]): Parse
 				break;
 			case "--expected-url":
 				values.expectedUrl = readValue(args, index);
+				index += 1;
+				break;
+			case "--acquisition-timeout-ms":
+				values.acquisitionTimeoutMs = Number(readValue(args, index));
 				index += 1;
 				break;
 			case "--discovery-timeout-ms":

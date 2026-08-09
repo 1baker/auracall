@@ -20948,3 +20948,20 @@ browser-stage lifecycle observability, not transcript truncation.
   5 seconds. Characterize that latency provider-free, expose the timed-out
   stage explicitly, and give acquisition plus request-list execution separate
   positive bounds before another live probe.
+
+## 2026-08-09 | Layer caller acquisition over daemon-worker network deadlines
+
+- A caller process deadline cannot distinguish serialized agent-browser
+  acquisition/transport delay from the network operation running inside the
+  daemon. Increasing that one deadline only hides the current latency and still
+  leaves the worker without its own cancellation boundary.
+- Pass request discovery and response detail through agent-browser's
+  `--job-timeout-ms`, which begins after queue dispatch and cancels the active
+  worker operation. Give each child a separately positive acquisition/
+  transport allowance outside that worker budget, while retaining the caller
+  abort and output cap.
+- Preserve failed child stdout only inside the closed-world reducer long enough
+  to recognize agent-browser's structured `data.timedOut=true` response. Never
+  forward the raw envelope. Report whether timeout occurred at the discovery
+  or detail worker versus its caller command envelope, so a later canary cannot
+  misclassify acquisition latency as `Network.getResponseBody` evidence.

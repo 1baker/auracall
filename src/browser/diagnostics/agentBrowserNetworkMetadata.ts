@@ -2,6 +2,7 @@ import { execFile } from "node:child_process";
 
 const DEFAULT_TIMEOUT_MS = 15_000;
 const DEFAULT_DISCOVERY_TIMEOUT_MS = 5_000;
+const DEFAULT_ACQUISITION_TIMEOUT_MS = 15_000;
 const DEFAULT_MAX_OUTPUT_BYTES = 8 * 1024 * 1024;
 
 export type AgentBrowserNetworkMetadataOutcome =
@@ -15,6 +16,13 @@ export type AgentBrowserNetworkMetadataOutcome =
 	| "request_not_found"
 	| "ambiguous_request";
 
+export type AgentBrowserNetworkMetadataStage =
+	| "completed"
+	| "request_discovery_command"
+	| "request_discovery"
+	| "response_detail_command"
+	| "response_detail";
+
 export interface AgentBrowserNetworkBodyMetadata {
 	retrieval: "present" | "absent" | "base64_summary";
 	characterLength: number | null;
@@ -24,6 +32,7 @@ export interface AgentBrowserNetworkBodyMetadata {
 
 export interface AgentBrowserNetworkMetadata {
 	outcome: AgentBrowserNetworkMetadataOutcome;
+	stage: AgentBrowserNetworkMetadataStage;
 	candidateCount: number | null;
 	requestIdMatches: boolean | null;
 	expectedUrlMatches: boolean | null;
@@ -43,6 +52,7 @@ export interface AgentBrowserNetworkCommandOptions {
 	cdpPort: number;
 	requestId?: string;
 	expectedUrl: string;
+	acquisitionTimeoutMs?: number;
 	discoveryTimeoutMs?: number;
 	timeoutMs?: number;
 	maxOutputBytes?: number;
@@ -58,6 +68,7 @@ export interface CapturedProcessOptions {
 export interface CapturedProcessResult {
 	stdout: string;
 	stderr: string;
+	error?: unknown;
 }
 
 export type CapturedProcessRunner = (
@@ -80,9 +91,11 @@ const absentBody = (): AgentBrowserNetworkBodyMetadata => ({
 
 const terminalResult = (
 	outcome: Exclude<AgentBrowserNetworkMetadataOutcome, "completed">,
+	stage: Exclude<AgentBrowserNetworkMetadataStage, "completed">,
 	elapsedMs: number,
 ): AgentBrowserNetworkMetadata => ({
 	outcome,
+	stage,
 	candidateCount: null,
 	requestIdMatches: null,
 	expectedUrlMatches: null,
@@ -142,23 +155,24 @@ export function reduceAgentBrowserNetworkDetail(
 	try {
 		envelope = JSON.parse(rawOutput) as unknown;
 	} catch {
-		return terminalResult("invalid_json", options.elapsedMs);
+		return terminalResult("invalid_json", "response_detail", options.elapsedMs);
 	}
 
 	if (!isRecord(envelope)) {
-		return terminalResult("invalid_shape", options.elapsedMs);
+		return terminalResult("invalid_shape", "response_detail", options.elapsedMs);
 	}
 	if (envelope.success === false) {
-		return terminalResult("command_failed", options.elapsedMs);
+		return terminalResult("command_failed", "response_detail", options.elapsedMs);
 	}
 
 	const detail = isRecord(envelope.data) ? envelope.data : envelope;
 	if (typeof detail.requestId !== "string" || typeof detail.url !== "string") {
-		return terminalResult("invalid_shape", options.elapsedMs);
+		return terminalResult("invalid_shape", "response_detail", options.elapsedMs);
 	}
 
 	return {
 		outcome: "completed",
+		stage: "completed",
 		candidateCount: null,
 		requestIdMatches: detail.requestId === options.expectedRequestId,
 		expectedUrlMatches: detail.url === options.expectedUrl,
@@ -170,7 +184,7 @@ export function reduceAgentBrowserNetworkDetail(
 }
 
 const defaultProcessRunner: CapturedProcessRunner = (executable, args, options) =>
-	new Promise((resolve, reject) => {
+	new Promise((resolve) => {
 		execFile(
 			executable,
 			args,
@@ -182,11 +196,7 @@ const defaultProcessRunner: CapturedProcessRunner = (executable, args, options) 
 				signal: options.signal,
 			},
 			(error, stdout, stderr) => {
-				if (error) {
-					reject(error);
-					return;
-				}
-				resolve({ stdout, stderr });
+				resolve({ stdout, stderr, error: error ?? undefined });
 			},
 		);
 	});
@@ -213,9 +223,23 @@ const requirePositiveInteger = (value: number, label: string): number => {
 type CapturedCommandSettlement =
 	| { outcome: "completed"; stdout: string; elapsedMs: number }
 	| {
-			outcome: "timeout" | "output_limit" | "child_failed";
+			outcome: "timeout" | "worker_timeout" | "output_limit" | "child_failed";
 			elapsedMs: number;
 	  };
+
+const isAgentBrowserWorkerTimeout = (rawOutput: string): boolean => {
+	let envelope: unknown;
+	try {
+		envelope = JSON.parse(rawOutput) as unknown;
+	} catch {
+		return false;
+	}
+	if (!isRecord(envelope) || envelope.success !== false) {
+		return false;
+	}
+	const data = envelope.data;
+	return isRecord(data) && data.timedOut === true;
+};
 
 const runCapturedCommand = async (
 	executable: string,
@@ -253,12 +277,33 @@ const runCapturedCommand = async (
 		if (!settled.ok) {
 			return { outcome: classifyProcessFailure(settled.error), elapsedMs };
 		}
+		if (settled.result.error) {
+			const failure = classifyProcessFailure(settled.result.error);
+			if (failure === "child_failed" && isAgentBrowserWorkerTimeout(settled.result.stdout)) {
+				return { outcome: "worker_timeout", elapsedMs };
+			}
+			return { outcome: failure, elapsedMs };
+		}
+		if (isAgentBrowserWorkerTimeout(settled.result.stdout)) {
+			return { outcome: "worker_timeout", elapsedMs };
+		}
 		return { outcome: "completed", stdout: settled.result.stdout, elapsedMs };
 	} finally {
 		if (timeoutHandle) {
 			clearTimeout(timeoutHandle);
 		}
 	}
+};
+
+const commandEnvelopeTimeoutMs = (
+	acquisitionTimeoutMs: number,
+	workerTimeoutMs: number,
+): number => {
+	const combined = acquisitionTimeoutMs + workerTimeoutMs;
+	if (!Number.isSafeInteger(combined)) {
+		throw new Error("Invalid combined command timeout.");
+	}
+	return combined;
 };
 
 type RequestSelection =
@@ -318,6 +363,10 @@ export async function runAgentBrowserNetworkMetadata(
 	dependencies: AgentBrowserNetworkCommandDependencies = {},
 ): Promise<AgentBrowserNetworkMetadata> {
 	const timeoutMs = requirePositiveInteger(options.timeoutMs ?? DEFAULT_TIMEOUT_MS, "timeout");
+	const acquisitionTimeoutMs = requirePositiveInteger(
+		options.acquisitionTimeoutMs ?? DEFAULT_ACQUISITION_TIMEOUT_MS,
+		"acquisition timeout",
+	);
 	const discoveryTimeoutMs = requirePositiveInteger(
 		options.discoveryTimeoutMs ?? DEFAULT_DISCOVERY_TIMEOUT_MS,
 		"discovery timeout",
@@ -345,24 +394,33 @@ export async function runAgentBrowserNetworkMetadata(
 				"--cdp",
 				String(options.cdpPort),
 				"--json",
+				"--job-timeout-ms",
+				String(discoveryTimeoutMs),
 				"network",
 				"requests",
 				"--filter",
 				options.expectedUrl,
 			],
-			discoveryTimeoutMs,
+			commandEnvelopeTimeoutMs(acquisitionTimeoutMs, discoveryTimeoutMs),
 			maxOutputBytes,
 			processRunner,
 			now,
 		);
+		if (discovery.outcome === "worker_timeout") {
+			return terminalResult("timeout", "request_discovery", Math.max(0, now() - startedAt));
+		}
 		if (discovery.outcome !== "completed") {
-			return terminalResult(discovery.outcome, Math.max(0, now() - startedAt));
+			return terminalResult(
+				discovery.outcome,
+				"request_discovery_command",
+				Math.max(0, now() - startedAt),
+			);
 		}
 		const selection = selectExactRequest(discovery.stdout, options.expectedUrl);
 		candidateCount = selection.candidateCount;
 		if (selection.outcome !== "selected") {
 			return {
-				...terminalResult(selection.outcome, Math.max(0, now() - startedAt)),
+				...terminalResult(selection.outcome, "request_discovery", Math.max(0, now() - startedAt)),
 				candidateCount,
 			};
 		}
@@ -377,18 +435,26 @@ export async function runAgentBrowserNetworkMetadata(
 			"--cdp",
 			String(options.cdpPort),
 			"--json",
+			"--job-timeout-ms",
+			String(timeoutMs),
 			"network",
 			"request",
 			requestId,
 		],
-		timeoutMs,
+		commandEnvelopeTimeoutMs(acquisitionTimeoutMs, timeoutMs),
 		maxOutputBytes,
 		processRunner,
 		now,
 	);
 	const elapsedMs = Math.max(0, now() - startedAt);
+	if (detail.outcome === "worker_timeout") {
+		return { ...terminalResult("timeout", "response_detail", elapsedMs), candidateCount };
+	}
 	if (detail.outcome !== "completed") {
-		return { ...terminalResult(detail.outcome, elapsedMs), candidateCount };
+		return {
+			...terminalResult(detail.outcome, "response_detail_command", elapsedMs),
+			candidateCount,
+		};
 	}
 	return {
 		...reduceAgentBrowserNetworkDetail(detail.stdout, {

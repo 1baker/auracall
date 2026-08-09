@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, test, vi } from "vitest";
+import { parseAgentBrowserNetworkMetadataArguments } from "../../scripts/browser-service/agent-browser-network-metadata.js";
 import {
 	type CapturedProcessRunner,
 	reduceAgentBrowserNetworkDetail,
@@ -34,6 +35,35 @@ afterEach(() => {
 });
 
 describe("agent-browser network metadata reduction", () => {
+	test("parses separate acquisition, discovery-worker, and detail-worker deadlines", () => {
+		expect(
+			parseAgentBrowserNetworkMetadataArguments([
+				"--session",
+				"synthetic-session",
+				"--cdp",
+				"45044",
+				"--expected-url",
+				"https://example.test/expected",
+				"--acquisition-timeout-ms",
+				"15000",
+				"--discovery-timeout-ms",
+				"5000",
+				"--timeout-ms",
+				"15000",
+				"--max-output-bytes",
+				"8388608",
+			]),
+		).toEqual({
+			session: "synthetic-session",
+			cdpPort: 45044,
+			expectedUrl: "https://example.test/expected",
+			acquisitionTimeoutMs: 15000,
+			discoveryTimeoutMs: 5000,
+			timeoutMs: 15000,
+			maxOutputBytes: 8388608,
+		});
+	});
+
 	test("does not expose secret-bearing direct request detail fields", () => {
 		const sentinels = {
 			authorization: "SYNTHETIC_AUTHORIZATION_SENTINEL_0229",
@@ -76,6 +106,7 @@ describe("agent-browser network metadata reduction", () => {
 
 		expect(result).toEqual({
 			outcome: "completed",
+			stage: "completed",
 			candidateCount: null,
 			requestIdMatches: true,
 			expectedUrlMatches: true,
@@ -179,6 +210,7 @@ describe("agent-browser network metadata reduction", () => {
 				cdpPort: 45044,
 				requestId: "request-1",
 				expectedUrl: "https://example.test/expected",
+				acquisitionTimeoutMs: 25,
 				timeoutMs: 50,
 				maxOutputBytes: 4096,
 			},
@@ -193,11 +225,13 @@ describe("agent-browser network metadata reduction", () => {
 				"--cdp",
 				"45044",
 				"--json",
+				"--job-timeout-ms",
+				"50",
 				"network",
 				"request",
 				"request-1",
 			],
-			expect.objectContaining({ timeoutMs: 50, maxOutputBytes: 4096 }),
+			expect.objectContaining({ timeoutMs: 75, maxOutputBytes: 4096 }),
 		);
 		expect(result).toMatchObject({
 			outcome: "completed",
@@ -260,6 +294,7 @@ describe("agent-browser network metadata reduction", () => {
 				session: "synthetic-session",
 				cdpPort: 45044,
 				expectedUrl,
+				acquisitionTimeoutMs: 75,
 				discoveryTimeoutMs: 25,
 				timeoutMs: 50,
 				maxOutputBytes: 4096,
@@ -276,12 +311,14 @@ describe("agent-browser network metadata reduction", () => {
 				"--cdp",
 				"45044",
 				"--json",
+				"--job-timeout-ms",
+				"25",
 				"network",
 				"requests",
 				"--filter",
 				expectedUrl,
 			],
-			expect.objectContaining({ timeoutMs: 25, maxOutputBytes: 4096 }),
+			expect.objectContaining({ timeoutMs: 100, maxOutputBytes: 4096 }),
 		);
 		expect(runner).toHaveBeenNthCalledWith(
 			2,
@@ -292,11 +329,13 @@ describe("agent-browser network metadata reduction", () => {
 				"--cdp",
 				"45044",
 				"--json",
+				"--job-timeout-ms",
+				"50",
 				"network",
 				"request",
 				"selected-request-id",
 			],
-			expect.objectContaining({ timeoutMs: 50, maxOutputBytes: 4096 }),
+			expect.objectContaining({ timeoutMs: 125, maxOutputBytes: 4096 }),
 		);
 		expect(result).toMatchObject({
 			outcome: "completed",
@@ -322,6 +361,7 @@ describe("agent-browser network metadata reduction", () => {
 			session: "synthetic-session",
 			cdpPort: 45044,
 			expectedUrl,
+			acquisitionTimeoutMs: 25,
 			discoveryTimeoutMs: 25,
 			timeoutMs: 50,
 		};
@@ -354,17 +394,19 @@ describe("agent-browser network metadata reduction", () => {
 				cdpPort: 45044,
 				requestId: "request-1",
 				expectedUrl: "https://example.test/expected",
+				acquisitionTimeoutMs: 25,
 				timeoutMs: 25,
 			},
 			{ processRunner: runner },
 		);
 
-		await vi.advanceTimersByTimeAsync(25);
+		await vi.advanceTimersByTimeAsync(50);
 		const result = await resultPromise;
 
 		expect(result).toMatchObject({
 			outcome: "timeout",
-			elapsedMs: 25,
+			stage: "response_detail_command",
+			elapsedMs: 50,
 			requestIdMatches: null,
 			expectedUrlMatches: null,
 			body: { retrieval: "absent" },
@@ -384,6 +426,7 @@ describe("agent-browser network metadata reduction", () => {
 					cdpPort: 45044,
 					requestId: "request-1",
 					expectedUrl: "https://example.test/expected",
+					acquisitionTimeoutMs: 25,
 					timeoutMs: 50,
 					maxOutputBytes: 1024,
 				},
@@ -433,6 +476,7 @@ describe("agent-browser network metadata reduction", () => {
 					requestId: "request-1",
 					expectedUrl: "https://example.test/expected",
 					executable,
+					acquisitionTimeoutMs: 100,
 					timeoutMs: 1_000,
 					maxOutputBytes: 16_384,
 				}),
@@ -452,6 +496,112 @@ describe("agent-browser network metadata reduction", () => {
 		expectNoSentinels(result, sentinels);
 	});
 
+	test("budgets delayed command acquisition separately from daemon-worker discovery", async () => {
+		const expectedUrl = "https://example.test/backend-api/conversation/layered-deadline";
+		const sentinels = [
+			"SYNTHETIC_LAYERED_HEADER_SENTINEL_0231",
+			"SYNTHETIC_LAYERED_BODY_SENTINEL_0231",
+		];
+		const source = `
+const args = process.argv.slice(2);
+const workerDeadlineIndex = args.indexOf("--job-timeout-ms");
+const action = args.includes("requests") ? "discovery" : "detail";
+const expectedWorkerDeadline = action === "discovery" ? "25" : "50";
+if (workerDeadlineIndex < 0 || args[workerDeadlineIndex + 1] !== expectedWorkerDeadline) {
+	process.stdout.write(JSON.stringify({ success: false, error: "missing layered worker deadline" }));
+	process.exit(1);
+}
+if (action === "discovery") {
+	setTimeout(() => process.stdout.write(JSON.stringify({
+		success: true,
+		data: { requests: [{
+			requestId: "selected-layered-request",
+			url: ${JSON.stringify(expectedUrl)},
+			status: 200,
+			headers: { authorization: ${JSON.stringify(sentinels[0])} },
+		}] },
+	})), 60);
+} else {
+	process.stdout.write(JSON.stringify({
+		success: true,
+		data: {
+			requestId: "selected-layered-request",
+			url: ${JSON.stringify(expectedUrl)},
+			status: 200,
+			responseBody: JSON.stringify({ mapping: { only: {} }, content: ${JSON.stringify(sentinels[1])} }),
+		},
+	}));
+}
+`;
+
+		const result = await withFakeAgentBrowser(source, (executable) =>
+			runAgentBrowserNetworkMetadata({
+				session: "synthetic-layered-session",
+				cdpPort: 45044,
+				expectedUrl,
+				executable,
+				acquisitionTimeoutMs: 500,
+				discoveryTimeoutMs: 25,
+				timeoutMs: 50,
+				maxOutputBytes: 16_384,
+			}),
+		);
+
+		expect(result).toMatchObject({
+			outcome: "completed",
+			stage: "completed",
+			candidateCount: 1,
+			requestIdMatches: true,
+			expectedUrlMatches: true,
+			status: 200,
+			body: { retrieval: "present", parseState: "json", mappingCount: 1 },
+		});
+		expectNoSentinels(result, sentinels);
+	});
+
+	test("distinguishes daemon-worker discovery and detail timeouts after nonzero child exit", async () => {
+		const timeoutSentinel = "SYNTHETIC_WORKER_TIMEOUT_SENTINEL_0231";
+		const workerTimeoutEnvelope = JSON.stringify({
+			success: false,
+			error: timeoutSentinel,
+			data: { timedOut: true, timeoutMs: 25 },
+		});
+		const source = `process.stdout.write(${JSON.stringify(workerTimeoutEnvelope)}); process.exit(1);`;
+
+		await withFakeAgentBrowser(source, async (executable) => {
+			const discovery = await runAgentBrowserNetworkMetadata({
+				session: "synthetic-worker-timeout",
+				cdpPort: 45044,
+				expectedUrl: "https://example.test/expected",
+				executable,
+				acquisitionTimeoutMs: 500,
+				discoveryTimeoutMs: 25,
+				timeoutMs: 50,
+			});
+			const detail = await runAgentBrowserNetworkMetadata({
+				session: "synthetic-worker-timeout",
+				cdpPort: 45044,
+				requestId: "synthetic-request",
+				expectedUrl: "https://example.test/expected",
+				executable,
+				acquisitionTimeoutMs: 500,
+				timeoutMs: 25,
+			});
+
+			expect(discovery).toMatchObject({
+				outcome: "timeout",
+				stage: "request_discovery",
+				candidateCount: null,
+			});
+			expect(detail).toMatchObject({
+				outcome: "timeout",
+				stage: "response_detail",
+				candidateCount: null,
+			});
+			expectNoSentinels([discovery, detail], [timeoutSentinel, "synthetic-request"]);
+		});
+	});
+
 	test("enforces timeout and output caps through the real child process boundary", async () => {
 		const timeout = await withFakeAgentBrowser(
 			"setInterval(() => undefined, 1000);",
@@ -462,6 +612,7 @@ describe("agent-browser network metadata reduction", () => {
 					requestId: "request-1",
 					expectedUrl: "https://example.test/expected",
 					executable,
+					acquisitionTimeoutMs: 50,
 					timeoutMs: 50,
 					maxOutputBytes: 1024,
 				}),
@@ -475,6 +626,7 @@ describe("agent-browser network metadata reduction", () => {
 					requestId: "request-1",
 					expectedUrl: "https://example.test/expected",
 					executable,
+					acquisitionTimeoutMs: 100,
 					timeoutMs: 1_000,
 					maxOutputBytes: 128,
 				}),

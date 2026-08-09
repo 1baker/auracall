@@ -34,6 +34,7 @@ pnpm tsx scripts/browser-service/agent-browser-network-metadata.ts \
   --session <named-session> \
   --cdp <exact-live-port> \
   --expected-url 'https://chatgpt.com/backend-api/conversation/<conversation-id>' \
+  --acquisition-timeout-ms 15000 \
   --discovery-timeout-ms 5000 \
   --timeout-ms 15000 \
   --max-output-bytes 8388608
@@ -41,11 +42,24 @@ pnpm tsx scripts/browser-service/agent-browser-network-metadata.ts \
 
 The helper captures one filtered request list internally, requires exactly one
 exact-URL 2xx candidate, keeps its request ID internal, then captures one full
-request-detail command under an independent deadline and output cap. Its public
-JSON is closed-world: outcome, exact candidate count, request-ID/URL match
-booleans, status, elapsed time, body presence/character length, JSON parse
-state, and mapping count. It never emits the selected request ID, URL, headers,
-cookies, body, stderr, or child error text.
+request-detail command under an independent deadline and output cap.
+`--discovery-timeout-ms` and `--timeout-ms` are daemon-worker deadlines passed
+through agent-browser's `--job-timeout-ms`; they begin after serialized command
+dispatch and cancel request-list or response-detail work at the daemon. The
+separate positive `--acquisition-timeout-ms` is added to each worker deadline
+only for the caller's client/session acquisition and command-transport
+envelope. Do not replace the layered contract with one larger undifferentiated
+child timeout.
+
+Its public JSON is closed-world: outcome, terminal `stage`, exact candidate
+count, request-ID/URL match booleans, status, elapsed time, body
+presence/character length, JSON parse state, and mapping count. A timeout at
+`request_discovery_command` or `response_detail_command` is a caller
+acquisition/transport-envelope failure; a timeout at `request_discovery` or
+`response_detail` is a daemon-worker operation deadline. `completed` means the
+full reduced detail settled. The helper never emits the selected request ID,
+URL, headers, cookies, body, stderr, child error text, or the worker's raw error
+envelope.
 
 The helper does not launch, attach, navigate, reload, close, or repair a
 browser. Those effects require their own exact-profile gate and cleanup. A
