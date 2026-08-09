@@ -45000,3 +45000,16 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   `PLANNED`, not live authority. It requires the pushed Plan 0231 closeout,
   fresh operator approval, and current stopped-runtime readback before launch;
   scheduler and wider completions remain outside its boundary.
+
+## 2026-08-09 | Plan 0232 opens for one layered response-detail canary
+
+- The operator gave fresh approval with `ok go` for exactly the frozen Plan
+  0232 `wsl-chrome-3` canary. Gate 2 is satisfied; the one live packet is not
+  launchable until this `OPEN` transition is audited, committed, and pushed and
+  current stopped-runtime gate 3 is proven.
+- The authorized sequence remains one exact browser, one named agent-browser
+  attachment, one authenticated no-challenge read, one conversation
+  navigation, one metadata-only direct GET, one network clear, one reload, and
+  one layered helper invocation followed by immediate exact-browser cleanup.
+- Scheduler, wider completions, materialization, install/restart, source,
+  guard, prompt, click, retry, and wider-resume effects remain excluded.

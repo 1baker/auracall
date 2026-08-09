@@ -1,10 +1,10 @@
 # WSL-Chrome-3 Layered Response-Detail Canary | 0232-2026-08-09
 
-State: PLANNED
+State: OPEN
 Lane: P01
-Plan version: 1
-Gate state: AWAITING_FRESH_LIVE_APPROVAL
-Goal execution state: PREPARED_NOT_AUTHORIZED
+Plan version: 2
+Gate state: OPEN_OPERATOR_APPROVED_ONE_CANARY
+Goal execution state: ACTIVE_PRELAUNCH_RUNTIME_GATES
 
 ## Stable Goal Objective
 
@@ -41,7 +41,8 @@ work.
 1. Plan 0231 is closed, audited, committed, and pushed with exact focused
    validation: satisfied by `c05edde8` on 2026-08-09.
 2. The operator gives fresh approval to consume exactly this one live browser
-   canary after reviewing this frozen packet: not satisfied.
+   canary after reviewing this frozen packet: satisfied by `ok go` on
+   2026-08-09.
 3. Current readback proves healthy API, target blocked/pass 49/force null,
    active jobs zero, wider completions and scheduler paused, guard null, and no
    exact-profile browser process: not yet reread.
@@ -144,3 +145,25 @@ No browser or provider action is allowed while any gate remains unmet.
 - `subagent_status`: not_spawned; `max_subagents=0`.
 - `next_action_or_stop_reason`: stop. Wait for fresh operator approval, then
   reread all runtime gates before launch.
+
+## Approval Checkpoint | One Canary Opens Behind Runtime Readback
+
+- `checkpoint_id`: `P0232-C02`.
+- `state_transition`: P0232_PLANNED_AWAITING_FRESH_LIVE_APPROVAL ->
+  P0232_OPEN_OPERATOR_APPROVED_ONE_CANARY.
+- `progress_classification`: blocker_reduction.
+- `authority_classification`: the operator approved exactly one bounded live
+  `wsl-chrome-3` canary; every browser effect still waits on current stopped-
+  runtime readback and a pushed `OPEN` commit. Scheduler, completions,
+  materialization, install/restart, source, and wider-resume effects remain
+  excluded.
+- `evidence`: operator instruction `ok go` on 2026-08-09; provider-free Plan
+  0231 closeout `c05edde8`; prerequisite-binding commit `c1bf85d8`.
+- `subagent_status`: not_spawned; `max_subagents=0`.
+- `review_disposition_summary`: gate 2 is satisfied; gate 3 remains a hard
+  prelaunch stop until current API, completion, job, scheduler, guard, and
+  exact-profile process state is reread.
+- `next_action_or_stop_reason`: audit, commit, and push this `OPEN` transition,
+  then reread gate 3. If and only if every value matches, run exactly one
+  named-session canary and close the exact browser at its first terminal
+  result.
