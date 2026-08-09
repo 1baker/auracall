@@ -45245,3 +45245,17 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - The one-canary gate is not ready because the exact selector resolves a known
   complete asset. No durable job, browser/provider work, install/restart,
   completion/scheduler/guard control, retry, or wider materialization ran.
+
+## 2026-08-09 | Plan 0238 opens exact terminal-admission repair
+
+- Operator authority continues provider-free only: repair the exact
+  `catalogItemId` admission mismatch, add a red/green service regression, and
+  rerun `maxItems=1` with provider callbacks disabled.
+- Structural inspection shows the exact branch binds `selectedCatalogAsset`
+  without the terminal-family check already used by direct-conversation and
+  broad reconciliation paths. That is the first ranked, falsifiable cause.
+- Installed API remains healthy at PID 8247; scheduler is paused/idle, active
+  history work is zero, wider ChatGPT passes remain paused at `7/2/34`, and
+  `wsl-chrome-3` remains idle-waiting at pass 51. Live canary, browser work,
+  runtime installation/restart, and all scheduler/completion controls remain
+  excluded.
