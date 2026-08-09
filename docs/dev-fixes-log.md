@@ -21100,3 +21100,18 @@ browser-stage lifecycle observability, not transcript truncation.
   are selected and uses 50 only for media-only reconciliation. Current-data
   replay then advances from the empty-family Budget row to a distinct exact
   conversation file without provider work.
+
+## 2026-08-09 | Bind exact canary success to file, archive, and stopped-runtime receipts
+
+- A successful history-materialization status can summarize a download while
+  leaving its top-level `entries` and `archiveItems` arrays empty. Treat the
+  generated cache manifest, file-fetch manifest, readable local bytes, and
+  canonical archive lookup as the durable asset receipt.
+- Verify the local file independently: nonzero size, expected file type, and a
+  recomputed SHA-256 matching the manifest/archive checksum. Also require one
+  job attempt, transfer telemetry with zero failures, and matching provider
+  session proof before classifying `C1_useful_yield`.
+- Close the live packet only after active jobs return to zero, the exact owned
+  managed browser/port are absent, the API is healthy, and scheduler/completion
+  pass counters are unchanged. A normally exited browser does not require a
+  synthetic close action.

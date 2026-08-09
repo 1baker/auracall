@@ -45375,3 +45375,21 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   refresh, prompts/clicks/`Answer now`, second jobs/assets, and wider
   materialization remain excluded. Any terminal failure or skip ends the packet
   without substitution.
+
+## 2026-08-09 | Plan 0241 closes C1 with one exact file
+
+- One install produced exact source/installed bundle parity at
+  `73d7de35...b22a4`; API PID 55894 is active/running with zero service
+  restarts, and the stopped scheduler/completion posture survived the restart.
+- Sole job `hmj_f315844a2d144fd0a3ecad37b004d4dc` succeeded on attempt one
+  with four-dimension identity proof `match`. It downloaded exactly one
+  170,148-byte, one-page `Fence Guidelines.pdf` at SHA-256
+  `974c5695...2955`; transfer telemetry is attempted one, succeeded one,
+  failed zero.
+- The cache manifest, fetch manifest, and archive item bind the frozen catalog
+  item, conversation, identity, and ChatGPT file ID. Artifact-ID and checksum
+  archive lookups return one available canonical item.
+- Final active jobs are zero; the exact managed browser exited normally and
+  port 45015 is closed. Scheduler remains paused/idle, target pass 51 and wider
+  passes 7/2/34 are unchanged, and no retry, second job, scheduler/completion/
+  guard control, prompt, click, force, refresh, or wider materialization ran.

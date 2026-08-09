@@ -1,11 +1,11 @@
 # Fence Guidelines Installed One-Canary | 0241-2026-08-09
 
-State: OPEN
+State: CLOSED
 Lane: LIVE_FOLLOW_RECOVERY
 Plan version: 1
-Outcome: ACTIVE_INSTALL_EXACT_CANARY
-Goal execution state: ACTIVE
-Gate state: INSTALL_PARITY_AND_FRESH_READBACK_REQUIRED
+Outcome: C1_USEFUL_YIELD
+Goal execution state: COMPLETE
+Gate state: CLOSED_ONE_CANARY_SUCCEEDED
 
 ## Stable Objective
 
@@ -16,27 +16,22 @@ control remain untouched.
 
 ## Current State
 
-- Plan 0240 closed at pushed commit `e2f7d7ec`. All 76 focused history tests,
-  typecheck, scoped lint, build, and provider-free retained replay passed.
-- Current source bundle SHA-256 is
-  `73d7de35b4661f2c7456b9887d31ce3ac85ef0380f3820eb46242a1cc4ab22a4`;
-  installed bundle SHA-256 is the prior
-  `625739bca9473885de39eadf3b104664ca009ddbd5200987c64237f941744455`,
-  so one install/restart is required before live work.
-- Broad provider-free `maxItems=1` now selects conversation
-  `6a526cdb-580c-83ea-ab97-ab95a85f6975`. One exact replay freezes file catalog
-  item
-  `6a526cdb-580c-83ea-ab97-ab95a85f6975:c836da7e-c513-419a-8c13-a8ab62a0873d:0:Fence Guidelines.pdf`,
-  provider file ID `file_00000000c980722f8f18eeb8a63d72a7`, on
-  `chatgpt/wsl-chrome-3`, bound identity `eric.cochran@soylei.com`.
-- The exact replay reached one disabled `materializeConversation` seam with no
-  unexpected/provider implementation call; cache detail had no local path or
-  checksum; archive/job terminal admission did not reject it; the 1,884-job
-  index stayed byte-identical at `641836ac...b41087`.
-- API PID 90242 is healthy with zero restarts. Scheduler is paused/idle, active
-  exact history jobs are zero, target completion is idle-waiting at pass 51,
-  wider ChatGPT completions remain paused at 7/2/34, and the exact managed
-  browser/port 45015 are absent.
+- One install produced exact source/installed bundle parity at
+  `73d7de35b4661f2c7456b9887d31ce3ac85ef0380f3820eb46242a1cc4ab22a4`.
+  API PID 55894 is active/running with `NRestarts=0`.
+- The sole durable job `hmj_f315844a2d144fd0a3ecad37b004d4dc`
+  ran exactly one attempt and succeeded. Provider-session proof matched email,
+  plan, structure, and account-level expectations for
+  `eric.cochran@soylei.com`.
+- `Fence Guidelines.pdf` is a readable one-page PDF of 170,148 bytes with
+  SHA-256 `974c5695f6ac123c79c046fa056a4f5ea0708b44312c84ba0085b953082ea955`.
+  Its cache manifest, file-fetch manifest, and materialized archive item all
+  bind the frozen catalog identity and ChatGPT file ID.
+- Active history jobs are zero, the exact managed browser exited and port
+  45015 is closed, the scheduler is paused/idle, the target remains
+  idle-waiting at pass 51, and wider ChatGPT completions remain paused at
+  7/2/34. No scheduler, completion, guard, retry, force, refresh, prompt,
+  click, second-job, or wider-materialization action occurred.
 
 ## Authority And Non-Goals
 
@@ -121,17 +116,17 @@ control remain untouched.
 
 ## Acceptance Criteria
 
-- [ ] Source and installed history-materialization bundles match exactly after
+- [x] Source and installed history-materialization bundles match exactly after
   one install/restart, and the API plus stopped runtime posture are healthy.
-- [ ] The fresh exact gate still identifies the same file/provider/runtime/
+- [x] The fresh exact gate still identifies the same file/provider/runtime/
   browser/identity/conversation and proves no local/terminal/active duplicate.
-- [ ] Exactly one direct job runs with `catalogKind=files`, `maxItems=1`, attempt
+- [x] Exactly one direct job runs with `catalogKind=files`, `maxItems=1`, attempt
   one, `force=false`, no snapshot refresh, and no second action.
-- [ ] Terminal result is `C1_useful_yield` with readable bytes, checksum,
+- [x] Terminal result is `C1_useful_yield` with readable bytes, checksum,
   manifest/archive evidence, and zero failures.
-- [ ] Exact browser cleanup, active-job zero, API health, scheduler pause,
+- [x] Exact browser cleanup, active-job zero, API health, scheduler pause,
   target pass 51, wider passes 7/2/34, and guard-null posture are current.
-- [ ] Plan/journal/fix evidence, audit, commit, push, and goal closeout are
+- [x] Plan/journal/fix evidence, audit, commit, push, and goal closeout are
   complete.
 
 ## Opening Checkpoint | Frozen Exact File Canary Ready
@@ -155,6 +150,35 @@ control remain untouched.
 - `review_disposition_summary`: truncated catalog admission is verified fixed;
   the frozen exact file is accepted for one installed canary. Scheduler or
   wider resume remains explicitly rejected.
+
+## Closing Checkpoint | Exact File Materialized
+
+- `checkpoint_id`: `P0241-C02`.
+- `state_transition`: P0241_ACTIVE_INSTALL_EXACT_FILE_CANARY ->
+  P0241_CLOSED_C1_USEFUL_YIELD.
+- `progress_classification`: outcome_progress.
+- `evidence`: exact installed/source bundle SHA-256 `73d7de35...b22a4`; job
+  `hmj_f315844a2d144fd0a3ecad37b004d4dc` succeeded on attempt one; one
+  170,148-byte PDF at SHA-256 `974c5695...2955`; download telemetry attempted
+  one/succeeded one/failed zero; artifact-ID and checksum archive lookups each
+  return one available canonical item.
+- `runtime_readback`: API PID 55894 active/running with zero service restarts;
+  active history jobs zero; exact managed browser absent and port 45015
+  closed; scheduler paused/idle; target/wider pass counts unchanged at 51 and
+  7/2/34.
+- `effect_accounting`: installs 1/1; service restarts 1/1; durable jobs 1/1;
+  attempts 1/1; provider materialization callbacks 1/1; browser launches 1/1;
+  downloads 1/1; browser closes required 0/1 because the owned browser exited
+  normally; every prohibited effect remained zero.
+- `subagent_status`: not_spawned; the primary agent executed and independently
+  verified the serialized runtime slice.
+- `next_action_or_stop_reason`: stop. The bounded objective is achieved; do
+  not resume the scheduler or any completion as part of this closeout.
+- `authority_classification`: completed within the one-canary effect ceiling.
+- `review_disposition_summary`: acceptance criteria pass. Provider-artifact-ID
+  archive lookup did not surface the row even though the canonical item retains
+  that ID in metadata; artifact-ID and checksum lookup are green, so this is a
+  nonblocking backlog observation rather than a reason to widen the packet.
 
 ## Definition Of Done
 
