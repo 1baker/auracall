@@ -45184,3 +45184,18 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - No retry, scheduler or wider completion resume, guard control, second child,
   direct runtime edit, prompt/click, or separate materialization start belongs
   to this packet.
+
+## 2026-08-09 | Plan 0236 satisfies its stopped-runtime gate
+
+- Fresh readback proves API PID 5590 active/running with zero restarts,
+  scheduler paused/idle with active request count zero, active history jobs
+  zero, and all five active completions paused with queued/running zero.
+- Target `acctmirror_completion_fb93ed6c-c57b-40cd-b5dc-ba6322f75446`
+  remains blocked/pass 50/force null with `materializationMaxItems=6`; exact
+  `wsl-chrome-3` status is eligible with null provider/routine guards and idle
+  browser health. Wider ChatGPT completions remain paused at `7/2/34`, and the
+  exact-profile browser process count is zero.
+- Built adapter hash is `076d74e4...91161ec`; installed runtime remains
+  `10274e4c...d76e5`, so the authorized install is necessary. Effects remain
+  zero until this checkpoint is audited, committed, pushed, and immediately
+  rechecked.

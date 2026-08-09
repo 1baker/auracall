@@ -60,7 +60,8 @@ guard, or start any separate materialization.
    target blocked/pass 50/force null with its persisted `maxItems=6`; wider
    ChatGPT completions paused at `7/2/34`; all globally active completions
    paused; canonical ChatGPT guard clear; and no exact `wsl-chrome-3` browser
-   process.
+   process. Satisfied at 2026-08-09T14:11:08-05:00; reread once immediately
+   after this checkpoint is pushed and before installation.
 
 No install, restart, provider/browser call, completion control, or
 materialization effect is allowed while any gate remains unmet.
@@ -161,3 +162,30 @@ materialization effect is allowed while any gate remains unmet.
 - `next_action_or_stop_reason`: audit, commit, and push this gate, then perform
   the complete fresh readback. Stop on any mismatch; otherwise consume the one
   install/restart/canary packet and close at its first terminal result.
+
+## Checkpoint 2 | Runtime Gate Satisfied Before Installation
+
+- `checkpoint_id`: `P0236-C02`.
+- `state_transition`: P0236_OPEN_OPERATOR_APPROVED_RUNTIME_READBACK_REQUIRED ->
+  P0236_ALL_GATES_SATISFIED_PREINSTALL_RECHECK_REQUIRED.
+- `progress_classification`: blocker_reduction.
+- `authority_classification`: the approved effect remains one install, one API
+  restart, and one existing completion pass with one child. No retry, second
+  child, scheduler/wider resume, guard control, or separate job is admitted.
+- `evidence`: Plan 0236 open commit `6d35993d`; main clean and synchronized;
+  API PID 5590 active/running with `NRestarts=0`; source adapter SHA-256
+  `076d74e4e7f708f07cfbb58c6a0fe093388010ab096d61a1b9e0e8aad91161ec`;
+  installed adapter SHA-256
+  `10274e4c6c5894faf4013531313222b5f4cf2f11ff9605826ec22b28d32d76e5`;
+  scheduler paused/idle with active request count zero; active history jobs
+  zero; target blocked/pass 50/force null and `maxItems=6`; exact target
+  eligible with null provider/routine guards and idle browser health; all five
+  active completions paused with queued/running zero; wider ChatGPT passes
+  `7/2/34`; exact-profile browser process count zero.
+- `subagent_status`: not_spawned; `max_subagents=0`.
+- `review_disposition_summary`: every stopped-runtime invariant is current and
+  the exact adapter hash mismatch proves the single approved install is
+  necessary. No provider or browser effect was used to satisfy this gate.
+- `next_action_or_stop_reason`: audit, commit, and push this checkpoint. Then
+  immediately reread every gate; stop on drift, otherwise run the one
+  install/restart/canary sequence.
