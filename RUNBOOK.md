@@ -1,5 +1,19 @@
 # RUNBOOK
 
+## Turn 424 | 2026-08-08
+
+- Plan 0229 opens the provider-free prerequisite for continuing the response-
+  body discrepancy diagnosis. Current source is clean/synchronized at
+  `a67ec57d`; API PID 32737 is active with zero restarts; target remains
+  blocked/pass 49; jobs are zero; scheduler and wider completions remain paused;
+  no exact browser is running.
+- The packet will prove a timeout/size-bounded agent-browser child boundary and
+  a closed-world metadata reducer against synthetic authorization, cookie,
+  identity, query, body, stderr, malformed, timeout, and oversize fixtures.
+- The affected ChatGPT session remains a credential-rotation hard gate. This
+  packet permits no browser/provider access, install/restart, materialization,
+  completion/scheduler control, or canary.
+
 ## Turn 423 | 2026-08-08
 
 - Plan 0228 launched the exact `wsl-chrome-3` managed ChatGPT browser once as

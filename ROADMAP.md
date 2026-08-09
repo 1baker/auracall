@@ -400,6 +400,11 @@ Lane: P01
   rotation plus a provider-free redaction-pipeline proof are prerequisites to
   any separately authorized continuation; source, scheduler, wider completion,
   materialization, and further canary effects remain withheld.
+  Open provider-free prerequisite:
+  [docs/dev/plans/0229-2026-08-08-agent-browser-network-metadata-redaction-harness.md](docs/dev/plans/0229-2026-08-08-agent-browser-network-metadata-redaction-harness.md).
+  It adds a timeout/size-bounded closed-world reducer for direct agent-browser
+  network detail, proves synthetic secrets cannot reach any public outcome, and
+  prepares—but does not execute—the post-rotation discrepancy continuation.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,

@@ -44904,3 +44904,15 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   `7/2/34`, active jobs zero, and guards null. Revoke or rotate the affected
   ChatGPT managed-profile session, then prove redaction provider-free before
   any separately authorized continuation.
+
+## 2026-08-08 | Plan 0229 opens provider-free network metadata redaction
+
+- Current agent-browser is 0.28.0. Its service-owned network capture advertises
+  redacted headers, but exact external-browser reuse and content-free body
+  metadata must both be proven before it can replace the direct diagnostic
+  path.
+- The bounded packet first builds a synthetic secret-bearing red-capable test,
+  then implements only a closed-world reducer and captured child boundary if
+  the service contract is insufficient.
+- Live effects remain zero. The affected `wsl-chrome-3` ChatGPT session remains
+  unusable until credential rotation, and no Plan 0230 probe is authorized yet.
