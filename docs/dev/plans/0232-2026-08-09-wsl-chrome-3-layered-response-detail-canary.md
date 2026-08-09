@@ -2,9 +2,9 @@
 
 State: OPEN
 Lane: P01
-Plan version: 2
-Gate state: OPEN_OPERATOR_APPROVED_ONE_CANARY
-Goal execution state: ACTIVE_PRELAUNCH_RUNTIME_GATES
+Plan version: 3
+Gate state: ALL_EXTERNAL_GATES_SATISFIED_PRELAUNCH_RECHECK_REQUIRED
+Goal execution state: ACTIVE_ONE_CANARY_READY_AFTER_PUSH_AND_RECHECK
 
 ## Stable Goal Objective
 
@@ -34,7 +34,16 @@ work.
   blocked/pass 49/force null; active jobs were zero; wider ChatGPT completions
   were paused at `7/2/34`; scheduler was paused/idle; guard was null.
 - Those runtime values are historical preconditions, not current proof. They
-  must be reread after fresh approval and immediately before any browser launch.
+  were reread after fresh approval at 2026-08-09T10:27:35-05:00: API PID 32737
+  is active/running with zero restarts; the target remains blocked/pass 49/
+  force null; active history jobs are zero; the wider ChatGPT completions are
+  paused at `7/2/34`; the scheduler is paused/idle with active request count
+  zero; and exact-profile process count is zero.
+- The target's backing provider guard is null. The current status contract
+  serializes that state as `providerGuard.state=clear` with null kind/action;
+  only `manual_clear_required` or an unexpired `cooldown` is blocking. The
+  target status is `eligible`, so the historical `guard null` shorthand and
+  current canonical readback agree semantically.
 
 ## External Gates
 
@@ -44,8 +53,10 @@ work.
    canary after reviewing this frozen packet: satisfied by `ok go` on
    2026-08-09.
 3. Current readback proves healthy API, target blocked/pass 49/force null,
-   active jobs zero, wider completions and scheduler paused, guard null, and no
-   exact-profile browser process: not yet reread.
+   active jobs zero, wider completions and scheduler paused, canonical guard
+   state clear/backing guard null, and no exact-profile browser process:
+   satisfied at 2026-08-09T10:27:35-05:00. The same fields must be reread once
+   more after this checkpoint is pushed and immediately before launch.
 
 No browser or provider action is allowed while any gate remains unmet.
 
@@ -94,7 +105,7 @@ No browser or provider action is allowed while any gate remains unmet.
 
 ## Acceptance Criteria
 
-- [ ] All three external gates are satisfied and recorded before launch.
+- [x] All three external gates are satisfied and recorded before launch.
 - [ ] Exactly one fresh exact-profile browser and one named attachment run.
 - [ ] Healthy authenticated identity/no-challenge proof precedes navigation.
 - [ ] One direct metadata GET, one clear, one reload, and one layered helper
@@ -167,3 +178,32 @@ No browser or provider action is allowed while any gate remains unmet.
   then reread gate 3. If and only if every value matches, run exactly one
   named-session canary and close the exact browser at its first terminal
   result.
+
+## Runtime Checkpoint | All External Gates Satisfied
+
+- `checkpoint_id`: `P0232-C03`.
+- `state_transition`: P0232_OPEN_OPERATOR_APPROVED_ONE_CANARY ->
+  P0232_ALL_EXTERNAL_GATES_SATISFIED_PRELAUNCH_RECHECK_REQUIRED.
+- `progress_classification`: blocker_reduction.
+- `authority_classification`: all frozen external gates are satisfied. This
+  checkpoint still requires audit/commit/push and one matching immediate
+  read-only recheck before the single approved browser launch; it grants no
+  scheduler, completion, materialization, install/restart, source, guard,
+  retry, or wider-resume authority.
+- `evidence`: synchronized pushed `e492e17c`; API PID 32737 active/running with
+  zero restarts; target completion
+  `acctmirror_completion_fb93ed6c-c57b-40cd-b5dc-ba6322f75446` blocked/pass
+  49/force null; history jobs active 0; wider ChatGPT completions paused at
+  `7/2/34`; scheduler paused/idle with active request count 0; exact-profile
+  process count 0. Current CodeGraph source proves the status serializer emits
+  `providerGuard.state=clear` for a null backing guard, and live target status
+  is `eligible` with null guard kind/action.
+- `subagent_status`: not_spawned; `max_subagents=0`.
+- `review_disposition_summary`: the apparent null-versus-object difference is
+  rejected as a safety drift because `clear` is the canonical null-guard
+  projection; no active guard or cooldown is present. The stale port-8080
+  assumption was replaced by the service's actual bound port 18095 without a
+  runtime mutation.
+- `next_action_or_stop_reason`: audit, commit, and push this checkpoint, then
+  immediately reread the same fields. Stop on any mismatch; otherwise consume
+  exactly one canary and close at its first terminal helper result.

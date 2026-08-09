@@ -45013,3 +45013,18 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   one layered helper invocation followed by immediate exact-browser cleanup.
 - Scheduler, wider completions, materialization, install/restart, source,
   guard, prompt, click, retry, and wider-resume effects remain excluded.
+
+## 2026-08-09 | Plan 0232 satisfies its stopped-runtime gate
+
+- Read-only service discovery corrected the stale port-8080 assumption to the
+  installed service's actual port 18095. API PID 32737 is active/running with
+  zero restarts; target completion remains blocked/pass 49/force null; active
+  history jobs are zero; wider ChatGPT completions remain paused at `7/2/34`;
+  and the scheduler remains paused/idle with active request count zero.
+- Exact `wsl-chrome-3` ChatGPT managed-browser process count is zero. The live
+  target is eligible and reports canonical `providerGuard.state=clear` with
+  null kind/action. Current CodeGraph source confirms this is the serialized
+  representation of a null backing guard, not an active guard or cooldown.
+- All three Plan 0232 external gates are satisfied. Browser launch still waits
+  on audit/commit/push of this durable checkpoint and one immediate matching
+  recheck; no provider/browser or excluded runtime effect has occurred.
