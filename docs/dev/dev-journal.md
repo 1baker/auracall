@@ -45111,3 +45111,26 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Built adapter hash is `10274e4c...76e5`; installed runtime remains the prior
   `14668c68...6045`, so the authorized install is necessary. Effects remain
   zero until this checkpoint is audited, committed, pushed, and rechecked.
+
+## 2026-08-09 | Plan 0234 closes C4 after the failure moves downstream
+
+- The one user-runtime install produced exact source/installed adapter parity
+  at `10274e4c...76e5`. The one API restart produced PID 5590 active/running
+  with zero restarts and preserved the paused/idle stopped-runtime boundary.
+- The sole `run-one-pass` advanced only pass 49 to 50 and created only child
+  `hmj_99a99200ff9a4218a018f5717e274a64`. It ran attempt 1 against the existing
+  `maxItems=6` ceiling, selected five conversations, then failed two assets
+  from five conversations without retry.
+- The repaired payload-settlement stage did not recur. Two conversation reads
+  completed in 14275ms and 108511ms. Two later reads timed out in 109086ms and
+  109094ms at `provider:chatgpt.readVisibleDownloadArtifactProbes`; none named
+  or left pending `provider:chatgpt.readConversationPayload`.
+- Plan 0234 therefore closes `C4_other_terminal_failure`: the fix materially
+  moved the live failure boundary downstream but did not produce a clean
+  materialization canary. Parent is blocked/pass 50/force null; active jobs and
+  exact-profile browser processes are zero; scheduler remains paused/idle;
+  wider ChatGPT passes remain paused at `7/2/34`; guard remains clear.
+- No second install, restart, pass, child, attempt, browser launch, scheduler or
+  wider-completion resume, guard control, prompt/click, direct runtime edit, or
+  separate materialization start occurred. A successor must first own and
+  validate downstream visible-download probe settlement provider-free.

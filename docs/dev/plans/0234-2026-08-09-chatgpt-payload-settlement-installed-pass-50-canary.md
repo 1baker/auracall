@@ -1,10 +1,10 @@
 # ChatGPT Payload Settlement Installed Pass-50 Canary | 0234-2026-08-09
 
-State: OPEN
+State: CLOSED
 Lane: P01
-Plan version: 2
-Gate state: ALL_GATES_SATISFIED_PREINSTALL_RECHECK_REQUIRED
-Goal execution state: ACTIVE_ONE_INSTALLED_CANARY
+Plan version: 3
+Gate state: CONSUMED_C4_OTHER_TERMINAL_FAILURE_NO_RESUME
+Goal execution state: COMPLETE_STOPPED_AT_FIRST_TERMINAL_RESULT
 
 ## Stable Goal Objective
 
@@ -17,6 +17,26 @@ result and stop. Do not retry, resume the scheduler, resume any wider
 completion, control a provider guard, or start any separate materialization.
 
 ## Current State
+
+- The one installed canary is consumed and closed as
+  `C4_other_terminal_failure`. It advanced only pass 49 to 50 and created only
+  child `hmj_99a99200ff9a4218a018f5717e274a64`, which ran attempt 1 and failed
+  terminally without a retry.
+- The Plan 0233 defect did not recur. Two conversation context reads completed
+  (`14275ms` and `108511ms`) with `lastStage=complete`; two later reads timed
+  out at `provider:chatgpt.readVisibleDownloadArtifactProbes` (`109086ms` and
+  `109094ms`). No receipt named or left pending
+  `provider:chatgpt.readConversationPayload`.
+- The child attempted five conversations, selected five candidates, skipped
+  five asset outcomes, materialized zero, and failed two. The parent settled
+  blocked at pass 50 with `forceRunUntilPassCount=null` and
+  `account_mirror_materialization_failed`; no pass 51 or second child exists.
+- Final runtime readback is API PID 5590 active/running with zero restarts,
+  source/installed adapter parity at
+  `10274e4c6c5894faf4013531313222b5f4cf2f11ff9605826ec22b28d32d76e5`,
+  scheduler paused/idle, queued/running work zero, active history jobs zero,
+  wider ChatGPT completions still paused at `7/2/34`, provider guard clear,
+  and exact `wsl-chrome-3` browser process count zero.
 
 - Plan 0233 closed provider-free at pushed commit `49868b4d`. The exact real
   adapter regression failed red with a completed exact response body and an
@@ -101,17 +121,17 @@ materialization effect is allowed while any gate remains unmet.
 
 ## Acceptance Criteria
 
-- [ ] All four external gates are satisfied before effects.
-- [ ] Exactly one install and one API restart produce source/installed adapter
+- [x] All four external gates are satisfied before effects.
+- [x] Exactly one install and one API restart produce source/installed adapter
   parity and preserve stopped-runtime state.
-- [ ] Exactly one `wsl-chrome-3` `run-one-pass` advances pass 49 to 50 and
+- [x] Exactly one `wsl-chrome-3` `run-one-pass` advances pass 49 to 50 and
   creates exactly one fresh child under the existing `maxItems=6` ceiling.
-- [ ] Exactly one C1-C4 terminal classification is recorded without retry.
-- [ ] Exact child/parent evidence distinguishes payload-reader settlement from
+- [x] Exactly one C1-C4 terminal classification is recorded without retry.
+- [x] Exact child/parent evidence distinguishes payload-reader settlement from
   authentication, challenge, provider guard, or unrelated failure.
-- [ ] API returns healthy, active jobs return zero, scheduler remains paused,
+- [x] API returns healthy, active jobs return zero, scheduler remains paused,
   wider completions remain paused at `7/2/34`, and any exact browser is closed.
-- [ ] No second install/restart/canary, scheduler or wider-completion resume,
+- [x] No second install/restart/canary, scheduler or wider-completion resume,
   guard control, prompt submission, click, `Answer now`, direct runtime JSON
   edit, or separate materialization start occurs.
 
@@ -185,3 +205,33 @@ materialization effect is allowed while any gate remains unmet.
 - `next_action_or_stop_reason`: audit, commit, and push this corrected
   checkpoint. Then immediately reread every gate; stop on drift, otherwise run
   the one install/restart/canary sequence.
+
+## Checkpoint 3 | Pass 50 Stops At A Later Provider Stage
+
+- `checkpoint_id`: `P0234-C03`.
+- `state_transition`: P0234_ALL_GATES_SATISFIED_PREINSTALL_RECHECK_REQUIRED ->
+  P0234_CLOSED_C4_OTHER_TERMINAL_FAILURE.
+- `progress_classification`: outcome_progress_with_new_blocker.
+- `authority_classification`: the sole install, API restart, completion
+  control, pass advance, browser launch, child, and attempt are consumed. No
+  retry, pass 51, scheduler/wider resume, guard control, or separate
+  materialization is authorized.
+- `evidence`: source and installed adapter SHA-256 both
+  `10274e4c6c5894faf4013531313222b5f4cf2f11ff9605826ec22b28d32d76e5`;
+  API restart PID 5590 with zero restarts; parent pass `49 -> 50`; sole child
+  `hmj_99a99200ff9a4218a018f5717e274a64`; two successful context receipts at
+  `14275ms` and `108511ms`; two timeout receipts at
+  `provider:chatgpt.readVisibleDownloadArtifactProbes` after `109086ms` and
+  `109094ms`; child failed two assets from five conversations; parent blocked
+  at pass 50 with force null; final active jobs/browser processes zero;
+  scheduler paused/idle; wider paused passes `7/2/34`; guard clear.
+- `subagent_status`: not_spawned; `max_subagents=0`.
+- `review_disposition_summary`: Plan 0233 materially moved the live failure
+  boundary past payload settlement, but the canary is not clean because the
+  downstream visible-download probe exhausted the same context deadline for
+  two conversations. This is C4 rather than a repeated payload timeout or an
+  authentication/challenge stop.
+- `next_action_or_stop_reason`: stop with no retry. A provider-free successor
+  must make `readVisibleDownloadArtifactProbes` independently bounded or
+  interruptible and prove that exact later-stage settlement before any fresh
+  installed canary, scheduler resume, or wider completion resume.

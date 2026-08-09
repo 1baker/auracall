@@ -20997,3 +20997,19 @@ browser-stage lifecycle observability, not transcript truncation.
   and complete body callbacks but never resolves its own command promise. The
   regression must fail as pending before the fix and resolve the parsed mapping
   afterward; nearby transport-only tests cannot catch this ordering defect.
+
+## 2026-08-09 | A settled payload reader can expose a later probe deadline
+
+- A successful installed payload-settlement repair is stage-specific, not
+  proof that the full conversation-context read is terminal. In the pass-50
+  canary, two reads completed while two others advanced past
+  `readConversationPayload` and exhausted the context deadline at
+  `provider:chatgpt.readVisibleDownloadArtifactProbes`.
+- Treat that stage movement as real diagnostic progress, but not as a clean
+  canary. Preserve exact receipt stages and elapsed times so a downstream
+  timeout cannot be mislabeled as the original payload defect or as an
+  authentication failure.
+- Stop the live series at the first such terminal classification. Before any
+  retry, make the visible-download probe independently bounded or interruptible
+  and validate its settlement provider-free at the real adapter-to-receipt
+  boundary.
