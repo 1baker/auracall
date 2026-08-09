@@ -45049,3 +45049,16 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   zero active jobs, paused `7/2/34`, paused/idle scheduler, and clear guard are
   unchanged. No retry, install/restart, source, materialization,
   completion/scheduler/guard control, or wider resume occurred.
+
+## 2026-08-09 | Plan 0233 opens payload-reader settlement repair
+
+- Plan 0232 C5 proves the exact reload response detail and body are retrievable,
+  so the remaining failure surface is AuraCall callback ordering, CDP
+  target/session ownership, or enclosing `readConversationPayload` settlement.
+- Plan 0233 requires one fast deterministic provider-free loop to reproduce the
+  exact direct-404/reload-body-available/unsettled-reader pattern before source
+  repair. A shallow nearby test is not an acceptable substitute.
+- The user authorized up to 10 turns to continue the repair. This packet spends
+  only provider-free source/test/docs authority; browser/provider,
+  install/restart, materialization, completion/scheduler/guard, and wider-resume
+  effects remain zero and unauthorized.
