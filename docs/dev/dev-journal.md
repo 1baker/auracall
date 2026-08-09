@@ -45362,3 +45362,16 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   install/restart, live job, download, scheduler/completion/guard control, or
   wider materialization ran. The installed one-canary gate is now a distinct
   ready successor.
+
+## 2026-08-09 | Plan 0241 opens Fence Guidelines installed canary
+
+- The frozen packet targets only file catalog item
+  `6a526cdb-580c-83ea-ab97-ab95a85f6975:c836da7e-c513-419a-8c13-a8ab62a0873d:0:Fence Guidelines.pdf`
+  on `chatgpt/wsl-chrome-3` for bound identity `eric.cochran@soylei.com`.
+- Source bundle hash `73d7de35...b22a4` differs from installed
+  `625739bc...744455`, so the packet permits one install/API restart before one
+  direct exact job, one attempt, one browser lane, and one possible download.
+- Scheduler/completion/guard controls, pass 52, retries, force, snapshot
+  refresh, prompts/clicks/`Answer now`, second jobs/assets, and wider
+  materialization remain excluded. Any terminal failure or skip ends the packet
+  without substitution.
