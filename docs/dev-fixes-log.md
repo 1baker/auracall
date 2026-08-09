@@ -21115,3 +21115,18 @@ browser-stage lifecycle observability, not transcript truncation.
   managed browser/port are absent, the API is healthy, and scheduler/completion
   pass counters are unchanged. A normally exited browser does not require a
   synthetic close action.
+
+## 2026-08-09 | Wait for child pacing and parent absorption before closing a forced pass
+
+- A bounded `run-one-pass` can finish its refresh, advance the parent pass, and
+  queue one reconciliation child with a future `providerWorkNotBefore`. Treat
+  that not-before timestamp as intentional interaction pacing; do not diagnose
+  the waiting child as stalled or bypass the cooldown.
+- Child terminal status can precede parent absorption. Keep monitoring until
+  the parent materialization cursor/outcome names the terminal child and its
+  force ceiling, next attempt, and error all clear. The child alone is not the
+  final completion receipt.
+- For useful-yield classification, recompute every new file checksum, compare
+  it with the conversation manifest, and require one available canonical
+  archive item per checksum. Then prove active-job zero, exact-browser cleanup,
+  scheduler pause, unchanged wider passes, and a null provider guard.

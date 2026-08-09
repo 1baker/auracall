@@ -1,11 +1,11 @@
 # WSL Chrome 3 Staged Pass-52 Canary | 0242-2026-08-09
 
-State: OPEN
+State: CLOSED
 Lane: LIVE_FOLLOW_RECOVERY
 Plan version: 1
-Outcome: ACTIVE_ONE_PASS_52_CANARY
-Goal execution state: ACTIVE
-Gate state: OPEN_CHECKPOINT_COMMIT_REQUIRED
+Outcome: C1_USEFUL_PASS_PROGRESS
+Goal execution state: COMPLETE
+Gate state: CLOSED_ONE_PASS_SUCCEEDED
 
 ## Stable Objective
 
@@ -17,27 +17,31 @@ completion still paused.
 
 ## Current State
 
-- Plan 0241 closed `C1_useful_yield` at pushed commit `e118b230`. Exact job
-  `hmj_f315844a2d144fd0a3ecad37b004d4dc` downloaded one readable
-  `Fence Guidelines.pdf` on attempt one with four-dimension identity proof
-  `match`, then returned active history jobs and the exact browser to zero.
+- The sole completion control advanced only pass 51 to 52. Child
+  `hmj_1053aa86121a4e5983bd90055dc4553f` ran attempt one and succeeded with
+  five materialized assets, three skipped outcomes, zero failures, five
+  checksums, and four-dimension provider-session proof `match`.
+- Five readable PDFs were retained: four `Cochran ... 7-10-26.pdf` files of
+  194,282/123,596/123,615/122,257 bytes and one
+  `Dolgos_MastersThesisRevisions_v2.pdf` of 4,283,156 bytes. Recomputed
+  SHA-256 values match their cache manifests, and each checksum resolves to
+  exactly one available canonical archive item.
+- Local materialized assets increased from 123 to 128 while remote-known
+  missing-local assets decreased from 600 to 595. This is one bounded useful
+  pass, not backlog completion or authority for another pass.
 - Source and installed history-materialization bundles match exactly at
   `73d7de35b4661f2c7456b9887d31ce3ac85ef0380f3820eb46242a1cc4ab22a4`.
   API PID 55894 is active/running with `NRestarts=0`.
 - Completion `acctmirror_completion_fb93ed6c-c57b-40cd-b5dc-ba6322f75446`
-  is `idle_waiting` at pass 51, force ceiling null, error null, provider guard
-  null, and retains full-missing-assets reconciliation with all asset kinds,
-  `maxItems=6`, snapshot refresh enabled, and `force=false`.
+  is `idle_waiting` at pass 52 with force ceiling, next attempt, error, and
+  provider guard all null.
 - Scheduler is operator-paused and idle with active requests/reservations zero.
   Active history jobs, queued completions, and running completions are zero.
   Wider ChatGPT completions remain paused at default/wsl-chrome-2/
   wsl-chrome-4 passes 7/2/34. The exact managed browser is absent and port
   45015 is closed.
-- The durable history-job index SHA-256 before this packet is
-  `23d824ad3e371d863ded780da62d71825473dfad44ec3c0b51631086f3da2e30`.
-  Current status reports 600 remote-known missing-local assets and 123 locally
-  materialized assets for this target; those counts are readback, not authority
-  for a wider campaign.
+- The durable history-job index changed exactly once for the authorized child,
+  from SHA-256 `23d824ad...a2e30` to `ffdf89af...de2d`.
 
 ## Authority And Non-Goals
 
@@ -122,17 +126,17 @@ completion still paused.
 
 ## Acceptance Criteria
 
-- [ ] Opening gate is audited, committed, pushed, and freshly reread before
+- [x] Opening gate is audited, committed, pushed, and freshly reread before
   the one completion control.
-- [ ] Exactly one `wsl-chrome-3` `run-one-pass` control advances no farther than
+- [x] Exactly one `wsl-chrome-3` `run-one-pass` control advances no farther than
   pass 52 and creates no more than one fresh child/attempt under `maxItems=6`.
-- [ ] Exactly one C1-C5 terminal classification is recorded without retry,
+- [x] Exactly one C1-C5 terminal classification is recorded without retry,
   substitution, or another completion/materialization action.
-- [ ] Exact child/parent evidence reports identity, provider work, outcome
+- [x] Exact child/parent evidence reports identity, provider work, outcome
   counts, checksums/manifests when present, pending/error state, and cleanup.
-- [ ] API stays healthy; active jobs/browser return to zero; scheduler remains
+- [x] API stays healthy; active jobs/browser return to zero; scheduler remains
   paused/idle; wider ChatGPT passes remain 7/2/34; guard remains null.
-- [ ] Plan/journal evidence, active/goal plan audits, commit, and push complete.
+- [x] Plan/journal evidence, active/goal plan audits, commit, and push complete.
 
 ## Opening Checkpoint | One Pass-52 Canary Ready
 
@@ -154,6 +158,36 @@ completion still paused.
 - `review_disposition_summary`: the exact materialization path has current
   useful-yield proof, so one retained-policy completion pass is accepted. A
   second pass or automatic resume remains rejected.
+
+## Closing Checkpoint | Pass 52 Materialized Five Files
+
+- `checkpoint_id`: `P0242-C02`.
+- `state_transition`: P0242_ACTIVE_PASS_52_GATE ->
+  P0242_CLOSED_C1_USEFUL_PASS_PROGRESS.
+- `progress_classification`: outcome_progress.
+- `evidence`: sole control accepted at 2026-08-09T22:34:53.867Z; pass 52 and
+  sole child `hmj_1053aa86121a4e5983bd90055dc4553f`; attempt one; child
+  succeeded at 2026-08-09T22:43:27.307Z with conversations 3,
+  materialized/skipped/failed 5/3/0, checksum count 5, and all four identity
+  dimensions matching. Five recomputed file hashes match manifests and five
+  checksum lookups each return one available canonical archive item.
+- `runtime_readback`: parent idle-waiting/pass 52/force null/next null/error
+  null; active jobs zero; exact browser absent and port 45015 closed; API PID
+  55894 active/running with zero crash restarts; scheduler paused/idle; wider
+  passes unchanged at 7/2/34; provider guard null.
+- `effect_accounting`: completion controls 1/1; pass advances 1/1; children
+  1/1; child attempts 1/1; browser launches 1/1; downloads 5/6; browser close
+  actions 0/1 because the owned browser exited normally; every excluded effect
+  remained zero.
+- `subagent_status`: not_spawned; the primary agent executed and independently
+  verified the serialized live boundary.
+- `next_action_or_stop_reason`: stop. This packet is consumed; do not issue
+  pass 53, resume the scheduler, or resume another completion.
+- `authority_classification`: completed inside the separately authorized
+  one-pass ceiling.
+- `review_disposition_summary`: C1 is accepted. The pass reduced the retained
+  missing-local backlog by five without failure or identity drift. Any next
+  pass or scheduler action requires a new bounded successor.
 
 ## Definition Of Done
 

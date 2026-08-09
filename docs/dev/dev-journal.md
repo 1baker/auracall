@@ -45408,3 +45408,22 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   most the persisted six-item materialization ceiling. It excludes pass 53,
   retry, scheduler/other-completion/guard/config control, install/restart,
   separate materialization, prompt/click/`Answer now`, and automatic resume.
+
+## 2026-08-09 | Plan 0242 closes C1 with five materialized files
+
+- The sole `run-one-pass` advanced only pass 51 to 52 and created sole child
+  `hmj_1053aa86121a4e5983bd90055dc4553f`. It ran attempt one under
+  `maxItems=6`, honored its provider-work not-before time, and succeeded with
+  materialized/skipped/failed `5/3/0`, five checksums, and four-dimension
+  provider-session proof `match`.
+- Four Cochran PDFs and one Dolgos thesis-revisions PDF are readable at
+  4,846,906 bytes total; each recomputed checksum matches its cache manifest and
+  resolves to one available canonical archive item. Local materialized assets
+  increased `123 -> 128`, while remote-known missing-local decreased
+  `600 -> 595`.
+- The parent absorbed the child as idle-waiting/pass 52 with force, next,
+  error, and guard null. Active jobs are zero; the exact browser exited and
+  port 45015 is closed; API PID 55894 is healthy; scheduler is paused/idle;
+  wider passes remain paused at 7/2/34. No retry, pass 53, scheduler/wider
+  resume, guard/config control, prompt/click/`Answer now`, install/restart, or
+  separate materialization ran.
