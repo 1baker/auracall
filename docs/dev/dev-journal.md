@@ -45317,3 +45317,17 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   provider callback, download, retry, scheduler/completion/guard control, or
   wider materialization ran. The next repair is broad admission filtering, not
   authentication or browser recovery.
+
+## 2026-08-09 | Plan 0240 opens broad static-only admission repair
+
+- CodeGraph traced the residual failure to broad reconciliation: raw catalog
+  asset-family signatures are filtered by archive/job terminal evidence, but
+  item-level `static_image_false_positive` eligibility is not removed before a
+  conversation reaches provider work and consumes `maxItems=1`.
+- The bounded repair will add one focused red/green regression, filter known
+  ineligible catalog rows at the signature boundary, and replay current retained
+  selection with every provider-capable callback disabled.
+- Install/restart, durable jobs, browser/provider work, scheduler/completion/
+  guard controls, retries, force, snapshot refresh, downloads, prompts, and
+  wider materialization remain excluded until a separately installed successor
+  freezes a genuinely nonterminal exact item.
