@@ -645,6 +645,10 @@ Terminology note:
   browser-backed provider work for explicit proofs; MCP parity is
   `history_materialization_create`, `history_materialization_job`,
   `history_materialization_jobs`, and `history_materialization_cancel`.
+  Before an exact non-forced catalog-item request enters provider work, AuraCall
+  compares that selected asset family with readable archive rows and terminal
+  history-materialization entries. A match settles as skipped; `--force`
+  remains the explicit override.
   Reconciliation job-result metrics expose `eligibleCandidates` separately
   from `selectedCandidates`: eligible candidates passed cached routeability,
   selected-kind, freshness, and persisted terminal-family gates before the

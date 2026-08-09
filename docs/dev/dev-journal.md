@@ -45259,3 +45259,27 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   `wsl-chrome-3` remains idle-waiting at pass 51. Live canary, browser work,
   runtime installation/restart, and all scheduler/completion controls remain
   excluded.
+
+## 2026-08-09 | Plan 0238 exact terminal admission repaired provider-free
+
+- The focused regression first failed because exact catalog-item execution did
+  not call archive lookup and entered `materializeConversation`; after the
+  repair, matching exact artifact and conversation-file families both settle
+  skipped with zero refresh/provider calls.
+- Current-data replay seeded 1,884 retained jobs. Broad `maxItems=1` still
+  selected conversation `6a5e4bf8-972c-83ea-ad2f-3ad57f2a153f` and entered
+  one disabled stub, while the known exact DOCX settled skipped with zero
+  provider-boundary calls. The durable job-index SHA-256 remained
+  `641836ac...b41087`.
+- Validation passed for 74/74 history-materialization tests, typecheck, scoped
+  lint, production build, and diff hygiene. The wide suite reached 2,758
+  passing tests; its two unrelated `llmServiceContext` failures reduced to the
+  already-known pending-payload-operation test on isolated rerun and did not
+  touch the changed service.
+- The wide test run also coincided with an unexpected exact managed-browser
+  launch at 16:04:35 on PID 38900/port 45015. Registry evidence scoped the
+  browser to AuraCall's prior history-materialization lane; PID 38900 was
+  terminated once, and exact process/port checks returned empty. No browser
+  navigation, provider implementation, or download ran in this packet.
+- No installation/restart, durable history job, scheduler/completion/guard
+  control, retry, or wider materialization occurred.

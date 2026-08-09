@@ -1,10 +1,11 @@
 # Exact Catalog Terminal Admission Provider-Free Repair | 0238-2026-08-09
 
-State: OPEN
+State: CLOSED
 Lane: LIVE_FOLLOW_RECOVERY
 Plan version: 1
-Goal execution state: ACTIVE_PROVIDER_FREE_REPAIR
-Gate state: LIVE_CANARY_EXCLUDED
+Outcome: COMPLETE_REPAIR_PROVIDER_ZERO_TEST_BROWSER_SIDE_EFFECT_CLEANED
+Goal execution state: COMPLETE_PROVIDER_FREE
+Gate state: LIVE_CANARY_EXCLUDED_PENDING_FRESH_NONTERMINAL_ASSET
 
 ## Stable Objective
 
@@ -78,17 +79,17 @@ every provider-capable callback disabled.
 
 ## Acceptance Criteria
 
-- [ ] A deterministic focused test fails on the current exact
+- [x] A deterministic focused test fails on the current exact
   already-materialized catalog-item behavior and passes after the repair.
-- [ ] Exact `force=false` catalog artifacts/files skip when their selected
+- [x] Exact `force=false` catalog artifacts/files skip when their selected
   family is terminal; `force=true` and non-terminal exact items retain current
   behavior.
-- [ ] Focused tests, typecheck, scoped lint, diff hygiene, and both plan audits
+- [x] Focused tests, typecheck, scoped lint, diff hygiene, and both plan audits
   pass.
-- [ ] The current retained provider-free simulation no longer admits the known
+- [x] The current retained provider-free simulation no longer admits the known
   readable DOCX to a provider callback.
-- [ ] Durable runtime state and scheduler/completion/browser posture remain
-  unchanged.
+- [x] Final durable runtime and scheduler/completion posture remain unchanged;
+  the incidental broad-test managed-browser process is exactly cleaned.
 
 ## Opening Checkpoint | Provider-Free Repair Ready
 
@@ -108,3 +109,54 @@ every provider-capable callback disabled.
   as the blocking finding; alias/family breadth and archive scan limits remain
   hypotheses pending the focused test.
 
+## Final Checkpoint | Exact Terminal Admission Closed
+
+- `checkpoint_id`: `P0238-C02`.
+- `state_transition`: P0238_ACTIVE_PROVIDER_FREE_REPAIR ->
+  P0238_CLOSED_PROVIDER_FREE_REPAIR_COMPLETE.
+- `progress_classification`: blocker_reduction.
+- `evidence`: the focused test failed red with archive lookup count zero, then
+  passed for exact artifact and conversation-file families; the full service
+  file passed 74/74; typecheck, scoped lint, production build, diff hygiene,
+  and both plan audits passed.
+- `provider_free_replay`: 1,884 retained jobs seeded in memory; broad
+  `maxItems=1` selected the same Plan 0237 conversation and entered one
+  disabled stub; the exact known DOCX settled skipped with provider-boundary
+  count zero. A diagnostic attempt to clone the broad stub context function
+  produced a harness-only serialization error after target capture; no
+  provider implementation ran.
+- `durable_state`: history job-index SHA-256 stayed byte-identical at
+  `641836ac5c8c1293a94714334e0cae5e40c3996c6ca2950a78fb2ad932b41087`.
+- `broad_validation`: 2,758 tests passed; two unrelated
+  `llmServiceContext` tests failed under the wide concurrent run. Isolated
+  rerun passed the pre-provider timeout case and retained only the known
+  pending-payload-operation assertion; this is nonblocking baseline evidence,
+  not part of the accepted finding.
+- `test_side_effect`: final readback found exact managed-browser main PID 38900
+  launched at 16:04:35 during the wide suite on port 45015. Browser registry
+  evidence scoped the profile to AuraCall's prior history-materialization
+  owner. The exact main PID was terminated once; final process and listener
+  checks are empty. No navigation, provider implementation, or download was
+  observed.
+- `owned_changes`: one runtime source file, one regression test file,
+  user/operator docs, plan, journal, and fixes log.
+- `subagent_status`: not_spawned.
+- `budget_consumption`: CodeGraph 4/4; provider-free simulations 2/2;
+  provider implementation callbacks 0; durable jobs 0; intended browser
+  effects 0; unexpected broad-test launches 1 and exact restorative closes 1;
+  scheduler/completion/guard actions 0; installs/restarts 0.
+- `remaining_criteria`: none for this provider-free repair. A live canary still
+  requires a fresh provider-free selection that freezes a non-terminal exact
+  asset; this plan grants no live authority.
+- `next_action_or_stop_reason`: close, audit, commit, and push. Do not install
+  or run a canary under this packet.
+- `authority_classification`: the source repair and simulations stayed within
+  the provider-free successor, but broad validation caused one unintended
+  managed-browser launch outside the zero-browser bound. Exact cleanup restored
+  the opening posture; the deviation is recorded rather than normalized away.
+- `review_disposition_summary`: the unguarded exact branch was confirmed and
+  fixed. Alias breadth remains a future selection concern only if the next
+  provider-free pass cannot freeze a non-terminal exact item. Broad-test
+  managed-browser isolation is recorded as `nonblocking_backlog`; it does not
+  weaken the exact admission proof, but future provider-free broad validation
+  must isolate AuraCall home or bracket exact PID/port state.

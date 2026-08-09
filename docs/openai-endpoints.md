@@ -535,6 +535,9 @@ Current limits:
     `history-materialization-status`, `history-materialization-jobs`, and
     `history-materialization-cancel`; the create command accepts
     `--provider-work-timeout-ms` for bounded browser-backed provider work
+  - an exact non-forced catalog item is checked against readable archive and
+    terminal job families before provider work; a matching family settles as
+    skipped, while explicit `force=true` preserves retry semantics
   - MCP parity is `history_materialization_create`,
     `history_materialization_job`, `history_materialization_jobs`, and
     `history_materialization_cancel`

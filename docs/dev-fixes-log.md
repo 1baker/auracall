@@ -21056,3 +21056,28 @@ browser-stage lifecycle observability, not transcript truncation.
   asset is already readable, stop provider-free. Do not skip to a later asset
   ad hoc or spend a provider action until candidate admission and exact-asset
   exclusion agree under a separately bounded repair.
+
+## 2026-08-09 | Exact catalog items must honor terminal-family evidence
+
+- The direct conversation and broad reconciliation paths already checked
+  readable archive and terminal job families, but the exact `catalogItemId`
+  path bound `selectedCatalogAsset` and entered provider work without that
+  admission check.
+- Apply the same provider/runtime/identity-scoped family normalization before
+  exact provider work. Non-forced exact artifacts and conversation files now
+  settle as skipped when the family is terminal; `force=true` remains the
+  deliberate override.
+- A cache row marked eligible is routing evidence, not proof that provider work
+  is needed. Exact archive/job truth must control immediately before the
+  provider boundary.
+
+## 2026-08-09 | Broad tests need managed-browser effect guards
+
+- A provider-free slice observed the configured `wsl-chrome-3/chatgpt` managed
+  browser start during `pnpm test`, even though the focused
+  history-materialization test stayed in memory and launched nothing.
+- Bracket broad validation with exact managed-profile PID/port readbacks or use
+  an isolated AuraCall home. Do not infer that a unit-test command is
+  provider-free merely because live suites are skipped.
+- If this occurs, attribute ownership before cleanup and terminate only the
+  exact AuraCall-owned main process. Preserve unrelated or user-owned browsers.

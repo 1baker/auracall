@@ -1,5 +1,12 @@
 # Testing quickstart
 
+- Provider-free runtime work must bracket broad `pnpm test` runs with exact
+  managed-browser process/port checks or set an isolated AuraCall home. A
+  2026-08-09 broad run coincided with an unexpected launch of the configured
+  `wsl-chrome-3/chatgpt` managed browser profile; the focused service suite did
+  not. Treat a newly observed configured-profile process as a test-isolation
+  failure and clean up only the exact AuraCall-owned process.
+
 - Unit/type tests: `pnpm test` (Vitest) and `pnpm run check` (typecheck).
 - ChatGPT developer-app lifecycle:
   - provider-free contract tests:
@@ -1942,6 +1949,9 @@
   pre-exclusion known-file count used to distinguish terminal/bounded
   `known-files-excluded` outcomes from genuinely empty inventory, ChatGPT
   library-plus-conversation detail inventory,
+  exact non-forced artifact/file catalog-item rejection when the same family is
+  already readable in archive evidence while preserving forced and
+  non-terminal provider admission,
   Gemini conversation-artifact media manifest mapping, Gemini unavailable
   media-generation reconciliation by timestamp-backed cached conversation
   title, direct provider-conversation media recovery without a matching catalog
