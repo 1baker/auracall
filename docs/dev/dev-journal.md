@@ -45079,3 +45079,18 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Browser/provider, install/restart, materialization,
   completion/scheduler/guard, direct runtime-state, and wider-resume effects
   remain zero. A fresh effect gate is required before installed or live proof.
+
+## 2026-08-09 | Plan 0234 opens one installed pass-50 canary
+
+- The operator authorized the exact next gate with `ok go`: one user-runtime
+  install, one AuraCall API restart, and one `wsl-chrome-3` `maxItems=1`
+  `run-one-pass`, followed by terminal child/parent monitoring and stop.
+- The canary must advance only pass 49 to 50 and create one child. It will
+  distinguish clean payload-reader settlement from a repeated pending timeout,
+  auth/challenge stop, or another bounded terminal failure.
+- Installation and live effects remain withheld until this `OPEN` transition
+  is audited, committed, pushed, and fresh readback proves the API healthy,
+  scheduler and wider completions paused, active work zero, target unchanged,
+  guard clear, and exact-profile browser absent.
+- No retry, scheduler or wider completion resume, guard control, second child,
+  or separate materialization start belongs to this packet.
