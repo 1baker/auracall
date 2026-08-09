@@ -45166,3 +45166,21 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   scheduler/guard, direct runtime-state, prompt/click, and wider-resume effects
   remain zero. The still-pending-reload theory remains a live-only hypothesis,
   not a provider-free root-cause claim or authority for a canary.
+
+## 2026-08-09 | Plan 0236 opens one installed pass-51 artifact-probe canary
+
+- The operator authorized the exact next gate with `ok go`: one user-runtime
+  install, one AuraCall API restart, and one `wsl-chrome-3` `run-one-pass`,
+  followed by terminal child/parent monitoring and stop.
+- The canary must advance only pass 50 to 51 and create one child under the
+  target's existing `materializationMaxItems=6`. It will distinguish clean
+  artifact-probe settlement from a repeated exact-stage timeout, a distinct
+  reload/session or later-stage failure, auth/challenge stop, or another
+  bounded terminal failure.
+- Installation and live effects remain withheld until this `OPEN` transition
+  is audited, committed, pushed, and fresh readback proves the API healthy,
+  scheduler and wider completions paused, active work zero, target unchanged,
+  guard clear, and exact-profile browser absent.
+- No retry, scheduler or wider completion resume, guard control, second child,
+  direct runtime edit, prompt/click, or separate materialization start belongs
+  to this packet.
