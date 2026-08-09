@@ -1,5 +1,23 @@
 # RUNBOOK
 
+## Turn 422 | 2026-08-08
+
+- Plan 0227 installed adapter hash `14668c68...6045`, restarted only the API to
+  PID 32737/zero restarts, and issued one target control. Pass advanced only
+  `48 -> 49`; child `hmj_dc7af20472c74b829e14b6bff2b5d402` failed
+  `6/0/3/4`, eligible/selected `102/6`.
+- Identity matched all four dimensions and guard exclusions were zero. One
+  context succeeded in 14262 ms; four timed out once in 115178, 115122,
+  115148, and 115071 ms. Every failure retained the same-route completed marker
+  and pending payload-read operation.
+- Parent settled blocked/pass 49 with force null; scheduler remains paused,
+  wider passes remain `7/2/34`, active jobs are zero, API is healthy, and the
+  canary browser closed. No pass 50 or retry occurred.
+- Plan 0228 is the mandatory next packet: one fresh exact AuraCall-profile
+  launch and agent-browser session emulating direct 404, network tracking,
+  one reload, exact response selection, and one bounded response-body detail
+  read. Source changes and further canaries remain excluded.
+
 ## Turn 421 | 2026-08-08
 
 - Plan 0226's exact fallback red remained pending after 10001 simulated

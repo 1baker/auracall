@@ -1,9 +1,9 @@
 # ChatGPT Fallback-Body Installed Pass-49 Canary | 0227-2026-08-08
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 1
-Gate state: AUTHORIZED_ONE_CANARY_PREPARED
+Gate state: COMPLETE_CANARY_UNSUCCESSFUL_AGENT_BROWSER_PREPARED
 Goal execution state: ACTIVE_TURN_1_OF_10
 
 ## Stable Goal Objective
@@ -87,17 +87,17 @@ getResponseBody` sequence before another source change or canary.
 
 ## Acceptance Criteria
 
-- [ ] Plan is audited, committed, and pushed before effects.
-- [ ] Exactly one install and one restart produce source/runtime hash parity and
+- [x] Plan is audited, committed, and pushed before effects.
+- [x] Exactly one install and one restart produce source/runtime hash parity and
   a healthy stopped-control preflight.
-- [ ] Exactly one fresh child is bound to pass `48 -> 49`; no pass 50 occurs.
-- [ ] Terminal metrics, identity/guard evidence, and promoted receipts are
+- [x] Exactly one fresh child is bound to pass `48 -> 49`; no pass 50 occurs.
+- [x] Terminal metrics, identity/guard evidence, and promoted receipts are
   recorded and classified against Clean Canary Proof.
-- [ ] Scheduler and wider completions never resume; excluded effects remain
+- [x] Scheduler and wider completions never resume; excluded effects remain
   zero.
-- [ ] A failed/blocked/otherwise unsuccessful outcome transitions to one fresh
+- [x] A failed/blocked/otherwise unsuccessful outcome transitions to one fresh
   exact-profile deterministic agent-browser plan before further repair/canary.
-- [ ] Final runtime readback, docs, plan audit, commit, and push are complete.
+- [x] Final runtime readback, docs, plan audit, commit, and push are complete.
 
 ## Local Goal Bounds
 
@@ -140,3 +140,45 @@ getResponseBody` sequence before another source change or canary.
 - `next_action_or_stop_reason`: audit, commit, and push, then consume the sole
   install/restart/canary packet. If unsuccessful, prepare the mandatory fresh
   exact-profile agent-browser emulation before any further repair or canary.
+
+## Checkpoint 2 | Pass-49 Canary Unsuccessful; Direct Emulation Required
+
+- `checkpoint_id`: `P0227-C02`.
+- `state_transition`: P0227_AUTHORIZED_ONE_CANARY_PREPARED ->
+  COMPLETE_CANARY_UNSUCCESSFUL_AGENT_BROWSER_PREPARED.
+- `progress_classification`: blocker_reduction.
+- `activation_evidence`: the sole install produced source/installed adapter
+  SHA-256 parity at
+  `14668c680a393fd89495c97005486471d3535f9084de0c630e4d0887d8dc6045`;
+  the sole restart produced API PID 32737 active/running with `NRestarts=0`.
+- `canary`: the only control advanced pass `48 -> 49` and created exactly child
+  `hmj_dc7af20472c74b829e14b6bff2b5d402`. It ran once and failed at
+  `2026-08-09T02:34:04.254Z` with conversations/materialized/skipped/failed
+  `6/0/3/4`, eligible/selected `102/6`.
+- `identity_and_guard`: provider-session verdict `match`; email, plan,
+  structure, and account-level dimensions all matched; provider-guard
+  exclusions were zero and all ChatGPT guards remained null.
+- `receipt_evidence`:
+  - conversation `6a5e4bf8-972c-83ea-ad2f-3ad57f2a153f` succeeded once in
+    14262 ms;
+  - conversations `6a568ccb-3938-83ea-a635-02dde7634d3f`,
+    `6a563289-d5d8-83ea-9a2b-0e89e7078dff`,
+    `6a5245ad-7180-83ea-a3e4-7d2e81015af9`, and
+    `6a5245f5-0b10-83ea-b8fd-fa664bb743c5` timed out once in 115178, 115122,
+    115148, and 115071 ms respectively;
+  - all four failures retained
+    `lastStage=provider:chatgpt.skipSameRouteNavigation` and
+    `pendingOperation=provider:chatgpt.readConversationPayload`.
+- `post_canary_boundary`: parent is blocked/pass 49 with force ceiling null;
+  active jobs are zero; the canary browser closed; API PID 32737 remains
+  healthy; scheduler is paused; wider passes remain `7/2/34`; guards are null.
+- `effect_accounting`: installs 1/1, restarts 1/1, canaries 1/1, target
+  controls 1/1; scheduler/wider controls, manual browser actions, prompts,
+  `Answer now`, guard bypasses, direct runtime edits, and subagents zero.
+- `subagent_status`: not_spawned; `max_subagents=0`.
+- `review_disposition_summary`: Clean Canary Proof is unmet. The source seam is
+  valid provider-free but insufficient live; the repeated payload-read pending
+  state requires direct comparison of the exact fallback sequence.
+- `next_action_or_stop_reason`: stop canary/source work. Execute only Plan 0228
+  to emulate direct 404, exact-route reload/network capture, and bounded
+  response-body retrieval on one known failed conversation.

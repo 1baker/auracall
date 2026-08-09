@@ -386,11 +386,15 @@ Lane: P01
   null at 9001 ms after one response-body deadline seam preserved the outer
   fallback guard. Adapter tests pass 150/150 and the integrated gate passes
   306/306 with typecheck, build, touched Biome, audit, and diff hygiene.
-  Prepared one-canary successor:
+  Closed unsuccessful one-canary successor:
   [docs/dev/plans/0227-2026-08-08-chatgpt-fallback-body-installed-pass-49-canary.md](docs/dev/plans/0227-2026-08-08-chatgpt-fallback-body-installed-pass-49-canary.md).
-  It permits one install, one API restart, and one pass `48 -> 49` target
-  control. Any unsuccessful canary must route to another exact-profile
-  agent-browser discrepancy session before more source or live work.
+  One install/restart reached exact parity; the sole pass `48 -> 49` child
+  failed `6/0/3/4`. Four timeouts near 115.1 seconds again named the pending
+  payload read. Prepared mandatory direct successor:
+  [docs/dev/plans/0228-2026-08-08-chatgpt-fallback-sequence-agent-browser-emulation.md](docs/dev/plans/0228-2026-08-08-chatgpt-fallback-sequence-agent-browser-emulation.md).
+  It permits one fresh exact-profile agent-browser session to compare direct
+  404, reload response selection, and bounded response-body retrieval before
+  any source change or canary.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,

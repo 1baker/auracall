@@ -44869,3 +44869,20 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Plan 0227 prepares the sole install/restart/pass-49 canary. An unsuccessful
   result mandates a new exact-profile agent-browser deterministic emulation
   before any further source change or canary.
+
+## 2026-08-08 | Plan 0227 canary fails; Plan 0228 direct emulation opens
+
+- The only install produced exact adapter parity at `14668c68...6045`; the
+  only API restart produced PID 32737 with zero restarts. The sole control
+  advanced only pass `48 -> 49` and created child
+  `hmj_dc7af20472c74b829e14b6bff2b5d402`.
+- The child failed `6/0/3/4`, eligible/selected `102/6`. One context succeeded
+  in 14262 ms; four failed once near 115.1 seconds, all after the same-route
+  marker with `provider:chatgpt.readConversationPayload` pending.
+- Parent is blocked/pass 49/force null; scheduler paused, wider passes
+  `7/2/34`, active jobs zero, guards null, API healthy, and canary browser
+  closed. No retry or pass 50 ran.
+- Plan 0228 opens the operator-required fresh exact-profile agent-browser
+  comparison of direct 404, reload network response, and bounded response-body
+  retrieval. It excludes source, install/restart, completion, materialization,
+  and scheduler effects.
