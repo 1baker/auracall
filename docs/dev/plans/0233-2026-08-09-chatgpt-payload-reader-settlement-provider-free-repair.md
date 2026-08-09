@@ -1,10 +1,10 @@
 # ChatGPT Payload-Reader Settlement Provider-Free Repair | 0233-2026-08-09
 
-State: OPEN
+State: CLOSED
 Lane: P01
-Plan version: 1
-Gate state: OPEN_PROVIDER_FREE_RED_REQUIRED
-Goal execution state: ACTIVE_CALLBACK_SETTLEMENT_REPAIR
+Plan version: 2
+Gate state: CLOSED_PROVIDER_FREE_GREEN_LIVE_WITHHELD
+Goal execution state: COMPLETE_PROVIDER_FREE_SETTLEMENT_REPAIR
 
 ## Stable Goal Objective
 
@@ -74,21 +74,21 @@ an architectural finding rather than substituting a shallow green test.
 
 ## Acceptance Criteria
 
-- [ ] One named provider-free command reproduces the exact unsettled-reader
+- [x] One named provider-free command reproduces the exact unsettled-reader
   symptom red at the real callback/session seam.
-- [ ] The repro is minimized and 3-5 falsifiable hypotheses are ranked and
+- [x] The repro is minimized and 3-5 falsifiable hypotheses are ranked and
   tested against observed evidence.
-- [ ] A regression test proves the causal fix red-to-green without weakening
+- [x] A regression test proves the causal fix red-to-green without weakening
   payload, timeout, session-ownership, or fallback semantics.
-- [ ] The original repro and adjacent integration surface are green; typecheck,
+- [x] The original repro and adjacent integration surface are green; typecheck,
   production build, scoped lint, plan audit, and diff hygiene pass.
-- [ ] All temporary debug instrumentation is removed and no raw payload,
+- [x] All temporary debug instrumentation is removed and no raw payload,
   conversation content, credential, identity, header, cookie, or request body
   enters stdout, fixtures, or repo artifacts.
-- [ ] No browser/provider, installed-runtime, materialization,
+- [x] No browser/provider, installed-runtime, materialization,
   completion/scheduler/guard, direct runtime-state, or wider-resume effect
   occurs.
-- [ ] Plan 0233 is closed, committed, and pushed with a provider-free next gate
+- [x] Plan 0233 is closed, committed, and pushed with a provider-free next gate
   that does not authorize live execution.
 
 ## Local Goal Bounds
@@ -136,3 +136,29 @@ an architectural finding rather than substituting a shallow green test.
 - `next_action_or_stop_reason`: audit, commit, and push this provider-free
   authority, then build and run the exact red-capable loop before any source
   repair.
+
+## Checkpoint 2 | Exact Reader Settlement Repair Closes
+
+- `checkpoint_id`: `P0233-C02`.
+- `state_transition`: P0233_OPEN_PROVIDER_FREE_RED_REQUIRED ->
+  P0233_CLOSED_PROVIDER_FREE_GREEN_LIVE_WITHHELD.
+- `progress_classification`: causal_repair_complete_provider_free.
+- `root_cause`: the fallback reader awaited the CDP `Page.reload` command
+  acknowledgement before consuming its independently resolved exact Network
+  response body. A reload acknowledgement that remained pending therefore
+  stranded valid parsed payload data and the enclosing operation.
+- `repair`: keep the governed reload error-handled but concurrent; settle the
+  reader from the exact response body, which is the payload completion signal.
+  Shared `reloadAndSettle` behavior and payload semantics are unchanged.
+- `red_evidence`: the named single-test command failed with
+  `expected resolved, received pending` after the exact 200 callback and
+  successful `getResponseBody`; the same command passed after the repair.
+- `validation`: ChatGPT adapter 151/151; browser-service UI 54/54; TypeScript
+  typecheck; production build; scoped Biome check; goal-only plan audit; clean
+  diff hygiene.
+- `effect_accounting`: browser launches 0; live attaches 0; provider calls 0;
+  installs 0; API restarts 0; materialization starts 0; completion controls 0;
+  scheduler controls 0; guard controls 0; wider resumes 0; subagents 0.
+- `next_gate`: source is provider-free ready only. Any install/restart or fresh
+  `wsl-chrome-3` canary requires a separately explicit effect gate and fresh
+  stopped-runtime readback; no live execution is authorized by this closeout.

@@ -45062,3 +45062,20 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   only provider-free source/test/docs authority; browser/provider,
   install/restart, materialization, completion/scheduler/guard, and wider-resume
   effects remain zero and unauthorized.
+
+## 2026-08-09 | Plan 0233 closes the payload-reader settlement defect
+
+- The real adapter seam reproduced the exact failure provider-free: direct
+  parseable 404, one exact reload 200, successful response-body read, and an
+  enclosing payload reader that remained pending beyond 10 seconds.
+- Root cause was ordering, not authentication, target ownership, or response
+  transport. The reader awaited the CDP reload acknowledgement before
+  consuming an already-complete Network body. The governed reload now runs
+  concurrently and the exact body independently settles the reader.
+- The regression proved red-to-green; ChatGPT adapter tests pass 151/151 and
+  browser-service UI tests pass 54/54. Typecheck, production build, and scoped
+  Biome validation pass. No debug instrumentation or sensitive provider data
+  was introduced.
+- Browser/provider, install/restart, materialization,
+  completion/scheduler/guard, direct runtime-state, and wider-resume effects
+  remain zero. A fresh effect gate is required before installed or live proof.

@@ -3004,7 +3004,7 @@ export async function readChatgptConversationPayloadWithClient(
 			});
 		});
 	});
-	await reloadAndSettle(client, {
+	void reloadAndSettle(client, {
 		ignoreCache: true,
 		waitForDocumentReady: false,
 		interactionGovernor: options?.interactionGovernor,
@@ -3016,6 +3016,9 @@ export async function readChatgptConversationPayloadWithClient(
 			"fetch-conversation-api-payload-reload",
 		),
 	}).catch(() => undefined);
+	// The exact Network response is the payload completion signal. CDP can leave
+	// Page.reload pending after responseReceived/loadingFinished have delivered
+	// a complete body, so its command acknowledgement must not gate this read.
 	const response = await bodyPromise;
 	return parsePayloadBody(response?.body, response?.base64Encoded ?? false);
 }

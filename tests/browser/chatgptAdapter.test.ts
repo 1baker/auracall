@@ -2261,6 +2261,82 @@ describe("readChatgptConversationPayloadWithClient", () => {
 		}
 	});
 
+	test("settles from the exact fallback body when the reload command remains pending", async () => {
+		vi.useFakeTimers();
+		try {
+			let onResponseReceived: ((params: never) => void) | null = null;
+			let onLoadingFinished: ((params: never) => void) | null = null;
+			const getResponseBody = vi.fn(async () => ({
+				body: JSON.stringify({ mapping: { recovered: { message: { id: "recovered" } } } }),
+				base64Encoded: false,
+			}));
+			const client = {
+				// biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names.
+				Runtime: {
+					evaluate: vi.fn(async () => ({
+						result: { value: { ok: false, status: 404, body: "{}" } },
+					})),
+				},
+				// biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names.
+				Network: {
+					enable: vi.fn(async () => undefined),
+					responseReceived: vi.fn((handler) => {
+						onResponseReceived = handler;
+					}),
+					loadingFinished: vi.fn((handler) => {
+						onLoadingFinished = handler;
+					}),
+					getResponseBody,
+				},
+				// biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names.
+				Page: {
+					enable: vi.fn(async () => undefined),
+					reload: vi.fn(() => {
+						onResponseReceived?.({
+							requestId: "request-reload-pending",
+							response: {
+								url: "https://chatgpt.com/backend-api/conversation/conversation-reload-pending",
+								status: 200,
+							},
+						} as never);
+						onLoadingFinished?.({ requestId: "request-reload-pending" } as never);
+						return new Promise<never>(() => {});
+					}),
+				},
+			};
+			let outcome:
+				| { kind: "pending" }
+				| { kind: "resolved"; value: unknown }
+				| { kind: "rejected"; error: unknown } = { kind: "pending" };
+			void readChatgptConversationPayloadWithClient(
+				client as never,
+				"conversation-reload-pending",
+				null,
+				{ allowNavigation: true },
+			).then(
+				(value) => {
+					outcome = { kind: "resolved", value };
+				},
+				(error: unknown) => {
+					outcome = { kind: "rejected", error };
+				},
+			);
+
+			for (let index = 0; index < 10 && getResponseBody.mock.calls.length === 0; index += 1) {
+				await vi.advanceTimersByTimeAsync(0);
+			}
+			expect(getResponseBody).toHaveBeenCalledTimes(1);
+
+			await vi.advanceTimersByTimeAsync(10_001);
+			expect(outcome).toEqual({
+				kind: "resolved",
+				value: { mapping: { recovered: { message: { id: "recovered" } } } },
+			});
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
 	test("governs the fallback payload reload before mutating the page", async () => {
 		let onResponseReceived: ((params: never) => void) | null = null;
 		let onLoadingFinished: ((params: never) => void) | null = null;

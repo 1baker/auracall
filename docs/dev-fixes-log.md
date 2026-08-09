@@ -20982,3 +20982,18 @@ browser-stage lifecycle observability, not transcript truncation.
   Never retain request IDs, URLs with query material, headers, cookies, body
   content, stderr, or account identity, and close the exact browser after the
   first terminal classification.
+
+## 2026-08-09 | Do not gate an exact Network body on reload acknowledgement
+
+- CDP can deliver `responseReceived`, `loadingFinished`, and a complete
+  `getResponseBody` result while the originating `Page.reload` command promise
+  remains pending. Awaiting reload acknowledgement first can strand an already
+  valid payload and leave the enclosing provider operation unsettled.
+- For an exact-route reload-capture fallback, register Network listeners before
+  triggering the governed reload, handle reload rejection, and let the bounded
+  exact response-body promise determine reader settlement. Do not weaken exact
+  URL/status matching, response-body deadlines, or the outer fallback timer.
+- Prove this at the real reader seam with a fake reload that emits the exact 200
+  and complete body callbacks but never resolves its own command promise. The
+  regression must fail as pending before the fix and resolve the parsed mapping
+  afterward; nearby transport-only tests cannot catch this ordering defect.
