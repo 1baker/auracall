@@ -44942,3 +44942,27 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   launch/attach/direct-GET/clear/reload/helper sequence and immediate cleanup.
   Source, install/restart, retry, canary, materialization, completion/scheduler
   control, and wider resume remain excluded.
+
+## 2026-08-09 | Plan 0230 closes at request-discovery timeout
+
+- Pushed `OPEN` authority `3dff37f1` preceded every effect. The one exact
+  `wsl-chrome-3` browser was PID 37298 on actual port 45044; one named session
+  proved authenticated composer/account surfaces without login, challenge,
+  CAPTCHA, verification, or `Answer now` markers.
+- The direct metadata-only payload GET repeated parseable JSON 404 in 313 ms.
+  After exactly one network clear and one reload, the Plan 0229 helper returned
+  timeout at 5004 ms with no candidate selected and null request/status/body
+  metadata. The discovery command did not settle; response detail and
+  `Network.getResponseBody` were never reached. Plan 0230 closes D8 with no
+  retry.
+- Routine agent-browser calls in the same session used roughly 8.7-10.5 seconds
+  of process wall time, exceeding the helper's 5-second discovery deadline.
+  The next work unit is provider-free command-path latency characterization and
+  stage-specific timeout observability, not another live probe.
+- The named session and exact browser/process/port are closed. API PID 32737 has
+  zero restarts; target remains blocked/pass 49/force null; active jobs are
+  zero; wider ChatGPT completions remain paused at `7/2/34`; scheduler is
+  paused/idle with active request count zero; guard is null. The focused
+  provider-free helper suite remains green at 10/10; Plan 0230's closed-plan
+  audit fields and goal-governance audit pass, with only the repo's previously
+  existing unrelated active-plan audit debt remaining.

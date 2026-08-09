@@ -13,6 +13,18 @@
 - Raw agent-browser network output remains prohibited. Source, install/restart,
   canary, materialization, completion/scheduler control, and wider resume remain
   outside authority.
+- Pre-launch authority was pushed at `3dff37f1`. One exact browser launched as
+  PID 37298 on actual port 45044; one named attachment proved authenticated
+  composer/account surfaces and no login/challenge/`Answer now` markers.
+- The direct metadata GET repeated JSON 404 in 313 ms. After one clear and one
+  reload, the sole metadata helper terminated at its 5004-ms discovery timeout
+  with no candidate selected. Response detail and `Network.getResponseBody`
+  were never attempted; terminal classification is D8, and no retry ran.
+- Agent-browser commands in that live session consumed roughly 8.7-10.5
+  seconds of process wall time, so the helper's 5-second whole-child discovery
+  deadline did not cover normal command-path latency. The named session and
+  exact browser are closed. Target remains blocked/pass 49, jobs zero, wider
+  passes paused at `7/2/34`, scheduler paused/idle, and guard null.
 
 ## Turn 425 | 2026-08-08
 

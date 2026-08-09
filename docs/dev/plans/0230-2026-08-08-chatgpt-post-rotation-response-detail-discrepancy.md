@@ -1,10 +1,10 @@
 # ChatGPT Post-Rotation Response-Detail Discrepancy | 0230-2026-08-08
 
-State: OPEN
+State: CLOSED
 Lane: P01
-Plan version: 2
-Gate state: AUTHORIZED_OPERATOR_ACCEPTED_SESSION_REUSE_RISK_COMMIT_PENDING
-Goal execution state: ACTIVE_RESUMED_AFTER_OPERATOR_OVERRIDE
+Plan version: 3
+Gate state: COMPLETE_D8_DISCOVERY_COMMAND_TIMEOUT
+Goal execution state: COMPLETE_AGENT_BROWSER_EMULATION_DISCREPANCY_FOUND
 
 ## Stable Goal Objective
 
@@ -38,6 +38,27 @@ materialization, scheduler, or wider-completion effects.
   and instructed the agent to continue. This overrides Plan 0230's prior local
   security prerequisite for this one bounded diagnostic only; raw network
   output remains prohibited and every other effect boundary is unchanged.
+- The version-2 `OPEN` authority was audited, committed, and pushed at
+  `3dff37f1` before launch. One exact browser ran as PID 37298 on actual port
+  45044; one named agent-browser session proved the authenticated composer and
+  account surface with no login, challenge, CAPTCHA, verification, or
+  `Answer now` marker.
+- The direct payload GET again returned parseable JSON 404 in 313 ms (headers
+  312 ms, body 1 ms, 168 characters, no mapping). After exactly one network
+  clear and one reload, the Plan 0229 helper returned `outcome=timeout` at
+  5004 ms with `candidateCount=null` and every match/status/body field null.
+  The helper source returns that shape only when discovery did not settle, so
+  response-detail and `Network.getResponseBody` were never reached.
+- Routine live agent-browser commands in the same session consumed roughly
+  8.7-10.5 seconds of process wall time despite sub-second in-page work. The
+  5-second discovery child deadline was therefore below observed command-path
+  latency. This is terminal `D8_harness_terminal_failure`, not D1/D3/D6/D7;
+  no retry ran.
+- The named session detached and exact browser PID/port were closed. API PID
+  32737 remains active with zero restarts; target remains blocked/pass 49/force
+  null; active jobs are zero; wider ChatGPT completions remain paused at
+  `7/2/34`; scheduler is paused/idle with active request count zero; guard is
+  null; exact-profile process count is zero.
 
 ## External Gates
 
@@ -48,7 +69,7 @@ materialization, scheduler, or wider-completion effects.
 3. Operator gives fresh approval to consume this one live browser packet:
    satisfied by the instruction to continue on 2026-08-09.
 4. This version-2 `OPEN` transition is audited, committed, and pushed before
-   browser launch: pending until the pre-launch documentation commit is pushed.
+   browser launch: satisfied by `3dff37f1`.
 
 No browser or provider action is allowed while any gate remains unmet.
 
@@ -112,17 +133,17 @@ No browser or provider action is allowed while any gate remains unmet.
 
 ## Acceptance Criteria
 
-- [ ] All four external gates are evidenced before launch, including the
+- [x] All four external gates are evidenced before launch, including the
   operator's explicit session-reuse risk acceptance in place of rotation.
-- [ ] Exactly one fresh exact-profile browser and one named attachment are used.
-- [ ] Healthy authenticated identity and no challenge are proven before probe.
-- [ ] One direct GET remains metadata-only; one clear and one reload occur.
-- [ ] Only the Plan 0229 helper performs request discovery/detail, with raw
+- [x] Exactly one fresh exact-profile browser and one named attachment are used.
+- [x] Healthy authenticated identity and no challenge are proven before probe.
+- [x] One direct GET remains metadata-only; one clear and one reload occur.
+- [x] Only the Plan 0229 helper performs request discovery/detail, with raw
   agent-browser output absent from stdout, stderr, and repo artifacts.
-- [ ] Exactly one D1/D3/D6/D7/D8 result is recorded without retry.
-- [ ] Exact browser/session is closed and stopped runtime boundaries are
+- [x] Exactly one D1/D3/D6/D7/D8 result is recorded without retry.
+- [x] Exact browser/session is closed and stopped runtime boundaries are
   unchanged.
-- [ ] No excluded effect occurs; final docs/audit/commit/push are complete.
+- [x] No excluded effect occurs; final docs/audit/commit/push are complete.
 
 ## Local Goal Bounds
 
@@ -187,3 +208,27 @@ No browser or provider action is allowed while any gate remains unmet.
 - `next_action_or_stop_reason`: audit, commit, and push this `OPEN` authority,
   then run exactly one probe and close the exact browser at its first terminal
   classification.
+
+## Checkpoint 3 | Discovery Deadline Expires Before Response Detail
+
+- `checkpoint_id`: `P0230-C03`.
+- `state_transition`: P0230_OPEN_OPERATOR_ACCEPTED_SESSION_REUSE_RISK ->
+  P0230_CLOSED_D8_DISCOVERY_COMMAND_TIMEOUT.
+- `progress_classification`: outcome_progress.
+- `authority_classification`: the single approved live packet is consumed;
+  no retry, repair, install/restart, canary, materialization, completion, or
+  scheduler authority remains.
+- `evidence`: exact PID 37298/port 45044; healthy authenticated metadata-only
+  browser proof; direct GET 404 in 313 ms; one clear and one reload; helper
+  timeout at 5004 ms with null candidate selection; exact browser/process/port
+  cleanup; stopped runtime readback unchanged; provider-free helper regression
+  suite remains green at 10/10.
+- `subagent_status`: not_spawned; `max_subagents=0`.
+- `review_disposition_summary`: D8 accepted. D1/D3/D6 remain untested because
+  discovery never completed; D7 is inapplicable because no candidate array was
+  parsed. The accepted follow-up finding is that the 5-second discovery budget
+  does not cover observed live agent-browser command latency.
+- `next_action_or_stop_reason`: stop. Any successor must reproduce the
+  command-path latency provider-free, separate daemon/client acquisition time
+  from request-list execution, and make discovery timeout staging observable
+  before another live browser packet.

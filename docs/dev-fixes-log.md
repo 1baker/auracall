@@ -20933,3 +20933,18 @@ browser-stage lifecycle observability, not transcript truncation.
 - Enforce both an outer deadline and a byte cap. Test the actual child-process
   path with secret-bearing success, non-exiting, and oversize fixtures; mocked
   classification tests alone do not prove process-level capture behavior.
+
+## 2026-08-09 | Budget agent-browser acquisition separately from network detail
+
+- A safe response-detail helper can fail before request selection when its
+  discovery deadline covers the entire agent-browser child command, including
+  daemon/client acquisition and serialized command latency.
+- A terminal timeout with `candidateCount=null` and all request/status fields
+  null identifies discovery-command timeout, not a stalled
+  `Network.getResponseBody`. Do not classify it as response-detail evidence or
+  retry the live browser.
+- In the Plan 0230 session, routine agent-browser commands consumed roughly
+  8.7-10.5 seconds of process wall time while the discovery child was capped at
+  5 seconds. Characterize that latency provider-free, expose the timed-out
+  stage explicitly, and give acquisition plus request-list execution separate
+  positive bounds before another live probe.

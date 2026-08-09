@@ -406,14 +406,19 @@ Lane: P01
   final 10/10 suite proves internally captured exact-URL request discovery plus
   bounded detail reduction, including real child timeout/output-cap behavior,
   without public request IDs, URLs, headers, bodies, stderr, or child errors.
-  Open operator-risk-accepted continuation:
+  Closed operator-risk-accepted continuation:
   [docs/dev/plans/0230-2026-08-08-chatgpt-post-rotation-response-detail-discrepancy.md](docs/dev/plans/0230-2026-08-08-chatgpt-post-rotation-response-detail-discrepancy.md).
   On 2026-08-09 the operator explicitly accepted reuse of the unrotated session,
-  waived reauthentication for this packet, and approved one live diagnostic.
-  Plan 0230 is `OPEN`; its documentation transition must be audited, committed,
-  and pushed before launch. Raw network output, retries, source, canary,
-  materialization, completion, scheduler, and wider-resume effects remain
-  prohibited.
+  waived reauthentication for this packet, and approved one live diagnostic;
+  its `OPEN` authority was pushed at `3dff37f1`. The exact session repeated the
+  direct JSON 404 in 313 ms, then the safe helper timed out at its 5004-ms
+  discovery boundary with no candidate selected, before response detail or
+  `Network.getResponseBody`. This is D8: the 5-second discovery child deadline
+  is below the roughly 8.7-10.5-second process latency observed for ordinary
+  agent-browser commands in that session. The browser is closed and stopped
+  runtime boundaries are unchanged. Any successor is provider-free first;
+  retry, source, canary, materialization, completion, scheduler, and wider
+  resume remain prohibited.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,
