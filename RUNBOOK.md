@@ -1,5 +1,18 @@
 # RUNBOOK
 
+## Turn 420 | 2026-08-08
+
+- The operator authorized up to ten more goal turns and requires another
+  exact-profile agent-browser emulation after any unsuccessful canary. Plan
+  0226 opens the next provider-free slice; live effects remain excluded.
+- The exact red will drive initial 404, fallback response events, and a
+  never-settling `Network.getResponseBody`. Current source clears the outer
+  10-second body timer before awaiting that call, so the expected baseline is a
+  deterministic still-pending result.
+- Source is clean/synchronized at `1f291f28`; API PID 95638 has zero restarts;
+  scheduler/wider completions remain paused; active history jobs zero; target
+  blocked/pass 48/force null; exact managed browser processes zero.
+
 ## Turn 419 | 2026-08-08
 
 - The operator directed plan and execution of the proposed bounded direct

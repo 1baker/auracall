@@ -44837,3 +44837,15 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Port-45044 Chrome is closed and exact-profile processes are zero. Scheduler,
   completions, materialization, API health, passes, force ceiling, and ChatGPT
   guards remain at the stopped preflight boundary.
+
+## 2026-08-08 | Plan 0226 opens fallback response-body deadline repair
+
+- Current focus: deterministically reproduce the post-404 fallback with exact
+  network events and a never-settling `getResponseBody`, then repair only that
+  deadline seam provider-free.
+- The operator's ten-turn continuation requires one installed canary after the
+  green repair and another exact-profile agent-browser deterministic emulation
+  if that canary is unsuccessful.
+- Runtime effects remain zero: source synchronized at `1f291f28`, API PID
+  95638/zero restarts, scheduler and wider completions paused, active history
+  jobs zero, target blocked/pass 48/force null, and exact browser closed.

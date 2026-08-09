@@ -380,6 +380,12 @@ Lane: P01
   fetch/body/parse/transfer as the long stall and proving entry into the later
   reload/network-capture fallback. That fallback clears its body timer before
   an unbounded `Network.getResponseBody`; a provider-free red is next.
+  Active provider-free successor:
+  [docs/dev/plans/0226-2026-08-08-chatgpt-fallback-response-body-deadline.md](docs/dev/plans/0226-2026-08-08-chatgpt-fallback-response-body-deadline.md).
+  It admits one exact fake-CDP red and one deadline repair seam. After green
+  validation it prepares one installed canary; any unsuccessful canary must
+  route to another exact-profile agent-browser discrepancy session before more
+  source or live work.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,
