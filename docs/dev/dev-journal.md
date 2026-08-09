@@ -44966,3 +44966,19 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   provider-free helper suite remains green at 10/10; Plan 0230's closed-plan
   audit fields and goal-governance audit pass, with only the repo's previously
   existing unrelated active-plan audit debt remaining.
+
+## 2026-08-09 | Plan 0231 opens layered agent-browser deadlines
+
+- Current focus is one provider-free red/green at the safe network metadata
+  child boundary. The current 5-second discovery deadline covers both
+  agent-browser client/session acquisition and request enumeration, despite
+  observed 8.7-10.5-second command wall times.
+- Installed agent-browser already exposes `--job-timeout-ms`: its daemon worker
+  applies that deadline only after serialized queue dispatch and cancels the
+  running operation before a longer caller deadline. Plan 0231 will use that
+  public seam for discovery and detail while retaining an independent positive
+  acquisition/transport allowance, output cap, and closed-world redaction.
+- Browser/provider, install/restart, materialization/completion, scheduler, and
+  wider-resume effects remain zero. One fresh `wsl-chrome-3` canary plan may be
+  prepared only after provider-free closure and will not itself authorize a
+  live run.
