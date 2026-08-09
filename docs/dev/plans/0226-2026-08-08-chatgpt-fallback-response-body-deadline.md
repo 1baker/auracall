@@ -1,9 +1,9 @@
 # ChatGPT Fallback Response-Body Deadline | 0226-2026-08-08
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 1
-Gate state: PROVIDER_FREE_DIAGNOSIS_AND_REPAIR
+Gate state: COMPLETE_PROVIDER_FREE_REPAIR_CANARY_PREPARED
 Goal execution state: ACTIVE_TURN_1_OF_10
 
 ## Stable Goal Objective
@@ -97,15 +97,15 @@ before any further repair or canary.
 
 ## Acceptance Criteria
 
-- [ ] Plan is audited, committed, and pushed before source changes.
-- [ ] One deterministic real-seam test is red because fallback
+- [x] Plan is audited, committed, and pushed before source changes.
+- [x] One deterministic real-seam test is red because fallback
   `getResponseBody` remains pending after its intended deadline.
-- [ ] One bounded production seam makes the exact red green without truncating
+- [x] One bounded production seam makes the exact red green without truncating
   a successfully returned payload or weakening navigation/guard semantics.
-- [ ] Integrated provider-free validation, typecheck, lint, build, audit, and
+- [x] Integrated provider-free validation, typecheck, lint, build, audit, and
   diff hygiene pass.
-- [ ] Runtime/provider/control effects remain zero and stopped state is re-read.
-- [ ] Repair and canonical evidence are committed/pushed; one exact canary
+- [x] Runtime/provider/control effects remain zero and stopped state is re-read.
+- [x] Repair and canonical evidence are committed/pushed; one exact canary
   successor is prepared with the mandatory failed-canary agent-browser edge.
 
 ## Local Goal Bounds
@@ -154,3 +154,42 @@ before any further repair or canary.
   remain falsification controls or are already contradicted.
 - `next_action_or_stop_reason`: audit, commit, and push, then add and run the one
   exact red before modifying production source.
+
+## Checkpoint 2 | Response-Body Deadline Proven And Canary Prepared
+
+- `checkpoint_id`: `P0226-C02`.
+- `state_transition`: P0226_PROVIDER_FREE_REPAIR_PREPARED ->
+  COMPLETE_PROVIDER_FREE_REPAIR_CANARY_PREPARED.
+- `progress_classification`: blocker_reduction_complete.
+- `exact_red`: the real payload reader reached the fallback
+  `Network.getResponseBody` once and remained `pending` after 10001 simulated
+  milliseconds on current source. This confirmed H1 and contradicted H2/H3;
+  the two permitted red runs were consumed only to obtain an untruncated
+  verdict.
+- `repair`: the fallback keeps its 10000-ms outer settlement timer active and
+  independently bounds `Network.getResponseBody` at 9000 ms. The common
+  single-settlement helper clears the outer timer only when the bounded body
+  operation settles, so a late CDP result cannot replace the null outcome.
+- `exact_green`: the regression resolves null after 9001 simulated
+  milliseconds, proving the response-body deadline rather than only the outer
+  fallback guard. The full adapter suite passes 150/150.
+- `validation`: the integrated adapter/context/materialization/completion/MCP
+  gate passes 306/306; TypeScript typecheck, production build, zero-fix scoped
+  Biome, marker scan, plan audit (`227` kept, `0` errors), and diff hygiene
+  pass.
+- `runtime_boundary`: API PID 95638 is active/running with `NRestarts=0`;
+  scheduler state/posture is paused; active history jobs are zero; wider
+  ChatGPT completions remain paused at `7/2/34`; target remains blocked/pass 48
+  with force ceiling null; exact managed-browser processes are zero.
+- `effect_accounting`: installs, restarts, provider/browser calls,
+  materialization starts, completion/scheduler controls, navigations, clicks,
+  prompts, `Answer now`, guard bypasses, direct runtime edits, and subagents
+  all zero.
+- `subagent_status`: not_spawned; `max_subagents=0`.
+- `review_disposition_summary`: H1 is confirmed and repaired provider-free;
+  installed effectiveness remains deliberately unproved until the one-canary
+  successor. H4 remains rejected; H5 is a post-canary discrepancy branch only.
+- `next_action_or_stop_reason`: commit and push this repair and successor plan,
+  then execute only Plan 0227. If its canary is unsuccessful, transition to a
+  fresh exact-profile deterministic agent-browser emulation before any further
+  source change or canary.

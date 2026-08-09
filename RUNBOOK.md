@@ -1,5 +1,24 @@
 # RUNBOOK
 
+## Turn 421 | 2026-08-08
+
+- Plan 0226's exact fallback red remained pending after 10001 simulated
+  milliseconds when `Network.getResponseBody` never settled. One production
+  seam preserves the 10-second outer fallback deadline and independently
+  bounds the response-body request at 9 seconds; the strengthened regression
+  resolves null at 9001 ms.
+- The full adapter suite passes `150/150`; the integrated adapter, context,
+  materialization, completion, and MCP gate passes `306/306`. Typecheck,
+  production build, scoped Biome, marker scan, plan audit, and diff hygiene
+  pass.
+- Runtime/provider effects remain zero: API PID 95638/zero restarts, scheduler
+  paused, active jobs zero, wider passes `7/2/34`, target blocked/pass 48/force
+  null, and exact managed-browser processes zero.
+- Plan 0227 prepares one install, one restart, and one pass `48 -> 49` canary.
+  If unsuccessful, the next mandatory action is a fresh exact-profile
+  agent-browser emulation of `404 -> network events -> reload ->
+  getResponseBody` before another repair or canary.
+
 ## Turn 420 | 2026-08-08
 
 - The operator authorized up to ten more goal turns and requires another

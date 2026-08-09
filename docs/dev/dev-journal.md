@@ -44849,3 +44849,23 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Runtime effects remain zero: source synchronized at `1f291f28`, API PID
   95638/zero restarts, scheduler and wider completions paused, active history
   jobs zero, target blocked/pass 48/force null, and exact browser closed.
+
+## 2026-08-08 | Plan 0226 closes; one pass-49 canary prepared
+
+- The exact real-reader test reached fallback `getResponseBody` once and stayed
+  pending after 10001 simulated milliseconds on current source. This confirmed
+  that clearing the fallback timer before the response-body CDP request settled
+  removed its only bound.
+- One source seam now keeps the outer 10000-ms fallback timer until settlement
+  and wraps `getResponseBody` with an independent 9000-ms transport deadline.
+  The strengthened regression resolves null at 9001 ms, while successful full
+  payload parsing remains covered.
+- Full adapter tests pass `150/150`; the integrated adapter/context/history-
+  materialization/completion/MCP gate passes `306/306`. Typecheck, production
+  build, scoped Biome, marker scan, plan audit, and diff hygiene pass.
+- Runtime/provider effects remain zero at closeout: API PID 95638/zero
+  restarts, scheduler paused, active jobs zero, wider passes `7/2/34`, target
+  blocked/pass 48/force null, and exact managed-browser processes zero.
+- Plan 0227 prepares the sole install/restart/pass-49 canary. An unsuccessful
+  result mandates a new exact-profile agent-browser deterministic emulation
+  before any further source change or canary.

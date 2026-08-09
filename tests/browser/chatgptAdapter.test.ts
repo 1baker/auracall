@@ -2193,6 +2193,74 @@ describe("readChatgptConversationPayloadWithClient", () => {
 		expect(client.Page.reload).not.toHaveBeenCalled();
 	});
 
+	test("bounds a stalled fallback response-body read", async () => {
+		vi.useFakeTimers();
+		try {
+			let onResponseReceived: ((params: never) => void) | null = null;
+			let onLoadingFinished: ((params: never) => void) | null = null;
+			const getResponseBody = vi.fn(() => new Promise<never>(() => {}));
+			const client = {
+				// biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names.
+				Runtime: {
+					evaluate: vi.fn(async () => ({
+						result: { value: { ok: false, status: 404, body: "{}" } },
+					})),
+				},
+				// biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names.
+				Network: {
+					enable: vi.fn(async () => undefined),
+					responseReceived: vi.fn((handler) => {
+						onResponseReceived = handler;
+					}),
+					loadingFinished: vi.fn((handler) => {
+						onLoadingFinished = handler;
+					}),
+					getResponseBody,
+				},
+				// biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names.
+				Page: {
+					enable: vi.fn(async () => undefined),
+					reload: vi.fn(async () => {
+						onResponseReceived?.({
+							requestId: "request-stalled-body",
+							response: {
+								url: "https://chatgpt.com/backend-api/conversation/conversation-stalled-body",
+								status: 200,
+							},
+						} as never);
+						onLoadingFinished?.({ requestId: "request-stalled-body" } as never);
+					}),
+				},
+			};
+			let outcome:
+				| { kind: "pending" }
+				| { kind: "resolved"; value: unknown }
+				| { kind: "rejected"; error: unknown } = { kind: "pending" };
+			void readChatgptConversationPayloadWithClient(
+				client as never,
+				"conversation-stalled-body",
+				null,
+				{ allowNavigation: true },
+			).then(
+				(value) => {
+					outcome = { kind: "resolved", value };
+				},
+				(error: unknown) => {
+					outcome = { kind: "rejected", error };
+				},
+			);
+			for (let index = 0; index < 10 && getResponseBody.mock.calls.length === 0; index += 1) {
+				await vi.advanceTimersByTimeAsync(0);
+			}
+			expect(getResponseBody).toHaveBeenCalledTimes(1);
+
+			await vi.advanceTimersByTimeAsync(9_001);
+			expect(outcome).toEqual({ kind: "resolved", value: null });
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
 	test("governs the fallback payload reload before mutating the page", async () => {
 		let onResponseReceived: ((params: never) => void) | null = null;
 		let onLoadingFinished: ((params: never) => void) | null = null;

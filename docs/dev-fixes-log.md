@@ -20902,7 +20902,7 @@ browser-stage lifecycle observability, not transcript truncation.
   before awaiting `Network.getResponseBody` removes the only settlement bound.
   If that CDP request hangs, the callback cannot call `finish(...)` and the
   already-cleared timer cannot recover the promise.
-- Preserve full payload semantics, but apply both a DevTools request timeout and
-  an independent transport deadline to `getResponseBody`; clear the outer body
-  timer only after that bounded operation settles. Prove the exact sequence red
-  with fake CDP before changing installed behavior or authorizing a canary.
+- Preserve full payload semantics, but apply an independent transport deadline
+  to `getResponseBody` and retain the outer fallback deadline until that
+  bounded operation settles. Prove the exact sequence red with fake CDP before
+  changing installed behavior or authorizing a canary.

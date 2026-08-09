@@ -406,6 +406,8 @@ const CHATGPT_ARTIFACT_BROWSER_DOWNLOAD_TIMEOUT_MS = 30_000;
 const CHATGPT_VISIBLE_FILES_READ_TIMEOUT_MS = 10_000;
 const CHATGPT_CONVERSATION_PAYLOAD_FETCH_TIMEOUT_MS = 9_000;
 const CHATGPT_CONVERSATION_PAYLOAD_EVALUATE_TIMEOUT_MS = 10_000;
+const CHATGPT_CONVERSATION_PAYLOAD_RESPONSE_BODY_TIMEOUT_MS = 9_000;
+const CHATGPT_CONVERSATION_PAYLOAD_FALLBACK_TIMEOUT_MS = 10_000;
 const CHATGPT_CONVERSATION_MESSAGES_PAGE_SIZE = 8;
 const CHATGPT_CONVERSATION_MESSAGES_PAGE_TIMEOUT_MS = 10_000;
 const CHATGPT_CONVERSATION_MESSAGES_MAX_PAGES = 256;
@@ -2966,12 +2968,17 @@ export async function readChatgptConversationPayloadWithClient(
 	const bodyPromise = new Promise<{ body: string; base64Encoded: boolean } | null>((resolve) => {
 		let settled = false;
 		let exactRequestId: string | null = null;
+		let timer: NodeJS.Timeout | null = null;
 		const finish = (value: { body: string; base64Encoded: boolean } | null) => {
 			if (settled) return;
 			settled = true;
+			if (timer) {
+				clearTimeout(timer);
+				timer = null;
+			}
 			resolve(value);
 		};
-		const timer = setTimeout(() => finish(null), 10_000);
+		timer = setTimeout(() => finish(null), CHATGPT_CONVERSATION_PAYLOAD_FALLBACK_TIMEOUT_MS);
 		client.Network.responseReceived((params) => {
 			if (settled) return;
 			const url = params.response?.url ?? "";
@@ -2982,10 +2989,11 @@ export async function readChatgptConversationPayloadWithClient(
 		});
 		client.Network.loadingFinished(async (params) => {
 			if (settled || !exactRequestId || params.requestId !== exactRequestId) return;
-			clearTimeout(timer);
-			const response = await client.Network.getResponseBody({ requestId: params.requestId }).catch(
-				() => null,
-			);
+			const response = await withChatgptTimeout(
+				client.Network.getResponseBody({ requestId: params.requestId }),
+				CHATGPT_CONVERSATION_PAYLOAD_RESPONSE_BODY_TIMEOUT_MS,
+				`Timed out reading ChatGPT fallback conversation payload response body for ${conversationId} after ${CHATGPT_CONVERSATION_PAYLOAD_RESPONSE_BODY_TIMEOUT_MS}ms.`,
+			).catch(() => null);
 			if (!response?.body) {
 				finish(null);
 				return;
