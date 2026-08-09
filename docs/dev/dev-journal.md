@@ -45231,3 +45231,17 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   `wsl-chrome-3` job and one attempt. Installs, restarts, scheduler controls,
   completion controls, guard controls, snapshot refresh, retries, prompts,
   clicks, second jobs, and wider materialization remain excluded.
+
+## 2026-08-09 | Plan 0237 rejects the exact asset provider-free
+
+- The broad in-memory `maxItems=1` simulation seeded 1,884 retained jobs,
+  selected conversation `6a5e4bf8-972c-83ea-ad2f-3ad57f2a153f`, and stopped
+  at one disabled materialization seam with no provider callback. The exact
+  simulation bound the first cached download artifact and stopped identically.
+- Exact archive lookup then proved that the DOCX was already readable: 49,238 bytes at
+  SHA-256 `4a5c20b1...a9a6c`, with readable DOCX/PDF DOM aliases in the same
+  conversation. The durable job index stayed byte-identical at
+  `641836ac...b41087` across both simulations.
+- The one-canary gate is not ready because the exact selector resolves a known
+  complete asset. No durable job, browser/provider work, install/restart,
+  completion/scheduler/guard control, retry, or wider materialization ran.

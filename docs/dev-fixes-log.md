@@ -21043,3 +21043,16 @@ browser-stage lifecycle observability, not transcript truncation.
   cleanup, stopped scheduler, unchanged wider completions, and clear guard
   before closing the canary. Do not turn the clean skip into authority to
   retry, resume, or start a separate job.
+
+## 2026-08-09 | Exact catalog binding is not missing-local admission
+
+- A provider-free exact catalog-item simulation can correctly bind
+  `selectedCatalogAsset` and reach the disabled materialization seam even when
+  archive truth already has readable bytes for that exact provider artifact.
+- Always place exact archive/file/job adjudication after selector agreement and
+  before a live job. Broad candidate counts and a successful exact binding are
+  routing evidence, not proof that provider work remains necessary.
+- If the broad reconciliation selects a conversation whose first exact cached
+  asset is already readable, stop provider-free. Do not skip to a later asset
+  ad hoc or spend a provider action until candidate admission and exact-asset
+  exclusion agree under a separately bounded repair.

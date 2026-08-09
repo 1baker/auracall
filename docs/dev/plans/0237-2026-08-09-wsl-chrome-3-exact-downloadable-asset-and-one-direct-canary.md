@@ -1,10 +1,11 @@
 # WSL Chrome 3 Exact Downloadable Asset And One Direct Canary | 0237-2026-08-09
 
-State: OPEN
+State: CLOSED
 Lane: LIVE_FOLLOW_RECOVERY
 Plan version: 1
-Goal execution state: PROVIDER_FREE_SELECTION_REQUIRED
-Gate state: LIVE_CANARY_WITHHELD_PENDING_EXACT_ASSET
+Outcome: COMPLETE_PROVIDER_FREE_CANARY_WITHHELD
+Goal execution state: COMPLETE_PROVIDER_FREE
+Gate state: NOT_READY_ALREADY_MATERIALIZED_ASSET
 
 ## Stable Objective
 
@@ -128,6 +129,36 @@ provider-free with no live job.
 5. `C5_other_terminal_failure`: timeout, pending operation, unexpected fanout,
    service fault, scheduler/completion movement, or any other ambiguity.
 
+## Exact Provider-Free Resolution And Gate Decision
+
+- The broad in-memory simulation seeded all 1,884 persisted jobs, reused the
+  pass-51 `chatgpt/wsl-chrome-3` reconciliation request with `maxItems=1`, and
+  selected conversation `6a5e4bf8-972c-83ea-ad2f-3ad57f2a153f`, titled
+  `Budget Justification Request`. It reached the disabled
+  `materializeConversation` seam exactly once; no other dependency callback or
+  provider implementation ran.
+- Current cache ordering exposes four eligible download representations in
+  that conversation followed by four favicon images explicitly classified as
+  static false positives. The first exact catalog item is artifact
+  `8327aca6-69c2-4b6b-bf84-14ca67806ed2:download:sandbox:/mnt/data/Delta_Tie_Detailed_Budget_Justification_for_Review.docx`,
+  titled `Download the editable Word budget justification`.
+- The exact in-memory simulation bound that item in `selectedCatalogAsset`,
+  reached the same disabled seam once, and invoked zero provider
+  implementations. This proves exact selector agreement but does not establish
+  missing-local eligibility by itself.
+- Closed-world archive lookup proves the exact item is already materialized
+  and readable at 49,238 bytes with SHA-256
+  `4a5c20b16342ed3f2504bc1f3e4597744a799a2ccf16a1dc8dd48ae1c75a9a6c`.
+  The same conversation also has readable DOM-button aliases for the DOCX and
+  PDF. The broad simulation's carried terminal families already include the
+  normalized document family.
+- The durable history-materialization index SHA-256 remained byte-identical
+  before and after both simulations at
+  `641836ac5c8c1293a94714334e0cae5e40c3996c6ca2950a78fb2ad932b41087`.
+- The fresh one-canary gate is therefore not ready. A direct job would replay a
+  known readable asset, so no durable job, browser launch, provider callback,
+  or download is permitted or useful under this packet.
+
 ## Local Goal Bounds
 
 - `max_codegraph_calls: 4`; `max_in_memory_simulations: 2`;
@@ -150,15 +181,16 @@ provider-free with no live job.
 
 ## Acceptance Criteria
 
-- [ ] One broad and one exact provider-free simulation resolve one exact
-  conversation and one exact current asset with callback count zero.
-- [ ] Durable state is unchanged by simulation and exact closed-world readback
+- [x] One broad and one exact provider-free simulation resolve one exact
+  conversation and one exact current asset with provider implementation
+  callback count zero and one disabled seam call per simulation.
+- [x] Durable state is unchanged by simulation and exact closed-world readback
   truthfully admits or rejects the asset.
-- [ ] If admitted, exactly one direct `maxItems=1` job reaches one C1-C5
-  terminal classification without retry or substitute.
-- [ ] Final API, job, exact-browser, target pass, scheduler, wider completion,
+- [x] Because the exact asset was rejected as already readable, no direct job,
+  browser launch, provider callback, retry, or substitute occurred.
+- [x] Final API, job, exact-browser, target pass, scheduler, wider completion,
   guard, git, docs, and plan-audit readbacks agree.
-- [ ] No install/restart, scheduler/completion/guard action, snapshot refresh,
+- [x] No install/restart, scheduler/completion/guard action, snapshot refresh,
   prompt/click, `Answer now`, direct runtime edit, second job, retry, or wider
   materialization occurs.
 
@@ -212,3 +244,38 @@ The exact current `wsl-chrome-3` conversation and asset are resolved with
 provider callbacks disabled; one direct canary either proves useful yield or
 stops at one truthful terminal classification; the exact browser is cleaned;
 and scheduler plus all completion controls remain untouched.
+
+## Final Checkpoint | Exact Asset Rejected Provider-Free
+
+- `plan_version`: 1
+- `checkpoint_id`: `P0237-C02`
+- `state_transition`: P0237_OPEN_PROVIDER_FREE_SELECTION_REQUIRED ->
+  P0237_CLOSED_NOT_READY_ALREADY_MATERIALIZED_ASSET.
+- `progress_classification`: blocker_identified.
+- `owned_changes`: two in-memory simulations, cache/archive/filesystem
+  readbacks, and plan/journal/fixes evidence only. No durable runtime or
+  provider/browser effect.
+- `evidence`: 1,884 persisted jobs seeded into each in-memory store; broad
+  conversation `6a5e4bf8-972c-83ea-ad2f-3ad57f2a153f`; exact asset ID above;
+  two disabled seam calls total; zero provider implementation callbacks;
+  byte-identical durable job-index hash; readable 49,238-byte DOCX at exact
+  SHA-256; final API PID 8247 with zero restarts; scheduler paused/idle; active
+  jobs zero; target unchanged at pass 51; wider ChatGPT passes paused at
+  `7/2/34`; guard null; exact browser process absent.
+- `subagent_status`: not_spawned; `max_subagents=0`.
+- `budget_consumption`: CodeGraph 4/4; simulations 2/2; disabled seam calls
+  2; provider implementation callbacks 0; durable jobs 0/1; job attempts 0/1;
+  browser launches/closes 0/1; downloads 0/1; every excluded effect counter 0.
+- `remaining_criteria`: none for this provider-free packet. One live canary
+  remains unavailable because exact selection resolves an already-readable
+  asset.
+- `authority_classification`: fail-closed execution of the operator-approved
+  packet; the admission gate prevented a duplicate provider action and did not
+  consume scheduler, completion, or wider-materialization authority.
+- `review_disposition_summary`: aggregate `158` retrievable inventory and broad
+  conversation selection are rejected as canary evidence. Exact archive truth
+  controls and proves the selected asset is already complete.
+- `next_action_or_stop_reason`: close, audit, commit, and push. Any successor
+  must repair or explain why broad candidate admission can select a
+  conversation whose first exact catalog asset is already readable, then rerun
+  provider-free selection before another live gate.
