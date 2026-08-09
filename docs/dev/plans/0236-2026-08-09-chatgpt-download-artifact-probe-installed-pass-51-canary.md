@@ -1,10 +1,10 @@
 # ChatGPT Download-Artifact Probe Installed Pass-51 Canary | 0236-2026-08-09
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 1
-Gate state: OPEN_OPERATOR_APPROVED_RUNTIME_READBACK_REQUIRED
-Goal execution state: READY_BEHIND_EXTERNAL_GATES
+Gate state: CONSUMED_C1_CLEAN_ARTIFACT_PROBE_SETTLEMENT_NO_RESUME
+Goal execution state: COMPLETE_STOPPED_AT_FIRST_TERMINAL_RESULT
 
 ## Stable Goal Objective
 
@@ -17,6 +17,29 @@ retry, resume the scheduler, resume any wider completion, control a provider
 guard, or start any separate materialization.
 
 ## Current State
+
+- The sole installed canary is consumed and closes
+  `C1_clean_artifact_probe_settlement`. One install produced exact source/
+  installed adapter parity at
+  `076d74e4e7f708f07cfbb58c6a0fe093388010ab096d61a1b9e0e8aad91161ec`;
+  one API restart produced PID 8247 active/running with zero restarts.
+- The sole completion control advanced only pass 50 to 51 and created only
+  child `hmj_655aa727754b4083adc84e7707693177`. It ran attempt 1 from
+  2026-08-09T19:22:16.490Z to 2026-08-09T19:28:31.806Z and settled `skipped`
+  as a non-failure because no downloadable assets were found.
+- The child examined four conversations, reported 102 eligible candidates and
+  four selected candidates, materialized zero, skipped seven outcomes, and
+  failed zero. Its provider-session proof was `match`; no result entry,
+  snapshot refresh, pending operation, artifact-probe timeout, auth/challenge
+  failure, or reload/session error was retained.
+- The parent absorbed that result as `idle_waiting` at pass 51 with
+  `forceRunUntilPassCount=null`, null error, and the exact child outcome. Final
+  readback is API PID 8247 active/running with zero restarts, active jobs zero,
+  scheduler paused/idle, wider ChatGPT passes still paused at `7/2/34`, guard
+  null, and exact `wsl-chrome-3` browser process count zero.
+- No retry, second pass, second child, second install/restart, scheduler or
+  wider-completion resume, guard control, prompt/click, direct runtime edit, or
+  separate materialization start occurred.
 
 - Plan 0235 closed provider-free at pushed commit `a6f938c5`. Its exact
   real-seam regression failed red when a never-settling artifact-probe
@@ -84,9 +107,10 @@ materialization effect is allowed while any gate remains unmet.
 
 ## Terminal Classification
 
-1. `C1_clean_artifact_probe_settlement`: one child reaches terminal success
-   without context pending/timeout evidence, failed count is zero, and the
-   parent settles without `account_mirror_materialization_failed`.
+1. `C1_clean_artifact_probe_settlement`: one child reaches terminal
+   non-failure (`succeeded` or a zero-failure `skipped` result) without context
+   pending/timeout evidence, failed count is zero, and the parent settles
+   without `account_mirror_materialization_failed`.
 2. `C2_repeated_download_artifact_timeout`: the child again times out or
    remains pending at `provider:chatgpt.readVisibleDownloadArtifactProbes`.
    Stop with no retry and return to provider-free diagnosis.
@@ -103,17 +127,17 @@ materialization effect is allowed while any gate remains unmet.
 
 ## Acceptance Criteria
 
-- [ ] All four external gates are satisfied before effects.
-- [ ] Exactly one install and one API restart produce source/installed adapter
+- [x] All four external gates are satisfied before effects.
+- [x] Exactly one install and one API restart produce source/installed adapter
   parity and preserve stopped-runtime state.
-- [ ] Exactly one `wsl-chrome-3` `run-one-pass` advances pass 50 to 51 and
+- [x] Exactly one `wsl-chrome-3` `run-one-pass` advances pass 50 to 51 and
   creates exactly one fresh child under the existing `maxItems=6` ceiling.
-- [ ] Exactly one C1-C5 terminal classification is recorded without retry.
-- [ ] Exact child/parent evidence distinguishes artifact-probe settlement from
+- [x] Exactly one C1-C5 terminal classification is recorded without retry.
+- [x] Exact child/parent evidence distinguishes artifact-probe settlement from
   authentication, challenge, provider guard, or a distinct downstream stage.
-- [ ] API returns healthy, active jobs return zero, scheduler remains paused,
+- [x] API returns healthy, active jobs return zero, scheduler remains paused,
   wider completions remain paused at `7/2/34`, and any exact browser is closed.
-- [ ] No second install/restart/canary, scheduler or wider-completion resume,
+- [x] No second install/restart/canary, scheduler or wider-completion resume,
   guard control, prompt submission, click, `Answer now`, direct runtime JSON
   edit, or separate materialization start occurs.
 
@@ -189,3 +213,31 @@ materialization effect is allowed while any gate remains unmet.
 - `next_action_or_stop_reason`: audit, commit, and push this checkpoint. Then
   immediately reread every gate; stop on drift, otherwise run the one
   install/restart/canary sequence.
+
+## Checkpoint 3 | Pass 51 Settles Without Artifact-Probe Failure
+
+- `checkpoint_id`: `P0236-C03`.
+- `state_transition`: P0236_ALL_GATES_SATISFIED_PREINSTALL_RECHECK_REQUIRED ->
+  P0236_CLOSED_C1_CLEAN_ARTIFACT_PROBE_SETTLEMENT.
+- `progress_classification`: outcome_progress.
+- `authority_classification`: the sole install, API restart, completion
+  control, pass advance, browser launch, child, and attempt are consumed. No
+  retry, pass 52, scheduler/wider resume, guard control, or separate
+  materialization is authorized.
+- `evidence`: exact source/installed adapter parity at
+  `076d74e4e7f708f07cfbb58c6a0fe093388010ab096d61a1b9e0e8aad91161ec`;
+  API PID 8247 with `NRestarts=0`; parent pass `50 -> 51`; sole child
+  `hmj_655aa727754b4083adc84e7707693177`; attempt count 1; terminal `skipped`
+  after 375316ms; four conversations; 102 eligible/four selected candidates;
+  materialized 0, skipped 7, failed 0; provider-session proof `match`; no
+  retained entries or snapshot refreshes; parent `idle_waiting`, pass 51,
+  force null, error null; final active jobs/browser processes zero; scheduler
+  paused/idle; wider paused passes `7/2/34`; guard null.
+- `subagent_status`: not_spawned; `max_subagents=0`.
+- `review_disposition_summary`: the installed repair removed the prior
+  artifact-probe terminal failure for this exact canary. The zero-failure skip
+  means this pass found no downloadable assets among its bounded selections;
+  it proves settlement and safe cleanup, not that any asset was materialized.
+  The pending-reload/session hypothesis was not observed and remains unproven.
+- `next_action_or_stop_reason`: close, audit, commit, and push with the runtime
+  stopped. Do not resume the scheduler or wider completions under this plan.

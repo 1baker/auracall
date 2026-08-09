@@ -21028,3 +21028,18 @@ browser-stage lifecycle observability, not transcript truncation.
   time. The regression must fail as externally stalled before repair, then
   reject at the local deadline, clear pending telemetry, and preserve one-call
   normalization afterward.
+
+## 2026-08-09 | Treat a zero-failure materialization skip as settlement proof, not asset proof
+
+- An installed context/materialization canary can settle cleanly with status
+  `skipped` when its bounded conversation selection yields no downloadable
+  assets. If attempt count is one, failed count is zero, no pending/timeout or
+  auth/challenge stage is retained, and the parent absorbs the child without an
+  error, classify the provider read as a non-failure settlement.
+- Keep that claim narrower than materialization success. A zero-failure skip
+  proves the read and probe path returned and cleanup completed; it does not
+  prove that an asset was downloaded or that the wider backlog is complete.
+- Require final parent force-null state, zero active jobs, exact managed browser
+  cleanup, stopped scheduler, unchanged wider completions, and clear guard
+  before closing the canary. Do not turn the clean skip into authority to
+  retry, resume, or start a separate job.

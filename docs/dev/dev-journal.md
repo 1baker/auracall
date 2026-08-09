@@ -45199,3 +45199,21 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   `10274e4c...d76e5`, so the authorized install is necessary. Effects remain
   zero until this checkpoint is audited, committed, pushed, and immediately
   rechecked.
+
+## 2026-08-09 | Plan 0236 closes C1 after clean artifact-probe settlement
+
+- The one install produced exact source/installed adapter parity at
+  `076d74e4...91161ec`; the one API restart produced PID 8247 active/running
+  with zero restarts and preserved the stopped-runtime boundary.
+- The sole `run-one-pass` advanced only pass 50 to 51 and created only child
+  `hmj_655aa727754b4083adc84e7707693177`. It ran attempt 1 for 375316ms and
+  settled `skipped` with provider-session proof `match`, four conversations,
+  102 eligible/four selected candidates, materialized zero, skipped seven, and
+  failed zero because no downloadable assets were found.
+- No artifact-probe pending/timeout, auth/challenge failure, provider guard, or
+  reload/session failure was retained. The parent absorbed the child as
+  `idle_waiting` at pass 51 with force null and no error.
+- Final active jobs and exact-profile browser processes are zero; API PID 8247
+  remains healthy; scheduler is paused/idle; wider ChatGPT passes remain paused
+  at `7/2/34`; guard is null. No retry, pass 52, second child, scheduler/wider
+  resume, or separate materialization occurred.
