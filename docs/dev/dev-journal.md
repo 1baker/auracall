@@ -44821,3 +44821,19 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Plan 0225 carries the unchanged diagnostic onto the current PID/port with
   zero additional launch/navigation authority and the same one-payload,
   raw-content-free, stop-after-one boundary.
+
+## 2026-08-08 | Direct agent-browser probe localizes the post-404 fallback
+
+- Agent-browser attached once to exact-profile port 45044 and proved the
+  healthy authenticated Pro ChatGPT root without challenge or verification.
+- The sole known-conversation payload GET completed at `return-ready`: 404,
+  fetch 311 ms, body 1 ms/168 characters, valid JSON parse 0 ms, total 312 ms,
+  synthetic transfer, exit 0. No raw body was retained.
+- The initial direct request is not the 116-second operation. Its 404 sends
+  production into the reload/network-capture fallback, where
+  `loadingFinished` clears the 10-second body timer before awaiting an
+  independently unbounded `Network.getResponseBody`. This is the next exact
+  provider-free red candidate, not yet installed-live causal proof.
+- Port-45044 Chrome is closed and exact-profile processes are zero. Scheduler,
+  completions, materialization, API health, passes, force ceiling, and ChatGPT
+  guards remain at the stopped preflight boundary.

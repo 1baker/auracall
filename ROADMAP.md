@@ -373,9 +373,13 @@ Lane: P01
   payload. It excludes conversation navigation, reload, materialization,
   completion/scheduler controls, install, restart, and retry.
   Plan 0224 stopped before attachment when the exact browser selected live port
-  45044 instead of configured port 45015. Zero-additional-launch successor
+  45044 instead of configured port 45015. Closed zero-additional-launch successor
   [docs/dev/plans/0225-2026-08-08-chatgpt-payload-live-port-agent-browser-continuation.md](docs/dev/plans/0225-2026-08-08-chatgpt-payload-live-port-agent-browser-continuation.md)
-  binds the already-launched PID/port while preserving the one-payload bound.
+  bound the already-launched PID/port and completed one raw-content-free probe.
+  The initial direct request returned JSON 404 in 312 ms, rejecting standalone
+  fetch/body/parse/transfer as the long stall and proving entry into the later
+  reload/network-capture fallback. That fallback clears its body timer before
+  an unbounded `Network.getResponseBody`; a provider-free red is next.
   Plan 0190 added explicit eligible/selected candidate observability, passed the
   full provider-free gate, installed the pushed runtime with exact parity, and
   consumed its sole default-account proof. The job reported eligible 0,

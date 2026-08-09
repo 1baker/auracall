@@ -20891,3 +20891,18 @@ browser-stage lifecycle observability, not transcript truncation.
   metrics are converged evidence, not authority for a fourth retry. When nine
   of 12 timeout receipts name the same pending payload-read operation, close
   fail-closed and return to a provider-free reproducer at that exact boundary.
+
+## 2026-08-08 | Do not clear a fallback body timer before response-body CDP settles
+
+- A pending `readConversationPayload` receipt does not mean the initial
+  authenticated fetch is slow. A direct exact-profile milestone probe can show
+  that request returning a small JSON 404 quickly, which routes the reader into
+  its reload/network-capture fallback.
+- In an async `Network.loadingFinished` handler, clearing the body promise timer
+  before awaiting `Network.getResponseBody` removes the only settlement bound.
+  If that CDP request hangs, the callback cannot call `finish(...)` and the
+  already-cleared timer cannot recover the promise.
+- Preserve full payload semantics, but apply both a DevTools request timeout and
+  an independent transport deadline to `getResponseBody`; clear the outer body
+  timer only after that bounded operation settles. Prove the exact sequence red
+  with fake CDP before changing installed behavior or authorizing a canary.

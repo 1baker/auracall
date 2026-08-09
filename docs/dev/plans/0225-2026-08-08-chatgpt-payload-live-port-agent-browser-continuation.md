@@ -1,10 +1,10 @@
 # ChatGPT Payload Live-Port Agent-Browser Continuation | 0225-2026-08-08
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 1
-Gate state: AUTHORIZED_EXISTING_BROWSER_DIRECT_DIAGNOSTIC
-Goal execution state: ACTIVE_BOUNDED_PACKET
+Gate state: COMPLETE_DIRECT_DIAGNOSTIC
+Goal execution state: COMPLETE
 
 ## Stable Goal Objective
 
@@ -43,15 +43,15 @@ actual live DevTools port 45044 without another launch, navigation, or retry.
 
 ## Acceptance Criteria
 
-- [ ] Successor is audited, committed, and pushed before attachment.
-- [ ] Existing exact PID/port/target identity is reconfirmed; no second launch
+- [x] Successor is audited, committed, and pushed before attachment.
+- [x] Existing exact PID/port/target identity is reconfirmed; no second launch
   or navigation occurs.
-- [ ] One healthy agent-browser attachment precedes exactly one payload GET.
-- [ ] One bounded milestone result identifies the highest completed stage
+- [x] One healthy agent-browser attachment precedes exactly one payload GET.
+- [x] One bounded milestone result identifies the highest completed stage
   without retaining raw provider content.
-- [ ] PID 81735/port 45044 is closed and stopped runtime boundaries remain
+- [x] PID 81735/port 45044 is closed and stopped runtime boundaries remain
   unchanged.
-- [ ] Final docs, plan audit, diff check, commit, and push are complete.
+- [x] Final docs, plan audit, diff check, commit, and push are complete.
 
 ## Local Goal Bounds
 
@@ -95,3 +95,49 @@ actual live DevTools port 45044 without another launch, navigation, or retry.
   second launch is rejected as unnecessary effect expansion.
 - `next_action_or_stop_reason`: audit, commit, and push; then reconfirm exact
   live identity and attach agent-browser once.
+
+## Checkpoint 2 | Initial Payload Path Healthy; Fallback Boundary Localized
+
+- `checkpoint_id`: `P0225-C02`.
+- `state_transition`: P0225_AUTHORIZED_EXISTING_BROWSER_DIRECT_DIAGNOSTIC ->
+  P0225_COMPLETE_DIRECT_DIAGNOSTIC.
+- `progress_classification`: blocker_reduction.
+- `surface_preflight`: agent-browser attached once to live port 45044. URL was
+  `https://chatgpt.com/`, title was `ChatGPT`, and the bounded DOM snapshot
+  showed the expected authenticated Pro account/history/composer surface with
+  no CAPTCHA, challenge, verification, or login-loss marker.
+- `payload_probe`: the sole GET for conversation
+  `6a5245ad-7180-83ea-a3e4-7d2e81015af9` completed. Its bounded marker reached
+  `return-ready`: status 404, `ok=false`, fetch 311 ms, body read 1 ms, body
+  length 168, valid JSON parse 0 ms, mapping count null, total in-page 312 ms,
+  synthetic transfer selected, command exit 0. The outer CLI process completed
+  in 8.71 seconds. No raw response content was retained.
+- `hypothesis_disposition`: H1 body-read, H2 by-value, H3 fetch-header, and H4
+  size/parse are rejected for the standalone initial direct request. H5
+  sequence dependency is accepted: the 404 causes the production reader to
+  enter its later reload/network-capture fallback.
+- `new_source_candidate`: in that fallback, `Network.loadingFinished` clears
+  the body promise's 10000-ms timer before awaiting
+  `Network.getResponseBody`. That CDP request has no protocol or independent
+  transport deadline. If it remains unsettled, neither `finish(...)` nor the
+  cleared timer can resolve the body promise. This is a source-proven missing
+  bound and matches the live pending payload/CDP evidence, but requires one
+  provider-free red before promotion to the installed live cause.
+- `cleanup`: browser-tools closed only the port-45044 Chrome process group;
+  exact-profile process count is zero and port 45044 is closed.
+- `final_runtime_boundary`: API PID 95638 remains active/running with
+  `NRestarts=0`; scheduler state/posture paused; foreground and queued/running/
+  idle-waiting work zero; active history jobs zero; wider ChatGPT targets
+  paused at `7/2/34`; target blocked/pass 48 with force ceiling null; all
+  ChatGPT guards clear.
+- `effect_accounting`: cumulative launches 1/1, initial navigations 1/1,
+  agent-browser attaches 1/1, payload GETs 1/1, marker reads 1/2, closes 1/1;
+  conversation navigations, reloads, clicks, prompts, `Answer now`, raw-content
+  receipts, installs, restarts, materialization, completion/scheduler controls,
+  guard bypasses, direct runtime edits, and subagents all zero.
+- `subagent_status`: not_spawned; `max_subagents=0`.
+- `review_disposition_summary`: direct diagnostic objective met. A reload or
+  second live probe is rejected; the next evidence step is provider-free.
+- `next_action_or_stop_reason`: stop live effects. A successor should prove a
+  never-settling fallback `Network.getResponseBody` red, then bound that CDP
+  call without weakening full-payload semantics before any new canary gate.

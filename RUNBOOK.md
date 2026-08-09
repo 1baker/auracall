@@ -20,6 +20,19 @@
   port 45015. No agent-browser attachment or payload GET ran. Plan 0224 stops at
   that binding mismatch; Plan 0225 preserves the same browser and authorizes no
   second launch or navigation before binding agent-browser to actual port 45044.
+- Agent-browser attached once to the healthy authenticated Pro ChatGPT root.
+  The sole known-conversation GET reached `return-ready` in 312 ms: HTTP 404,
+  fetch 311 ms, body 1 ms/168 characters, JSON parse 0 ms, no mapping, and
+  synthetic by-value transfer; command exit 0. No raw response content was
+  retained.
+- The result rejects standalone initial fetch/body/parse/by-value delay and
+  accepts a later sequence dependency: production enters the reload/network
+  fallback after the 404. Its `loadingFinished` callback clears the 10-second
+  body timer before awaiting unbounded `Network.getResponseBody`, the next
+  provider-free red candidate.
+- Exact port-45044 Chrome is closed. API PID 95638/zero restarts, scheduler
+  paused, queued/running/idle-waiting and active history work zero, wider passes
+  `7/2/34`, target blocked/pass 48/force null, and ChatGPT guards clear.
 
 ## Turn 418 | 2026-08-08
 
