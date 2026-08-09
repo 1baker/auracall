@@ -45094,3 +45094,20 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   guard clear, and exact-profile browser absent.
 - No retry, scheduler or wider completion resume, guard control, second child,
   or separate materialization start belongs to this packet.
+
+## 2026-08-09 | Plan 0234 satisfies its runtime gate with corrected ceiling
+
+- Fresh readback proves API PID 32737 active/running with zero restarts,
+  scheduler paused/idle with active request count zero, active history jobs
+  zero, target blocked/pass 49/force null, exact target eligible with clear
+  provider guard, wider ChatGPT passes paused at `7/2/34`, and exact
+  `wsl-chrome-3` browser process count zero.
+- Five total completions are paused: the three intended ChatGPT lanes plus
+  pre-existing paused Gemini and Grok lanes. Queued and running counts are zero.
+- The existing target persists `materializationMaxItems=6`. Plan 0197's
+  `maxItems=1` belonged to an older direct exact-asset job, not this completion.
+  Plan 0234 is corrected to one pass and one child under the existing six-item
+  ceiling; no runtime configuration was changed.
+- Built adapter hash is `10274e4c...76e5`; installed runtime remains the prior
+  `14668c68...6045`, so the authorized install is necessary. Effects remain
+  zero until this checkpoint is audited, committed, pushed, and rechecked.

@@ -2,16 +2,17 @@
 
 State: OPEN
 Lane: P01
-Plan version: 1
-Gate state: OPEN_OPERATOR_APPROVED_RUNTIME_READBACK_REQUIRED
+Plan version: 2
+Gate state: ALL_GATES_SATISFIED_PREINSTALL_RECHECK_REQUIRED
 Goal execution state: ACTIVE_ONE_INSTALLED_CANARY
 
 ## Stable Goal Objective
 
 Install the pushed Plan 0233 payload-reader settlement repair exactly once,
 restart only the AuraCall API exactly once, prove source/installed parity and
-the stopped runtime boundary, then run exactly one `wsl-chrome-3`
-`maxItems=1` pass-50 canary. Monitor its one child and parent to a terminal
+the stopped runtime boundary, then run exactly one pass-50 canary on the
+existing `wsl-chrome-3` completion with its persisted `maxItems=6` ceiling.
+Monitor its one child and parent to a terminal
 result and stop. Do not retry, resume the scheduler, resume any wider
 completion, control a provider guard, or start any separate materialization.
 
@@ -27,11 +28,22 @@ completion, control a provider guard, or start any separate materialization.
 - Plan 0232 previously proved the retained `wsl-chrome-3` account/browser lane
   authenticated and response detail retrievable, then closed its exact browser.
   That evidence is historical and does not replace current preflight.
-- Last retained stopped-runtime evidence was API PID 32737 with zero restarts,
+- Fresh stopped-runtime evidence is API PID 32737 with zero restarts,
   target blocked/pass 49/force null, active history jobs zero, wider ChatGPT
   completions paused at `7/2/34`, scheduler paused/idle, provider guard clear,
-  and exact-profile browser process count zero. Every field must be freshly
-  reread before installation and again before the canary.
+  and exact-profile browser process count zero. Two additional non-ChatGPT
+  completions are paused, making the global paused count five with queued and
+  running counts zero.
+- The target's persisted `materializationMaxItems=6`; its prior pass attempted
+  six selected conversations. Plan 0197's `maxItems=1` contract belonged to an
+  older direct `chatgpt/default` exact-asset job consumed under Plan 0200. It is
+  not an invariant of this `wsl-chrome-3` completion. This plan authorizes one
+  pass and one child, not one selected conversation.
+- Current built adapter SHA-256 is
+  `10274e4c6c5894faf4013531313222b5f4cf2f11ff9605826ec22b28d32d76e5`;
+  installed adapter remains the prior
+  `14668c680a393fd89495c97005486471d3535f9084de0c630e4d0887d8dc6045`,
+  proving the sole install is necessary.
 - The operator authorized this bounded installed canary with `ok go` after the
   Plan 0233 closeout recommendation. That approval does not authorize a retry,
   scheduler resume, wider completion resume, or a second child.
@@ -45,9 +57,11 @@ completion, control a provider guard, or start any separate materialization.
 3. This Plan 0234 `OPEN` transition is audited, committed, and pushed.
 4. Fresh readback proves source build health; API active/running with no crash
    restart; scheduler paused/idle; active jobs and queued/running work zero;
-   target blocked/pass 49/force null with `maxItems=1`; wider completions paused
-   at `7/2/34`; canonical ChatGPT guard clear; and no exact `wsl-chrome-3`
-   browser process.
+   target blocked/pass 49/force null with its persisted `maxItems=6`; wider
+   ChatGPT completions paused at `7/2/34`; all five globally active completions
+   paused; canonical ChatGPT guard clear; and no exact `wsl-chrome-3` browser
+   process. Satisfied at 2026-08-09T12:51:44-05:00; reread once immediately
+   after this checkpoint is pushed and before installation.
 
 No install, restart, provider/browser call, completion control, or
 materialization effect is allowed while any gate remains unmet.
@@ -91,7 +105,7 @@ materialization effect is allowed while any gate remains unmet.
 - [ ] Exactly one install and one API restart produce source/installed adapter
   parity and preserve stopped-runtime state.
 - [ ] Exactly one `wsl-chrome-3` `run-one-pass` advances pass 49 to 50 and
-  creates exactly one fresh child under `maxItems=1`.
+  creates exactly one fresh child under the existing `maxItems=6` ceiling.
 - [ ] Exactly one C1-C4 terminal classification is recorded without retry.
 - [ ] Exact child/parent evidence distinguishes payload-reader settlement from
   authentication, challenge, provider guard, or unrelated failure.
@@ -145,3 +159,29 @@ materialization effect is allowed while any gate remains unmet.
 - `next_action_or_stop_reason`: audit, commit, and push this gate, then perform
   the complete fresh readback. Stop on any mismatch; otherwise consume the one
   install/restart/canary packet and close at its first terminal result.
+
+## Checkpoint 2 | Runtime Gate Satisfied With Existing Six-Item Ceiling
+
+- `checkpoint_id`: `P0234-C02`.
+- `state_transition`: P0234_OPEN_OPERATOR_APPROVED_RUNTIME_READBACK_REQUIRED ->
+  P0234_ALL_GATES_SATISFIED_PREINSTALL_RECHECK_REQUIRED.
+- `progress_classification`: blocker_reduction.
+- `authority_classification`: the approved effect remains one install, one API
+  restart, and one existing completion pass with one child. The persisted child
+  request may select up to six conversations; no retry, second child, scheduler
+  resume, wider completion resume, guard control, or separate job is admitted.
+- `evidence`: Plan 0234 open commit `9275a0dd`; API PID 32737 active/running with
+  zero restarts; source/installed adapter hashes intentionally differ before
+  install; scheduler paused/idle and active request count zero; history jobs
+  active zero; target blocked/pass 49/force null and `maxItems=6`; exact target
+  status eligible with provider guard state clear and null kind/action; wider
+  ChatGPT passes paused at `7/2/34`; total paused completions five with queued/
+  running zero; exact-profile browser process count zero.
+- `subagent_status`: not_spawned; `max_subagents=0`.
+- `review_disposition_summary`: the initial `maxItems=1` wording is rejected as
+  a cross-plan carryover from the older exact-asset canary. The current target's
+  six-item ceiling is accepted only inside one pass/one-child authority and is
+  current persisted configuration, not a runtime mutation.
+- `next_action_or_stop_reason`: audit, commit, and push this corrected
+  checkpoint. Then immediately reread every gate; stop on drift, otherwise run
+  the one install/restart/canary sequence.
