@@ -45301,3 +45301,19 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   materialization remain excluded. The primary agent owns the serialized path;
   no subagent is spawned because all steps share the same installed/runtime
   and exact browser state.
+
+## 2026-08-09 | Plan 0239 installs the repair but withholds the canary
+
+- One install produced exact source/installed history-materialization bundle
+  parity at `625739bc...744455`; API PID 90242 is healthy with zero restarts,
+  and all paused/no-work boundaries survived the restart.
+- One broad in-memory simulation seeded 1,884 retained jobs and again selected
+  conversation `6a5e4bf8-972c-83ea-ad2f-3ad57f2a153f` at one disabled seam
+  with zero provider implementations. Its four eligible download rows all
+  settled terminal in four exact simulations before that seam; the remaining
+  four rows are classified static favicon false positives.
+- Durable job-index SHA-256 remained `641836ac...b41087`. No exact nonterminal
+  asset exists in the selected conversation, so no durable job, browser launch,
+  provider callback, download, retry, scheduler/completion/guard control, or
+  wider materialization ran. The next repair is broad admission filtering, not
+  authentication or browser recovery.

@@ -21081,3 +21081,18 @@ browser-stage lifecycle observability, not transcript truncation.
   provider-free merely because live suites are skipped.
 - If this occurs, attribute ownership before cleanup and terminate only the
   exact AuraCall-owned main process. Preserve unrelated or user-owned browsers.
+
+## 2026-08-09 | Broad selection must reject static-only residual families
+
+- A broad history-reconciliation selector can carry correct terminal-family
+  exclusions yet still select a conversation whose only residual catalog rows
+  are known static image false positives. Exact replay then truthfully finds no
+  nonterminal downloadable item, so provider work can only end in a clean skip.
+- Apply the same catalog materialization-eligibility classification before a
+  conversation consumes broad target budget. Terminal downloads plus favicon
+  rows are not an actionable conversation merely because the favicon family is
+  absent from archive/job terminal evidence.
+- Prove the repair provider-free at the real broad selector: the static-only
+  conversation must not reach `materializeConversation`, and `maxItems=1` must
+  advance to the next actually actionable conversation without changing the
+  durable job store.

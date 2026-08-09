@@ -1,11 +1,11 @@
 # Installed Exact Asset One-Canary Gate | 0239-2026-08-09
 
-State: OPEN
+State: CLOSED
 Lane: LIVE_FOLLOW_RECOVERY
 Plan version: 1
-Outcome: ACTIVE_INSTALL_SELECTION_CANARY_GATE
-Goal execution state: ACTIVE
-Gate state: INSTALL_AND_PROVIDER_FREE_SELECTION_READY
+Outcome: COMPLETE_PROVIDER_FREE_CANARY_WITHHELD
+Goal execution state: COMPLETE_PROVIDER_FREE
+Gate state: NOT_READY_NO_NONTERMINAL_EXACT_CANDIDATE
 
 ## Stable Objective
 
@@ -20,18 +20,19 @@ resume.
 - Plan 0238 closed at pushed commit `7b5e7354`; focused history-materialization
   validation passed 74/74 and the known readable DOCX now skips exact admission
   with zero provider-boundary calls.
-- The source repair is not installed. The current API remains PID 8247,
-  active/running with zero systemd restarts.
+- The source repair is installed with exact source/installed bundle SHA-256
+  `625739bca9473885de39eadf3b104664ca009ddbd5200987c64237f941744455`.
+  The current API is PID 90242, active/running with zero systemd restarts.
 - The account-mirror scheduler remains operator-paused. Current completion
   metrics are active 6, queued 0, running 0, idle-waiting 1, and paused 5.
   `wsl-chrome-3` is the sole idle-waiting ChatGPT target at pass 51 with no
   next attempt or error; wider ChatGPT lanes remain paused at passes 7/2/34.
 - Active `wsl-chrome-3` history-materialization jobs are zero. The exact
   managed browser profile and port 45015 are absent.
-- The retained broad provider-free selector still reaches one disabled seam
-  for conversation `6a5e4bf8-972c-83ea-ad2f-3ad57f2a153f`; the first exact
-  cached DOCX is terminal, so a fresh bounded exact-candidate resolution is
-  required before live work.
+- The retained broad provider-free selector reaches one disabled seam for
+  conversation `6a5e4bf8-972c-83ea-ad2f-3ad57f2a153f`, but all four of its
+  otherwise eligible download rows are terminal and its remaining four rows
+  are classified static favicon false positives. No live canary is admissible.
 
 ## Authority And Non-Goals
 
@@ -110,20 +111,24 @@ resume.
 
 ## Acceptance Criteria
 
-- [ ] The source and installed runtime carry byte-equivalent
+- [x] The source and installed runtime carry byte-equivalent
   `historyMaterializationService` output, and the restarted API is healthy.
 - [ ] A provider-free broad `maxItems=1` simulation and bounded exact replay
-  freeze one exact catalog asset that reaches only the disabled provider seam.
-- [ ] Closed-world archive, job, filesystem, active-work, and exact-browser
-  evidence proves the frozen item is nonterminal before live creation.
+  freeze one exact nonterminal catalog asset that reaches only the disabled
+  provider seam. Four exact candidates were exhausted as terminal instead.
+- [x] Closed-world archive, job, filesystem, active-work, and exact-browser
+  evidence adjudicates every exact candidate before live creation; here it
+  proved all four downloads terminal and left no frozen nonterminal item.
 - [ ] Exactly one direct `wsl-chrome-3` job runs at `maxItems=1`, attempt count
-  one, with `force=false` and no snapshot refresh.
+  one, with `force=false` and no snapshot refresh. Correctly withheld because
+  the nonterminal admission criterion failed.
 - [ ] The canary terminal result contains one readable checksummed asset for the
   frozen exact item, with no auth/challenge/guard/pending-operation failure.
-- [ ] Final service and exact-browser cleanup are healthy, active history work
+  No canary ran.
+- [x] Final service and exact-browser cleanup are healthy, active history work
   is zero, scheduler remains paused, `wsl-chrome-3` remains pass 51, and wider
   completion passes remain unchanged at 7/2/34.
-- [ ] Plan/journal/fix evidence, validation, commit, and push are complete.
+- [x] Plan/journal/fix evidence, validation, commit, and push are complete.
 
 ## Opening Checkpoint | Installed One-Canary Gate Ready
 
@@ -143,3 +148,37 @@ resume.
   goal; scheduler and wider-completion resume remain explicitly excluded.
 - `review_disposition_summary`: exact terminal admission is accepted as fixed;
   fresh nonterminal exact selection is the sole live admission gate.
+
+## Final Checkpoint | Broad Selection Has No Exact Nonterminal Candidate
+
+- `checkpoint_id`: `P0239-C02`.
+- `state_transition`: P0239_ACTIVE_INSTALLED_ONE_CANARY_GATE ->
+  P0239_CLOSED_NOT_READY_NO_NONTERMINAL_EXACT_CANDIDATE.
+- `progress_classification`: exact_blocker_identified.
+- `evidence`: one install produced exact source/installed SHA-256 parity at
+  `625739bc...744455` and API PID 90242 with zero restarts. One broad in-memory
+  simulation seeded all 1,884 retained jobs, selected conversation
+  `6a5e4bf8-972c-83ea-ad2f-3ad57f2a153f`, and reached one disabled
+  `materializeConversation` seam with zero provider implementations. Four
+  exact simulations then each settled skipped before that seam because the
+  DOCX/PDF sandbox rows and their DOM-button aliases are terminal. The other
+  four conversation rows are catalog-classified static favicon false
+  positives. Durable job-index SHA-256 stayed byte-identical at
+  `641836ac...b41087`.
+- `owned_changes`: one user-runtime install/API restart, provider-free
+  in-memory simulation, and repo evidence only. Durable history jobs, browser
+  launches, downloads, scheduler/completion/guard actions, retries, force,
+  snapshot refresh, prompts, and wider materialization remained zero.
+- `subagent_status`: not_spawned; the serialized installed/runtime/browser path
+  had no independent safe lane and delegation was not requested.
+- `next_action_or_stop_reason`: close this canary gate without live work. A
+  successor must prevent broad reconciliation from admitting a conversation
+  solely because static false-positive asset families remain after terminal
+  exclusions, then rerun the same provider-free selector before any canary.
+- `authority_classification`: fail-closed execution of the standing bounded
+  goal. The hard gate withheld the sole live effect without consuming
+  scheduler or wider-completion authority.
+- `review_disposition_summary`: exact terminal admission is verified installed;
+  the remaining blocking finding is broad conversation admission of known
+  static false positives, not authentication, provider transport, or browser
+  health.
