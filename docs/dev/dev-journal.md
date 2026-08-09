@@ -45283,3 +45283,21 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   navigation, provider implementation, or download ran in this packet.
 - No installation/restart, durable history job, scheduler/completion/guard
   control, retry, or wider materialization occurred.
+
+## 2026-08-09 | Plan 0239 opens installed exact-asset one-canary gate
+
+- The standing goal now advances through one bounded installed-runtime packet:
+  one `install:user-runtime-service` execution, one provider-free broad
+  `maxItems=1` selection, at most eight exact-candidate simulations with every
+  provider-capable callback disabled, and one live direct exact-catalog canary
+  only if closed-world nonterminal evidence passes.
+- Opening readback is clean and synced at `7b5e7354`; API PID 8247 is
+  active/running with zero restarts, scheduler remains operator-paused,
+  completion queued/running counts are zero, `wsl-chrome-3` is idle-waiting at
+  pass 51, active exact history jobs are zero, and its managed browser/port
+  45015 are absent.
+- Scheduler/completion/guard controls, pass 52, retries, force, snapshot
+  refresh, prompt or `Answer now` actions, second jobs, and wider
+  materialization remain excluded. The primary agent owns the serialized path;
+  no subagent is spawned because all steps share the same installed/runtime
+  and exact browser state.
