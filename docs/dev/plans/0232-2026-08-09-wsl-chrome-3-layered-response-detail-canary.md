@@ -1,10 +1,10 @@
 # WSL-Chrome-3 Layered Response-Detail Canary | 0232-2026-08-09
 
-State: OPEN
+State: CLOSED
 Lane: P01
-Plan version: 3
-Gate state: ALL_EXTERNAL_GATES_SATISFIED_PRELAUNCH_RECHECK_REQUIRED
-Goal execution state: ACTIVE_ONE_CANARY_READY_AFTER_PUSH_AND_RECHECK
+Plan version: 4
+Gate state: COMPLETE_C5_DETAIL_COMPLETED
+Goal execution state: COMPLETE_RESPONSE_DETAIL_RETRIEVABLE
 
 ## Stable Goal Objective
 
@@ -44,6 +44,29 @@ work.
   only `manual_clear_required` or an unexpired `cooldown` is blocking. The
   target status is `eligible`, so the historical `guard null` shorthand and
   current canonical readback agree semantically.
+- Pushed runtime checkpoint `239d256d` preceded every browser effect. The one
+  exact AuraCall-owned browser ran as PID 59697 on actual DevTools port 45044,
+  and named session `auracall-plan0232-wsl3-detail` attached to that lane only.
+- Root URL/title plus one bounded snapshot and one content-free DOM check proved
+  ChatGPT origin, account and composer surfaces, with no login, challenge,
+  CAPTCHA, verification, or `Answer now` marker. One navigation opened the
+  exact conversation.
+- The sole metadata-only direct payload GET returned parseable JSON 404 in 171
+  ms (170 ms headers, 1 ms body, 168 characters, mapping null). After exactly
+  one network clear and one reload, the sole layered helper completed in 17968
+  ms with one exact candidate, request/URL matches true, response status 200,
+  body present at 4098025 characters, parsed JSON, and mapping count 138.
+- This is terminal `C5_detail_completed`. It rejects a live agent-browser
+  response-detail/`Network.getResponseBody` stall for this exact route and
+  shifts the remaining AuraCall discrepancy to callback ordering, target/CDP
+  session ownership, or the enclosing payload-reader settlement path. No
+  response content or raw network material was emitted or retained.
+- The named session closed and the exact browser process tree was killed.
+  Exact-profile process count and port inspection returned zero. API PID 32737
+  remains healthy with zero restarts; target remains blocked/pass 49/force
+  null; active jobs remain zero; wider ChatGPT completions remain paused at
+  `7/2/34`; scheduler remains paused/idle with active request count zero; and
+  canonical provider guard state remains clear.
 
 ## External Gates
 
@@ -106,14 +129,14 @@ No browser or provider action is allowed while any gate remains unmet.
 ## Acceptance Criteria
 
 - [x] All three external gates are satisfied and recorded before launch.
-- [ ] Exactly one fresh exact-profile browser and one named attachment run.
-- [ ] Healthy authenticated identity/no-challenge proof precedes navigation.
-- [ ] One direct metadata GET, one clear, one reload, and one layered helper
+- [x] Exactly one fresh exact-profile browser and one named attachment run.
+- [x] Healthy authenticated identity/no-challenge proof precedes navigation.
+- [x] One direct metadata GET, one clear, one reload, and one layered helper
   invocation occur; no raw network output reaches stdout/stderr/artifacts.
-- [ ] Exactly one C1-C6 classification is recorded without retry.
-- [ ] Exact session/browser are closed and stopped runtime boundaries are
+- [x] Exactly one C1-C6 classification is recorded without retry.
+- [x] Exact session/browser are closed and stopped runtime boundaries are
   reread unchanged.
-- [ ] No install/restart, source, materialization, completion/scheduler/guard,
+- [x] No install/restart, source, materialization, completion/scheduler/guard,
   prompt, click, `Answer now`, wider-resume, or direct runtime-edit effect
   occurs.
 
@@ -207,3 +230,28 @@ No browser or provider action is allowed while any gate remains unmet.
 - `next_action_or_stop_reason`: audit, commit, and push this checkpoint, then
   immediately reread the same fields. Stop on any mismatch; otherwise consume
   exactly one canary and close at its first terminal helper result.
+
+## Closeout Checkpoint | Response Detail Completes
+
+- `checkpoint_id`: `P0232-C04`.
+- `state_transition`: P0232_ALL_EXTERNAL_GATES_SATISFIED_PRELAUNCH_RECHECK_REQUIRED
+  -> P0232_CLOSED_C5_DETAIL_COMPLETED.
+- `progress_classification`: outcome_progress.
+- `authority_classification`: the single approved live canary is consumed and
+  closed. No retry, second canary, source repair, install/restart,
+  materialization, completion/scheduler/guard control, or wider resume is
+  authorized by this result.
+- `evidence`: exact PID 59697/port 45044 and named session; healthy
+  authenticated content-free proof; direct parseable 404 in 171 ms; exactly
+  one clear and reload; helper `outcome=completed`, `stage=completed`, one exact
+  candidate, status 200, present 4098025-character parsed JSON body, mapping
+  count 138, elapsed 17968 ms; exact session/browser cleanup; unchanged stopped
+  runtime readback.
+- `subagent_status`: not_spawned; `max_subagents=0`.
+- `review_disposition_summary`: C5 accepted. C1-C4 and C6 are inapplicable to
+  this completed run. A response-detail transport stall is rejected for the
+  exact canary; the remaining accepted diagnosis surface is AuraCall callback,
+  CDP target/session ownership, or enclosing payload-reader settlement.
+- `next_action_or_stop_reason`: stop. Validate and push this closeout. Any
+  repair or new live execution requires a separately bounded successor; keep
+  scheduler, wider completions, and materialization stopped.

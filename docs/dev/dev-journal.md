@@ -45028,3 +45028,24 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - All three Plan 0232 external gates are satisfied. Browser launch still waits
   on audit/commit/push of this durable checkpoint and one immediate matching
   recheck; no provider/browser or excluded runtime effect has occurred.
+
+## 2026-08-09 | Plan 0232 closes C5 with response detail retrievable
+
+- Pushed checkpoint `239d256d` preceded the sole live effect. Exact
+  `wsl-chrome-3` browser PID 59697 used actual port 45044; named session
+  `auracall-plan0232-wsl3-detail` proved authenticated ChatGPT account/composer
+  surfaces with no login, challenge, CAPTCHA, verification, or `Answer now`.
+- The one direct metadata-only GET returned parseable JSON 404 in 171 ms. After
+  one network clear and one reload, the sole layered helper completed in 17968
+  ms with one exact candidate, status 200, body present at 4098025 characters,
+  parsed JSON, and mapping count 138. No content or raw network material was
+  emitted or retained.
+- Terminal class is C5. Agent-browser response detail is retrievable for this
+  exact route; the remaining AuraCall discrepancy is now bounded to callback
+  ordering, CDP target/session ownership, or enclosing payload-reader
+  settlement rather than a live `Network.getResponseBody` stall.
+- The named session and exact browser process tree are closed; port/profile
+  inspection is empty. API PID 32737/zero restarts, blocked pass 49/force null,
+  zero active jobs, paused `7/2/34`, paused/idle scheduler, and clear guard are
+  unchanged. No retry, install/restart, source, materialization,
+  completion/scheduler/guard control, or wider resume occurred.

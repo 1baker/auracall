@@ -20965,3 +20965,20 @@ browser-stage lifecycle observability, not transcript truncation.
   forward the raw envelope. Report whether timeout occurred at the discovery
   or detail worker versus its caller command envelope, so a later canary cannot
   misclassify acquisition latency as `Network.getResponseBody` evidence.
+
+## 2026-08-09 | Separate direct conversation 404 from reload response-body transport
+
+- An authenticated same-origin direct GET can return a small parseable 404
+  while a normal conversation-page reload produces one exact 200 response with
+  the complete conversation body. The direct status alone is not evidence of
+  logout, missing authentication headers, or an unavailable reload payload.
+- After safe internal request selection, a completed agent-browser response
+  detail with a present parsed body rejects a `Network.getResponseBody` stall
+  for that exact session and route. Move the remaining diagnosis to callback
+  ordering, CDP target/session ownership, or the enclosing reader's settlement
+  path instead of repeating the live browser probe.
+- Keep the evidence metadata-only: candidate count, exact-match booleans,
+  status, body presence/length/parse state, mapping count, and elapsed time.
+  Never retain request IDs, URLs with query material, headers, cookies, body
+  content, stderr, or account identity, and close the exact browser after the
+  first terminal classification.
