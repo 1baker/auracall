@@ -20878,3 +20878,16 @@ browser-stage lifecycle observability, not transcript truncation.
   settling fake-CDP operation and an outer timeout. Also cover nested scopes so
   a late `finally` cannot erase a newer operation. Never retain raw payload,
   message, credential, or identity data in this field.
+
+## 2026-08-08 | Bound live canary series and stop on a repeated inner operation
+
+- A single installed timeout can be provider noise; a serialized bounded series
+  can distinguish that from a persistent inner-operation failure without
+  resuming the scheduler or widening the target set.
+- Preserve each child ID, pass transition, identity proof, guard count, and
+  promoted receipt before the next control. Honor product pacing and provider
+  cooldowns; never bypass them to spend the retry budget faster.
+- Three canaries that select the same conversations and repeat the same failed
+  metrics are converged evidence, not authority for a fourth retry. When nine
+  of 12 timeout receipts name the same pending payload-read operation, close
+  fail-closed and return to a provider-free reproducer at that exact boundary.

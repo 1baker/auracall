@@ -44777,3 +44777,21 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   scheduler paused, active jobs and queued/running work zero, wider passes
   `7/2/34`, and guards clear. Attempt 3 is the final authorized probe; no
   fourth attempt may run.
+
+## 2026-08-08 | Plan 0223 exhausts three canaries fail-closed
+
+- Attempt 3 honored pacing, advanced pass `47 -> 48`, and created exactly child
+  `hmj_601b75e3057d4902b2645cf92cd2fd9c`. It ran once and again failed
+  `6/0/3/4`, eligible/selected `102/6`; all identity dimensions matched and
+  provider-guard exclusions were zero.
+- One context succeeded in 13368 ms. The same four conversations timed out in
+  116595, 116535, 116572, and 116525 ms; one retained only
+  `cdp:Runtime.evaluate`, while three named the pending payload read.
+- Across all three canaries, three distinct children ran once and advanced only
+  passes 45-48. Aggregate metrics are `18/0/9/12`; nine of 12 timeout receipts
+  name `provider:chatgpt.readConversationPayload`, while three remain
+  CDP-localized. No clean canary was obtained and no fourth attempt ran.
+- Adapter parity remains `919e2529...f4b9`; API PID 95638 has zero restarts;
+  scheduler is paused; active jobs and queued/running work are zero; wider
+  passes remain `7/2/34`; target is blocked/pass 48 with force ceiling null;
+  guards are clear. Plan 0223 closes attempts-exhausted fail-closed.

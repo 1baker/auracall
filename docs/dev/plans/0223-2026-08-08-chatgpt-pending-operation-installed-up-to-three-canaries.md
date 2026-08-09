@@ -1,10 +1,10 @@
 # ChatGPT Pending-Operation Installed Up-To-Three Canaries | 0223-2026-08-08
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 1
-Gate state: AUTHORIZED_BOUNDED_LIVE_EXECUTION
-Goal execution state: ACTIVE_BOUNDED_PACKET
+Gate state: COMPLETE_ATTEMPTS_EXHAUSTED_FAIL_CLOSED
+Goal execution state: COMPLETE
 
 ## Stable Goal Objective
 
@@ -89,17 +89,17 @@ Keep the scheduler and every wider completion paused.
 
 ## Acceptance Criteria
 
-- [ ] Plan artifact is audited, committed, and pushed before effects.
+- [x] Plan artifact is audited, committed, and pushed before effects.
 - [x] Exactly one install and one API restart produce source/runtime parity and
   a healthy stopped-control preflight.
-- [ ] Between one and three fresh serialized `wsl-chrome-3` canaries settle;
+- [x] Between one and three fresh serialized `wsl-chrome-3` canaries settle;
   no fourth canary occurs.
-- [ ] Every failed attempt has exact terminal child metrics and promoted
+- [x] Every failed attempt has exact terminal child metrics and promoted
   `lastStage` / `pendingOperation` evidence before another attempt.
-- [ ] Execution stops early on clean proof or after attempt three.
-- [ ] Scheduler and wider completions never resume; no manual browser, prompt,
+- [x] Execution stops early on clean proof or after attempt three.
+- [x] Scheduler and wider completions never resume; no manual browser, prompt,
   `Answer now`, guard bypass, or direct runtime edit occurs.
-- [ ] Final runtime readback, plan audit, docs, commit, and push are complete.
+- [x] Final runtime readback, plan audit, docs, commit, and push are complete.
 
 ## Local Goal Bounds
 
@@ -222,3 +222,50 @@ Keep the scheduler and every wider completion paused.
   repeated timeouts to the payload read. No safety hard stop fired.
 - `next_action_or_stop_reason`: execute attempt 3 as the final bounded
   variability probe. Stop afterward regardless of outcome; no fourth attempt.
+
+## Checkpoint 4 | Attempt 3 Terminal And Three-Canary Bound Exhausted
+
+- `checkpoint_id`: `P0223-C04`.
+- `state_transition`: ATTEMPT_2_TERMINAL_FAILED ->
+  COMPLETE_ATTEMPTS_EXHAUSTED_FAIL_CLOSED.
+- `progress_classification`: outcome_progress.
+- `canary`: the third control honored the completion pacing guard, advanced
+  pass `47 -> 48`, and created exactly child
+  `hmj_601b75e3057d4902b2645cf92cd2fd9c`. It ran attempt one only and settled
+  failed with conversations/materialized/skipped/failed `6/0/3/4`,
+  eligible/selected `102/6`.
+- `identity_and_guard`: provider session verdict `match`; all four identity
+  dimensions matched; candidate-funnel provider-guard exclusions were zero and
+  all ChatGPT guards remained null.
+- `receipt_evidence`:
+  - one context succeeded in 13368 ms with `lastStage=complete` and
+    `pendingOperation=null`;
+  - the same four failed conversations timed out in 116595, 116535, 116572,
+    and 116525 ms;
+  - the first timeout retained `lastStage=cdp:Runtime.evaluate` and
+    `pendingOperation=null`; the other three retained the completed same-route
+    marker with `pendingOperation=provider:chatgpt.readConversationPayload`.
+- `three_attempt_summary`: the three controls created exactly three distinct
+  children, each ran once, and advanced only passes `45 -> 46 -> 47 -> 48`.
+  Aggregate job metrics are conversations/materialized/skipped/failed
+  `18/0/9/12`. Of 12 timeout receipts, nine name the pending payload read and
+  three remain CDP-localized with pending operation null. No clean canary was
+  obtained and no fourth control occurred.
+- `final_runtime_boundary`: source and installed adapter SHA-256 parity remains
+  `919e2529f2c2e59ad7d29d0b48377eac82ddf7aa8c04009012082d6d9509f4b9`;
+  API PID 95638 is active/running with `NRestarts=0`; scheduler state/posture is
+  paused; foreground, queued/running work, and active history jobs are zero;
+  wider passes remain `7/2/34`; target is blocked/pass 48 with force ceiling
+  null; all ChatGPT guards are null and browser health is idle.
+- `effect_accounting`: installs 1/1, restarts 1/1, canaries 3/3, target
+  completion controls 3/3, scheduler controls 0, wider controls 0, manual
+  browser navigations 0, prompts 0, `Answer now` clicks 0, guard bypasses 0,
+  direct runtime JSON edits 0.
+- `subagent_status`: not_spawned; `max_subagents=0`.
+- `review_disposition_summary`: clean-canary proof remains unmet. The repeated
+  pending payload-read signature is blocking for another live attempt; further
+  retry is rejected because the explicit cumulative bound is exhausted.
+- `next_action_or_stop_reason`: stop fail-closed. Any successor should
+  reproduce and repair the live payload-read boundary provider-free before a
+  separately authorized canary; scheduler and wider completion resume remain
+  excluded.
