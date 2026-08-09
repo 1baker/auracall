@@ -56,6 +56,7 @@ import {
 	readChatgptConversationPayloadWithClient,
 	readVisibleChatgptConversationFilesWithClientForTest,
 	readVisibleChatgptConversationMessagesWithClientForTest,
+	readVisibleChatgptDownloadArtifactProbesWithClientForTest,
 	recordChatgptTargetSessionForTest,
 	recoverVisibleChatgptBlockingSurfaceWithClientForTest,
 	resolveChatgptCanvasArtifactContentText,
@@ -3033,6 +3034,69 @@ describe("normalizeChatgptConversationFileProbes", () => {
 		).resolves.toEqual([]);
 		expect(evaluate).toHaveBeenCalledTimes(1);
 		expect(expression.match(/\bcollect\(\)/g) ?? []).toHaveLength(1);
+	});
+
+	test("bounds a stalled visible download artifact probe and records its pending operation", async () => {
+		vi.useFakeTimers();
+		try {
+			let request: {
+				expression?: string;
+				awaitPromise?: boolean;
+				returnByValue?: boolean;
+				timeout?: number;
+			} = {};
+			const evaluate = vi.fn((input: typeof request) => {
+				request = input;
+				return new Promise<never>(() => undefined);
+			});
+			const scrapeTelemetry = createBrowserScrapeTelemetryRecorder();
+			const read = readVisibleChatgptDownloadArtifactProbesWithClientForTest(
+				// biome-ignore lint/style/useNamingConvention: CDP domain names are protocol-defined.
+				{ Runtime: { evaluate } } as never,
+				{ scrapeTelemetry },
+			);
+			const pendingOperation = scrapeTelemetry.pendingOperation;
+			const outcome = Promise.race([
+				read.then(
+					() => "completed",
+					(error: unknown) => (error instanceof Error ? error.message : String(error)),
+				),
+				new Promise<string>((resolve) => setTimeout(() => resolve("outer-stalled"), 10_001)),
+			]);
+
+			await vi.advanceTimersByTimeAsync(10_001);
+			expect(await outcome).toBe(
+				"Timed out reading visible ChatGPT download artifact probes after 10000ms.",
+			);
+			expect(pendingOperation).toBe("provider:chatgpt.readVisibleDownloadArtifactProbes");
+			expect(scrapeTelemetry.pendingOperation).toBeNull();
+			expect(evaluate).toHaveBeenCalledTimes(1);
+			expect(request).toMatchObject({
+				awaitPromise: true,
+				returnByValue: true,
+				timeout: 10_000,
+			});
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	test("collects visible download artifact probes from the ready DOM only once", async () => {
+		let expression = "";
+		const evaluate = vi.fn(async (input: { expression?: string }) => {
+			expression = input.expression ?? "";
+			return { result: { value: [] } };
+		});
+
+		await expect(
+			readVisibleChatgptDownloadArtifactProbesWithClientForTest(
+				// biome-ignore lint/style/useNamingConvention: CDP domain names are protocol-defined.
+				{ Runtime: { evaluate } } as never,
+			),
+		).resolves.toEqual([]);
+		expect(evaluate).toHaveBeenCalledTimes(1);
+		expect(expression.match(/\bcollect\(\)/g) ?? []).toHaveLength(1);
+		expect(expression).not.toContain("for (let attempt = 0; attempt < 20");
 	});
 
 	test("emits stable conversation file refs from user-turn probes", () => {

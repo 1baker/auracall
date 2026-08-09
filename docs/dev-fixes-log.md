@@ -21013,3 +21013,18 @@ browser-stage lifecycle observability, not transcript truncation.
   retry, make the visible-download probe independently bounded or interruptible
   and validate its settlement provider-free at the real adapter-to-receipt
   boundary.
+
+## 2026-08-09 | Bound ready-surface artifact probes at the CDP await
+
+- Caller-owned conversation readiness makes a page-side 20-pass artifact poll
+  redundant. Repeatedly scanning every conversation turn and forcing layout
+  through `getBoundingClientRect()` can monopolize a large renderer while one
+  raw `Runtime.evaluate` remains invisible to the outer receipt.
+- Collect the ready DOM once. Give the evaluation both a protocol execution
+  timeout and an independent host deadline, and wrap the exact await in
+  pending-operation telemetry so an outer context timeout names the operation
+  that has not settled.
+- Prove the real seam with a never-resolving fake CDP evaluation under fake
+  time. The regression must fail as externally stalled before repair, then
+  reject at the local deadline, clear pending telemetry, and preserve one-call
+  normalization afterward.

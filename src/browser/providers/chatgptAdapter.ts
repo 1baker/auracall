@@ -404,6 +404,7 @@ const CHATGPT_DOWNLOAD_CAPTURE_STATE_KEY = "__auracallChatgptDownloadCapture";
 const CHATGPT_ARTIFACT_CAPTURED_FETCH_TIMEOUT_MS = 20_000;
 const CHATGPT_ARTIFACT_BROWSER_DOWNLOAD_TIMEOUT_MS = 30_000;
 const CHATGPT_VISIBLE_FILES_READ_TIMEOUT_MS = 10_000;
+const CHATGPT_VISIBLE_DOWNLOAD_ARTIFACT_PROBES_TIMEOUT_MS = 10_000;
 const CHATGPT_CONVERSATION_PAYLOAD_FETCH_TIMEOUT_MS = 9_000;
 const CHATGPT_CONVERSATION_PAYLOAD_EVALUATE_TIMEOUT_MS = 10_000;
 const CHATGPT_CONVERSATION_PAYLOAD_RESPONSE_BODY_TIMEOUT_MS = 9_000;
@@ -8786,9 +8787,13 @@ async function readVisibleChatgptDownloadArtifactProbesWithClient(
 ): Promise<ChatgptConversationDownloadButtonProbe[]> {
 	recordBrowserScrapeCdpCall(options, "Runtime.evaluate");
 	recordBrowserScrapeProviderAction(options, "chatgpt.readVisibleDownloadArtifactProbes");
-	const { result } = await client.Runtime.evaluate({
-		expression: `(async () => {
-      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+	const { result } = await withBrowserScrapePendingOperation(
+		options,
+		"provider:chatgpt.readVisibleDownloadArtifactProbes",
+		() =>
+			withChatgptTimeout(
+				client.Runtime.evaluate({
+					expression: `(() => {
       const normalize = (value) => String(value || '').replace(/\\s+/g, ' ').trim();
       const isVisible = (node) => {
         if (!(node instanceof Element)) return false;
@@ -8833,16 +8838,19 @@ async function readVisibleChatgptDownloadArtifactProbesWithClient(
           return buttons;
         });
       };
-      for (let attempt = 0; attempt < 20; attempt += 1) {
-        const probes = collect();
-        if (probes.length > 0) return probes;
-        await sleep(200);
-      }
+      // The caller has already established conversation-surface readiness.
+      // Repeating this layout-forcing full-DOM scan can monopolize a large
+      // conversation renderer, so collect the ready surface exactly once.
       return collect();
     })()`,
-		awaitPromise: true,
-		returnByValue: true,
-	});
+					awaitPromise: true,
+					returnByValue: true,
+					timeout: CHATGPT_VISIBLE_DOWNLOAD_ARTIFACT_PROBES_TIMEOUT_MS,
+				}),
+				CHATGPT_VISIBLE_DOWNLOAD_ARTIFACT_PROBES_TIMEOUT_MS,
+				`Timed out reading visible ChatGPT download artifact probes after ${CHATGPT_VISIBLE_DOWNLOAD_ARTIFACT_PROBES_TIMEOUT_MS}ms.`,
+			),
+	);
 	const value = result?.value;
 	return Array.isArray(value)
 		? value.filter(isRecord).map((item) => ({
@@ -8854,6 +8862,9 @@ async function readVisibleChatgptDownloadArtifactProbesWithClient(
 			}))
 		: [];
 }
+
+export const readVisibleChatgptDownloadArtifactProbesWithClientForTest =
+	readVisibleChatgptDownloadArtifactProbesWithClient;
 
 async function readVisibleChatgptImageArtifactProbesWithClient(
 	client: ChromeClient,

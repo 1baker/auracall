@@ -1,10 +1,10 @@
 # ChatGPT Download-Artifact Probe Settlement Provider-Free Repair | 0235-2026-08-09
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 1
-Gate state: PROVIDER_FREE_AUTHORIZED_LIVE_WITHHELD
-Goal execution state: ACTIVE_PROVIDER_FREE_REPAIR
+Gate state: CLOSED_PROVIDER_FREE_GREEN_LIVE_WITHHELD
+Goal execution state: COMPLETE_PROVIDER_FREE
 
 ## Stable Goal Objective
 
@@ -17,6 +17,26 @@ completion or guard, start materialization, or resume the scheduler or wider
 completions.
 
 ## Current State
+
+- The exact real-seam regression went red before repair in 1.27 seconds: a
+  never-settling download-artifact `Runtime.evaluate` remained pending and the
+  test observed `outer-stalled` instead of the required local timeout. The same
+  command is green after repair.
+- The probe now collects the caller-established ready DOM exactly once, passes
+  `timeout=10000` to CDP, applies an independent 10-second host deadline, and
+  wraps the await in pending-operation telemetry named
+  `provider:chatgpt.readVisibleDownloadArtifactProbes`. The regression proves
+  timeout rejection and telemetry cleanup under fake time.
+- Focused and adjacent validation is green: ChatGPT adapter 153/153, context
+  13/13, browser-service UI 54/54, TypeScript typecheck, production build, and
+  scoped Biome. Plan audit keeps 235 plans with zero validation errors.
+- Hypotheses 1-2 are confirmed as local defects and repaired. Hypothesis 3,
+  live CDP degradation from a still-pending reload, remains neither proven nor
+  required for provider-free closure; only a separately authorized installed
+  canary can decide whether it remains relevant.
+- Provider/browser, install/restart, completion/materialization,
+  scheduler/guard, direct runtime-state, prompt/click, and wider-resume effects
+  remained zero.
 
 - Plan 0234 consumed one installed pass-50 canary and closed
   `C4_other_terminal_failure`. The sole child
@@ -77,16 +97,16 @@ completions.
 
 ## Acceptance Criteria
 
-- [ ] One fast deterministic command goes red on the exact unresolved
+- [x] One fast deterministic command goes red on the exact unresolved
   download-artifact `Runtime.evaluate` seam before source repair.
-- [ ] The exact same command passes after one independently bounded,
+- [x] The exact same command passes after one independently bounded,
   single-collection repair.
-- [ ] The probe passes a protocol timeout, has an independent host deadline,
+- [x] The probe passes a protocol timeout, has an independent host deadline,
   honors pending-operation telemetry, and performs exactly one DOM collection.
-- [ ] Existing output normalization and caller behavior remain covered.
-- [ ] Focused and adjacent tests, typecheck, build, scoped Biome, diff hygiene,
+- [x] Existing output normalization and caller behavior remain covered.
+- [x] Focused and adjacent tests, typecheck, build, scoped Biome, diff hygiene,
   and plan audit pass.
-- [ ] Provider/browser, install/restart, completion/materialization,
+- [x] Provider/browser, install/restart, completion/materialization,
   scheduler/guard, direct runtime-state, prompt/click, and wider-resume effects
   remain zero.
 
@@ -129,3 +149,30 @@ completions.
 - `subagent_status`: not_spawned; `max_subagents=0`.
 - `next_action_or_stop_reason`: audit, commit, and push this open boundary, then
   add and run the exact red regression before editing production source.
+
+## Checkpoint 2 | Exact Artifact Probe Settles Provider-Free
+
+- `checkpoint_id`: `P0235-C02`.
+- `state_transition`: P0235_OPEN_PROVIDER_FREE_REPAIR ->
+  P0235_CLOSED_PROVIDER_FREE_GREEN_LIVE_WITHHELD.
+- `progress_classification`: blocker_reduction.
+- `authority_classification`: the one provider-free repair is consumed and
+  closed. Installation, restart, browser/provider work, completion or
+  materialization control, scheduler/wider resume, and guard control remain
+  unauthorized.
+- `evidence`: open-plan commit `fe255a92`; exact red command
+  `pnpm vitest run tests/browser/chatgptAdapter.test.ts -t "bounds a stalled visible download artifact probe"`
+  failed with expected local-timeout text but received `outer-stalled`; the
+  same command passed after repair; one-collection focused test passed;
+  adapter/context/browser-service suites passed `153/13/54` for 220 total;
+  typecheck, production build, scoped Biome, diff hygiene, and plan audit with
+  235 plans/zero errors passed.
+- `subagent_status`: not_spawned; `max_subagents=0`.
+- `review_disposition_summary`: confirmed immediate cause is a raw unbounded
+  download-artifact evaluation combined with unnecessary repeated ready-DOM
+  layout scans. The exact probe now owns local settlement and telemetry. A
+  still-pending reload is retained only as a falsifiable live hypothesis, not
+  asserted as root cause.
+- `next_action_or_stop_reason`: close and push provider-free. Prepare one fresh
+  installed `wsl-chrome-3` canary plan behind current stopped-runtime readback,
+  but do not install, restart, or run it without separate operator approval.

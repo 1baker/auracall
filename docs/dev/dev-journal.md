@@ -45149,3 +45149,20 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   Installation, restart, browser/provider work, completion/materialization,
   scheduler/guard control, direct runtime state, and wider resume remain
   withheld behind a separate future gate.
+
+## 2026-08-09 | Plan 0235 closes the artifact probe provider-free
+
+- The exact real-adapter regression failed red in 1.27 seconds: a
+  never-settling `Runtime.evaluate` produced `outer-stalled` rather than a local
+  artifact-probe timeout. The same command passes after the repair.
+- The visible download-artifact probe now trusts the caller's readiness gate
+  and collects the full conversation DOM once instead of up to 20 times. It
+  passes a 10-second protocol timeout, has an independent 10-second host
+  deadline, and records/cleans the exact pending operation around the await.
+- ChatGPT adapter tests pass 153/153, context tests 13/13, and browser-service
+  UI tests 54/54. Typecheck, production build, scoped Biome, diff hygiene, and
+  the 235-plan audit with zero errors pass.
+- Provider/browser, install/restart, completion/materialization,
+  scheduler/guard, direct runtime-state, prompt/click, and wider-resume effects
+  remain zero. The still-pending-reload theory remains a live-only hypothesis,
+  not a provider-free root-cause claim or authority for a canary.
