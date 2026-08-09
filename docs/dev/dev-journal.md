@@ -45331,3 +45331,34 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   guard controls, retries, force, snapshot refresh, downloads, prompts, and
   wider materialization remain excluded until a separately installed successor
   freezes a genuinely nonterminal exact item.
+
+## 2026-08-09 | Plan 0240 identifies catalog truncation as the exact cause
+
+- Temporary provider-free instrumentation at the broad candidate seam captured
+  `assetFamilySignatures=[]` for the selected Budget Justification conversation.
+  A direct 500-row catalog read contains its four terminal downloads and four
+  favicon rows; the existing helper correctly filters the favicon rows.
+- The family evidence disappears because selecting media alongside artifacts
+  and files reduces the shared catalog window from the artifact/file floor of
+  500 to 50 at `maxItems=1`. The conversation summary still advertises cached
+  assets, so classification admits it while the empty family set bypasses the
+  terminal-family check.
+- The diagnostic hook and temporary harness were removed. The corrected repair
+  is a limit-sensitive regression plus a narrow catalog-limit selection fix,
+  preserving the 50-row media-only behavior and all live-effect exclusions.
+
+## 2026-08-09 | Plan 0240 advances provider-free to Fence Guidelines
+
+- Artifact/file/media reconciliation now retains the 500-row catalog floor;
+  media-only reconciliation remains at 50. The limit-sensitive regression was
+  red before the change and green afterward, and all 76 focused history tests,
+  typecheck, scoped lint, and the production build pass.
+- Current retained replay moved broad `maxItems=1` selection to conversation
+  `6a526cdb-580c-83ea-ab97-ab95a85f6975`. Exact replay froze the nonterminal
+  file `Fence Guidelines.pdf` with provider file ID
+  `file_00000000c980722f8f18eeb8a63d72a7` at one disabled seam.
+- Broad and exact provider implementation counts stayed zero; the 1,884-job
+  durable index remained byte-identical at `641836ac...b41087`; no browser,
+  install/restart, live job, download, scheduler/completion/guard control, or
+  wider materialization ran. The installed one-canary gate is now a distinct
+  ready successor.

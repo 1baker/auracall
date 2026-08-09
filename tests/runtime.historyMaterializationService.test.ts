@@ -3997,7 +3997,10 @@ describe("history materialization service", () => {
 			boundIdentityKey: "user@example.com",
 			status: "eligible" as const,
 			reason: "eligible" as const,
-			kind: request.itemId === "file_exact_archive_backed" ? ("files" as const) : ("artifacts" as const),
+			kind:
+				request.itemId === "file_exact_archive_backed"
+					? ("files" as const)
+					: ("artifacts" as const),
 			itemId: request.itemId,
 			item:
 				request.itemId === "file_exact_archive_backed"
@@ -4044,8 +4047,7 @@ describe("history materialization service", () => {
 						artifactId: "turn_1:download:sandbox:/mnt/data/review.docx",
 						title: "Download the editable review",
 						fileName: "review.docx",
-						mimeType:
-							"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+						mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 						localPath: priorMaterializedPath,
 						checksumSha256: "already-readable",
 						fileAvailable: true,
@@ -5314,6 +5316,253 @@ describe("history materialization service", () => {
 				verdict: "match",
 				sessionFingerprint: "reconciliation-session-fingerprint",
 			},
+		});
+	});
+
+	it("keeps the artifact-family catalog floor when media is also selected", async () => {
+		let scheduled: (() => Promise<void>) | undefined;
+		const readCatalog = vi.fn(async (request: { limit?: number | null } = {}) => {
+			const includesFullAssetFamilies = (request.limit ?? 0) >= 500;
+			const artifacts = [
+				...(includesFullAssetFamilies
+					? [
+							{
+								id: "turn_terminal:download:sandbox:/mnt/data/Completed.docx",
+								title: "Download completed DOCX",
+								uri: "sandbox:/mnt/data/Completed.docx",
+								conversationId: "conv_terminal_plus_static",
+							},
+							{
+								id: "image-dom:turn_terminal:0",
+								title: "Generated image 1",
+								kind: "image",
+								uri: "https://www.google.com/s2/favicons?domain=example.com&sz=128",
+								conversationId: "conv_terminal_plus_static",
+								metadata: { extraction: "dom-imagegen-image" },
+							},
+						]
+					: []),
+				{
+					id: "turn_actionable:download:sandbox:/mnt/data/Next.docx",
+					title: "Download next DOCX",
+					uri: "sandbox:/mnt/data/Next.docx",
+					conversationId: "conv_actionable",
+				},
+			];
+			return {
+				object: "account_mirror_catalog" as const,
+				generatedAt: "2026-08-09T21:50:00.000Z",
+				kind: "all" as const,
+				limit: request.limit ?? 0,
+				entries: [
+					{
+						provider: "chatgpt" as const,
+						runtimeProfileId: "wsl-chrome-3",
+						browserProfileId: "wsl-chrome-3",
+						boundIdentityKey: "user@example.com",
+						status: "eligible" as const,
+						reason: "eligible" as const,
+						mirrorCompleteness: {
+							state: "in_progress" as const,
+							summary: "Conversation summaries outlive a truncated asset-family window.",
+							remainingDetailSurfaces: { projects: 0, conversations: 2, total: 2 },
+							signals: {
+								projectsTruncated: false,
+								conversationsTruncated: true,
+								attachmentInventoryTruncated: true,
+								attachmentCursorPresent: true,
+							},
+						},
+						counts: {
+							projects: 0,
+							conversations: 2,
+							artifacts: artifacts.length,
+							files: 0,
+							media: 0,
+						},
+						manifests: {
+							projects: [],
+							conversations: [
+								{
+									id: "conv_terminal_plus_static",
+									title: "Terminal plus static",
+									provider: "chatgpt" as const,
+									cachedArtifactCount: 2,
+									cachedFileCount: 0,
+									metadata: {
+										conversationFreshness: {
+											state: "missing_assets",
+											assetCounts: { known: 2, missingLocal: 2 },
+										},
+									},
+								},
+								{
+									id: "conv_actionable",
+									title: "Actually actionable",
+									provider: "chatgpt" as const,
+									cachedArtifactCount: 1,
+									cachedFileCount: 0,
+									metadata: {
+										conversationFreshness: {
+											state: "missing_assets",
+											assetCounts: { known: 1, missingLocal: 1 },
+										},
+									},
+								},
+							],
+							artifacts,
+							files: [],
+							media: [],
+						},
+					},
+				],
+				metrics: {
+					targets: 1,
+					projects: 0,
+					conversations: 2,
+					artifacts: artifacts.length,
+					files: 0,
+					media: 0,
+				},
+			};
+		});
+		const materializeConversation = vi.fn(
+			async (target): Promise<HistoryMaterializationResult> => ({
+				object: "history_materialization_result",
+				generatedAt: "2026-08-09T21:50:02.000Z",
+				status: "materialized",
+				target,
+				source: { type: "reconciliation", provider: "chatgpt" },
+				manifestPaths: [],
+				entries: [
+					{
+						kind: "artifact",
+						providerId: "turn_actionable:download:sandbox:/mnt/data/Next.docx",
+						title: "Next.docx",
+						status: "materialized",
+						localPath: "/tmp/Next.docx",
+						remoteUrl: "sandbox:/mnt/data/Next.docx",
+						cacheKey: null,
+						checksumSha256: "next-checksum",
+						mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+						size: 42,
+						materializationMethod: "captured-anchor-fetch",
+						reason: null,
+						archiveItemId: null,
+						assetRoute: null,
+					},
+				],
+				archiveItems: [],
+				metrics: { conversations: 1, materialized: 1, skipped: 0, failed: 0 },
+				message: "Recovered next actionable asset.",
+			}),
+		);
+		const service = createHistoryMaterializationService({
+			config: {},
+			store: createInMemoryHistoryMaterializationJobStore([]),
+			catalogService: { readCatalog, readItem: vi.fn() },
+			runArchiveService: {
+				listItems: vi.fn(async () => ({
+					items: [
+						buildArchiveItem({
+							id: "archive-completed-docx",
+							provider: "chatgpt",
+							runtimeProfile: "wsl-chrome-3",
+							boundIdentityKey: "user@example.com",
+							fileName: "Completed.docx",
+							metadata: { source: "download" },
+						}),
+					],
+				})),
+			} as unknown as RunArchiveService,
+			generateId: () => "hmj_media_inclusive_catalog_floor",
+			now: sequenceNow([
+				"2026-08-09T21:50:00.000Z",
+				"2026-08-09T21:50:01.000Z",
+				"2026-08-09T21:50:02.000Z",
+			]),
+			schedule: (work) => {
+				scheduled = work;
+			},
+			materializeConversation,
+		});
+
+		await service.createJob({
+			provider: "chatgpt",
+			runtimeProfile: "wsl-chrome-3",
+			boundIdentityKey: "user@example.com",
+			reconcile: true,
+			assetKinds: ["artifacts", "files", "media"],
+			maxItems: 1,
+			refreshSnapshot: false,
+			force: false,
+		});
+		if (!scheduled) throw new Error("Expected job to be scheduled.");
+		await scheduled();
+
+		expect(readCatalog).toHaveBeenCalledWith(expect.objectContaining({ kind: "all", limit: 500 }));
+		expect(materializeConversation.mock.calls.map(([target]) => target.conversationId)).toEqual([
+			"conv_actionable",
+		]);
+		await expect(service.readJob("hmj_media_inclusive_catalog_floor")).resolves.toMatchObject({
+			status: "succeeded",
+			result: {
+				metrics: {
+					eligibleCandidates: 1,
+					selectedCandidates: 1,
+					candidateFunnel: {
+						preEligibilityExclusions: { terminalAssetFamilies: 1 },
+					},
+				},
+			},
+		});
+	});
+
+	it("keeps the smaller catalog floor for media-only reconciliation", async () => {
+		let scheduled: (() => Promise<void>) | undefined;
+		const readCatalog = vi.fn(async (request: { limit?: number | null } = {}) => ({
+			object: "account_mirror_catalog" as const,
+			generatedAt: "2026-08-09T21:55:00.000Z",
+			kind: "all" as const,
+			limit: request.limit ?? 0,
+			entries: [],
+			metrics: { targets: 0, projects: 0, conversations: 0, artifacts: 0, files: 0, media: 0 },
+		}));
+		const service = createHistoryMaterializationService({
+			config: {},
+			store: createInMemoryHistoryMaterializationJobStore([]),
+			catalogService: { readCatalog, readItem: vi.fn() },
+			runArchiveService: {
+				listItems: vi.fn(async () => ({ items: [] })),
+			} as unknown as RunArchiveService,
+			generateId: () => "hmj_media_only_catalog_floor",
+			now: sequenceNow([
+				"2026-08-09T21:55:00.000Z",
+				"2026-08-09T21:55:01.000Z",
+				"2026-08-09T21:55:02.000Z",
+			]),
+			schedule: (work) => {
+				scheduled = work;
+			},
+			materializeConversation: vi.fn(),
+			materializeMediaGeneration: vi.fn(),
+		});
+
+		await service.createJob({
+			provider: "chatgpt",
+			runtimeProfile: "wsl-chrome-3",
+			reconcile: true,
+			assetKinds: ["media"],
+			maxItems: 1,
+			refreshSnapshot: false,
+			force: false,
+		});
+		if (!scheduled) throw new Error("Expected job to be scheduled.");
+		await scheduled();
+
+		expect(readCatalog).toHaveBeenCalledWith(expect.objectContaining({ kind: "all", limit: 50 }));
+		await expect(service.readJob("hmj_media_only_catalog_floor")).resolves.toMatchObject({
+			status: "skipped",
 		});
 	});
 

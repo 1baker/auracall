@@ -21082,17 +21082,21 @@ browser-stage lifecycle observability, not transcript truncation.
 - If this occurs, attribute ownership before cleanup and terminate only the
   exact AuraCall-owned main process. Preserve unrelated or user-owned browsers.
 
-## 2026-08-09 | Broad selection must reject static-only residual families
+## 2026-08-09 | Empty family evidence under catalog truncation is not nonterminal proof
 
-- A broad history-reconciliation selector can carry correct terminal-family
-  exclusions yet still select a conversation whose only residual catalog rows
-  are known static image false positives. Exact replay then truthfully finds no
-  nonterminal downloadable item, so provider work can only end in a clean skip.
-- Apply the same catalog materialization-eligibility classification before a
-  conversation consumes broad target budget. Terminal downloads plus favicon
-  rows are not an actionable conversation merely because the favicon family is
-  absent from archive/job terminal evidence.
-- Prove the repair provider-free at the real broad selector: the static-only
-  conversation must not reach `materializeConversation`, and `maxItems=1` must
-  advance to the next actually actionable conversation without changing the
-  durable job store.
+- A broad history-reconciliation selector can retain a conversation summary
+  while a small shared catalog limit truncates away the matching asset rows.
+  If an empty family set is treated as nonterminal, the summary can consume
+  provider work even when every real download family is already terminal.
+- When artifacts or files are selected, preserve the larger family-evidence
+  catalog floor even if media is selected too. Keep the smaller window only for
+  media-only work; the existing ChatGPT static-image classifier should continue
+  to own favicon rejection.
+- Prove the repair provider-free with a limit-sensitive catalog fixture: the
+  truncated request must reproduce the wrong first target, the full
+  artifact/file window must exclude it by terminal family and advance
+  `maxItems=1`, and the durable job store must remain unchanged.
+- The implemented boundary keeps the 500-row floor whenever artifacts or files
+  are selected and uses 50 only for media-only reconciliation. Current-data
+  replay then advances from the empty-family Budget row to a distinct exact
+  conversation file without provider work.

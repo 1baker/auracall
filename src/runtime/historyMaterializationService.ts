@@ -1285,7 +1285,8 @@ async function materializeHistoryRequest(input: {
 				now: input.now,
 				source: sourceFromCreateRequest(request),
 				target,
-				message: "Selected account mirror catalog asset family is already terminal in local evidence.",
+				message:
+					"Selected account mirror catalog asset family is already terminal in local evidence.",
 			});
 		}
 		return reconcileConversationTarget({
@@ -2252,9 +2253,10 @@ async function materializeReconciliation(input: {
 	const maxTargets = normalizeMaxItems(input.request.maxItems) ?? 10;
 	const selectedKinds = normalizeAssetKinds(input.request.assetKinds);
 	const selectedConversationIds = normalizeConversationIds(input.request.conversationIds);
-	const catalogLimit = selectedKinds.includes("media")
-		? Math.max(50, maxTargets * 20)
-		: Math.max(500, maxTargets * 20);
+	const catalogLimit =
+		selectedKinds.includes("artifacts") || selectedKinds.includes("files")
+			? Math.max(500, maxTargets * 20)
+			: Math.max(50, maxTargets * 20);
 	const catalog = await input.catalogService.readCatalog({
 		provider: input.request.provider ?? null,
 		runtimeProfileId: input.request.runtimeProfile ?? null,
