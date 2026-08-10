@@ -1,10 +1,11 @@
 # ChatGPT Staged Wider Recovery And Scheduler Resume | 0247-2026-08-09
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 2
-Goal execution state: ACTIVE
-Gate state: AUTHORIZED_RETAINED_BROWSER_PRE_DEFAULT_PASS
+Goal execution state: FAILED_CLOSED
+Gate state: CLOSED_DEFAULT_PASS8_CHILD_FAILED
+Outcome: STOPPED_FAIL_CLOSED
 
 ## Stable Objective
 
@@ -35,6 +36,13 @@ Gemini/Grok targets and all identity, guard, pacing, and browser safeguards.
 - Only those four ChatGPT targets have live follow enabled. Gemini and Grok
   live follow is disabled or unconfigured; the retained Gemini
   `google-sorry` guard remains excluded and must not be cleared or contacted.
+- The sole default control advanced only pass 7 to 8, matched all four identity
+  dimensions, and created sole child
+  `hmj_d33cb7db5d274995ace8a1f26c8a5787`. Attempt one honored its
+  `2026-08-10T03:10:37.565Z` provider-work fence but failed with
+  materialized/skipped/failed `0/5/2` across five conversations. The parent
+  absorbed as blocked/pass 8 with force/next null. This consumed the packet's
+  hard stop before any later completion or scheduler action.
 
 ## Authority And Non-Goals
 
@@ -189,9 +197,48 @@ Gemini/Grok targets and all identity, guard, pacing, and browser safeguards.
   runtime state, not active provider work. Safe admission is exact single-owner
   reuse plus duplicate rejection, rather than destructive precondition cleanup.
 
+## Closing Checkpoint | Default Pass 8 Child Failure
+
+- `checkpoint_id`: `P0247-C03`.
+- `state_transition`:
+  P0247_ACTIVE_AUTHORIZED_RETAINED_BROWSER_PRE_DEFAULT_PASS ->
+  P0247_CLOSED_DEFAULT_PASS8_CHILD_FAILED.
+- `progress_classification`: blocker_reduction.
+- `canary_evidence`: the sole default control was accepted at
+  `2026-08-10T03:02:43.174Z`, advanced only pass 7 to 8, and created sole child
+  `hmj_d33cb7db5d274995ace8a1f26c8a5787`. Attempt one retained `maxItems=6`,
+  `force=false`, honored `providerWorkNotBefore=2026-08-10T03:10:37.565Z`,
+  and matched email, plan, structure, and account-level identity.
+- `terminal_outcome`: the child failed at `2026-08-10T03:16:25.822Z` after
+  five conversations with eligible/selected candidates `28/5` and
+  materialized/skipped/failed `0/5/2`. The two failed dispositions are
+  retryable; routeability counts are routeable/unknown `2/2`. No manifest,
+  checksum, or archive item was produced.
+- `parent_and_cleanup`: default absorbed as blocked/pass 8 with force/next
+  null and `account_mirror_materialization_failed`; active jobs are zero; its
+  reused PID 21323 browser exited normally. The original `wsl-chrome-2` exact
+  retained owner remains healthy at PID 30446/port 45013, with no duplicate;
+  `wsl-chrome-3` and `wsl-chrome-4` browsers remain absent. API PID 85854 is
+  healthy and scheduler posture is operator-paused/idle with zero active
+  requests or reservations.
+- `subagent_status`: not_spawned; serialized provider critical path.
+- `effect_accounting`: completion controls `1/3`; provider passes `1/5`; pass
+  advances `1/5`; children/attempts `1/5`; retained-browser reuses `1/2`;
+  materialized files/downloads `0`; scheduler run-once/resume/emergency-pause
+  actions `0/0/0`; every excluded effect remains zero.
+- `next_action_or_stop_reason`: stop all live effects. `wsl-chrome-2` pass 3,
+  `wsl-chrome-4` pass 35, scheduler run-once, and scheduler resume remain
+  withheld. A separately reviewed provider-free successor must localize the
+  two retryable candidate failures before any fresh canary authority.
+- `authority_classification`: the authorized packet terminated at its stated
+  first hard stop; failure does not imply retry or later-lane authority.
+- `review_disposition_summary`: identity, pacing, and browser ownership were
+  green; the terminal blocker is materialization correctness on the broader
+  default candidate set, so scheduler-last ordering prevented wider exposure.
+
 ## Definition Of Done
 
-The three paused ChatGPT completions each prove one clean bounded pass, all four
-ChatGPT lanes are stable, one paused scheduler canary is clean, normal scheduler
-cadence is durably resumed, excluded providers remain disabled/unchanged, and
-all runtime plus repository evidence is current and pushed.
+This plan closes fail-closed because the first direct lane's sole child failed.
+The later lanes and all scheduler actions remain withheld, excluded providers
+remain unchanged, and the terminal runtime plus repository evidence is current
+and pushed.

@@ -17,6 +17,16 @@
   prompt, click, `Answer now`, config/guard mutation, or separate job.
 - Delegation receipt: `not_spawned`; all lanes share one provider boundary and
   the user did not request parallel agents.
+- Result: the sole default control advanced only pass 7 to 8 and created child
+  `hmj_d33cb7db5d274995ace8a1f26c8a5787`. Attempt one honored the provider
+  fence and matched all identity dimensions, then failed with
+  materialized/skipped/failed `0/5/2` across five conversations. The parent is
+  blocked/pass 8 with force/next null; jobs are zero and its reused browser
+  exited normally. `wsl-chrome-2` pass 3, `wsl-chrome-4` pass 35, scheduler
+  run-once, and scheduler resume did not run. Scheduler remains paused/idle.
+- Stop: Plan 0247 is closed fail-closed. The two failed dispositions are
+  retryable, but no retry is authorized; a provider-free successor must
+  localize them before a fresh canary gate.
 
 ## 2026-08-09 | Plan 0246 Activated for One Pass-56 Canary
 

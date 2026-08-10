@@ -1,3 +1,11 @@
+- 2026-08-09: A clean exact-profile canary does not prove every older
+  completion's broader candidate set. Resume recovery serially and keep the
+  scheduler last: Plan 0247's first default pass matched all account identity
+  dimensions but its sole child still failed two retryable assets, so the hard
+  stop prevented later profile and scheduler exposure. Preserve the terminal
+  child receipt, require zero active jobs and cleared force fields, and localize
+  the new candidate failures provider-free before granting any retry.
+
 - 2026-08-09: A rejected `Runtime.evaluate` promise can return both
   `exceptionDetails` and an object-shaped by-value result. Do not treat that
   object as successful binary content or use its truthiness to suppress a

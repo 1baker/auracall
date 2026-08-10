@@ -17,6 +17,14 @@
   default at PID 21323/port 45011 and one for `wsl-chrome-2` at PID 30446/port
   45013; the other two profiles have none. Plan version 2 admits single-owner
   reuse, forbids duplicates, and must audit, commit, and push before pass 8.
+- The sole default control advanced only pass 7 to 8 and created child
+  `hmj_d33cb7db5d274995ace8a1f26c8a5787`. Attempt one honored pacing and matched
+  all four identity dimensions, then failed materialized/skipped/failed
+  `0/5/2` across five conversations. Parent cleanup is blocked/pass 8 with
+  force/next null; active jobs are zero and its reused browser exited normally.
+- This is Plan 0247's first hard stop. `wsl-chrome-2` pass 3,
+  `wsl-chrome-4` pass 35, scheduler run-once, and scheduler resume remain
+  unconsumed. Scheduler is still paused/idle; no retry is admitted.
 
 ## Turn 428 | 2026-08-09
 

@@ -7,12 +7,16 @@
 Status: active
 Lane: P01
 
-- Active authorized ChatGPT staged wider recovery and scheduler-last resume:
+- Stopped ChatGPT staged wider recovery and scheduler-last resume:
   [docs/dev/plans/0247-2026-08-09-chatgpt-staged-wider-recovery-and-scheduler-resume.md](docs/dev/plans/0247-2026-08-09-chatgpt-staged-wider-recovery-and-scheduler-resume.md)
   Plan 0246 proved the structured-exception repair with six materialized
   external images. Plan 0247 now owns one serialized bounded pass for each of
   the three paused ChatGPT lanes, one paused scheduler run-once canary, and
-  scheduler resume only after every direct proof is green. Gemini/Grok remain
+  scheduler resume only after every direct proof is green. The first default
+  control advanced only pass 7 to 8, matched identity, then its sole child
+  failed `0/5/2`; therefore the later lanes and every scheduler action stayed
+  withheld. A provider-free successor must localize the two retryable failures
+  before another canary. Gemini/Grok remain
   disabled and excluded. Fresh admission corrected the browser precondition:
   default and `wsl-chrome-2` each have one healthy exact retained browser that
   may be reused, while duplicate exact-profile ownership remains a hard stop.
