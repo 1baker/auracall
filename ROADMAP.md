@@ -13,7 +13,8 @@ Lane: P01
   entries with no asset identity. Current AuraCall reads both conversations in
   about 12 seconds with two messages and zero files/artifacts. Plan 0250 may
   project that successful cached evidence into the two account-mirror rows and
-  prove callback-disabled retry exclusion. Provider, materialization,
+  prove callback-disabled broad-retry exclusion. Explicit conversation IDs are
+  a separate operator-directed live-discovery authority. Provider, materialization,
   completion, scheduler, install, and restart effects remain zero.
 
 - Stopped default DOCX installed one-canary gate:

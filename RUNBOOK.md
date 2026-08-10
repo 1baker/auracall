@@ -22,6 +22,12 @@
   scheduler is paused/paused; active history jobs and the owned browser are
   zero; default remains blocked/pass 8. Publish the gate before any evidence
   write.
+- The first throwing-sentinel selector exposed a scope error in Plan 0250
+  version 1: explicit `conversationIds` deliberately bypass cached
+  eligibility and request live discovery. No provider or runtime write ran;
+  the sentinel threw at the boundary. Version 2 uses the actual broad
+  scheduler-style selector, where zero-asset rows must be classified
+  `noSelectedAssetEvidence` before any callback.
 
 ## Turn 430 | 2026-08-10
 

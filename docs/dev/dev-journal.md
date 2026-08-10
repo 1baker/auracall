@@ -14,6 +14,11 @@
   through `AccountMirrorPersistence`, and deterministic readback. Provider,
   browser, materialization, completion, scheduler, install/restart, direct
   runtime editing, and other-provider effects remain zero.
+- Selector correction: explicit `conversationIds` are operator-directed live
+  discovery and intentionally bypass normal cached eligibility. A throwing
+  sentinel caught that distinction without provider work. Plan version 2 now
+  tests the broad automatic selector, which must exclude both current
+  zero-asset rows as `noSelectedAssetEvidence`.
 
 ## 2026-08-10 | Plan 0248 Direct Default DOCX Inspection And Repair
 

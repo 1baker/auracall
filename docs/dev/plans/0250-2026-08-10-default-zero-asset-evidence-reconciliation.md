@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 1
+Plan version: 2
 Outcome: IN_PROGRESS
 Goal execution state: ACTIVE
 Gate state: AUTHORIZED_PROVIDER_FREE_EVIDENCE_ONLY
@@ -63,9 +63,13 @@ that neither row remains eligible for asset retry.
 1. Publish this authority boundary before the runtime evidence write.
 2. Read and validate the two cached contexts and successful terminal receipts.
    Reject stale, failed, mismatched-account, nonzero-asset, or malformed input.
-3. In memory, overlay the exact intended evidence and run selected-ID
-   `maxItems=1` reconciliation with every provider callback replaced by a
-   throwing sentinel. Require zero provider callbacks and zero selected rows.
+3. In memory, overlay the exact intended evidence and run the broad
+   scheduler-style `maxItems=1` reconciliation selector with every provider
+   callback replaced by a throwing sentinel. Require zero provider callbacks,
+   zero selected rows, and two `noSelectedAssetEvidence` exclusions. Do not
+   supply explicit `conversationIds`: that operator-directed form intentionally
+   authorizes live discovery even when the cache has no selected-asset evidence
+   and is not the automatic retry path being adjudicated here.
 4. Apply exactly two evidence updates through `AccountMirrorPersistence`:
    `routeable`, complete detail, `assetCompleteness=none`, current observed
    timestamp, and exact message/file/source/artifact counts. Clear only the
@@ -77,28 +81,29 @@ that neither row remains eligible for asset retry.
    clean Git, and close the plan.
 
 - `provider_free_simulations: 2`; `account_mirror_evidence_writes: 2`;
-  `focused_validation_runs: 2`; `plan_commits: 2`.
+  `focused_validation_runs: 2`; `plan_commits: 3`.
 - `provider_callbacks: 0`; `browser_launches: 0`; `downloads: 0`;
   `materialization_jobs: 0`; `completion_controls: 0`;
   `scheduler_controls: 0`; `guard_actions: 0`; `config_mutations: 0`;
   `installs: 0`; `service_restarts: 0`; `direct_runtime_edits: 0`;
   `subagents: 0`.
-- `max_work_unit_attempts: 1`; `max_review_rework_cycles: 1`;
+- `max_work_unit_attempts: 2`; `max_review_rework_cycles: 1`;
   `checkpoint_interval: 1 slice`; `authorization_gate: significant_departure_only`.
 
 ## Acceptance Criteria
 
 - [ ] Cached context and receipt identity/timestamps/counts validate for both
   exact conversations.
-- [ ] Pre-apply callback-disabled simulation predicts both rows are excluded
-  with no provider invocation.
+- [ ] Pre-apply callback-disabled broad simulation predicts both rows are
+  excluded as `noSelectedAssetEvidence` with no provider invocation.
 - [ ] Exactly two service-layer evidence writes succeed; no direct runtime file
   edit occurs.
 - [ ] Durable readback reports both rows routeable, detail complete,
   `assetCompleteness=none`, messages 2, files 0, sources 0, artifacts 0, with
   no stale timeout reason.
-- [ ] Post-apply `maxItems=1` callback-disabled simulation selects zero rows and
-  invokes zero provider callbacks.
+- [ ] Post-apply broad `maxItems=1` callback-disabled simulation selects zero
+  rows, records two `noSelectedAssetEvidence` exclusions, and invokes zero
+  provider callbacks.
 - [ ] The retained failed job is unchanged; scheduler remains paused; active
   history jobs and owned browser processes remain zero; completion pass/status
   is unchanged.
@@ -130,3 +135,30 @@ Both exact account-mirror rows carry current routeable zero-asset evidence,
 provider-free selection cannot admit them for asset retry, the historical
 failure remains intact, and every scheduler/materialization/provider boundary
 remains stopped.
+
+## Selector-Scope Correction Checkpoint | Explicit IDs Are Not Automatic Retry
+
+- `checkpoint_id`: `P0250-C02`.
+- `state_transition`: P0250_ACTIVE_PROVIDER_FREE_EVIDENCE_RECONCILIATION ->
+  P0250_ACTIVE_BROAD_RETRY_SELECTOR_CORRECTED.
+- `progress_classification`: blocker_reduction.
+- `evidence`: the first throwing-sentinel harness proved an explicit
+  `conversationIds` request invokes `materializeConversation` despite an
+  in-memory zero-asset overlay. Source inspection shows this branch
+  deliberately bypasses normal conversation eligibility so an operator can
+  request live discovery for an exact ID. The automatic/broad branch alone
+  calls `classifyCatalogConversationMaterialization`, which excludes current
+  zero-asset rows as `noSelectedAssetEvidence`.
+- `subagent_status`: not_spawned.
+- `effect_accounting`: provider/browser/runtime writes remain zero. One
+  sentinel invocation occurred entirely in memory and threw before provider
+  work; the evidence update remains unconsumed.
+- `next_action_or_stop_reason`: publish plan version 2, rerun the corrected
+  broad callback-disabled selector, and require two exclusions before writing
+  evidence.
+- `authority_classification`: unchanged evidence-only authority; explicit-ID
+  live discovery, materialization, completion, and scheduler effects remain
+  excluded.
+- `review_disposition_summary`: rejected the selected-ID simulation as a model
+  of scheduler retry; accepted the broad reconciliation classifier as the
+  relevant automatic-admission boundary.
