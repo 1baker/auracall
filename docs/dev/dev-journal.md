@@ -1,3 +1,35 @@
+## 2026-08-10 | Plan 0255 Context Preflight Abort Repair
+
+- Live result: Plan 0254's sole canary made zero provider attempts and timed
+  out in `preflight:buildListOptions`; this is not a recurrence of the
+  ChatGPT payload fallback failure.
+- Direct evidence: agent-browser first showed an authenticated, challenge-free
+  ChatGPT home surface. The terminal receipt then localized the canary to
+  managed-browser target preflight, and exact cleanup returned browser/job
+  ownership to zero.
+- Causal contract: the context abort signal governs only the outer wait. It is
+  dropped before browser target resolution, manual-login launch, and Chrome
+  launch, so a pending launcher is outside the context cancellation contract.
+- Reporting defect: conversation-context receipts use a cache envelope with
+  the receipt under `items`; the canary sanitizer reads the root and therefore
+  hid the unique terminal receipt.
+- Red tests: focused fixtures reproduce envelope rejection, signal loss, and
+  the missing cleanup-joined abortable-launch primitive. Plan 0255 admits only
+  the provider-free repair and validation; Plan 0254 is closed with no retry.
+- Implementation: thread the same optional signal from context list-option
+  construction through target resolution and manual-login into native WSL
+  Chrome launch. The launch race kills once, awaits cleanup, preserves the
+  abort reason, does not clean successful launches, and never starts an
+  already-cancelled launch. Receipt sanitization unwraps `items` first.
+- Validation: 19 focused and 109 broader tests pass; the full provider-free
+  suite passes 2777 tests with 65 skipped and zero failed. Typecheck, build,
+  lint, diff checks, and plan audit pass. Lint retains 206 existing warnings.
+- Closeout: API PID 64314 remains healthy with zero restarts, scheduler is
+  paused/paused, active history jobs and exact browser owners are zero,
+  `wsl-chrome-3` remains idle-waiting/pass 56, and default remains
+  blocked/pass 9. Plan 0256 is prepared but awaits explicit live-effect
+  approval for one install/restart and one new zero-retry canary.
+
 ## 2026-08-10 | Plan 0254 Provider-Free One-Canary Harness
 
 - Focus: make the prepared `wsl-chrome-3` context canary provably one provider

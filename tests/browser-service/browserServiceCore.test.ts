@@ -90,6 +90,39 @@ describe('BrowserService core launch port handling', () => {
       }),
     );
   });
+
+  test('passes the caller abort signal into managed browser launch', async () => {
+    const controller = new AbortController();
+    const launchManualLoginSession = vi.fn(async () => ({
+      chrome: { port: 45011, host: '127.0.0.1' },
+      port: 45011,
+    }));
+    const service = new BrowserService(
+      {
+        ...DEFAULT_BROWSER_CONFIG,
+        manualLoginProfileDir: '/tmp/auracall/wsl-chrome-3/chatgpt',
+        chromeProfile: 'Default',
+        debugPort: 45011,
+        debugPortStrategy: 'fixed',
+      } as ResolvedBrowserConfig,
+      {
+        resolveBrowserListTarget: vi.fn(async () => undefined),
+        pruneRegistry: vi.fn(async () => {}),
+        launchManualLoginSession,
+      },
+    );
+
+    await service.resolveDevToolsTarget({
+      ensurePort: true,
+      defaultProfileDir: '/tmp/auracall/wsl-chrome-3/chatgpt',
+      launchUrl: 'https://chatgpt.com/',
+      abortSignal: controller.signal,
+    });
+
+    expect(launchManualLoginSession).toHaveBeenCalledWith(
+      expect.objectContaining({ abortSignal: controller.signal }),
+    );
+  });
 });
 
 describe('browser interaction governor', () => {

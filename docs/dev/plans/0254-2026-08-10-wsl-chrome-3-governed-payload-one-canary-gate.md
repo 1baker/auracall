@@ -1,10 +1,10 @@
 # WSL Chrome 3 Governed Payload One-Canary Gate | 0254-2026-08-10
 
-State: OPEN
+State: CLOSED
 Lane: P01
-Plan version: 4
-Gate state: APPROVED_READY_FOR_INSTALL
-Goal execution state: ACTIVE_SINGLE_CANARY_PACKET
+Plan version: 5
+Gate state: FAILED_CANARY_PREFLIGHT
+Goal execution state: STOPPED_NO_RETRY
 
 ## Stable Goal Objective
 
@@ -103,10 +103,10 @@ scheduler, or widen to another route/profile in this plan.
   agent-browser inspection.
 - [x] Git and runtime admission are clean, stopped, and drift-free; exact
   `wsl-chrome-3/chatgpt` browser owners are zero.
-- [ ] Installed/source ChatGPT adapter hashes match after one healthy restart.
+- [x] Installed/source ChatGPT adapter hashes match after one healthy restart.
 - [ ] The sole context read succeeds with no pending operation or late mutation.
-- [ ] Exact browser/job cleanup returns to zero.
-- [ ] Materialization, completion, scheduler, guard, and wider-profile effects
+- [x] Exact browser/job cleanup returns to zero.
+- [x] Materialization, completion, scheduler, guard, and wider-profile effects
   remain zero.
 
 ## Local Goal Bounds
@@ -215,3 +215,30 @@ The installed runtime exactly matches the committed repair, the single fresh
 `wsl-chrome-3` context read succeeds and fully cleans up, and scheduler,
 materialization, and completion effects remain zero. Otherwise the plan closes
 at the first hard stop with no retry.
+
+## Terminal Checkpoint | Canary Stopped In Browser Preflight
+
+- `checkpoint_id`: `P0254-C04`.
+- `state_transition`: P0254_APPROVED_READY_FOR_INSTALL ->
+  P0254_CLOSED_FAILED_CANARY_PREFLIGHT.
+- `progress_classification`: causal_localization.
+- `evidence`: the sole install/restart produced exact source/installed adapter
+  SHA-256 parity at
+  `756d54dea8ac39535f2bb63444d3d2c160706a7383eaf9119487dbfc32a3361b`.
+  The sole zero-retry canary then exited after 120649 ms with no parsed output.
+  Its unique current receipt records `outcome=timed_out`, `attemptCount=0`,
+  `lastStage=preflight:buildListOptions`, and
+  `errorCode=conversation_context_timeout`. It therefore never entered a
+  ChatGPT provider attempt. Direct agent-browser inspection immediately before
+  activation had already proved the account/browser surface healthy. Exact
+  browser owners and active jobs returned to zero after the failed canary.
+- `subagent_status`: not_spawned.
+- `next_action_or_stop_reason`: Plan 0255 owns a provider-free repair for the
+  dropped cancellation signal and cache-envelope receipt parser. Plan 0254 is
+  closed at its zero-retry hard stop; it does not authorize another canary.
+- `authority_classification`: the one install/restart and one live context read
+  were exhausted; materialization, completion, scheduler, guard, prompt,
+  click, download, upload, retry, and wider-profile effects remained zero.
+- `review_disposition_summary`: the earlier provider payload diagnosis is not
+  implicated by this canary. The observed failure is a managed-browser target
+  preflight whose launch path does not receive the context abort signal.

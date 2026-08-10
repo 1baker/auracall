@@ -1,5 +1,37 @@
 # RUNBOOK
 
+## Turn 437 | 2026-08-10
+
+- Plan 0254's sole install/restart produced exact source/installed ChatGPT
+  adapter parity and a healthy API, then its sole zero-retry canary timed out
+  after 120649 ms with no parsed context output.
+- The unique current receipt records `attemptCount=0`,
+  `lastStage=preflight:buildListOptions`, and no pending provider operation.
+  The canary never entered ChatGPT extraction; exact browser owners and active
+  jobs returned to zero, and scheduler/completion state did not move.
+- Provider-free inspection found the context abort signal stops at the outer
+  preflight wait and is not forwarded into managed-browser target/Chrome
+  launch. The canary also inspected the receipt envelope root instead of its
+  `items` payload. Three focused red tests now reproduce both defects and the
+  missing joined-launch cleanup contract.
+- Plan 0254 is closed without retry. Plan 0255 owns only the provider-free
+  signal propagation, joined launch cleanup, receipt-envelope repair, tests,
+  and documentation. It does not permit install/restart, browser/provider,
+  materialization, completion, scheduler, guard, or direct-runtime effects.
+- Plan 0255 is now closed green. Focused tests pass 19/19, the broader
+  browser/context surface passes 109/109, and the full provider-free suite
+  passes 306 test files with 2777 passed and 65 skipped tests. Typecheck, build,
+  lint, diff checks, and the 255-plan audit pass; lint retains 206 existing
+  warnings.
+- Fresh read-only admission reports API PID 64314 active/running with
+  `NRestarts=0`, scheduler paused/paused, active history jobs zero,
+  `wsl-chrome-3` idle-waiting/pass 56, default blocked/pass 9, and zero exact
+  default or `wsl-chrome-3` Chrome owners.
+- Plan 0256 prepares one new install/restart and one fresh zero-retry
+  `wsl-chrome-3` context canary, but remains stopped at its explicit
+  live-effect approval gate. Scheduler, completion, materialization, guard,
+  retry, and wider-profile authority remain excluded.
+
 ## Turn 436 | 2026-08-10
 
 - Fresh continuation found the same exact AuraCall-managed

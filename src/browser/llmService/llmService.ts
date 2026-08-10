@@ -823,6 +823,7 @@ export abstract class LlmService {
 						serviceId: this.providerId,
 						configuredUrl,
 						ensurePort: options.ensurePort,
+						abortSignal: overrides.abortSignal,
 					});
 		const host = target?.host ?? overrides.host;
 		const port = target?.port ?? overrides.port;

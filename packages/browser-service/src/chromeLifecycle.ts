@@ -38,6 +38,55 @@ const WINDOWS_WSL_DISCOVERY_DELAY_MS = 250;
 const DEFAULT_CDP_LIST_TIMEOUT_MS = 5_000;
 type ManagedChromeHandle = LaunchedChrome & { host?: string; launchedByAuracall?: boolean };
 
+function readAbortReason(signal: AbortSignal): unknown {
+  return signal.reason ?? new Error('Browser launch aborted.');
+}
+
+export async function runAbortableBrowserLaunch<T>(options: {
+  launch: () => Promise<T>;
+  cleanup: () => Promise<void> | void;
+  abortSignal?: AbortSignal;
+}): Promise<T> {
+  const { abortSignal } = options;
+  if (!abortSignal) {
+    return options.launch();
+  }
+
+  let cleanupPromise: Promise<void> | null = null;
+  const cleanupOnce = (): Promise<void> => {
+    cleanupPromise ??= Promise.resolve().then(options.cleanup);
+    return cleanupPromise;
+  };
+  if (abortSignal.aborted) {
+    await cleanupOnce().catch(() => undefined);
+    throw readAbortReason(abortSignal);
+  }
+
+  let onAbort: (() => void) | null = null;
+  const abortPromise = new Promise<never>((_resolve, reject) => {
+    onAbort = () => {
+      void cleanupOnce().then(
+        () => reject(readAbortReason(abortSignal)),
+        () => reject(readAbortReason(abortSignal)),
+      );
+    };
+    abortSignal.addEventListener('abort', onAbort, { once: true });
+  });
+
+  try {
+    const result = await Promise.race([options.launch(), abortPromise]);
+    if (abortSignal.aborted) {
+      await cleanupOnce().catch(() => undefined);
+      throw readAbortReason(abortSignal);
+    }
+    return result;
+  } finally {
+    if (onAbort) {
+      abortSignal.removeEventListener('abort', onAbort);
+    }
+  }
+}
+
 export async function launchChrome(
   config: ResolvedBrowserConfig,
   userDataDir: string,
@@ -47,8 +96,10 @@ export async function launchChrome(
     onWindowsRetry?: (context: { failedPort: number; nextPort: number; attempt: number }) => Promise<void>;
     ownedPids?: ReadonlySet<number>;
     ownedPorts?: ReadonlySet<number>;
+    abortSignal?: AbortSignal;
   } = {},
 ) {
+  options.abortSignal?.throwIfAborted();
   const registryOptions = options.registryPath ? { registryPath: options.registryPath } : null;
   const resolvedProfileName = resolveProfileDirectoryName(userDataDir, config.chromeProfile ?? 'Default');
   const windowsChromeFromWsl = isWindowsHostedChromePath(config.chromePath ?? undefined);
@@ -286,6 +337,7 @@ export async function launchChrome(
             host: usePatchedLauncher ? probeHost ?? '127.0.0.1' : null,
             requestedPort: debugPort ?? undefined,
             ignoreDefaultFlags: minimalFlags,
+            abortSignal: options.abortSignal,
           });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -1689,6 +1741,7 @@ async function launchWithCustomHost({
   host,
   requestedPort,
   ignoreDefaultFlags,
+  abortSignal,
 }: {
   chromeFlags: string[];
   chromePath?: string | null;
@@ -1696,6 +1749,7 @@ async function launchWithCustomHost({
   host: string | null;
   requestedPort?: number;
   ignoreDefaultFlags?: boolean;
+  abortSignal?: AbortSignal;
 }): Promise<LaunchedChrome & { host?: string }> {
   const launcher = new Launcher({
     chromePath: chromePath ?? undefined,
@@ -1732,7 +1786,11 @@ async function launchWithCustomHost({
     };
   }
 
-  await launcher.launch();
+  await runAbortableBrowserLaunch({
+    launch: () => launcher.launch(),
+    cleanup: () => launcher.kill(),
+    abortSignal,
+  });
 
   const kill = async () => launcher.kill();
   return {

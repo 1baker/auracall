@@ -21,6 +21,7 @@ export async function launchManualLoginSession(options: {
   collapseDisposableWindows?: boolean;
   detach?: boolean;
   registryPath?: string;
+  abortSignal?: AbortSignal;
 }): Promise<{ chrome: Awaited<ReturnType<typeof launchChrome>>; port: number }> {
   const effectiveDebugPortStrategy = options.debugPortStrategy ?? options.baseConfig.debugPortStrategy ?? 'fixed';
   const effectiveDebugPortRange = options.debugPortRange ?? DEFAULT_DEBUG_PORT_RANGE;
@@ -52,6 +53,7 @@ export async function launchManualLoginSession(options: {
   };
   const chrome = await launchChrome(config, options.userDataDir, options.logger, {
     registryPath: options.registryPath,
+    abortSignal: options.abortSignal,
   });
   if (options.detach) {
     chrome.process?.unref();

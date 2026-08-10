@@ -24,6 +24,7 @@ export type BrowserServiceDependencies = {
     blankTabLimit?: number | null;
     collapseDisposableWindows?: boolean;
     detach?: boolean;
+    abortSignal?: AbortSignal;
   }) => Promise<{ chrome: { port?: number; host?: string }; port: number }>;
 };
 
@@ -50,6 +51,7 @@ export class BrowserService {
     ensurePort?: boolean;
     launchUrl?: string;
     defaultProfileDir?: string;
+    abortSignal?: AbortSignal;
   } = {}): Promise<{ host?: string; port?: number; launched?: boolean }> {
     const remoteChrome = this.resolvedConfig.remoteChrome ?? null;
     let port = options.port ?? remoteChrome?.port;
@@ -72,6 +74,7 @@ export class BrowserService {
       }
     }
     if (!port && options.ensurePort) {
+      options.abortSignal?.throwIfAborted();
       const userDataDir =
         this.resolvedConfig.manualLoginProfileDir ??
         options.defaultProfileDir ??
@@ -94,6 +97,7 @@ export class BrowserService {
         blankTabLimit: 0,
         collapseDisposableWindows: this.resolvedConfig.collapseDisposableWindows,
         detach: true,
+        abortSignal: options.abortSignal,
       });
       port = chrome.port;
       host = chrome.host ?? host;

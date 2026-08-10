@@ -109,7 +109,8 @@ export function summarizeChatgptContextPayload(payload: unknown): {
 }
 
 function sanitizeReceipt(payload: unknown): SanitizedReceipt {
-	const record = asRecord(payload);
+	const root = asRecord(payload);
+	const record = asRecord(root?.items) ?? root;
 	return {
 		object: readString(record?.object),
 		version: readNumber(record?.version),
@@ -142,7 +143,9 @@ export function selectChangedConversationContextReceipt(
 	}
 	const receipt = sanitizeReceipt(changed[0]?.payload);
 	if (receipt.conversationId !== conversationId) {
-		throw new Error("The changed conversation-context receipt belongs to a different conversation.");
+		throw new Error(
+			"The changed conversation-context receipt belongs to a different conversation.",
+		);
 	}
 	return receipt;
 }

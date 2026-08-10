@@ -47,6 +47,7 @@ type ServiceTargetMatchOptions = {
   configuredUrl?: string | null;
   ensurePort?: boolean;
   logger?: (message: string) => void;
+  abortSignal?: AbortSignal;
 };
 
 export type BrowserProcessOwnerAttribution = {
@@ -139,6 +140,7 @@ export class BrowserService extends BrowserServiceCore {
       port: undefined,
       ensurePort: options.ensurePort,
       launchUrl: options.configuredUrl ?? undefined,
+      abortSignal: options.abortSignal,
     });
     if (!target.port) {
       return { host: target.host, port: target.port, ...selectionProvenance };
@@ -295,6 +297,7 @@ export class BrowserService extends BrowserServiceCore {
     ensurePort?: boolean;
     launchUrl?: string;
     defaultProfileDir?: string;
+    abortSignal?: AbortSignal;
   } = {}) {
     const launchContext = this.resolveLaunchContext(this.serviceTarget);
     const fallbackDir = launchContext.managedProfileDir;

@@ -20,6 +20,7 @@ export async function launchManualLoginSession(options: {
   blankTabLimit?: number | null;
   collapseDisposableWindows?: boolean;
   detach?: boolean;
+  abortSignal?: AbortSignal;
 }): Promise<{ chrome: Awaited<ReturnType<typeof launchManualLoginSessionCore>>['chrome']; port: number }> {
   return launchManualLoginSessionCore({
     ...options,

@@ -3,6 +3,7 @@ import path from 'node:path';
 import { describe, expect, test, afterEach } from 'vitest';
 import {
   buildChromeFlags,
+  runAbortableBrowserLaunch,
   resolveChromeLauncherTempPrefix,
   resolveUserDataBaseDir,
   resolveUserDataDirFlag,
@@ -94,4 +95,58 @@ describe('chromeLifecycle (package)', () => {
       expect(flags).toContain('--use-mock-keychain');
     },
   );
+
+  test('joins browser-launch cleanup before rejecting an abort', async () => {
+    const controller = new AbortController();
+    let cleanupFinished = false;
+    let cleanupCount = 0;
+    const launch = new Promise<void>(() => undefined);
+    const result = runAbortableBrowserLaunch({
+      launch: () => launch,
+      cleanup: async () => {
+        cleanupCount += 1;
+        await Promise.resolve();
+        cleanupFinished = true;
+      },
+      abortSignal: controller.signal,
+    });
+
+    controller.abort(new Error('context deadline'));
+
+    await expect(result).rejects.toThrow('context deadline');
+    expect(cleanupFinished).toBe(true);
+    expect(cleanupCount).toBe(1);
+  });
+
+  test('returns a completed browser launch without cleanup', async () => {
+    let cleanupCount = 0;
+
+    await expect(runAbortableBrowserLaunch({
+      launch: async () => 'launched',
+      cleanup: () => {
+        cleanupCount += 1;
+      },
+      abortSignal: new AbortController().signal,
+    })).resolves.toBe('launched');
+    expect(cleanupCount).toBe(0);
+  });
+
+  test('does not start a browser launch after cancellation', async () => {
+    const controller = new AbortController();
+    let launchCount = 0;
+    let cleanupCount = 0;
+    controller.abort(new Error('cancelled before launch'));
+
+    await expect(runAbortableBrowserLaunch({
+      launch: async () => {
+        launchCount += 1;
+      },
+      cleanup: () => {
+        cleanupCount += 1;
+      },
+      abortSignal: controller.signal,
+    })).rejects.toThrow('cancelled before launch');
+    expect(launchCount).toBe(0);
+    expect(cleanupCount).toBe(1);
+  });
 });

@@ -1,3 +1,15 @@
+- 2026-08-10: A conversation-context timeout with `attemptCount=0` and
+  `lastStage=preflight:buildListOptions` is not a provider extraction failure.
+  In Plan 0254, direct agent-browser inspection showed a healthy authenticated
+  surface, while the context abort signal stopped at the outer preflight wait
+  and never reached managed-browser Chrome launch. Thread the same signal
+  through target resolution and manual-login, race the launcher against it,
+  invoke cleanup exactly once, and wait for cleanup before rejecting with the
+  caller reason. Also remember that conversation-context receipts are cache
+  envelopes: sanitize the allowlisted receipt under `items`, not envelope
+  identity fields. Deterministic tests must cover pending-launch abort,
+  successful no-cleanup, and pre-aborted no-launch behavior.
+
 - 2026-08-10: A bounded live canary is not single-attempt merely because the
   operator runs one CLI command. `getConversationContext` normally retries a
   generic provider failure once, so a plan with `max_context_retries: 0` must

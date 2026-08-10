@@ -7,13 +7,27 @@
 Status: active
 Lane: P01
 
-- Prepared `wsl-chrome-3` installed one-canary gate; awaiting explicit approval:
+- Prepared installed `wsl-chrome-3` abort-repair one-canary gate:
+  [docs/dev/plans/0256-2026-08-10-wsl-chrome-3-abort-repair-one-canary-gate.md](docs/dev/plans/0256-2026-08-10-wsl-chrome-3-abort-repair-one-canary-gate.md)
+  Provider-free repair and fresh stopped-state admission are green. The gate
+  awaits explicit approval for one install/restart and one zero-retry context
+  canary; it permits no materialization, completion/scheduler control, retry,
+  or wider profile.
+
+- Closed provider-free context-preflight abort and receipt-envelope repair:
+  [docs/dev/plans/0255-2026-08-10-context-preflight-abort-and-receipt-envelope-repair.md](docs/dev/plans/0255-2026-08-10-context-preflight-abort-and-receipt-envelope-repair.md)
+  The sole Plan 0254 canary made zero provider attempts and timed out in
+  `preflight:buildListOptions`. Plan 0255 threads cancellation into managed
+  browser launch, joins cleanup before rejection, and corrects cache-envelope
+  receipt selection. Full provider-free validation is green; provider, browser,
+  runtime, materialization, completion, scheduler, and guard effects were zero.
+
+- Closed `wsl-chrome-3` installed one-canary gate at its preflight hard stop:
   [docs/dev/plans/0254-2026-08-10-wsl-chrome-3-governed-payload-one-canary-gate.md](docs/dev/plans/0254-2026-08-10-wsl-chrome-3-governed-payload-one-canary-gate.md)
-  The gate permits one install/restart, exact source/installed parity, and one
-  fresh context read for one previously failing route. Its provider-free
-  harness now sets an explicit zero-retry ceiling and emits only bounded counts
-  plus a sanitized terminal receipt. It permits no retry, materialization,
-  completion control, scheduler control, or wider profile.
+  The install/restart achieved exact parity, but the sole zero-retry context
+  command timed out before provider attempt 1 while resolving its managed
+  browser target. Exact cleanup succeeded; no retry, materialization,
+  completion control, scheduler control, or wider profile ran.
 
 - Closed provider-free repair of governed ChatGPT payload reload settlement:
   [docs/dev/plans/0253-2026-08-10-chatgpt-governed-payload-reload-settlement-repair.md](docs/dev/plans/0253-2026-08-10-chatgpt-governed-payload-reload-settlement-repair.md)
