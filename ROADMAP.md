@@ -13,7 +13,9 @@ Lane: P01
   external images. Plan 0247 now owns one serialized bounded pass for each of
   the three paused ChatGPT lanes, one paused scheduler run-once canary, and
   scheduler resume only after every direct proof is green. Gemini/Grok remain
-  disabled and excluded.
+  disabled and excluded. Fresh admission corrected the browser precondition:
+  default and `wsl-chrome-2` each have one healthy exact retained browser that
+  may be reused, while duplicate exact-profile ownership remains a hard stop.
 
 - Completed ChatGPT file-retrieval provider-free repair iterations:
   [docs/dev/plans/0181-2026-08-01-chatgpt-file-retrieval-provider-free-repair-iterations.md](docs/dev/plans/0181-2026-08-01-chatgpt-file-retrieval-provider-free-repair-iterations.md)

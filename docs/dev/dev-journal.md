@@ -4,7 +4,12 @@
   one bounded pass at a time, prove all four lanes stable, run one scheduler
   canary while still paused, then resume normal scheduler cadence.
 - Admission: source/install hashes match; API PID 85854 healthy; scheduler
-  paused/idle; jobs/browser zero; ChatGPT guards clear. Starting states are
+  paused/idle and jobs zero; ChatGPT guards clear. A fresh admission correction
+  found one healthy exact retained browser for default at PID 21323/port 45011
+  and one for `wsl-chrome-2` at PID 30446/port 45013; the other two profiles
+  are process-free and no duplicate owner exists. Plan version 2 admits reuse
+  of these exact single owners instead of closing established healthy state.
+  Starting states are
   default paused/pass 7, `wsl-chrome-2` paused/pass 2, `wsl-chrome-3`
   idle-waiting/pass 56, and `wsl-chrome-4` paused/pass 34.
 - Exclusions: Gemini/Grok live follow remains disabled; the retained Gemini

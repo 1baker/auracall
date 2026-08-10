@@ -2,9 +2,9 @@
 
 State: OPEN
 Lane: P01
-Plan version: 1
+Plan version: 2
 Goal execution state: ACTIVE
-Gate state: AUTHORIZED_PRE_DEFAULT_PASS
+Gate state: AUTHORIZED_RETAINED_BROWSER_PRE_DEFAULT_PASS
 
 ## Stable Objective
 
@@ -22,8 +22,13 @@ Gemini/Grok targets and all identity, guard, pacing, and browser safeguards.
   and ChatGPT adapter hash
   `ff3fe974478c6f28b975c82444a122c60759bc9404d4518337e1396c90d8baf6`.
   API PID 85854 is active/running with `NRestarts=0`.
-- Scheduler is operator-paused/idle with foreground work false. Active history
-  jobs and exact managed browsers are zero. All four ChatGPT guards are clear.
+- Scheduler is operator-paused/idle with foreground work false and active
+  history jobs zero. Fresh admission found one healthy AuraCall-owned retained
+  managed browser for ChatGPT/default at PID 21323/port 45011 and one for
+  ChatGPT/`wsl-chrome-2` at PID 30446/port 45013. Both are alive,
+  DevTools-responsive, and have one page target; `wsl-chrome-3` and
+  `wsl-chrome-4` have no browser process. There is no duplicate ownership. All
+  four ChatGPT guards are clear.
 - Configured ChatGPT completions are default paused/pass 7,
   `wsl-chrome-2` paused/pass 2, `wsl-chrome-3` idle-waiting/pass 56, and
   `wsl-chrome-4` paused/pass 34; all have null force/next/error.
@@ -48,8 +53,10 @@ Gemini/Grok targets and all identity, guard, pacing, and browser safeguards.
 
 ## Execution Graph
 
-1. Audit, commit, and push this exact opening gate. Freshly re-read Git,
-   hashes, API, scheduler, all target states, guards, jobs, and browsers.
+1. Audit, commit, and push this corrected opening gate. Freshly re-read Git,
+   hashes, API, scheduler, all target states, guards, jobs, and browsers. Admit
+   only the two exact healthy retained owners above; do not close them merely
+   to manufacture a zero-browser precondition and do not admit a duplicate.
 2. Invoke `run-one-pass` exactly once on ChatGPT/default completion
    `acctmirror_completion_db1266f9-7b50-41d5-bf32-1adaddb735b3`; require only
    pass 8, one child/attempt, failed count zero, identity match, parent
@@ -63,7 +70,8 @@ Gemini/Grok targets and all identity, guard, pacing, and browser safeguards.
    `acctmirror_completion_65de7626-9aaf-4585-8224-601bee2cada4`; require only
    pass 35 and the same terminal receipts.
 5. Require all four ChatGPT completions `idle_waiting`, disabled providers
-   unchanged, scheduler paused/idle, guards clear, jobs/browser zero.
+   unchanged, scheduler paused/idle, guards clear, jobs zero, and at most one
+   healthy AuraCall-owned browser root per exact managed browser profile.
 6. POST one `accountMirrorScheduler.action=run-once` with `dryRun=false` while
    the operator pause remains durable. Require exactly one new scheduler event
    selecting an enabled ChatGPT target and one clean terminal provider cycle.
@@ -81,8 +89,9 @@ Gemini/Grok targets and all identity, guard, pacing, and browser safeguards.
   `scheduler_resume_actions: 1`; `scheduler_emergency_pause_actions: 1`;
   `total_provider_passes: 5`; `total_pass_advances: 5`;
   `fresh_children: 5`; `child_attempts: 5`; `per_child_max_items: 6`;
-  `cumulative_materialized_items: 30`; `browser_launches: 5`;
-  `browser_closes: 5`; `downloads: 30`.
+  `cumulative_materialized_items: 30`; `retained_browser_reuses: 2`;
+  `new_browser_launches: 5`; `browser_closes: 5`; `downloads: 30`;
+  `browser_profile_owners: 1 per exact managed browser profile`.
 - `provider_retries: 0`; `substitute_completions: 0`;
   `other_provider_actions: 0`; `guard_actions: 0`; `config_mutations: 0`;
   `installs: 0`; `service_restarts: 0`; `separate_materialization_jobs: 0`;
@@ -105,8 +114,11 @@ Gemini/Grok targets and all identity, guard, pacing, and browser safeguards.
   receipt proves skipped/no-yield reconciliation and pass/cycle progress.
 - Any materialized asset has readable file, size/MIME/checksum, manifest, and
   one available canonical archive receipt without duplicates.
-- Parent absorbs to `idle_waiting` with force/next/error null; active jobs and
-  owned browser return to zero before the next edge.
+- Parent absorbs to `idle_waiting` with force/next/error null and active jobs
+  return to zero before the next edge. The pre-existing default and
+  `wsl-chrome-2` retained browsers may remain healthy; any browser opened by a
+  bounded operation may close normally. No exact managed browser profile may
+  have more than one AuraCall-owned browser root.
 
 ## Hard Stops
 
@@ -152,6 +164,30 @@ Gemini/Grok targets and all identity, guard, pacing, and browser safeguards.
 - `review_disposition_summary`: disabled-provider risk is rejected by current
   configuration; scheduler remains withheld until all direct and run-once
   proofs are green.
+
+## Admission Correction Checkpoint | Retained Browser Ownership
+
+- `checkpoint_id`: `P0247-C02`.
+- `state_transition`: P0247_ACTIVE_AUTHORIZED_PRE_DEFAULT_PASS ->
+  P0247_ACTIVE_AUTHORIZED_RETAINED_BROWSER_PRE_DEFAULT_PASS.
+- `progress_classification`: blocker_reduction.
+- `evidence`: no Plan 0247 completion or scheduler control had run when the
+  fresh admission found ChatGPT/default PID 21323/port 45011 and
+  ChatGPT/`wsl-chrome-2` PID 30446/port 45013. Both exact managed browser
+  owners are alive and DevTools-responsive with one page target;
+  `wsl-chrome-3` and `wsl-chrome-4` remain process-free. Active jobs are zero.
+- `subagent_status`: not_spawned; serialized provider critical path.
+- `effect_accounting`: all Plan 0247 completion, provider-pass, scheduler,
+  prompt, click, guard, config, install, and restart counters remain zero.
+- `next_action_or_stop_reason`: audit, commit, and push plan version 2; require
+  paused/idle scheduler and zero active jobs; then run only default pass 8,
+  reusing the single exact retained owner without permitting a duplicate.
+- `authority_classification`: the original explicit wider-recovery authority
+  is unchanged; this correction narrows browser ownership semantics and adds
+  no effect class.
+- `review_disposition_summary`: a retained healthy browser is established
+  runtime state, not active provider work. Safe admission is exact single-owner
+  reuse plus duplicate rejection, rather than destructive precondition cleanup.
 
 ## Definition Of Done
 

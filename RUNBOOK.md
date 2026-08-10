@@ -13,7 +13,10 @@
   `google-sorry` guard remains untouched and excluded.
 - Opening evidence is clean/synced `b6a215d0`, exact source/installed parity,
   healthy API PID 85854, scheduler paused/idle, clear ChatGPT guards, and zero
-  active jobs/browser. The gate must audit, commit, and push before pass 8.
+  active jobs. Fresh admission found one healthy retained exact browser for
+  default at PID 21323/port 45011 and one for `wsl-chrome-2` at PID 30446/port
+  45013; the other two profiles have none. Plan version 2 admits single-owner
+  reuse, forbids duplicates, and must audit, commit, and push before pass 8.
 
 ## Turn 428 | 2026-08-09
 
