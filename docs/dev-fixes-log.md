@@ -21130,3 +21130,20 @@ browser-stage lifecycle observability, not transcript truncation.
   it with the conversation manifest, and require one available canonical
   archive item per checksum. Then prove active-job zero, exact-browser cleanup,
   scheduler pause, unchanged wider passes, and a null provider guard.
+
+## 2026-08-09 | Mixed partial yield is still a failed pass when one asset fails
+
+- A reconciliation child can retain valid files and still terminate `failed`
+  when a different selected asset fails. Do not infer success from the summary
+  message or positive materialized count; use child status, failed count,
+  disposition counts, and the per-conversation fetch manifests.
+- Preserve and independently verify the valid partial yield, but enforce the
+  staged hard stop before another pass. In the observed case, four file
+  downloads succeeded while one externally hosted image artifact recorded
+  `ChatGPT artifact binary fetch failed`; identity, auth, challenge, and guard
+  evidence remained clean.
+- Parent absorption may correctly transition the completion to `blocked` with
+  `account_mirror_materialization_failed` even when the human-readable message
+  says assets were materialized. Treat the structured status/code as
+  authoritative and diagnose the exact failed asset provider-free before any
+  live retry.

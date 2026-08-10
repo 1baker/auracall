@@ -1,11 +1,11 @@
 # WSL Chrome 3 Three-Pass Staged Continuation | 0243-2026-08-09
 
-State: OPEN
+State: CLOSED
 Lane: LIVE_FOLLOW_RECOVERY
 Plan version: 1
-Outcome: ACTIVE_THREE_PASS_STAGED_CONTINUATION
-Goal execution state: ACTIVE
-Gate state: OPEN_CHECKPOINT_COMMIT_REQUIRED
+Outcome: C5_OTHER_TERMINAL_FAILURE_PARTIAL_YIELD
+Goal execution state: COMPLETE
+Gate state: CLOSED_PASS_54_HARD_STOP
 
 ## Stable Objective
 
@@ -16,25 +16,31 @@ global scheduler and every wider completion remain paused.
 
 ## Current State
 
-- Plan 0242 closed `C1_USEFUL_PASS_PROGRESS` at pushed commit `92a1bab7`.
-  Pass 52 materialized five verified PDFs from three conversations with zero
-  failures and four-dimension provider-session proof `match`.
+- Two authorized controls advanced passes 52 through 54. Pass 53 classified
+  C1 with six materialized files and zero failures. Pass 54 then hit the
+  fail-fast C5 stop: its sole child materialized four files but failed one
+  external image-artifact binary fetch, so pass 55 was not run.
+- Across both passes, 10 independently verified files totaling 25,570,586
+  bytes were retained. Every recomputed checksum matches its manifest and
+  resolves to exactly one available canonical archive item owned by the
+  corresponding child. Provider-session proof matched all four dimensions on
+  both attempts.
 - Completion `acctmirror_completion_fb93ed6c-c57b-40cd-b5dc-ba6322f75446`
-  is `idle_waiting` at pass 52 with next attempt, force ceiling, error, and
-  provider guard all null. It retains reconciliation of all asset kinds,
-  snapshot refresh, `force=false`, and `maxItems=6` per pass.
-- Current target counts are 595 remote-known missing-local and 128 locally
-  materialized assets. These are progress counters, not authority to exhaust
-  the backlog.
-- Source and installed history-materialization bundles match at SHA-256
+  is blocked at pass 54 with next attempt and force ceiling null, provider
+  guard null, and structured error code
+  `account_mirror_materialization_failed`. Target counts moved from 595
+  missing/128 local to 585 missing/138 local.
+- Source and installed history-materialization bundles still match at SHA-256
   `73d7de35b4661f2c7456b9887d31ce3ac85ef0380f3820eb46242a1cc4ab22a4`.
-  The durable history-job index starts at
-  `ffdf89af492a87179b1f3a0a840465847fbbd3a006108442ea6f63fd5f69de2d`.
-- API PID 55894 is active/running with `NRestarts=0`. Scheduler is
-  operator-paused and idle with active requests/reservations zero. Queued and
-  running completions and active history jobs are zero. Wider ChatGPT
-  completions remain paused at default/wsl-chrome-2/wsl-chrome-4 passes
-  7/2/34. The exact managed browser is absent and port 45015 is closed.
+  The durable history-job index changed from
+  `ffdf89af492a87179b1f3a0a840465847fbbd3a006108442ea6f63fd5f69de2d`
+  to `cc9a3705721b720da6eb86339bd34cb584395ee3f84d72baec8b8aad3299b56d`
+  for the two authorized children.
+- API PID 55894 is active/running with `NRestarts=0`. Scheduler remains
+  operator-paused with active requests/reservations zero. Queued/running
+  completions and active history jobs are zero. Wider ChatGPT completions
+  remain paused at default/wsl-chrome-2/wsl-chrome-4 passes 7/2/34. The exact
+  managed browser is absent and port 45015 is closed.
 
 ## Authority And Non-Goals
 
@@ -133,18 +139,18 @@ global scheduler and every wider completion remain paused.
 
 ## Acceptance Criteria
 
-- [ ] Opening gate is audited, committed, pushed, and freshly reread before
+- [x] Opening gate is audited, committed, pushed, and freshly reread before
   the first completion control.
-- [ ] No more than three exact controls advance sequentially from pass 52 to no
+- [x] No more than three exact controls advance sequentially from pass 52 to no
   farther than pass 55, with no more than one child/attempt per pass.
-- [ ] Every executed pass has one terminal classification, verified identity,
+- [x] Every executed pass has one terminal classification, verified identity,
   child/parent absorption evidence, and exact asset receipts when present.
-- [ ] Continuation occurs only after C1 plus full cleanup; cumulative
+- [x] Continuation occurs only after C1 plus full cleanup; cumulative
   materialized items remain no more than 18; no retry or substitution occurs.
-- [ ] API stays healthy, active work/browser return to zero after each pass,
+- [x] API stays healthy, active work/browser return to zero after each pass,
   scheduler remains paused/idle, wider passes remain 7/2/34, and guard remains
   null.
-- [ ] Plan/journal/fix evidence as applicable, active/goal plan audits, commit,
+- [x] Plan/journal/fix evidence as applicable, active/goal plan audits, commit,
   push, and final stopped-state readback complete.
 
 ## Opening Checkpoint | Three-Pass Staged Gate Ready
@@ -197,6 +203,45 @@ global scheduler and every wider completion remain paused.
   three-pass/18-item ceiling.
 - `review_disposition_summary`: C1 accepted; useful yield and full cleanup
   satisfy the conditional edge to pass 54.
+
+## Closing Checkpoint | Pass 54 Partial Yield Hits C5 Stop
+
+- `checkpoint_id`: `P0243-C03`.
+- `state_transition`: P0243_PASS_53_C1_PASS_54_READY ->
+  P0243_CLOSED_PASS_54_C5_PARTIAL_YIELD.
+- `progress_classification`: outcome_progress.
+- `evidence`: sole pass-54 control accepted at 2026-08-10T00:28:06.201Z;
+  sole child `hmj_a2cbb3ac5369477b9cfb3efb21e8d47f`; attempt one;
+  provider-work not-before honored; child terminal at
+  2026-08-10T00:36:44.834Z with conversations 3,
+  materialized/skipped/failed 4/2/1, checksum count 4, and four-dimension
+  identity proof `match`. Four retained files total 1,586,009 bytes and have
+  matching hashes plus one canonical available archive item per checksum.
+  The failed item is external image artifact `Honolulu Sword & Shield J2CR
+  Crystal Blue`; its manifest records `ChatGPT artifact binary fetch failed`,
+  attempted/succeeded/failed 1/0/1, with no auth/challenge evidence.
+- `runtime_readback`: parent blocked/pass 54/force null/next null with error
+  code `account_mirror_materialization_failed`; target counts 585 missing/138
+  local; active jobs zero; exact managed browser absent and port 45015 closed;
+  API PID 55894 active/running with zero restarts; scheduler paused with active
+  requests/reservations zero; wider passes unchanged at 7/2/34; guard null;
+  durable job-index SHA-256 `cc9a3705...9b56d`.
+- `effect_accounting`: completion controls 2/3; pass advances 2/3; children
+  2/3; child attempts 2/3; materialized items 10/18; failed items 1; browser
+  launches 2/3; browser close actions 0/3 because both owned browsers exited
+  normally; pass-55 controls 0; every excluded effect remains zero.
+- `subagent_status`: not_spawned; primary agent independently verified both
+  serialized live boundaries.
+- `next_action_or_stop_reason`: stop. Pass 55 is ineligible under the frozen
+  C2-C5 hard stop; do not retry, substitute, resume the scheduler, or control
+  another completion.
+- `authority_classification`: packet completed by correctly enforcing its
+  operator-approved fail-fast boundary with one unused pass and eight unused
+  materialization-item capacity.
+- `review_disposition_summary`: classify pass 54 C5 because failed count is
+  one. The four valid files are accepted partial yield; the external-image
+  artifact failure requires a provider-free successor diagnosis before any
+  live retry or pass continuation.
 
 ## Definition Of Done
 

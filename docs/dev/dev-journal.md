@@ -45462,3 +45462,25 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   PID 55894 remains healthy with zero restarts, scheduler is paused/idle, and
   wider passes remain 7/2/34. Pass 54 is eligible only after this durable
   checkpoint is audited, pushed, and freshly reread.
+
+## 2026-08-09 | Plan 0243 stops at pass 54 after partial yield
+
+- The second authorized control advanced only pass 53 to 54 and created sole
+  child `hmj_a2cbb3ac5369477b9cfb3efb21e8d47f`. Attempt one honored its
+  provider-work not-before time and returned materialized/skipped/failed
+  `4/2/1`, four checksums, and four-dimension identity proof `match`.
+- Two JSON files, one DOCX, and one PDF total 1,586,009 bytes; all four hashes
+  match the refreshed manifest and each checksum resolves to one available
+  canonical archive item owned by the child. Across passes 53 and 54, Plan
+  0243 retained 10 verified files totaling 25,570,586 bytes and reduced target
+  counts from 595 missing/128 local to 585 missing/138 local.
+- The failed item is external image artifact `Honolulu Sword & Shield J2CR
+  Crystal Blue`. Its artifact-fetch manifest reports `ChatGPT artifact binary
+  fetch failed` and transfer attempted/succeeded/failed `1/0/1`; there is no
+  auth, challenge, identity, or provider-guard signal.
+- The parent absorbed the child as blocked/pass 54 with force and next null,
+  error code `account_mirror_materialization_failed`, and guard null. Active
+  jobs and exact browser processes are zero, port 45015 is closed, API PID
+  55894 remains healthy, scheduler remains paused, and wider passes remain
+  7/2/34. Plan 0243 therefore closes C5 without pass 55, retry, substitution,
+  scheduler/wider control, or any other excluded effect.
