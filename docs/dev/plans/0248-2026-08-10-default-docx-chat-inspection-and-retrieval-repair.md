@@ -24,7 +24,9 @@ code gap. Prepare but do not consume any installed canary or scheduler action.
 - Default completion is blocked/pass 8 with force/next null;
   `wsl-chrome-2` is paused/pass 2, `wsl-chrome-3` is idle-waiting/pass 56, and
   `wsl-chrome-4` is paused/pass 34. Active history jobs are zero. API PID 85854
-  is healthy. Scheduler state/posture is paused/paused with zero active request
+  was replaced outside this packet by healthy systemd API PID 1466 at
+  `2026-08-10 05:15:25 CDT`; `NRestarts=0`, active/running. Scheduler
+  state/posture is paused/paused with zero active request
   or drain reservation and idle background drain.
 - The default managed browser profile has no live process. The existing
   `wsl-chrome-2` retained browser remains out of scope and must not be touched.
@@ -163,6 +165,26 @@ code gap. Prepare but do not consume any installed canary or scheduler action.
 - `review_disposition_summary`: the DOCX sandbox/DOM path is the leading new
   mechanism, but code diagnosis is deliberately withheld until direct evidence
   and a deterministic red reproduction exist.
+
+## Admission Correction Checkpoint | Healthy API Replacement
+
+- `checkpoint_id`: `P0248-C02`.
+- `state_transition`: P0248_ACTIVE_AUTHORIZED_PRE_DIRECT_CHAT_INSPECTION ->
+  P0248_ACTIVE_AUTHORIZED_PRE_DIRECT_CHAT_INSPECTION_RUNTIME_REFRESHED.
+- `progress_classification`: blocker_reduction.
+- `evidence`: fresh admission found systemd API PID 1466 rather than stale
+  opening PID 85854. PID 1466 started at `2026-08-10 05:15:25 CDT`, reports
+  `NRestarts=0`, and is active/running. Scheduler remains paused/idle; active
+  jobs and all managed browsers are zero; four completion passes/statuses and
+  null ChatGPT guards are unchanged; Git is clean/synced at `1f4bfaa2`.
+- `subagent_status`: not_spawned; serialized critical path.
+- `effect_accounting`: all Plan 0248 effect counters remain zero.
+- `next_action_or_stop_reason`: commit and push this corrected admission, then
+  launch only the exact default managed browser for the two-chat inspection.
+- `authority_classification`: current healthy service provenance replaces the
+  stale PID fact and does not widen browser or provider authority.
+- `review_disposition_summary`: this is external runtime replacement, not a
+  source/install mismatch signal; every stopped safety boundary agrees.
 
 ## Definition Of Done
 

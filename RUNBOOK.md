@@ -14,6 +14,9 @@
 - No asset click/download, reload, raw network/body read, retry, install,
   canary, completion control, or scheduler control is authorized. Scheduler
   and all completion boundaries remain stopped.
+- Fresh admission corrected the API identity to healthy systemd PID 1466,
+  started at `2026-08-10 05:15:25 CDT` with `NRestarts=0`. All stopped runtime
+  and browser-absence evidence otherwise agrees with the opening gate.
 
 ## Turn 429 | 2026-08-09
 

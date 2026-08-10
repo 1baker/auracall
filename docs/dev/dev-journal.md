@@ -13,6 +13,9 @@
   network/body capture, retry, install/canary, completion, and scheduler
   controls remain zero. Delegation is `not_spawned` on the serialized critical
   path.
+- Admission correction: the API was externally replaced by healthy systemd PID
+  1466 at `2026-08-10 05:15:25 CDT`, `NRestarts=0`. Completions, scheduler,
+  guards, jobs, and all managed-browser absence remained unchanged.
 
 ## 2026-08-09 | Plan 0247 Authorized Staged Wider Recovery
 
