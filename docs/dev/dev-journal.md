@@ -36,6 +36,10 @@
   active jobs and browsers are zero; four ChatGPT pass/status boundaries and
   guards are unchanged. One install/restart and one exact canary are now the
   only authorized effects.
+- Installed parity: the sole install/restart moved API PID 1466 to healthy PID
+  27774 and produced exact source/installed adapter hash parity at
+  `223f3f84...93522`. Scheduler/completion/guard state remained frozen, and
+  jobs/browsers stayed zero. The one exact canary is the only remaining effect.
 
 ## 2026-08-09 | Plan 0247 Authorized Staged Wider Recovery
 

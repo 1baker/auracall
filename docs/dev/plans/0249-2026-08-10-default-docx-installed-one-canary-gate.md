@@ -2,9 +2,9 @@
 
 State: OPEN
 Lane: P01
-Plan version: 2
+Plan version: 3
 Goal execution state: ACTIVE
-Gate state: AUTHORIZED_PRE_INSTALL
+Gate state: AUTHORIZED_PRE_CANARY
 
 ## Stable Objective
 
@@ -147,3 +147,27 @@ authority.
 - `review_disposition_summary`: a transient background-drain readback reported
   `running` with zero requests/reservations, then settled to required idle on
   the next read. No work or state mutation was inferred from the transient.
+
+## Installed Parity Checkpoint | Canary Eligible
+
+- `checkpoint_id`: `P0249-C03`.
+- `state_transition`: P0249_ACTIVE_AUTHORIZED_PRE_INSTALL ->
+  P0249_ACTIVE_AUTHORIZED_PRE_CANARY.
+- `progress_classification`: blocker_reduction.
+- `evidence`: the sole `pnpm run install:user-runtime-service` completed and
+  restarted the API exactly once from PID 1466 to healthy PID 27774 at
+  `2026-08-10 06:06:29 CDT`, `NRestarts=0`. Source and installed ChatGPT
+  adapter SHA-256 values both equal
+  `223f3f84a913f11074878569920873565c823a6f46a69ff973ce03566e393522`.
+  Scheduler remains operator-paused/idle with foreground false and zero
+  requests/reservations; active history jobs and DevTools-enabled browsers are
+  zero; ChatGPT passes/statuses remain `8/2/56/34`; guards remain null.
+- `subagent_status`: not_spawned; serialized live boundary.
+- `effect_accounting`: installs `1/1`; API restarts `1/1`; canary creates,
+  jobs, attempts, browser launches, and downloads remain zero.
+- `next_action_or_stop_reason`: audit, commit, and push this installed parity;
+  then issue the frozen canary create command exactly once.
+- `authority_classification`: the remaining authority is one exact
+  history-materialization create and its sole attempt only.
+- `review_disposition_summary`: installation and parity are accepted; no
+  runtime drift or safety stop is present before the canary.

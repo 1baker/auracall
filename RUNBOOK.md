@@ -36,6 +36,11 @@
   one transient drain read; jobs and browsers are zero; ChatGPT states remain
   `8/2/56/34` with guards null. Activation must be audited, committed, and
   pushed before the sole install.
+- The sole `install:user-runtime-service` restarted the API once from PID 1466
+  to healthy PID 27774. Source and installed adapter hashes match at
+  `223f3f84...93522`; scheduler remains paused/idle, passes remain `8/2/56/34`,
+  guards are null, and jobs/browsers are zero. The exact canary is now eligible
+  after this checkpoint is audited and pushed.
 
 ## Turn 429 | 2026-08-09
 
