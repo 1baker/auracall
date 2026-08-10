@@ -24,6 +24,15 @@
 - The diagnostic session detached and owned browser closed. Scheduler, target
   pass 54, wider passes 7/2/34, guards, and active jobs remain frozen. The sole
   pass-55 canary is now eligible after this checkpoint is audited and pushed.
+- The sole pass-55 control created child
+  `hmj_4abf109417184cfc8866c0563e89c567`, attempt one, identity match, but it
+  failed `0/1/6`. All six external-image failures recorded page fetch calls and
+  zero loaded-resource fallback actions/CDP calls, proving the repair's
+  fallback eligibility condition was missed.
+- Parent absorbed blocked/pass 55 with force/next null; jobs and browser are
+  zero, scheduler remains paused/idle, wider passes remain 7/2/34, and no retry
+  or pass 56 ran. Plan 0245 continues provider-free and will only prepare the
+  next effect gate.
 
 ## Turn 426 | 2026-08-09
 

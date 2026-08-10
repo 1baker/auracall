@@ -1,10 +1,10 @@
 # ChatGPT External Image Artifact Fetch Repair | 0244-2026-08-09
 
-State: OPEN
+State: CLOSED
 Lane: LIVE_FOLLOW_RECOVERY
 Plan version: 1
-Goal execution state: ACTIVE
-Gate state: EXTERNAL_DIAGNOSTIC_GREEN_PASS_55_READY
+Goal execution state: SUPERSEDED_BY_PLAN_0245
+Gate state: CLOSED_PASS_55_STRUCTURED_EXCEPTION_FALLBACK_MISS
 
 ## Stable Objective
 
@@ -111,10 +111,10 @@ global scheduler and every wider completion paused throughout.
 - [x] One external agent-browser attachment to the exact AuraCall-owned browser
   proves healthy auth/challenge state and nonempty exact-image bytes without
   raw content/header retention or duplicate-profile activity.
-- [ ] Exactly one pass-55 canary runs only after the diagnostic gate, creates no
+- [x] Exactly one pass-55 canary runs only after the diagnostic gate, creates no
   more than one child/attempt, does not reach pass 56, and has complete identity
   and asset/stopped-state receipts.
-- [ ] Scheduler remains paused/idle, wider passes remain `7/2/34`, excluded
+- [x] Scheduler remains paused/idle, wider passes remain `7/2/34`, excluded
   effects remain zero, and final plan/journal/fix/runbook evidence is audited,
   committed, and pushed.
 
@@ -195,3 +195,36 @@ global scheduler and every wider completion paused throughout.
 - `next_action_or_stop_reason`: audit, commit, and push this diagnostic gate;
   freshly re-read stopped state; then run exactly one pass-55 control or stop
   on drift.
+
+## Closing Checkpoint | Pass 55 Exposes Structured-Exception Fallback Miss
+
+- `checkpoint_id`: `P0244-C04`.
+- `state_transition`: P0244_EXTERNAL_DIAGNOSTIC_GREEN_PASS_55_READY ->
+  P0244_CLOSED_PASS_55_STRUCTURED_EXCEPTION_FALLBACK_MISS.
+- `progress_classification`: blocker_reduction.
+- `canary_evidence`: the sole control was accepted at
+  `2026-08-10T01:37:40.721Z`, advanced only pass 54 to 55, and created sole
+  child `hmj_4abf109417184cfc8866c0563e89c567`. Attempt one honored
+  `providerWorkNotBefore=2026-08-10T01:45:39.515Z`, retained `maxItems=6` and
+  `force=false`, and matched all four provider-session identity dimensions.
+- `terminal_outcome`: child failed at `2026-08-10T01:45:57.955Z` with two
+  conversations and materialized/skipped/failed `0/1/6`. All six errors are
+  external image artifacts in conversation
+  `6a4852f5-5cb4-83ea-9aca-57fe9e8cc6a0`, each with the same generic `ChatGPT
+  artifact binary fetch failed` error.
+- `new_exact_evidence`: transfer telemetry is attempted/succeeded/failed
+  `6/0/6` with six `Runtime.evaluate` and `chatgpt.fetchBinary` calls, but zero
+  `chatgpt.fetchBinaryResourceContent`, `Page.getResourceTree`, or
+  `Page.getResourceContent` calls. The installed fallback was therefore not
+  entered. A rejected promise serialized with an object-shaped by-value result
+  is now the leading falsifiable provider-free hypothesis.
+- `parent_and_cleanup`: parent absorbed the sole child as blocked/pass 55 with
+  force/next null and `account_mirror_materialization_failed`; active jobs are
+  zero; the exact browser and port 45015 are absent; API PID 93478 is healthy;
+  scheduler is paused/idle; wider passes remain `7/2/34`; guards remain clear.
+- `effect_accounting`: one control, one pass advance, one child/attempt, one
+  canary browser launch/normal exit, zero retained files, zero retries, zero
+  pass-56/scheduler/wider/guard actions; every excluded effect remains zero.
+- `next_action_or_stop_reason`: stop live effects. Plan 0245 owns one
+  provider-free structured-exception red/green and prepares, but does not
+  consume, a fresh installed canary gate.

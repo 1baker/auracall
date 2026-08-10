@@ -45531,3 +45531,18 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   active jobs are absent; scheduler remains paused, target remains blocked at
   pass 54, wider passes remain 7/2/34, and guards are clear. Pass 55 is now
   eligible behind a fresh committed readback.
+
+## 2026-08-09 | Plan 0244 pass 55 exposes fallback eligibility miss
+
+- The sole control advanced only pass 54 to 55 and created sole child
+  `hmj_4abf109417184cfc8866c0563e89c567`, attempt one, identity match,
+  `maxItems=6`, and force false. It honored its provider-work not-before time.
+- The child failed `0/1/6`; all six failures are external images from the same
+  conversation with the generic fetch error. Telemetry shows six page fetches
+  but zero loaded-resource fallback actions or Page CDP calls, so the installed
+  repair did not enter its fallback branch.
+- Parent absorbed blocked/pass 55 with force/next null. Jobs/browser are zero,
+  API PID 93478 healthy, scheduler paused/idle, wider passes 7/2/34, guards
+  clear. No retry or pass 56 ran.
+- Plan 0245 opens provider-free to model the likely object-shaped CDP exception
+  result, repair only that classification, and prepare a fresh canary gate.
