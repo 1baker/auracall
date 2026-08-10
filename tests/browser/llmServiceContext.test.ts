@@ -69,8 +69,12 @@ class HangingListOptionsContextLlmService extends TestContextLlmService {
 
 	override async buildListOptions(
 		overrides: BrowserProviderListOptions = {},
+		options: {
+			onPreflightStage?: (stage: string) => void;
+		} = {},
 	): Promise<BrowserProviderListOptions> {
 		this.listOptionsSignal = overrides.abortSignal;
+		options.onPreflightStage?.("browserTargetDiscovery");
 		await new Promise(() => {});
 		return overrides;
 	}
@@ -477,7 +481,7 @@ describe("project-scoped conversation context normalization", () => {
 				outcome: "timed_out",
 				timeoutMs: 25,
 				attemptCount: 0,
-				lastStage: "preflight:buildListOptions",
+				lastStage: "preflight:browserTargetDiscovery",
 				errorCode: "conversation_context_timeout",
 			});
 		} finally {

@@ -1,3 +1,12 @@
+- 2026-08-10: A cancellation-safe one-shot browser canary still lacks useful
+  failure evidence if every pre-provider await shares one broad terminal stage.
+  Before spending another live attempt, expose sanitized caller-owned stage
+  updates through existing option objects for target discovery, DevTools
+  probing, debug-port resolution, manual-login/Chrome launch, readiness,
+  login-tab opening, and target classification. Prove stage ordering and
+  terminal receipt projection with provider-free fakes; do not use callbacks
+  to change provider behavior or introduce another retry.
+
 - 2026-08-10: A conversation-context timeout with `attemptCount=0` and
   `lastStage=preflight:buildListOptions` is not a provider extraction failure.
   In Plan 0254, direct agent-browser inspection showed a healthy authenticated

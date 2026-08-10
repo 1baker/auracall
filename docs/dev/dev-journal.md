@@ -29,6 +29,24 @@
   `wsl-chrome-3` remains idle-waiting/pass 56, and default remains
   blocked/pass 9. Plan 0256 is prepared but awaits explicit live-effect
   approval for one install/restart and one new zero-retry canary.
+- Closed-world audit correction: cancellation is now safe at the native launch
+  seam, but a future terminal receipt would still report only
+  `preflight:buildListOptions` for any target-discovery, port, launch, readiness,
+  or tab-opening stall. Plan 0256 version 2 admits a provider-free stage
+  observer and deterministic receipt-stage tests before returning to the live
+  gate; runtime effects remain zero.
+- Stage-localization closeout: the caller-owned observer now records target
+  discovery, configured DevTools probing, debug-port resolution, manual-login
+  launch, Chrome launch, DevTools readiness, login-tab opening, and target
+  classification. Focused tests pass 20/20, the broader browser/context packet
+  passes 127/127, and the full provider-free suite passes 307 files with 2781
+  passed and 65 skipped tests. Typecheck, build, lint, plan audit, and
+  goal-policy audit are green; Plan 0256 version 3 has returned to the explicit
+  live-effect approval gate with zero runtime effects.
+- Fresh closeout admission: API PID 64314 is active/running with `NRestarts=0`;
+  scheduler posture is paused/paused; queued/running completions, active
+  history-materialization jobs, and exact `wsl-chrome-3` Chrome owners are
+  zero; the target completion remains idle-waiting/pass 56.
 
 ## 2026-08-10 | Plan 0254 Provider-Free One-Canary Harness
 

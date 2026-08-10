@@ -21,6 +21,7 @@ export async function launchManualLoginSession(options: {
   collapseDisposableWindows?: boolean;
   detach?: boolean;
   abortSignal?: AbortSignal;
+  onStage?: (stage: string) => void;
 }): Promise<{ chrome: Awaited<ReturnType<typeof launchManualLoginSessionCore>>['chrome']; port: number }> {
   return launchManualLoginSessionCore({
     ...options,

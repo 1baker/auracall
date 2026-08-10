@@ -31,6 +31,25 @@
   `wsl-chrome-3` context canary, but remains stopped at its explicit
   live-effect approval gate. Scheduler, completion, materialization, guard,
   retry, and wider-profile authority remain excluded.
+- Fresh CodeGraph closed-world review found that cancellation reaches native
+  Chrome launch but terminal receipts still collapse every target-resolution
+  await into `preflight:buildListOptions`. Plan 0256 version 2 reopens only
+  provider-free preparation to expose target discovery, port resolution,
+  Chrome launch, DevTools readiness, and login-tab opening as sanitized receipt
+  stages. The live gate and every excluded effect remain unchanged.
+- The stage observer is now implemented through existing browser-service
+  option objects. Deterministic tests prove target discovery, debug-port
+  resolution, Chrome launch, DevTools readiness, login-tab opening, and
+  terminal receipt projection without a provider or browser launch.
+- Provider-free validation passes 20 focused tests, 127 broader browser/context
+  tests, and the full suite with 307 test files, 2781 passed tests, 65 skipped,
+  and zero failures. Typecheck, build, lint, plan audit, and goal-policy audit
+  pass; lint retains 206 existing warnings. Plan 0256 version 3 is back at its
+  explicit live-effect approval gate.
+- Closing read-only admission confirms API PID 64314 active/running with
+  `NRestarts=0`, scheduler paused/paused, no queued or running completion, zero
+  active history-materialization jobs, `wsl-chrome-3` idle-waiting/pass 56,
+  and zero exact managed Chrome owners.
 
 ## Turn 436 | 2026-08-10
 

@@ -25,6 +25,7 @@ export type BrowserServiceDependencies = {
     collapseDisposableWindows?: boolean;
     detach?: boolean;
     abortSignal?: AbortSignal;
+    onStage?: (stage: string) => void;
   }) => Promise<{ chrome: { port?: number; host?: string }; port: number }>;
 };
 
@@ -52,16 +53,19 @@ export class BrowserService {
     launchUrl?: string;
     defaultProfileDir?: string;
     abortSignal?: AbortSignal;
+    onStage?: (stage: string) => void;
   } = {}): Promise<{ host?: string; port?: number; launched?: boolean }> {
     const remoteChrome = this.resolvedConfig.remoteChrome ?? null;
     let port = options.port ?? remoteChrome?.port;
     let host = options.host ?? remoteChrome?.host;
     if (!port) {
+      options.onStage?.('browserTargetDiscovery');
       const target = await this.deps.resolveBrowserListTarget();
       port = target?.port;
       host ??= target?.host;
     }
     if (options.ensurePort && port) {
+      options.onStage?.('browserConfiguredDevToolsProbe');
       const candidateHost = host ?? '127.0.0.1';
       const reachable = await isDevToolsResponsive({
         host: candidateHost,
@@ -81,7 +85,9 @@ export class BrowserService {
         path.join(os.homedir(), '.browser-service', 'browser-profile');
       const profileName = this.resolvedConfig.chromeProfile ?? 'Default';
       const url = options.launchUrl ?? 'about:blank';
+      options.onStage?.('browserDebugPortResolution');
       const launchDebugPort = await this.resolveLaunchDebugPort(options.defaultProfileDir);
+      options.onStage?.('browserManualLoginLaunch');
       const { chrome } = await this.deps.launchManualLoginSession({
         chromePath: this.resolvedConfig.chromePath ?? 'google-chrome',
         display: this.resolvedConfig.display ?? null,
@@ -98,6 +104,7 @@ export class BrowserService {
         collapseDisposableWindows: this.resolvedConfig.collapseDisposableWindows,
         detach: true,
         abortSignal: options.abortSignal,
+        onStage: options.onStage,
       });
       port = chrome.port;
       host = chrome.host ?? host;

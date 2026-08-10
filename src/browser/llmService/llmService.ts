@@ -810,7 +810,10 @@ export abstract class LlmService {
 
 	async buildListOptions(
 		overrides: BrowserProviderListOptions = {},
-		options: { ensurePort?: boolean } = {},
+		options: {
+			ensurePort?: boolean;
+			onPreflightStage?: (stage: string) => void;
+		} = {},
 	): Promise<BrowserProviderListOptions> {
 		const configuredUrl = Object.hasOwn(overrides, "configuredUrl")
 			? (overrides.configuredUrl ?? null)
@@ -824,6 +827,7 @@ export abstract class LlmService {
 						configuredUrl,
 						ensurePort: options.ensurePort,
 						abortSignal: overrides.abortSignal,
+						onStage: options.onPreflightStage,
 					});
 		const host = target?.host ?? overrides.host;
 		const port = target?.port ?? overrides.port;
@@ -2636,7 +2640,12 @@ export abstract class LlmService {
 					: await waitForPromiseWithAbort(
 							this.buildListOptions(
 								{ ...providedListOptions, abortSignal: controller.signal },
-								{ ensurePort: !options?.cacheOnly },
+								{
+									ensurePort: !options?.cacheOnly,
+									onPreflightStage: (stage) => {
+										lastStage = `preflight:${stage}`;
+									},
+								},
 							),
 							controller.signal,
 						);

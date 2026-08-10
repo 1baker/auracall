@@ -22,7 +22,9 @@ export async function launchManualLoginSession(options: {
   detach?: boolean;
   registryPath?: string;
   abortSignal?: AbortSignal;
+  onStage?: (stage: string) => void;
 }): Promise<{ chrome: Awaited<ReturnType<typeof launchChrome>>; port: number }> {
+  options.onStage?.('browserDebugPortResolution');
   const effectiveDebugPortStrategy = options.debugPortStrategy ?? options.baseConfig.debugPortStrategy ?? 'fixed';
   const effectiveDebugPortRange = options.debugPortRange ?? DEFAULT_DEBUG_PORT_RANGE;
   const port = effectiveDebugPortStrategy === 'fixed'
@@ -51,6 +53,7 @@ export async function launchManualLoginSession(options: {
     blankTabLimit: options.blankTabLimit ?? options.baseConfig.blankTabLimit,
     collapseDisposableWindows: options.collapseDisposableWindows ?? options.baseConfig.collapseDisposableWindows,
   };
+  options.onStage?.('browserChromeLaunch');
   const chrome = await launchChrome(config, options.userDataDir, options.logger, {
     registryPath: options.registryPath,
     abortSignal: options.abortSignal,
@@ -65,6 +68,7 @@ export async function launchManualLoginSession(options: {
   }
 
   const host = chrome.host ?? '127.0.0.1';
+  options.onStage?.('browserDevToolsReadiness');
   const ready = await isDevToolsResponsive({ host, port: chrome.port, attempts: 5, timeoutMs: 1000 });
   if (!ready) {
     throw new Error(`Chrome DevTools did not respond on ${host}:${chrome.port}.`);
@@ -73,6 +77,7 @@ export async function launchManualLoginSession(options: {
     await hideChromeWindow(chrome, options.logger);
   }
 
+  options.onStage?.('browserLoginTabOpening');
   await openLoginUrl(host, chrome.port, options.url, {
     compatibleHosts: options.compatibleHosts,
     serviceTabLimit: config.serviceTabLimit,

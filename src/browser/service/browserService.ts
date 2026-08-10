@@ -48,6 +48,7 @@ type ServiceTargetMatchOptions = {
   ensurePort?: boolean;
   logger?: (message: string) => void;
   abortSignal?: AbortSignal;
+  onStage?: (stage: string) => void;
 };
 
 export type BrowserProcessOwnerAttribution = {
@@ -141,11 +142,13 @@ export class BrowserService extends BrowserServiceCore {
       ensurePort: options.ensurePort,
       launchUrl: options.configuredUrl ?? undefined,
       abortSignal: options.abortSignal,
+      onStage: options.onStage,
     });
     if (!target.port) {
       return { host: target.host, port: target.port, ...selectionProvenance };
     }
 
+    options.onStage?.('browserTargetClassification');
     const classifiedInstances = await listInstancesWithLiveness({ registryPath: this.registryPath });
     const expectedProfilePath = launchContext.managedProfileDir;
     const expectedProfileName = launchContext.managedChromeProfile;
@@ -298,6 +301,7 @@ export class BrowserService extends BrowserServiceCore {
     launchUrl?: string;
     defaultProfileDir?: string;
     abortSignal?: AbortSignal;
+    onStage?: (stage: string) => void;
   } = {}) {
     const launchContext = this.resolveLaunchContext(this.serviceTarget);
     const fallbackDir = launchContext.managedProfileDir;

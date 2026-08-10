@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 1
+Plan version: 3
 Gate state: PREPARED_AWAITING_LIVE_EFFECT_APPROVAL
 Goal execution state: PAUSED_AT_APPROVAL_GATE
 
@@ -22,9 +22,11 @@ control a completion, resume the scheduler, or widen to another route/profile.
 - Plan 0255 passes the same context abort signal through managed-browser target
   and native WSL Chrome launch, joins launcher cleanup before abort rejection,
   and correctly unwraps the cache receipt envelope.
-- Provider-free validation passes 19 focused tests, 109 broader browser/context
-  tests, 2777 full-suite tests, typecheck, build, lint, diff checks, and plan
-  audit. The source repair is not installed.
+- Provider-free validation passes 20 focused tests, 127 broader browser/context
+  tests, 2781 full-suite tests, typecheck, build, lint, diff checks, plan audit,
+  and goal-policy audit. Target discovery, port resolution, Chrome launch,
+  DevTools readiness, and login-tab opening are now receipt-visible. The source
+  repair is not installed.
 - Final admission reports API PID 64314 active/running with `NRestarts=0`,
   scheduler paused/paused, active history materialization jobs zero,
   `wsl-chrome-3` idle-waiting/pass 56, and zero exact default or
@@ -58,6 +60,8 @@ control a completion, resume the scheduler, or widen to another route/profile.
 ## Acceptance Criteria
 
 - [ ] Explicit approval and fresh drift-free admission are recorded.
+- [x] Provider-free receipt tests distinguish browser target discovery, debug
+  port resolution, Chrome launch, DevTools readiness, and login-tab opening.
 - [ ] Installed/source repair parity follows one healthy API restart.
 - [ ] The sole canary returns current nonempty context and one sanitized
   successful receipt with no pending operation.
@@ -97,3 +101,50 @@ control a completion, resume the scheduler, or widen to another route/profile.
 The installed repair passes one fresh zero-retry canary and exact cleanup while
 all scheduler, completion, materialization, guard, retry, and wider effects
 remain zero. Any failure closes this plan immediately without another attempt.
+
+## Preparation Checkpoint | Stage Localization Gap Accepted
+
+- `checkpoint_id`: `P0256-C02`.
+- `state_transition`: P0256_PREPARED_AWAITING_APPROVAL ->
+  P0256_ACTIVE_PROVIDER_FREE_STAGE_LOCALIZATION.
+- `progress_classification`: blocker_reduction.
+- `evidence`: fresh CodeGraph flow review confirms the abort signal reaches
+  native Chrome launch, but `getConversationContext` initializes
+  `lastStage=preflight:buildListOptions` and receives no stage updates from
+  service target resolution, manual-login launch, DevTools readiness, or tab
+  opening. Another timeout would therefore be safe but still causally
+  ambiguous.
+- `subagent_status`: not_spawned.
+- `next_action_or_stop_reason`: add a narrow caller-owned preflight-stage
+  observer through existing option objects, prove stage ordering and receipt
+  projection provider-free, then return to the unchanged live-effect gate.
+- `authority_classification`: standing provider-free goal authority; install,
+  restart, browser/provider, materialization, completion, scheduler, guard,
+  retry, and direct-runtime effects remain excluded.
+- `review_disposition_summary`: cancellation coverage is accepted; broad
+  `buildListOptions`-only receipt evidence is blocking for another one-shot
+  canary because it cannot distinguish a repeated or new preflight mechanism.
+
+## Preparation Checkpoint | Stage Localization Validated And Gate Refrozen
+
+- `checkpoint_id`: `P0256-C03`.
+- `state_transition`: P0256_ACTIVE_PROVIDER_FREE_STAGE_LOCALIZATION ->
+  P0256_PREPARED_AWAITING_APPROVAL.
+- `progress_classification`: canary_prepared.
+- `evidence`: the caller-owned observer reports sanitized target-discovery,
+  debug-port, manual-login/Chrome-launch, DevTools-readiness, login-tab, and
+  target-classification stages. Provider-free validation passes 20 focused,
+  127 broader, and 2781 full-suite tests with zero failures; typecheck, build,
+  lint, plan audit, and goal-policy audit pass. Closing admission reports API
+  PID 64314 active/running with zero restarts, scheduler paused/paused, no
+  queued/running completion, zero active history-materialization jobs,
+  `wsl-chrome-3` idle-waiting/pass 56, and zero exact Chrome owners.
+- `subagent_status`: not_spawned.
+- `next_action_or_stop_reason`: stop before install or provider/browser work
+  until this exact one-canary live-effect packet is explicitly approved.
+- `authority_classification`: preparation complete; install, restart,
+  browser/provider, materialization, completion, scheduler, guard, retry, and
+  direct-runtime effects remain excluded before approval.
+- `review_disposition_summary`: another canary can now distinguish a repeated
+  native-launch stall from later readiness or tab-opening failure without
+  widening the one-shot packet.
