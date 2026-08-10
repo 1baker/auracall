@@ -1,10 +1,10 @@
 # Structured-Exception Installed Pass-56 Canary | 0246-2026-08-09
 
-State: PLANNED
+State: OPEN
 Lane: LIVE_FOLLOW_RECOVERY
 Plan version: 1
-Goal execution state: AWAITING_EFFECT_APPROVAL
-Gate state: FROZEN_ONE_CANARY_GATE
+Goal execution state: ACTIVE
+Gate state: AUTHORIZED_PRE_INSTALL
 
 ## Stable Objective
 
@@ -21,8 +21,8 @@ the scheduler and all wider completions remain paused.
   `hmj_4abf109417184cfc8866c0563e89c567` failed six external images. Active
   jobs and exact browser are zero; API PID 93478 is healthy; scheduler is
   paused/idle; wider passes are `7/2/34`; guards are clear.
-- This plan is prepared only. No effect is authorized until the operator
-  explicitly activates its unchanged packet.
+- The operator explicitly refilled the attempt budget and activated this
+  unchanged packet. The pre-install audit/commit/push gate remains mandatory.
 
 ## Frozen Effect Packet
 
@@ -61,7 +61,7 @@ the scheduler and all wider completions remain paused.
 
 ## Acceptance Criteria
 
-- [ ] Operator explicitly activates this unchanged effect packet.
+- [x] Operator explicitly activates this unchanged effect packet.
 - [ ] One install/restart yields exact adapter parity and healthy frozen state.
 - [ ] One control advances only pass 55 to 56 with one child/attempt and no
   retry or pass 57.
@@ -84,3 +84,20 @@ the scheduler and all wider completions remain paused.
 - `authority_classification`: fresh effect approval required because Plan 0244
   consumed its one install and one canary.
 
+## Activation Checkpoint | Fresh Budget Authorized
+
+- `checkpoint_id`: `P0246-C02`.
+- `state_transition`: P0246_PLANNED_AWAITING_EFFECT_APPROVAL ->
+  P0246_ACTIVE_AUTHORIZED_PRE_INSTALL.
+- `progress_classification`: authority_activation.
+- `evidence`: operator instruction, "Okay refill your attempt budget and
+  continue"; clean/synced Git at `b36f66a7`; provider-free source hash
+  `ff3fe974...d8baf6`; deliberately stale installed hash
+  `4b2dca82...c4725`; most recent stopped-state readback remained target
+  blocked/pass 55, active jobs and exact browser zero, scheduler paused/idle,
+  wider passes `7/2/34`, and guards clear.
+- `next_action_or_stop_reason`: audit/commit/push this activation, then perform
+  a fresh admission readback before the sole install/restart.
+- `authority_classification`: one renewed execution window for the unchanged
+  frozen packet; no scheduler, wider-completion, pass-57, retry, prompt, click,
+  or `Answer now` authority.

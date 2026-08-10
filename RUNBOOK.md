@@ -1,5 +1,19 @@
 # RUNBOOK
 
+## Turn 428 | 2026-08-09
+
+- The operator explicitly refilled the attempt budget and activated Plan 0246
+  unchanged. The renewable execution window permits one install/restart and
+  one `wsl-chrome-3` pass-56 completion control only.
+- Exact bounds remain one child/attempt, `maxItems=6`, force false, identity
+  match, provider pacing honored, and a hard stop after the sole control
+  regardless of outcome.
+- Scheduler and wider completions remain paused. Pass 57, retry, prompt, click,
+  `Answer now`, config/guard mutation, and direct runtime-JSON effects remain
+  prohibited.
+- Activation is recorded before effects; audit/commit/push and a fresh stopped-
+  state admission readback are required before the sole install.
+
 ## Turn 427 | 2026-08-09
 
 - Plan 0244 opens the bounded repair for the pass-54 external DOM-image

@@ -1,3 +1,15 @@
+## 2026-08-09 | Plan 0246 Activated for One Pass-56 Canary
+
+- Focus: consume the operator-refilled execution window for exactly one
+  installed structured-exception repair and one `wsl-chrome-3` pass-56 canary.
+- Authority: one install/restart, one completion control, one pass advance,
+  one child/attempt, `maxItems=6`, and one browser launch. Scheduler actions,
+  wider completion actions, retries, pass 57, prompts, clicks, and `Answer now`
+  remain zero.
+- Gate: Plan 0246 is `OPEN`/`ACTIVE`/`AUTHORIZED_PRE_INSTALL`; activation must
+  audit, commit, and push before a fresh runtime admission readback and any
+  install effect.
+
 ## 2026-07-29 | ChatGPT Developer-App Create Postcondition Repair
 
 - Focus: remove the false `awaiting-human` terminal state observed by LitScout
