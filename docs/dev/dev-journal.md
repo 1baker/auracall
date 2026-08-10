@@ -9,6 +9,18 @@
 - Gate: Plan 0246 is `OPEN`/`ACTIVE`/`AUTHORIZED_PRE_INSTALL`; activation must
   audit, commit, and push before a fresh runtime admission readback and any
   install effect.
+- Result: one install produced exact source/installed adapter parity at
+  `ff3fe974...d8baf6` and one healthy restart to API PID 85854. The single
+  pass-56 control created child `hmj_e59b8b5155f64a98a04c2d9a095d9224`,
+  which honored pacing, matched all identity dimensions, and succeeded on
+  attempt one with materialized/skipped/failed `6/1/0`.
+- Artifact proof: the refreshed manifest recorded six resource-content
+  fallbacks and downloads `6/6/0`; all six local files match manifest byte
+  size/MIME and independently recomputed SHA-256 values, and each checksum
+  resolves to one available canonical archive item without duplicates.
+- Final boundary: parent is `idle_waiting`/pass 56 with force/next/error null;
+  API healthy; scheduler paused/idle; wider passes `7/2/34`; guards clear;
+  jobs/browser zero. No retry, pass 57, scheduler action, or wider resume ran.
 
 ## 2026-07-29 | ChatGPT Developer-App Create Postcondition Repair
 

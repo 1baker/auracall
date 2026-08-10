@@ -1,3 +1,13 @@
+- 2026-08-09: A rejected `Runtime.evaluate` promise can return both
+  `exceptionDetails` and an object-shaped by-value result. Do not treat that
+  object as successful binary content or use its truthiness to suppress a
+  provider-neutral fallback. Branch on `exceptionDetails` first, while keeping
+  explicit HTTP failures terminal. Validate the exact serialized shape
+  provider-free, then require installed hash parity and one paced canary. The
+  pass-56 proof exercised the loaded-resource fallback six times, materialized
+  all six images, and independently matched local size/MIME/checksum to one
+  available canonical archive item per asset.
+
 - 2026-08-07: A blocked live-follow completion cannot be cleared with
   `resume`; the supported control contract exposes only `run_one_pass` for a
   blocked live-follow operation. Treat a returned unchanged object with no

@@ -13,6 +13,21 @@
   prohibited.
 - Activation is recorded before effects; audit/commit/push and a fresh stopped-
   state admission readback are required before the sole install.
+- The sole install produced source/installed adapter parity
+  `ff3fe974...d8baf6` and restarted the API once as healthy PID 85854.
+- The sole control advanced exactly to pass 56 and created child
+  `hmj_e59b8b5155f64a98a04c2d9a095d9224`. Attempt one honored its
+  `02:21:10Z` provider-work fence, matched all identity dimensions, and
+  materialized six external images with zero failures.
+- Manifest telemetry proves the repaired branch ran six times:
+  `chatgpt.fetchBinaryResourceContent=6`, `Page.getResourceTree=6`,
+  `Page.getResourceContent=6`, and downloads `6/6/0`. All files match recorded
+  size/MIME and each independently recomputed checksum resolves to exactly one
+  available canonical archive item with no duplicate cache key.
+- Parent absorbed as `idle_waiting`/pass 56 with force/next/error null. Jobs and
+  exact browser are zero; API is healthy; scheduler remains paused/idle; wider
+  passes remain `7/2/34`; guards are clear. No retry, pass 57, scheduler action,
+  or wider resume occurred. Plan 0246 is closed success.
 
 ## Turn 427 | 2026-08-09
 
