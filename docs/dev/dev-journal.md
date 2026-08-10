@@ -23,6 +23,14 @@
   `wsl-chrome-3/chatgpt` directory. It has no active materialization job or
   completion child. Do not attach or close it; require independent exit and a
   fresh zero-owner readback before install or canary execution.
+- Activation correction: direct agent-browser inspection proved that PID 12504
+  held only one authenticated ChatGPT home tab with a composer and no auth,
+  challenge, `Answer now`, or rate-limit signal. Zero active jobs and zero
+  completion children established it as an idle orphan. Agent-browser detached;
+  exact PID/port cleanup removed the process group while preserving the managed
+  profile. Fresh admission is zero-owner, and the single install/restart plus
+  zero-retry canary packet is activated under the operator's standing bounded
+  repair authority.
 
 ## 2026-08-10 | Plan 0253 Governed Payload Reload Settlement Repair
 

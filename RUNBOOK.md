@@ -1,5 +1,23 @@
 # RUNBOOK
 
+## Turn 436 | 2026-08-10
+
+- Fresh continuation found the same exact AuraCall-managed
+  `wsl-chrome-3/chatgpt` Chrome process group rooted at PID 12504/port 45015,
+  with no agent-browser ownership, active materialization job, or completion
+  child.
+- Direct agent-browser attachment identified one authenticated ChatGPT home
+  tab with an available composer and no login, CAPTCHA, `Answer now`, or
+  rate-limit surface. Agent-browser detached without closing the externally
+  owned browser.
+- The exact browser-tools cleanup terminated only PID 12504/port 45015 and its
+  process group. The managed profile directory was preserved, and fresh
+  process admission reports zero exact default or `wsl-chrome-3` owners.
+- The activated Plan 0254 packet remains bounded to one install/restart and one
+  zero-retry, redaction-safe context canary. Scheduler and completion controls,
+  materialization, prompts, clicks, downloads, uploads, guards, and wider
+  profiles remain excluded.
+
 ## Turn 435 | 2026-08-10
 
 - Provider-free preparation found that `conversations context get` inherits

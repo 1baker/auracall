@@ -2,9 +2,9 @@
 
 State: OPEN
 Lane: P01
-Plan version: 3
-Gate state: AWAITING_EXPLICIT_ONE_CANARY_APPROVAL_AND_CLEAR_ADMISSION
-Goal execution state: PAUSED_AT_EFFECT_GATE
+Plan version: 4
+Gate state: APPROVED_READY_FOR_INSTALL
+Goal execution state: ACTIVE_SINGLE_CANARY_PACKET
 
 ## Stable Goal Objective
 
@@ -36,18 +36,21 @@ scheduler, or widen to another route/profile in this plan.
   operator posture are paused with no foreground request or drain reservation.
   The default completion is blocked/pass 9; `wsl-chrome-3` is
   idle-waiting/pass 56 and active history-materialization jobs are zero.
-- Fresh agent-browser no-launch inspection found no agent-browser-owned browser
-  or session for `wsl-chrome-3`, but corrected process admission found Chrome
-  PID 12504 using the exact AuraCall-managed `wsl-chrome-3/chatgpt` directory.
-  It started at 2026-08-10 16:19:52 local time and is not represented as an
-  active materialization job or completion child. It is an external owner for
-  this gate: do not attach to or close it, and do not install or launch the
-  canary until it exits independently and fresh admission returns to zero.
+- Agent-browser attached read-only to the previously external exact browser.
+  It contained one authenticated ChatGPT home tab with a composer and no
+  login, CAPTCHA, `Answer now`, or rate-limit surface. Active jobs and
+  completion children remained zero, proving it was an idle orphan rather than
+  provider work. Agent-browser detached without lifecycle mutation; the exact
+  repo cleanup helper then terminated only PID 12504/port 45015 and its process
+  group while preserving the managed profile directory. Fresh executable-
+  scoped admission now reports zero exact default and `wsl-chrome-3` owners.
 
 ## Authority And Effect Boundary
 
-- This document prepares but does not grant the live effect authority. An
-  explicit operator approval naming this one-canary gate is required.
+- The operator explicitly authorized continued repair work, previously
+  authorized the bounded successor canary, and required direct agent-browser
+  inspection first. That inspection is now complete and the unchanged
+  one-canary packet is activated.
 - After approval, permit one user-runtime install, one API restart, one exact
   source/installed adapter hash comparison, one `wsl-chrome-3/chatgpt` managed
   browser launch, one context read, and one exact owned-browser cleanup.
@@ -96,8 +99,9 @@ scheduler, or widen to another route/profile in this plan.
 
 ## Acceptance Criteria
 
-- [ ] Explicit operator approval names this single canary gate.
-- [ ] Git and runtime admission are clean, stopped, and drift-free; exact
+- [x] Operator authority covers this single canary gate after direct
+  agent-browser inspection.
+- [x] Git and runtime admission are clean, stopped, and drift-free; exact
   `wsl-chrome-3/chatgpt` browser owners are zero.
 - [ ] Installed/source ChatGPT adapter hashes match after one healthy restart.
 - [ ] The sole context read succeeds with no pending operation or late mutation.
@@ -112,6 +116,7 @@ scheduler, or widen to another route/profile in this plan.
   `max_materialization_starts: 0`; `max_completion_controls: 0`;
   `max_scheduler_controls: 0`; `max_guard_actions: 0`;
   `max_direct_runtime_edits: 0`; `max_subagents: 0`;
+  `max_pre_canary_stale_browser_closes: 1`;
   `max_provider_free_harness_source_files: 3`;
   `max_provider_free_harness_test_files: 2`.
 
@@ -176,6 +181,33 @@ scheduler, or widen to another route/profile in this plan.
 - `review_disposition_summary`: the retry-safe, redaction-safe harness is
   accepted for later execution; current live admission is rejected while PID
   12504 owns the exact managed browser directory.
+
+## Activation Checkpoint | Direct Inspection And Clean Admission
+
+- `checkpoint_id`: `P0254-C03`.
+- `state_transition`:
+  P0254_AWAITING_EXPLICIT_ONE_CANARY_APPROVAL_AND_CLEAR_ADMISSION ->
+  P0254_APPROVED_READY_FOR_INSTALL.
+- `progress_classification`: blocker_removed.
+- `evidence`: agent-browser read-only inspection found one ChatGPT home tab,
+  an available composer, and no login, CAPTCHA, `Answer now`, or rate-limit
+  signal. With active jobs and completion children zero, exact PID/port cleanup
+  removed the orphan. Fresh process admission reports zero exact owners. Git is
+  clean/synchronized at `97a0c5c7`; API PID 27774 is active/running with
+  `NRestarts=0`; scheduler is paused/paused; default remains blocked/pass 9;
+  `wsl-chrome-3` remains idle-waiting/pass 56. Source adapter hash
+  `756d54de...3361b` differs from installed `223f3f84...93522`, so exactly one
+  install remains necessary.
+- `subagent_status`: not_spawned.
+- `next_action_or_stop_reason`: perform the sole user-runtime install and API
+  restart, prove adapter parity and stopped-state preservation, then run the
+  exact zero-retry redaction-safe canary once.
+- `authority_classification`: activated bounded runtime/provider packet; no
+  materialization, completion, scheduler, guard, prompt, click, download,
+  upload, or wider-profile authority.
+- `review_disposition_summary`: provider/auth unavailability is rejected by
+  direct current inspection; clean admission and the repaired harness are
+  accepted for one live context canary.
 
 ## Definition Of Done
 
