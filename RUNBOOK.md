@@ -1,5 +1,28 @@
 # RUNBOOK
 
+## Turn 431 | 2026-08-10
+
+- Independent inspection corrected the Plan 0247 failure classification. The
+  two failed child rows are synthetic conversation-context timeout entries,
+  not DOCX or other asset transfers: provider ID, title, URL, path, and MIME are
+  all null.
+- Both exact conversations are currently readable. AuraCall completed their
+  current context reads in about 12 seconds each with two messages and zero
+  files/artifacts; metadata-only terminal receipts are successful. A direct
+  in-page 404 was recovered by the current CDP/visible-page fallback and is not
+  accepted as expiration evidence.
+- The operator replied `ok go` to a bounded provider-free evidence
+  reconciliation. Plan 0250,
+  `docs/dev/plans/0250-2026-08-10-default-zero-asset-evidence-reconciliation.md`,
+  authorizes one callback-disabled simulation, two exact service-layer
+  evidence writes, and deterministic readback only.
+  Browser/provider, materialization, completion, scheduler, guard/config,
+  install/restart, and direct runtime-file effects remain prohibited.
+- Opening state is clean/synced `a8892b38`; API PID 27774 is healthy;
+  scheduler is paused/paused; active history jobs and the owned browser are
+  zero; default remains blocked/pass 8. Publish the gate before any evidence
+  write.
+
 ## Turn 430 | 2026-08-10
 
 - The operator directed direct inspection of the new default failure before

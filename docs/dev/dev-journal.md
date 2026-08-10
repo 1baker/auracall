@@ -1,3 +1,20 @@
+## 2026-08-10 | Plan 0250 Provider-Free Zero-Asset Evidence Reconciliation
+
+- Focus: replace only the stale current account-mirror timeout evidence for the
+  two exact Plan 0247 rows with their successful cached context evidence, then
+  prove provider-free that neither remains eligible for asset retry.
+- Correction: the retained failures are null-identity synthetic artifact rows
+  caused by context timeouts. They are not the DOCX candidate chats inspected
+  by Plans 0248/0249 and contain no asset that can be called expired or
+  retrievable.
+- Current proof: each exact conversation now returns two messages and zero
+  files/artifacts with a successful roughly 12-second receipt. Account-mirror
+  rows still retain the superseded timeout as `routeabilityState=unknown`.
+- Boundary: one callback-disabled in-memory simulation, two exact writes
+  through `AccountMirrorPersistence`, and deterministic readback. Provider,
+  browser, materialization, completion, scheduler, install/restart, direct
+  runtime editing, and other-provider effects remain zero.
+
 ## 2026-08-10 | Plan 0248 Direct Default DOCX Inspection And Repair
 
 - Focus: inspect the two implicated default ChatGPT chats directly before

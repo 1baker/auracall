@@ -7,6 +7,15 @@
 Status: active
 Lane: P01
 
+- Active provider-free zero-asset evidence reconciliation:
+  [docs/dev/plans/0250-2026-08-10-default-zero-asset-evidence-reconciliation.md](docs/dev/plans/0250-2026-08-10-default-zero-asset-evidence-reconciliation.md)
+  The two Plan 0247 retryable rows are synthetic conversation-context timeout
+  entries with no asset identity. Current AuraCall reads both conversations in
+  about 12 seconds with two messages and zero files/artifacts. Plan 0250 may
+  project that successful cached evidence into the two account-mirror rows and
+  prove callback-disabled retry exclusion. Provider, materialization,
+  completion, scheduler, install, and restart effects remain zero.
+
 - Stopped default DOCX installed one-canary gate:
   [docs/dev/plans/0249-2026-08-10-default-docx-installed-one-canary-gate.md](docs/dev/plans/0249-2026-08-10-default-docx-installed-one-canary-gate.md)
   The sole install/restart produced exact adapter parity, but the exact
@@ -18,9 +27,9 @@ Lane: P01
   controls remain zero. The next work must be provider-free timeout/cleanup
   ordering diagnosis, not a retry.
 
-- Closed default DOCX chat inspection and provider-free retrieval repair:
+- Closed default DOCX candidate-chat inspection and provider-free retrieval repair:
   [docs/dev/plans/0248-2026-08-10-default-docx-chat-inspection-and-retrieval-repair.md](docs/dev/plans/0248-2026-08-10-default-docx-chat-inspection-and-retrieval-repair.md)
-  Both implicated chats expose generated DOCX files through JavaScript buttons
+  Both inspected candidate chats expose generated DOCX files through JavaScript buttons
   with no anchor URL. The current nested native-download control is labelled
   `Download file`, but the viewer fallback accepted only exact `Download`.
   The narrow matcher repair is covered by a deterministic red/green and a
