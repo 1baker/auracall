@@ -1,3 +1,14 @@
+- 2026-08-10: Do not spend a response-acquisition deadline while an
+  interaction governor is still holding the physical reload. In the ChatGPT
+  payload fallback, the old ten-second timer could expire before
+  `Page.reload` began; the detached reload and its per-read Network listeners
+  could then survive the context read and fail after client cleanup. Govern
+  first, capture and dispose both subscriptions, and let exact response
+  completion close the reusable reload mutation audit even when the CDP reload
+  acknowledgement remains pending. Command rejection must still fail the
+  reload. Public abort paths must await the shared retained-connection cleanup
+  helper rather than only triggering it.
+
 - 2026-08-10: A fire-and-forget browser reload can outlive its owning context
   and job. Plan 0252's installed mutation audit recorded the final closed-
   WebSocket reload failure 11.6 seconds after the child job result was already

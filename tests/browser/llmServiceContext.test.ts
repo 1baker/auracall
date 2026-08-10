@@ -763,12 +763,19 @@ describe("project-scoped conversation context normalization", () => {
 			identityKey: "cache-test@example.com",
 		};
 		const store = new JsonCacheStore();
+		let resolvePayloadStarted: (() => void) | undefined;
+		const payloadStarted = new Promise<void>((resolve) => {
+			resolvePayloadStarted = resolve;
+		});
 		const evaluate = vi.fn(() => {
 			const call = evaluate.mock.calls.length;
 			if (call <= 2) return Promise.resolve({ result: { value: [] } });
 			if (call === 3) return Promise.resolve({ result: { value: url } });
 			if (call <= 6) return Promise.resolve({ result: { value: true } });
-			if (call === 7) return new Promise<never>(() => undefined);
+			if (call === 7) {
+				resolvePayloadStarted?.();
+				return new Promise<never>(() => undefined);
+			}
 			return Promise.resolve({ result: { value: [] } });
 		});
 		const client = {
@@ -800,9 +807,7 @@ describe("project-scoped conversation context normalization", () => {
 				timeoutMs: 25,
 				listOptions: { allowNavigation: true },
 			});
-			for (let index = 0; index < 20 && evaluate.mock.calls.length < 7; index += 1) {
-				await vi.advanceTimersByTimeAsync(0);
-			}
+			await payloadStarted;
 			expect(evaluate).toHaveBeenCalledTimes(7);
 			await vi.advanceTimersByTimeAsync(25);
 			await expect(read).rejects.toMatchObject({

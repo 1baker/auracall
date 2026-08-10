@@ -80,6 +80,7 @@ import {
 } from "../../src/browser/providers/chatgptArtifactControls.js";
 import type { FileRef } from "../../src/browser/providers/domain.js";
 import { normalizeProjectMemoryMode } from "../../src/browser/providers/domain.js";
+import { annotateClientMutationContext } from "../../src/browser/providers/mutationAudit.js";
 import { createProviderSessionAuthority } from "../../src/browser/providers/providerSessionAuthority.js";
 import {
 	createBrowserScrapeTelemetryRecorder,
@@ -2388,6 +2389,7 @@ describe("readChatgptConversationPayloadWithClient", () => {
 	test("settles from the exact fallback body when the reload command remains pending", async () => {
 		vi.useFakeTimers();
 		try {
+			const mutationRecords: Array<{ phase: string; outcome?: string }> = [];
 			let onResponseReceived: ((params: never) => void) | null = null;
 			let onLoadingFinished: ((params: never) => void) | null = null;
 			const getResponseBody = vi.fn(async () => ({
@@ -2428,6 +2430,15 @@ describe("readChatgptConversationPayloadWithClient", () => {
 					}),
 				},
 			};
+			annotateClientMutationContext(
+				client as never,
+				{
+					mutationAudit: (record) => {
+						mutationRecords.push({ phase: record.phase, outcome: record.outcome });
+					},
+				},
+				"provider:chatgpt",
+			);
 			let outcome:
 				| { kind: "pending" }
 				| { kind: "resolved"; value: unknown }
@@ -2456,9 +2467,241 @@ describe("readChatgptConversationPayloadWithClient", () => {
 				kind: "resolved",
 				value: { mapping: { recovered: { message: { id: "recovered" } } } },
 			});
+			expect(mutationRecords).toEqual([
+				{ phase: "start", outcome: undefined },
+				{ phase: "complete", outcome: "succeeded" },
+			]);
 		} finally {
 			vi.useRealTimers();
 		}
+	});
+
+	test("waits for governed fallback reload before starting the body deadline", async () => {
+		vi.useFakeTimers();
+		let releaseGovernor: (() => void) | undefined;
+		try {
+			let onResponseReceived: ((params: never) => void) | null = null;
+			let onLoadingFinished: ((params: never) => void) | null = null;
+			const beforeInteraction = vi.fn(
+				() =>
+					new Promise<void>((resolve) => {
+						releaseGovernor = resolve;
+					}),
+			);
+			const client = {
+				// biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names.
+				Runtime: {
+					evaluate: vi.fn(async () => ({
+						result: { value: { ok: false, status: 404, body: "{}" } },
+					})),
+				},
+				// biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names.
+				Network: {
+					enable: vi.fn(async () => undefined),
+					responseReceived: vi.fn((handler) => {
+						onResponseReceived = handler;
+					}),
+					loadingFinished: vi.fn((handler) => {
+						onLoadingFinished = handler;
+					}),
+					getResponseBody: vi.fn(async () => ({
+						body: JSON.stringify({ mapping: { governed: { message: { id: "governed" } } } }),
+						base64Encoded: false,
+					})),
+				},
+				// biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names.
+				Page: {
+					enable: vi.fn(async () => undefined),
+					reload: vi.fn(async () => {
+						onResponseReceived?.({
+							requestId: "request-governed",
+							response: {
+								url: "https://chatgpt.com/backend-api/conversation/conversation-governed",
+								status: 200,
+							},
+						} as never);
+						onLoadingFinished?.({ requestId: "request-governed" } as never);
+					}),
+				},
+			};
+			let outcome:
+				| { kind: "pending" }
+				| { kind: "resolved"; value: unknown }
+				| { kind: "rejected"; error: unknown } = { kind: "pending" };
+			void readChatgptConversationPayloadWithClient(
+				client as never,
+				"conversation-governed",
+				null,
+				{
+					allowNavigation: true,
+					interactionGovernor: { beforeInteraction },
+				},
+			).then(
+				(value) => {
+					outcome = { kind: "resolved", value };
+				},
+				(error: unknown) => {
+					outcome = { kind: "rejected", error };
+				},
+			);
+
+			await vi.advanceTimersByTimeAsync(0);
+			expect(beforeInteraction).toHaveBeenCalledWith("page-refresh");
+			expect(client.Page.reload).not.toHaveBeenCalled();
+
+			await vi.advanceTimersByTimeAsync(10_001);
+			expect(outcome).toEqual({ kind: "pending" });
+
+			releaseGovernor?.();
+			await vi.advanceTimersByTimeAsync(0);
+			expect(outcome).toEqual({
+				kind: "resolved",
+				value: { mapping: { governed: { message: { id: "governed" } } } },
+			});
+		} finally {
+			releaseGovernor?.();
+			vi.useRealTimers();
+		}
+	});
+
+	test("disposes fallback network listeners before a sequential read", async () => {
+		const responseHandlers = new Set<(params: never) => void>();
+		const loadingHandlers = new Set<(params: never) => void>();
+		let activeConversationId = "conversation-sequential-one";
+		const client = {
+			// biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names.
+			Runtime: {
+				evaluate: vi.fn(async () => ({
+					result: { value: { ok: false, status: 404, body: "{}" } },
+				})),
+			},
+			// biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names.
+			Network: {
+				enable: vi.fn(async () => undefined),
+				responseReceived: vi.fn((handler: (params: never) => void) => {
+					responseHandlers.add(handler);
+					return () => responseHandlers.delete(handler);
+				}),
+				loadingFinished: vi.fn((handler: (params: never) => void) => {
+					loadingHandlers.add(handler);
+					return () => loadingHandlers.delete(handler);
+				}),
+				getResponseBody: vi.fn(async () => ({
+					body: JSON.stringify({
+						mapping: { [activeConversationId]: { message: { id: activeConversationId } } },
+					}),
+					base64Encoded: false,
+				})),
+			},
+			// biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names.
+			Page: {
+				enable: vi.fn(async () => undefined),
+				reload: vi.fn(async () => {
+					const requestId = `request-${activeConversationId}`;
+					for (const handler of responseHandlers) {
+						handler({
+							requestId,
+							response: {
+								url: `https://chatgpt.com/backend-api/conversation/${activeConversationId}`,
+								status: 200,
+							},
+						} as never);
+					}
+					for (const handler of loadingHandlers) {
+						handler({ requestId } as never);
+					}
+				}),
+			},
+		};
+
+		await expect(
+			readChatgptConversationPayloadWithClient(
+				client as never,
+				"conversation-sequential-one",
+				null,
+				{ allowNavigation: true },
+			),
+		).resolves.toMatchObject({
+			mapping: {
+				"conversation-sequential-one": { message: { id: "conversation-sequential-one" } },
+			},
+		});
+		expect(responseHandlers.size).toBe(0);
+		expect(loadingHandlers.size).toBe(0);
+
+		activeConversationId = "conversation-sequential-two";
+		await expect(
+			readChatgptConversationPayloadWithClient(
+				client as never,
+				"conversation-sequential-two",
+				null,
+				{ allowNavigation: true },
+			),
+		).resolves.toMatchObject({
+			mapping: {
+				"conversation-sequential-two": { message: { id: "conversation-sequential-two" } },
+			},
+		});
+		expect(responseHandlers.size).toBe(0);
+		expect(loadingHandlers.size).toBe(0);
+	});
+
+	test("settles a rejected fallback reload and closes its mutation audit", async () => {
+		const responseHandlers = new Set<(params: never) => void>();
+		const loadingHandlers = new Set<(params: never) => void>();
+		const mutationRecords: Array<{ phase: string; outcome?: string }> = [];
+		const client = {
+			// biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names.
+			Runtime: {
+				evaluate: vi.fn(async () => ({
+					result: { value: { ok: false, status: 404, body: "{}" } },
+				})),
+			},
+			// biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names.
+			Network: {
+				enable: vi.fn(async () => undefined),
+				responseReceived: vi.fn((handler: (params: never) => void) => {
+					responseHandlers.add(handler);
+					return () => responseHandlers.delete(handler);
+				}),
+				loadingFinished: vi.fn((handler: (params: never) => void) => {
+					loadingHandlers.add(handler);
+					return () => loadingHandlers.delete(handler);
+				}),
+				getResponseBody: vi.fn(),
+			},
+			// biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names.
+			Page: {
+				enable: vi.fn(async () => undefined),
+				reload: vi.fn(async () => {
+					throw new Error("WebSocket is not open: readyState 3 (CLOSED)");
+				}),
+			},
+		};
+		annotateClientMutationContext(
+			client as never,
+			{
+				mutationAudit: (record) => {
+					mutationRecords.push({ phase: record.phase, outcome: record.outcome });
+				},
+			},
+			"provider:chatgpt",
+		);
+
+		await expect(
+			readChatgptConversationPayloadWithClient(
+				client as never,
+				"conversation-reload-rejected",
+				null,
+				{ allowNavigation: true },
+			),
+		).resolves.toBeNull();
+		expect(responseHandlers.size).toBe(0);
+		expect(loadingHandlers.size).toBe(0);
+		expect(mutationRecords).toEqual([
+			{ phase: "start", outcome: undefined },
+			{ phase: "complete", outcome: "failed" },
+		]);
 	});
 
 	test("governs the fallback payload reload before mutating the page", async () => {

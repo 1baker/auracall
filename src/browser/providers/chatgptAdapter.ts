@@ -3001,11 +3001,20 @@ export async function readChatgptConversationPayloadWithClient(
 	const targetUrl = resolveChatgptConversationApiUrl(conversationId);
 	await client.Network.enable().catch(() => undefined);
 	await client.Page.enable().catch(() => undefined);
+	// Pacing is outside the response-acquisition window. Starting the fallback
+	// timer before the governor releases the physical reload can exhaust the
+	// entire body deadline without issuing the request, while the detached reload
+	// later outlives this read and its client.
+	await beforeChatgptBrowserInteraction(options, "page-refresh");
 
-	const bodyPromise = new Promise<{ body: string; base64Encoded: boolean } | null>((resolve) => {
+	type FallbackBody = { body: string; base64Encoded: boolean } | null;
+	let finishBody: (value: FallbackBody) => void = () => undefined;
+	const bodyPromise = new Promise<FallbackBody>((resolve) => {
 		let settled = false;
 		let exactRequestId: string | null = null;
 		let timer: NodeJS.Timeout | null = null;
+		let disposeResponseReceived: (() => void) | null = null;
+		let disposeLoadingFinished: (() => void) | null = null;
 		const finish = (value: { body: string; base64Encoded: boolean } | null) => {
 			if (settled) return;
 			settled = true;
@@ -3013,10 +3022,15 @@ export async function readChatgptConversationPayloadWithClient(
 				clearTimeout(timer);
 				timer = null;
 			}
+			disposeResponseReceived?.();
+			disposeLoadingFinished?.();
+			disposeResponseReceived = null;
+			disposeLoadingFinished = null;
 			resolve(value);
 		};
+		finishBody = finish;
 		timer = setTimeout(() => finish(null), CHATGPT_CONVERSATION_PAYLOAD_FALLBACK_TIMEOUT_MS);
-		client.Network.responseReceived((params) => {
+		const responseReceivedSubscription: unknown = client.Network.responseReceived((params) => {
 			if (settled) return;
 			const url = params.response?.url ?? "";
 			const status = params.response?.status ?? 0;
@@ -3024,7 +3038,10 @@ export async function readChatgptConversationPayloadWithClient(
 			if (!isExactConversationResponse || status < 200 || status >= 300) return;
 			exactRequestId = params.requestId;
 		});
-		client.Network.loadingFinished(async (params) => {
+		if (typeof responseReceivedSubscription === "function") {
+			disposeResponseReceived = () => responseReceivedSubscription();
+		}
+		const loadingFinishedSubscription: unknown = client.Network.loadingFinished(async (params) => {
 			if (settled || !exactRequestId || params.requestId !== exactRequestId) return;
 			const response = await withChatgptTimeout(
 				client.Network.getResponseBody({ requestId: params.requestId }),
@@ -3040,22 +3057,27 @@ export async function readChatgptConversationPayloadWithClient(
 				base64Encoded: response.base64Encoded ?? false,
 			});
 		});
+		if (typeof loadingFinishedSubscription === "function") {
+			disposeLoadingFinished = () => loadingFinishedSubscription();
+		}
 	});
-	void reloadAndSettle(client, {
+	// The exact Network response is the payload completion signal. CDP can leave
+	// Page.reload pending after responseReceived/loadingFinished have delivered
+	// a complete body, so its command acknowledgement must not gate this read.
+	await reloadAndSettle(client, {
 		ignoreCache: true,
 		waitForDocumentReady: false,
-		interactionGovernor: options?.interactionGovernor,
-		interactionClass: "page-refresh",
 		mutationAudit: resolveMutationAudit(client),
 		mutationSource: resolveMutationSource(
 			client,
 			"provider:chatgpt",
 			"fetch-conversation-api-payload-reload",
 		),
-	}).catch(() => undefined);
-	// The exact Network response is the payload completion signal. CDP can leave
-	// Page.reload pending after responseReceived/loadingFinished have delivered
-	// a complete body, so its command acknowledgement must not gate this read.
+		completionSignal: bodyPromise.then((response) => ({
+			ok: response !== null,
+			reason: response ? undefined : "Exact conversation payload response not observed.",
+		})),
+	}).catch(() => finishBody(null));
 	const response = await bodyPromise;
 	return parsePayloadBody(response?.body, response?.base64Encoded ?? false);
 }
@@ -12254,10 +12276,8 @@ export function createChatgptAdapter(): Pick<
 				options,
 				resolveChatgptConversationUrl(conversationId, normalizedProjectId),
 			);
-			const { client, targetId, host, port } = connection;
-			const unbindAbortCleanup = bindChatgptAbortCleanup(connection, options);
-			try {
-				options?.abortSignal?.throwIfAborted();
+			const { targetId, host, port } = connection;
+			return runWithChatgptAbortBoundConnection(connection, options, async (client) => {
 				await assertChatgptExpectedIdentity(client, options);
 				await dismissCreateProjectDialogIfOpen(client.Runtime, {
 					strict: true,
@@ -12271,11 +12291,7 @@ export function createChatgptAdapter(): Pick<
 					options,
 					{ host, port, targetId: targetId ?? null },
 				);
-			} finally {
-				const cleanupStarted = unbindAbortCleanup.cleanupStarted();
-				unbindAbortCleanup();
-				if (!cleanupStarted) await closeChatgptTabConnection(connection, options);
-			}
+			});
 		},
 		async readActiveConversationArtifacts(
 			conversationId: string,

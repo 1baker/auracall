@@ -16,6 +16,22 @@
 - Admission: Git clean/synced at `7e29a0a9`; API PID 27774 healthy with zero
   restarts; scheduler paused; default blocked/pass 9; active jobs and exact
   AuraCall-managed browser owners zero.
+- Red/green: the governed-delay fixture reproduced the exact early-null
+  failure before `Page.reload`; the sequential retained-client fixture found
+  both Network listeners still installed after settlement. Governance now
+  precedes the body window, both subscriptions are disposed, exact response
+  evidence settles the reusable reload audit, reload rejection closes failure
+  audit, and the public context path joins shared abort cleanup.
+- Verification: focused adapter/tab-lifecycle 167/167, integrated
+  account-mirror/materialization 210/210, final combined repair surface
+  238/238, typecheck, build, and isolated full suite 799/799 suites with
+  2770 passed, 65 pending, and zero failed tests. Exact managed browser
+  readback remained absent. No provider, browser, install, restart,
+  materialization, completion, scheduler, guard, or direct-runtime effect ran.
+- Closeout: Plan 0253 closes provider-free.
+  [Plan 0254](plans/0254-2026-08-10-wsl-chrome-3-governed-payload-one-canary-gate.md)
+  prepares one install/restart and one fresh `wsl-chrome-3` context canary,
+  but remains unapproved and unexecuted.
 
 ## 2026-08-10 | Plan 0252 Direct Default Context-Timeout Falsification
 

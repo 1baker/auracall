@@ -1,10 +1,10 @@
 # ChatGPT Governed Payload Reload Settlement Repair | 0253-2026-08-10
 
-State: OPEN
+State: CLOSED
 Lane: P01
-Plan version: 1
-Gate state: PROVIDER_FREE_REPAIR_AUTHORIZED
-Goal execution state: ACTIVE
+Plan version: 2
+Gate state: PROVIDER_FREE_REPAIR_ACCEPTED
+Goal execution state: PAUSED_AT_SEPARATE_ONE_CANARY_GATE
 
 ## Stable Goal Objective
 
@@ -108,15 +108,15 @@ materialization or provider/browser work in this plan.
 
 ## Acceptance Criteria
 
-- [ ] H1 is reproduced provider-free and the governed reload cannot lose its
+- [x] H1 is reproduced provider-free and the governed reload cannot lose its
   body-acquisition window before the physical reload begins.
-- [ ] Two sequential fallback reads do not retain first-read listeners or owned
+- [x] Two sequential fallback reads do not retain first-read listeners or owned
   reload work across the second read.
-- [ ] Public conversation-context abort waits for retained-session cleanup.
-- [ ] Existing exact-body-while-reload-pending behavior remains green.
-- [ ] Focused/integrated provider-free tests, typecheck, touched lint, build,
+- [x] Public conversation-context abort waits for retained-session cleanup.
+- [x] Existing exact-body-while-reload-pending behavior remains green.
+- [x] Focused/integrated provider-free tests, typecheck, touched lint, build,
   planning audit, and diff check pass.
-- [ ] Runtime effects remain zero and a separate one-canary gate is prepared.
+- [x] Runtime effects remain zero and a separate one-canary gate is prepared.
 
 ## Opening Checkpoint | Provider-Free Repair Authorized
 
@@ -142,3 +142,30 @@ The deterministic reproducer fails before the fix and passes after it, reload
 and cleanup ownership settle across sequential reads and abort, integrated
 provider-free validation is green, operational docs are current, and the next
 live action is a separate unexecuted one-canary gate.
+
+## Closing Checkpoint | Governed Reload Settlement Repaired Provider-Free
+
+- `checkpoint_id`: `P0253-C02`.
+- `state_transition`: P0253_ACTIVE_PROVIDER_FREE_REPAIR ->
+  P0253_CLOSED_PROVIDER_FREE_REPAIR_ACCEPTED.
+- `progress_classification`: blocker_removed_provider_free.
+- `causal_evidence`: the H1 fixture held the governor beyond the old ten-second
+  body window and reproduced an early `null` before `Page.reload`. The
+  sequential fixture then reproduced one retained response listener and one
+  retained loading listener after the first read.
+- `repair`: the page-refresh governor now releases before response acquisition;
+  both per-read Network subscriptions are disposed on every settlement;
+  browser-service `reloadAndSettle` accepts caller-owned exact-response
+  completion while preserving command-rejection failure; and the public context
+  path uses the shared abort-bound connection helper that joins cleanup.
+- `verification`: focused adapter/tab-lifecycle tests passed 167/167;
+  integrated account-mirror/materialization tests passed 210/210; the final
+  combined repair surface passed 238/238; typecheck and build passed; and the
+  isolated full suite passed 799/799 suites with 2770 passed, 65 pending, and
+  zero failed tests. The corrected exact-browser process bracket was absent.
+- `effect_accounting`: provider calls 0, browser launches/attaches 0,
+  installs/restarts 0, materialization starts 0, completion controls 0,
+  scheduler controls 0, guard/config changes 0, and direct runtime edits 0.
+- `next_action_or_stop_reason`: Plan 0254 is prepared and awaits explicit
+  approval for one install/restart and one fresh `wsl-chrome-3` context canary.
+  Scheduler, materialization, completion, and wider execution remain stopped.

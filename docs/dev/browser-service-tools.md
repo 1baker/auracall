@@ -185,6 +185,13 @@ Current active extraction plan:
   - Provider callers may pass the existing `interactionGovernor` and an
     `interactionClass`; browser-service invokes it immediately before the
     physical reload and again before a fallback reload.
+  - A caller that owns stronger response evidence may pass `completionSignal`.
+    The helper still issues the governed `Page.reload(...)`, but the external
+    signal can close the mutation audit and return without waiting for a CDP
+    reload acknowledgement that remains pending. A rejected reload command
+    still fails the operation. Arm the response listener and its disposer
+    before calling the helper, and do not start a response deadline until any
+    caller-owned interaction governor has released the physical reload.
   - Prefer this over provider-local `Page.reload(...)` calls when a browser
     recovery path intentionally refreshes the active page.
 

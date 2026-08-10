@@ -578,6 +578,12 @@ export type ReloadAndSettleOptions = WaitForPredicateOptions & {
   mutationSource?: string;
   interactionGovernor?: BrowserInteractionGovernor;
   interactionClass?: BrowserInteractionClass;
+  /**
+   * Settles the governed reload audit from caller-owned response evidence when
+   * the CDP Page.reload acknowledgement may remain pending. A rejected reload
+   * command still fails the operation.
+   */
+  completionSignal?: Promise<{ ok: boolean; reason?: string }>;
 };
 
 export type ReloadAndSettleResult = {
@@ -1305,7 +1311,27 @@ export async function reloadAndSettle(
   try {
     try {
       await options.interactionGovernor?.beforeInteraction(options.interactionClass ?? 'page-refresh');
-      await client.Page.reload({ ignoreCache: options.ignoreCache });
+      const reloadCommand = client.Page.reload({ ignoreCache: options.ignoreCache });
+      if (options.completionSignal) {
+        const commandFailure = new Promise<never>((_resolve, reject) => {
+          void reloadCommand.catch(reject);
+        });
+        const completion = await Promise.race([options.completionSignal, commandFailure]);
+        const externallySettled: ReloadAndSettleResult = {
+          ok: completion.ok,
+          fallbackUsed: false,
+          reason: completion.reason,
+        };
+        await audit.complete({
+          outcome: externallySettled.ok ? 'succeeded' : 'failed',
+          toUrl: mutationAudit ? await readLocationHrefForAudit(client.Runtime) : fromUrl,
+          fallbackUsed: false,
+          reason: 'external-completion-signal',
+          error: externallySettled.ok ? null : externallySettled.reason ?? null,
+        });
+        return externallySettled;
+      }
+      await reloadCommand;
     } catch (error) {
       if (!options.fallbackToLocationReload) {
         throw error;

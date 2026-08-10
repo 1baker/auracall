@@ -7,13 +7,19 @@
 Status: active
 Lane: P01
 
-- Active provider-free repair of governed ChatGPT payload reload settlement:
+- Prepared `wsl-chrome-3` installed one-canary gate; awaiting explicit approval:
+  [docs/dev/plans/0254-2026-08-10-wsl-chrome-3-governed-payload-one-canary-gate.md](docs/dev/plans/0254-2026-08-10-wsl-chrome-3-governed-payload-one-canary-gate.md)
+  The gate permits one install/restart, exact source/installed parity, and one
+  fresh context read for one previously failing route. It permits no retry,
+  materialization, completion control, scheduler control, or wider profile.
+
+- Closed provider-free repair of governed ChatGPT payload reload settlement:
   [docs/dev/plans/0253-2026-08-10-chatgpt-governed-payload-reload-settlement-repair.md](docs/dev/plans/0253-2026-08-10-chatgpt-governed-payload-reload-settlement-repair.md)
-  Plan 0252 proved the routes and payloads healthy. Plan 0253 now tests the
-  exact ordering defect: the fallback body window begins before the governor
-  releases the reload, listeners/reload work can outlive the read, and public
-  abort cleanup may not be joined. The slice is provider-free; scheduler,
-  materialization, install, restart, and canary effects remain stopped.
+  Deterministic reds proved the fallback body window began before the governor
+  released the reload and per-read Network subscriptions survived settlement.
+  The repair governs first, disposes both subscriptions, closes reload audit
+  from exact response evidence, and joins abort cleanup. Provider-free focused
+  and integrated validation is green; live/runtime effects remained zero.
 
 - Closed direct agent-browser falsification of default pass-9 context stalls:
   [docs/dev/plans/0252-2026-08-10-default-context-timeout-agent-browser-falsification.md](docs/dev/plans/0252-2026-08-10-default-context-timeout-agent-browser-falsification.md)

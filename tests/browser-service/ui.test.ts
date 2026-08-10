@@ -1437,6 +1437,71 @@ describe('browser-service ui wait helpers', () => {
     ]);
   });
 
+  test('reloadAndSettle can settle from an external response while the command remains pending', async () => {
+    const mutationLog = createInMemoryBrowserMutationLog();
+    let releaseReload: (() => void) | undefined;
+    const PAGE = {
+      reload: vi.fn(
+        () =>
+          new Promise<void>((resolve) => {
+            releaseReload = resolve;
+          }),
+      ),
+    };
+    const runtime = {
+      evaluate: vi.fn(async () => ({ result: { value: 'https://chatgpt.com/c/123' } })),
+    };
+    const client = {
+      // biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names.
+      Page: PAGE as never,
+      // biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names.
+      Runtime: runtime as never,
+    };
+    let outcome:
+      | { kind: 'pending' }
+      | { kind: 'resolved'; value: unknown }
+      | { kind: 'rejected'; error: unknown } = { kind: 'pending' };
+
+    try {
+      void reloadAndSettle(client, {
+        waitForDocumentReady: false,
+        mutationAudit: mutationLog.record,
+        mutationSource: 'test:external-reload-completion',
+        completionSignal: Promise.resolve({ ok: true }),
+      }).then(
+        (value) => {
+          outcome = { kind: 'resolved', value };
+        },
+        (error: unknown) => {
+          outcome = { kind: 'rejected', error };
+        },
+      );
+      for (let index = 0; index < 20 && outcome.kind === 'pending'; index += 1) {
+        await Promise.resolve();
+      }
+
+      expect(outcome).toEqual({
+        kind: 'resolved',
+        value: { ok: true, fallbackUsed: false },
+      });
+      expect(mutationLog.list()).toEqual([
+        expect.objectContaining({
+          phase: 'start',
+          kind: 'reload',
+          source: 'test:external-reload-completion',
+        }),
+        expect.objectContaining({
+          phase: 'complete',
+          kind: 'reload',
+          source: 'test:external-reload-completion',
+          outcome: 'succeeded',
+        }),
+      ]);
+    } finally {
+      releaseReload?.();
+    }
+  });
+
   test('pressButton waits for a visible selector before clicking', async () => {
     const runtime = createRuntime([
       {

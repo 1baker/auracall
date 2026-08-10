@@ -17,6 +17,31 @@
 - Admission is clean/synced `7e29a0a9`; API PID 27774 is healthy with zero
   restarts, scheduler is paused, default remains blocked/pass 9, active jobs
   and exact AuraCall-managed browser owners are zero.
+- The first H1 test failed exactly as predicted: with the page-refresh governor
+  held beyond 10 seconds, the old implementation resolved `null` before
+  `Page.reload` began. Governance now completes before response acquisition and
+  the same test returns the exact payload after release.
+- A sequential retained-client test also failed with one response and one
+  loading listener still installed after the first read. The repaired reader
+  captures and invokes both subscription disposers, and a rejected reload now
+  closes its mutation audit and the payload read instead of surviving owner
+  cleanup.
+- Browser-service `reloadAndSettle` now accepts caller-owned external response
+  completion. It still issues the governed reload and treats command rejection
+  as failure, but a complete exact response can close the mutation audit
+  without waiting for a stuck CDP command acknowledgement. The public context
+  method now uses the shared abort-bound connection helper and waits for
+  retained-session cleanup.
+- Focused adapter/tab-lifecycle validation passed 167/167, integrated
+  account-mirror/materialization validation passed 210/210, the final combined
+  repair surface passed 238/238, and typecheck/build passed. Agent-browser
+  no-launch status showed no active browser/session/profile, and corrected
+  process readback found no exact managed browser. All live/runtime effects
+  remained zero.
+- [Plan 0254](docs/dev/plans/0254-2026-08-10-wsl-chrome-3-governed-payload-one-canary-gate.md)
+  is prepared but not authorized: one install/restart, parity check, and one
+  fresh `wsl-chrome-3` context read. Scheduler, materialization, completion,
+  and wider execution stay stopped.
 
 ## Turn 433 | 2026-08-10
 
