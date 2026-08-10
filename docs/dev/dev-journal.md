@@ -12,6 +12,10 @@
   control, at most one child/attempt and six materialized items, then one
   scheduler resume only on accepted settlement. No exact-DOCX retry, other
   completion/provider action, install/restart, or separate materialization.
+- Provider-free selection: 40 discovered, 30 no-asset exclusions, 10 eligible,
+  and six selected at the frozen cap. Neither Plan 0250 row returned; both
+  earlier DOCX conversations are in the cone. Provider callbacks and durable
+  runtime writes stayed zero, and the historical job hash is unchanged.
 
 ## 2026-08-10 | Plan 0250 Provider-Free Zero-Asset Evidence Reconciliation
 

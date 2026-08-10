@@ -22,6 +22,12 @@
   resume, plus one emergency pause after resume. It does not retry Plan 0249's
   exact DOCX command, control another completion/provider, install/restart, or
   run a separate materialization job.
+- Provider-free full-current selection discovered 40 conversations, excluded
+  30 as `noSelectedAssetEvidence`, admitted 10, and selected exactly six at the
+  frozen cap. Neither Plan 0250 row was selected. The cone includes both prior
+  DOCX conversations, so pass 9 is a real regression canary. Actual provider
+  callbacks and runtime writes were zero; the retained job index hash remains
+  `f15c7b36...aaac`.
 
 ## Turn 431 | 2026-08-10
 

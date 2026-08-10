@@ -170,3 +170,38 @@ boundary.
 Either the sole default canary succeeds and the scheduler is durably resumed,
 or the first hard stop closes the plan with the scheduler still paused. No
 second canary or repair is inferred.
+
+## Provider-Free Selection Checkpoint | Exact Six-Candidate Canary Cone
+
+- `checkpoint_id`: `P0251-C02`.
+- `state_transition`: P0251_ACTIVE_AUTHORIZED_PRE_CANARY ->
+  P0251_ACTIVE_PROVIDER_FREE_CONE_ACCEPTED.
+- `progress_classification`: blocker_reduction.
+- `evidence`: the current-catalog, retained-history, in-memory simulation used
+  `maxItems=6`, `refreshSnapshot=true`, all asset kinds, and `force=false` with
+  every provider implementation replaced by local deterministic stubs. It
+  discovered 40 conversations, excluded 30 as `noSelectedAssetEvidence`,
+  classified 10 eligible, and selected exactly six after three duplicate-family
+  and one target-budget exclusions.
+- `selected_conversations`: `6a720f4a-49d8-83ea-9211-b99ee9ceefa1`,
+  `6a711231-211c-83ea-869c-2eb6dcd9bf50`,
+  `6a70a15a-b390-83ea-912b-bf1af667e1d3`,
+  `6a6ffa3e-37f8-83ea-9a0f-833adb3b78c9`,
+  `6a6fb365-db60-83ea-803e-42007bbc1c61`, and
+  `6a6fa606-9870-83ea-9bdd-090d134ec58f`.
+- `exclusion_receipt`: neither Plan 0250 zero-asset conversation was selected.
+  Actual provider callbacks, browser effects, runtime evidence writes, and
+  durable materialization jobs remained zero; the historical job index stayed
+  at SHA-256
+  `f15c7b36de9bd574e237f910a2b0b98780349843510b35ebdc5a38eef574aaac`.
+- `subagent_status`: not_spawned.
+- `effect_accounting`: provider-free simulations `1/1`; every live Plan 0251
+  counter remains zero.
+- `next_action_or_stop_reason`: publish this exact cone, freshly re-read
+  admission, then issue only the authorized default `run-one-pass` control.
+- `authority_classification`: the six-candidate cone fits the frozen cap and
+  includes both earlier DOCX conversations, so the canary is meaningful; no
+  scheduler action is admitted before live acceptance.
+- `review_disposition_summary`: accepted full-current selection and rejected an
+  empty-success interpretation. The local stubs exercised selection only and
+  supplied no provider or retrievability result.
