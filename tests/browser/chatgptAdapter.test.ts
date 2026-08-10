@@ -514,6 +514,95 @@ describe("fetchChatgptBinaryWithClient", () => {
 			failed: 0,
 		});
 	});
+
+	test("falls back to loaded resource content when an external DOM image is blocked by page fetch", async () => {
+		const scrapeTelemetry = createBrowserScrapeTelemetryRecorder();
+		const imageBytes = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46]);
+		const evaluate = vi.fn(async () => ({
+			result: { type: "object", subtype: "error" },
+			exceptionDetails: { text: "Uncaught (in promise) TypeError: Failed to fetch" },
+		}));
+		const getResourceTree = vi.fn(async () => ({
+			frameTree: {
+				frame: { id: "frame-main" },
+				resources: [
+					{
+						url: "https://themadpickler.com/cdn/shop/files/Honolulu_J2CR_Blue.jpg?v=1782685624",
+						mimeType: "image/jpeg",
+					},
+				],
+			},
+		}));
+		const getResourceContent = vi.fn(async () => ({
+			content: imageBytes.toString("base64"),
+			base64Encoded: true,
+		}));
+		const client = {
+			// biome-ignore lint/style/useNamingConvention: CDP client shape uses Runtime.
+			Runtime: { evaluate },
+			// biome-ignore lint/style/useNamingConvention: CDP client shape uses Page.
+			Page: { getResourceTree, getResourceContent },
+		};
+
+		const result = await fetchChatgptBinaryWithClientForTest(
+			client as never,
+			"https://themadpickler.com/cdn/shop/files/Honolulu_J2CR_Blue.jpg?v=1782685624",
+			{ scrapeTelemetry },
+			100,
+		);
+
+		expect(result.buffer).toEqual(imageBytes);
+		expect(result.contentType).toBe("image/jpeg");
+		expect(evaluate).toHaveBeenCalledTimes(1);
+		expect(getResourceTree).toHaveBeenCalledTimes(1);
+		expect(getResourceContent).toHaveBeenCalledWith({
+			frameId: "frame-main",
+			url: "https://themadpickler.com/cdn/shop/files/Honolulu_J2CR_Blue.jpg?v=1782685624",
+		});
+		expect(scrapeTelemetry.providerActions).toMatchObject({
+			"chatgpt.fetchBinary": 1,
+			"chatgpt.fetchBinaryResourceContent": 1,
+		});
+		expect(scrapeTelemetry.cdpCalls).toMatchObject({
+			"Runtime.evaluate": 1,
+			"Page.getResourceTree": 1,
+			"Page.getResourceContent": 1,
+		});
+		expect(scrapeTelemetry.downloads).toEqual({
+			attempted: 1,
+			succeeded: 1,
+			failed: 0,
+		});
+	});
+
+	test("preserves an explicit non-success response without consulting loaded resources", async () => {
+		const scrapeTelemetry = createBrowserScrapeTelemetryRecorder();
+		const getResourceTree = vi.fn();
+		const client = {
+			// biome-ignore lint/style/useNamingConvention: CDP client shape uses Runtime.
+			Runtime: {
+				evaluate: vi.fn(async () => ({ result: { value: { ok: false, status: 404 } } })),
+			},
+			// biome-ignore lint/style/useNamingConvention: CDP client shape uses Page.
+			Page: { getResourceTree },
+		};
+
+		await expect(
+			fetchChatgptBinaryWithClientForTest(
+				client as never,
+				"https://example.test/missing.jpg",
+				{ scrapeTelemetry },
+				100,
+			),
+		).rejects.toThrow("ChatGPT artifact binary fetch failed (status 404)");
+
+		expect(getResourceTree).not.toHaveBeenCalled();
+		expect(scrapeTelemetry.downloads).toEqual({
+			attempted: 1,
+			succeeded: 0,
+			failed: 1,
+		});
+	});
 });
 
 async function runNativeConversationDownloadIdentityScenario(

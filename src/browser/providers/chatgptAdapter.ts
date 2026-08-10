@@ -2447,6 +2447,42 @@ function contentTypeToExtension(contentType: string | null | undefined): string 
 	return ".bin";
 }
 
+function inferChatgptBinaryContentType(buffer: Buffer, url: string): string | null {
+	if (buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) {
+		return "image/jpeg";
+	}
+	if (
+		buffer.length >= 8 &&
+		buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))
+	) {
+		return "image/png";
+	}
+	if (buffer.length >= 6) {
+		const signature = buffer.subarray(0, 6).toString("ascii");
+		if (signature === "GIF87a" || signature === "GIF89a") {
+			return "image/gif";
+		}
+	}
+	if (
+		buffer.length >= 12 &&
+		buffer.subarray(0, 4).toString("ascii") === "RIFF" &&
+		buffer.subarray(8, 12).toString("ascii") === "WEBP"
+	) {
+		return "image/webp";
+	}
+	let pathname = "";
+	try {
+		pathname = new URL(url).pathname.toLowerCase();
+	} catch {
+		pathname = url.toLowerCase().split("?", 1)[0] ?? "";
+	}
+	if (/\.jpe?g$/.test(pathname)) return "image/jpeg";
+	if (/\.png$/.test(pathname)) return "image/png";
+	if (/\.gif$/.test(pathname)) return "image/gif";
+	if (/\.webp$/.test(pathname)) return "image/webp";
+	return null;
+}
+
 function extractFilenameFromContentDisposition(value: string | null | undefined): string | null {
 	const text = String(value ?? "").trim();
 	if (!text) return null;
@@ -9714,6 +9750,18 @@ async function fetchChatgptBinaryWithClient(
 		);
 		const value = isRecord(result.result?.value) ? result.result.value : null;
 		if (!value || value.ok !== true || typeof value.base64 !== "string") {
+			if (!value) {
+				const loadedResource = await readLoadedChatgptResourceWithClient(
+					client,
+					url,
+					options,
+					timeoutMs,
+				).catch(() => null);
+				if (loadedResource) {
+					recordBrowserScrapeDownloadSuccess(options);
+					return loadedResource;
+				}
+			}
 			const status = typeof value?.status === "number" ? ` (status ${value.status})` : "";
 			throw new Error(`ChatGPT artifact binary fetch failed${status}`);
 		}
@@ -9728,6 +9776,63 @@ async function fetchChatgptBinaryWithClient(
 		recordBrowserScrapeDownloadFailure(options);
 		throw error;
 	}
+}
+
+async function readLoadedChatgptResourceWithClient(
+	client: ChromeClient,
+	url: string,
+	options: BrowserProviderListOptions | undefined,
+	timeoutMs: number,
+): Promise<{ buffer: Buffer; contentType: string | null; contentDisposition: null } | null> {
+	const page = client.Page as
+		| {
+				getResourceTree?: () => Promise<{
+					frameTree?: {
+						frame?: { id?: string };
+						resources?: Array<{ url?: string; mimeType?: string }>;
+					};
+				}>;
+				getResourceContent?: (input: {
+					frameId: string;
+					url: string;
+				}) => Promise<{ content?: string; base64Encoded?: boolean }>;
+		  }
+		| undefined;
+	if (!page?.getResourceTree || !page.getResourceContent) {
+		return null;
+	}
+	recordBrowserScrapeProviderAction(options, "chatgpt.fetchBinaryResourceContent");
+	recordBrowserScrapeCdpCall(options, "Page.getResourceTree");
+	const tree = await withChatgptTimeout(
+		page.getResourceTree(),
+		timeoutMs,
+		`Timed out reading ChatGPT artifact resource tree after ${timeoutMs}ms.`,
+	);
+	const frameId = normalizeUiText(tree.frameTree?.frame?.id);
+	if (!frameId) {
+		return null;
+	}
+	recordBrowserScrapeCdpCall(options, "Page.getResourceContent");
+	const response = await withChatgptTimeout(
+		page.getResourceContent({ frameId, url }),
+		timeoutMs,
+		`Timed out reading ChatGPT artifact resource content after ${timeoutMs}ms.`,
+	);
+	if (typeof response.content !== "string" || response.content.length === 0) {
+		return null;
+	}
+	const buffer = Buffer.from(response.content, response.base64Encoded ? "base64" : "utf8");
+	if (buffer.length === 0) {
+		return null;
+	}
+	const resource = tree.frameTree?.resources?.find((candidate) => candidate.url === url);
+	const contentType =
+		normalizeUiText(resource?.mimeType) || inferChatgptBinaryContentType(buffer, url);
+	return {
+		buffer,
+		contentType: contentType || null,
+		contentDisposition: null,
+	};
 }
 
 export const fetchChatgptBinaryWithClientForTest = fetchChatgptBinaryWithClient;

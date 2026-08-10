@@ -21147,3 +21147,18 @@ browser-stage lifecycle observability, not transcript truncation.
   says assets were materialized. Treat the structured status/code as
   authoritative and diagnose the exact failed asset provider-free before any
   live retry.
+
+## 2026-08-09 | Reuse loaded DOM-image bytes when page fetch is cross-origin blocked
+
+- A cross-origin `<img>` can render successfully while a credentialed
+  page-context `fetch()` rejects under browser CORS rules. A missing
+  `Runtime.evaluate` value in this situation is not evidence that the image
+  bytes are unavailable.
+- For an already-discovered DOM image, consult the inspected page's resource
+  tree/content only after the page fetch produces no structured result. Keep
+  explicit HTTP statuses terminal, bound both CDP reads, and count the fallback
+  within the original single transfer attempt.
+- Reproduce the seam with a provider-free rejected-promise evaluation plus
+  loaded-resource bytes, and separately prove that a 404 never enters the
+  fallback. A live external diagnostic must still confirm that the exact CDN
+  image is loaded before a canary.

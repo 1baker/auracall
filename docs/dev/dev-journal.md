@@ -45500,3 +45500,17 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   restart, browser launch, provider callback, materialization, or completion
   control is permitted until the regression turns green and adjacent validation
   passes.
+
+## 2026-08-09 | Plan 0244 repairs rejected external-image page fetches provider-free
+
+- The exact red modeled a page-context `fetch()` rejected before producing a
+  by-value result while Chrome retained the already-loaded JPEG resource. It
+  failed with the same pass-54 generic error before source changes.
+- The adapter now consults `Page.getResourceTree` and
+  `Page.getResourceContent` only for that missing-result branch. Explicit HTTP
+  failures such as 404 do not enter the fallback, so provider terminal
+  semantics remain unchanged. Both CDP calls carry bounded waits and share one
+  attempted/succeeded/failed transfer receipt.
+- Adapter tests pass `155/155`; the integrated adapter/history/MCP gate passes
+  `236/236`; typecheck, scoped Biome, full build, and diff check pass. Built
+  adapter SHA-256 is `4b2dca82...c4725`. No runtime/provider effect has run.

@@ -12,6 +12,10 @@
   will not be persisted in diagnostic output.
 - Scheduler and wider completions remain paused; install/restart, browser, and
   canary effects remain behind their explicit sequential gates.
+- The provider-free external-image fixture reproduced the exact generic error
+  red, then turned green with a loaded-resource-content fallback. Explicit 404
+  behavior stays terminal. Adapter `155/155`, integrated history/MCP `236/236`,
+  typecheck, scoped lint, and full build pass; no runtime effect has run yet.
 
 ## Turn 426 | 2026-08-09
 

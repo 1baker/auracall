@@ -4,7 +4,7 @@ State: OPEN
 Lane: LIVE_FOLLOW_RECOVERY
 Plan version: 1
 Goal execution state: ACTIVE
-Gate state: PROVIDER_FREE_RED_REQUIRED
+Gate state: PROVIDER_FREE_GREEN_INSTALL_READY
 
 ## Stable Objective
 
@@ -134,4 +134,32 @@ global scheduler and every wider completion paused throughout.
 - `authority_classification`: explicit operator direction to repair with
   provider-free evidence, external agent-browser diagnosis, and one canary;
   scheduler and wider completion authority remain zero.
+
+## Provider-Free Checkpoint | Loaded-Resource Fallback Green
+
+- `checkpoint_id`: `P0244-C02`.
+- `state_transition`: P0244_ACTIVE_PROVIDER_FREE_RED ->
+  P0244_PROVIDER_FREE_GREEN_INSTALL_READY.
+- `progress_classification`: blocker_reduction.
+- `red_evidence`: the exact external-image fixture returned a rejected-promise
+  `Runtime.evaluate` result while exposing the same image through
+  `Page.getResourceContent`; current source failed at line 9718 with `ChatGPT
+  artifact binary fetch failed`. One test failed and 153 were skipped.
+- `hypothesis_disposition`: H1 cross-origin page-fetch rejection remains the
+  leading live hypothesis and is repaired provider-free; H2 explicit non-2xx
+  stays terminal and does not enter fallback; H3 resource-not-loaded and H4
+  unrelated page exception remain live-diagnostic alternatives.
+- `implementation`: when and only when page fetch has no structured value, the
+  adapter reads the already-loaded resource through `Page.getResourceTree` and
+  `Page.getResourceContent`, with bounded waits, one transfer receipt, and
+  MIME inference. Explicit status responses retain existing failure semantics.
+- `verification`: adapter `155/155`; integrated adapter/history/MCP gate
+  `236/236`; typecheck; scoped Biome zero-warning; full build; diff check.
+  Built adapter SHA-256 is `4b2dca82be9c5a6325b1a2749cdcb3218d1211e5f0a232bbfe20cb00d39c4725`.
+- `effect_accounting`: provider-free reds 1/1; implementation slices 1/1;
+  installs/restarts/browser launches/attaches/diagnostics/completion controls
+  all 0; excluded effects zero.
+- `next_action_or_stop_reason`: audit, commit, and push the provider-free
+  repair; then freshly verify stopped runtime, install/restart once, and prove
+  built/installed adapter parity before any browser launch.
 
