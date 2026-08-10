@@ -1,10 +1,11 @@
 # Default Context-Timeout Agent-Browser Falsification | 0252-2026-08-10
 
-State: OPEN
+State: CLOSED
 Lane: P01
-Plan version: 2
-Gate state: AUTHORIZED_EXACT_FALLBACK_EMULATION
-Goal execution state: ACTIVE
+Plan version: 3
+Gate state: CLOSED_DIRECT_BROWSER_HEALTHY
+Goal execution state: COMPLETE_DIAGNOSIS
+Outcome: ENCLOSING_RETAINED_CLIENT_SETTLEMENT_DEFECT
 
 ## Stable Goal Objective
 
@@ -113,8 +114,8 @@ scheduler stopped.
   `max_conversation_navigations: 5`; `max_same_route_checks: 5`;
   `max_payload_probes: 5`; `max_message_page_probes_per_route: 256`;
   `max_dom_snapshots: 1`; `max_browser_closes: 1`;
-  `max_network_log_clears: 5`; `max_page_reloads: 5`;
-  `max_exact_response_details: 5`; `max_browser_clicks: 0`;
+  `max_network_log_clears: 10`; `max_page_reloads: 5`;
+  `max_exact_response_details: 6`; `max_browser_clicks: 0`;
   `max_downloads: 0`;
   `max_prompt_submissions: 0`; `max_answer_now_actions: 0`;
   `max_materialization_starts: 0`; `max_completion_controls: 0`;
@@ -144,13 +145,13 @@ scheduler stopped.
 
 - [x] Exact routes, control, effect bounds, and falsifiable hypotheses are
   recorded before browser work.
-- [ ] One exact-profile browser and one agent-browser attachment are used.
-- [ ] All five routes receive metadata-only terminal classifications or the
+- [x] One exact-profile browser and one agent-browser attachment are used.
+- [x] All five routes receive metadata-only terminal classifications or the
   first safety hard stop is recorded.
-- [ ] The first non-settling production-equivalent operation is identified, or
+- [x] The first non-settling production-equivalent operation is identified, or
   H5 is accepted with the page-operation diagnosis rejected.
-- [ ] The exact browser closes and scheduler/completion/jobs remain stopped.
-- [ ] Final documentation, audit, Git cleanliness, commit, and push agree.
+- [x] The exact browser closes and scheduler/completion/jobs remain stopped.
+- [x] Final documentation, audit, Git cleanliness, commit, and push agree.
 
 ## Opening Checkpoint | Direct Falsification Authorized
 
@@ -188,7 +189,7 @@ scheduler stopped.
   the exact 200 route-load response body was independently reduced in 451 ms
   with one candidate and a valid JSON mapping.
 - `effect_accounting`: launches 1/1, attaches 1/1, route navigations 1/5,
-  payload probes 1/5, response details 1/5, reloads 0/5, closes 0/1; all
+  payload probes 1/5, response details 1/6, reloads 0/5, closes 0/1; all
   excluded effects zero.
 - `next_action_or_stop_reason`: because the production reader necessarily
   enters reload fallback after the direct 404, permit exactly one request-log
@@ -200,6 +201,58 @@ scheduler stopped.
 - `review_disposition_summary`: direct fetch/header/body stall is rejected for
   the control. Reload response discovery/body settlement and enclosing callback
   ordering remain `needs_evidence`.
+
+## Closing Checkpoint | Browser Operations Healthy; Enclosing Settlement Defect
+
+- `checkpoint_id`: `P0252-C03`.
+- `state_transition`: P0252_ACTIVE_EXACT_FALLBACK_EMULATION ->
+  P0252_CLOSED_ENCLOSING_RETAINED_CLIENT_SETTLEMENT_DEFECT.
+- `progress_classification`: blocker_reduction.
+- `route_evidence`: the known-good control and all four pass-9 failures loaded
+  their exact routes, retained ordinary authenticated ChatGPT state, and
+  exposed readable message DOM. Direct authenticated conversation GETs all
+  returned the same small parseable 404 in 181-366 ms. Each exact fallback
+  reload emitted exactly one 200 response; the metadata-only reducer retrieved
+  and parsed bodies in 329-3798 ms with mapping counts 6, 32, 50, 14, and 10.
+  Message pages were readable for every route, including the largest observed
+  44-node/six-page route and the 34043-character two-node route. CAPTCHA,
+  challenge, login, `Answer now`, response ambiguity, parse failure, and
+  transport timeout counts were zero.
+- `hypothesis_disposition`: H1, H2, H3, and H4 are rejected as current
+  standalone browser/page-operation causes. H5 is accepted: the four provider
+  conversations and their payloads are currently retrievable, while pass 9's
+  AuraCall receipts still prove the enclosing context read timed out with
+  `pendingOperation=provider:chatgpt.readConversationPayload`.
+- `code_boundary`: production registers per-read Network callbacks, starts
+  `reloadAndSettle` without joining it, returns when the exact body promise
+  settles, and reuses a retained client for the next conversation. The direct
+  agent-browser sequence serialized and settled the same operations. Therefore
+  retained-client reuse, callback lifetime/target ownership, or reload cleanup
+  ordering is the remaining causal boundary. Which of those three is exact
+  remains provider-free `needs_evidence`; no source repair is admitted here.
+- `effect_accounting`: one exact browser launch, one agent-browser attachment,
+  five route navigations, five direct payload probes, five exact reloads, ten
+  local request-log clears, six safe response details (one initial control
+  route-load diagnostic plus five exact fallback reads), and one exact browser
+  process-group close. Clicks, downloads, prompts, materialization,
+  completion/scheduler controls, installs, restarts, source changes, guard
+  actions, and runtime edits remained zero.
+- `cleanup`: agent-browser detached; AuraCall `browser-tools kill --ports
+  45065 --force` closed only the exact PID 4232 process group. Port 45065 and
+  the exact AuraCall-managed browser owner are absent. Unrelated pre-existing
+  agent-browser sessions were not mutated. API PID 27774 remains active/running
+  with zero restarts; scheduler state remains paused; default remains
+  blocked/pass 9 with force/next null; active history jobs are zero.
+- `subagent_status`: not_spawned.
+- `next_action_or_stop_reason`: close this diagnostic. A provider-free
+  successor should reproduce two sequential fallback payload reads on one
+  retained client, assert callback/listener and reload-task cleanup before the
+  second read, then repair only the proven seam before any new canary.
+- `authority_classification`: direct inspection complete; no repair, canary,
+  materialization, or scheduler authority inferred.
+- `review_disposition_summary`: browser/provider unavailability and route-size
+  theories are rejected. Retained-client fallback settlement is blocking;
+  its exact submechanism remains `needs_evidence` for a deterministic red.
 
 ## Definition Of Done
 

@@ -1,3 +1,15 @@
+- 2026-08-10: A context receipt whose last completed stage is
+  `provider:chatgpt.skipSameRouteNavigation` and pending operation is
+  `provider:chatgpt.readConversationPayload` does not prove the provider or
+  conversation payload is unavailable. Direct agent-browser inspection of the
+  control plus all four failed routes found authenticated, challenge-free
+  pages; direct GETs returned the same small 404 in under 0.4 seconds; one
+  exact fallback 200 response per route was retrievable and parseable in under
+  3.8 seconds; and all message pages were readable. Move diagnosis to the
+  enclosing retained-client callback/target/reload-settlement sequence. Before
+  source repair, reproduce two sequential fallback reads on one fake retained
+  client and require listener plus reload-task cleanup before the second read.
+
 - 2026-08-10: Correcting stale zero-asset evidence does not guarantee the next
   broad completion pass will be healthy. Plan 0251's provider-free cone was
   accurate and identity matched live, yet four newly selected conversations

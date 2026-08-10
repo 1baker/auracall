@@ -18,6 +18,23 @@
   ms, while the exact 200 navigation response detail is retrievable and parses
   in 451 ms. Version 2 admits one exact fallback reload and safe metadata-only
   detail reduction per route because that is the production branch after 404.
+- Direct result: all four failed routes match the control's healthy behavior.
+  Their direct GETs settle in 181-366 ms as parseable 404s; exact reload
+  response bodies settle and parse in 329-3306 ms with one candidate each.
+  All message pages and later DOM counts return, including the 44-message and
+  34043-character cases. There is no auth, challenge, response ambiguity,
+  parse, body-transfer, or route-size failure.
+- Corrected diagnosis: the browser/provider operations are healthy. The live
+  failure exists in AuraCall's enclosing retained-client payload fallback
+  settlement between sequential reads. Current source leaves per-read Network
+  callbacks installed and starts reload settlement without joining it before
+  later retained-client reuse; callback lifetime, target ownership, and reload
+  cleanup ordering need one provider-free sequential red before choosing a
+  repair.
+- Closeout: agent-browser detached and the exact port-45065 process group was
+  closed. API PID 27774 remains healthy, scheduler remains paused, default is
+  blocked/pass 9, active jobs/browser owners are zero, and every excluded
+  runtime/control effect stayed zero. Plan 0252 closes diagnostic-only.
 
 ## 2026-08-10 | Plan 0251 Default Pass-9 Canary And Scheduler Resume
 

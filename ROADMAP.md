@@ -7,13 +7,15 @@
 Status: active
 Lane: P01
 
-- Active direct agent-browser falsification of default pass-9 context stalls:
+- Closed direct agent-browser falsification of default pass-9 context stalls:
   [docs/dev/plans/0252-2026-08-10-default-context-timeout-agent-browser-falsification.md](docs/dev/plans/0252-2026-08-10-default-context-timeout-agent-browser-falsification.md)
-  One exact default/chatgpt browser will compare the four failed routes with
-  the known-good neighbor using metadata-only payload, readiness, message-page,
-  and later-probe milestones. Materialization, completion controls, scheduler
-  controls, source repair, install/restart, clicks, downloads, and prompts stay
-  excluded.
+  The control and all four failed routes are currently healthy in direct
+  agent-browser inspection: direct 404s settle in under 0.4 seconds, exact
+  fallback 200 bodies parse in 0.33-3.80 seconds, and all message pages are
+  readable. Pass 9's pending payload receipt is therefore an AuraCall
+  retained-client/callback/reload-settlement defect, not conversation or auth
+  unavailability. The exact submechanism now needs a two-sequential-read
+  provider-free red before source repair or another canary.
 
 - Stopped default pass-9 canary; scheduler remains paused:
   [docs/dev/plans/0251-2026-08-10-default-pass9-canary-and-scheduler-resume.md](docs/dev/plans/0251-2026-08-10-default-pass9-canary-and-scheduler-resume.md)

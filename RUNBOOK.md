@@ -3,8 +3,9 @@
 ## Turn 433 | 2026-08-10
 
 - The operator rejected an inference-only diagnosis and explicitly required
-  direct agent-browser inspection first. Plan 0252 freezes one exact
-  default/chatgpt managed-browser launch and one agent-browser attachment.
+  direct agent-browser inspection first. [Plan 0252](docs/dev/plans/0252-2026-08-10-default-context-timeout-agent-browser-falsification.md)
+  freezes one exact default/chatgpt managed-browser launch and one
+  agent-browser attachment.
 - The inspection compares the four pass-9 timeout routes with the known-good
   neighbor. It emulates same-route readiness, payload, post-payload readiness,
   paged message extraction, and later visible asset probes while retaining only
@@ -23,6 +24,24 @@
   ms. Plan version 2 therefore permits one request-log clear, exact-route
   reload, and metadata-only exact response detail per route to emulate the
   production fallback that the 404 necessarily enters.
+- Direct inspection completed across the control and all four failed routes.
+  Every direct GET settled as the same small 404 in 181-366 ms; every exact
+  fallback reload produced one 200 response whose JSON body reduced in
+  329-3798 ms. Mapping counts were 10 for the control and 6/32/50/14 for the
+  four failures. All DOM message pages were readable, including 44 messages
+  over six pages and one 34043-character message aggregate.
+- This rejects provider/auth/route availability, standalone payload transport,
+  post-payload readiness, message paging, and later DOM probes as the current
+  failure. The pass-9 receipt remains real but localizes the defect to
+  AuraCall's enclosing retained-client fallback settlement: callback lifetime,
+  target ownership, or fire-and-forget reload cleanup between sequential reads.
+- Agent-browser detached and the exact port-45065 Chrome process group closed.
+  API PID 27774 remains healthy; scheduler is paused; default remains
+  blocked/pass 9 with force/next null; active jobs and exact AuraCall-managed
+  browser owners are zero. Unrelated pre-existing agent-browser sessions were
+  left untouched. Plan 0252 closes diagnostic-only; no source repair,
+  materialization, completion or scheduler control, install/restart, click,
+  download, or prompt ran.
 
 ## Turn 432 | 2026-08-10
 
