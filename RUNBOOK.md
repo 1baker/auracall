@@ -41,6 +41,19 @@
   `223f3f84...93522`; scheduler remains paused/idle, passes remain `8/2/56/34`,
   guards are null, and jobs/browsers are zero. The exact canary is now eligible
   after this checkpoint is audited and pushed.
+- The exact one-canary create returned fresh job
+  `hmj_42389669c0f141e9be2b83134cf9c80e`, request identity exact,
+  artifacts-only, `maxItems=1`, no refresh/force, attempt one. It failed at the
+  120000-ms running stale threshold with public result/proof/telemetry null.
+- A late artifact manifest appeared about 11 seconds after terminal: one
+  selected, zero materialized, connection refused on the prior default browser
+  port, downloads `0/0/0`, and no repaired current-label counter. The DOCX and
+  archive row on disk predate the canary, so they are not acceptance evidence.
+- Plan 0249 is closed failed before transfer. Jobs/browser are zero, API PID
+  27774 remains healthy with installed parity, scheduler is paused/idle, and
+  passes/guards remain frozen. No retry, completion action, or scheduler action
+  ran. The next successor must be provider-free and own stale-threshold /
+  provider cleanup ordering.
 
 ## Turn 429 | 2026-08-09
 

@@ -40,6 +40,16 @@
   27774 and produced exact source/installed adapter hash parity at
   `223f3f84...93522`. Scheduler/completion/guard state remained frozen, and
   jobs/browsers stayed zero. The one exact canary is the only remaining effect.
+- Canary result: fresh job `hmj_42389669c0f141e9be2b83134cf9c80e`
+  retained the frozen request and attempt count one, then failed the 120000-ms
+  running stale threshold before returning result, identity proof, or telemetry.
+  A manifest written about 11 seconds later selected one DOCX but materialized
+  zero with connection refused, downloads `0/0/0`, and no repaired-label
+  branch counter. The cached DOCX/archive row is from August 2/3, not this run.
+- Hard stop: Plan 0249 is closed failed-before-transfer. API/install parity is
+  healthy; scheduler/completions/guards remain frozen; jobs and browsers are
+  zero. No retry or wider action is authorized. A provider-free successor must
+  reproduce and repair terminal timeout versus provider cleanup ordering.
 
 ## 2026-08-09 | Plan 0247 Authorized Staged Wider Recovery
 

@@ -1,3 +1,14 @@
+- 2026-08-10: A history-materialization job can cross its running stale
+  threshold before the provider task has finished unwinding. Do not equate the
+  public terminal timestamp with provider completion or cleanup: wait for exact
+  browser/process and manifest settlement, then compare timestamps. Plan 0249's
+  sole job failed at 120000 ms with null result/proof/telemetry; about 11
+  seconds later its manifest recorded one selected, zero materialized,
+  connection refused, and downloads `0/0/0`. The installed viewer-label branch
+  was never reached. A pre-existing cached file/archive row must be rejected by
+  mtime/creation evidence rather than misreported as canary success. Diagnose
+  timeout/abort/cleanup ordering provider-free before any retry.
+
 - 2026-08-10: ChatGPT generated-file controls can be button-only and can use
   `Download file` rather than legacy exact `Download`. When artifact activation
   produces neither a native file nor a captured anchor URL, the viewer fallback

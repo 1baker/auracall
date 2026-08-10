@@ -7,13 +7,16 @@
 Status: active
 Lane: P01
 
-- Active authorized default DOCX installed one-canary gate:
+- Stopped default DOCX installed one-canary gate:
   [docs/dev/plans/0249-2026-08-10-default-docx-installed-one-canary-gate.md](docs/dev/plans/0249-2026-08-10-default-docx-installed-one-canary-gate.md)
-  Plan 0248 localized the exact current ChatGPT viewer label gap and closed
-  green provider-free. The operator explicitly activated Plan 0249 for one
-  install/restart and one exact default-conversation artifacts-only canary at
-  `maxItems=1`. Completion and scheduler controls remain zero, and a green
-  canary still requires a separate wider-recovery gate.
+  The sole install/restart produced exact adapter parity, but the exact
+  `maxItems=1` job `hmj_42389669c0f141e9be2b83134cf9c80e` failed its running
+  stale threshold at 120 seconds before transfer. A late manifest selected one
+  DOCX but materialized zero with connection refused, downloads `0/0/0`, and
+  no repaired label counter. The visible cached DOCX/archive row predates the
+  canary. Plan 0249 is closed at its hard stop; completion and scheduler
+  controls remain zero. The next work must be provider-free timeout/cleanup
+  ordering diagnosis, not a retry.
 
 - Closed default DOCX chat inspection and provider-free retrieval repair:
   [docs/dev/plans/0248-2026-08-10-default-docx-chat-inspection-and-retrieval-repair.md](docs/dev/plans/0248-2026-08-10-default-docx-chat-inspection-and-retrieval-repair.md)
