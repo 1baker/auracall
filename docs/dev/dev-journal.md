@@ -16,6 +16,16 @@
   and six selected at the frozen cap. Neither Plan 0250 row returned; both
   earlier DOCX conversations are in the cone. Provider callbacks and durable
   runtime writes stayed zero, and the historical job hash is unchanged.
+- Result: one control advanced exactly to pass 9 and created sole child
+  `hmj_22f3b386babb424fa0fc46e3a254f6bb`. Identity matched, but the child
+  settled failed `0/3/4` with no materialized file, manifest, checksum, or
+  telemetry. Four exact receipts timed out once at about 110 seconds in
+  `provider:chatgpt.skipSameRouteNavigation`; one neighboring context read
+  succeeded in 11.4 seconds.
+- Closeout: parent blocked/pass 9, force/next null, provider lease released,
+  active jobs/browser owners zero, scheduler still paused. Conditional resume
+  was not executed; Plan 0251 closes fail-closed pending a provider-free
+  same-route context-timeout repair.
 
 ## 2026-08-10 | Plan 0250 Provider-Free Zero-Asset Evidence Reconciliation
 

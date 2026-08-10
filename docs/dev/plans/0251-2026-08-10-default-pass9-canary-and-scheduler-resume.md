@@ -1,11 +1,11 @@
 # Default Pass 9 Canary And Scheduler Resume | 0251-2026-08-10
 
-State: OPEN
+State: CLOSED
 Lane: P01
-Plan version: 1
-Outcome: IN_PROGRESS
-Goal execution state: ACTIVE
-Gate state: AUTHORIZED_PRE_CANARY
+Plan version: 2
+Outcome: CANARY_FAILED_CONTEXT_TIMEOUTS
+Goal execution state: FAILED_CLOSED
+Gate state: CLOSED_SCHEDULER_REMAINS_PAUSED
 
 ## Stable Objective
 
@@ -130,16 +130,16 @@ boundary.
 
 ## Acceptance Criteria
 
-- [ ] Opening gate is audited, committed, pushed, and freshly re-read.
-- [ ] Provider-free current selection respects the cap and excludes the two
+- [x] Opening gate is audited, committed, pushed, and freshly re-read.
+- [x] Provider-free current selection respects the cap and excludes the two
   Plan 0250 zero-asset rows without provider callbacks.
-- [ ] Exactly one default control advances only pass 8 to 9 and creates at most
+- [x] Exactly one default control advances only pass 8 to 9 and creates at most
   one bounded child/attempt.
 - [ ] Canary identity, materialization, terminal settlement, and browser cleanup
   are accepted with failed count zero.
 - [ ] The accepted completion returns to `idle_waiting` with force/next/error
   clear before one scheduler resume.
-- [ ] Final scheduler, completion, guard, job, browser, archive, Git, audit,
+- [x] Final scheduler, completion, guard, job, browser, archive, Git, audit,
   documentation, commit, and remote readbacks agree.
 
 ## Opening Checkpoint | One Default Pass And Conditional Resume Authorized
@@ -205,3 +205,52 @@ second canary or repair is inferred.
 - `review_disposition_summary`: accepted full-current selection and rejected an
   empty-success interpretation. The local stubs exercised selection only and
   supplied no provider or retrievability result.
+
+## Closing Checkpoint | Pass 9 Exposed Four Same-Route Context Timeouts
+
+- `checkpoint_id`: `P0251-C03`.
+- `state_transition`: P0251_ACTIVE_PROVIDER_FREE_CONE_ACCEPTED ->
+  P0251_CLOSED_CANARY_FAILED_CONTEXT_TIMEOUTS.
+- `progress_classification`: blocker_reduction.
+- `control_receipt`: the sole control was accepted at
+  `2026-08-10T13:54:33.657Z`, advanced exactly pass `8 -> 9`, and created sole
+  child `hmj_22f3b386babb424fa0fc46e3a254f6bb`. The child retained all asset
+  kinds, `maxItems=6`, refreshed snapshots, `force=false`, provider fence
+  `2026-08-10T14:04:18.663Z`, and attempt count one.
+- `terminal_receipt`: the child settled failed at
+  `2026-08-10T14:11:43.173Z`, not stale, with identity verdict `match` across
+  email, plan, structure, and account level. It attempted six conversations,
+  classified 27 eligible and six selected, and reported materialized/skipped/
+  failed `0/3/4`, checksum count zero, no manifest paths, and no scrape
+  telemetry.
+- `failure_mechanism`: independently read cached receipts identify four
+  one-attempt `conversation_context_timeout` outcomes at stage
+  `provider:chatgpt.skipSameRouteNavigation`: conversations
+  `6a40724d-8688-83ea-ab36-7458e921ed19` (110054 ms),
+  `6a4071e7-2478-83ea-bbf7-b75a382d98b0` (110010 ms),
+  `6a303b38-a97c-8333-8103-d47ce9a110cd` (110056 ms), and
+  `6a03ed4c-85c8-8333-91e1-ee4e269ad457` (109982 ms). Neighbor conversation
+  `6a636202-3ce0-83ea-8a52-6b5e287fdc31` succeeded at `complete` in 11444 ms
+  with two messages and zero files/artifacts.
+- `cleanup`: the parent absorbed to blocked/pass 9 with force, next, and retry
+  authority null; provider work settled at `14:11:43.173Z` and the lease was
+  released at `14:11:52.450Z`. Active jobs and DevTools browser owners returned
+  to zero. Scheduler state/posture remained paused/paused; resume and emergency
+  pause actions were both zero.
+- `history_receipt`: the new terminal job is durably retained; job-index SHA-256
+  is `0694f5e94011d856cac89c667e6c4ef0930f1e9ac7f938d7674a007399050db6`.
+- `subagent_status`: not_spawned.
+- `effect_accounting`: provider-free simulations `1/1`; completion controls
+  `1/1`; pass advances `1/1`; children/attempts `1/1`; selected conversations
+  `6/6`; materialized files/downloads/checksums/archive items `0`; scheduler
+  resume/emergency-pause actions `0/0`; retries and all excluded effects zero.
+- `next_action_or_stop_reason`: hard stop. Do not resume the scheduler or issue
+  another completion/materialization control. A provider-free successor must
+  reproduce and repair the same-route context-read timeout before another
+  live gate.
+- `authority_classification`: the conditional scheduler authority was never
+  admitted because canary acceptance failed; the packet is exhausted.
+- `review_disposition_summary`: Plan 0250 correctly removed its two false
+  retries, but fresh pass-9 detail selection exposed four different current
+  same-route context stalls. Healthy identity and browser progress are accepted;
+  wider materialization and scheduler readiness are rejected.

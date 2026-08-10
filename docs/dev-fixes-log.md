@@ -1,3 +1,14 @@
+- 2026-08-10: Correcting stale zero-asset evidence does not guarantee the next
+  broad completion pass will be healthy. Plan 0251's provider-free cone was
+  accurate and identity matched live, yet four newly selected conversations
+  each timed out once at roughly 110 seconds in
+  `provider:chatgpt.skipSameRouteNavigation`; a neighboring conversation
+  completed in 11.4 seconds. Treat browser tab progress and a temporarily
+  `idle_waiting` parent as intermediate evidence only. Require owned child
+  settlement and parent absorption before scheduler resume, preserve the exact
+  per-conversation receipts, and diagnose this same-route extraction stall
+  provider-free before another live gate.
+
 - 2026-08-10: A history-materialization failure row labeled `kind=artifact`
   is not proof that an asset exists. If provider ID, title, URL, local path,
   and MIME are all null and the error is a conversation-context timeout,

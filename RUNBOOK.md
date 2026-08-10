@@ -28,6 +28,18 @@
   DOCX conversations, so pass 9 is a real regression canary. Actual provider
   callbacks and runtime writes were zero; the retained job index hash remains
   `f15c7b36...aaac`.
+- The sole control advanced default exactly `8 -> 9` and created child
+  `hmj_22f3b386babb424fa0fc46e3a254f6bb` once. It honored its cap, force=false,
+  provider fence, and identity match, then settled failed—not stale—with
+  materialized/skipped/failed `0/3/4`, no manifests, checksum, or telemetry.
+- Exact cached receipts identify four one-attempt, roughly 110-second failures
+  at `provider:chatgpt.skipSameRouteNavigation`: `6a40724d...`,
+  `6a4071e7...`, `6a303b38...`, and `6a03ed4c...`. One adjacent conversation
+  succeeded in 11.4 seconds with zero assets. This is a current same-route
+  context-extraction stall, not the old job stale-terminal race.
+- Parent absorption is blocked/pass 9 with force/next null; provider lease was
+  released, active jobs and browsers are zero, and scheduler stayed paused.
+  Conditional resume was not executed. Plan 0251 is closed fail-closed.
 
 ## Turn 431 | 2026-08-10
 
