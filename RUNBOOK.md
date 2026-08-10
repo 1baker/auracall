@@ -1,5 +1,23 @@
 # RUNBOOK
 
+## Turn 434 | 2026-08-10
+
+- The operator authorized up to ten goal turns to fix the Plan 0252 defect.
+  [Plan 0253](docs/dev/plans/0253-2026-08-10-chatgpt-governed-payload-reload-settlement-repair.md)
+  opens the provider-free implementation packet; no live/browser/runtime
+  effect is admitted.
+- The first deterministic red will delay the page-refresh governor beyond the
+  ten-second payload fallback window. Current ordering predicts the read will
+  return `null` before `Page.reload` begins. The intended contract starts body
+  acquisition only after governance releases the exact reload.
+- Separate bounded checks cover two sequential fallback reads and public abort
+  cleanup. The repair must preserve exact-body completion when the CDP reload
+  acknowledgement itself remains pending, remove per-read listener/task
+  leakage, and await retained-session cleanup before return.
+- Admission is clean/synced `7e29a0a9`; API PID 27774 is healthy with zero
+  restarts, scheduler is paused, default remains blocked/pass 9, active jobs
+  and exact AuraCall-managed browser owners are zero.
+
 ## Turn 433 | 2026-08-10
 
 - The operator rejected an inference-only diagnosis and explicitly required

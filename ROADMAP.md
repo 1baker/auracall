@@ -7,6 +7,14 @@
 Status: active
 Lane: P01
 
+- Active provider-free repair of governed ChatGPT payload reload settlement:
+  [docs/dev/plans/0253-2026-08-10-chatgpt-governed-payload-reload-settlement-repair.md](docs/dev/plans/0253-2026-08-10-chatgpt-governed-payload-reload-settlement-repair.md)
+  Plan 0252 proved the routes and payloads healthy. Plan 0253 now tests the
+  exact ordering defect: the fallback body window begins before the governor
+  releases the reload, listeners/reload work can outlive the read, and public
+  abort cleanup may not be joined. The slice is provider-free; scheduler,
+  materialization, install, restart, and canary effects remain stopped.
+
 - Closed direct agent-browser falsification of default pass-9 context stalls:
   [docs/dev/plans/0252-2026-08-10-default-context-timeout-agent-browser-falsification.md](docs/dev/plans/0252-2026-08-10-default-context-timeout-agent-browser-falsification.md)
   The control and all four failed routes are currently healthy in direct

@@ -1,3 +1,22 @@
+## 2026-08-10 | Plan 0253 Governed Payload Reload Settlement Repair
+
+- Focus: prove and repair the provider-free causal ordering behind Plan 0252's
+  retained-client fallback defect, then prepare a separate one-canary gate.
+- Leading red: a fake page-refresh governor remains pending beyond the current
+  ten-second response-body window. Current code starts that window first, so it
+  should return `null` before the governed `Page.reload` can emit the exact
+  response. The corrected contract begins acquisition after governance.
+- Secondary checks: two sequential fallback reads leave no first-read listener
+  or reload activity, and public context abort does not settle before retained-
+  session cleanup completes.
+- Boundary: adapter plus focused tests and operational docs only unless a red
+  proves the reusable browser-service primitive owns the defect. Provider,
+  browser, install, restart, materialization, completion, scheduler, guard, and
+  direct runtime effects remain zero.
+- Admission: Git clean/synced at `7e29a0a9`; API PID 27774 healthy with zero
+  restarts; scheduler paused; default blocked/pass 9; active jobs and exact
+  AuraCall-managed browser owners zero.
+
 ## 2026-08-10 | Plan 0252 Direct Default Context-Timeout Falsification
 
 - Focus: use one exact AuraCall-managed default ChatGPT browser and one
