@@ -1,5 +1,20 @@
 # RUNBOOK
 
+## Turn 429 | 2026-08-09
+
+- The operator explicitly authorized broader completion recovery after Plan
+  0246 closed success. Plan 0247 stages default pass 8, `wsl-chrome-2` pass 3,
+  and `wsl-chrome-4` pass 35 serially, with `wsl-chrome-3` already stable at
+  pass 56.
+- Scheduler remains paused until all direct lanes are green. One scheduler
+  `run-once` canary while paused must pass before the sole scheduler resume.
+- Only four configured ChatGPT targets have live follow enabled. Gemini/Grok
+  targets remain disabled or unconfigured; the retained Gemini
+  `google-sorry` guard remains untouched and excluded.
+- Opening evidence is clean/synced `b6a215d0`, exact source/installed parity,
+  healthy API PID 85854, scheduler paused/idle, clear ChatGPT guards, and zero
+  active jobs/browser. The gate must audit, commit, and push before pass 8.
+
 ## Turn 428 | 2026-08-09
 
 - The operator explicitly refilled the attempt budget and activated Plan 0246

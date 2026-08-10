@@ -1,3 +1,18 @@
+## 2026-08-09 | Plan 0247 Authorized Staged Wider Recovery
+
+- Focus: re-enable the three paused configured ChatGPT live-follow completions
+  one bounded pass at a time, prove all four lanes stable, run one scheduler
+  canary while still paused, then resume normal scheduler cadence.
+- Admission: source/install hashes match; API PID 85854 healthy; scheduler
+  paused/idle; jobs/browser zero; ChatGPT guards clear. Starting states are
+  default paused/pass 7, `wsl-chrome-2` paused/pass 2, `wsl-chrome-3`
+  idle-waiting/pass 56, and `wsl-chrome-4` paused/pass 34.
+- Exclusions: Gemini/Grok live follow remains disabled; the retained Gemini
+  `google-sorry` guard is not cleared or contacted. No retry, install/restart,
+  prompt, click, `Answer now`, config/guard mutation, or separate job.
+- Delegation receipt: `not_spawned`; all lanes share one provider boundary and
+  the user did not request parallel agents.
+
 ## 2026-08-09 | Plan 0246 Activated for One Pass-56 Canary
 
 - Focus: consume the operator-refilled execution window for exactly one
