@@ -1,5 +1,23 @@
 # RUNBOOK
 
+## Turn 433 | 2026-08-10
+
+- The operator rejected an inference-only diagnosis and explicitly required
+  direct agent-browser inspection first. Plan 0252 freezes one exact
+  default/chatgpt managed-browser launch and one agent-browser attachment.
+- The inspection compares the four pass-9 timeout routes with the known-good
+  neighbor. It emulates same-route readiness, payload, post-payload readiness,
+  paged message extraction, and later visible asset probes while retaining only
+  counts, timings, status, parse state, and terminal stage.
+- Opening state is clean/synced at `33f4e42b`; API PID 27774 is active/running
+  with zero restarts; scheduler state is paused; default is blocked/pass 9 with
+  force/next null; active history jobs and exact browser owners are zero;
+  agent-browser remote-control doctor is ready.
+- This packet cannot materialize, control a completion or scheduler, install,
+  restart, repair source, reload, click, download, submit a prompt, or click
+  `Answer now`. The prior `skipSameRouteNavigation` receipt is treated only as
+  the last completed marker until the direct sequence proves the next await.
+
 ## Turn 432 | 2026-08-10
 
 - The operator authorized the recommended fresh admission, one bounded canary,

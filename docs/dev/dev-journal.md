@@ -1,3 +1,19 @@
+## 2026-08-10 | Plan 0252 Direct Default Context-Timeout Falsification
+
+- Focus: use one exact AuraCall-managed default ChatGPT browser and one
+  agent-browser attachment to compare the four pass-9 timeout routes against
+  the 11.4-second control before accepting a code diagnosis.
+- Evidence correction: `provider:chatgpt.skipSameRouteNavigation` is the last
+  completed provider-action marker. It does not identify the later pending
+  payload, readiness, message-page, or asset-probe operation.
+- Boundary: five route navigations and metadata-only stage probes, one browser
+  launch/close, and no reload, click, download, prompt, materialization,
+  completion/scheduler control, install/restart, source repair, guard/config
+  mutation, or direct runtime edit.
+- Admission: clean/synced `33f4e42b`; API PID 27774 healthy with zero restarts;
+  scheduler paused; default blocked/pass 9 with force/next null; active jobs
+  and exact browser owners zero; agent-browser remote control ready.
+
 ## 2026-08-10 | Plan 0251 Default Pass-9 Canary And Scheduler Resume
 
 - Focus: use the blocked default completion's supported `run-one-pass` as one

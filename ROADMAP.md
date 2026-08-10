@@ -7,6 +7,14 @@
 Status: active
 Lane: P01
 
+- Active direct agent-browser falsification of default pass-9 context stalls:
+  [docs/dev/plans/0252-2026-08-10-default-context-timeout-agent-browser-falsification.md](docs/dev/plans/0252-2026-08-10-default-context-timeout-agent-browser-falsification.md)
+  One exact default/chatgpt browser will compare the four failed routes with
+  the known-good neighbor using metadata-only payload, readiness, message-page,
+  and later-probe milestones. Materialization, completion controls, scheduler
+  controls, source repair, install/restart, clicks, downloads, and prompts stay
+  excluded.
+
 - Stopped default pass-9 canary; scheduler remains paused:
   [docs/dev/plans/0251-2026-08-10-default-pass9-canary-and-scheduler-resume.md](docs/dev/plans/0251-2026-08-10-default-pass9-canary-and-scheduler-resume.md)
   The sole control advanced default exactly to pass 9, but child
