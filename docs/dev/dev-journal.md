@@ -31,10 +31,17 @@
   later retained-client reuse; callback lifetime, target ownership, and reload
   cleanup ordering need one provider-free sequential red before choosing a
   repair.
+- Installed mutation audit: three production fallback reload tasks eventually
+  reported `WebSocket is not open: readyState 3 (CLOSED)`. The final task
+  completed 11.6 seconds after the child job result was terminal. That proves
+  unjoined reload work survives owner cleanup, but also means the closed-socket
+  error may be a downstream symptom rather than the timeout's initiator. The
+  provider-free red must establish that causal order instead of assuming it.
 - Closeout: agent-browser detached and the exact port-45065 process group was
   closed. API PID 27774 remains healthy, scheduler remains paused, default is
-  blocked/pass 9, active jobs/browser owners are zero, and every excluded
-  runtime/control effect stayed zero. Plan 0252 closes diagnostic-only.
+  blocked/pass 9, active jobs and exact AuraCall-managed browser owners are
+  zero, and every excluded runtime/control effect stayed zero. Plan 0252
+  closes diagnostic-only.
 
 ## 2026-08-10 | Plan 0251 Default Pass-9 Canary And Scheduler Resume
 

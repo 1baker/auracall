@@ -1,3 +1,11 @@
+- 2026-08-10: A fire-and-forget browser reload can outlive its owning context
+  and job. Plan 0252's installed mutation audit recorded the final closed-
+  WebSocket reload failure 11.6 seconds after the child job result was already
+  terminal. Treat that error as proof of defective task/listener lifetime, but
+  not automatically as the initiating timeout cause: owner cleanup itself can
+  close the socket. Reproduce two fallback reads on one retained fake client,
+  assert causal ordering plus reload/listener cleanup, and only then repair.
+
 - 2026-08-10: A context receipt whose last completed stage is
   `provider:chatgpt.skipSameRouteNavigation` and pending operation is
   `provider:chatgpt.readConversationPayload` does not prove the provider or

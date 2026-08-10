@@ -35,6 +35,12 @@
   failure. The pass-9 receipt remains real but localizes the defect to
   AuraCall's enclosing retained-client fallback settlement: callback lifetime,
   target ownership, or fire-and-forget reload cleanup between sequential reads.
+- Post-close installed mutation diagnostics retain three fallback reload
+  failures on a closed WebSocket. The final failure was recorded 11.6 seconds
+  after the child job's terminal result, proving the fire-and-forget reload can
+  outlive its owner. Because the closed socket can therefore be a cleanup
+  consequence rather than the initiating cause, the successor must reproduce
+  two sequential fallback reads and establish causal ordering provider-free.
 - Agent-browser detached and the exact port-45065 Chrome process group closed.
   API PID 27774 remains healthy; scheduler is paused; default remains
   blocked/pass 9 with force/next null; active jobs and exact AuraCall-managed

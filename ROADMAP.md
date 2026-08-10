@@ -14,8 +14,11 @@ Lane: P01
   fallback 200 bodies parse in 0.33-3.80 seconds, and all message pages are
   readable. Pass 9's pending payload receipt is therefore an AuraCall
   retained-client/callback/reload-settlement defect, not conversation or auth
-  unavailability. The exact submechanism now needs a two-sequential-read
-  provider-free red before source repair or another canary.
+  unavailability. Installed mutation evidence additionally proves a
+  fire-and-forget reload can outlive its job and later fail on the closed
+  retained WebSocket; whether that is cause or downstream cleanup symptom now
+  needs a two-sequential-read provider-free red before repair or another
+  canary.
 
 - Stopped default pass-9 canary; scheduler remains paused:
   [docs/dev/plans/0251-2026-08-10-default-pass9-canary-and-scheduler-resume.md](docs/dev/plans/0251-2026-08-10-default-pass9-canary-and-scheduler-resume.md)

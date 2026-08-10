@@ -2,7 +2,7 @@
 
 State: CLOSED
 Lane: P01
-Plan version: 3
+Plan version: 4
 Gate state: CLOSED_DIRECT_BROWSER_HEALTHY
 Goal execution state: COMPLETE_DIAGNOSIS
 Outcome: ENCLOSING_RETAINED_CLIENT_SETTLEMENT_DEFECT
@@ -259,3 +259,22 @@ scheduler stopped.
 The exact five-route browser sequence identifies the first non-settling
 operation or rejects the page-operation diagnosis, the owned browser is closed,
 and all wider runtime controls remain stopped.
+
+## Post-Close Installed Mutation Audit | Reload Task Outlives Owner
+
+- The installed scheduler diagnostics retain three production fallback reload
+  failures with `WebSocket is not open: readyState 3 (CLOSED)`. The final
+  reload started at `2026-08-10T14:11:38.453Z` and recorded its failure at
+  `2026-08-10T14:11:54.670Z`, after the child job had already generated its
+  terminal result at `2026-08-10T14:11:43.077Z`.
+- Current installed/source parity shows the payload reader creates a bounded
+  ten-second response-body promise, registers per-read Network listeners, then
+  starts `reloadAndSettle` with `void ...catch(() => undefined)` and awaits only
+  the body promise. It neither joins/cancels the reload task nor removes those
+  listeners before retained-client cleanup/reuse.
+- The temporal ordering proves a reload task can outlive its owning context/job
+  and then observe the closed retained WebSocket. It does not prove the closed
+  WebSocket initiated the earlier context deadline; that error can be a
+  downstream cleanup symptom. The exact upstream trigger therefore remains
+  `needs_evidence`, while reload-task/listener lifetime is now the proven
+  defective mechanism to isolate in the two-sequential-read provider-free red.
