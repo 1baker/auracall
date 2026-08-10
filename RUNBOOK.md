@@ -30,6 +30,12 @@
   after a future explicit gate it permits one install/restart and one exact
   default-conversation artifacts-only canary at `maxItems=1`, then a hard stop
   regardless of outcome. Scheduler and completion controls remain excluded.
+- The operator then explicitly replied `ok go`, activating Plan 0249's frozen
+  packet. Fresh admission is clean/synced `17568365`; API PID 1466 remains
+  healthy with zero restarts; scheduler returned to operator-paused/idle after
+  one transient drain read; jobs and browsers are zero; ChatGPT states remain
+  `8/2/56/34` with guards null. Activation must be audited, committed, and
+  pushed before the sole install.
 
 ## Turn 429 | 2026-08-09
 

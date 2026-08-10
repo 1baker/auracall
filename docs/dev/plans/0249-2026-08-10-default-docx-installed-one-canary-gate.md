@@ -1,10 +1,10 @@
 # Default DOCX Installed One-Canary Gate | 0249-2026-08-10
 
-State: PLANNED
+State: OPEN
 Lane: P01
-Plan version: 1
-Goal execution state: AWAITING_OPERATOR_AUTHORIZATION
-Gate state: PREPARED_NOT_AUTHORIZED
+Plan version: 2
+Goal execution state: ACTIVE
+Gate state: AUTHORIZED_PRE_INSTALL
 
 ## Stable Objective
 
@@ -123,3 +123,27 @@ authority.
 - `review_disposition_summary`: the repaired label seam is the only accepted
   cause. Button tagging, browser download-path configuration, and captured URL
   fallback remain unchanged and will be distinguished by terminal telemetry.
+
+## Activation Checkpoint | One Install And One Canary Authorized
+
+- `checkpoint_id`: `P0249-C02`.
+- `state_transition`: P0249_PREPARED_NOT_AUTHORIZED ->
+  P0249_ACTIVE_AUTHORIZED_PRE_INSTALL.
+- `progress_classification`: blocker_reduction.
+- `evidence`: the operator explicitly replied `ok go`. Fresh admission is
+  clean/synced `main` at `17568365`; API PID 1466 remains active/running with
+  `NRestarts=0`; scheduler is operator-paused/idle with foreground false and
+  zero requests/reservations; active history jobs and DevTools-enabled
+  browsers are zero. Default remains blocked/pass 8, `wsl-chrome-2`
+  paused/pass 2, `wsl-chrome-3` idle-waiting/pass 56, and `wsl-chrome-4`
+  paused/pass 34; all ChatGPT guards are null.
+- `subagent_status`: not_spawned; one serialized provider boundary.
+- `effect_accounting`: install/restart/canary/job/attempt/browser/download
+  counters remain zero at activation.
+- `next_action_or_stop_reason`: audit, commit, and push this authority boundary;
+  re-read admission; then install/restart exactly once.
+- `authority_classification`: explicit authority covers only the frozen install
+  and canary packet. Completion and scheduler controls remain excluded.
+- `review_disposition_summary`: a transient background-drain readback reported
+  `running` with zero requests/reservations, then settled to required idle on
+  the next read. No work or state mutation was inferred from the transient.

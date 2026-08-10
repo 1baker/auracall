@@ -30,6 +30,12 @@
   `PREPARED_NOT_AUTHORIZED`. Installed source remains intentionally stale;
   scheduler/completions are untouched and active jobs/browser processes are
   zero.
+- Activation: the operator explicitly authorized Plan 0249. Fresh admission is
+  clean/synced at `17568365`; API PID 1466 is healthy with zero restarts;
+  scheduler is operator-paused/idle after a transient drain cycle settled;
+  active jobs and browsers are zero; four ChatGPT pass/status boundaries and
+  guards are unchanged. One install/restart and one exact canary are now the
+  only authorized effects.
 
 ## 2026-08-09 | Plan 0247 Authorized Staged Wider Recovery
 

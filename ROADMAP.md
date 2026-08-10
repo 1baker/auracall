@@ -7,13 +7,13 @@
 Status: active
 Lane: P01
 
-- Prepared, not authorized, default DOCX installed one-canary gate:
+- Active authorized default DOCX installed one-canary gate:
   [docs/dev/plans/0249-2026-08-10-default-docx-installed-one-canary-gate.md](docs/dev/plans/0249-2026-08-10-default-docx-installed-one-canary-gate.md)
   Plan 0248 localized the exact current ChatGPT viewer label gap and closed
-  green provider-free. Plan 0249 freezes one future install/restart and one
-  exact default-conversation artifacts-only canary at `maxItems=1`. It does
-  not authorize its recorded command; completion and scheduler controls remain
-  zero, and a green canary would still require a separate wider-recovery gate.
+  green provider-free. The operator explicitly activated Plan 0249 for one
+  install/restart and one exact default-conversation artifacts-only canary at
+  `maxItems=1`. Completion and scheduler controls remain zero, and a green
+  canary still requires a separate wider-recovery gate.
 
 - Closed default DOCX chat inspection and provider-free retrieval repair:
   [docs/dev/plans/0248-2026-08-10-default-docx-chat-inspection-and-retrieval-repair.md](docs/dev/plans/0248-2026-08-10-default-docx-chat-inspection-and-retrieval-repair.md)
