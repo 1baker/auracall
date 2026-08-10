@@ -2522,6 +2522,7 @@ export abstract class LlmService {
 			cacheOnly?: boolean;
 			allowCacheFallback?: boolean;
 			timeoutMs?: number;
+			retryAttempts?: number;
 			listOptions?: BrowserProviderListOptions;
 			onReceipt?: (receipt: ConversationContextReadReceipt) => void | Promise<void>;
 		},
@@ -2530,6 +2531,13 @@ export abstract class LlmService {
 			throw new Error(`Conversation context retrieval is not supported for ${this.providerId}.`);
 		}
 		const providedListOptions = options?.listOptions;
+		const retryAttempts = options?.retryAttempts;
+		if (
+			typeof retryAttempts === "number" &&
+			(!Number.isInteger(retryAttempts) || retryAttempts < 0)
+		) {
+			throw new Error("Conversation context retry attempts must be a non-negative integer.");
+		}
 		const timeoutMs = resolveConversationContextTimeoutMs(options?.timeoutMs);
 		const startedAt = Date.now();
 		let attemptCount = 0;
@@ -2679,6 +2687,7 @@ export abstract class LlmService {
 				},
 				{
 					action: "readConversationContext",
+					retries: retryAttempts,
 					abortSignal: controller.signal,
 					bypassProviderGuardFailure: (error) => error instanceof ConversationContextReadError,
 					shouldRetry: (error) => {

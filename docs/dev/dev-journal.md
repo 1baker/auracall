@@ -1,3 +1,29 @@
+## 2026-08-10 | Plan 0254 Provider-Free One-Canary Harness
+
+- Focus: make the prepared `wsl-chrome-3` context canary provably one provider
+  attempt and prevent message or asset content from reaching its retained
+  output.
+- Contract correction: the ordinary context path defaults to one retry, so a
+  command without an explicit ceiling could perform two provider attempts even
+  though Plan 0254 said `max_context_retries: 0`.
+- Implementation: add an optional non-negative retry ceiling to the context
+  service and CLI; the canary wrapper uses `--refresh --retry-attempts 0`,
+  captures bounded child output privately, emits counts and one sanitized
+  changed receipt, and rejects ambiguous receipt changes.
+- Boundary: all validation in this packet is provider-free and no-launch.
+  Install, API restart, browser/provider, materialization, completion,
+  scheduler, guard, and direct-runtime effects remain excluded pending the
+  explicit Plan 0254 one-canary approval.
+- Validation: the exact dry run reports zero provider calls, zero browser
+  launches, and the required refresh/zero-retry flags; 18 focused tests,
+  typecheck, build, diff checks, and the isolated full suite pass. Full-suite
+  totals are 801/801 suites, 2775 passed, 65 pending, and zero failed tests.
+- Admission drift: agent-browser owns no matching browser/session, but Chrome
+  PID 12504 currently owns the exact AuraCall-managed
+  `wsl-chrome-3/chatgpt` directory. It has no active materialization job or
+  completion child. Do not attach or close it; require independent exit and a
+  fresh zero-owner readback before install or canary execution.
+
 ## 2026-08-10 | Plan 0253 Governed Payload Reload Settlement Repair
 
 - Focus: prove and repair the provider-free causal ordering behind Plan 0252's

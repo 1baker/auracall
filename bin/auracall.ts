@@ -3949,6 +3949,7 @@ conversationContextCommand
   .option('--history-since <date>', 'Stop once History entries are older than this date (YYYY-MM-DD or ISO).')
   .option('--refresh', 'Force live refresh (default).')
   .option('--cache-only', 'Read from cache only (skip live browser retrieval).')
+  .option('--retry-attempts <count>', 'Maximum provider retries after the first context attempt.', parseIntOption)
   .option(
     '--timeout-ms <ms>',
     'Maximum live context-read time in milliseconds.',
@@ -3994,6 +3995,12 @@ conversationContextCommand
     if (listOptionOverrides.historySince && !Number.isFinite(Date.parse(listOptionOverrides.historySince))) {
       throw new Error('history-since must be a valid date (YYYY-MM-DD or ISO timestamp).');
     }
+    if (
+      typeof commandOptions.retryAttempts === 'number' &&
+      (!Number.isInteger(commandOptions.retryAttempts) || commandOptions.retryAttempts < 0)
+    ) {
+      throw new Error('retry-attempts must be a non-negative integer.');
+    }
     const projectArg =
       commandOptions.projectId ?? parentOptions.projectId ?? userConfig.browser?.projectId;
     const selector = String(id || '').trim();
@@ -4021,6 +4028,7 @@ conversationContextCommand
       cacheOnly: Boolean(commandOptions.cacheOnly),
       allowCacheFallback: command.getOptionValueSource?.('refresh') === 'cli' ? false : undefined,
       timeoutMs: commandOptions.timeoutMs,
+      retryAttempts: commandOptions.retryAttempts,
       listOptions,
     });
     console.log(JSON.stringify(context, null, 2));

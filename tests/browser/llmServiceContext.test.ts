@@ -750,6 +750,38 @@ describe("project-scoped conversation context normalization", () => {
 		}
 	});
 
+	test("getConversationContext honors an explicit zero-retry ceiling", async () => {
+		const homeDir = await mkdtemp(path.join(os.tmpdir(), "auracall-llm-context-no-retry-"));
+		setAuracallHomeDirOverrideForTest(homeDir);
+		const store = new JsonCacheStore();
+		const provider = {
+			id: "chatgpt",
+			config: { id: "chatgpt", selectors: {} as never },
+			readConversationContext: vi.fn(async () => {
+				throw new Error("WebSocket connection closed");
+			}),
+		};
+		const service = new InventoryContextLlmService(provider as never, store);
+
+		try {
+			await expect(
+				service.getConversationContext("conversation-no-retry", {
+					refresh: true,
+					allowCacheFallback: false,
+					retryAttempts: 0,
+					listOptions: {
+						accountMirrorInventory: true,
+						skipFeatureSignature: true,
+					},
+				}),
+			).rejects.toThrow();
+
+			expect(provider.readConversationContext).toHaveBeenCalledTimes(1);
+		} finally {
+			await rm(homeDir, { recursive: true, force: true });
+		}
+	});
+
 	test("getConversationContext preserves the pending ChatGPT payload operation separately from the last completed stage", async () => {
 		vi.useFakeTimers();
 		const homeDir = await mkdtemp(path.join(os.tmpdir(), "auracall-context-pending-payload-"));

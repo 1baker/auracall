@@ -1,5 +1,25 @@
 # RUNBOOK
 
+## Turn 435 | 2026-08-10
+
+- Provider-free preparation found that `conversations context get` inherits
+  the ordinary one-retry policy. Plan 0254's earlier command therefore did not
+  enforce its stated `max_context_retries: 0` bound.
+- The context service and CLI now accept an explicit non-negative retry count.
+  The one-canary harness passes `--refresh --retry-attempts 0`, captures child
+  output privately, and emits only context counts plus a sanitized terminal
+  receipt. Ambiguous receipt changes fail closed.
+- This preparation does not install or restart AuraCall, launch or attach a
+  browser, call ChatGPT, materialize assets, control a completion, or resume
+  the scheduler. The live `wsl-chrome-3` canary remains at its explicit
+  approval gate.
+- Fresh agent-browser no-launch inspection found no agent-browser-owned
+  `wsl-chrome-3` session, but executable-scoped process admission found Chrome
+  PID 12504 already using the exact AuraCall-managed `wsl-chrome-3/chatgpt`
+  directory. Active jobs remain zero and the completion is idle-waiting/pass
+  56. Treat that Chrome as an external owner: do not attach or close it, and
+  require it to exit independently before the live gate can admit one canary.
+
 ## Turn 434 | 2026-08-10
 
 - The operator authorized up to ten goal turns to fix the Plan 0252 defect.

@@ -10,8 +10,10 @@ Lane: P01
 - Prepared `wsl-chrome-3` installed one-canary gate; awaiting explicit approval:
   [docs/dev/plans/0254-2026-08-10-wsl-chrome-3-governed-payload-one-canary-gate.md](docs/dev/plans/0254-2026-08-10-wsl-chrome-3-governed-payload-one-canary-gate.md)
   The gate permits one install/restart, exact source/installed parity, and one
-  fresh context read for one previously failing route. It permits no retry,
-  materialization, completion control, scheduler control, or wider profile.
+  fresh context read for one previously failing route. Its provider-free
+  harness now sets an explicit zero-retry ceiling and emits only bounded counts
+  plus a sanitized terminal receipt. It permits no retry, materialization,
+  completion control, scheduler control, or wider profile.
 
 - Closed provider-free repair of governed ChatGPT payload reload settlement:
   [docs/dev/plans/0253-2026-08-10-chatgpt-governed-payload-reload-settlement-repair.md](docs/dev/plans/0253-2026-08-10-chatgpt-governed-payload-reload-settlement-repair.md)

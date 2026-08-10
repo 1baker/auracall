@@ -1,3 +1,11 @@
+- 2026-08-10: A bounded live canary is not single-attempt merely because the
+  operator runs one CLI command. `getConversationContext` normally retries a
+  generic provider failure once, so a plan with `max_context_retries: 0` must
+  pass an explicit retry ceiling through the CLI and service. For sensitive
+  context canaries, capture raw child output privately, retain only counts and
+  a sanitized terminal receipt, and fail closed unless exactly one receipt
+  changes with `attemptCount=1` and no pending operation.
+
 - 2026-08-10: Do not spend a response-acquisition deadline while an
   interaction governor is still holding the physical reload. In the ChatGPT
   payload fallback, the old ten-second timer could expire before

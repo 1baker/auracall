@@ -566,6 +566,9 @@ Terminology note:
   feature probe; the provider adapter still observes and asserts the bound
   account before reading conversation content. This keeps cache placement
   provider-free without weakening live account authorization.
+  Use `--retry-attempts 0` for a one-attempt canary. The option controls the
+  number of provider retries after the first context attempt; omitted commands
+  retain the normal retry policy.
   `cache context get` returns the receipt as `terminalReceipt` without
   contacting a browser.
   An explicit `--refresh` never substitutes stale cached context for a timeout.
