@@ -2,8 +2,8 @@
 
 State: OPEN
 Lane: P01
-Plan version: 1
-Gate state: AUTHORIZED_DIRECT_INSPECTION
+Plan version: 2
+Gate state: AUTHORIZED_EXACT_FALLBACK_EMULATION
 Goal execution state: ACTIVE
 
 ## Stable Goal Objective
@@ -48,9 +48,12 @@ scheduler stopped.
   `6a03ed4c-85c8-8333-91e1-ee4e269ad457`; use only
   `6a636202-3ce0-83ea-8a52-6b5e287fdc31` as the control.
 - For each route, agent-browser may perform one route navigation, confirm the
-  same-route ready surface without another physical navigation, and run one
-  metadata-only emulation of payload fetch, post-payload readiness, paged
-  message counting/length aggregation, and visible file/artifact counts.
+  same-route ready surface, and run one metadata-only emulation of the direct
+  payload fetch. When that fetch is non-2xx, agent-browser may clear its request
+  log, reload that exact route once, and pass the single exact 2xx conversation
+  response directly into the validated metadata-only reducer. It may then run
+  post-payload readiness, paged message counting/length aggregation, and
+  visible file/artifact counts.
 - Each operation must have an inner browser deadline and an outer command
   deadline. Retain only stage, elapsed time, HTTP status, parse state, mapping
   count, message count/aggregate character length, and file/artifact counts.
@@ -63,13 +66,15 @@ scheduler stopped.
   close or mutate unrelated browser processes.
 - Source repair, install, API restart, materialization, completion control,
   scheduler control, guard/config mutation, prompt submission, clicks,
-  downloads, reloads, direct runtime-state edits, and retries are excluded.
+  downloads, reloads beyond the one exact fallback reload per route, direct
+  runtime-state edits, and retries are excluded.
 
 ## Ranked Hypotheses And Predictions
 
-1. `H1_payload_read`: same-route readiness settles, but the authenticated
-   payload fetch/body/parse sequence fails or times out. The first failed
-   milestone will be payload headers/body/parse, while the control settles.
+1. `H1_payload_read`: same-route readiness settles and the direct fetch returns
+   non-2xx, but the exact reload response discovery/body read fails or times
+   out. The first failed milestone will be fallback discovery/detail, while
+   the control settles.
 2. `H2_post_payload_readiness`: payload metadata settles, but the next ready
    predicate does not. The first failed milestone will be post-payload
    readiness.
@@ -108,7 +113,9 @@ scheduler stopped.
   `max_conversation_navigations: 5`; `max_same_route_checks: 5`;
   `max_payload_probes: 5`; `max_message_page_probes_per_route: 256`;
   `max_dom_snapshots: 1`; `max_browser_closes: 1`;
-  `max_page_reloads: 0`; `max_browser_clicks: 0`; `max_downloads: 0`;
+  `max_network_log_clears: 5`; `max_page_reloads: 5`;
+  `max_exact_response_details: 5`; `max_browser_clicks: 0`;
+  `max_downloads: 0`;
   `max_prompt_submissions: 0`; `max_answer_now_actions: 0`;
   `max_materialization_starts: 0`; `max_completion_controls: 0`;
   `max_scheduler_controls: 0`; `max_guard_actions: 0`;
@@ -128,9 +135,9 @@ scheduler stopped.
   active materialization, scheduler drift, or raw-content exposure risk.
 - Stop each route after its first failed/timed-out milestone. A timeout is
   evidence, not retry authority.
-- Stop the whole packet on any need for reload, click, download, prompt,
-  `Answer now`, materialization, completion/scheduler control, install/restart,
-  source repair, guard bypass, or runtime edit.
+- Stop the whole packet on any need for a second reload on one route, click,
+  download, prompt, `Answer now`, materialization, completion/scheduler
+  control, install/restart, source repair, guard bypass, or runtime edit.
 - This inspection does not authorize a canary or scheduler resume.
 
 ## Acceptance Criteria
@@ -166,6 +173,33 @@ scheduler stopped.
 - `review_disposition_summary`: the prior `skipSameRouteNavigation` marker is
   accepted only as the last completed action. Any claim that it is the blocked
   operation remains `needs_evidence` until this sequence settles.
+
+## Control Checkpoint | Direct 404 Requires Exact Fallback Emulation
+
+- `checkpoint_id`: `P0252-C02`.
+- `state_transition`: P0252_ACTIVE_DIRECT_AGENT_BROWSER_FALSIFICATION ->
+  P0252_ACTIVE_EXACT_FALLBACK_EMULATION.
+- `progress_classification`: blocker_reduction.
+- `evidence`: exact browser PID 4232 owns the AuraCall-managed default/chatgpt
+  directory on live DevTools port 45065. Agent-browser confirmed authenticated
+  ChatGPT with no login, CAPTCHA, challenge, or `Answer now` control. On the
+  known-good route, same-route DOM readiness is complete; the direct
+  authenticated conversation GET completed in 186 ms as a small parseable 404;
+  the exact 200 route-load response body was independently reduced in 451 ms
+  with one candidate and a valid JSON mapping.
+- `effect_accounting`: launches 1/1, attaches 1/1, route navigations 1/5,
+  payload probes 1/5, response details 1/5, reloads 0/5, closes 0/1; all
+  excluded effects zero.
+- `next_action_or_stop_reason`: because the production reader necessarily
+  enters reload fallback after the direct 404, permit exactly one request-log
+  clear, reload, and metadata-only exact response detail per route. Continue
+  with the control fallback, then the four failed routes without retry.
+- `authority_classification`: in-envelope direct code-step emulation required
+  by the operator; no repair, materialization, completion, or scheduler scope
+  added.
+- `review_disposition_summary`: direct fetch/header/body stall is rejected for
+  the control. Reload response discovery/body settlement and enclosing callback
+  ordering remain `needs_evidence`.
 
 ## Definition Of Done
 

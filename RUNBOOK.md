@@ -14,9 +14,15 @@
   force/next null; active history jobs and exact browser owners are zero;
   agent-browser remote-control doctor is ready.
 - This packet cannot materialize, control a completion or scheduler, install,
-  restart, repair source, reload, click, download, submit a prompt, or click
-  `Answer now`. The prior `skipSameRouteNavigation` receipt is treated only as
-  the last completed marker until the direct sequence proves the next await.
+  restart, repair source, click, download, submit a prompt, or click `Answer
+  now`. The prior `skipSameRouteNavigation` receipt is treated only as the last
+  completed marker until the direct sequence proves the next await.
+- The known-good control rejects a direct fetch/body stall: the exact route is
+  ready, its direct authenticated GET settles in 186 ms as a small parseable
+  404, and its exact 200 route-load response detail reduces successfully in 451
+  ms. Plan version 2 therefore permits one request-log clear, exact-route
+  reload, and metadata-only exact response detail per route to emulate the
+  production fallback that the 404 necessarily enters.
 
 ## Turn 432 | 2026-08-10
 

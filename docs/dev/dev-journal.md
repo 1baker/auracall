@@ -7,12 +7,17 @@
   completed provider-action marker. It does not identify the later pending
   payload, readiness, message-page, or asset-probe operation.
 - Boundary: five route navigations and metadata-only stage probes, one browser
-  launch/close, and no reload, click, download, prompt, materialization,
-  completion/scheduler control, install/restart, source repair, guard/config
-  mutation, or direct runtime edit.
+  launch/close, at most one exact fallback reload per route, and no click,
+  download, prompt, materialization, completion/scheduler control,
+  install/restart, source repair, guard/config mutation, or direct runtime edit.
 - Admission: clean/synced `33f4e42b`; API PID 27774 healthy with zero restarts;
   scheduler paused; default blocked/pass 9 with force/next null; active jobs
   and exact browser owners zero; agent-browser remote control ready.
+- Control result: exact PID 4232/port 45065/profile binding is healthy. The
+  known-good route is DOM-ready; its direct GET returns a parseable 404 in 186
+  ms, while the exact 200 navigation response detail is retrievable and parses
+  in 451 ms. Version 2 admits one exact fallback reload and safe metadata-only
+  detail reduction per route because that is the production branch after 404.
 
 ## 2026-08-10 | Plan 0251 Default Pass-9 Canary And Scheduler Resume
 
