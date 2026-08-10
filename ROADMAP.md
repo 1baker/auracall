@@ -7,6 +7,14 @@
 Status: active
 Lane: P01
 
+- Active default DOCX chat inspection and provider-free retrieval repair:
+  [docs/dev/plans/0248-2026-08-10-default-docx-chat-inspection-and-retrieval-repair.md](docs/dev/plans/0248-2026-08-10-default-docx-chat-inspection-and-retrieval-repair.md)
+  Plan 0247 stopped on two retryable default materialization failures. Plan
+  0248 inspects only the two implicated DOCX-bearing chats directly, then
+  requires a deterministic provider-free red before code repair and testing.
+  It excludes downloads, retries, install/canary work, and every scheduler or
+  completion control.
+
 - Stopped ChatGPT staged wider recovery and scheduler-last resume:
   [docs/dev/plans/0247-2026-08-09-chatgpt-staged-wider-recovery-and-scheduler-resume.md](docs/dev/plans/0247-2026-08-09-chatgpt-staged-wider-recovery-and-scheduler-resume.md)
   Plan 0246 proved the structured-exception repair with six materialized

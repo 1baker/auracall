@@ -1,3 +1,19 @@
+## 2026-08-10 | Plan 0248 Direct Default DOCX Inspection And Repair
+
+- Focus: inspect the two implicated default ChatGPT chats directly before
+  forming a code explanation, then build a deterministic provider-free red,
+  repair the owning retrieval gap, and validate broadly.
+- Current evidence: Plan 0247 default pass 8 matched all identity dimensions
+  but its sole child failed `0/5/2`. The newest routeable asset-bearing cache
+  rows point to two chats with the same generated DOCX exposed through sandbox
+  `/workspace/scratch/...` plus DOM-download aliases, unlike the successful
+  external-image path.
+- Boundary: one exact default browser launch/attachment, two read-only chat
+  navigations, and bounded DOM metadata only. Downloads, clicks, reloads,
+  network/body capture, retry, install/canary, completion, and scheduler
+  controls remain zero. Delegation is `not_spawned` on the serialized critical
+  path.
+
 ## 2026-08-09 | Plan 0247 Authorized Staged Wider Recovery
 
 - Focus: re-enable the three paused configured ChatGPT live-follow completions

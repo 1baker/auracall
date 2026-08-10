@@ -1,5 +1,20 @@
 # RUNBOOK
 
+## Turn 430 | 2026-08-10
+
+- The operator directed direct inspection of the new default failure before
+  code diagnosis, followed by repair and testing. Plan 0248 owns one exact
+  default managed-browser launch, two named conversation inspections, and one
+  provider-free repair slice.
+- Current cache evidence identifies two newest routeable DOCX-bearing chats,
+  each exposing `auracall-m5-20260802T185953Z.docx` through sandbox
+  `/workspace/scratch/...` and DOM-download surfaces. This differs from the six
+  successful external-image resource-content fallbacks but is not yet the
+  proven cause.
+- No asset click/download, reload, raw network/body read, retry, install,
+  canary, completion control, or scheduler control is authorized. Scheduler
+  and all completion boundaries remain stopped.
+
 ## Turn 429 | 2026-08-09
 
 - The operator explicitly authorized broader completion recovery after Plan
