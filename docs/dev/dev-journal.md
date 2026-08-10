@@ -1,3 +1,18 @@
+## 2026-08-10 | Plan 0251 Default Pass-9 Canary And Scheduler Resume
+
+- Focus: use the blocked default completion's supported `run-one-pass` as one
+  bounded canary; resume the scheduler only after pass 9 and its child settle
+  with zero failures and full cleanup.
+- Admission: clean/synced `dd450c8d`; source/installed adapter parity
+  `bd301ef2...aa426`; healthy API PID 27774/zero restarts; scheduler
+  paused/paused and idle; guards and active jobs zero; no settled default
+  browser owner. Default remains blocked/pass 8 with cap six and 27 current
+  retrievable missing-local assets.
+- Boundary: one provider-free selection simulation, one default completion
+  control, at most one child/attempt and six materialized items, then one
+  scheduler resume only on accepted settlement. No exact-DOCX retry, other
+  completion/provider action, install/restart, or separate materialization.
+
 ## 2026-08-10 | Plan 0250 Provider-Free Zero-Asset Evidence Reconciliation
 
 - Focus: replace only the stale current account-mirror timeout evidence for the

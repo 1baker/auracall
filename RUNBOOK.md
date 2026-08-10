@@ -1,5 +1,28 @@
 # RUNBOOK
 
+## Turn 432 | 2026-08-10
+
+- The operator authorized the recommended fresh admission, one bounded canary,
+  and conditional scheduler continuation. Plan 0251 uses the blocked
+  ChatGPT/default completion's supported `run-one-pass` as both the canary and
+  the completion return to cadence waiting; plain `resume` cannot unblock this
+  state. Authority is recorded in
+  `docs/dev/plans/0251-2026-08-10-default-pass9-canary-and-scheduler-resume.md`.
+- Fresh admission is clean/synced `dd450c8d`; source/installed ChatGPT adapter
+  hashes match at `bd301ef2...aa426`; API PID 27774 is healthy with zero
+  restarts; scheduler is paused/paused and idle; guards and active jobs are
+  zero; no default DevTools/browser owner remains after transient port-zero
+  inspection processes settled.
+- Default remains blocked/pass 8 with `maxItems=6`, all asset kinds,
+  refreshed snapshots, and `force=false`; current recovery planning reports 27
+  retrievable missing-local assets. The two Plan 0250 zero-asset rows are no
+  longer retry candidates, but this wider backlog still makes a real canary
+  necessary.
+- Plan 0251 permits exactly one default control and one conditional scheduler
+  resume, plus one emergency pause after resume. It does not retry Plan 0249's
+  exact DOCX command, control another completion/provider, install/restart, or
+  run a separate materialization job.
+
 ## Turn 431 | 2026-08-10
 
 - Independent inspection corrected the Plan 0247 failure classification. The

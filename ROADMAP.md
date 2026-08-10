@@ -7,6 +7,14 @@
 Status: active
 Lane: P01
 
+- Active default pass-9 canary and conditional scheduler resume:
+  [docs/dev/plans/0251-2026-08-10-default-pass9-canary-and-scheduler-resume.md](docs/dev/plans/0251-2026-08-10-default-pass9-canary-and-scheduler-resume.md)
+  Plan 0250 removed the two false zero-asset retries, but the default completion
+  remains blocked/pass 8 with a real 27-item retrievable backlog. Plan 0251
+  authorizes one supported `run-one-pass` as the sole canary and completion
+  continuation, followed by one scheduler resume only after clean settlement.
+  The failed exact-DOCX canary is not retried; every edge remains fail-closed.
+
 - Closed provider-free zero-asset evidence reconciliation:
   [docs/dev/plans/0250-2026-08-10-default-zero-asset-evidence-reconciliation.md](docs/dev/plans/0250-2026-08-10-default-zero-asset-evidence-reconciliation.md)
   The two Plan 0247 retryable rows are synthetic conversation-context timeout
