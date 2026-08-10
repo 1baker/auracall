@@ -21162,3 +21162,16 @@ browser-stage lifecycle observability, not transcript truncation.
   loaded-resource bytes, and separately prove that a 404 never enters the
   fallback. A live external diagnostic must still confirm that the exact CDN
   image is loaded before a canary.
+
+## 2026-08-09 | CDP exceptions can carry object-shaped by-value results
+
+- `Runtime.evaluate` can report a rejected promise through `exceptionDetails`
+  while `result.value` is an empty record. Treating any record-shaped value as
+  a structured application result can therefore bypass exception recovery.
+- Use the protocol's `exceptionDetails` field to classify evaluation failure.
+  Keep explicit application results such as `{ok:false,status:404}` terminal
+  when no exception is present, and retain the missing-value fallback as a
+  compatibility path.
+- A live canary's absence of fallback provider-action and Page-CDP telemetry is
+  decisive branch evidence: it can distinguish fallback eligibility failure
+  from resource-content failure without exposing raw response content.

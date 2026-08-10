@@ -515,13 +515,25 @@ describe("fetchChatgptBinaryWithClient", () => {
 		});
 	});
 
-	test("falls back to loaded resource content when an external DOM image is blocked by page fetch", async () => {
+	test.each([
+		{
+			shape: "object-shaped exception value",
+			evaluation: {
+				result: { type: "object", subtype: "error", value: {} },
+				exceptionDetails: { text: "Uncaught (in promise) TypeError: Failed to fetch" },
+			},
+		},
+		{
+			shape: "missing by-value result",
+			evaluation: {
+				result: { type: "object", subtype: "error" },
+				exceptionDetails: { text: "Uncaught (in promise) TypeError: Failed to fetch" },
+			},
+		},
+	])("falls back to loaded resource content for $shape", async ({ evaluation }) => {
 		const scrapeTelemetry = createBrowserScrapeTelemetryRecorder();
 		const imageBytes = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46]);
-		const evaluate = vi.fn(async () => ({
-			result: { type: "object", subtype: "error" },
-			exceptionDetails: { text: "Uncaught (in promise) TypeError: Failed to fetch" },
-		}));
+		const evaluate = vi.fn(async () => evaluation);
 		const getResourceTree = vi.fn(async () => ({
 			frameTree: {
 				frame: { id: "frame-main" },

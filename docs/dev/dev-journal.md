@@ -45546,3 +45546,18 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   clear. No retry or pass 56 ran.
 - Plan 0245 opens provider-free to model the likely object-shaped CDP exception
   result, repair only that classification, and prepare a fresh canary gate.
+
+## 2026-08-09 | Plan 0245 repairs object-shaped CDP exceptions provider-free
+
+- The revised fixture returned `result.value={}` plus `exceptionDetails` and
+  reproduced the pass-55 generic failure. This confirms why the first repair's
+  `!value` check never entered fallback.
+- Fallback eligibility now follows `exceptionDetails` or a missing value.
+  Explicit 404 remains terminal, successful/timeout behavior is unchanged, and
+  both object-shaped and missing-value exception fixtures use the loaded
+  resource path with correct telemetry.
+- Focused binary fetch passes 5/5; adapter 156/156; integrated history/MCP
+  237/237; typecheck, scoped Biome, full build, and diff check pass. Built hash
+  is `ff3fe974...d8baf6`; installed remains `4b2dca82...c4725`.
+- Plan 0246 prepares one install/restart and one pass-56 canary but remains
+  `PLANNED` pending explicit effect approval. No runtime/provider effect ran.

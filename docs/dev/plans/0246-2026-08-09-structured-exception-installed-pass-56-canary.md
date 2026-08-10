@@ -1,0 +1,86 @@
+# Structured-Exception Installed Pass-56 Canary | 0246-2026-08-09
+
+State: PLANNED
+Lane: LIVE_FOLLOW_RECOVERY
+Plan version: 1
+Goal execution state: AWAITING_EFFECT_APPROVAL
+Gate state: FROZEN_ONE_CANARY_GATE
+
+## Stable Objective
+
+Install the provider-free structured-exception eligibility repair, prove exact
+source/installed parity, and run one fresh `wsl-chrome-3` pass-56 canary while
+the scheduler and all wider completions remain paused.
+
+## Current State
+
+- Source is provider-free green at adapter hash
+  `ff3fe974478c6f28b975c82444a122c60759bc9404d4518337e1396c90d8baf6`;
+  installed runtime remains the pass-55 hash `4b2dca82...c4725`.
+- Target is blocked/pass 55 with force/next null after sole child
+  `hmj_4abf109417184cfc8866c0563e89c567` failed six external images. Active
+  jobs and exact browser are zero; API PID 93478 is healthy; scheduler is
+  paused/idle; wider passes are `7/2/34`; guards are clear.
+- This plan is prepared only. No effect is authorized until the operator
+  explicitly activates its unchanged packet.
+
+## Frozen Effect Packet
+
+1. Re-read clean/pushed Git, built hash, installed mismatch, API health,
+   scheduler pause/idle, target blocked/pass 55 with null force/next, wider
+   passes `7/2/34`, clear guards, active jobs zero, and exact browser absence.
+2. Run one `install:user-runtime-service`; require one healthy API restart and
+   exact adapter parity at `ff3fe974...d8baf6` with stopped state unchanged.
+3. Invoke exactly once:
+   `auracall api mirror-completion-control acctmirror_completion_fb93ed6c-c57b-40cd-b5dc-ba6322f75446 run-one-pass --port 18095 --timeout-ms 15000 --json`.
+4. Require only pass 56, one child/attempt, `maxItems=6`, force false, matching
+   identity, and honored provider-work pacing. Monitor to terminal and parent
+   absorption without retry.
+5. Verify each materialized file/checksum/archive receipt if present, exact
+   artifact telemetry, browser/job cleanup, API health, scheduler pause, wider
+   passes, guards, and no pass 57. Close docs/audit/commit/push.
+
+## Local Goal Bounds
+
+- `installs: 1`; `api_restarts: 1`; `completion_controls: 1`;
+  `pass_advances: 1`; `fresh_children: 1`; `child_attempts: 1`;
+  `per_pass_max_items: 6`; `browser_launches: 1`.
+- `scheduler_actions: 0`; `other_completion_actions: 0`;
+  `pass_57_actions: 0`; `retries: 0`; `force_mutations: 0`;
+  `config_mutations: 0`; `guard_actions: 0`; `direct_runtime_json_edits: 0`;
+  `prompt_submissions: 0`; `browser_clicks: 0`; `answer_now_actions: 0`;
+  `duplicate_profile_processes: 0`; `subagents: 0`.
+
+## Hard Stops
+
+- Stop before install/control on any Git/hash/API/scheduler/target/wider/guard/
+  active-job/browser drift or ownership ambiguity.
+- Stop after the sole control regardless of outcome. Any timeout, failed item,
+  auth/challenge/identity signal, fanout, missing receipt, pass 57, or cleanup
+  failure ends the packet without retry, substitution, or wider resume.
+
+## Acceptance Criteria
+
+- [ ] Operator explicitly activates this unchanged effect packet.
+- [ ] One install/restart yields exact adapter parity and healthy frozen state.
+- [ ] One control advances only pass 55 to 56 with one child/attempt and no
+  retry or pass 57.
+- [ ] Terminal child and parent absorption have complete identity, artifact,
+  file/archive, browser/job, scheduler/wider/guard receipts.
+- [ ] Plan/docs/audit/commit/push close the packet; scheduler and wider
+  completions remain paused.
+
+## Prepared Gate | Awaiting Explicit Approval
+
+- `checkpoint_id`: `P0246-C01`.
+- `state_transition`: P0245_COMPLETE_PROVIDER_FREE_CANARY_GATE_PREPARED ->
+  P0246_PLANNED_AWAITING_EFFECT_APPROVAL.
+- `progress_classification`: authority_preparation.
+- `evidence`: exact pass-55 failure branch reproduced and repaired
+  provider-free; built/installed hash mismatch intentionally retained; stopped
+  runtime boundary above.
+- `next_action_or_stop_reason`: do not install or run pass 56 until explicit
+  operator approval activates this exact packet.
+- `authority_classification`: fresh effect approval required because Plan 0244
+  consumed its one install and one canary.
+

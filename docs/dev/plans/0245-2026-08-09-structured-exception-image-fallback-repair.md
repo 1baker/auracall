@@ -1,10 +1,10 @@
 # ChatGPT Structured-Exception Image Fallback Repair | 0245-2026-08-09
 
-State: OPEN
+State: CLOSED
 Lane: LIVE_FOLLOW_RECOVERY
 Plan version: 1
-Goal execution state: ACTIVE
-Gate state: PROVIDER_FREE_RED_REQUIRED
+Goal execution state: COMPLETE
+Gate state: PROVIDER_FREE_GREEN_CANARY_GATE_PREPARED
 
 ## Stable Objective
 
@@ -79,13 +79,13 @@ scheduler in this packet.
 
 ## Acceptance Criteria
 
-- [ ] One object-shaped exception fixture is red before source changes and
+- [x] One object-shaped exception fixture is red before source changes and
   green after the repair.
-- [ ] Explicit 404, successful fetch, timeout, and missing-value fallback cases
+- [x] Explicit 404, successful fetch, timeout, and missing-value fallback cases
   remain green with correct transfer/CDP telemetry.
-- [ ] Adapter/adjacent tests, typecheck, build, scoped lint, plan audit, and diff
+- [x] Adapter/adjacent tests, typecheck, build, scoped lint, plan audit, and diff
   hygiene pass with a durable built hash.
-- [ ] Plan 0245 closes provider-free and one fresh installed pass-56 canary gate
+- [x] Plan 0245 closes provider-free and one fresh installed pass-56 canary gate
   is prepared but not executed.
 
 ## Opening Checkpoint | Structured Exception Red Required
@@ -101,4 +101,28 @@ scheduler in this packet.
   provider-free fixture to the exact structured-exception shape and require red.
 - `authority_classification`: ordinary provider-free continuation; all runtime
   and provider effects require a fresh successor approval gate.
+
+## Closing Checkpoint | Protocol Exception Eligibility Green
+
+- `checkpoint_id`: `P0245-C02`.
+- `state_transition`: P0245_ACTIVE_PROVIDER_FREE_RED ->
+  P0245_COMPLETE_PROVIDER_FREE_CANARY_GATE_PREPARED.
+- `progress_classification`: blocker_reduction.
+- `red_evidence`: changing the external-image fixture from an absent value to
+  `result.value={}` plus `exceptionDetails` reproduced the exact generic error
+  at the pre-fallback branch; one test failed and 154 were skipped.
+- `repair`: loaded-resource fallback eligibility now uses the CDP protocol's
+  `exceptionDetails` signal as well as a missing value. A structured
+  `{ok:false,status:404}` without exception details remains terminal and never
+  enters the fallback.
+- `verification`: focused binary-fetch gate `5/5`; adapter `156/156`;
+  integrated adapter/history/MCP `237/237`; typecheck; scoped Biome
+  zero-warning; full build; diff check. Built adapter SHA-256 is
+  `ff3fe974478c6f28b975c82444a122c60759bc9404d4518337e1396c90d8baf6`;
+  installed adapter intentionally remains `4b2dca82...c4725`.
+- `effect_accounting`: one provider-free red and one implementation slice;
+  installs/restarts/browser/provider/completion/scheduler/pass-56 actions all
+  zero.
+- `next_action_or_stop_reason`: stop provider-free complete. Plan 0246 is a
+  prepared, unapproved one-install/one-pass-56 effect gate.
 

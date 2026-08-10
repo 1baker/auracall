@@ -33,6 +33,13 @@
   zero, scheduler remains paused/idle, wider passes remain 7/2/34, and no retry
   or pass 56 ran. Plan 0245 continues provider-free and will only prepare the
   next effect gate.
+- The object-shaped exception fixture reproduced the failure red, then turned
+  green when fallback eligibility followed CDP `exceptionDetails`. Explicit
+  404 remains terminal. Binary fetch 5/5, adapter 156/156, integrated
+  history/MCP 237/237, typecheck, lint, and full build pass.
+- Built adapter hash is `ff3fe974...d8baf6`; installed remains
+  `4b2dca82...c4725`. Plan 0246 freezes one install/restart and one pass-56
+  canary but is `PLANNED`; no new live effect is authorized or executed.
 
 ## Turn 426 | 2026-08-09
 

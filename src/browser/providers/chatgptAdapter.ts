@@ -9750,7 +9750,7 @@ async function fetchChatgptBinaryWithClient(
 		);
 		const value = isRecord(result.result?.value) ? result.result.value : null;
 		if (!value || value.ok !== true || typeof value.base64 !== "string") {
-			if (!value) {
+			if (result.exceptionDetails || !value) {
 				const loadedResource = await readLoadedChatgptResourceWithClient(
 					client,
 					url,
