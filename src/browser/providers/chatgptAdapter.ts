@@ -11475,7 +11475,7 @@ async function clickChatgptViewerDownloadButtonWithClient(
         const controls = Array.from(document.querySelectorAll('button, [role="button"], a'))
           .filter((node) => isVisible(node) && node.getAttribute(taggedAttr) !== 'true')
           .map((node) => ({ node, label: labelFor(node) }));
-        const download = controls.find((entry) => /^Download$/i.test(entry.label));
+        const download = controls.find((entry) => /^Download(?: file)?$/i.test(entry.label));
         if (!download?.node || typeof download.node.click !== 'function') {
           return { ok: false, labels: controls.map((entry) => entry.label).filter(Boolean).slice(0, 20) };
         }
@@ -11486,6 +11486,15 @@ async function clickChatgptViewerDownloadButtonWithClient(
 		});
 		if (isRecord(result.result?.value) && result.result.value.ok === true) {
 			recordBrowserScrapeProviderAction(options, "chatgpt.clickArtifactViewerDownload");
+			const matchedLabel = normalizeUiText(
+				typeof result.result.value.label === "string" ? result.result.value.label : null,
+			);
+			recordBrowserScrapeProviderAction(
+				options,
+				matchedLabel.toLowerCase() === "download file"
+					? "chatgpt.clickArtifactViewerDownload.currentFileLabel.v1"
+					: "chatgpt.clickArtifactViewerDownload.legacyLabel.v1",
+			);
 			return true;
 		}
 		await sleep(250);

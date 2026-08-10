@@ -16,6 +16,20 @@
 - Admission correction: the API was externally replaced by healthy systemd PID
   1466 at `2026-08-10 05:15:25 CDT`, `NRestarts=0`. Completions, scheduler,
   guards, jobs, and all managed-browser absence remained unchanged.
+- Direct result: both exact chats use button-only generated DOCX surfaces. The
+  first control can open a preview/card, whose nested download control is
+  labelled `Download file`; there is no anchor URL for the existing fetch
+  fallback. The adapter's viewer fallback accepted only exact `Download`.
+- Repair and verification: the deterministic regression failed on the legacy
+  matcher and passes after narrowly accepting `Download file`; the repaired
+  branch emits a sanitized versioned counter. Focused suites pass 278 tests;
+  the full provider-free suite passes 2,766 tests in 305 files, with 65 opt-in
+  tests skipped. Typecheck, build, scoped lint, and diff hygiene pass.
+- Closeout: Plan 0248 is closed. Plan 0249 freezes one future install/restart
+  and one exact default artifacts-only `maxItems=1` canary, but is
+  `PREPARED_NOT_AUTHORIZED`. Installed source remains intentionally stale;
+  scheduler/completions are untouched and active jobs/browser processes are
+  zero.
 
 ## 2026-08-09 | Plan 0247 Authorized Staged Wider Recovery
 

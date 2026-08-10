@@ -1,3 +1,13 @@
+- 2026-08-10: ChatGPT generated-file controls can be button-only and can use
+  `Download file` rather than legacy exact `Download`. When artifact activation
+  produces neither a native file nor a captured anchor URL, the viewer fallback
+  owns recovery; rejecting the current label silently turns an otherwise
+  retrievable sandbox DOCX into a skipped/failed materialization. Match only
+  the two known labels, retain native download-path and URL-fetch behavior, and
+  record a sanitized label-family counter so an installed canary can prove the
+  repaired branch without logging filenames or chat content. Validate the
+  exact expression red/green provider-free before any install or asset click.
+
 - 2026-08-09: A clean exact-profile canary does not prove every older
   completion's broader candidate set. Resume recovery serially and keep the
   scheduler last: Plan 0247's first default pass matched all account identity

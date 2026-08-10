@@ -1,10 +1,11 @@
 # Default DOCX Chat Inspection And Retrieval Repair | 0248-2026-08-10
 
-State: OPEN
+State: CLOSED
 Lane: P01
-Plan version: 1
-Goal execution state: ACTIVE
-Gate state: AUTHORIZED_PRE_DIRECT_CHAT_INSPECTION
+Plan version: 2
+Outcome: PROVIDER_FREE_REPAIR_GREEN_CANARY_PREPARED
+Goal execution state: AWAITING_RUNTIME_GATE
+Gate state: SUCCESSOR_PREPARED_NOT_AUTHORIZED
 
 ## Stable Objective
 
@@ -130,21 +131,21 @@ code gap. Prepare but do not consume any installed canary or scheduler action.
 
 ## Acceptance Criteria
 
-- [ ] Opening gate is audited, committed, pushed, and freshly reread.
-- [ ] Exactly two implicated chats are inspected once with bounded metadata and
+- [x] Opening gate is audited, committed, pushed, and freshly reread.
+- [x] Exactly two implicated chats are inspected once with bounded metadata and
   no download/click/reload/sensitive-output effect.
-- [ ] The observed difference from the successful external-image mechanism is
+- [x] The observed difference from the successful external-image mechanism is
   explicit and evidence-backed.
-- [ ] One fast deterministic command reproduces the exact failure on current
+- [x] One fast deterministic command reproduces the exact failure on current
   code and becomes green after the repair.
-- [ ] CodeGraph-backed flow analysis identifies the explanatory gap and the
+- [x] CodeGraph-backed flow analysis identifies the explanatory gap and the
   repair stays at the narrow owning layer.
-- [ ] Focused and broad provider-free validation pass with no managed-browser
+- [x] Focused and broad provider-free validation pass with no managed-browser
   leakage or regression in identity, timeout, explicit-status, and external
   image behavior.
-- [ ] Scheduler/completions remain stopped, excluded providers unchanged, and
+- [x] Scheduler/completions remain stopped, excluded providers unchanged, and
   final docs/audits/Git readbacks agree.
-- [ ] A fresh installed-canary successor is prepared but not activated.
+- [x] A fresh installed-canary successor is prepared but not activated.
 
 ## Opening Checkpoint | Direct Chat Inspection Authorized
 
@@ -193,3 +194,75 @@ mechanism is reproduced deterministically provider-free, the real explanatory
 gap is repaired with regression coverage and broad validation, stopped runtime
 boundaries remain intact, and one unactivated fresh canary successor records
 the next exact gate.
+
+## Direct Inspection And Repair Checkpoint | Current Viewer Label Gap
+
+- `checkpoint_id`: `P0248-C03`.
+- `state_transition`:
+  P0248_ACTIVE_AUTHORIZED_PRE_DIRECT_CHAT_INSPECTION_RUNTIME_REFRESHED ->
+  P0248_PROVIDER_FREE_REPAIR_GREEN.
+- `progress_classification`: blocker_reduction.
+- `direct_evidence`: both exact chats are authenticated and challenge-free.
+  Each assistant turn exposes the generated DOCX through JavaScript buttons
+  only: no anchor, `href`, or `download` attribute. Artifact activation opens
+  a preview/card whose nested native control is labelled `Download file`.
+  The successful pass-56 image path instead used external image resource
+  content and never depended on a viewer button.
+- `codegraph_evidence`: canonical sandbox artifacts reconcile to synthetic
+  `chatgpt://download-button/<turn>/0` controls and reach
+  `materializeChatgptConversationArtifactWithClient`. That path configures
+  browser downloads, clicks the tagged artifact, waits for a captured URL or
+  native file, then calls the viewer fallback only when neither exists. The
+  fallback accepted `/^Download$/i` and therefore excluded the observed
+  `Download file` control; with no URL, the artifact returned null.
+- `red_green`: the exact focused regression failed in 22 ms because the
+  emitted matcher was `/^Download$/i`; after the narrow repair it passes and
+  records
+  `chatgpt.clickArtifactViewerDownload.currentFileLabel.v1`. The matcher
+  accepts only `Download` and `Download file`.
+- `validation`: adapter/materialization/history suites pass 278/278; typecheck,
+  production build, scoped Biome, and diff check pass. The full provider-free
+  suite passes 2,766 tests in 305 files with 65 opt-in tests skipped. Browser
+  inspection is empty before and after the broad suite.
+- `subagent_status`: not_spawned; serialized critical path.
+- `effect_accounting`: one owned default browser launch, one named attachment,
+  two exact route navigations, bounded read-only DOM metadata, and one exact
+  close; asset clicks/downloads, reloads, raw network/body reads, prompts,
+  `Answer now`, provider work, materialization, completion/scheduler controls,
+  install, and restart remain zero.
+- `next_action_or_stop_reason`: prepare a separate unactivated exact
+  `maxItems=1` installed canary, then stop provider-free.
+- `authority_classification`: direct diagnostic and source repair complete;
+  installed/live effects remain outside current authority.
+- `review_disposition_summary`: hypothesis 1 is accepted. The first artifact
+  control can open the viewer and no anchor URL is emitted, but the native
+  fallback rejects the current control label. Download-directory drift remains
+  unobserved and is not accepted as the cause.
+
+## Closing Checkpoint | Successor Frozen Without Effects
+
+- `checkpoint_id`: `P0248-C04`.
+- `state_transition`: P0248_PROVIDER_FREE_REPAIR_GREEN ->
+  P0248_CLOSED_CANARY_PREPARED_NOT_AUTHORIZED.
+- `progress_classification`: blocker_reduction.
+- `evidence`: built adapter hash
+  `223f3f84a913f11074878569920873565c823a6f46a69ff973ce03566e393522`;
+  installed adapter remains
+  `ff3fe974478c6f28b975c82444a122c60759bc9404d4518337e1396c90d8baf6`.
+  API PID 1466 is active/running with `NRestarts=0`; scheduler is
+  operator-paused/idle with foreground false and zero requests/reservations;
+  active history jobs and DevTools-enabled browsers are zero. ChatGPT states
+  remain default blocked/pass 8, `wsl-chrome-2` paused/pass 2,
+  `wsl-chrome-3` idle-waiting/pass 56, and `wsl-chrome-4` paused/pass 34.
+- `successor`: Plan 0249 freezes one exact default conversation, artifacts-only
+  `maxItems=1` canary after one separately authorized install/restart. It is
+  `PREPARED_NOT_AUTHORIZED` and its command has not run.
+- `subagent_status`: not_spawned.
+- `effect_accounting`: no install, restart, canary, materialization job,
+  completion action, scheduler action, or retry occurred.
+- `next_action_or_stop_reason`: stop. Await explicit operator authorization of
+  Plan 0249.
+- `authority_classification`: Plan 0248 is complete provider-free; no live
+  authority carries forward.
+- `review_disposition_summary`: repair and regression are accepted; installed
+  runtime acceptance remains pending the separate one-canary gate.

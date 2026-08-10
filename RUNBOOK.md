@@ -6,17 +6,30 @@
   code diagnosis, followed by repair and testing. Plan 0248 owns one exact
   default managed-browser launch, two named conversation inspections, and one
   provider-free repair slice.
-- Current cache evidence identifies two newest routeable DOCX-bearing chats,
-  each exposing `auracall-m5-20260802T185953Z.docx` through sandbox
-  `/workspace/scratch/...` and DOM-download surfaces. This differs from the six
-  successful external-image resource-content fallbacks but is not yet the
-  proven cause.
-- No asset click/download, reload, raw network/body read, retry, install,
-  canary, completion control, or scheduler control is authorized. Scheduler
-  and all completion boundaries remain stopped.
+- Direct inspection proved both exact assistant turns expose the DOCX through
+  JavaScript buttons only, with no anchor, `href`, or `download` attribute.
+  Artifact activation depends on a nested `Download file` control, unlike the
+  successful external-image resource-content path.
+- CodeGraph traced the canonical sandbox artifact through live-control
+  reconciliation into the generated-artifact materializer. Its no-URL native
+  viewer fallback accepted only exact `Download`, so it rejected the current
+  `Download file` label and returned no artifact.
+- The exact regression failed red on `/^Download$/i` and is green with a
+  narrow `Download` / `Download file` matcher plus sanitized branch counter.
+  Focused validation passes 278 tests; the full provider-free suite passes
+  2,766 tests in 305 files with 65 opt-in tests skipped. Typecheck, build,
+  scoped lint, and diff hygiene pass.
+- No asset download, reload, raw network/body read, retry, install, canary,
+  materialization job, completion control, or scheduler control ran.
+  Scheduler is still operator-paused/idle, active history jobs and browsers
+  are zero, and all four ChatGPT pass/status boundaries are unchanged.
 - Fresh admission corrected the API identity to healthy systemd PID 1466,
   started at `2026-08-10 05:15:25 CDT` with `NRestarts=0`. All stopped runtime
   and browser-absence evidence otherwise agrees with the opening gate.
+- Plan 0248 is closed provider-free. Plan 0249 is prepared but not authorized:
+  after a future explicit gate it permits one install/restart and one exact
+  default-conversation artifacts-only canary at `maxItems=1`, then a hard stop
+  regardless of outcome. Scheduler and completion controls remain excluded.
 
 ## Turn 429 | 2026-08-09
 

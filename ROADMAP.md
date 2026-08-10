@@ -7,13 +7,22 @@
 Status: active
 Lane: P01
 
-- Active default DOCX chat inspection and provider-free retrieval repair:
+- Prepared, not authorized, default DOCX installed one-canary gate:
+  [docs/dev/plans/0249-2026-08-10-default-docx-installed-one-canary-gate.md](docs/dev/plans/0249-2026-08-10-default-docx-installed-one-canary-gate.md)
+  Plan 0248 localized the exact current ChatGPT viewer label gap and closed
+  green provider-free. Plan 0249 freezes one future install/restart and one
+  exact default-conversation artifacts-only canary at `maxItems=1`. It does
+  not authorize its recorded command; completion and scheduler controls remain
+  zero, and a green canary would still require a separate wider-recovery gate.
+
+- Closed default DOCX chat inspection and provider-free retrieval repair:
   [docs/dev/plans/0248-2026-08-10-default-docx-chat-inspection-and-retrieval-repair.md](docs/dev/plans/0248-2026-08-10-default-docx-chat-inspection-and-retrieval-repair.md)
-  Plan 0247 stopped on two retryable default materialization failures. Plan
-  0248 inspects only the two implicated DOCX-bearing chats directly, then
-  requires a deterministic provider-free red before code repair and testing.
-  It excludes downloads, retries, install/canary work, and every scheduler or
-  completion control.
+  Both implicated chats expose generated DOCX files through JavaScript buttons
+  with no anchor URL. The current nested native-download control is labelled
+  `Download file`, but the viewer fallback accepted only exact `Download`.
+  The narrow matcher repair is covered by a deterministic red/green and a
+  sanitized current-label counter; 278 focused and 2,766 full provider-free
+  tests pass. No install, canary, completion, or scheduler effect ran.
 
 - Stopped ChatGPT staged wider recovery and scheduler-last resume:
   [docs/dev/plans/0247-2026-08-09-chatgpt-staged-wider-recovery-and-scheduler-resume.md](docs/dev/plans/0247-2026-08-09-chatgpt-staged-wider-recovery-and-scheduler-resume.md)

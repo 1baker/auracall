@@ -431,6 +431,28 @@ describe("clickChatgptViewerDownloadButtonWithClient", () => {
 			"chatgpt.clickArtifactViewerDownload": 1,
 		});
 	});
+
+	test("accepts the current viewer pane Download file control label", async () => {
+		const telemetry = createBrowserScrapeTelemetryRecorder();
+		const evaluate = vi.fn(async (input: { expression?: string; returnByValue?: boolean }) => {
+			expect(input.returnByValue).toBe(true);
+			expect(input.expression).toContain("/^Download(?: file)?$/i");
+			return { result: { value: { ok: true, label: "Download file" } } };
+		});
+
+		await expect(
+			clickChatgptViewerDownloadButtonWithClientForTest(
+				// biome-ignore lint/style/useNamingConvention: CDP domain names are protocol-defined.
+				{ Runtime: { evaluate } } as never,
+				{ scrapeTelemetry: telemetry },
+			),
+		).resolves.toBe(true);
+		expect(evaluate).toHaveBeenCalledTimes(1);
+		expect(telemetry.providerActions).toMatchObject({
+			"chatgpt.clickArtifactViewerDownload": 1,
+			"chatgpt.clickArtifactViewerDownload.currentFileLabel.v1": 1,
+		});
+	});
 });
 
 describe("extractChatgptArtifactFileNameFromUri", () => {
