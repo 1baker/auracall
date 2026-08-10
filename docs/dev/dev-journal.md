@@ -19,6 +19,16 @@
   sentinel caught that distinction without provider work. Plan version 2 now
   tests the broad automatic selector, which must exclude both current
   zero-asset rows as `noSelectedAssetEvidence`.
+- Result: both exact rows now carry durable routeable, detail-complete,
+  `assetCompleteness=none` evidence with message/file/source/artifact counts
+  `2/0/0/0` and their individual successful receipt timestamps. Pre/post broad
+  callback-disabled simulations excluded both, selected zero, and invoked zero
+  provider callbacks.
+- Closeout: retained job index SHA-256 remains
+  `f15c7b36de9bd574e237f910a2b0b98780349843510b35ebdc5a38eef574aaac`;
+  focused tests pass `2/2`; scheduler remains paused; active jobs and browser
+  instances remain zero; default completion remains blocked/pass 8. Plan 0250
+  is closed with no canary or wider authority consumed.
 
 ## 2026-08-10 | Plan 0248 Direct Default DOCX Inspection And Repair
 

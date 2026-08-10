@@ -1,11 +1,11 @@
 # Default Zero-Asset Evidence Reconciliation | 0250-2026-08-10
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 2
-Outcome: IN_PROGRESS
-Goal execution state: ACTIVE
-Gate state: AUTHORIZED_PROVIDER_FREE_EVIDENCE_ONLY
+Outcome: EVIDENCE_RECONCILED_PROVIDER_FREE
+Goal execution state: COMPLETE
+Gate state: CLOSED_NO_LIVE_EFFECTS
 
 ## Stable Objective
 
@@ -92,22 +92,22 @@ that neither row remains eligible for asset retry.
 
 ## Acceptance Criteria
 
-- [ ] Cached context and receipt identity/timestamps/counts validate for both
+- [x] Cached context and receipt identity/timestamps/counts validate for both
   exact conversations.
-- [ ] Pre-apply callback-disabled broad simulation predicts both rows are
+- [x] Pre-apply callback-disabled broad simulation predicts both rows are
   excluded as `noSelectedAssetEvidence` with no provider invocation.
-- [ ] Exactly two service-layer evidence writes succeed; no direct runtime file
+- [x] Exactly two service-layer evidence writes succeed; no direct runtime file
   edit occurs.
-- [ ] Durable readback reports both rows routeable, detail complete,
+- [x] Durable readback reports both rows routeable, detail complete,
   `assetCompleteness=none`, messages 2, files 0, sources 0, artifacts 0, with
   no stale timeout reason.
-- [ ] Post-apply broad `maxItems=1` callback-disabled simulation selects zero
+- [x] Post-apply broad `maxItems=1` callback-disabled simulation selects zero
   rows, records two `noSelectedAssetEvidence` exclusions, and invokes zero
   provider callbacks.
-- [ ] The retained failed job is unchanged; scheduler remains paused; active
+- [x] The retained failed job is unchanged; scheduler remains paused; active
   history jobs and owned browser processes remain zero; completion pass/status
   is unchanged.
-- [ ] Docs, planning audit, targeted tests, Git status, commit, and push agree.
+- [x] Docs, planning audit, targeted tests, Git status, commit, and push agree.
 
 ## Opening Checkpoint | Evidence-Only Reconciliation Authorized
 
@@ -162,3 +162,37 @@ remains stopped.
 - `review_disposition_summary`: rejected the selected-ID simulation as a model
   of scheduler retry; accepted the broad reconciliation classifier as the
   relevant automatic-admission boundary.
+
+## Closing Checkpoint | Current Evidence Reconciled, History Preserved
+
+- `checkpoint_id`: `P0250-C03`.
+- `state_transition`: P0250_ACTIVE_BROAD_RETRY_SELECTOR_CORRECTED ->
+  P0250_CLOSED_EVIDENCE_RECONCILED_PROVIDER_FREE.
+- `progress_classification`: objective_complete.
+- `evidence`: both successful cached reads validated provider, account scope,
+  conversation ID, terminal receipt, and exact counts. The two service-layer
+  writes recorded `routeable`, detail `complete`, `assetCompleteness=none`, and
+  counts `2/0/0/0` at `2026-08-10T12:34:51.714Z` and
+  `2026-08-10T12:35:11.831Z`. Durable JSON and persistence readback agree.
+- `selection_receipt`: both pre-apply and post-apply broad `maxItems=1`
+  simulations discovered two rows, excluded both as
+  `noSelectedAssetEvidence`, admitted and selected zero, and invoked zero
+  provider callbacks.
+- `history_receipt`: retained job index remained byte-identical at SHA-256
+  `f15c7b36de9bd574e237f910a2b0b98780349843510b35ebdc5a38eef574aaac`.
+- `validation_receipt`: focused persistence and history-materialization tests
+  passed `2/2`; scheduler remains paused/paused; active jobs are zero; no
+  Chrome DevTools instance exists; API PID 27774 is healthy; default remains
+  blocked/pass 8.
+- `subagent_status`: not_spawned.
+- `effect_accounting`: two account-mirror evidence writes; all provider,
+  browser, download, materialization, completion, scheduler, guard/config,
+  install, restart, and direct-runtime-edit counters remained zero. The earlier
+  explicit-ID sentinel invocation was in memory and stopped before provider
+  work.
+- `next_action_or_stop_reason`: stop. No canary, completion, scheduler, or wider
+  materialization authority exists in this plan.
+- `authority_classification`: evidence-only authority consumed and closed.
+- `review_disposition_summary`: current rows are routeable zero-asset
+  conversations and are no longer broad automatic retry candidates; retained
+  timeout entries remain historical evidence rather than being relabeled.

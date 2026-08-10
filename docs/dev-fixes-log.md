@@ -1,3 +1,13 @@
+- 2026-08-10: A history-materialization failure row labeled `kind=artifact`
+  is not proof that an asset exists. If provider ID, title, URL, local path,
+  and MIME are all null and the error is a conversation-context timeout,
+  preserve that terminal row as historical execution evidence. Independently
+  validate current conversation context; when it succeeds with no selected
+  assets, persist routeable, detail-complete, `assetCompleteness=none` evidence
+  and exact zero counts through account-mirror persistence. Broad automatic
+  reconciliation then excludes the row as `noSelectedAssetEvidence`; explicit
+  conversation IDs remain a separate operator-directed live-discovery path.
+
 - 2026-08-10: A history-materialization job can cross its running stale
   threshold before the provider task has finished unwinding. Do not equate the
   public terminal timestamp with provider completion or cleanup: wait for exact

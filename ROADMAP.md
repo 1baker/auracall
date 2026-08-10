@@ -7,15 +7,15 @@
 Status: active
 Lane: P01
 
-- Active provider-free zero-asset evidence reconciliation:
+- Closed provider-free zero-asset evidence reconciliation:
   [docs/dev/plans/0250-2026-08-10-default-zero-asset-evidence-reconciliation.md](docs/dev/plans/0250-2026-08-10-default-zero-asset-evidence-reconciliation.md)
   The two Plan 0247 retryable rows are synthetic conversation-context timeout
-  entries with no asset identity. Current AuraCall reads both conversations in
-  about 12 seconds with two messages and zero files/artifacts. Plan 0250 may
-  project that successful cached evidence into the two account-mirror rows and
-  prove callback-disabled broad-retry exclusion. Explicit conversation IDs are
-  a separate operator-directed live-discovery authority. Provider, materialization,
-  completion, scheduler, install, and restart effects remain zero.
+  entries with no asset identity. Plan 0250 projected the two successful cached
+  reads into current account-mirror evidence as routeable, detail-complete,
+  zero-asset rows. Pre/post callback-disabled broad selection excluded both as
+  `noSelectedAssetEvidence`; provider callbacks and selected candidates were
+  zero. Historical job SHA-256 stayed unchanged, scheduler stayed paused, and
+  materialization/completion/browser effects remained zero.
 
 - Stopped default DOCX installed one-canary gate:
   [docs/dev/plans/0249-2026-08-10-default-docx-installed-one-canary-gate.md](docs/dev/plans/0249-2026-08-10-default-docx-installed-one-canary-gate.md)

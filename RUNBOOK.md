@@ -28,6 +28,17 @@
   the sentinel threw at the boundary. Version 2 uses the actual broad
   scheduler-style selector, where zero-asset rows must be classified
   `noSelectedAssetEvidence` before any callback.
+- Plan 0250 closed provider-free. Exactly two service-layer evidence writes
+  recorded routeable, detail-complete, `assetCompleteness=none`, and exact
+  `2/0/0/0` message/file/source/artifact counts. Durable readback matched the
+  successful receipt times `2026-08-10T12:34:51.714Z` and
+  `2026-08-10T12:35:11.831Z`.
+- Pre/post broad `maxItems=1` simulations each discovered two, excluded two as
+  `noSelectedAssetEvidence`, selected zero, and invoked zero provider callbacks.
+  The retained job index remained byte-identical at SHA-256
+  `f15c7b36de9bd574e237f910a2b0b98780349843510b35ebdc5a38eef574aaac`.
+  Focused tests passed `2/2`; scheduler is still paused, active jobs are zero,
+  no Chrome DevTools instance exists, and default remains blocked/pass 8.
 
 ## Turn 430 | 2026-08-10
 
