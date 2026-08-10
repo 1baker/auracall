@@ -4,7 +4,7 @@ State: OPEN
 Lane: LIVE_FOLLOW_RECOVERY
 Plan version: 1
 Goal execution state: ACTIVE
-Gate state: PROVIDER_FREE_GREEN_INSTALL_READY
+Gate state: EXTERNAL_DIAGNOSTIC_GREEN_PASS_55_READY
 
 ## Stable Objective
 
@@ -104,11 +104,11 @@ global scheduler and every wider completion paused throughout.
 
 ## Acceptance Criteria
 
-- [ ] One exact provider-free regression is red before the repair and green
+- [x] One exact provider-free regression is red before the repair and green
   after it; existing successful and timeout behavior remains green.
-- [ ] Targeted/adjacent validation, typecheck, build, lint, audit, and diff
+- [x] Targeted/adjacent validation, typecheck, build, lint, audit, and diff
   hygiene pass; one install/restart yields exact source/installed parity.
-- [ ] One external agent-browser attachment to the exact AuraCall-owned browser
+- [x] One external agent-browser attachment to the exact AuraCall-owned browser
   proves healthy auth/challenge state and nonempty exact-image bytes without
   raw content/header retention or duplicate-profile activity.
 - [ ] Exactly one pass-55 canary runs only after the diagnostic gate, creates no
@@ -163,3 +163,35 @@ global scheduler and every wider completion paused throughout.
   repair; then freshly verify stopped runtime, install/restart once, and prove
   built/installed adapter parity before any browser launch.
 
+## External Diagnostic Checkpoint | Exact CORS Mechanism Confirmed
+
+- `checkpoint_id`: `P0244-C03`.
+- `state_transition`: P0244_PROVIDER_FREE_GREEN_INSTALL_READY ->
+  P0244_EXTERNAL_DIAGNOSTIC_GREEN_PASS_55_READY.
+- `progress_classification`: blocker_reduction.
+- `install_evidence`: the sole install/restart moved API PID `55894 -> 93478`
+  with `NRestarts=0`. Source and installed adapter SHA-256 match at
+  `4b2dca82be9c5a6325b1a2749cdcb3218d1211e5f0a232bbfe20cb00d39c4725`.
+- `agent_browser_preflight`: one exact AuraCall-managed browser launched as PID
+  7681 on actual port 45044. Agent-browser session `p0244-external-image`
+  attached once and reported origin `https://chatgpt.com`, title `ChatGPT`, an
+  authenticated composer surface, and challenge/`Answer now` both false.
+- `exact_mechanism`: the exact external CDN image loaded successfully as a
+  1292x1292 DOM image, but the same page-context credentialed `fetch()` rejected
+  with `TypeError` and no HTTP status. After enabling the Page CDP domain on the
+  same live browser, `Page.getResourceContent` found the exact resource as
+  `Image`/`image/webp`, base64-encoded, 71,346 bytes, SHA-256
+  `2d47c662a23bfa46d1ac56f764f1f3b8468f32d05c5daf434385ab4e91f92127`.
+  This accepts H1 and rejects H2/H3/H4 for the observed pass-54 URL.
+- `cleanup`: agent-browser detached, the owned port-45044 Chrome process group
+  closed, the named diagnostic session disappeared, exact-profile processes
+  and port are absent, and active history jobs are zero.
+- `runtime_readback`: API PID 93478 healthy; scheduler operator-paused/idle;
+  target still blocked/pass 54 with force/next null; wider passes unchanged at
+  `7/2/34`; all ChatGPT provider guards clear.
+- `effect_accounting`: installs 1/1; API restarts 1/1; browser launches 1/1;
+  agent-browser attaches 1/1; metadata diagnostics 1/1; browser closes 1/1;
+  completion controls 0/1; every excluded effect zero.
+- `next_action_or_stop_reason`: audit, commit, and push this diagnostic gate;
+  freshly re-read stopped state; then run exactly one pass-55 control or stop
+  on drift.

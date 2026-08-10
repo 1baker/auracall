@@ -16,6 +16,14 @@
   red, then turned green with a loaded-resource-content fallback. Explicit 404
   behavior stays terminal. Adapter `155/155`, integrated history/MCP `236/236`,
   typecheck, scoped lint, and full build pass; no runtime effect has run yet.
+- The sole install/restart produced adapter parity `4b2dca82...c4725` and API
+  PID 93478. One agent-browser attachment to the exact AuraCall-owned browser
+  proved the exact CDN image loads at 1292x1292 while page fetch rejects with
+  `TypeError`; CDP resource content returned 71,346 `image/webp` bytes with
+  SHA-256 `2d47c662...f92127`.
+- The diagnostic session detached and owned browser closed. Scheduler, target
+  pass 54, wider passes 7/2/34, guards, and active jobs remain frozen. The sole
+  pass-55 canary is now eligible after this checkpoint is audited and pushed.
 
 ## Turn 426 | 2026-08-09
 

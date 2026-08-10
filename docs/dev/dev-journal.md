@@ -45514,3 +45514,20 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Adapter tests pass `155/155`; the integrated adapter/history/MCP gate passes
   `236/236`; typecheck, scoped Biome, full build, and diff check pass. Built
   adapter SHA-256 is `4b2dca82...c4725`. No runtime/provider effect has run.
+
+## 2026-08-09 | Plan 0244 external diagnostic confirms exact CORS mechanism
+
+- One install/restart produced source/installed adapter parity at
+  `4b2dca82...c4725` and healthy API PID 93478 with zero crash restarts.
+- One exact AuraCall-owned browser launched on live port 45044. The sole
+  agent-browser attachment saw authenticated ChatGPT with no challenge or
+  `Answer now`. The exact CDN image loaded at 1292x1292, while credentialed
+  page fetch rejected with `TypeError` before any HTTP status.
+- The same browser's CDP resource-content path returned the exact loaded
+  `image/webp`: 71,346 bytes with SHA-256 `2d47c662...f92127`. The causal
+  mechanism is therefore cross-origin page-fetch rejection despite successful
+  image loading, exactly the branch repaired provider-free.
+- Agent-browser detached and the owned browser closed. Exact profile/port and
+  active jobs are absent; scheduler remains paused, target remains blocked at
+  pass 54, wider passes remain 7/2/34, and guards are clear. Pass 55 is now
+  eligible behind a fresh committed readback.
