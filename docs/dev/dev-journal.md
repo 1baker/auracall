@@ -45484,3 +45484,19 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   55894 remains healthy, scheduler remains paused, and wider passes remain
   7/2/34. Plan 0243 therefore closes C5 without pass 55, retry, substitution,
   scheduler/wider control, or any other excluded effect.
+
+## 2026-08-09 | Plan 0244 opens external-image transport repair
+
+- The operator authorized a serialized provider-free repair, one external
+  agent-browser diagnostic on the exact AuraCall-managed `wsl-chrome-3`
+  browser, and one pass-55 canary only after that diagnostic passes. Scheduler
+  and wider completions remain paused.
+- The retained pass-54 failure is localized after successful DOM image
+  discovery: the adapter's credentialed page-context `fetch()` returned no
+  usable by-value result for the external CDN image and emitted `ChatGPT
+  artifact binary fetch failed`. Identity/auth/challenge/guard evidence is
+  clean.
+- The first gate is one provider-free red at that transport seam. No install,
+  restart, browser launch, provider callback, materialization, or completion
+  control is permitted until the regression turns green and adjacent validation
+  passes.

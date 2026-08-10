@@ -1,5 +1,18 @@
 # RUNBOOK
 
+## Turn 427 | 2026-08-09
+
+- Plan 0244 opens the bounded repair for the pass-54 external DOM-image
+  artifact failure. Authority is provider-free red/green first, then one
+  exact-profile agent-browser diagnostic, then one pass-55 canary only if the
+  diagnostic proves the repaired byte path.
+- The failure is localized after DOM image discovery in the page-context
+  binary fetch, with no identity, authentication, challenge, provider-guard,
+  timeout, or pending-operation signal. The exact external URL and raw headers
+  will not be persisted in diagnostic output.
+- Scheduler and wider completions remain paused; install/restart, browser, and
+  canary effects remain behind their explicit sequential gates.
+
 ## Turn 426 | 2026-08-09
 
 - The operator explicitly accepted the residual risk of reusing the unrotated
