@@ -3,7 +3,7 @@
 State: OPEN
 Lane: P01
 Plan version: 3
-Gate state: PREPARED_AWAITING_APPROVAL
+Gate state: PREPARED_AWAITING_APPROVAL_AND_ZERO_OWNER
 Goal execution state: PAUSED_AT_LIVE_EFFECT_GATE
 
 ## Stable Goal Objective
@@ -41,10 +41,15 @@ or widen the route or browser profile.
   `1f3941267e762d72b1caf12d41fce6fbd4f70e12cd6300b6c55e6e6d180beb4a`;
   installed remains
   `fac2bd9b1de04ed3ec2ed9b19e64ceb5b1766232224b7d4acb3a7fd2dcd6bea7`.
-- Fresh read-only posture is API PID 81249 active/running with `NRestarts=0`,
-  scheduler paused/paused, completion queued/running counts 0/0, target
-  idle-waiting/pass 56 with null error/next/force, active history jobs zero,
-  exact profile owners zero, and port 45015 unbound.
+- API PID 81249 is active/running with `NRestarts=0`; scheduler is
+  paused/paused; completion queued/running counts and active history jobs are
+  zero; and the target remains idle-waiting/pass 56 with null
+  error/next/force.
+- Fresh final admission found an unrelated live AuraCall browser run using the
+  exact `wsl-chrome-3/chatgpt` managed browser profile. Parent PID 5165 launched
+  Chrome root PID 5747 at 08:12:49 CDT, and PID 5747 owns port 45015. Its command
+  is a separate LitScout declaration campaign, not this canary or an API job.
+  The owner must settle naturally; this plan has no attach or kill authority.
 
 ## Authority And Effect Boundary
 
@@ -183,6 +188,29 @@ No command in this section is authorized by its presence in the plan.
 - `subagent_status`: not_spawned.
 - `next_action_or_stop_reason`: await explicit Plan 0262 approval, then re-run
   fresh admission and execute the frozen packet once or stop on drift.
+
+## Admission Checkpoint | Unrelated Exact-Profile Owner
+
+- `checkpoint_id`: `P0262-C04`.
+- `state_transition`: P0262_PREPARED_AWAITING_APPROVAL ->
+  P0262_PREPARED_AWAITING_APPROVAL_AND_ZERO_OWNER.
+- `progress_classification`: live_admission_failed_closed.
+- `owner_evidence`: port 45015 is listening under Chrome root PID 5747 with
+  exact user-data directory
+  `~/.auracall/browser-profiles/wsl-chrome-3/chatgpt`. Its parent PID 5165 is an
+  unrelated active AuraCall/LitScout campaign started before this admission.
+- `runtime_evidence`: API PID 81249 remains healthy; scheduler paused/paused;
+  completion queued/running 0/0; active history jobs zero; and the target
+  idle-waiting/pass 56 with null error/next/force.
+- `effect_audit`: ownership was attributed from OS process and socket metadata
+  only. No page attachment, browser inspection, kill, install, restart,
+  provider call, context read, materialization, or control occurred.
+- `authority_classification`: fail closed. This plan does not authorize
+  interrupting or cleaning an unrelated browser owner.
+- `subagent_status`: not_spawned.
+- `next_action_or_stop_reason`: wait for PID 5165/5747 and port 45015 to settle
+  naturally, then require a fresh zero-owner admission and explicit Plan 0262
+  live-effect approval before executing the frozen packet.
 
 ## Definition Of Done
 

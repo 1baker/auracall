@@ -62,6 +62,12 @@
   completion queued/running 0/0, target idle-waiting/pass 56, active history
   jobs zero, and port 45015 unbound. No live command was executed and approval
   remains withheld.
+- The final admission read then changed: an unrelated live AuraCall/LitScout
+  campaign under parent PID 5165 launched Chrome root PID 5747 with the exact
+  `wsl-chrome-3/chatgpt` managed browser directory and port 45015. OS ancestry
+  attributes it to a separate declaration-campaign run, not this canary or an
+  API job. Plan 0262 failed closed without attaching to or killing it. The
+  frozen packet now awaits both natural owner settlement and explicit approval.
 
 ## Turn 438 | 2026-08-11
 

@@ -16,8 +16,10 @@ Lane: P01
   pending-operation, and ambiguous-receipt near misses. The live packet is now
   frozen to one combined install/service restart, one exact canary, and
   ownership-checked cleanup; a second restart or unrelated-process kill is a
-  hard stop. It awaits approval; materialization and scheduler/completion
-  control remain excluded.
+  hard stop. Fresh admission is currently red because an unrelated live
+  AuraCall/LitScout campaign owns the exact managed browser profile and port
+  45015. It awaits that owner's natural settlement plus approval;
+  materialization and scheduler/completion control remain excluded.
 
 - Closed ChatGPT exact-fallback terminal-unavailable provider-free repair:
   [docs/dev/plans/0261-2026-08-11-chatgpt-fallback-terminal-unavailable-provider-free-repair.md](docs/dev/plans/0261-2026-08-11-chatgpt-fallback-terminal-unavailable-provider-free-repair.md)

@@ -10,6 +10,12 @@
   cannot prompt, select a model, or materialize. Browser-tools help confirmed
   exact port-scoped inspect/kill controls. These were provider-free reads only;
   the live gate remains unapproved.
+- Fresh final admission found a legitimate unrelated owner after the earlier
+  zero-owner read: AuraCall PID 5165 is running a separate LitScout campaign,
+  and its Chrome root PID 5747 owns the exact managed profile and port 45015.
+  Process/socket attribution required no page attachment. Plan 0262 failed
+  closed and will neither inspect nor kill that browser; it now awaits natural
+  settlement as well as explicit live-effect approval.
 - Gate audit found the existing canary harness would reject the newly allowed
   terminal result because `accepted` required child exit 0 and nonempty
   context. The deterministic red failed on the absent receipt-driven outcome
