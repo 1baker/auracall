@@ -1,5 +1,24 @@
 ## 2026-08-10 | Plan 0255 Context Preflight Abort Repair
 
+- Plan 0258 activation: the operator approved only the prepared single
+  install/restart and one zero-retry `wsl-chrome-3` context canary. Fresh
+  admission is drift-free: Git is clean at committed/pushed `69e22c87`, API
+  PID 69726 is healthy with zero restarts, scheduler remains paused/paused,
+  the target remains idle-waiting/pass 56, active materialization jobs and
+  exact managed Chrome owners are zero, and port 45015 is unbound. The
+  agent-browser resource inventory reports no GC candidates and no matching
+  profile owner. Scheduler, completion, and materialization authority remain
+  excluded.
+- Plan 0258 terminal result: the sole install/restart produced healthy API PID
+  64951 and exact browser-service parity. The one zero-retry canary advanced
+  through native launch into provider attempt 1, then failed after 39036 ms;
+  its unique receipt records `lastStage=cdp:Runtime.evaluate`,
+  `attemptCount=1`, and `pendingOperation=null`. No context was emitted. Exact
+  cleanup removed canary-owned PID/process group 82045 and port 45015. Active
+  jobs are zero, the target remains idle-waiting/pass 56, and scheduler remains
+  paused/paused. Plan 0258 is closed without retry; the exact evaluation
+  exception is not established by the intentionally sanitized receipt.
+
 - Plan 0256 terminal outcome: the pre-existing PID 89142 exited independently,
   fresh zero-owner admission passed, and the single install/restart produced
   healthy API PID 69726 with exact source/installed parity. Its sole canary

@@ -102,10 +102,25 @@
   agent-browser claimed no matching resource. Exact test-owned cleanup restored
   zero profile owners and an unbound port; jobs remained zero, target stayed
   idle-waiting/pass 56, and scheduler stayed paused/paused.
-- Plan 0258 is prepared but not active. It permits one install/restart and one
-  fresh zero-retry context canary only after explicit approval and fresh
-  zero-owner admission. No scheduler, completion, materialization, prompt,
-  download, retry, guard, or wider-profile action is included.
+- Plan 0258 is active under the operator's explicit `ok go`. Fresh admission
+  found a clean committed/pushed worktree, healthy API PID 69726, scheduler
+  paused/paused, target idle-waiting/pass 56, zero active materialization jobs,
+  zero exact managed Chrome owners, and port 45015 unbound. The agent-browser
+  resource inventory reports no GC candidates or matching profile owner. One
+  install/restart and one zero-retry context canary are admitted; scheduler,
+  completion, materialization, prompt, download, retry, guard, and wider-
+  profile actions remain excluded.
+- The one install/restart completed with healthy API PID 64951 and exact
+  browser-service source/installed parity. The sole canary then reached
+  provider attempt 1 and failed once after 39036 ms at
+  `cdp:Runtime.evaluate`; its receipt has `pendingOperation=null` and emitted no
+  context. This materially clears the former native Chrome launch stall but
+  does not expose the exact evaluation exception.
+- Exact cleanup removed canary-owned PID/process group 82045 on port 45015.
+  Exact profile processes, the listener, and active jobs are zero; the target
+  remains idle-waiting/pass 56 and scheduler remains paused/paused. Plan 0258
+  is closed without retry. Any successor starts provider-free at the first CDP
+  evaluation boundary; no scheduler or materialization resume is authorized.
 
 ## Turn 436 | 2026-08-10
 

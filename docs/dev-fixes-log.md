@@ -1,3 +1,13 @@
+- 2026-08-10: A one-shot canary that moves from
+  `preflight:browserChromeLaunch` with `attemptCount=0` to
+  `cdp:Runtime.evaluate` with `attemptCount=1` is positive evidence that the
+  native launch bound/abort repair cleared its targeted mechanism, but it is
+  not context-read acceptance. Close the canary gate when the first evaluation
+  fails, even if Chrome launched quickly. Preserve the sanitized stage and
+  attempt count, perform exact owned cleanup, and reproduce the evaluation
+  exception provider-free before another live attempt; a redaction-safe
+  receipt with only `errorCode=Error` does not establish the exact exception.
+
 - 2026-08-10: A terminal context receipt at
   `preflight:browserChromeLaunch` with `attemptCount=0` rules out provider
   extraction but does not prove `chrome-launcher.launch()` itself is the

@@ -7,12 +7,15 @@
 Status: active
 Lane: P01
 
-- Prepared `wsl-chrome-3` bounded-launch one-canary gate:
+- Closed `wsl-chrome-3` bounded-launch one-canary gate at first CDP evaluation:
   [docs/dev/plans/0258-2026-08-10-wsl-chrome-3-bounded-launch-one-canary-gate.md](docs/dev/plans/0258-2026-08-10-wsl-chrome-3-bounded-launch-one-canary-gate.md)
-  One install/restart and one zero-retry context read are staged behind explicit
-  approval. The gate accepts only current nonempty context plus exact cleanup;
-  materialization, completion/scheduler controls, prompts, downloads, retries,
-  and wider profiles remain excluded.
+  The operator approved one install/restart and one zero-retry context read.
+  Installed parity and API health passed; the launch repair advanced the sole
+  canary from the former native-launch timeout into provider attempt 1, where
+  it failed at `cdp:Runtime.evaluate` with no pending operation. Exact cleanup
+  restored zero owners/jobs and an unbound port. The target remains pass 56
+  and scheduler remains paused; materialization, completion/scheduler controls,
+  prompts, downloads, retries, and wider profiles remained zero.
 
 - Closed provider-free native Chrome launch localization:
   [docs/dev/plans/0257-2026-08-10-native-chrome-launch-provider-free-localization.md](docs/dev/plans/0257-2026-08-10-native-chrome-launch-provider-free-localization.md)
