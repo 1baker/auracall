@@ -1,10 +1,10 @@
 # ChatGPT Advanced/Effort Selector Mainline Refresh | 0262-2026-08-11
 
-State: OPEN
+State: CLOSED
 Lane: P02
 Plan version: 1
-Gate state: PUSHED_FEATURE_INSTALL_ACTIVE
-Goal execution state: ACTIVE_BOUNDED_EXECUTION
+Gate state: INSTALLED_PARITY_GREEN
+Goal execution state: COMPLETE
 
 ## Stable Goal Objective
 
@@ -67,8 +67,8 @@ repeating the known pre-submission thinking-menu failure.
 - [x] Build, scoped lint, plan audit, and diff hygiene pass.
 - [x] The repair commit is pushed without overwriting Plan 0261 work.
 - [ ] Mainline reconciliation remains a non-blocking repository follow-up after
-  Plan 0261 reaches a clean checkpoint.
-- [ ] One installed build has exact source parity while the named profile and
+  Plan 0261 reaches a clean checkpoint; it is not an Experiment 5 prerequisite.
+- [x] One installed build has exact source parity while the named profile and
   port remain absent.
 - [x] Browser, provider, prompt, attachment, scheduler, completion,
   materialization, and LitScout mutation effects remain zero during repair.
@@ -92,3 +92,19 @@ feature branch with exact parity while `wsl-chrome-3` remains absent. The
 Experiment 5 submission itself remains owned by the LitScout campaign and
 requires a corrected frozen receipt against those installed bytes. Mainline
 reconciliation may follow without blocking that governed experiment.
+
+## Closeout Checkpoint | Installed Experiment Prerequisite Green
+
+- `source_commit`: `be0056d4ec2de127520355a173e4c4e0bd790073` at exact
+  feature-branch origin parity before this documentation-only closeout commit.
+- `dist_manifest`: 510/510 source and installed files, aggregate SHA-256
+  `9c58a155c36271c5838d5ac47c79da9aa07148b252c0b0a0267bee41c979953a`.
+- `selector_hashes`: model selection
+  `0eb93c41635c7eae97aac1068b8fd8d46a1d746439e64cb26682cc5d41e2c936`;
+  thinking time
+  `8a841d622e887613082306dd6e2996852495bb74c2744475253f8b55b6411614`.
+- `runtime`: API PID 81249 active/running, `NRestarts=0`, `/status` HTTP 200;
+  `wsl-chrome-3` process count zero and port 45015 unbound.
+- `effects`: one install and one API restart; browser launch/attach/navigation,
+  prompt, attachment, provider, scheduler, completion, materialization, and
+  LitScout mutations remained zero.

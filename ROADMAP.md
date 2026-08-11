@@ -7,13 +7,13 @@
 Status: active
 Lane: P01
 
-- Active serialized Experiment 5 selector mainline refresh:
+- Closed installed Experiment 5 selector feature refresh:
   [docs/dev/plans/0262-2026-08-11-chatgpt-advanced-effort-selector-mainline-refresh.md](docs/dev/plans/0262-2026-08-11-chatgpt-advanced-effort-selector-mainline-refresh.md)
   The compact `Advanced`/`Effort` repair is green on a separate worktree.
-  The exact pushed feature build may be installed without touching Plan 0261's
-  separate provider-free main-worktree files; mainline reconciliation waits
-  for its clean checkpoint. Browser, provider, prompt, attachment, scheduler,
-  and LitScout effects remain zero during this prerequisite repair.
+  The exact pushed feature build is installed with 510/510 dist parity and a
+  healthy API. The named browser profile and port remain absent. Mainline
+  reconciliation waits for Plan 0261's clean checkpoint but does not block the
+  refrozen LitScout Experiment 5 packet.
 
 - Active `wsl-chrome-3` evaluation-class one-canary gate:
   [docs/dev/plans/0260-2026-08-11-wsl-chrome-3-evaluation-class-one-canary-gate.md](docs/dev/plans/0260-2026-08-11-wsl-chrome-3-evaluation-class-one-canary-gate.md)

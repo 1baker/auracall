@@ -13,6 +13,11 @@
   install/restart/browser effects. Do not overwrite or merge across that lane.
   The exact pushed feature build may be installed directly because it changes
   no owned Plan 0261 file; reconcile main only after its clean checkpoint.
+- The exact feature build is now installed. Source/installed dist parity is
+  510/510 at aggregate SHA `9c58a155...953a`; model/thinking hashes are the
+  accepted `0eb93c...c936` and `8a841d...1614`. API PID 81249 is healthy with
+  zero restarts and status 200; exact browser owners and port 45015 are zero.
+  Plan 0262 closes. LitScout must refreeze before its one submission.
 
 ## Turn 439 | 2026-08-11
 

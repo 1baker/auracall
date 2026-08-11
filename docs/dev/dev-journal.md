@@ -11,6 +11,11 @@
   mainline adapter packet but excludes runtime effects, so the exact pushed
   feature build may be installed independently; main integration remains
   serialized behind its clean checkpoint.
+- The install is complete with 510/510 source/installed dist parity at
+  `9c58a155...953a`; API PID 81249 is active with status 200 and zero restarts.
+  The named profile and port stayed absent, and no browser/provider/prompt or
+  LitScout effect occurred. Plan 0262 closes as the green Experiment 5
+  prerequisite; later mainline reconciliation is non-blocking.
 
 ## 2026-08-11 | Plan 0260 Live Gate Activation
 
