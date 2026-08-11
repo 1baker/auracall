@@ -748,6 +748,10 @@ Terminology note:
   provider refresh. Manual `run-once` remains dry-run unless the server was
   started with `--account-mirror-scheduler-execute` and the request sets
   `"dryRun":false`.
+  Scheduler selection excludes targets whose active completion is
+  operator-paused. Dry-run, skipped, and targetless passes never reconcile
+  configured live follow; only a completed execute refresh may reconcile the
+  provider/runtime-profile lane it selected.
   Recent scheduler passes are persisted in the AuraCall cache and exposed at
   `/status.accountMirrorScheduler.history` so cadence and failure evidence
   survives a service restart. `/status.accountMirrorScheduler.lastWakeReason`
@@ -794,6 +798,9 @@ Terminology note:
   Startup reconciliation upgrades an existing active live-follow operation in
   place when the configured `liveFollow` policy becomes full retrieval; it does
   not start a duplicate loop for the same provider/runtime target.
+  Pausing a completion aborts its active collector before returning control, so
+  that collector cannot later advance the pass or queue materialization. A
+  subsequent resume starts a fresh run.
   History-materialization jobs stay `running` until provider work actually
   settles or the API service restarts, so readback does not mark a job failed
   while browser retrieval continues in the background. A bounded completion

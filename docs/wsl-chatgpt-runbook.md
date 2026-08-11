@@ -147,6 +147,12 @@ oracle --profile wsl-chrome-2 --engine browser -p "Say hello from second profile
     relaunch it with the keyring bypass flags.
   - For visible auth recovery, use `auracall --profile <name> login --target chatgpt`;
     auth-mode opens on `DISPLAY=:0.0` by default.
+- **A managed browser profile already has a Chrome owner**:
+  - AuraCall reattaches when that exact managed browser profile's responsive
+    DevTools endpoint is attributable.
+  - If Chrome owns the directory but no responsive endpoint can be attributed,
+    AuraCall fails closed instead of launching a second Chrome on a dynamic
+    port. Inspect or close only the exact owned process before retrying.
 - **Using Windows Chrome from WSL**:
   - Keep `manualLoginProfileDir` as a WSL path if you override it; Aura-Call converts it to the `\\wsl.localhost\...` path for Windows Chrome.
   - If DevTools can’t be reached, open the Windows firewall for the chosen port or pin a port with `AURACALL_BROWSER_PORT`.

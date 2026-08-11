@@ -1202,23 +1202,6 @@ export async function createResponsesHttpServer(
 	const reconcileAccountMirrorLiveFollowOnStart =
 		reconcileAccountMirrorLiveFollowOnStartRequested && !initialAccountMirrorSchedulerPaused;
 	const accountMirrorProviderWorkCoordinator = createAccountMirrorProviderWorkCoordinator();
-	const accountMirrorSchedulerService =
-		deps.accountMirrorSchedulerService ??
-		createAccountMirrorSchedulerPassService({
-			registry: accountMirrorStatusRegistry,
-			refreshService: accountMirrorRefreshService,
-			now,
-			readHistory: () => accountMirrorSchedulerLedger.readHistory(),
-			providerWorkCoordinator: accountMirrorProviderWorkCoordinator,
-			shouldYieldToForegroundWork: () =>
-				hasForegroundAuraCallExecutionPressure()
-					? {
-							reason: "foreground-work",
-							message:
-								"Foreground AuraCall API or service work is pending; live follow will retry later.",
-						}
-					: null,
-		});
 	const accountMirrorCompletionStore = createAccountMirrorCompletionStore({
 		config: configuredRuntimeConfig,
 	});
@@ -1267,6 +1250,33 @@ export async function createResponsesHttpServer(
 				);
 			},
 		});
+	const accountMirrorSchedulerService =
+		deps.accountMirrorSchedulerService ??
+		createAccountMirrorSchedulerPassService({
+			registry: accountMirrorStatusRegistry,
+			refreshService: accountMirrorRefreshService,
+			now,
+			readHistory: () => accountMirrorSchedulerLedger.readHistory(),
+			providerWorkCoordinator: accountMirrorProviderWorkCoordinator,
+			isTargetSelectable: (entry) => {
+				const active =
+					accountMirrorCompletionService.list({
+						provider: entry.provider,
+						runtimeProfileId: entry.runtimeProfileId,
+						status: "active",
+						limit: null,
+					})[0] ?? null;
+				return classifyLiveFollowTarget(entry, active).classification !== "operator_paused";
+			},
+			shouldYieldToForegroundWork: () =>
+				hasForegroundAuraCallExecutionPressure()
+					? {
+							reason: "foreground-work",
+							message:
+								"Foreground AuraCall API or service work is pending; live follow will retry later.",
+						}
+					: null,
+		});
 	const accountMirrorReconciliationCampaignService =
 		deps.accountMirrorReconciliationCampaignService ??
 		createAccountMirrorReconciliationCampaignService({
@@ -1284,10 +1294,13 @@ export async function createResponsesHttpServer(
 	const preflightRunner = deps.preflightRunner ?? createLazyLiveFollowPreflightRunner();
 	const scheduleApiServiceRestart =
 		deps.scheduleApiServiceRestart ?? scheduleDefaultUserApiServiceRestart;
-	const reconcileAccountMirrorLiveFollow = async () => {
+	const reconcileAccountMirrorLiveFollow = async (
+		target?: Pick<AccountMirrorStatusEntry, "provider" | "runtimeProfileId">,
+	) => {
 		await reconcileConfiguredAccountMirrorLiveFollow({
 			registry: accountMirrorStatusRegistry,
 			completionService: accountMirrorCompletionService,
+			target,
 		}).catch((error) => {
 			logger(
 				`Account mirror live-follow reconcile failed: ${error instanceof Error ? error.message : String(error)}`,
@@ -1629,7 +1642,13 @@ export async function createResponsesHttpServer(
 					logger(error instanceof Error ? error.message : String(error));
 					return accountMirrorSchedulerState.history;
 				});
-			await reconcileAccountMirrorLiveFollow();
+			if (
+				accountMirrorSchedulerState.lastPass.mode === "execute" &&
+				accountMirrorSchedulerState.lastPass.action === "refresh-completed" &&
+				accountMirrorSchedulerState.lastPass.selectedTarget
+			) {
+				await reconcileAccountMirrorLiveFollow(accountMirrorSchedulerState.lastPass.selectedTarget);
+			}
 		} catch (error) {
 			logger(error instanceof Error ? error.message : String(error));
 		} finally {

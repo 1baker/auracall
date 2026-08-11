@@ -977,6 +977,7 @@ export function createAccountMirrorCompletionService(input: {
 			if (request.action === "pause") {
 				if (!isActiveOperation(operation)) return operation;
 				cancelProviderWorkWait(operation.id);
+				abortActiveRun(operation.id, "Account-mirror completion paused by operator request.");
 				const updated = update(operation.id, {
 					status: "paused",
 					error: null,

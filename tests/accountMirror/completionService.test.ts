@@ -1557,7 +1557,7 @@ describe("account mirror completion service", () => {
 	test("pauses, resumes, and cancels live-follow operations", async () => {
 		let resolveRefresh: (value: AccountMirrorRefreshResult) => void = () => undefined;
 		const requestRefresh = vi.fn(
-			() =>
+			(_request?: AccountMirrorRefreshRequest) =>
 				new Promise<AccountMirrorRefreshResult>((resolve) => {
 					resolveRefresh = resolve;
 				}),
@@ -1576,6 +1576,8 @@ describe("account mirror completion service", () => {
 
 		service.start();
 		await waitFor(() => requestRefresh.mock.calls.length === 1);
+		const firstRefreshRequest = requestRefresh.mock.calls[0]?.[0];
+		expect(firstRefreshRequest?.abortSignal?.aborted).toBe(false);
 		expect(service.read("acctmirror_control")?.lifecycleEvents?.map((event) => event.type)).toEqual(
 			["started", "provider_work_acquired"],
 		);
@@ -1587,18 +1589,16 @@ describe("account mirror completion service", () => {
 		expect(service.list({ status: "active" }).map((operation) => operation.id)).toEqual([
 			"acctmirror_control",
 		]);
+		expect(firstRefreshRequest?.abortSignal?.aborted).toBe(true);
 
 		resolveRefresh(createRefreshResult());
 		await waitFor(() => service.read("acctmirror_control")?.status === "paused");
 		expect(service.read("acctmirror_control")).toMatchObject({
 			status: "paused",
-			passCount: 1,
-			phase: "steady_follow",
-			mirrorCompleteness: completeMirror,
-			lastRefresh: {
-				requestId: "acctmirror_refresh_1",
-				status: "completed",
-			},
+			passCount: 0,
+			phase: "backfill_history",
+			mirrorCompleteness: null,
+			lastRefresh: null,
 		});
 
 		expect(service.control({ id: "acctmirror_control", action: "resume" })).toMatchObject({
@@ -1606,13 +1606,7 @@ describe("account mirror completion service", () => {
 		});
 		await waitFor(() => service.read("acctmirror_control")?.status === "running");
 		expect(service.read("acctmirror_control")?.lifecycleEvents?.map((event) => event.type)).toEqual(
-			expect.arrayContaining([
-				"started",
-				"operator_paused",
-				"live_follow_phase_decision",
-				"account_library_catchup_skipped",
-				"operator_resumed",
-			]),
+			expect.arrayContaining(["started", "operator_paused", "operator_resumed"]),
 		);
 		await waitFor(() => requestRefresh.mock.calls.length === 2);
 		expect(requestRefresh).toHaveBeenCalledTimes(2);

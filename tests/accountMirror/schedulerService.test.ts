@@ -508,6 +508,35 @@ describe("account mirror scheduler pass service", () => {
 		});
 	});
 
+	test("excludes operator-paused targets from the canonical scheduler selection", async () => {
+		const requestRefresh = vi.fn(async () => createRefreshResult());
+		const service = createAccountMirrorSchedulerPassService({
+			registry: createAccountMirrorStatusRegistry({
+				config: createMultiChatgptConfig(),
+				now: () => new Date("2026-04-29T12:00:00.000Z"),
+			}),
+			refreshService: { requestRefresh },
+			now: () => new Date("2026-04-29T12:00:00.000Z"),
+			isTargetSelectable: (entry) => entry.runtimeProfileId !== "default",
+		});
+
+		const result = await service.runOnce({ dryRun: true });
+
+		expect(requestRefresh).not.toHaveBeenCalled();
+		expect(result).toMatchObject({
+			action: "dry-run",
+			selectedTarget: {
+				provider: "chatgpt",
+				runtimeProfileId: "secondary",
+			},
+			metrics: {
+				liveFollowEligibleTargets: 1,
+				defaultChatgptEligibleTargets: 1,
+				inProgressEligibleTargets: 0,
+			},
+		});
+	});
+
 	test("rotates same-priority live-follow targets using persisted scheduler history", async () => {
 		const requestRefresh = vi.fn(async (request) => ({
 			...createRefreshResult(),

@@ -101,6 +101,7 @@ export function createAccountMirrorSchedulerPassService(input: {
 	shouldYieldToForegroundWork?: () => AccountMirrorSchedulerBackpressure | null;
 	readHistory?: () => Promise<AccountMirrorSchedulerPassHistory>;
 	providerWorkCoordinator?: AccountMirrorProviderWorkCoordinator | null;
+	isTargetSelectable?: (entry: AccountMirrorStatusEntry) => boolean;
 }): AccountMirrorSchedulerPassService {
 	const now = input.now ?? (() => new Date());
 	return {
@@ -119,7 +120,8 @@ export function createAccountMirrorSchedulerPassService(input: {
 				(entry) => entry.liveFollow.state === "enabled",
 			);
 			const liveFollowEligibleTargets = eligibleTargets.filter(
-				(entry) => entry.liveFollow.state === "enabled",
+				(entry) =>
+					entry.liveFollow.state === "enabled" && (input.isTargetSelectable?.(entry) ?? true),
 			);
 			const liveFollowDelayedTargets = delayedTargets.filter(
 				(entry) => entry.liveFollow.state === "enabled",

@@ -51,9 +51,17 @@ export interface AccountMirrorLiveFollowTargetClassification {
 export async function reconcileConfiguredAccountMirrorLiveFollow(input: {
 	registry: AccountMirrorStatusRegistry;
 	completionService: AccountMirrorCompletionService;
+	target?: Pick<AccountMirrorStatusEntry, "provider" | "runtimeProfileId"> | null;
 }): Promise<AccountMirrorLiveFollowReconcileResult> {
 	await input.registry.refreshPersistentState?.();
-	const entries = input.registry.readStatus({ explicitRefresh: false }).entries;
+	const entries = input.registry
+		.readStatus({ explicitRefresh: false })
+		.entries.filter(
+			(entry) =>
+				!input.target ||
+				(entry.provider === input.target.provider &&
+					entry.runtimeProfileId === input.target.runtimeProfileId),
+		);
 	const enabledEntries = entries.filter(
 		(entry) => entry.liveFollow.state === "enabled" && entry.status !== "blocked",
 	);

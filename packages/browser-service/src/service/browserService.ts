@@ -7,6 +7,11 @@ import { connectToChrome } from '../chromeLifecycle.js';
 
 export type BrowserServiceDependencies = {
   resolveBrowserListTarget: () => Promise<{ host?: string; port?: number } | undefined>;
+  resolveManagedProfileOwner?: (userDataDir: string) => Promise<{
+    host?: string;
+    port?: number;
+    pid?: number;
+  } | null>;
   pruneRegistry: () => Promise<void>;
   launchManualLoginSession: (options: {
     chromePath: string;
@@ -83,6 +88,26 @@ export class BrowserService {
         this.resolvedConfig.manualLoginProfileDir ??
         options.defaultProfileDir ??
         path.join(os.homedir(), '.browser-service', 'browser-profile');
+      const managedProfileOwner = await this.deps.resolveManagedProfileOwner?.(userDataDir);
+      if (managedProfileOwner) {
+        options.onStage?.('browserManagedProfileOwnerProbe');
+        const ownerHost = managedProfileOwner.host ?? '127.0.0.1';
+        const ownerPort = managedProfileOwner.port;
+        const ownerReachable = ownerPort
+          ? await isDevToolsResponsive({
+              host: ownerHost,
+              port: ownerPort,
+              attempts: 2,
+              timeoutMs: 1000,
+            })
+          : false;
+        if (ownerPort && ownerReachable) {
+          return { host: ownerHost, port: ownerPort, launched: false };
+        }
+        throw new Error(
+          `Managed browser profile ${userDataDir} is already owned by Chrome process ${managedProfileOwner.pid ?? 'unknown'}, but no responsive DevTools endpoint could be attributed. Refusing to launch a second Chrome process for the same managed browser profile.`,
+        );
+      }
       const profileName = this.resolvedConfig.chromeProfile ?? 'Default';
       const url = options.launchUrl ?? 'about:blank';
       options.onStage?.('browserDebugPortResolution');

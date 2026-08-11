@@ -1,3 +1,21 @@
+## 2026-08-11 | Plan 0269 Provider-Free Repair Green
+
+- Four TDD slices now repair the observed control boundaries: scheduler metrics
+  and selection share a caller-supplied pause-aware predicate; post-pass live
+  follow runs only after a completed execute refresh and only for its selected
+  lane; completion pause aborts its active collector; and browser-service
+  reattaches to a responsive same-directory Chrome owner or fails closed.
+- The exact reds reproduced raw selection of the paused lane, two-lane
+  reconciliation, non-aborting pause, and duplicate-launch fallback. A new HTTP
+  seam also caught and corrected a misplaced call-site gate before runtime.
+- Green evidence is nine adjacent scheduler/reconciler/completion/browser/
+  history suites `193/193`, scheduler HTTP seams `7/7`, typecheck, whole-repo
+  lint with 208 pre-existing warnings and zero errors, full build, diff hygiene,
+  healthy CodeGraph at 882 files/16,662 nodes/56,576 edges, plan audit
+  `269/269` with zero validation errors, and a green goal-contract audit.
+  Scheduler and runtime remain untouched and paused; the committed/pushed
+  provider-free gate still precedes the one authorized canary.
+
 ## 2026-08-11 | Plan 0269 Scheduler Control Repair Activation
 
 - The operator authorized fixing the Plan 0268 scheduler/control failure,

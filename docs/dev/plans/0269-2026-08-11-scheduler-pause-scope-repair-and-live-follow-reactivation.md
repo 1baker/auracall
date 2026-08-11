@@ -141,7 +141,7 @@ target, target-scoped reconciliation, and no delayed paused-completion work.
 
 - [x] Current failure mechanism, runtime posture, authority, and policy/index
   state are re-anchored.
-- [ ] Four public-seam tracer bullets fail for the observed behavior before
+- [x] Four public-seam tracer bullets fail for the observed behavior before
   minimal implementation changes make them pass.
 - [ ] Focused, adjacent, typecheck, lint, build, diff, CodeGraph, and plan audits
   pass from the committed provider-free repair.
@@ -172,6 +172,30 @@ target, target-scoped reconciliation, and no delayed paused-completion work.
   validation, sole canary, and conditional live-follow activation.
 - `review_disposition_summary`: Plan 0268's four causal findings are accepted
   blocking criteria; no new broad discovery is needed before implementation.
+
+## Checkpoint P0269-C02 | Provider-Free Repair Green
+
+- `state_transition`: ACTIVE_PROVIDER_FREE_REPAIR ->
+  PROVIDER_FREE_IMPLEMENTATION_GREEN.
+- `progress_classification`: blocker_reduction.
+- `evidence`: scheduler selector red then green with canonical predicate and
+  aligned metrics; targeted reconciler and aborting-pause reds then green;
+  same-managed-directory browser owner reattach/fail-closed reds then green;
+  HTTP dry-run/targetless/selected-lane integration green after it caught and
+  corrected a misplaced call-site gate. Nine adjacent suites pass `193/193`,
+  scheduler HTTP seams pass `7/7`, typecheck and full build pass, whole-repo
+  lint has 208 pre-existing warnings and zero errors, diff hygiene passes,
+  CodeGraph is healthy at 882 files/16,662 nodes/56,576 edges, the plan audit
+  keeps `269/269` with zero validation errors, and the goal audit is green.
+- `subagent_status`: not_spawned.
+- `effect_accounting`: provider/browser/install/runtime controls remain zero;
+  durable scheduler remains paused.
+- `next_action_or_stop_reason`: run adjacent lint/build/suites, CodeGraph and
+  plan audits, then commit and push the provider-free acceptance gate.
+- `authority_classification`: still inside the authorized provider-free repair;
+  no canary or activation effect is admitted yet.
+- `review_disposition_summary`: all four accepted causal findings have minimal
+  implementations and direct regressions; no new blocking finding is open.
 
 ## Definition Of Done
 

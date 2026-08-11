@@ -141,6 +141,66 @@ describe("account mirror live-follow reconciler", () => {
 		});
 	});
 
+	test("reconciles only the scheduler-selected target when a target scope is supplied", async () => {
+		const registry = createAccountMirrorStatusRegistry({
+			config: {
+				runtimeProfiles: {
+					default: {
+						browserProfile: "default",
+						services: {
+							chatgpt: {
+								identity: { email: "operator@example.com" },
+								liveFollow: { enabled: true },
+							},
+						},
+					},
+					consult: {
+						browserProfile: "wsl-chrome-2",
+						services: {
+							chatgpt: {
+								identity: { email: "consult@example.com" },
+								liveFollow: { enabled: true },
+							},
+						},
+					},
+				},
+			},
+		});
+		const start = vi.fn((request) => ({
+			...baseOperation,
+			id: `completion_${request.runtimeProfileId}`,
+			runtimeProfileId: request.runtimeProfileId ?? "default",
+		}));
+
+		const result = await reconcileConfiguredAccountMirrorLiveFollow({
+			registry,
+			completionService: {
+				start,
+				list: vi.fn(() => []),
+				read: vi.fn(),
+				control: vi.fn(),
+			},
+			target: { provider: "chatgpt", runtimeProfileId: "consult" },
+		});
+
+		expect(start).toHaveBeenCalledTimes(1);
+		expect(start).toHaveBeenCalledWith(
+			expect.objectContaining({
+				provider: "chatgpt",
+				runtimeProfileId: "consult",
+			}),
+		);
+		expect(result.metrics).toMatchObject({
+			enabledTargets: 1,
+			started: 1,
+			existing: 0,
+			skipped: 0,
+		});
+		expect(result.targetClassifications).toEqual([
+			expect.objectContaining({ runtimeProfileId: "consult", action: "start" }),
+		]);
+	});
+
 	test("does not duplicate an active live-follow completion", async () => {
 		const registry = createAccountMirrorStatusRegistry({
 			config: {

@@ -1,3 +1,15 @@
+- 2026-08-11: Scheduler eligibility, post-pass reconciliation, completion
+  control, and managed-browser ownership must form one effect boundary. Exclude
+  operator-paused completions from the same target set used for scheduler
+  metrics and selection. Reconcile live follow only after a completed execute
+  refresh and only for its selected provider/runtime-profile lane; dry-run,
+  skipped, and targetless passes are effect-free. A pause must abort the active
+  collector before returning so it cannot advance or enqueue later work. Before
+  launching Chrome, inspect ownership of the exact managed browser profile
+  directory: reattach to an attributable responsive endpoint, otherwise fail
+  closed rather than changing to a dynamic port for a second same-directory
+  process.
+
 - 2026-08-11: A scheduler target projection is unsafe for admission when it
   overlays an active completion's `operator_paused` state but the scheduler
   selector reads raw mirror-registry eligibility. The two surfaces can name

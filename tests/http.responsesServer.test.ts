@@ -9032,6 +9032,132 @@ describe("http responses adapter", () => {
 		}
 	});
 
+	it("reconciles only a completed execute pass target and keeps dry-run or targetless passes effect-free", async () => {
+		const config = {
+			model: "gpt-5.2",
+			browser: {},
+			runtimeProfiles: {
+				default: {
+					browserProfile: "default",
+					services: {
+						chatgpt: {
+							identity: { email: "operator@example.com" },
+							liveFollow: { enabled: true },
+						},
+					},
+				},
+				consult: {
+					browserProfile: "wsl-chrome-2",
+					services: {
+						chatgpt: {
+							identity: { email: "consult@example.com" },
+							liveFollow: { enabled: true },
+						},
+					},
+				},
+			},
+		};
+		const registry = createAccountMirrorStatusRegistry({ config });
+		let invocation = 0;
+		const runOnce = vi.fn(
+			async (input: { dryRun: boolean }): Promise<AccountMirrorSchedulerPassResult> => {
+				invocation += 1;
+				const selectedTarget =
+					invocation === 3
+						? {
+								provider: "chatgpt" as const,
+								runtimeProfileId: "consult",
+								browserProfileId: "wsl-chrome-2",
+								status: "eligible" as const,
+								reason: "eligible" as const,
+								eligibleAt: "2026-04-29T12:00:00.000Z",
+								mirrorCompleteness: completeAccountMirror,
+							}
+						: null;
+				return {
+					object: "account_mirror_scheduler_pass",
+					mode: input.dryRun ? "dry-run" : "execute",
+					action: input.dryRun ? "dry-run" : invocation === 2 ? "skipped" : "refresh-completed",
+					startedAt: "2026-04-29T12:00:00.000Z",
+					completedAt: "2026-04-29T12:00:00.000Z",
+					selectedTarget,
+					backpressure: { reason: "none", message: null },
+					metrics: {
+						totalTargets: 2,
+						eligibleTargets: 2,
+						delayedTargets: 0,
+						blockedTargets: 0,
+						defaultChatgptEligibleTargets: 1,
+						defaultChatgptDelayedTargets: 0,
+						inProgressEligibleTargets: 0,
+					},
+					refresh: null,
+					error: null,
+				};
+			},
+		);
+		const start = vi.fn(
+			(request: {
+				provider?: "chatgpt";
+				runtimeProfileId?: string;
+			}): AccountMirrorCompletionOperation => ({
+				object: "account_mirror_completion",
+				id: `completion_${request.runtimeProfileId}`,
+				provider: request.provider ?? "chatgpt",
+				runtimeProfileId: request.runtimeProfileId ?? "default",
+				mode: "live_follow",
+				phase: "backfill_history",
+				status: "queued",
+				startedAt: "2026-04-29T12:00:00.000Z",
+				completedAt: null,
+				nextAttemptAt: null,
+				maxPasses: null,
+				passCount: 0,
+				lastRefresh: null,
+				mirrorCompleteness: null,
+				error: null,
+			}),
+		);
+		const server = await createResponsesHttpServer(
+			{
+				host: "127.0.0.1",
+				port: 0,
+				accountMirrorSchedulerDryRun: false,
+				reconcileAccountMirrorLiveFollowOnStart: false,
+			},
+			{
+				config,
+				accountMirrorStatusRegistry: registry,
+				accountMirrorSchedulerService: { runOnce },
+				accountMirrorSchedulerLedger: createMemorySchedulerLedger(),
+				accountMirrorCompletionService: {
+					start,
+					read: vi.fn(() => null),
+					list: vi.fn(() => []),
+					control: vi.fn(() => null),
+				},
+			},
+		);
+
+		try {
+			for (const dryRun of [true, false, false]) {
+				const response = await fetch(`http://127.0.0.1:${server.port}/status`, {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ accountMirrorScheduler: { action: "run-once", dryRun } }),
+				});
+				expect(response.status).toBe(200);
+			}
+
+			expect(start).toHaveBeenCalledTimes(1);
+			expect(start).toHaveBeenCalledWith(
+				expect.objectContaining({ provider: "chatgpt", runtimeProfileId: "consult" }),
+			);
+		} finally {
+			await server.close();
+		}
+	});
+
 	it("nudges lazy account mirror follow-up after media generation settles", async () => {
 		await useTempAuracallHome("auracall-http-media-scheduler-follow-up-");
 		const pass: AccountMirrorSchedulerPassResult = {

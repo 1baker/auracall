@@ -29,7 +29,10 @@ import {
   collectDiscardedRegistryCandidates,
   type DiscardedRegistryCandidate as ServiceTargetDiscardedRegistryCandidate,
 } from './registryDiagnostics.js';
-import { findChromePidUsingUserDataDir } from '../../../packages/browser-service/src/processCheck.js';
+import {
+  findChromePidUsingUserDataDir,
+  findChromeProcessUsingUserDataDir,
+} from '../../../packages/browser-service/src/processCheck.js';
 import {
   BrowserService as BrowserServiceCore,
   type BrowserServiceDependencies,
@@ -85,6 +88,16 @@ export class BrowserService extends BrowserServiceCore {
     const registryPath = path.join(getAuracallHomeDir(), 'browser-state.json');
     const deps: BrowserServiceDependencies = {
       resolveBrowserListTarget: () => resolveBrowserListTarget(userConfig, target),
+      resolveManagedProfileOwner: async (userDataDir) => {
+        const owner = await findChromeProcessUsingUserDataDir(userDataDir);
+        return owner
+          ? {
+              host: '127.0.0.1',
+              port: owner.port ?? undefined,
+              pid: owner.pid,
+            }
+          : null;
+      },
       pruneRegistry: () => pruneRegistry(),
       launchManualLoginSession,
     };
