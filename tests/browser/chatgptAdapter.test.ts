@@ -13,6 +13,7 @@ import {
 	classifyChatgptBlockingSurfaceProbe,
 	classifyChatgptCapturedFileIdentityValuesForTest,
 	classifyChatgptFileRetrievalFailure,
+	classifyChatgptRuntimeEvaluationFailureForTest,
 	clickChatgptViewerDownloadButtonWithClientForTest,
 	closeChatgptTabConnectionForTest,
 	createChatgptAdapter,
@@ -302,6 +303,39 @@ describe("recordChatgptTargetSession", () => {
 });
 
 describe("ensureChatgptConversationSurfaceReadyForRead", () => {
+	test.each([
+		{
+			error: new Error("Timed out waiting for a provider predicate after 10000ms."),
+			expected: "evaluation_timeout",
+		},
+		{
+			error: new Error("Execution context was destroyed. raw-provider-detail"),
+			expected: "execution_context_destroyed",
+		},
+		{
+			error: Object.assign(new Error("Cannot find context with specified id"), {
+				name: "ProtocolError",
+			}),
+			expected: "execution_context_missing",
+		},
+		{
+			error: new Error("WebSocket is not open: readyState 3 (CLOSED)"),
+			expected: "transport_closed",
+		},
+		{
+			error: Object.assign(new Error("opaque protocol failure"), { name: "ProtocolError" }),
+			expected: "protocol_error",
+		},
+		{
+			error: new Error("raw-provider-detail"),
+			expected: "generic_error",
+		},
+	])("classifies $expected without returning raw evaluation detail", ({ error, expected }) => {
+		const classification = classifyChatgptRuntimeEvaluationFailureForTest(error);
+		expect(classification).toBe(expected);
+		expect(classification).not.toContain("raw-provider-detail");
+	});
+
 	test("hands a ready same-route conversation directly to the context reader", async () => {
 		const conversationId = "same-route-context";
 		const url = `https://chatgpt.com/c/${conversationId}`;
@@ -402,6 +436,60 @@ describe("ensureChatgptConversationSurfaceReadyForRead", () => {
 			expect(scrapeTelemetry.providerActions).toMatchObject({
 				"chatgpt.skipSameRouteNavigation": 1,
 				"chatgpt.waitPostPayloadReadiness": 1,
+				"chatgpt.postPayloadReadiness.failed.evaluation_timeout.v1": 1,
+			});
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	test("fails closed when post-payload readiness stays unsatisfied", async () => {
+		vi.useFakeTimers();
+		try {
+			const conversationId = "same-route-post-payload-not-ready";
+			const url = `https://chatgpt.com/c/${conversationId}`;
+			let payloadRead = false;
+			const evaluate = vi.fn((input: { expression?: string }) => {
+				const expression = input.expression ?? "";
+				if (expression.includes("fetch(") && expression.includes("/backend-api/conversation/")) {
+					payloadRead = true;
+					return Promise.resolve({
+						result: { value: { ok: true, body: JSON.stringify({ mapping: {} }) } },
+					});
+				}
+				if (expression.includes("hasTurns || hasComposer")) {
+					return Promise.resolve({ result: { value: !payloadRead } });
+				}
+				if (expression.trim() === "location.href") {
+					return Promise.resolve({ result: { value: url } });
+				}
+				return Promise.resolve({ result: { value: [] } });
+			});
+			const scrapeTelemetry = createBrowserScrapeTelemetryRecorder();
+			const outcome = readChatgptConversationContextWithClientForTest(
+				{
+					// biome-ignore lint/style/useNamingConvention: CDP domain names are protocol-defined.
+					Page: { navigate: vi.fn() },
+					// biome-ignore lint/style/useNamingConvention: CDP domain names are protocol-defined.
+					Runtime: { evaluate },
+				} as never,
+				conversationId,
+				null,
+				undefined,
+				{ allowNavigation: true, scrapeTelemetry },
+			).then(
+				() => "completed",
+				(error: unknown) => (error instanceof Error ? error.message : String(error)),
+			);
+
+			for (let index = 0; index < 120; index += 1) {
+				await vi.advanceTimersByTimeAsync(100);
+			}
+			expect(await outcome).toBe(
+				`ChatGPT conversation ${conversationId} post-payload readiness was not satisfied.`,
+			);
+			expect(scrapeTelemetry.providerActions).toMatchObject({
+				"chatgpt.postPayloadReadiness.failed.predicate_unsatisfied.v1": 1,
 			});
 		} finally {
 			vi.useRealTimers();

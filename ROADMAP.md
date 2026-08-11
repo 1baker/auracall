@@ -7,6 +7,22 @@
 Status: active
 Lane: P01
 
+- Prepared `wsl-chrome-3` evaluation-class one-canary gate:
+  [docs/dev/plans/0260-2026-08-11-wsl-chrome-3-evaluation-class-one-canary-gate.md](docs/dev/plans/0260-2026-08-11-wsl-chrome-3-evaluation-class-one-canary-gate.md)
+  One install/restart and one zero-retry read of the same conversation await
+  explicit approval. A failure now retains an allowlisted completed evaluation
+  stage; materialization, completion/scheduler control, prompt, download,
+  retry, and wider profiles remain excluded.
+
+- Closed provider-free first `Runtime.evaluate` diagnosis:
+  [docs/dev/plans/0259-2026-08-11-chatgpt-first-runtime-evaluate-provider-free-diagnosis.md](docs/dev/plans/0259-2026-08-11-chatgpt-first-runtime-evaluate-provider-free-diagnosis.md)
+  Plan 0258 cleared native launch but its sole canary failed with only a broad
+  CDP method marker. Plan 0259 reproduced that ambiguity twice, added
+  allowlisted completed failure classes, and fixed the ignored
+  post-payload-readiness result. Focused and adjacent provider-free validation
+  are green; browser/provider, install, scheduler/completion, and
+  materialization effects remained zero.
+
 - Closed `wsl-chrome-3` bounded-launch one-canary gate at first CDP evaluation:
   [docs/dev/plans/0258-2026-08-10-wsl-chrome-3-bounded-launch-one-canary-gate.md](docs/dev/plans/0258-2026-08-10-wsl-chrome-3-bounded-launch-one-canary-gate.md)
   The operator approved one install/restart and one zero-retry context read.

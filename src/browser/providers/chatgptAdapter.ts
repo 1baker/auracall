@@ -2955,6 +2955,51 @@ function buildChatgptConversationPayloadExpression(conversationId: string): stri
   })()`;
 }
 
+type ChatgptRuntimeEvaluationFailureClass =
+	| "evaluation_timeout"
+	| "execution_context_destroyed"
+	| "execution_context_missing"
+	| "transport_closed"
+	| "protocol_error"
+	| "generic_error";
+
+function classifyChatgptRuntimeEvaluationFailure(
+	error: unknown,
+): ChatgptRuntimeEvaluationFailureClass {
+	const record = error && typeof error === "object" ? (error as Record<string, unknown>) : null;
+	const name =
+		error instanceof Error ? error.name : typeof record?.name === "string" ? record.name : "";
+	const message =
+		error instanceof Error
+			? error.message
+			: typeof record?.message === "string"
+				? record.message
+				: typeof error === "string"
+					? error
+					: "";
+	const code = typeof record?.code === "string" ? record.code : "";
+	const signal = `${name} ${code} ${message}`.toLowerCase();
+	if (/timed?\s*out|timeout/.test(signal)) return "evaluation_timeout";
+	if (/execution context (?:was )?destroyed|context destroyed/.test(signal)) {
+		return "execution_context_destroyed";
+	}
+	if (/cannot find context|context with specified id|no execution context/.test(signal)) {
+		return "execution_context_missing";
+	}
+	if (
+		/websocket.*(?:closed|not open)|target closed|session closed|connection closed|readyState\s*3/.test(
+			signal,
+		)
+	) {
+		return "transport_closed";
+	}
+	if (/protocolerror|protocol error/.test(signal)) return "protocol_error";
+	return "generic_error";
+}
+
+export const classifyChatgptRuntimeEvaluationFailureForTest =
+	classifyChatgptRuntimeEvaluationFailure;
+
 export async function readChatgptConversationPayloadWithClient(
 	client: ChromeClient,
 	conversationId: string,
@@ -8637,28 +8682,57 @@ async function readChatgptConversationContextWithClient(
 				projectId,
 				options,
 			);
-			let payload = await withBrowserScrapePendingOperation(
-				options,
-				"provider:chatgpt.readConversationPayload",
-				() => readChatgptConversationPayloadWithClient(client, conversationId, projectId, options),
-			).catch(() => null);
+			let payload: ChatgptConversationPayload | null = null;
+			try {
+				payload = await withBrowserScrapePendingOperation(
+					options,
+					"provider:chatgpt.readConversationPayload",
+					() =>
+						readChatgptConversationPayloadWithClient(client, conversationId, projectId, options),
+				);
+			} catch (error) {
+				recordBrowserScrapeProviderAction(
+					options,
+					`chatgpt.readConversationPayload.failed.${classifyChatgptRuntimeEvaluationFailure(error)}.v1`,
+				);
+			}
 			recordBrowserScrapeProviderAction(options, "chatgpt.waitPostPayloadReadiness");
-			await waitForPredicate(
-				client.Runtime,
-				buildConversationSurfaceReadyExpression(conversationId, projectId),
-				{
-					timeoutMs: 10_000,
-					evaluationTimeoutMs: 10_000,
-					description: `ChatGPT conversation ${conversationId} post-payload readiness`,
-					interrupt: () =>
-						assertNoChatgptAccountMirrorHardStop(
-							client,
-							options,
-							`ChatGPT conversation ${conversationId} payload-sync readiness wait`,
-						),
-					interruptPollMs: 1_000,
-				},
-			);
+			recordBrowserScrapeCdpCall(options, "Runtime.evaluate");
+			let postPayloadReadiness: Awaited<ReturnType<typeof waitForPredicate>>;
+			try {
+				postPayloadReadiness = await waitForPredicate(
+					client.Runtime,
+					buildConversationSurfaceReadyExpression(conversationId, projectId),
+					{
+						timeoutMs: 10_000,
+						evaluationTimeoutMs: 10_000,
+						description: `ChatGPT conversation ${conversationId} post-payload readiness`,
+						interrupt: () =>
+							assertNoChatgptAccountMirrorHardStop(
+								client,
+								options,
+								`ChatGPT conversation ${conversationId} payload-sync readiness wait`,
+							),
+						interruptPollMs: 1_000,
+					},
+				);
+			} catch (error) {
+				recordBrowserScrapeProviderAction(
+					options,
+					`chatgpt.postPayloadReadiness.failed.${classifyChatgptRuntimeEvaluationFailure(error)}.v1`,
+				);
+				throw error;
+			}
+			if (!postPayloadReadiness.ok) {
+				recordBrowserScrapeProviderAction(
+					options,
+					"chatgpt.postPayloadReadiness.failed.predicate_unsatisfied.v1",
+				);
+				throw new Error(
+					`ChatGPT conversation ${conversationId} post-payload readiness was not satisfied.`,
+				);
+			}
+			recordBrowserScrapeProviderAction(options, "chatgpt.postPayloadReadiness.succeeded.v1");
 			const readMessages = () => readVisibleChatgptConversationMessagesWithClient(client, options);
 
 			let messages = await readMessages();
@@ -8682,16 +8756,23 @@ async function readChatgptConversationContextWithClient(
 				throw new Error(`ChatGPT conversation ${conversationId} messages not found`);
 			}
 			if (!payload) {
-				payload = await readChatgptConversationPayloadWithClient(
-					client,
-					conversationId,
-					projectId,
-					// The first payload read already exhausted the single governed reload
-					// fallback for this context read. Retry the direct authenticated fetch
-					// after the conversation DOM settles without physically reloading the
-					// same route a second time.
-					buildChatgptPayloadDirectRetryOptions(options),
-				).catch(() => null);
+				try {
+					payload = await readChatgptConversationPayloadWithClient(
+						client,
+						conversationId,
+						projectId,
+						// The first payload read already exhausted the single governed reload
+						// fallback for this context read. Retry the direct authenticated fetch
+						// after the conversation DOM settles without physically reloading the
+						// same route a second time.
+						buildChatgptPayloadDirectRetryOptions(options),
+					);
+				} catch (error) {
+					recordBrowserScrapeProviderAction(
+						options,
+						`chatgpt.readConversationPayloadRetry.failed.${classifyChatgptRuntimeEvaluationFailure(error)}.v1`,
+					);
+				}
 			}
 			const deepResearchFrameUrls = await readVisibleChatgptDeepResearchFrameUrlsWithClient(
 				client,

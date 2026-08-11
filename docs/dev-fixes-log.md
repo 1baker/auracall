@@ -1,3 +1,12 @@
+- 2026-08-11: `lastStage=cdp:Runtime.evaluate` proves only that an evaluation
+  method counter was the latest completed telemetry update; it does not identify
+  the evaluation purpose or exception. At provider-owned evaluation boundaries,
+  record a completed failure action after settlement using a closed allowlist
+  (`evaluation_timeout`, destroyed/missing execution context, closed transport,
+  protocol, generic, or unsatisfied predicate). Never persist the raw error or
+  expression. Also check `waitForPredicate().ok`: a settled false predicate is
+  a failure, not permission to continue into downstream DOM extraction.
+
 - 2026-08-10: A one-shot canary that moves from
   `preflight:browserChromeLaunch` with `attemptCount=0` to
   `cdp:Runtime.evaluate` with `attemptCount=1` is positive evidence that the

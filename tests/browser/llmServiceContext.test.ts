@@ -425,6 +425,65 @@ describe("project-scoped conversation context normalization", () => {
 		}
 	});
 
+	test("preserves a safe completed evaluation-failure stage after the CDP method marker", async () => {
+		const homeDir = await mkdtemp(path.join(os.tmpdir(), "auracall-llm-context-eval-stage-"));
+		setAuracallHomeDirOverrideForTest(homeDir);
+		const cacheContext: ProviderCacheContext = {
+			provider: "chatgpt",
+			userConfig: {} as ProviderCacheContext["userConfig"],
+			listOptions: {},
+			identityKey: "cache-test@example.com",
+		};
+		const store = new JsonCacheStore();
+		const provider = {
+			id: "chatgpt",
+			config: { id: "chatgpt", selectors: {} as never },
+			readConversationContext: vi.fn(
+				async (
+					_conversationId: string,
+					_projectId: string | undefined,
+					options: BrowserProviderListOptions,
+				) => {
+					const telemetry = options.scrapeTelemetry;
+					if (!telemetry) throw new Error("missing scrape telemetry");
+					telemetry.cdpCalls["Runtime.evaluate"] = 1;
+					telemetry.onUpdate?.();
+					telemetry.providerActions[
+						"chatgpt.postPayloadReadiness.failed.execution_context_destroyed.v1"
+					] = 1;
+					telemetry.onUpdate?.();
+					throw new Error("Execution context was destroyed. raw-provider-detail");
+				},
+			),
+		};
+		const service = new TestContextLlmService(provider as never, store, cacheContext);
+
+		try {
+			await expect(
+				service.getConversationContext("conversation-eval-stage", {
+					refresh: true,
+					allowCacheFallback: false,
+					retryAttempts: 0,
+					listOptions: {},
+				}),
+			).rejects.toThrow("raw-provider-detail");
+			const receipt = await readConversationContextReadReceipt(
+				cacheContext,
+				"conversation-eval-stage",
+			);
+			expect(receipt.items).toMatchObject({
+				outcome: "failed",
+				attemptCount: 1,
+				lastStage: "provider:chatgpt.postPayloadReadiness.failed.execution_context_destroyed.v1",
+				pendingOperation: null,
+				errorCode: "Error",
+			});
+			expect(JSON.stringify(receipt.items)).not.toContain("raw-provider-detail");
+		} finally {
+			await rm(homeDir, { recursive: true, force: true });
+		}
+	});
+
 	test("getConversationContext bounds pre-provider list-option resolution and preserves a terminal receipt", async () => {
 		const homeDir = await mkdtemp(
 			path.join(os.tmpdir(), "auracall-llm-context-preflight-timeout-"),

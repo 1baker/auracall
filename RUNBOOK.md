@@ -1,5 +1,30 @@
 # RUNBOOK
 
+## Turn 438 | 2026-08-11
+
+- The operator authorized the recommended provider-free successor after Plan
+  0258's sole canary failed at `cdp:Runtime.evaluate` with `attemptCount=1` and
+  a generic error code. Plan 0259 is active and closed-world against that exact
+  boundary.
+- This packet must first create a deterministic red-capable fake-CDP loop,
+  classify evaluation purpose and exception safely, then repair only a proven
+  defect. Install/restart, browser/provider work, another canary,
+  materialization, completion control, scheduler control, guard changes, and
+  direct runtime edits remain zero-authority effects.
+- The real adapter-seam loop failed twice because a stalled post-payload
+  evaluation retained only the broad CDP method counter. The expanded red also
+  proved there was no safe exception classifier. The repair records only
+  allowlisted completed failure classes, never raw messages/expressions, and
+  fails closed when the readiness predicate finishes with `ok=false`.
+- Exact validation passes 8/8, focused validation 186/186, and the adjacent
+  five-file packet 358/358. Typecheck, build, scoped Biome, the 260-plan audit,
+  and diff hygiene pass. No full-suite run was used because its known browser
+  e2e would violate the packet's zero-launch bound.
+- Plan 0259 closes provider-free. Plan 0260 is prepared but unapproved for one
+  install/restart and one zero-retry same-conversation canary. Current runtime
+  state remains scheduler paused/paused, target idle-waiting/pass 56, zero
+  active jobs, zero exact browser owners, and port 45015 unbound.
+
 ## Turn 437 | 2026-08-10
 
 - Plan 0254's sole install/restart produced exact source/installed ChatGPT

@@ -1,3 +1,24 @@
+## 2026-08-11 | Plan 0259 First Runtime Evaluate Diagnosis
+
+- Current focus: reproduce Plan 0258's broad `cdp:Runtime.evaluate` failure at
+  the real context-read seam with fake CDP, then distinguish the evaluation
+  purpose and safe exception class without retaining expressions or provider
+  content. CodeGraph confirms the receipt stage is currently derived only from
+  a method-level telemetry counter, so several evaluation call sites collapse
+  into the same stage.
+- Boundary: provider-free source/tests/docs only. No install, API restart,
+  browser launch/attachment, provider call, live canary, materialization,
+  completion/scheduler control, guard action, or direct runtime edit.
+- Red/green: the exact adapter-seam loop failed twice because no completed
+  post-payload evaluation-failure action existed; the expanded classifier red
+  also failed. The repair uses a closed allowlist and never persists raw
+  exception text or expressions. It additionally checks the previously ignored
+  `waitForPredicate().ok` result and fails closed when readiness is unsatisfied.
+- Validation: 8/8 exact, 186/186 focused, and 358/358 adjacent provider-free
+  tests pass. Typecheck, build, scoped Biome, 260-plan audit, and diff check pass.
+  Plan 0259 closes; Plan 0260 is prepared for one separately approved
+  install/restart and one zero-retry canary only.
+
 ## 2026-08-10 | Plan 0255 Context Preflight Abort Repair
 
 - Plan 0258 activation: the operator approved only the prepared single
