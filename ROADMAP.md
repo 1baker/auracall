@@ -7,6 +7,13 @@
 Status: active
 Lane: P01
 
+- Active `wsl-chrome-3` pass-57 one-pass live-follow canary:
+  [docs/dev/plans/0267-2026-08-11-wsl-chrome-3-pass-57-one-pass-live-follow-canary.md](docs/dev/plans/0267-2026-08-11-wsl-chrome-3-pass-57-one-pass-live-follow-canary.md)
+  Plan 0266 removed the exact route-loss blocker. The operator approved one
+  targeted `run-one-pass` on the retained pass-56 completion with one
+  child/attempt, retained `maxItems=6`/`force=false`, and exact owned cleanup.
+  This does not resume the scheduler or any wider completion.
+
 - Closed accepted `wsl-chrome-3` route-bound payload one-canary gate:
   [docs/dev/plans/0266-2026-08-11-wsl-chrome-3-route-bound-payload-one-canary-gate.md](docs/dev/plans/0266-2026-08-11-wsl-chrome-3-route-bound-payload-one-canary-gate.md)
   The sole install established exact adapter parity and healthy API PID 1886.

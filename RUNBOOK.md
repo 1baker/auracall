@@ -1,5 +1,25 @@
 # RUNBOOK
 
+## Turn 443 | 2026-08-11
+
+- The operator approved the recommended separately bounded live-follow
+  successor with `ok go`. Plan 0267 activates exactly one targeted
+  `run-one-pass` on retained `chatgpt/wsl-chrome-3` completion
+  `acctmirror_completion_fb93ed6c-c57b-40cd-b5dc-ba6322f75446`; the scheduler
+  itself remains paused.
+- Fresh admission is green at clean/synchronized Git `a1fa791e`: API PID 1886
+  is active/running with zero restarts; exact source/installed adapter parity
+  is `3068a77b...`; target is idle-waiting/backfill-history/pass 56 with null
+  error/next/force and guard; retained request is `maxItems=6`/`force=false`;
+  active history jobs, exact browser-tools owners, matching agent-browser
+  resources, and port-45015 listeners are zero. Wider passes remain 9/2/34.
+- Bounds are one control, one pass advance, one child/attempt, at most six
+  materializations/downloads, and one exact cleanup. Scheduler/wider controls,
+  pass 58, retries, installs/restarts, force/guard/config changes, prompts,
+  model selections, clicks, `Answer now`, uploads, direct runtime edits, and
+  subagents remain excluded. Commit/push and a repeated admission precede the
+  sole control.
+
 ## Turn 442 | 2026-08-11
 
 - The operator's explicit `ok go` activates Plan 0266's frozen packet: one

@@ -1,3 +1,23 @@
+## 2026-08-11 | Plan 0267 Pass-57 One-Pass Activation
+
+- The operator's `ok go` approves one targeted `run-one-pass` on retained
+  `chatgpt/wsl-chrome-3` completion
+  `acctmirror_completion_fb93ed6c-c57b-40cd-b5dc-ba6322f75446`. This is not a
+  global scheduler or wider-completion resume.
+- Fresh admission is green at clean/synchronized Git `a1fa791e`: API PID 1886
+  is active/running with `NRestarts=0`; source/installed adapter parity is
+  `3068a77b...`; scheduler is paused/paused; target is
+  idle-waiting/backfill-history/pass 56 with null error/next/force and guard;
+  retained request is `maxItems=6`/`force=false`; active jobs, exact
+  browser-tools owners, matching agent-browser resources, and port-45015
+  listeners are zero. Wider passes remain 9/2/34.
+- The bounded packet permits one control, one pass advance, one child/attempt,
+  at most six materializations/downloads, and one exact owned cleanup. Every
+  scheduler/wider, retry, pass-58, install/restart, force/guard/config, prompt,
+  model, click, `Answer now`, upload, direct-edit, and subagent effect remains
+  excluded. The active gate must be audited, committed, pushed, and freshly
+  reread before control.
+
 ## 2026-08-11 | Plan 0266 Live Gate Activation
 
 - The operator's explicit `ok go` activates the frozen one-install,
