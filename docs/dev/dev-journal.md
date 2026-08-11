@@ -17,6 +17,22 @@
   model, click, `Answer now`, upload, direct-edit, and subagent effect remains
   excluded. The active gate must be audited, committed, pushed, and freshly
   reread before control.
+- Activation commit `1e721c52` was pushed before the sole control. The control
+  advanced exactly pass 56 -> 57 and created sole child
+  `hmj_514862dd63e64b8cbda075ec3a09bdec`, which honored provider pacing and
+  succeeded on attempt 1: two conversations, six materialized PNGs, one skip,
+  and zero failures.
+- Independent receipt verification recomputed all six SHA-256 values, checked
+  13,263,761 bytes as `image/png`, and resolved every checksum to exactly one
+  canonical `materialized` archive record. Scrape telemetry reports six
+  attempted/six succeeded/zero failed downloads and no pending operation;
+  provider identity matches on email, plan, structure, and account level.
+- Parent absorption is idle-waiting/steady-follow/pass 57 with null
+  error/next/force and no guard. The owned browser exited itself, so no kill
+  was spent; exact owners, port 45015, and active jobs are zero. API PID 1886,
+  installed parity, wider passes 9/2/34, and scheduler paused/paused remain
+  verified. Plan 0267 closes `C1_useful_pass_progress`; no retry or wider
+  resume ran.
 
 ## 2026-08-11 | Plan 0266 Live Gate Activation
 

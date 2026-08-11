@@ -19,6 +19,22 @@
   model selections, clicks, `Answer now`, uploads, direct runtime edits, and
   subagents remain excluded. Commit/push and a repeated admission precede the
   sole control.
+- Activation commit `1e721c52` was pushed before the sole control. It advanced
+  exactly pass 56 -> 57 and created only child
+  `hmj_514862dd63e64b8cbda075ec3a09bdec`. The child honored its provider-work
+  not-before time and succeeded on attempt 1 with two conversations, six
+  materialized PNGs, one skipped item, and zero failures.
+- All six SHA-256 values recompute from 13,263,761 local bytes, identify as
+  `image/png`, and resolve one-to-one to canonical `materialized` archive
+  records. Telemetry reports six attempted/six succeeded/zero failed downloads
+  and no pending operation. Provider-session proof matches email, plan,
+  structure, and account-level dimensions.
+- The parent absorbed the child at idle-waiting/steady-follow/pass 57 with null
+  error/next/force and no guard. The pass-owned browser exited independently;
+  no kill was used, browser-tools returns `[]`, port 45015 is unbound, and
+  active jobs are zero. API PID 1886 remains healthy with exact adapter parity;
+  wider passes remain 9/2/34 and scheduler remains paused/paused. Plan 0267
+  closes as `C1_useful_pass_progress` without retry or wider resume.
 
 ## Turn 442 | 2026-08-11
 

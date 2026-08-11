@@ -7,12 +7,14 @@
 Status: active
 Lane: P01
 
-- Active `wsl-chrome-3` pass-57 one-pass live-follow canary:
+- Closed accepted `wsl-chrome-3` pass-57 one-pass live-follow canary:
   [docs/dev/plans/0267-2026-08-11-wsl-chrome-3-pass-57-one-pass-live-follow-canary.md](docs/dev/plans/0267-2026-08-11-wsl-chrome-3-pass-57-one-pass-live-follow-canary.md)
-  Plan 0266 removed the exact route-loss blocker. The operator approved one
-  targeted `run-one-pass` on the retained pass-56 completion with one
-  child/attempt, retained `maxItems=6`/`force=false`, and exact owned cleanup.
-  This does not resume the scheduler or any wider completion.
+  The sole control advanced exactly 56 -> 57. Its sole child succeeded on
+  attempt 1 with six materialized PNGs, one skip, zero failures, six verified
+  checksums, and matching provider-session identity. Parent absorption, API
+  health/parity, zero exact ownership, unchanged wider passes 9/2/34, and the
+  scheduler's paused/paused posture are all verified. No retry or wider resume
+  ran.
 
 - Closed accepted `wsl-chrome-3` route-bound payload one-canary gate:
   [docs/dev/plans/0266-2026-08-11-wsl-chrome-3-route-bound-payload-one-canary-gate.md](docs/dev/plans/0266-2026-08-11-wsl-chrome-3-route-bound-payload-one-canary-gate.md)
