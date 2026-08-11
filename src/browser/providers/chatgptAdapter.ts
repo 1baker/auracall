@@ -409,6 +409,7 @@ const CHATGPT_CONVERSATION_PAYLOAD_FETCH_TIMEOUT_MS = 9_000;
 const CHATGPT_CONVERSATION_PAYLOAD_EVALUATE_TIMEOUT_MS = 10_000;
 const CHATGPT_CONVERSATION_PAYLOAD_RESPONSE_BODY_TIMEOUT_MS = 9_000;
 const CHATGPT_CONVERSATION_PAYLOAD_FALLBACK_TIMEOUT_MS = 10_000;
+const CHATGPT_POST_PAYLOAD_ROUTE_READ_TIMEOUT_MS = 2_000;
 const CHATGPT_CONVERSATION_MESSAGES_PAGE_SIZE = 8;
 const CHATGPT_CONVERSATION_MESSAGES_PAGE_TIMEOUT_MS = 10_000;
 const CHATGPT_CONVERSATION_MESSAGES_MAX_PAGES = 256;
@@ -807,6 +808,65 @@ type ChatgptProjectSettingsSnapshot = {
 type ChatgptConversationPayload = {
 	mapping?: Record<string, ChatgptConversationPayloadNode | null> | null;
 };
+
+type ChatgptConversationPayloadShape = "mapping" | "non_mapping" | "missing";
+type ChatgptPostPayloadRouteClass =
+	| "expected_conversation"
+	| "home"
+	| "other_chatgpt"
+	| "non_chatgpt"
+	| "unknown";
+
+function classifyChatgptConversationPayloadShape(
+	payload: unknown,
+): ChatgptConversationPayloadShape {
+	if (!isRecord(payload)) return "missing";
+	return isRecord(payload.mapping) ? "mapping" : "non_mapping";
+}
+
+export const classifyChatgptConversationPayloadShapeForTest =
+	classifyChatgptConversationPayloadShape;
+
+function classifyChatgptPostPayloadRoute(
+	value: string | null | undefined,
+	conversationId: string,
+	projectId?: string | null,
+): ChatgptPostPayloadRouteClass {
+	if (typeof value !== "string" || !value.trim()) return "unknown";
+	try {
+		const parsed = new URL(value);
+		if (!CHATGPT_COMPATIBLE_HOSTS.includes(parsed.hostname)) return "non_chatgpt";
+		const routeConversationId = extractChatgptConversationIdFromUrl(value);
+		const expectedProjectId = normalizeChatgptProjectId(projectId ?? undefined);
+		const routeProjectId = extractChatgptProjectIdFromUrl(value);
+		if (
+			routeConversationId === conversationId &&
+			(!expectedProjectId || routeProjectId === expectedProjectId)
+		) {
+			return "expected_conversation";
+		}
+		if (parsed.pathname === "/" || parsed.pathname === "") return "home";
+		return "other_chatgpt";
+	} catch {
+		return "unknown";
+	}
+}
+
+export const classifyChatgptPostPayloadRouteForTest = classifyChatgptPostPayloadRoute;
+
+function buildChatgptPostPayloadReadinessFailureStage(
+	payload: unknown,
+	currentUrl: string | null | undefined,
+	conversationId: string,
+	projectId?: string | null,
+): string {
+	const payloadShape = classifyChatgptConversationPayloadShape(payload);
+	const routeClass = classifyChatgptPostPayloadRoute(currentUrl, conversationId, projectId);
+	return `chatgpt.postPayloadReadiness.failed.predicate_unsatisfied.payload_${payloadShape}.route_${routeClass}.v1`;
+}
+
+export const buildChatgptPostPayloadReadinessFailureStageForTest =
+	buildChatgptPostPayloadReadinessFailureStage;
 
 type ChatgptConversationPayloadNode = {
 	id?: string | null;
@@ -8765,9 +8825,26 @@ async function readChatgptConversationContextWithClient(
 				throw error;
 			}
 			if (!postPayloadReadiness.ok) {
+				recordBrowserScrapeCdpCall(options, "Runtime.evaluate");
+				const currentUrl = await withChatgptTimeout(
+					client.Runtime.evaluate({
+						expression: "location.href",
+						returnByValue: true,
+						timeout: CHATGPT_POST_PAYLOAD_ROUTE_READ_TIMEOUT_MS,
+					}),
+					CHATGPT_POST_PAYLOAD_ROUTE_READ_TIMEOUT_MS,
+					"Timed out classifying the ChatGPT post-payload route.",
+				)
+					.then(({ result }) => (typeof result?.value === "string" ? result.value : null))
+					.catch(() => null);
 				recordBrowserScrapeProviderAction(
 					options,
-					"chatgpt.postPayloadReadiness.failed.predicate_unsatisfied.v1",
+					buildChatgptPostPayloadReadinessFailureStage(
+						payload,
+						currentUrl,
+						conversationId,
+						projectId,
+					),
 				);
 				throw new Error(
 					`ChatGPT conversation ${conversationId} post-payload readiness was not satisfied.`,

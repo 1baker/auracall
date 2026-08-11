@@ -180,6 +180,64 @@ describe("chatgpt context canary", () => {
 		).toBe("context");
 	});
 
+	test("accepts one exact closed post-payload payload-route classification", () => {
+		expect(
+			classifyChatgptContextCanaryOutcome({
+				childExitCode: 1,
+				timedOut: false,
+				expectedConversationId: "conversation-safe",
+				outputParseState: "not_parsed",
+				contextSummary: null,
+				receiptSelection: "selected",
+				receipt: {
+					object: "conversation_context_read_receipt",
+					version: 1,
+					provider: "chatgpt",
+					accountScopeHash: "scope-safe",
+					conversationId: "conversation-safe",
+					outcome: "failed",
+					timeoutMs: 120_000,
+					elapsedMs: 1_234,
+					attemptCount: 1,
+					lastStage:
+						"provider:chatgpt.postPayloadReadiness.failed.predicate_unsatisfied.payload_mapping.route_home.v1",
+					pendingOperation: null,
+					completedAt: "2026-08-11T15:00:00.000Z",
+					errorCode: "Error",
+				},
+			}),
+		).toBe("classified_post_payload_failure");
+	});
+
+	test("rejects a post-payload stage outside the closed payload-route matrix", () => {
+		expect(
+			classifyChatgptContextCanaryOutcome({
+				childExitCode: 1,
+				timedOut: false,
+				expectedConversationId: "conversation-safe",
+				outputParseState: "not_parsed",
+				contextSummary: null,
+				receiptSelection: "selected",
+				receipt: {
+					object: "conversation_context_read_receipt",
+					version: 1,
+					provider: "chatgpt",
+					accountScopeHash: "scope-safe",
+					conversationId: "conversation-safe",
+					outcome: "failed",
+					timeoutMs: 120_000,
+					elapsedMs: 1_234,
+					attemptCount: 1,
+					lastStage:
+						"provider:chatgpt.postPayloadReadiness.failed.predicate_unsatisfied.payload_private.route_home.v1",
+					pendingOperation: null,
+					completedAt: "2026-08-11T15:00:00.000Z",
+					errorCode: "Error",
+				},
+			}),
+		).toBeNull();
+	});
+
 	test.each([
 		{ label: "timeout", timedOut: true, attemptCount: 1, pendingOperation: null },
 		{ label: "retry", timedOut: false, attemptCount: 2, pendingOperation: null },

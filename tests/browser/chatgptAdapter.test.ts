@@ -9,10 +9,13 @@ import {
 	buildChatgptAuthSessionIdentityExpression,
 	buildChatgptCreateProjectDialogStateExpressionForTest,
 	buildChatgptPayloadDirectRetryOptionsForTest,
+	buildChatgptPostPayloadReadinessFailureStageForTest,
 	buildChatgptUrlRouteExpressionForTest,
 	classifyChatgptBlockingSurfaceProbe,
 	classifyChatgptCapturedFileIdentityValuesForTest,
+	classifyChatgptConversationPayloadShapeForTest,
 	classifyChatgptFileRetrievalFailure,
+	classifyChatgptPostPayloadRouteForTest,
 	classifyChatgptRuntimeEvaluationFailureForTest,
 	clickChatgptViewerDownloadButtonWithClientForTest,
 	closeChatgptTabConnectionForTest,
@@ -443,7 +446,13 @@ describe("ensureChatgptConversationSurfaceReadyForRead", () => {
 		}
 	});
 
-	test("fails closed when post-payload readiness stays unsatisfied", async () => {
+	test.each([
+		{ label: "expected route", currentUrl: null, routeClass: "expected_conversation" },
+		{ label: "ChatGPT home", currentUrl: "https://chatgpt.com/", routeClass: "home" },
+	])("fails closed with sanitized payload and route evidence on $label", async ({
+		currentUrl,
+		routeClass,
+	}) => {
 		vi.useFakeTimers();
 		try {
 			const conversationId = "same-route-post-payload-not-ready";
@@ -461,7 +470,7 @@ describe("ensureChatgptConversationSurfaceReadyForRead", () => {
 					return Promise.resolve({ result: { value: !payloadRead } });
 				}
 				if (expression.trim() === "location.href") {
-					return Promise.resolve({ result: { value: url } });
+					return Promise.resolve({ result: { value: payloadRead ? (currentUrl ?? url) : url } });
 				}
 				return Promise.resolve({ result: { value: [] } });
 			});
@@ -489,11 +498,59 @@ describe("ensureChatgptConversationSurfaceReadyForRead", () => {
 				`ChatGPT conversation ${conversationId} post-payload readiness was not satisfied.`,
 			);
 			expect(scrapeTelemetry.providerActions).toMatchObject({
-				"chatgpt.postPayloadReadiness.failed.predicate_unsatisfied.v1": 1,
+				[`chatgpt.postPayloadReadiness.failed.predicate_unsatisfied.payload_mapping.route_${routeClass}.v1`]: 1,
 			});
 		} finally {
 			vi.useRealTimers();
 		}
+	});
+
+	test("sanitizes post-payload failure into closed payload and route classes", () => {
+		expect(classifyChatgptConversationPayloadShapeForTest(null)).toBe("missing");
+		expect(classifyChatgptConversationPayloadShapeForTest({ detail: "redacted" })).toBe(
+			"non_mapping",
+		);
+		expect(classifyChatgptConversationPayloadShapeForTest({ mapping: {} })).toBe("mapping");
+
+		const conversationId = "route-class-conversation";
+		expect(
+			classifyChatgptPostPayloadRouteForTest(
+				`https://chatgpt.com/c/${conversationId}`,
+				conversationId,
+			),
+		).toBe("expected_conversation");
+		expect(classifyChatgptPostPayloadRouteForTest("https://chatgpt.com/", conversationId)).toBe(
+			"home",
+		);
+		expect(
+			classifyChatgptPostPayloadRouteForTest(
+				"https://chatgpt.com/c/another-conversation",
+				conversationId,
+			),
+		).toBe("other_chatgpt");
+		expect(classifyChatgptPostPayloadRouteForTest("https://example.com/", conversationId)).toBe(
+			"non_chatgpt",
+		);
+		expect(classifyChatgptPostPayloadRouteForTest(null, conversationId)).toBe("unknown");
+
+		expect(
+			buildChatgptPostPayloadReadinessFailureStageForTest(
+				{ mapping: {} },
+				"https://chatgpt.com/",
+				conversationId,
+			),
+		).toBe(
+			"chatgpt.postPayloadReadiness.failed.predicate_unsatisfied.payload_mapping.route_home.v1",
+		);
+		expect(
+			buildChatgptPostPayloadReadinessFailureStageForTest(
+				{ detail: "not retained" },
+				"https://chatgpt.com/c/another-conversation",
+				conversationId,
+			),
+		).toBe(
+			"chatgpt.postPayloadReadiness.failed.predicate_unsatisfied.payload_non_mapping.route_other_chatgpt.v1",
+		);
 	});
 
 	test("propagates terminal payload unavailability before post-payload readiness", async () => {

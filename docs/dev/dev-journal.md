@@ -17,6 +17,34 @@
   scheduler/completion control, retries, prompts, model selection, downloads,
   guards, config changes, direct runtime edits, and wider profiles remain
   excluded.
+- The sole combined installer completed with API PID 85444, zero restarts, and
+  exact source/installed adapter parity at `1f394126...`. The one zero-retry
+  canary exited 1 after 35067 ms at attempt 1 with no timeout or pending
+  operation. Its last stage was again
+  `provider:chatgpt.postPayloadReadiness.failed.predicate_unsatisfied.v1`, not
+  context or the repaired terminal-unavailable stage.
+- Exact inspection attributed PID 86060/port 45015 to the canary and found its
+  provider page at ChatGPT home rather than the conversation route. One exact
+  cleanup restored zero owners/listeners. Active work remains zero, the target
+  remains idle-waiting/pass 56, and scheduler remains paused/paused.
+- Plan 0262 closes not accepted and without retry. Plan 0263 opens provider-free
+  because the current receipt omits the causal payload-shape dimension. It may
+  add only a closed payload-shape plus safe-route failure stage and tests; all
+  live/runtime and control effects remain excluded.
+- The Plan 0263 red failed 2/2 because mapped payload on the expected route and
+  mapped payload followed by ChatGPT home both retained the same generic stage.
+  Closed classifiers now bind a failed predicate to payload `mapping`,
+  `non_mapping`, or `missing` plus route `expected_conversation`, `home`,
+  `other_chatgpt`, `non_chatgpt`, or `unknown`. No URL, payload body, error,
+  auth data, or conversation content enters telemetry.
+- Focused and adjacent validation passes 198/198, including exact harness
+  acceptance and near-match rejection, plus typecheck, production build,
+  scoped Biome, canary dry-run, diff hygiene, and plan audit. New built
+  adapter hash is `2acb20a9...`; installed remains `1f394126...`. Plan 0263
+  closes provider-free with every live/runtime effect zero.
+- Plan 0264 prepares one separately approved install/restart and one exact
+  zero-retry classified canary. It is stopped at the live-effect gate; no
+  materialization or scheduler/completion control is admitted.
 
 ## 2026-08-11 | Plan 0262 Classified One-Canary Preparation
 

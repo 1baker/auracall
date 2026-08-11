@@ -36,7 +36,10 @@ type SanitizedReceipt = {
 
 type ContextSummary = ReturnType<typeof summarizeChatgptContextPayload>;
 
-export type ChatgptContextCanaryOutcome = "context" | "terminal_unavailable";
+export type ChatgptContextCanaryOutcome =
+	| "context"
+	| "terminal_unavailable"
+	| "classified_post_payload_failure";
 
 type ChatgptContextCanaryOutcomeInput = {
 	childExitCode: number | null;
@@ -60,6 +63,8 @@ const MAX_CHILD_OUTPUT_BYTES = 20 * 1024 * 1024;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const CHATGPT_TERMINAL_UNAVAILABLE_STAGE =
 	"provider:chatgpt.readConversationPayload.failed.conversation_unavailable.v1";
+const CHATGPT_CLASSIFIED_POST_PAYLOAD_FAILURE_STAGE_PATTERN =
+	/^provider:chatgpt\.postPayloadReadiness\.failed\.predicate_unsatisfied\.payload_(?:mapping|non_mapping|missing)\.route_(?:expected_conversation|home|other_chatgpt|non_chatgpt|unknown)\.v1$/;
 
 function asRecord(value: unknown): Record<string, unknown> | null {
 	return value !== null && typeof value === "object" && !Array.isArray(value)
@@ -153,6 +158,15 @@ export function classifyChatgptContextCanaryOutcome(
 		receipt.lastStage === CHATGPT_TERMINAL_UNAVAILABLE_STAGE
 	) {
 		return "terminal_unavailable";
+	}
+	if (
+		input.childExitCode === 1 &&
+		input.outputParseState === "not_parsed" &&
+		input.contextSummary === null &&
+		receipt.outcome === "failed" &&
+		CHATGPT_CLASSIFIED_POST_PAYLOAD_FAILURE_STAGE_PATTERN.test(receipt.lastStage ?? "")
+	) {
+		return "classified_post_payload_failure";
 	}
 	return null;
 }

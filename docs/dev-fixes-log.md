@@ -1,3 +1,13 @@
+- 2026-08-11: A sanitized stage that reports only post-payload predicate
+  failure cannot distinguish payload loss from route loss. At that terminal
+  boundary, reduce the already-held payload to a closed shape (`mapping`,
+  `non_mapping`, or `missing`) and perform one independently bounded
+  `location.href` read reduced to a closed route class (`expected_conversation`,
+  `home`, `other_chatgpt`, `non_chatgpt`, or `unknown`). Record only the
+  combined labels. Never retain the URL, payload body, error text, auth data,
+  or conversation content, and do not change payload, navigation, readiness,
+  retry, or terminal behavior merely to improve diagnosis.
+
 - 2026-08-11: Freeze a one-canary install packet to the combined
   `install:user-runtime-service` command when that script already owns the API
   restart; a later manual restart silently exceeds the declared effect bound.

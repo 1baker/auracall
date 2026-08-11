@@ -7,7 +7,25 @@
 Status: active
 Lane: P01
 
-- Active `wsl-chrome-3` terminal-unavailable one-canary gate:
+- Prepared `wsl-chrome-3` payload-route-class one-canary gate:
+  [docs/dev/plans/0264-2026-08-11-wsl-chrome-3-payload-route-class-one-canary-gate.md](docs/dev/plans/0264-2026-08-11-wsl-chrome-3-payload-route-class-one-canary-gate.md)
+  Provider-free localization is green and built but not installed. One future
+  zero-retry canary can now distinguish mapped, non-mapping, or absent payload
+  from expected, home, other-ChatGPT, non-ChatGPT, or unknown route without
+  retaining content. It awaits separate approval and fresh admission;
+  materialization and scheduler/completion control remain excluded.
+
+- Closed provider-free ChatGPT post-payload route-loss localization:
+  [docs/dev/plans/0263-2026-08-11-chatgpt-post-payload-route-loss-provider-free-localization.md](docs/dev/plans/0263-2026-08-11-chatgpt-post-payload-route-loss-provider-free-localization.md)
+  Plan 0262's sole canary again ended at generic post-payload predicate failure
+  while exact owned inspection found ChatGPT home. This provider-free slice
+  binds that failure to a closed payload-shape and safe route class without
+  changing behavior or retaining provider content. The exact red failed 2/2;
+  198/198 focused/adjacent tests plus typecheck, build, scoped Biome, dry-run,
+  and plan audit are green. Installation and browser work remained zero.
+
+- Closed `wsl-chrome-3` terminal-unavailable one-canary gate without
+  acceptance:
   [docs/dev/plans/0262-2026-08-11-wsl-chrome-3-terminal-unavailable-one-canary-gate.md](docs/dev/plans/0262-2026-08-11-wsl-chrome-3-terminal-unavailable-one-canary-gate.md)
   The provider-free repair is green and built but not installed. One fresh
   same-route, zero-retry canary is specified to accept either current context
@@ -20,8 +38,11 @@ Lane: P01
   Chrome orphaned; the operator authorized closing it, and one attributed
   port-scoped close restored zero ownership. Fresh admission is green at Git
   `06bb93d1`, API PID 81249, scheduler paused/paused, target pass 56, and zero
-  active work. The frozen install and sole canary are now active;
-  materialization and scheduler/completion control remain excluded.
+  active work. The sole install reached exact parity and the sole zero-retry
+  canary reproduced `postPayloadReadiness.failed.predicate_unsatisfied` rather
+  than context or terminal unavailability. Exact inspection found ChatGPT home;
+  cleanup restored zero ownership. Plan 0262 is exhausted without retry, while
+  materialization and scheduler/completion control remained excluded.
 
 - Closed ChatGPT exact-fallback terminal-unavailable provider-free repair:
   [docs/dev/plans/0261-2026-08-11-chatgpt-fallback-terminal-unavailable-provider-free-repair.md](docs/dev/plans/0261-2026-08-11-chatgpt-fallback-terminal-unavailable-provider-free-repair.md)

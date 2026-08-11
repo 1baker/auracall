@@ -18,6 +18,35 @@
   exact canary-owned cleanup are active. Materialization, scheduler/completion
   control, retries, prompts, model selection, downloads, guards, direct runtime
   edits, and wider profiles remain excluded.
+- The sole installer completed and produced API PID 85444 with zero restarts
+  plus exact source/installed adapter parity at `1f394126...`. The sole canary
+  then exited 1 after 35067 ms at attempt 1 with no timeout or pending operation;
+  its last stage was the same generic post-payload predicate-unsatisfied stage,
+  not context or terminal unavailability.
+- Owned inspection found canary root PID 86060/port 45015 and only ChatGPT home,
+  not the requested conversation. The one exact cleanup removed that tree;
+  owners, listeners, active jobs, and active completions are zero. The target
+  remains pass 56 and scheduler remains paused/paused. No retry or excluded
+  effect occurred.
+- Plan 0262 closes not accepted. Plan 0263 opens provider-free to add one closed
+  payload-shape plus safe-route stage at the exact readiness failure. It changes
+  no behavior and withholds installation and any browser canary behind a new
+  gate.
+- Plan 0263's red proved mapped payload on the expected route and mapped payload
+  followed by ChatGPT home both collapsed into the same generic stage. The
+  repair now records only closed payload shapes (`mapping`, `non_mapping`,
+  `missing`) and route classes (`expected_conversation`, `home`,
+  `other_chatgpt`, `non_chatgpt`, `unknown`) after a failed readiness
+  predicate. It retains no provider content and changes no navigation or
+  terminal behavior.
+- Validation passes 198/198 focused and adjacent tests, including exact harness
+  acceptance and near-match rejection, plus typecheck, production build,
+  scoped Biome, frozen canary dry-run, diff hygiene, and the 263-plan
+  audit. Built hash is `2acb20a9...`; installed remains `1f394126...`. No live
+  effect occurred in Plan 0263.
+- Plan 0264 is prepared but unapproved for one combined install/restart, one
+  exact zero-retry canary, and exact cleanup. Scheduler/completion control and
+  materialization remain excluded.
 
 ## Turn 439 | 2026-08-11
 

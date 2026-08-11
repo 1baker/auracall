@@ -1,10 +1,10 @@
 # WSL Chrome 3 Terminal-Unavailable One-Canary Gate | 0262-2026-08-11
 
-State: OPEN
+State: CLOSED
 Lane: P01
-Plan version: 4
-Gate state: ACTIVE_INSTALL_AND_ONE_CANARY
-Goal execution state: ACTIVE_BOUNDED_LIVE_PACKET
+Plan version: 5
+Gate state: CLOSED_ONE_CANARY_NOT_ACCEPTED
+Goal execution state: PAUSED_AT_FUTURE_LIVE_GATE
 
 ## Stable Goal Objective
 
@@ -70,13 +70,13 @@ or widen the route or browser profile.
 - [x] Provider-free harness acceptance matches both permitted outcomes and
   rejects timeout, retry, and pending-operation near misses.
 - [x] Explicit approval and fresh drift-free zero-owner admission.
-- [ ] One healthy install/restart with exact installed/source parity.
+- [x] One healthy install/restart with exact installed/source parity.
 - [ ] Exactly one attempt yields either current nonempty context or
   `provider:chatgpt.readConversationPayload.failed.conversation_unavailable.v1`.
 - [ ] No post-payload predicate failure follows a terminal-unavailable stage.
-- [ ] Exact browser/job cleanup returns to zero.
-- [ ] Target stays pass 56 and scheduler stays paused/paused.
-- [ ] Materialization and every other excluded effect remain zero.
+- [x] Exact browser/job cleanup returns to zero.
+- [x] Target stays pass 56 and scheduler stays paused/paused.
+- [x] Materialization and every other excluded effect remain zero.
 
 ## Frozen Live Command Packet | Withheld Until Approval
 
@@ -250,3 +250,41 @@ One installed zero-retry canary distinguishes current context from exact online
 unavailability, exact cleanup succeeds, and pass 56 plus scheduler pause remain
 unchanged. The plan does not materialize or resume wider execution under either
 outcome.
+
+## Terminal Checkpoint | Sole Canary Rejected Without Retry
+
+- `checkpoint_id`: `P0262-C06`.
+- `state_transition`: P0262_ACTIVE_INSTALL_AND_ONE_CANARY ->
+  P0262_CLOSED_ONE_CANARY_NOT_ACCEPTED.
+- `progress_classification`: live_hypothesis_disproved.
+- `install_evidence`: the sole combined installer completed successfully,
+  produced API PID 85444 active/running with `NRestarts=0`, and established
+  exact source/installed adapter SHA-256 parity at
+  `1f3941267e762d72b1caf12d41fce6fbd4f70e12cd6300b6c55e6e6d180beb4a`.
+- `canary_evidence`: the sole zero-retry child exited 1 after 35067 ms. Its
+  unique sanitized receipt records provider `chatgpt`, attempt count 1, no
+  timeout, no pending operation, and last stage
+  `provider:chatgpt.postPayloadReadiness.failed.predicate_unsatisfied.v1`.
+  It emitted neither context nor the permitted terminal-unavailable stage.
+- `browser_evidence`: ownership-checked inspection found the canary-created
+  exact managed Chrome root PID 86060 on port 45015 with its only provider page
+  at `https://chatgpt.com/`, not the requested conversation route.
+- `cleanup_evidence`: the one canary cleanup removed PID 86060 and four exact
+  Chrome children. Fresh browser-tools and socket readback are zero-owner.
+- `runtime_evidence`: API PID 85444 remains healthy with exact installed
+  parity; active completion/materialization counts are zero; the target remains
+  idle-waiting/backfill-history/pass 56 with null error/next/force; scheduler
+  remains paused/paused.
+- `acceptance_state`: NOT_ACCEPTED. The fallback-404/410 terminal classifier
+  was not exercised by this live failure; the exact payload shape at route loss
+  remains unobserved.
+- `effect_audit`: one install/restart, one browser launch/context attempt, and
+  one exact canary cleanup were consumed. Retries, materialization,
+  completion/scheduler controls, prompts, model selection, downloads, guards,
+  config changes, direct runtime edits, and wider profiles remained zero.
+- `authority_classification`: this plan is exhausted and grants no retry. Plan
+  0263 may add provider-free, sanitized payload-shape plus route-loss
+  localization only.
+- `subagent_status`: not_spawned.
+- `next_action_or_stop_reason`: continue provider-free under Plan 0263; any
+  further installed/browser canary requires a new explicit gate.

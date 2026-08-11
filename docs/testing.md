@@ -2728,6 +2728,13 @@
       project might already exist, resolve/list first and reuse the existing id
 - Until that matrix is re-proven in one fresh pass, treat Gemini as supported with inherited coverage, not as a freshly re-certified browser provider.
 - ChatGPT guarded browser acceptance: `DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx scripts/chatgpt-acceptance.ts`.
+  - For a separately governed single context diagnostic, use
+    `scripts/chatgpt-context-canary.ts`. Its sanitized acceptance outcomes are
+    `context`, `terminal_unavailable`, and `classified_post_payload_failure`.
+    The last outcome requires child exit 1, one failed attempt, no timeout or
+    pending operation, no parsed context, and an exact stage from the closed
+    payload-shape/route-class matrix; arbitrary or near-match stages remain
+    rejected.
   - The runner now aborts if the persisted ChatGPT cooldown is still materially active instead of sleeping for minutes and resuming later.
   - If `~/.auracall/cache/providers/chatgpt/__runtime__/rate-limit-<profile>.json` shows a long active cooldown, wait for it to clear before rerunning.
   - The current safer default guard is weighted rather than flat-count based:
