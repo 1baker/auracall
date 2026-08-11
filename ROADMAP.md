@@ -7,7 +7,7 @@
 Status: active
 Lane: P01
 
-- Prepared `wsl-chrome-3` terminal-unavailable one-canary gate:
+- Active `wsl-chrome-3` terminal-unavailable one-canary gate:
   [docs/dev/plans/0262-2026-08-11-wsl-chrome-3-terminal-unavailable-one-canary-gate.md](docs/dev/plans/0262-2026-08-11-wsl-chrome-3-terminal-unavailable-one-canary-gate.md)
   The provider-free repair is green and built but not installed. One fresh
   same-route, zero-retry canary is specified to accept either current context
@@ -16,9 +16,11 @@ Lane: P01
   pending-operation, and ambiguous-receipt near misses. The live packet is now
   frozen to one combined install/service restart, one exact canary, and
   ownership-checked cleanup; a second restart or unrelated-process kill is a
-  hard stop. Fresh admission is currently red because an unrelated live
-  AuraCall/LitScout campaign owns the exact managed browser profile and port
-  45015. It awaits that owner's natural settlement plus approval;
+  hard stop. The unrelated AuraCall parent exited and left its exact-profile
+  Chrome orphaned; the operator authorized closing it, and one attributed
+  port-scoped close restored zero ownership. Fresh admission is green at Git
+  `06bb93d1`, API PID 81249, scheduler paused/paused, target pass 56, and zero
+  active work. The frozen install and sole canary are now active;
   materialization and scheduler/completion control remain excluded.
 
 - Closed ChatGPT exact-fallback terminal-unavailable provider-free repair:

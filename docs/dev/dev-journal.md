@@ -1,3 +1,23 @@
+## 2026-08-11 | Plan 0262 Live Gate Activation
+
+- The operator approved continuation and separately authorized closing the
+  exact-profile processes if necessary. AuraCall PID 5165 had already exited;
+  its Chrome root PID 5747 remained orphaned under PPID 397 with port 45015 and
+  the exact `wsl-chrome-3/chatgpt` managed-browser directory.
+- One attributed port-scoped browser-tools close removed PID 5747 plus four
+  exact Chrome children. Fresh browser-tools and socket readback report zero
+  owners/listeners.
+- Admission is green at clean/synchronized Git `06bb93d1`: API PID 81249 is
+  active/running with zero restarts; scheduler is paused/paused; queued/running
+  completions and active history-materialization jobs are zero; the target is
+  idle-waiting/backfill-history/pass 56 with null error/next/force and
+  `materializationForce=false`.
+- Plan 0262 version 4 activates only one combined install/service restart, one
+  exact zero-retry canary, and exact canary-owned cleanup. Materialization,
+  scheduler/completion control, retries, prompts, model selection, downloads,
+  guards, config changes, direct runtime edits, and wider profiles remain
+  excluded.
+
 ## 2026-08-11 | Plan 0262 Classified One-Canary Preparation
 
 - A provider-free execution audit found the plan described install/restart and

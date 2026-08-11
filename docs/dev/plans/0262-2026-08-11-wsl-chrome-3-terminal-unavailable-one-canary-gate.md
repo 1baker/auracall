@@ -2,9 +2,9 @@
 
 State: OPEN
 Lane: P01
-Plan version: 3
-Gate state: PREPARED_AWAITING_APPROVAL_AND_ZERO_OWNER
-Goal execution state: PAUSED_AT_LIVE_EFFECT_GATE
+Plan version: 4
+Gate state: ACTIVE_INSTALL_AND_ONE_CANARY
+Goal execution state: ACTIVE_BOUNDED_LIVE_PACKET
 
 ## Stable Goal Objective
 
@@ -45,11 +45,13 @@ or widen the route or browser profile.
   paused/paused; completion queued/running counts and active history jobs are
   zero; and the target remains idle-waiting/pass 56 with null
   error/next/force.
-- Fresh final admission found an unrelated live AuraCall browser run using the
+- Fresh final preparation admission found an unrelated live AuraCall browser run using the
   exact `wsl-chrome-3/chatgpt` managed browser profile. Parent PID 5165 launched
   Chrome root PID 5747 at 08:12:49 CDT, and PID 5747 owns port 45015. Its command
   is a separate LitScout declaration campaign, not this canary or an API job.
-  The owner must settle naturally; this plan has no attach or kill authority.
+  The original AuraCall parent later exited and left the exact Chrome root
+  orphaned. The operator separately authorized closing those processes if
+  necessary; one port-scoped close removed only the attributed Chrome tree.
 
 ## Authority And Effect Boundary
 
@@ -67,7 +69,7 @@ or widen the route or browser profile.
 
 - [x] Provider-free harness acceptance matches both permitted outcomes and
   rejects timeout, retry, and pending-operation near misses.
-- [ ] Explicit approval and fresh drift-free zero-owner admission.
+- [x] Explicit approval and fresh drift-free zero-owner admission.
 - [ ] One healthy install/restart with exact installed/source parity.
 - [ ] Exactly one attempt yields either current nonempty context or
   `provider:chatgpt.readConversationPayload.failed.conversation_unavailable.v1`.
@@ -211,6 +213,36 @@ No command in this section is authorized by its presence in the plan.
 - `next_action_or_stop_reason`: wait for PID 5165/5747 and port 45015 to settle
   naturally, then require a fresh zero-owner admission and explicit Plan 0262
   live-effect approval before executing the frozen packet.
+
+## Activation Checkpoint | Authorized Orphan Cleanup And Zero-Owner Admission
+
+- `checkpoint_id`: `P0262-C05`.
+- `state_transition`: P0262_PREPARED_AWAITING_APPROVAL_AND_ZERO_OWNER ->
+  P0262_ACTIVE_INSTALL_AND_ONE_CANARY.
+- `progress_classification`: live_gate_activated.
+- `approval_evidence`: the operator approved continuation and separately
+  authorized closing the processes if necessary.
+- `owner_evidence`: AuraCall PID 5165 had already exited. Chrome root PID 5747
+  remained orphaned under PPID 397, owned port 45015, and retained the exact
+  `~/.auracall/browser-profiles/wsl-chrome-3/chatgpt` directory. Port-scoped
+  browser-tools inspection confirmed that same browser tree.
+- `cleanup_evidence`: the one authorized port-scoped close removed root PID
+  5747 and four exact Chrome children. Fresh browser-tools and socket readback
+  report zero owners and no port-45015 listener.
+- `runtime_evidence`: Git is clean and synchronized at `06bb93d1`; API PID
+  81249 is active/running with `NRestarts=0`; scheduler is paused/paused;
+  completion queued/running and active history-materialization counts are zero;
+  and the target remains idle-waiting/backfill-history/pass 56 with null
+  error/next/force and `materializationForce=false`.
+- `effect_audit`: the unrelated orphan cleanup is the only new effect. Install,
+  API restart, canary/browser launch, provider/context read, materialization,
+  completion/scheduler control, prompt/model/download actions, retries, guards,
+  config changes, and direct runtime edits remain zero.
+- `authority_classification`: activate only the already frozen combined
+  install/restart, one zero-retry canary, and exact canary-owned cleanup.
+- `subagent_status`: not_spawned.
+- `next_action_or_stop_reason`: audit and publish this activation checkpoint,
+  re-read zero-owner admission, then execute the frozen packet once.
 
 ## Definition Of Done
 

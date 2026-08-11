@@ -1,5 +1,24 @@
 # RUNBOOK
 
+## Turn 440 | 2026-08-11
+
+- The operator approved Plan 0262 continuation and separately authorized
+  closing the exact-profile processes if necessary. The unrelated AuraCall
+  parent PID 5165 had already exited; Chrome root PID 5747 remained orphaned
+  under PPID 397 on port 45015 with the exact
+  `wsl-chrome-3/chatgpt` managed-browser directory.
+- One port-scoped browser-tools close removed only PID 5747 and its four exact
+  Chrome children. Fresh socket and browser-tools reads are zero-owner.
+- Activation admission is green at clean/synchronized Git `06bb93d1`: API PID
+  81249 is active/running with zero restarts, scheduler is paused/paused,
+  queued/running completions and active history-materialization jobs are zero,
+  and the target remains idle-waiting/backfill-history/pass 56 with null
+  error/next/force and `materializationForce=false`.
+- Only the frozen combined install/restart, one exact zero-retry canary, and
+  exact canary-owned cleanup are active. Materialization, scheduler/completion
+  control, retries, prompts, model selection, downloads, guards, direct runtime
+  edits, and wider profiles remain excluded.
+
 ## Turn 439 | 2026-08-11
 
 - The operator authorized continuing toward the real context-read fix for up
