@@ -1,5 +1,20 @@
 # RUNBOOK
 
+## Turn 439 | 2026-08-11
+
+- The operator authorized continuing toward the real context-read fix for up
+  to ten goal turns. This activates only Plan 0260's previously prepared one
+  install/restart and one zero-retry `wsl-chrome-3` canary; the standing goal
+  permits a provider-free successor if the new classified receipt fails.
+- Fresh admission is green at Git `f6af7b37`: API PID 82312 is healthy,
+  scheduler is paused/paused, the target is idle-waiting/pass 56, active jobs
+  are zero, exact browser owners and port 45015 listeners are zero, and
+  agent-browser reports no matching owner or retained challenge. Its unrelated
+  default-profile warning is outside this gate.
+- Stop after the sole canary and exact cleanup. No retry, materialization,
+  completion/scheduler control, model selection, prompt, download, guard/config
+  mutation, or wider profile is authorized in this packet.
+
 ## Turn 438 | 2026-08-11
 
 - The operator authorized the recommended provider-free successor after Plan

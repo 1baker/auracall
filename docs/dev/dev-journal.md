@@ -1,3 +1,16 @@
+## 2026-08-11 | Plan 0260 Live Gate Activation
+
+- The operator authorized continued work toward the actual context-read fix.
+  Plan 0260 is active for one install/restart, one exact zero-retry
+  `wsl-chrome-3` context read, and exact owned cleanup only.
+- Admission: Git is clean/synchronized at `f6af7b37`; API PID 82312 is
+  active/running with zero restarts; scheduler is paused; the target remains
+  idle-waiting/pass 56; active history jobs, exact browser owners, and port
+  45015 listeners are zero. Agent-browser reports no matching owner or retained
+  challenge.
+- Excluded: retries, materialization, completion/scheduler control, prompts,
+  model selection, downloads, guard/config changes, and wider profiles.
+
 ## 2026-08-11 | Plan 0259 First Runtime Evaluate Diagnosis
 
 - Current focus: reproduce Plan 0258's broad `cdp:Runtime.evaluate` failure at

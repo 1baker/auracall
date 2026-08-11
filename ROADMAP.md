@@ -7,10 +7,10 @@
 Status: active
 Lane: P01
 
-- Prepared `wsl-chrome-3` evaluation-class one-canary gate:
+- Active `wsl-chrome-3` evaluation-class one-canary gate:
   [docs/dev/plans/0260-2026-08-11-wsl-chrome-3-evaluation-class-one-canary-gate.md](docs/dev/plans/0260-2026-08-11-wsl-chrome-3-evaluation-class-one-canary-gate.md)
-  One install/restart and one zero-retry read of the same conversation await
-  explicit approval. A failure now retains an allowlisted completed evaluation
+  The operator authorized one install/restart and one zero-retry read of the
+  same conversation after fresh zero-owner admission. A failure now retains an allowlisted completed evaluation
   stage; materialization, completion/scheduler control, prompt, download,
   retry, and wider profiles remain excluded.
 

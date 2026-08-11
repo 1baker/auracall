@@ -2,9 +2,9 @@
 
 State: OPEN
 Lane: P01
-Plan version: 1
-Gate state: PREPARED_AWAITING_APPROVAL
-Goal execution state: PREPARED_AWAITING_APPROVAL
+Plan version: 2
+Gate state: ACTIVE_INSTALL_AND_ONE_CANARY
+Goal execution state: ACTIVE
 
 ## Stable Goal Objective
 
@@ -64,7 +64,7 @@ scheduler, submit a prompt, or widen the route or browser profile.
 
 ## Acceptance Criteria
 
-- [ ] Explicit approval and fresh drift-free zero-owner admission.
+- [x] Explicit approval and fresh drift-free zero-owner admission.
 - [ ] One healthy install/restart with exact installed/source parity.
 - [ ] One successful zero-retry context receipt and current nonempty context.
 - [ ] Exact browser/job cleanup returns to zero.
@@ -99,6 +99,37 @@ scheduler, submit a prompt, or widen the route or browser profile.
 - `review_disposition_summary`: another Plan 0258 retry is rejected. This is a
   fresh gate over new completed-stage evidence and the repaired readiness
   result contract.
+
+## Activation Checkpoint | Goal Continuation Admitted
+
+- `checkpoint_id`: `P0260-C02`.
+- `state_transition`: P0260_PREPARED_AWAITING_APPROVAL ->
+  P0260_ACTIVE_INSTALL_AND_ONE_CANARY.
+- `progress_classification`: live_gate_activated.
+- `approval_evidence`: the operator authorized continuing toward the real fix
+  for up to ten goal turns after the primary recommendation named Plan 0260's
+  single install/restart and zero-retry canary.
+- `admission_evidence`: Git HEAD and `origin/main` both equal
+  `f6af7b3702d87ac2c17dcb9a9bfa3c181140c47d`; the worktree is clean; API PID
+  82312 is active/running with `NRestarts=0`; scheduler is paused/paused;
+  completion `acctmirror_completion_fb93ed6c-c57b-40cd-b5dc-ba6322f75446`
+  is idle-waiting/pass 56 with null error/next/force; active history jobs are
+  zero; no exact managed Chrome owner exists; and port 45015 is unbound.
+- `agent_browser_evidence`: the read-only resource inventory reports zero GC
+  candidates and no exact profile/port process; retained challenge count is
+  zero. One unrelated default-profile duplicate warning does not overlap this
+  named profile or port.
+- `subagent_status`: not_spawned; the packet is serialized and repo policy
+  requires direct CodeGraph/browser inspection.
+- `authority_classification`: only the exact Plan 0260 install/restart, single
+  context read, and exact owned cleanup are active. Scheduler/completion,
+  materialization, prompt, model, download, retry, guard/config, and wider
+  profile effects remain excluded.
+- `review_disposition_summary`: admission is current and drift-free; no prior
+  live attempt is being retried because this gate installs new completed-stage
+  evidence and a corrected readiness contract.
+- `next_action_or_stop_reason`: consume the one install/restart, prove exact
+  parity and fresh zero-owner posture, then run the sole canary once.
 
 ## Definition Of Done
 
