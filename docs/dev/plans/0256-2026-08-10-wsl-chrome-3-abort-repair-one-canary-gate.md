@@ -1,9 +1,9 @@
 # WSL Chrome 3 Abort Repair One-Canary Gate | 0256-2026-08-10
 
-State: OPEN
+State: CLOSED
 Lane: P01
-Plan version: 6
-Gate state: PROVIDER_FREE_SELECTOR_REPAIR_VALIDATED_WAITING_ZERO_OWNER
+Plan version: 7
+Gate state: CLOSED_STOPPED_NATIVE_CHROME_LAUNCH_TIMEOUT
 Goal execution state: ACTIVE_BOUNDED_EXECUTION
 
 ## Stable Goal Objective
@@ -110,13 +110,14 @@ scheduler, submit a prompt, or widen to another route/profile.
   passes deterministic provider-free selection tests.
 - [x] Provider-free receipt tests distinguish browser target discovery, debug
   port resolution, Chrome launch, DevTools readiness, and login-tab opening.
-- [ ] Installed/source repair parity follows one healthy API restart.
+- [x] Installed/source repair parity follows one healthy API restart.
 - [ ] The sole canary returns current nonempty context and one sanitized
-  successful receipt with no pending operation.
-- [ ] Exact browser/job cleanup returns to zero.
-- [ ] `wsl-chrome-3` remains pass 56, default remains blocked/pass 9, and
+  successful receipt with no pending operation. It instead timed out before
+  provider attempt 1 at `preflight:browserChromeLaunch`.
+- [x] Exact browser/job cleanup returns to zero.
+- [x] `wsl-chrome-3` remains pass 56, default remains blocked/pass 9, and
   scheduler remains paused/paused.
-- [ ] Materialization, completion, scheduler, guard, retry, and wider-profile
+- [x] Materialization, completion, scheduler, guard, retry, and wider-profile
   effects remain zero.
 
 ## Local Goal Bounds
@@ -281,3 +282,32 @@ remain zero. Any failure closes this plan immediately without another attempt.
   zero; `wsl-chrome-3` remains idle-waiting/pass 56 with error/next/force null;
   externally owned exact Chrome PID 89142 remains present. No install, restart,
   canary, materialization, completion control, or scheduler control has run.
+
+## Closure Checkpoint | Sole Canary Stopped At Native Chrome Launch
+
+- `checkpoint_id`: `P0256-C07`.
+- `state_transition`:
+  P0256_PROVIDER_FREE_SELECTOR_REPAIR_VALIDATED_WAITING_ZERO_OWNER ->
+  P0256_CLOSED_STOPPED_NATIVE_CHROME_LAUNCH_TIMEOUT.
+- `progress_classification`: blocker_reduction.
+- `evidence`: PID 89142 exited independently before an exact close ran. Fresh
+  zero-owner admission passed; the only install/restart produced healthy API
+  PID 69726 with `NRestarts=0` and exact installed/source parity. The sole
+  canary's unique receipt records `outcome=timed_out`, `elapsedMs=114916`,
+  `attemptCount=0`, `lastStage=preflight:browserChromeLaunch`,
+  `pendingOperation=null`, and `errorCode=conversation_context_timeout`.
+  Immediate cleanup found no exact browser owner, no listener on port 45015,
+  and no active history-materialization job.
+- `subagent_status`: not_spawned.
+- `next_action_or_stop_reason`: close this plan without retry. A provider-free
+  successor may decompose native launch into registry/profile scan, process
+  spawn, and debugger-readiness stages, reproduce the pending seam with fakes,
+  and prepare a fresh canary only after a validated repair.
+- `authority_classification`: the install, restart, and one context read are
+  consumed. No further browser/provider effect is authorized here; scheduler,
+  materialization, completion controls, prompts, downloads, guard changes,
+  retries, and wider profiles remain excluded.
+- `review_disposition_summary`: cancellation and exact cleanup are accepted;
+  canary outcome acceptance failed. `attemptCount=0` rules out provider
+  extraction and confines the unresolved mechanism to native Chrome launch
+  preflight.

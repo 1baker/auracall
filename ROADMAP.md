@@ -7,18 +7,36 @@
 Status: active
 Lane: P01
 
-- Active approved `wsl-chrome-3` selector inspection and one-canary gate:
+- Prepared `wsl-chrome-3` bounded-launch one-canary gate:
+  [docs/dev/plans/0258-2026-08-10-wsl-chrome-3-bounded-launch-one-canary-gate.md](docs/dev/plans/0258-2026-08-10-wsl-chrome-3-bounded-launch-one-canary-gate.md)
+  One install/restart and one zero-retry context read are staged behind explicit
+  approval. The gate accepts only current nonempty context plus exact cleanup;
+  materialization, completion/scheduler controls, prompts, downloads, retries,
+  and wider profiles remain excluded.
+
+- Closed provider-free native Chrome launch localization:
+  [docs/dev/plans/0257-2026-08-10-native-chrome-launch-provider-free-localization.md](docs/dev/plans/0257-2026-08-10-native-chrome-launch-provider-free-localization.md)
+  Plan 0256's sole canary made zero provider attempts and stopped in native
+  Chrome launch. Plan 0257 decomposes that broad stage, reproduces the pending
+  await with fakes, bounds and aborts the launcher socket probe, joins launch
+  settlement after cleanup, and exposes exact substages. Full validation is
+  green. Its e2e suite accidentally launched one exact test-owned Chrome; that
+  process was attributed and cleaned, and scheduler/materialization stayed
+  paused.
+
+- Closed `wsl-chrome-3` selector inspection and one-canary gate at native
+  launch timeout:
   [docs/dev/plans/0256-2026-08-10-wsl-chrome-3-abort-repair-one-canary-gate.md](docs/dev/plans/0256-2026-08-10-wsl-chrome-3-abort-repair-one-canary-gate.md)
   The operator approved one shared exact-profile browser lifecycle: fresh
   agent-browser inspection of ChatGPT's changed model menu, provider-free
   selector mapping repair, one install/restart, one zero-retry context canary,
   and exact cleanup. Model selection, prompts, materialization,
   completion/scheduler control, retry, and wider profiles remain excluded.
-  Admission found a pre-existing externally owned exact-profile browser, so the
-  inspection proved the nested Advanced -> Model/Effort structure and the
-  provider-free selector repair is green. The exact browser remains externally
-  owned, so install/canary still waits for fresh zero-owner admission; no
-  navigation, model selection, prompt, materialization, or close ran.
+  Inspection proved the nested Advanced -> Model/Effort structure and the
+  selector repair is installed with exact parity. The sole canary timed out at
+  `preflight:browserChromeLaunch` with `attemptCount=0`; cleanup returned exact
+  owner/job counts to zero. No retry, provider extraction, materialization,
+  completion/scheduler control, prompt, or download ran.
 
 - Closed provider-free context-preflight abort and receipt-envelope repair:
   [docs/dev/plans/0255-2026-08-10-context-preflight-abort-and-receipt-envelope-repair.md](docs/dev/plans/0255-2026-08-10-context-preflight-abort-and-receipt-envelope-repair.md)

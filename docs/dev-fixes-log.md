@@ -1,3 +1,31 @@
+- 2026-08-10: A terminal context receipt at
+  `preflight:browserChromeLaunch` with `attemptCount=0` rules out provider
+  extraction but does not prove `chrome-launcher.launch()` itself is the
+  pending await. AuraCall's public stage currently spans registry lookup,
+  profile/process inspection, stale-state cleanup, spawn, and debugger
+  readiness. Split those phases before another canary. Also join the owned
+  launch promise after abort cleanup; racing it and awaiting only `kill()` can
+  still allow a late launch task to reject or mutate after its caller settles.
+  The library's nominal 51 x 500 ms debugger polling window cannot by itself
+  explain a roughly 115-second broad-stage stall.
+
+- 2026-08-10: `chrome-launcher@1.2.1` enforces a retry count around debugger
+  readiness but its underlying `net.createConnection()` has no socket timeout;
+  one pending connect can therefore defeat the nominal retry window. For every
+  local or remote native Chrome launch, replace that probe with AuraCall's
+  one-second bounded port check and race it against the caller abort. On abort,
+  prevent a not-yet-started launch and do not reject the caller until exact
+  cleanup and the in-flight launch promise both settle. Emit registry lookup,
+  process inspection, profile cleanup, port probe, spawn, and readiness stages
+  so the next one-shot receipt can distinguish the historical await.
+
+- 2026-08-10: A nominally provider-free full suite can still execute its
+  browser reattach e2e and launch the configured managed browser. Bracket broad
+  tests with exact OS/profile/port admission and cleanup. In Plan 0257, no
+  exact owner existed before the suite; it created PID 27679/port 45015, which
+  agent-browser did not own. Exact process-group cleanup restored zero owner and
+  an unbound port without touching scheduler, completion, or materialization.
+
 - 2026-08-10: ChatGPT's model picker is no longer a flat
   Instant/Thinking/Pro list. The compact menu hides model families behind
   `Show advanced options`, then a separate `Model` submenu exposes GPT-5.6

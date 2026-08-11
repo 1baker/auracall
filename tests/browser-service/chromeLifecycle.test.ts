@@ -1,13 +1,14 @@
 import os from 'node:os';
 import path from 'node:path';
-import { describe, expect, test, afterEach } from 'vitest';
+import { afterEach, describe, expect, test } from 'vitest';
 import {
   buildChromeFlags,
-  runAbortableBrowserLaunch,
+  probeChromeDebuggerPort,
   resolveChromeLauncherTempPrefix,
   resolveUserDataBaseDir,
   resolveUserDataDirFlag,
   resolveWslHost,
+  runAbortableBrowserLaunch,
 } from '../../packages/browser-service/src/chromeLifecycle.js';
 
 const ORIGINAL_ENV = { ...process.env };
@@ -100,22 +101,53 @@ describe('chromeLifecycle (package)', () => {
     const controller = new AbortController();
     let cleanupFinished = false;
     let cleanupCount = 0;
-    const launch = new Promise<void>(() => undefined);
+    let rejectLaunch: ((reason: Error) => void) | undefined;
+    let launchSettled = false;
+    const launch = new Promise<void>((_resolve, reject) => {
+      rejectLaunch = reject;
+    }).finally(() => {
+      launchSettled = true;
+    });
     const result = runAbortableBrowserLaunch({
       launch: () => launch,
       cleanup: async () => {
         cleanupCount += 1;
         await Promise.resolve();
         cleanupFinished = true;
+        setTimeout(() => rejectLaunch?.(new Error('launcher stopped')), 10);
       },
       abortSignal: controller.signal,
     });
 
+    await Promise.resolve();
     controller.abort(new Error('context deadline'));
 
     await expect(result).rejects.toThrow('context deadline');
     expect(cleanupFinished).toBe(true);
+    expect(launchSettled).toBe(true);
     expect(cleanupCount).toBe(1);
+  });
+
+  test('interrupts a pending debugger probe without waiting for its transport', async () => {
+    const controller = new AbortController();
+    const probe = probeChromeDebuggerPort({
+      host: '127.0.0.1',
+      port: 45015,
+      abortSignal: controller.signal,
+      probe: () => new Promise<boolean>(() => undefined),
+    });
+
+    controller.abort(new Error('context deadline'));
+
+    await expect(probe).rejects.toThrow('context deadline');
+  });
+
+  test('rejects a bounded debugger probe when the port is not ready', async () => {
+    await expect(probeChromeDebuggerPort({
+      host: '127.0.0.1',
+      port: 45015,
+      probe: async () => false,
+    })).rejects.toThrow('Chrome DevTools 127.0.0.1:45015 did not become ready');
   });
 
   test('returns a completed browser launch without cleanup', async () => {
@@ -146,6 +178,27 @@ describe('chromeLifecycle (package)', () => {
       },
       abortSignal: controller.signal,
     })).rejects.toThrow('cancelled before launch');
+    expect(launchCount).toBe(0);
+    expect(cleanupCount).toBe(1);
+  });
+
+  test('does not start a deferred browser launch when cancellation wins the first microtask', async () => {
+    const controller = new AbortController();
+    let launchCount = 0;
+    let cleanupCount = 0;
+    const result = runAbortableBrowserLaunch({
+      launch: async () => {
+        launchCount += 1;
+      },
+      cleanup: () => {
+        cleanupCount += 1;
+      },
+      abortSignal: controller.signal,
+    });
+
+    controller.abort(new Error('cancelled before deferred launch'));
+
+    await expect(result).rejects.toThrow('cancelled before deferred launch');
     expect(launchCount).toBe(0);
     expect(cleanupCount).toBe(1);
   });

@@ -51,7 +51,20 @@ describe('manual login preflight stages', () => {
 
   test('reports debug-port resolution and Chrome launch before awaiting the launcher', async () => {
     const stages: string[] = [];
-    launchMocks.launchChrome.mockRejectedValueOnce(new Error('stop after stage capture'));
+    launchMocks.launchChrome.mockImplementationOnce(async (
+      _config: unknown,
+      _userDataDir: unknown,
+      _logger: unknown,
+      options: { onStage?: (stage: string) => void },
+    ) => {
+      options.onStage?.('browserChromeRegistryLookup');
+      options.onStage?.('browserChromeProcessInspection');
+      options.onStage?.('browserChromeProfileCleanup');
+      options.onStage?.('browserChromePortProbe');
+      options.onStage?.('browserChromeProcessSpawn');
+      options.onStage?.('browserChromeDebuggerReadiness');
+      throw new Error('stop after stage capture');
+    });
 
     await expect(
       launchManualLoginSession({
@@ -66,7 +79,16 @@ describe('manual login preflight stages', () => {
       }),
     ).rejects.toThrow('stop after stage capture');
 
-    expect(stages).toEqual(['browserDebugPortResolution', 'browserChromeLaunch']);
+    expect(stages).toEqual([
+      'browserDebugPortResolution',
+      'browserChromeLaunch',
+      'browserChromeRegistryLookup',
+      'browserChromeProcessInspection',
+      'browserChromeProfileCleanup',
+      'browserChromePortProbe',
+      'browserChromeProcessSpawn',
+      'browserChromeDebuggerReadiness',
+    ]);
   });
 
   test('reports DevTools readiness and login-tab opening after a successful launch', async () => {

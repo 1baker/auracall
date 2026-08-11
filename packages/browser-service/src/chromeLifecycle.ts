@@ -13,6 +13,7 @@ import {
   findChromeProcessUsingUserDataDir,
   findResponsiveWindowsDevToolsPortForUserDataDir,
   isDevToolsResponsive,
+  isPortOpen,
   probeWindowsLocalDevToolsPort,
 } from './processCheck.js';
 import { isWindowsPath, isWslEnvironment, toWindowsPath } from './platformPaths.js';
@@ -42,6 +43,38 @@ function readAbortReason(signal: AbortSignal): unknown {
   return signal.reason ?? new Error('Browser launch aborted.');
 }
 
+export async function probeChromeDebuggerPort(options: {
+  host: string;
+  port: number;
+  abortSignal?: AbortSignal;
+  probe?: (host: string, port: number) => Promise<boolean>;
+}): Promise<void> {
+  const { abortSignal } = options;
+  abortSignal?.throwIfAborted();
+  const probe = options.probe ?? isPortOpen;
+  let onAbort: (() => void) | null = null;
+  const abortPromise = new Promise<never>((_resolve, reject) => {
+    if (!abortSignal) return;
+    onAbort = () => reject(readAbortReason(abortSignal));
+    abortSignal.addEventListener('abort', onAbort, { once: true });
+  });
+
+  try {
+    const ready = await Promise.race([
+      Promise.resolve().then(() => probe(options.host, options.port)),
+      abortPromise,
+    ]);
+    abortSignal?.throwIfAborted();
+    if (!ready) {
+      throw new Error(`Chrome DevTools ${options.host}:${options.port} did not become ready`);
+    }
+  } finally {
+    if (onAbort && abortSignal) {
+      abortSignal.removeEventListener('abort', onAbort);
+    }
+  }
+}
+
 export async function runAbortableBrowserLaunch<T>(options: {
   launch: () => Promise<T>;
   cleanup: () => Promise<void> | void;
@@ -62,24 +95,36 @@ export async function runAbortableBrowserLaunch<T>(options: {
     throw readAbortReason(abortSignal);
   }
 
+  const launchPromise = Promise.resolve().then(() => {
+    abortSignal.throwIfAborted();
+    return options.launch();
+  });
   let onAbort: (() => void) | null = null;
   const abortPromise = new Promise<never>((_resolve, reject) => {
     onAbort = () => {
-      void cleanupOnce().then(
-        () => reject(readAbortReason(abortSignal)),
-        () => reject(readAbortReason(abortSignal)),
-      );
+      void cleanupOnce()
+        .catch(() => undefined)
+        .then(() => launchPromise.then(() => undefined, () => undefined))
+        .then(() => reject(readAbortReason(abortSignal)));
     };
     abortSignal.addEventListener('abort', onAbort, { once: true });
   });
 
   try {
-    const result = await Promise.race([options.launch(), abortPromise]);
+    const result = await Promise.race([launchPromise, abortPromise]);
     if (abortSignal.aborted) {
       await cleanupOnce().catch(() => undefined);
+      await launchPromise.then(() => undefined, () => undefined);
       throw readAbortReason(abortSignal);
     }
     return result;
+  } catch (error) {
+    if (abortSignal.aborted) {
+      await cleanupOnce().catch(() => undefined);
+      await launchPromise.then(() => undefined, () => undefined);
+      throw readAbortReason(abortSignal);
+    }
+    throw error;
   } finally {
     if (onAbort) {
       abortSignal.removeEventListener('abort', onAbort);
@@ -97,6 +142,7 @@ export async function launchChrome(
     ownedPids?: ReadonlySet<number>;
     ownedPorts?: ReadonlySet<number>;
     abortSignal?: AbortSignal;
+    onStage?: (stage: string) => void;
   } = {},
 ) {
   options.abortSignal?.throwIfAborted();
@@ -105,6 +151,7 @@ export async function launchChrome(
   const windowsChromeFromWsl = isWindowsHostedChromePath(config.chromePath ?? undefined);
   logger(`Using Chrome profile directory "${resolvedProfileName}" in ${userDataDir}.`);
   // 1. Check persistent registry first
+  options.onStage?.('browserChromeRegistryLookup');
   const registered = registryOptions
     ? await findActiveInstance(registryOptions, userDataDir, resolvedProfileName)
     : null;
@@ -140,6 +187,7 @@ export async function launchChrome(
   }
 
   // 2. Legacy Fallback: check if this profile is already active via OS/FS
+  options.onStage?.('browserChromeProcessInspection');
   const existingProcess = await findChromeProcessUsingUserDataDir(userDataDir);
   const existingPid = existingProcess?.pid ?? null;
   if (existingPid) {
@@ -269,6 +317,7 @@ export async function launchChrome(
   const isManagedProfileForCleanup = managedProfileRootForCleanup
     ? path.resolve(userDataDir).startsWith(managedProfileRootForCleanup + path.sep)
     : false;
+  options.onStage?.('browserChromeProfileCleanup');
   await cleanupStaleProfileState(userDataDir, logger, {
     lockRemovalMode: isManagedProfileForCleanup ? 'if_recorded_pid_dead' : 'never',
   });
@@ -329,6 +378,7 @@ export async function launchChrome(
             userDataDir,
             requestedPort: requestedLaunchPort,
             logger,
+            onStage: options.onStage,
           })
         : await launchWithCustomHost({
             chromeFlags: effectiveChromeFlags,
@@ -338,6 +388,7 @@ export async function launchChrome(
             requestedPort: debugPort ?? undefined,
             ignoreDefaultFlags: minimalFlags,
             abortSignal: options.abortSignal,
+            onStage: options.onStage,
           });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -1667,6 +1718,7 @@ async function launchWindowsChromeFromWsl(options: {
   userDataDir: string;
   requestedPort: number;
   logger: BrowserLogger;
+  onStage?: (stage: string) => void;
 }): Promise<LaunchedChrome & { host?: string }> {
   const chromePath = options.chromePath ?? undefined;
   if (!chromePath) {
@@ -1689,6 +1741,7 @@ async function launchWindowsChromeFromWsl(options: {
     `-ArgumentList @(${argumentList.join(', ')}) -PassThru -WindowStyle Normal; ` +
     'Write-Output $process.Id';
 
+  options.onStage?.('browserChromeProcessSpawn');
   const { stdout } = await execFileAsync(
     powershellPath,
     ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', command],
@@ -1742,6 +1795,7 @@ async function launchWithCustomHost({
   requestedPort,
   ignoreDefaultFlags,
   abortSignal,
+  onStage,
 }: {
   chromeFlags: string[];
   chromePath?: string | null;
@@ -1750,6 +1804,7 @@ async function launchWithCustomHost({
   requestedPort?: number;
   ignoreDefaultFlags?: boolean;
   abortSignal?: AbortSignal;
+  onStage?: (stage: string) => void;
 }): Promise<LaunchedChrome & { host?: string }> {
   const launcher = new Launcher({
     chromePath: chromePath ?? undefined,
@@ -1767,24 +1822,31 @@ async function launchWithCustomHost({
     patched.makeTmpDir = () => mkdtempSync(launcherTempPrefix);
   }
 
-  if (host) {
-    const patched = launcher as unknown as { isDebuggerReady?: () => Promise<void>; port?: number };
-    patched.isDebuggerReady = function patchedIsDebuggerReady(this: Launcher & { port?: number }): Promise<void> {
-      const debugPort = this.port ?? 0;
-      if (!debugPort) {
-        return Promise.reject(new Error('Missing Chrome debug port'));
-      }
-      return waitForDevTools({
-        host,
-        port: debugPort,
-        logger: () => undefined,
-      }).then((ready) => {
-        if (!ready) {
-          throw new Error(`Chrome DevTools ${host}:${debugPort} did not become ready`);
-        }
-      });
-    };
-  }
+  const patched = launcher as unknown as {
+    isDebuggerReady?: () => Promise<void>;
+    port?: number;
+    spawn: (...args: unknown[]) => unknown;
+  };
+  const originalSpawn = patched.spawn.bind(launcher);
+  patched.spawn = (...args: unknown[]) => {
+    onStage?.('browserChromeProcessSpawn');
+    const process = originalSpawn(...args);
+    onStage?.('browserChromeDebuggerReadiness');
+    return process;
+  };
+  const debugHost = host ?? '127.0.0.1';
+  patched.isDebuggerReady = function patchedIsDebuggerReady(this: Launcher & { port?: number }): Promise<void> {
+    const debugPort = this.port ?? 0;
+    if (!debugPort) {
+      return Promise.reject(new Error('Missing Chrome debug port'));
+    }
+    onStage?.('browserChromePortProbe');
+    return probeChromeDebuggerPort({
+      host: debugHost,
+      port: debugPort,
+      abortSignal,
+    });
+  };
 
   await runAbortableBrowserLaunch({
     launch: () => launcher.launch(),

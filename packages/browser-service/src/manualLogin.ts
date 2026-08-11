@@ -57,6 +57,7 @@ export async function launchManualLoginSession(options: {
   const chrome = await launchChrome(config, options.userDataDir, options.logger, {
     registryPath: options.registryPath,
     abortSignal: options.abortSignal,
+    onStage: options.onStage,
   });
   if (options.detach) {
     chrome.process?.unref();

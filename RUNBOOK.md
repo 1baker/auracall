@@ -76,6 +76,36 @@
   scheduler paused, active history jobs zero, and the target idle-waiting/pass
   56 with error/next/force null. External exact Chrome PID 89142 still owns the
   managed browser profile, so no install, restart, or canary has run.
+- PID 89142 later exited independently before the separately authorized exact
+  close ran. Fresh zero-owner admission passed. The sole install/restart
+  produced API PID 69726 active/running with `NRestarts=0` and exact
+  source/installed browser-service plus selector parity.
+- Plan 0256's one zero-retry canary then stopped after 115996 ms. The unique
+  sanitized receipt records `attemptCount=0`,
+  `lastStage=preflight:browserChromeLaunch`, `pendingOperation=null`, and
+  `conversation_context_timeout`; it never entered provider extraction.
+- Exact abort cleanup is green: no exact managed Chrome owner, no listener on
+  port 45015, active history jobs zero, target idle-waiting/pass 56, and
+  scheduler paused/paused. Plan 0256 closes without retry. Plan 0257 now owns
+  provider-free native-launch substage localization and joined-task repair;
+  it cannot install, launch a browser, call a provider, or run another canary.
+- Plan 0257 reproduced three provider-free defects: launch substages stopped at
+  the manual-login boundary, the native `chrome-launcher` TCP probe had no
+  socket deadline, and abort cleanup did not join the launch promise it raced.
+  The repaired probe is one-second bounded and immediately abortable; abort
+  prevents deferred start and waits for cleanup plus launch settlement.
+- Focused validation passes 34/34, the wider browser packet passes 159/159,
+  and the full suite passes 307 files/2797 tests with 65 skipped. Typecheck,
+  build, lint with 206 existing warnings, and the 257-plan audit pass.
+- The full suite itself escaped the zero-browser test bound by launching exact
+  root PID 27679/port 45015. Pre-suite admission proved no owner and
+  agent-browser claimed no matching resource. Exact test-owned cleanup restored
+  zero profile owners and an unbound port; jobs remained zero, target stayed
+  idle-waiting/pass 56, and scheduler stayed paused/paused.
+- Plan 0258 is prepared but not active. It permits one install/restart and one
+  fresh zero-retry context canary only after explicit approval and fresh
+  zero-owner admission. No scheduler, completion, materialization, prompt,
+  download, retry, guard, or wider-profile action is included.
 
 ## Turn 436 | 2026-08-10
 

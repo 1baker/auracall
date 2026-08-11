@@ -1,5 +1,30 @@
 ## 2026-08-10 | Plan 0255 Context Preflight Abort Repair
 
+- Plan 0256 terminal outcome: the pre-existing PID 89142 exited independently,
+  fresh zero-owner admission passed, and the single install/restart produced
+  healthy API PID 69726 with exact source/installed parity. Its sole canary
+  failed once at `preflight:browserChromeLaunch` with `attemptCount=0` and no
+  pending provider operation. Exact browser/job cleanup succeeded, the target
+  stayed idle-waiting/pass 56, and scheduler stayed paused/paused.
+- Current focus: Plan 0257 is provider-free. It will split native launch into
+  registry/profile scan, process spawn, and debugger-readiness evidence,
+  reproduce the pending await with fakes, and join every owned launch task on
+  abort. No install, browser/provider call, context read, materialization,
+  completion control, or scheduler control is allowed.
+- Plan 0257 repair: native launcher readiness no longer depends on
+  `chrome-launcher`'s unbounded TCP connect. AuraCall applies its bounded port
+  probe to local and remote hosts, makes it abortable, suppresses a deferred
+  start after cancellation, joins cleanup plus launch settlement, and reports
+  exact registry/process/profile/probe/spawn/readiness stages.
+- Validation: 34 focused and 159 wider browser tests pass; the full suite passes
+  307 files/2797 tests with 65 skipped. Typecheck, build, lint, and plan audit
+  pass. The full suite accidentally launched test-owned PID 27679/port 45015;
+  exact cleanup restored zero ownership. Jobs remain zero, pass remains 56,
+  and scheduler remains paused/paused.
+- Current gate: Plan 0258 is prepared for one install/restart and one zero-retry
+  context canary, but no live effect is active. Built/installed browser-service
+  hashes intentionally differ until approval.
+
 - Live result: Plan 0254's sole canary made zero provider attempts and timed
   out in `preflight:buildListOptions`; this is not a recurrence of the
   ChatGPT payload fallback failure.
