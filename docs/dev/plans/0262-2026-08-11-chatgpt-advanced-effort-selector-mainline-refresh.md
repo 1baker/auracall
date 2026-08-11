@@ -3,7 +3,7 @@
 State: OPEN
 Lane: P02
 Plan version: 1
-Gate state: PROVIDER_FREE_GREEN_INSTALL_SERIALIZED
+Gate state: PUSHED_FEATURE_INSTALL_ACTIVE
 Goal execution state: ACTIVE_BOUNDED_EXECUTION
 
 ## Stable Goal Objective
@@ -24,8 +24,9 @@ repeating the known pre-submission thinking-menu failure.
   `EffortLight` rows. Current main concatenates visible text and aria labels,
   so the semantic control can be present while the starts-with predicate fails.
 - Plan 0261 currently owns separate provider-free ChatGPT adapter files in the
-  main worktree. This plan uses a separate worktree and does not touch those
-  files or the installed runtime until that lane reaches a clean checkpoint.
+  main worktree and explicitly excludes install, restart, and browser effects.
+  This plan uses a separate pushed worktree, does not touch those files, and
+  may install its exact committed build without merging or rewriting main.
 
 ## Authority And Effect Boundary
 
@@ -35,9 +36,9 @@ repeating the known pre-submission thinking-menu failure.
 - Allowed writes: model/thinking selector implementation, focused tests, this
   plan, `ROADMAP.md`, `RUNBOOK.md`, `docs/dev/dev-journal.md`, and
   `docs/dev-fixes-log.md`.
-- Allowed later effect after clean mainline reconciliation: one exact
-  user-runtime install and its installer-required API restart, followed by
-  source/install parity and zero-browser-owner verification.
+- Allowed effect after exact feature-branch origin parity and zero browser
+  ownership: one user-runtime install and its installer-required API restart,
+  followed by source/install parity and zero-browser-owner verification.
 - Excluded here: browser launch/attach/navigation, model selection, prompt or
   attachment submission, provider call, retry, scheduler/completion control,
   materialization, profile cleanup, and LitScout database mutation.
@@ -50,8 +51,9 @@ repeating the known pre-submission thinking-menu failure.
    scoped lint, plan audit, and diff hygiene with exact profile/port checks.
 3. Commit and push this branch without touching the dirty Plan 0261 main
    worktree.
-4. After Plan 0261 reaches a clean pushed checkpoint, reconcile this commit
-   onto the then-current mainline, revalidate, and install once.
+4. Install the exact pushed feature build once while Plan 0261 remains
+   provider-free, then prove API health, source/install parity, and zero exact
+   browser ownership. Mainline reconciliation is a later repository follow-up.
 5. Leave `wsl-chrome-3` stopped. LitScout must refreeze its effect receipt
    against the exact installed hashes before the one Experiment 5 submission.
 
@@ -63,8 +65,9 @@ repeating the known pre-submission thinking-menu failure.
 - [x] Focused 26/26 and adjacent 101/101 selector/config tests pass; typecheck
   passes.
 - [x] Build, scoped lint, plan audit, and diff hygiene pass.
-- [ ] The repair commit is pushed and reconciled onto the clean current
-  mainline without overwriting Plan 0261 work.
+- [x] The repair commit is pushed without overwriting Plan 0261 work.
+- [ ] Mainline reconciliation remains a non-blocking repository follow-up after
+  Plan 0261 reaches a clean checkpoint.
 - [ ] One installed build has exact source parity while the named profile and
   port remain absent.
 - [x] Browser, provider, prompt, attachment, scheduler, completion,
@@ -84,7 +87,8 @@ repeating the known pre-submission thinking-menu failure.
 
 ## Definition Of Done
 
-The exact current-mainline selector repair is committed, pushed, installed
-with parity after cross-lane reconciliation, and `wsl-chrome-3` remains absent.
-The Experiment 5 submission itself remains owned by the LitScout campaign and
-requires a corrected frozen receipt against those installed bytes.
+The selector repair is committed, pushed, and installed from its isolated
+feature branch with exact parity while `wsl-chrome-3` remains absent. The
+Experiment 5 submission itself remains owned by the LitScout campaign and
+requires a corrected frozen receipt against those installed bytes. Mainline
+reconciliation may follow without blocking that governed experiment.

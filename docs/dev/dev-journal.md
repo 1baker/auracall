@@ -7,9 +7,10 @@
   exact coverage for compact `Advanced`, `ModelGPT-5.6 Sol`, and
   `EffortLight` controls.
 - Provider-free validation currently passes 26 focused and 101 adjacent tests
-  plus typecheck. Plan 0261 owns a dirty mainline adapter packet, so install and
-  integration are serialized behind its clean checkpoint; browser, provider,
-  prompt, and LitScout effects remain zero.
+  plus typecheck/build/lint/plan-audit. Plan 0261 owns a dirty provider-free
+  mainline adapter packet but excludes runtime effects, so the exact pushed
+  feature build may be installed independently; main integration remains
+  serialized behind its clean checkpoint.
 
 ## 2026-08-11 | Plan 0260 Live Gate Activation
 
