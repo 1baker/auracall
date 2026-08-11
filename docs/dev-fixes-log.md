@@ -21346,3 +21346,12 @@ browser-stage lifecycle observability, not transcript truncation.
 - A live canary's absence of fallback provider-action and Page-CDP telemetry is
   decisive branch evidence: it can distinguish fallback eligibility failure
   from resource-content failure without exposing raw response content.
+- 2026-08-11: Plan 0259 repeated the known fact that the nominally provider-free
+  full suite executes `tests/browser/reattach.e2e.test.ts` and can launch the
+  configured managed Chrome profile. It created exact PID 98032/port 45015 at
+  `about:blank` and rewrote retained profile History bytes without a ChatGPT
+  route or submission. Root-only SIGTERM was insufficient; after verifying all
+  members belonged to the exact process group, group SIGTERM restored zero
+  profile processes and an unbound port. Future browser-excluded validation
+  must omit this e2e or provide a launch-proof fake; do not describe the broad
+  suite as provider-free merely because provider calls are mocked.

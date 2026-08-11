@@ -23,7 +23,63 @@ type ThinkingTimeOutcome =
   | { status: 'menu-not-found' }
   | { status: 'option-not-found' };
 
+type ThinkingTimeNavigationItem = {
+  text: string;
+  ariaLabel?: string | null;
+  role: string | null;
+  expanded: string | null;
+};
+
+type ThinkingTimeNavigationAction = {
+  kind: 'open-advanced' | 'open-effort';
+  index: number;
+};
+
 const THINKING_TIME_EVALUATE_TIMEOUT_MS = 25_000;
+
+function chooseThinkingTimeNavigationAction(
+  items: readonly ThinkingTimeNavigationItem[],
+): ThinkingTimeNavigationAction | null {
+  const normalize = (value: string) =>
+    value
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  const labels = (item: ThinkingTimeNavigationItem) =>
+    [item.text, item.ariaLabel ?? ''].map(normalize).filter(Boolean);
+  const isAdvancedControl = (item: ThinkingTimeNavigationItem) =>
+    labels(item).some(
+      (label) => label === 'advanced' || label.startsWith('show advanced options'),
+    );
+  const isEffortControl = (item: ThinkingTimeNavigationItem) =>
+    labels(item).some(
+      (label) =>
+        label === 'effort' ||
+        label.startsWith('effort ') ||
+        label === 'effortlight' ||
+        label === 'effortmedium' ||
+        label === 'efforthigh' ||
+        label === 'effortextra high',
+    );
+
+  const advancedIndex = items.findIndex(
+    (item) =>
+      item.role === 'menuitem' &&
+      isAdvancedControl(item) &&
+      item.expanded !== 'true',
+  );
+  if (advancedIndex >= 0) {
+    return { kind: 'open-advanced', index: advancedIndex };
+  }
+  const effortIndex = items.findIndex(
+    (item) =>
+      item.role === 'menuitem' &&
+      isEffortControl(item) &&
+      item.expanded !== 'true',
+  );
+  return effortIndex >= 0 ? { kind: 'open-effort', index: effortIndex } : null;
+}
 
 /**
  * Selects a specific thinking time level in ChatGPT's composer pill menu.
@@ -295,18 +351,33 @@ function buildThinkingTimeExpression(level: ThinkingTimeLevel): string {
         .filter(visible)
         .find((node) => normalize([node.textContent ?? '', node.getAttribute?.('aria-label') ?? ''].join(' ')).includes('configure'));
 
+      const labelsForNode = (node) => [
+        normalize(node.textContent ?? ''),
+        normalize(node.getAttribute?.('aria-label') ?? ''),
+      ].filter(Boolean);
+
       const findAdvancedNode = () => Array.from(document.querySelectorAll(MENU_ITEM_SELECTOR))
         .filter(visible)
         .find((node) => {
-          const text = normalize([node.textContent ?? '', node.getAttribute?.('aria-label') ?? ''].join(' '));
-          return text.startsWith('show advanced options') && node.getAttribute('aria-expanded') !== 'true';
+          const matches = labelsForNode(node).some(
+            (label) => label === 'advanced' || label.startsWith('show advanced options')
+          );
+          return matches && node.getAttribute('aria-expanded') !== 'true';
         });
 
       const findEffortNode = () => Array.from(document.querySelectorAll(MENU_ITEM_SELECTOR))
         .filter(visible)
         .find((node) => {
-          const text = normalize([node.textContent ?? '', node.getAttribute?.('aria-label') ?? ''].join(' '));
-          return text.startsWith('effort ') && node.getAttribute('aria-expanded') !== 'true';
+          const matches = labelsForNode(node).some(
+            (label) =>
+              label === 'effort' ||
+              label.startsWith('effort ') ||
+              label === 'effortlight' ||
+              label === 'effortmedium' ||
+              label === 'efforthigh' ||
+              label === 'effortextra high'
+          );
+          return matches && node.getAttribute('aria-expanded') !== 'true';
         });
 
       const findDialog = () => Array.from(document.querySelectorAll('[role="dialog"], [data-radix-dialog-content], div[aria-modal="true"]'))
@@ -465,6 +536,12 @@ function buildThinkingTimeExpression(level: ThinkingTimeLevel): string {
 
 export function buildThinkingTimeExpressionForTest(level: ThinkingTimeLevel = 'extended'): string {
   return buildThinkingTimeExpression(level);
+}
+
+export function chooseThinkingTimeNavigationActionForTest(
+  items: readonly ThinkingTimeNavigationItem[],
+): ThinkingTimeNavigationAction | null {
+  return chooseThinkingTimeNavigationAction(items);
 }
 
 export function resolveChatgptProModeFromThinkingTime(level: ThinkingTimeLevel): ChatgptProMode {

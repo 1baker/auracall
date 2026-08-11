@@ -1,3 +1,31 @@
+## 2026-08-11 | Plan 0259 ChatGPT Advanced/Effort Selector Repair
+
+- Current focus: remove the exact pre-submission AuraCall blocker from LitScout
+  Declaration Campaign Experiment 5 without launching the browser or retrying
+  the governed submission.
+- Retained failure: GPT-5.6 Sol family selection succeeded, then strict effort
+  selection returned `Unable to find the Thinking time dropdown menu.` No
+  attachment, prompt, conversation, model response, provider call, or LitScout
+  canonical mutation occurred.
+- Provider-free diagnosis: the compact row can expose visible `Advanced` and
+  accessible `Show advanced options`; concatenating visible text first produces
+  `advanced show advanced options`, which fails the current starts-with
+  predicate in both model-family and thinking-effort selector navigation.
+- Boundary: Plan 0259 admits regression coverage, a narrow selector repair,
+  provider-free validation, and one exact user-runtime install. Browser launch,
+  attach, navigation, ChatGPT submission, provider calls, and retry remain
+  excluded until the user's explicit `go`.
+- Green repair: visible text and accessible labels are evaluated independently
+  in both selector paths, including exact compact `Advanced`, whitespace-free
+  `ModelGPT-5.6 Sol`, and `EffortLight` shapes. Focused tests pass 26/26, the
+  broader packet passes 119/119, typecheck/build pass, and the full suite passes
+  2,798 tests with 65 skipped.
+- Validation deviation: the full suite's reattach e2e launched test-owned Chrome
+  PID 98032/port 45015 at `about:blank` and changed retained History bytes. It
+  did not navigate to ChatGPT or retry Experiment 5. Exact process-group
+  SIGTERM restored zero profile processes and a closed port; retained evidence
+  was not rewritten or cleaned. The broad suite was not rerun.
+
 ## 2026-08-10 | Plan 0255 Context Preflight Abort Repair
 
 - Plan 0258 activation: the operator approved only the prepared single

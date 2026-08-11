@@ -1,5 +1,32 @@
 # RUNBOOK
 
+## Turn 438 | 2026-08-11
+
+- Opened
+  [Plan 0259](docs/dev/plans/0259-2026-08-11-chatgpt-advanced-effort-selector-repair.md)
+  on owned lane `fix/chatgpt-advanced-effort-selector` after LitScout Plan 0371
+  stopped before attachment/submission at `Unable to find the Thinking time
+  dropdown menu.`
+- Retained evidence proves zero ChatGPT submission/response and zero LitScout
+  canonical mutation. Fresh admission keeps `wsl-chrome-3` processes at zero
+  and port 45015 closed.
+- Current source diagnosis is provider-free: visible `Advanced` plus accessible
+  `Show advanced options` normalizes to `advanced show advanced options`, while
+  selector navigation requires a combined string beginning with
+  `show advanced options`. The next packet is a deterministic red/green across
+  model and effort navigation.
+- The pure regression reproduced the defect before repair. Both selector paths
+  now normalize visible text and accessible labels independently; focused tests
+  pass 26/26, the broader packet passes 119/119, typecheck/build pass, the full
+  suite passes 2,798 tests with 65 skipped, and lint exits zero with only the
+  existing warning baseline.
+- Deviation: the full suite's known reattach e2e launched exact Chrome PID 98032
+  on port 45015 at `about:blank`, rewriting retained profile History bytes. No
+  ChatGPT route, submission, provider call, or Experiment 5 retry occurred. An
+  exact process-group SIGTERM restored zero profile processes and an unbound
+  port; no profile or evidence cleanup was performed. Commit/install parity is
+  the remaining Plan 0259 packet.
+
 ## Turn 437 | 2026-08-10
 
 - Plan 0254's sole install/restart produced exact source/installed ChatGPT
