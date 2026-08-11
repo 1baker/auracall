@@ -550,6 +550,12 @@ Terminology note:
   `retrievalFailed` means AuraCall did not obtain verified bytes and does not
   prove the provider asset is unavailable; only provider-confirmed 404/410 or
   explicit deleted/expired/not-found evidence is terminal unavailability.
+  For ChatGPT conversation payload reads, an in-page 404 remains recoverable
+  because the governed reload may still receive the exact payload with 200.
+  Only an exact fallback conversation response with 404/410 is classified as
+  `not_found_or_unavailable`. Persisting that online state does not delete
+  cached artifact/file history; ordinary reconciliation excludes the terminal
+  conversation before provider work or `maxItems` budget is spent.
   Direct `conversations context get` reads have a shared finite 120-second
   command-lifecycle deadline, overridable with `--timeout-ms`. For an exact
   conversation ID without project resolution, the deadline starts before

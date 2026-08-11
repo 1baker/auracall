@@ -495,6 +495,68 @@ describe("ensureChatgptConversationSurfaceReadyForRead", () => {
 			vi.useRealTimers();
 		}
 	});
+
+	test("propagates terminal payload unavailability before post-payload readiness", async () => {
+		const conversationId = "terminal-context-404";
+		const url = `https://chatgpt.com/c/${conversationId}`;
+		let onResponseReceived: ((params: never) => void) | null = null;
+		const evaluate = vi.fn(async (input: { expression?: string }) => {
+			const expression = input.expression ?? "";
+			if (expression.includes("fetch(") && expression.includes("/backend-api/conversation/")) {
+				return { result: { value: { ok: false, status: 404, body: "{}" } } };
+			}
+			const call = evaluate.mock.calls.length;
+			if (call <= 2) return { result: { value: [] } };
+			if (call === 3) return { result: { value: url } };
+			if (call <= 6) return { result: { value: true } };
+			return { result: { value: [] } };
+		});
+		const scrapeTelemetry = createBrowserScrapeTelemetryRecorder();
+		const client = {
+			// biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names.
+			Runtime: { evaluate },
+			// biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names.
+			Network: {
+				enable: vi.fn(async () => undefined),
+				responseReceived: vi.fn((handler: (params: never) => void) => {
+					onResponseReceived = handler;
+					return () => undefined;
+				}),
+				loadingFinished: vi.fn(() => () => undefined),
+				getResponseBody: vi.fn(),
+			},
+			// biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names.
+			Page: {
+				enable: vi.fn(async () => undefined),
+				navigate: vi.fn(),
+				reload: vi.fn(async () => {
+					onResponseReceived?.({
+						requestId: "request-terminal-context-404",
+						response: {
+							url: `https://chatgpt.com/backend-api/conversation/${conversationId}`,
+							status: 404,
+						},
+					} as never);
+				}),
+			},
+		};
+
+		await expect(
+			readChatgptConversationContextWithClientForTest(
+				client as never,
+				conversationId,
+				null,
+				undefined,
+				{ allowNavigation: true, scrapeTelemetry },
+			),
+		).rejects.toThrow(
+			`conversation-not-found-or-unavailable: ChatGPT conversation ${conversationId} exact fallback response returned status 404.`,
+		);
+		expect(scrapeTelemetry.providerActions).toMatchObject({
+			"chatgpt.readConversationPayload.failed.conversation_unavailable.v1": 1,
+		});
+		expect(scrapeTelemetry.providerActions).not.toHaveProperty("chatgpt.waitPostPayloadReadiness");
+	});
 });
 
 describe("clickChatgptViewerDownloadButtonWithClient", () => {
@@ -2404,6 +2466,79 @@ describe("readChatgptConversationPayloadWithClient", () => {
 		expect(client.Network.enable).not.toHaveBeenCalled();
 		expect(client.Page.enable).not.toHaveBeenCalled();
 		expect(client.Page.reload).not.toHaveBeenCalled();
+	});
+
+	test.each([
+		404, 410,
+	] as const)("classifies an exact fallback $status as terminal conversation unavailability", async (status) => {
+		vi.useFakeTimers();
+		try {
+			const conversationId = `conversation-terminal-${status}`;
+			let onResponseReceived: ((params: never) => void) | null = null;
+			const responseHandlers = new Set<(params: never) => void>();
+			const loadingHandlers = new Set<(params: never) => void>();
+			const client = {
+				// biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names.
+				Runtime: {
+					evaluate: vi.fn(async () => ({
+						result: { value: { ok: false, status: 404, body: "{}" } },
+					})),
+				},
+				// biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names.
+				Network: {
+					enable: vi.fn(async () => undefined),
+					responseReceived: vi.fn((handler: (params: never) => void) => {
+						onResponseReceived = handler;
+						responseHandlers.add(handler);
+						return () => responseHandlers.delete(handler);
+					}),
+					loadingFinished: vi.fn((handler: (params: never) => void) => {
+						loadingHandlers.add(handler);
+						return () => loadingHandlers.delete(handler);
+					}),
+					getResponseBody: vi.fn(),
+				},
+				// biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names.
+				Page: {
+					enable: vi.fn(async () => undefined),
+					reload: vi.fn(async () => {
+						onResponseReceived?.({
+							requestId: `request-terminal-${status}`,
+							response: {
+								url: `https://chatgpt.com/backend-api/conversation/${conversationId}`,
+								status,
+							},
+						} as never);
+					}),
+				},
+			};
+			let outcome: { kind: "pending" | "resolved" | "rejected"; error?: unknown } = {
+				kind: "pending",
+			};
+			void readChatgptConversationPayloadWithClient(client as never, conversationId, null, {
+				allowNavigation: true,
+			}).then(
+				() => {
+					outcome = { kind: "resolved" };
+				},
+				(error: unknown) => {
+					outcome = { kind: "rejected", error };
+				},
+			);
+
+			await vi.advanceTimersByTimeAsync(0);
+			expect(outcome).toMatchObject({
+				kind: "rejected",
+				error: expect.objectContaining({
+					message: `conversation-not-found-or-unavailable: ChatGPT conversation ${conversationId} exact fallback response returned status ${status}.`,
+				}),
+			});
+			expect(responseHandlers.size).toBe(0);
+			expect(loadingHandlers.size).toBe(0);
+			expect(client.Network.getResponseBody).not.toHaveBeenCalled();
+		} finally {
+			vi.useRealTimers();
+		}
 	});
 
 	test("bounds a stalled fallback response-body read", async () => {

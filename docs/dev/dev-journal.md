@@ -1,3 +1,22 @@
+## 2026-08-11 | Plan 0262 Classified One-Canary Preparation
+
+- Plan 0261's exact fake-CDP red returned `pending`: the payload fallback
+  listener ignored its exact 404. The repair distinguishes exact fallback
+  404/410 from the intentionally recoverable direct-404/fallback-200 path and
+  propagates one coded canonical safe error before post-payload readiness.
+- Provider-free validation passes 170 adapter and 272 focused/adjacent tests,
+  typecheck, build, and scoped Biome. Persistence coverage proves terminal
+  routeability updates do not remove cached artifacts/files. A
+  `maxItems=1` reconciliation fixture retains a readable historical asset,
+  skips its online-terminal conversation before provider work, and advances to
+  the next routeable row.
+- API PID 3323 remains active/running with zero restarts; scheduler is
+  paused/paused; the target remains idle-waiting/pass 56 with null
+  error/next/force; exact profile owners and port 45015 listeners are zero.
+  Built/installed adapter hashes differ intentionally. Plan 0262 prepares one
+  install/restart and one exact zero-retry canary but awaits separate approval;
+  materialization and scheduler/completion controls remain excluded.
+
 ## 2026-08-11 | Plan 0261 Exact Fallback Terminal-Unavailable Repair
 
 - Plan 0260 consumed one install/restart and one zero-retry canary. Installed

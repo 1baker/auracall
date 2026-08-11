@@ -4874,7 +4874,7 @@ describe("history materialization service", () => {
 		});
 	});
 
-	it("does not reselect confirmed expired volatile ChatGPT artifacts during reconciliation", async () => {
+	it("preserves historical assets and skips online-terminal rows before maxItems=1", async () => {
 		const homeDir = await fs.mkdtemp(
 			path.join(os.tmpdir(), "auracall-history-materialize-expired-volatile-"),
 		);
@@ -5011,6 +5011,13 @@ describe("history materialization service", () => {
 								provider: "chatgpt" as const,
 								cachedArtifactCount: 1,
 								cachedFileCount: 0,
+								conversationFreshness: {
+									object: "account_mirror_conversation_freshness",
+									state: "terminal_unavailable",
+									routeabilityState: "not_found_or_unavailable",
+									assetCompleteness: "complete",
+									assetCounts: { known: 1, local: 1, missingLocal: 0 },
+								},
 							},
 							{
 								id: "conv_live",
@@ -5099,7 +5106,7 @@ describe("history materialization service", () => {
 			boundIdentityKey: "user@example.com",
 			reconcile: true,
 			assetKinds: ["artifacts"],
-			maxItems: 5,
+			maxItems: 1,
 		});
 		if (!scheduled) throw new Error("Expected job to be scheduled.");
 		await scheduled();
@@ -5108,6 +5115,7 @@ describe("history materialization service", () => {
 		expect(materializeConversation.mock.calls[0]?.[0]).toMatchObject({
 			conversationId: "conv_live",
 		});
+		await expect(fs.readFile(priorMaterializedPath, "utf8")).resolves.toBe("already materialized");
 	});
 
 	it("forwards terminal job exclusions when a collector-reused conversation has no catalog asset manifest", async () => {

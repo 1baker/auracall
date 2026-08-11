@@ -29,6 +29,20 @@
   listeners ignore. The latter should project the existing canonical
   terminal-unavailable reason so historical artifacts are retained and the row
   is excluded before a callback or `maxItems=1` budget consumption.
+- The provider-free red returned `pending` because the exact fallback 404 was
+  ignored. The repaired listener settles exact 404/410 immediately and the
+  context caller rethrows the canonical safe error before readiness; existing
+  direct-404/fallback-200 recovery remains unchanged.
+- Validation passes 170 adapter tests and 272 focused/adjacent tests plus
+  typecheck, build, scoped Biome, and plan audit. Cache tests prove terminal
+  routeability updates preserve existing artifact/file history; reconciliation
+  preserves a readable historic asset and advances to the later routeable row
+  under `maxItems=1` without calling the terminal row.
+- Plan 0261 closes provider-free. Plan 0262 is prepared but not approved for
+  one install/restart and one exact zero-retry same-route canary. The built and
+  installed adapter hashes intentionally differ. Scheduler/completion control,
+  materialization, prompts, model selection, downloads, retries, guards, and
+  wider profiles remain excluded.
 
 ## Turn 438 | 2026-08-11
 

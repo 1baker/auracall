@@ -1,3 +1,15 @@
+- 2026-08-11: A direct ChatGPT conversation-payload 404 is not by itself
+  terminal: the governed reload can still observe the exact API response with
+  200 and recover the payload. The fallback Network listener must therefore
+  distinguish exact 200 recovery from an exact 404/410 terminal response. Do
+  not ignore the latter and wait on a route that the reload moved to home;
+  settle immediately with the sanitized canonical
+  `conversation-not-found-or-unavailable:` error and propagate it before
+  post-payload readiness. Existing account-mirror evidence then records
+  `not_found_or_unavailable` / `terminal_unavailable`, preserves cached
+  artifact/file history, and excludes the row before provider work or
+  `maxItems` consumption.
+
 - 2026-08-11: `lastStage=cdp:Runtime.evaluate` proves only that an evaluation
   method counter was the latest completed telemetry update; it does not identify
   the evaluation purpose or exception. At provider-owned evaluation boundaries,

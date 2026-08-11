@@ -424,7 +424,7 @@ describe("account mirror cache persistence", () => {
 		}
 	});
 
-	test("updates cached conversation rows with reconciliation freshness evidence", async () => {
+	test("updates cached conversation freshness while preserving existing asset history", async () => {
 		const homeDir = await mkdtemp(path.join(os.tmpdir(), "auracall-mirror-cache-evidence-"));
 		setAuracallHomeDirOverrideForTest(homeDir);
 		const cacheStore = createCacheStore("dual");
@@ -471,6 +471,17 @@ describe("account mirror cache persistence", () => {
 					routeabilityObservedAt: "2026-05-23T16:05:00.000Z",
 				},
 			});
+			const existingTerminal = await updateConversationEvidence?.({
+				provider: "chatgpt",
+				boundIdentityKey: "ecochran76@gmail.com",
+				conversationId: "conv_1",
+				evidence: {
+					routeabilityState: "not_found_or_unavailable",
+					routeabilityReason:
+						"conversation-not-found-or-unavailable: exact fallback response returned status 404",
+					routeabilityObservedAt: "2026-05-23T16:04:00.000Z",
+				},
+			});
 			const insertedTerminal = await updateConversationEvidence?.({
 				provider: "chatgpt",
 				boundIdentityKey: "ecochran76@gmail.com",
@@ -488,6 +499,7 @@ describe("account mirror cache persistence", () => {
 
 			expect(updated).toBe(true);
 			expect(missingWithoutUpsert).toBe(false);
+			expect(existingTerminal).toBe(true);
 			expect(insertedTerminal).toBe(true);
 			await expect(cacheStore.readConversations(context)).resolves.toMatchObject({
 				items: [
@@ -497,8 +509,10 @@ describe("account mirror cache persistence", () => {
 							indexObservedAt: "2026-04-29T12:00:10.000Z",
 							detailObservedAt: "2026-05-23T16:00:00.000Z",
 							manifestObservedAt: "2026-05-23T16:00:01.000Z",
-							routeabilityObservedAt: "2026-05-23T16:00:00.000Z",
-							routeabilityState: "routeable",
+							routeabilityObservedAt: "2026-05-23T16:04:00.000Z",
+							routeabilityState: "not_found_or_unavailable",
+							routeabilityReason:
+								"conversation-not-found-or-unavailable: exact fallback response returned status 404",
 							messageCount: 4,
 							artifactCount: 1,
 						},
@@ -516,6 +530,12 @@ describe("account mirror cache persistence", () => {
 						},
 					},
 				],
+			});
+			await expect(cacheStore.readAccountMirrorArtifacts(context)).resolves.toMatchObject({
+				items: [{ id: "artifact_1", title: "Generated report" }],
+			});
+			await expect(cacheStore.readAccountMirrorFiles(context)).resolves.toMatchObject({
+				items: [{ id: "file_1", name: "Project source.pdf" }],
 			});
 		} finally {
 			await rm(homeDir, { recursive: true, force: true });

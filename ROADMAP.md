@@ -7,13 +7,20 @@
 Status: active
 Lane: P01
 
-- Active ChatGPT exact-fallback terminal-unavailable provider-free repair:
+- Prepared `wsl-chrome-3` terminal-unavailable one-canary gate:
+  [docs/dev/plans/0262-2026-08-11-wsl-chrome-3-terminal-unavailable-one-canary-gate.md](docs/dev/plans/0262-2026-08-11-wsl-chrome-3-terminal-unavailable-one-canary-gate.md)
+  The provider-free repair is green and built but not installed. One fresh
+  same-route, zero-retry canary is specified to accept either current context
+  or the exact terminal-unavailable stage. It awaits separate approval;
+  materialization and scheduler/completion control remain excluded.
+
+- Closed ChatGPT exact-fallback terminal-unavailable provider-free repair:
   [docs/dev/plans/0261-2026-08-11-chatgpt-fallback-terminal-unavailable-provider-free-repair.md](docs/dev/plans/0261-2026-08-11-chatgpt-fallback-terminal-unavailable-provider-free-repair.md)
-  The sole Plan 0260 canary proved that the payload fallback reload lost the
-  conversation route and ended on ChatGPT home. Plan 0261 distinguishes a
-  recoverable direct 404 from an exact fallback 404/410, then connects the
-  latter to existing historical-artifact preservation and terminal retry
-  suppression. All browser/provider/runtime effects remain excluded.
+  The exact red proved fallback 404 was ignored. Exact fallback 404/410 now
+  settles with a canonical sanitized terminal error before post-payload
+  readiness, while direct-404/fallback-200 recovery remains green. Cached
+  artifact/file history is retained and online-terminal rows are skipped before
+  provider work or `maxItems=1`. All live/runtime effects were zero.
 
 - Closed `wsl-chrome-3` evaluation-class one-canary gate:
   [docs/dev/plans/0260-2026-08-11-wsl-chrome-3-evaluation-class-one-canary-gate.md](docs/dev/plans/0260-2026-08-11-wsl-chrome-3-evaluation-class-one-canary-gate.md)

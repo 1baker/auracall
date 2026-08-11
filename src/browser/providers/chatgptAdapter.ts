@@ -779,6 +779,25 @@ type ChatgptConversationPayloadResponse = {
 	error?: string | null;
 };
 
+const CHATGPT_CONVERSATION_UNAVAILABLE_ERROR_CODE = "chatgpt_conversation_not_found_or_unavailable";
+
+function createChatgptConversationUnavailableError(
+	conversationId: string,
+	status: number,
+): Error & { code: typeof CHATGPT_CONVERSATION_UNAVAILABLE_ERROR_CODE } {
+	const metadata = { code: CHATGPT_CONVERSATION_UNAVAILABLE_ERROR_CODE } as const;
+	return Object.assign(
+		new Error(
+			`conversation-not-found-or-unavailable: ChatGPT conversation ${conversationId} exact fallback response returned status ${status}.`,
+		),
+		metadata,
+	);
+}
+
+function isChatgptConversationUnavailableError(error: unknown): boolean {
+	return isRecord(error) && error.code === CHATGPT_CONVERSATION_UNAVAILABLE_ERROR_CODE;
+}
+
 type ChatgptProjectSettingsSnapshot = {
 	name: string;
 	text: string;
@@ -3052,7 +3071,10 @@ export async function readChatgptConversationPayloadWithClient(
 	// later outlives this read and its client.
 	await beforeChatgptBrowserInteraction(options, "page-refresh");
 
-	type FallbackBody = { body: string; base64Encoded: boolean } | null;
+	type FallbackBody =
+		| { kind: "body"; body: string; base64Encoded: boolean }
+		| { kind: "terminal-unavailable"; status: 404 | 410 }
+		| null;
 	let finishBody: (value: FallbackBody) => void = () => undefined;
 	const bodyPromise = new Promise<FallbackBody>((resolve) => {
 		let settled = false;
@@ -3060,7 +3082,7 @@ export async function readChatgptConversationPayloadWithClient(
 		let timer: NodeJS.Timeout | null = null;
 		let disposeResponseReceived: (() => void) | null = null;
 		let disposeLoadingFinished: (() => void) | null = null;
-		const finish = (value: { body: string; base64Encoded: boolean } | null) => {
+		const finish = (value: FallbackBody) => {
 			if (settled) return;
 			settled = true;
 			if (timer) {
@@ -3080,7 +3102,12 @@ export async function readChatgptConversationPayloadWithClient(
 			const url = params.response?.url ?? "";
 			const status = params.response?.status ?? 0;
 			const isExactConversationResponse = url === targetUrl || url.startsWith(`${targetUrl}?`);
-			if (!isExactConversationResponse || status < 200 || status >= 300) return;
+			if (!isExactConversationResponse) return;
+			if (status === 404 || status === 410) {
+				finish({ kind: "terminal-unavailable", status });
+				return;
+			}
+			if (status < 200 || status >= 300) return;
 			exactRequestId = params.requestId;
 		});
 		if (typeof responseReceivedSubscription === "function") {
@@ -3098,6 +3125,7 @@ export async function readChatgptConversationPayloadWithClient(
 				return;
 			}
 			finish({
+				kind: "body",
 				body: response.body,
 				base64Encoded: response.base64Encoded ?? false,
 			});
@@ -3124,7 +3152,13 @@ export async function readChatgptConversationPayloadWithClient(
 		})),
 	}).catch(() => finishBody(null));
 	const response = await bodyPromise;
-	return parsePayloadBody(response?.body, response?.base64Encoded ?? false);
+	if (response?.kind === "terminal-unavailable") {
+		throw createChatgptConversationUnavailableError(conversationId, response.status);
+	}
+	return parsePayloadBody(
+		response?.kind === "body" ? response.body : null,
+		response?.kind === "body" ? response.base64Encoded : false,
+	);
 }
 
 function buildChatgptPayloadDirectRetryOptions(
@@ -8691,6 +8725,13 @@ async function readChatgptConversationContextWithClient(
 						readChatgptConversationPayloadWithClient(client, conversationId, projectId, options),
 				);
 			} catch (error) {
+				if (isChatgptConversationUnavailableError(error)) {
+					recordBrowserScrapeProviderAction(
+						options,
+						"chatgpt.readConversationPayload.failed.conversation_unavailable.v1",
+					);
+					throw error;
+				}
 				recordBrowserScrapeProviderAction(
 					options,
 					`chatgpt.readConversationPayload.failed.${classifyChatgptRuntimeEvaluationFailure(error)}.v1`,
@@ -8768,6 +8809,13 @@ async function readChatgptConversationContextWithClient(
 						buildChatgptPayloadDirectRetryOptions(options),
 					);
 				} catch (error) {
+					if (isChatgptConversationUnavailableError(error)) {
+						recordBrowserScrapeProviderAction(
+							options,
+							"chatgpt.readConversationPayload.failed.conversation_unavailable.v1",
+						);
+						throw error;
+					}
 					recordBrowserScrapeProviderAction(
 						options,
 						`chatgpt.readConversationPayloadRetry.failed.${classifyChatgptRuntimeEvaluationFailure(error)}.v1`,
