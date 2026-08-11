@@ -1,3 +1,22 @@
+## 2026-08-11 | Plan 0268 One-Pass Scheduler Resume Activation
+
+- The operator approved one short scheduler-resume canary. The bounded packet
+  performs one durable resume, observes exactly the first operator-resume pass,
+  and restores the durable pause immediately after that pass starts. A second
+  cadence pass and lasting resume are excluded.
+- Installed control-flow parity proves each scheduler pass chooses one target
+  and a pause during the running pass suppresses its 600000 ms successor.
+  Current selection deterministically predicts `chatgpt/default`, which is
+  eligible/in-progress/pass 9 with 12 detail surfaces, 88 missing-local assets,
+  no active completion, and no guard. At most one newly reconciled default
+  completion may be paused and allowed only its already-started first pass.
+- Fresh admission is clean/synced Git `2030ce52`, healthy API PID 1886, exact
+  source/installed parity across the HTTP scheduler, selector, reconciler,
+  completion, and adapter surfaces, scheduler paused/paused in execute mode,
+  active jobs zero, exact default and `wsl-chrome-3` owners zero, and 38 GiB
+  available memory. Unrelated retained owners on ports 45013/45017 must remain
+  untouched.
+
 ## 2026-08-11 | Plan 0267 Pass-57 One-Pass Activation
 
 - The operator's `ok go` approves one targeted `run-one-pass` on retained

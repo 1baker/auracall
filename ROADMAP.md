@@ -7,6 +7,13 @@
 Status: active
 Lane: P01
 
+- Active one-pass account-mirror scheduler resume canary:
+  [docs/dev/plans/0268-2026-08-11-one-pass-scheduler-resume-canary.md](docs/dev/plans/0268-2026-08-11-one-pass-scheduler-resume-canary.md)
+  The operator approved one short real resume. The packet admits one immediate
+  scheduler pass, restores the durable pause as soon as that pass starts, and
+  contains at most one newly reconciled default completion within its first
+  pass. No second cadence pass or lasting scheduler resume is authorized.
+
 - Closed accepted `wsl-chrome-3` pass-57 one-pass live-follow canary:
   [docs/dev/plans/0267-2026-08-11-wsl-chrome-3-pass-57-one-pass-live-follow-canary.md](docs/dev/plans/0267-2026-08-11-wsl-chrome-3-pass-57-one-pass-live-follow-canary.md)
   The sole control advanced exactly 56 -> 57. Its sole child succeeded on

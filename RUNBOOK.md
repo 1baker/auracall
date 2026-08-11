@@ -1,5 +1,25 @@
 # RUNBOOK
 
+## Turn 444 | 2026-08-11
+
+- The operator's `ok go` authorizes the recommended short scheduler-resume
+  canary. Plan 0268 admits one `resume`, exactly the immediate
+  `operator-resume` scheduler pass, and one mandatory `pause` as soon as that
+  pass starts. It does not leave the scheduler running.
+- Installed CodeGraph/source review proves a scheduler pass selects one target
+  and pause-during-run prevents the ten-minute successor timer. Fresh status
+  deterministically predicts `chatgpt/default`: eligible, in-progress/pass 9,
+  12 detail surfaces, 88 missing-local assets, no active completion, clear
+  guard. Reconciliation may start one new default completion after refresh, so
+  the packet also permits one exact pause and at most its already-started first
+  pass/child/attempt with `maxItems=6` and `force=false`.
+- Admission is clean/synced Git `2030ce52`, API PID 1886 healthy, source and
+  installed HTTP/scheduler/reconciler/completion/adapter hashes identical,
+  scheduler paused/paused in execute mode at 600000 ms, active jobs zero, exact
+  default and `wsl-chrome-3` browser ownership zero, and 38 GiB host memory
+  available. Unrelated retained `wsl-chrome-2`/`wsl-chrome-4` owners are
+  explicitly excluded from cleanup.
+
 ## Turn 443 | 2026-08-11
 
 - The operator approved the recommended separately bounded live-follow
