@@ -7,12 +7,21 @@
 Status: active
 Lane: P01
 
-- Active `wsl-chrome-3` evaluation-class one-canary gate:
+- Active ChatGPT exact-fallback terminal-unavailable provider-free repair:
+  [docs/dev/plans/0261-2026-08-11-chatgpt-fallback-terminal-unavailable-provider-free-repair.md](docs/dev/plans/0261-2026-08-11-chatgpt-fallback-terminal-unavailable-provider-free-repair.md)
+  The sole Plan 0260 canary proved that the payload fallback reload lost the
+  conversation route and ended on ChatGPT home. Plan 0261 distinguishes a
+  recoverable direct 404 from an exact fallback 404/410, then connects the
+  latter to existing historical-artifact preservation and terminal retry
+  suppression. All browser/provider/runtime effects remain excluded.
+
+- Closed `wsl-chrome-3` evaluation-class one-canary gate:
   [docs/dev/plans/0260-2026-08-11-wsl-chrome-3-evaluation-class-one-canary-gate.md](docs/dev/plans/0260-2026-08-11-wsl-chrome-3-evaluation-class-one-canary-gate.md)
-  The operator authorized one install/restart and one zero-retry read of the
-  same conversation after fresh zero-owner admission. A failure now retains an allowlisted completed evaluation
-  stage; materialization, completion/scheduler control, prompt, download,
-  retry, and wider profiles remain excluded.
+  Installed parity and API health passed. The one zero-retry canary failed at
+  post-payload predicate readiness; exact owned inspection found the provider
+  page on ChatGPT home rather than the admitted conversation route. Cleanup
+  restored zero owners/jobs and the unbound port while pass 56 and scheduler
+  pause remained unchanged. No retry or materialization ran.
 
 - Closed provider-free first `Runtime.evaluate` diagnosis:
   [docs/dev/plans/0259-2026-08-11-chatgpt-first-runtime-evaluate-provider-free-diagnosis.md](docs/dev/plans/0259-2026-08-11-chatgpt-first-runtime-evaluate-provider-free-diagnosis.md)

@@ -14,6 +14,21 @@
 - Stop after the sole canary and exact cleanup. No retry, materialization,
   completion/scheduler control, model selection, prompt, download, guard/config
   mutation, or wider profile is authorized in this packet.
+- The one install/restart passed exact source/installed adapter parity and left
+  API PID 3323 active/running with zero restarts. The sole canary then failed
+  after 34354 ms at
+  `provider:chatgpt.postPayloadReadiness.failed.predicate_unsatisfied.v1` with
+  attempt count 1, no pending operation, and no context.
+- Exact owned browser inspection before cleanup found the only provider page
+  at `https://chatgpt.com/`, proving the payload fallback reload lost the
+  conversation route. One exact close restored zero profile owners and an
+  unbound port. Jobs remain zero, the target remains idle-waiting/pass 56, and
+  scheduler remains paused/paused. Plan 0260 is closed without retry.
+- Plan 0261 is active provider-free. Its red must distinguish the recoverable
+  direct-404/fallback-200 contract from an exact fallback 404/410 that current
+  listeners ignore. The latter should project the existing canonical
+  terminal-unavailable reason so historical artifacts are retained and the row
+  is excluded before a callback or `maxItems=1` budget consumption.
 
 ## Turn 438 | 2026-08-11
 

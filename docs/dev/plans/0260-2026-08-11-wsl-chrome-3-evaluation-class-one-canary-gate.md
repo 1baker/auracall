@@ -1,10 +1,10 @@
 # WSL Chrome 3 Evaluation-Class One-Canary Gate | 0260-2026-08-11
 
-State: OPEN
+State: CLOSED
 Lane: P01
-Plan version: 2
-Gate state: ACTIVE_INSTALL_AND_ONE_CANARY
-Goal execution state: ACTIVE
+Plan version: 3
+Gate state: CLOSED_FAILED_POST_PAYLOAD_ROUTE_LOST
+Goal execution state: ACTIVE_SUCCESSOR_PROVIDER_FREE
 
 ## Stable Goal Objective
 
@@ -65,11 +65,11 @@ scheduler, submit a prompt, or widen the route or browser profile.
 ## Acceptance Criteria
 
 - [x] Explicit approval and fresh drift-free zero-owner admission.
-- [ ] One healthy install/restart with exact installed/source parity.
+- [x] One healthy install/restart with exact installed/source parity.
 - [ ] One successful zero-retry context receipt and current nonempty context.
-- [ ] Exact browser/job cleanup returns to zero.
-- [ ] Target remains pass 56 and scheduler remains paused/paused.
-- [ ] Materialization, completion/scheduler control, prompt, download, guard,
+- [x] Exact browser/job cleanup returns to zero.
+- [x] Target remains pass 56 and scheduler remains paused/paused.
+- [x] Materialization, completion/scheduler control, prompt, download, guard,
   retry, and wider-profile effects remain zero.
 
 ## Local Goal Bounds
@@ -136,3 +136,33 @@ scheduler, submit a prompt, or widen the route or browser profile.
 The installed repair passes one fresh zero-retry context canary and exact
 cleanup while pass 56, scheduler pause, and every excluded effect remain
 unchanged. Any failure closes the plan immediately without another attempt.
+
+## Terminal Checkpoint | Reload Lost The Conversation Route
+
+- `checkpoint_id`: `P0260-C03`.
+- `state_transition`: P0260_ACTIVE_INSTALL_AND_ONE_CANARY ->
+  P0260_CLOSED_FAILED_POST_PAYLOAD_ROUTE_LOST.
+- `progress_classification`: canary_failed_with_new_route_loss_evidence.
+- `install_evidence`: the sole install and API restart completed; API PID 3323
+  is active/running with `NRestarts=0`, and source/installed
+  `chatgptAdapter.js` hashes both equal
+  `fac2bd9b1de04ed3ec2ed9b19e64ceb5b1766232224b7d4acb3a7fd2dcd6bea7`.
+- `canary_evidence`: the sole zero-retry read completed after 34354 ms with
+  no context. Its unique receipt records `attemptCount=1`,
+  `pendingOperation=null`, and
+  `lastStage=provider:chatgpt.postPayloadReadiness.failed.predicate_unsatisfied.v1`.
+- `browser_evidence`: exact owned inspection before cleanup found root PID
+  24323/port 45015 and one provider page at `https://chatgpt.com/`, not the
+  admitted `/c/6a40724d-8688-83ea-ab36-7458e921ed19` route. This proves the
+  payload fallback reload lost the conversation route before readiness.
+- `cleanup_evidence`: one exact browser-tools close removed only the admitted
+  process group. Exact profile owners and port listeners returned to zero;
+  active jobs remain zero, the target remains idle-waiting/pass 56, and the
+  scheduler remains paused/paused.
+- `effect_audit`: one install, one API restart, one browser launch, one context
+  read, and one exact close were consumed. Retry, materialization,
+  completion/scheduler control, prompt, model, download, guard/config,
+  direct-runtime, and wider-profile effects were zero.
+- `subagent_status`: not_spawned.
+- `next_action_or_stop_reason`: Plan 0261 owns a provider-free regression at
+  the exact fallback-response boundary. Plan 0260 is closed and cannot retry.

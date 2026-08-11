@@ -1,3 +1,21 @@
+## 2026-08-11 | Plan 0261 Exact Fallback Terminal-Unavailable Repair
+
+- Plan 0260 consumed one install/restart and one zero-retry canary. Installed
+  parity and API health passed; the canary failed after 34354 ms at the safe
+  completed stage
+  `provider:chatgpt.postPayloadReadiness.failed.predicate_unsatisfied.v1`.
+- Exact browser inspection before cleanup found root PID 24323/port 45015 and
+  only `https://chatgpt.com/`, not the admitted conversation route. Exact
+  cleanup restored zero owners and an unbound port. Active jobs remain zero,
+  the target remains idle-waiting/pass 56, and scheduler remains paused.
+- CodeGraph shows the payload fallback accepts only exact 2xx API responses.
+  Existing tests intentionally recover when a direct in-page 404 is followed
+  by a fallback 200, so direct 404 is not terminal. Plan 0261 will first prove
+  that an exact fallback 404/410 is ignored, then project it through the
+  existing `conversation-not-found-or-unavailable` evidence contract. Browser,
+  provider, runtime, materialization, completion, and scheduler effects are
+  excluded.
+
 ## 2026-08-11 | Plan 0260 Live Gate Activation
 
 - The operator authorized continued work toward the actual context-read fix.
