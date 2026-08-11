@@ -6,16 +6,22 @@ import {
 
 describe('semantic model selectors', () => {
   it.each([
-    ['chatgpt:auto', { desiredModel: 'Auto' }],
-    ['chatgpt:instant', { desiredModel: 'Instant' }],
-    ['chatgpt:thinking-standard', { desiredModel: 'Thinking', thinkingTime: 'standard' }],
-    ['chatgpt:thinking-extended', { desiredModel: 'Thinking', thinkingTime: 'extended' }],
-    ['chatgpt:sol-medium', { desiredModel: 'Thinking', thinkingTime: 'standard' }],
-    ['chatgpt:sol-high', { desiredModel: 'Thinking', thinkingTime: 'extended' }],
-    ['chatgpt:sol-extra-high', { desiredModel: 'Thinking', thinkingTime: 'heavy' }],
-    ['chatgpt:pro-standard', { desiredModel: 'Pro', thinkingTime: 'standard' }],
-    ['chatgpt:pro-extended', { desiredModel: 'Pro', thinkingTime: 'extended' }],
-    ['chatgpt:sol-pro', { desiredModel: 'Pro' }],
+    ['chatgpt:auto', { desiredModel: 'GPT-5.6 Terra' }],
+    ['chatgpt:terra', { desiredModel: 'GPT-5.6 Terra' }],
+    ['chatgpt:gpt-5.6-terra', { desiredModel: 'GPT-5.6 Terra' }],
+    ['chatgpt:instant', { desiredModel: 'GPT-5.6 Luna' }],
+    ['chatgpt:luna', { desiredModel: 'GPT-5.6 Luna' }],
+    ['chatgpt:gpt-5.6-luna', { desiredModel: 'GPT-5.6 Luna' }],
+    ['chatgpt:thinking-standard', { desiredModel: 'GPT-5.6 Sol', thinkingTime: 'standard' }],
+    ['chatgpt:thinking-extended', { desiredModel: 'GPT-5.6 Sol', thinkingTime: 'extended' }],
+    ['chatgpt:sol', { desiredModel: 'GPT-5.6 Sol', thinkingTime: 'standard' }],
+    ['chatgpt:sol-medium', { desiredModel: 'GPT-5.6 Sol', thinkingTime: 'standard' }],
+    ['chatgpt:sol-high', { desiredModel: 'GPT-5.6 Sol', thinkingTime: 'extended' }],
+    ['chatgpt:sol-extra-high', { desiredModel: 'GPT-5.6 Sol', thinkingTime: 'heavy' }],
+    ['chatgpt:pro-standard', { desiredModel: 'GPT-5.6 Sol', thinkingTime: 'standard' }],
+    ['chatgpt:pro-extended', { desiredModel: 'GPT-5.6 Sol', thinkingTime: 'extended' }],
+    ['chatgpt:sol-pro', { desiredModel: 'GPT-5.6 Sol', thinkingTime: 'heavy' }],
+    ['chatgpt:gpt-5.5', { desiredModel: 'GPT-5.5' }],
   ])('resolves %s to current ChatGPT browser controls', (selector, expected) => {
     expect(resolveChatgptSemanticModelSelector(selector)).toEqual(expected);
   });

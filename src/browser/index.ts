@@ -4135,7 +4135,7 @@ function isWebSocketClosureError(error: Error): boolean {
 
 function shouldApplyThinkingTime(desiredModel: string | null | undefined): boolean {
 	if (!desiredModel) return false;
-	return /\b(thinking|pro)\b/i.test(desiredModel);
+	return /\b(sol|thinking|pro)\b/i.test(desiredModel);
 }
 
 export function formatThinkingLog(

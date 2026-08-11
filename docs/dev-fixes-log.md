@@ -1,3 +1,16 @@
+- 2026-08-10: ChatGPT's model picker is no longer a flat
+  Instant/Thinking/Pro list. The compact menu hides model families behind
+  `Show advanced options`, then a separate `Model` submenu exposes GPT-5.6
+  Sol, Terra, Luna, and legacy GPT-5.5; a sibling `Effort` submenu exposes
+  Light, Medium, High, and Extra High. Traverse by accessible role/text and
+  `aria-expanded`, not absent test IDs. Classify Sol/Terra/Luna as distinct
+  families so shared GPT-5.6 tokens cannot select the wrong row. Map durable
+  auto/instant intent to Terra/Luna and legacy Thinking/Pro effort intent to
+  current Sol controls. Update the bundled raw browser-model registry in the
+  same slice so older GPT labels cannot bypass the semantic repair. Provider-
+  free tests must cover compact-to-advanced navigation, exact-family rejection,
+  checked-radio semantics, and effort submenu traversal.
+
 - 2026-08-10: A cancellation-safe one-shot browser canary still lacks useful
   failure evidence if every pre-provider await shares one broad terminal stage.
   Before spending another live attempt, expose sanitized caller-owned stage

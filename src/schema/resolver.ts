@@ -150,9 +150,7 @@ export async function resolveConfig(
 
 function resolveModelForChatgptSemanticSelection(selection: { desiredModel: string }): string {
   switch (selection.desiredModel) {
-    case 'Pro':
-      return DEFAULT_MODEL;
-    case 'Thinking':
+    case 'GPT-5.6 Sol':
       return 'gpt-5.6-sol';
     default:
       return 'gpt-5.2-instant';
@@ -166,7 +164,7 @@ function mergeRecursively(target: MutableConfig, source: MutableConfig): Mutable
   if (!isRecord(target)) {
     return source;
   }
-  
+
   const result: MutableConfig = { ...target };
   for (const key of Object.keys(source)) {
     if (Array.isArray(source[key])) {

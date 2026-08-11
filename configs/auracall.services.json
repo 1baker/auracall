@@ -4,45 +4,24 @@
     "chatgpt": {
       "models": [
         {
-          "id": "gpt-5.2-thinking",
-          "label": "Thinking",
+          "id": "gpt-5.6-sol",
+          "label": "GPT-5.6 Sol",
           "aliases": [
             "thinking",
             "gpt-5-thinking",
             "gpt 5 thinking",
+            "gpt-5.2-thinking",
             "gpt 5.2 thinking",
             "gpt-5.6-sol",
             "gpt 5.6 sol",
             "gpt-5.6",
             "gpt 5.6",
             "sol",
-            "medium",
-            "high",
-            "extra high"
-          ]
-        },
-        {
-          "id": "gpt-5.2-instant",
-          "label": "Instant",
-          "aliases": [
-            "instant",
-            "gpt-5.2",
-            "gpt 5.2",
-            "gpt 5 2",
-            "gpt-5.1",
-            "gpt 5.1",
-            "gpt 5 1",
-            "gpt-5.1-instant",
-            "gpt 5.1 instant"
-          ]
-        },
-        {
-          "id": "gpt-5.1-pro",
-          "label": "Pro",
-          "aliases": [
             "pro",
             "gpt-5-pro",
             "gpt 5 pro",
+            "gpt-5.1-pro",
+            "gpt 5.1 pro",
             "gpt-5.2-pro",
             "gpt 5.2 pro",
             "gpt 5 2 pro",
@@ -50,7 +29,44 @@
             "gpt 5.6 sol pro",
             "gpt-5.6-pro",
             "gpt 5.6 pro",
-            "sol pro"
+            "sol pro",
+            "medium",
+            "high",
+            "extra high"
+          ]
+        },
+        {
+          "id": "gpt-5.6-terra",
+          "label": "GPT-5.6 Terra",
+          "aliases": [
+            "auto",
+            "gpt-5.2",
+            "gpt 5.2",
+            "gpt 5 2",
+            "gpt-5.1",
+            "gpt 5.1",
+            "gpt 5 1"
+          ]
+        },
+        {
+          "id": "gpt-5.6-luna",
+          "label": "GPT-5.6 Luna",
+          "aliases": [
+            "instant",
+            "gpt-5.2-instant",
+            "gpt 5.2 instant",
+            "gpt-5.1-instant",
+            "gpt 5.1 instant"
+          ]
+        },
+        {
+          "id": "gpt-5.5",
+          "label": "GPT-5.5",
+          "aliases": [
+            "5.5",
+            "gpt 5.5",
+            "gpt 5 5",
+            "legacy"
           ]
         }
       ],

@@ -2,8 +2,8 @@
 
 State: OPEN
 Lane: P01
-Plan version: 5
-Gate state: ACTIVE_REUSE_ONLY_SELECTOR_INSPECTION
+Plan version: 6
+Gate state: PROVIDER_FREE_SELECTOR_REPAIR_VALIDATED_WAITING_ZERO_OWNER
 Goal execution state: ACTIVE_BOUNDED_EXECUTION
 
 ## Stable Goal Objective
@@ -43,11 +43,28 @@ scheduler, submit a prompt, or widen to another route/profile.
   owner. Treat it as externally owned: no launch, navigation, or close is
   admitted. Agent-browser may attach read-only and open the existing model menu
   once, then must detach.
+- Two bounded named agent-browser attachments inspected the already-open picker
+  without navigation or selection. The current compact menu exposes `Power`,
+  `Show advanced options`, and fast mode. Its advanced surface exposes nested
+  `Model`, `Effort`, and `Speed` controls. The model submenu contains GPT-5.6
+  Sol, Terra, Luna, and legacy GPT-5.5; the effort submenu contains Light,
+  Medium, High, and Extra High. Both sessions detached with leave-open
+  semantics and exact root PID 89142 remained unchanged.
+- Provider-free repair now maps `auto` to Terra, `instant` to Luna,
+  Sol/Thinking/legacy-Pro effort aliases to Sol, and `gpt-5.5` to the legacy
+  row. The bundled raw browser-model registry maps older base/Instant/
+  Thinking/Pro labels onto Terra/Luna/Sol as well. Model selection traverses
+  compact -> advanced -> model semantically and
+  rejects cross-family GPT-5.6 matches. Effort selection traverses the same
+  advanced surface. Focused validation passes 168 tests; a clean standalone
+  full-suite rerun passes 2794 tests with 65 skipped. Typecheck, build, lint,
+  and plan audit pass.
 
 ## Authority And Effect Boundary
 
-- Approval covers one exact managed-browser launch, one agent-browser attach,
-  one model-menu open without choosing a model, the provider-free selector
+- Approval covers one exact managed-browser launch, two agent-browser attaches,
+  bounded advanced/model/effort submenu inspection without choosing a model,
+  the provider-free selector
   mapping/test update, one install, one API restart, one exact
   source/installed parity check, one context read, and one exact owned cleanup.
 - The sole route is conversation
@@ -87,9 +104,9 @@ scheduler, submit a prompt, or widen to another route/profile.
 
 - [x] Explicit approval is recorded; fresh drift-free admission remains
   required immediately before launch.
-- [ ] Fresh agent-browser inspection records the current model options without
+- [x] Fresh agent-browser inspection records the current model options without
   selecting a model, submitting a prompt, or exposing private page content.
-- [ ] AuraCall's semantic ChatGPT model mapping matches that live selector and
+- [x] AuraCall's semantic ChatGPT model mapping matches that live selector and
   passes deterministic provider-free selection tests.
 - [x] Provider-free receipt tests distinguish browser target discovery, debug
   port resolution, Chrome launch, DevTools readiness, and login-tab opening.
@@ -107,7 +124,9 @@ scheduler, submit a prompt, or widen to another route/profile.
 - `max_installs: 1`; `max_api_restarts: 1`; `max_browser_launches: 1`;
   `max_context_reads: 1`; `max_context_retries: 0`;
   `max_browser_closes: 1`; `max_materialization_starts: 0`;
-  `max_agent_browser_attaches: 1`; `max_model_menu_opens: 1`;
+  `max_agent_browser_attaches: 2`; `max_model_menu_opens: 1`;
+  `max_advanced_menu_opens: 1`; `max_model_submenu_opens: 1`;
+  `max_effort_submenu_opens: 1`;
   `max_model_selections: 0`; `max_prompt_submissions: 0`;
   `max_completion_controls: 0`; `max_scheduler_controls: 0`;
   `max_guard_actions: 0`; `max_direct_runtime_edits: 0`;
@@ -226,3 +245,39 @@ remain zero. Any failure closes this plan immediately without another attempt.
 - `review_disposition_summary`: silently treating the existing browser as
   canary-owned is rejected; bounded attachment preserves operator browser
   ownership while still collecting the explicitly requested selector evidence.
+
+## Validation Checkpoint | Nested Selector Repair Green
+
+- `checkpoint_id`: `P0256-C06`.
+- `state_transition`: P0256_ACTIVE_REUSE_ONLY_SELECTOR_INSPECTION ->
+  P0256_PROVIDER_FREE_SELECTOR_REPAIR_VALIDATED_WAITING_ZERO_OWNER.
+- `progress_classification`: blocker_reduction.
+- `evidence`: two named agent-browser attachments observed the compact,
+  advanced, model, and effort menus with no navigation, model selection,
+  prompt, or download. Leave-open detach preserved exact PID 89142. Provider-
+  free tests prove current semantic mappings, compact-to-advanced-to-model
+  navigation, cross-family rejection, checked-radio semantics, and advanced
+  effort traversal; 168 focused tests and typecheck pass. An initial full-suite
+  run had one unrelated lease-heartbeat timing failure, which passed on an
+  immediate isolated rerun. After correcting one stale Sol classification
+  assertion and avoiding concurrent build/test output mutation, a clean
+  standalone full-suite rerun passes 307 files/2794 tests with 65 skipped;
+  build, lint, and plan audit pass.
+- `subagent_status`: not_spawned.
+- `next_action_or_stop_reason`: finish documentation/audits, commit and push
+  the provider-free repair, then wait for PID 89142 to exit independently or
+  for separate close authority. Only after fresh zero-owner admission may the
+  one install/restart and sole context canary run.
+- `authority_classification`: provider-free repair is admitted and live
+  inspection is complete; browser close, install/restart, canary,
+  materialization, completion/scheduler control, guard action, retry, and
+  wider profiles remain excluded while the external owner persists.
+- `review_disposition_summary`: a flat-label-only repair is rejected because
+  current model and effort choices do not exist until separate nested submenus
+  are opened. Treating shared GPT-5.6 text as sufficient is also rejected;
+  Sol, Terra, and Luna require family-exact matching.
+- `closing_readback`: API PID 64314 remains active/running with `NRestarts=0`;
+  scheduler state remains paused; active history-materialization jobs remain
+  zero; `wsl-chrome-3` remains idle-waiting/pass 56 with error/next/force null;
+  externally owned exact Chrome PID 89142 remains present. No install, restart,
+  canary, materialization, completion control, or scheduler control has run.

@@ -58,6 +58,22 @@
   claims it. Version 5 permits reuse-only attachment and one model-menu open,
   but no launch, navigation, selection, or close. Install/canary requires a
   later zero-owner admission or separate close authority.
+- Selector inspection and repair: two named agent-browser attachments reused
+  PID 89142 without navigation or model selection and detached leave-open. The
+  live picker now requires compact -> `Show advanced options` -> `Model` for
+  GPT-5.6 Sol/Terra/Luna and GPT-5.5, with Light/Medium/High/Extra High under a
+  sibling `Effort` submenu. AuraCall now follows both nested paths, performs
+  family-exact matching, maps auto/instant to Terra/Luna, and keeps legacy
+  Thinking/Pro aliases compatible through Sol effort levels. Focused provider-
+  free validation passes 168 tests. A clean standalone full-suite rerun passes
+  307 files/2794 tests with 65 skipped; typecheck, build, lint, and plan audit
+  are green. Install and the sole canary remain stopped while the external
+  browser owner persists.
+- Closing admission: API PID 64314 is active/running with `NRestarts=0`, the
+  scheduler remains paused, active history jobs remain zero, and the target is
+  idle-waiting/pass 56 with error/next/force null. Exact external Chrome PID
+  89142 is unchanged; install, restart, canary, materialization, completion,
+  and scheduler effects remain zero.
 
 ## 2026-08-10 | Plan 0254 Provider-Free One-Canary Harness
 

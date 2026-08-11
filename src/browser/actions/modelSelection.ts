@@ -71,7 +71,45 @@ function withStageTimeout<T>(task: Promise<T>, timeoutMs: number, message: strin
   });
 }
 
-type ModelOptionKind = 'instant' | 'thinking' | 'pro' | null;
+type ModelOptionKind = 'instant' | 'thinking' | 'pro' | 'sol' | 'terra' | 'luna' | 'legacy' | null;
+
+type ModelPickerNavigationItem = {
+  text: string;
+  role: string | null;
+  expanded: string | null;
+};
+
+type ModelPickerNavigationAction = {
+  kind: 'open-advanced' | 'open-model';
+  index: number;
+};
+
+function chooseModelPickerNavigationAction(
+  items: readonly ModelPickerNavigationItem[],
+): ModelPickerNavigationAction | null {
+  const normalize = (value: string) =>
+    value
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  const advancedIndex = items.findIndex(
+    (item) =>
+      item.role === 'menuitem' &&
+      normalize(item.text).startsWith('show advanced options') &&
+      item.expanded !== 'true',
+  );
+  if (advancedIndex >= 0) {
+    return { kind: 'open-advanced', index: advancedIndex };
+  }
+  const modelIndex = items.findIndex(
+    (item) =>
+      item.role === 'menuitem' &&
+      normalize(item.text).startsWith('model ') &&
+      item.expanded !== 'true',
+  );
+  return modelIndex >= 0 ? { kind: 'open-model', index: modelIndex } : null;
+}
 
 function normalizeModelPickerText(value: string | null | undefined): string {
   if (!value) {
@@ -88,6 +126,18 @@ function classifyModelPickerOption(normalizedText: string, normalizedTestId = ''
   const text = normalizedText.trim();
   const testId = normalizedTestId.toLowerCase();
   const startsWith = (pattern: RegExp) => pattern.test(text);
+  if (text.includes('gpt 5 6 terra') || testId.includes('terra')) {
+    return 'terra';
+  }
+  if (text.includes('gpt 5 6 luna') || testId.includes('luna')) {
+    return 'luna';
+  }
+  if (text.includes('gpt 5 6 sol') || testId.includes('gpt-5-6-sol')) {
+    return 'sol';
+  }
+  if (text.includes('gpt 5 5') || testId.includes('gpt-5-5')) {
+    return 'legacy';
+  }
   const hasInstantTestId =
     testId.includes('instant') ||
     testId.includes('gpt-5-3') ||
@@ -126,7 +176,7 @@ function classifyModelPickerOption(normalizedText: string, normalizedTestId = ''
   if (text.includes('instant')) {
     return 'instant';
   }
-  if (text.includes('thinking') || text.includes('gpt 5 6 sol')) {
+  if (text.includes('thinking')) {
     return 'thinking';
   }
   if (text.includes(' pro') || text.endsWith('pro')) {
@@ -216,6 +266,12 @@ export function scoreModelPickerOptionForTest(
   return scoreModelPickerOption(targetModel, option);
 }
 
+export function chooseModelPickerNavigationActionForTest(
+  items: readonly ModelPickerNavigationItem[],
+): ModelPickerNavigationAction | null {
+  return chooseModelPickerNavigationAction(items);
+}
+
 /**
  * Builds the DOM expression that runs inside the ChatGPT tab to select a model.
  * The string is evaluated inside Chrome, so keep it self-contained and well-commented.
@@ -291,6 +347,18 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
     const classifyOption = (normalizedText, normalizedTestId) => {
       const text = normalizedText.trim();
       const testId = (normalizedTestId ?? '').toLowerCase();
+      if (text.includes('gpt 5 6 terra') || testId.includes('terra')) {
+        return 'terra';
+      }
+      if (text.includes('gpt 5 6 luna') || testId.includes('luna')) {
+        return 'luna';
+      }
+      if (text.includes('gpt 5 6 sol') || testId.includes('gpt-5-6-sol')) {
+        return 'sol';
+      }
+      if (text.includes('gpt 5 5') || testId.includes('gpt-5-5')) {
+        return 'legacy';
+      }
       const hasInstantTestId =
         testId.includes('instant') ||
         testId.includes('gpt-5-3') ||
@@ -369,6 +437,25 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
         return menus.flatMap((menu) => Array.from(menu.querySelectorAll(${menuItemLiteral})));
       }
       return Array.from(document.querySelectorAll(${menuItemLiteral}));
+    };
+    const findNavigationAction = () => {
+      const nodes = collectOptionNodes();
+      const advancedIndex = nodes.findIndex((node) => {
+        const text = normalizeText([node.textContent ?? '', node.getAttribute?.('aria-label') ?? ''].join(' '));
+        return node.getAttribute?.('role') === 'menuitem' &&
+          text.startsWith('show advanced options') &&
+          node.getAttribute('aria-expanded') !== 'true';
+      });
+      if (advancedIndex >= 0) {
+        return { kind: 'open-advanced', node: nodes[advancedIndex] };
+      }
+      const modelIndex = nodes.findIndex((node) => {
+        const text = normalizeText([node.textContent ?? '', node.getAttribute?.('aria-label') ?? ''].join(' '));
+        return node.getAttribute?.('role') === 'menuitem' &&
+          text.startsWith('model ') &&
+          node.getAttribute('aria-expanded') !== 'true';
+      });
+      return modelIndex >= 0 ? { kind: 'open-model', node: nodes[modelIndex] } : null;
     };
 
     const scoreOption = (normalizedText, testid) => {
@@ -472,8 +559,12 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
         const testid = option.getAttribute('data-testid') ?? '';
         const score = scoreOption(normalizedText, testid);
         const label = getOptionLabel(option);
+        const optionKind = classifyOption(normalizedText, testid);
+        if (!['sol', 'terra', 'luna', 'legacy', 'instant', 'thinking', 'pro'].includes(optionKind)) {
+          continue;
+        }
         if (!selected || score > selected.score) {
-          selected = { node: option, label, score, testid, normalizedText };
+          selected = { node: option, label, score, testid, normalizedText, optionKind };
         }
       }
       return selected;
@@ -531,13 +622,22 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
           dispatchClickSequence(match.node);
           // Submenus (e.g. "Legacy models") need a second pass to pick the actual model option.
           // Keep scanning once the submenu opens instead of treating the submenu click as a final switch.
-          const isSubmenu = (match.testid ?? '').toLowerCase().includes('submenu');
+          const isSubmenu =
+            (match.testid ?? '').toLowerCase().includes('submenu') ||
+            match.node.getAttribute?.('aria-expanded') !== null ||
+            match.normalizedText.startsWith('model ');
           if (isSubmenu) {
             setTimeout(attempt, REOPEN_INTERVAL_MS / 2);
             return;
           }
           // Verify via the checked menu item instead of the top button label, which is often generic.
           setTimeout(attempt, Math.max(160, INITIAL_WAIT_MS));
+          return;
+        }
+        const navigation = findNavigationAction();
+        if (navigation) {
+          dispatchClickSequence(navigation.node);
+          setTimeout(attempt, REOPEN_INTERVAL_MS / 2);
           return;
         }
         if (performance.now() - start > MAX_WAIT_MS) {
@@ -559,24 +659,31 @@ export function buildModelMatchersLiteralForTest(targetModel: string) {
 }
 
 function buildModelMatchersLiteral(targetModel: string): {
-  semanticTarget: 'instant' | 'thinking' | 'pro' | null;
+  semanticTarget: ModelOptionKind;
   labelTokens: string[];
   testIdTokens: string[];
 } {
   const base = targetModel.trim().toLowerCase();
   const labelTokens = new Set<string>();
   const testIdTokens = new Set<string>();
-  const semanticTarget =
-    base.includes(' pro') || base.endsWith('pro')
-      ? 'pro'
-      : base.includes('thinking') ||
-          base.includes('sol') ||
-          base.includes('medium') ||
-          base.includes('high')
-        ? 'thinking'
-        : base.includes('instant') || base.startsWith('gpt-') || base.includes('chatgpt')
-          ? 'instant'
-          : null;
+  const semanticTarget: ModelOptionKind = base.includes('terra')
+    ? 'terra'
+    : base.includes('luna')
+      ? 'luna'
+      : base.includes('sol')
+        ? 'sol'
+        : /(^|[^0-9])5[ .-]?5([^0-9]|$)/.test(base)
+          ? 'legacy'
+          : base.includes(' pro') || base.endsWith('pro')
+            ? 'pro'
+            : base.includes('thinking') ||
+                base.includes('sol') ||
+                base.includes('medium') ||
+                base.includes('high')
+              ? 'thinking'
+              : base.includes('instant') || base.startsWith('gpt-') || base.includes('chatgpt')
+                ? 'instant'
+                : null;
 
   const push = (value: string | null | undefined, set: Set<string>) => {
     const normalized = value?.trim();
@@ -711,7 +818,7 @@ function buildModelMatchersLiteral(targetModel: string): {
     testIdTokens.add('proresearch');
   }
   // Numeric variations (5.6 Sol ↔ 56 ↔ gpt-5-6-sol)
-  if (base.includes('5.6') || base.includes('5-6') || base.includes('56') || base.includes('sol')) {
+  if (base.includes('sol')) {
     push('5.6', labelTokens);
     push('gpt-5.6', labelTokens);
     push('gpt5.6', labelTokens);

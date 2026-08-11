@@ -145,17 +145,17 @@ describe('service registry manifest helpers', () => {
   });
 
   test('resolves chatgpt model aliases through the bundled manifest', () => {
-    expect(resolveBundledServiceModelLabels('chatgpt', 'gpt-5.2-thinking')).toEqual(['Thinking']);
-    expect(resolveBundledServiceModelLabels('chatgpt', 'gpt-5.6-sol')).toEqual(['Thinking']);
-    expect(resolveBundledServiceModelLabels('chatgpt', 'gpt-5.2')).toEqual(['Instant']);
-    expect(resolveBundledServiceModelLabels('chatgpt', 'gpt-5.2-pro')).toEqual(['Pro']);
-    expect(resolveBundledServiceModelLabels('chatgpt', 'sol pro')).toEqual(['Pro']);
+    expect(resolveBundledServiceModelLabels('chatgpt', 'gpt-5.2-thinking')).toEqual(['GPT-5.6 Sol']);
+    expect(resolveBundledServiceModelLabels('chatgpt', 'gpt-5.6-sol')).toEqual(['GPT-5.6 Sol']);
+    expect(resolveBundledServiceModelLabels('chatgpt', 'gpt-5.2')).toEqual(['GPT-5.6 Terra']);
+    expect(resolveBundledServiceModelLabels('chatgpt', 'gpt-5.2-pro')).toEqual(['GPT-5.6 Sol']);
+    expect(resolveBundledServiceModelLabels('chatgpt', 'sol pro')).toEqual(['GPT-5.6 Sol']);
   });
 
   test('requires bundled model labels for manifest-owned browser models', () => {
-    expect(requireBundledServiceModelLabel('chatgpt', 'gpt-5.2')).toBe('Instant');
-    expect(requireBundledServiceModelLabel('chatgpt', 'gpt-5.6-sol')).toBe('Thinking');
-    expect(requireBundledServiceModelLabel('chatgpt', 'gpt-5.1-pro')).toBe('Pro');
+    expect(requireBundledServiceModelLabel('chatgpt', 'gpt-5.2')).toBe('GPT-5.6 Terra');
+    expect(requireBundledServiceModelLabel('chatgpt', 'gpt-5.6-sol')).toBe('GPT-5.6 Sol');
+    expect(requireBundledServiceModelLabel('chatgpt', 'gpt-5.1-pro')).toBe('GPT-5.6 Sol');
     expect(requireBundledServiceModelLabel('gemini', 'gemini-3-pro')).toBe('Gemini 3 Pro');
     expect(requireBundledServiceModelLabel('grok', 'grok-4.1')).toBe('Expert');
   });
@@ -371,7 +371,7 @@ describe('service registry manifest helpers', () => {
   test('copies the bundled manifest into the writable registry', async () => {
     const registry = await ensureServicesRegistry();
     expect(registry.services.chatgpt?.models?.map((entry) => entry.label)).toEqual(
-      expect.arrayContaining(['Thinking', 'Instant', 'Pro']),
+      expect.arrayContaining(['GPT-5.6 Sol', 'GPT-5.6 Terra', 'GPT-5.6 Luna', 'GPT-5.5']),
     );
   });
 });

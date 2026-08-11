@@ -10,7 +10,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="MIT License"></a>
 </p>
 
-Aura-Call bundles your prompt and files so another AI can answer with real context. It speaks stable GPT Pro aliases, GPT-5.1 Codex (API-only), GPT-5.1, GPT-5.2 family models, GPT-5.6 Sol, Gemini 3 Pro, Claude Sonnet 4.5, Claude Opus 4.1, Grok 4.20, and more—and it can ask one or multiple models in a single run. Browser automation is available; use semantic ChatGPT selectors such as `chatgpt:instant`, `chatgpt:sol-high`, and `chatgpt:sol-pro`, or use `--browser-model-strategy current` to keep the active ChatGPT model. API remains the most reliable path, and `--copy` is an easy manual fallback.
+Aura-Call bundles your prompt and files so another AI can answer with real context. It speaks stable GPT Pro aliases, GPT-5.1 Codex (API-only), GPT-5.1, GPT-5.2 family models, GPT-5.6 Sol, Gemini 3 Pro, Claude Sonnet 4.5, Claude Opus 4.1, Grok 4.20, and more—and it can ask one or multiple models in a single run. Browser automation is available; the current ChatGPT picker exposes GPT-5.6 Sol, Terra, Luna, and legacy GPT-5.5. Use semantic selectors such as `chatgpt:sol-high`, `chatgpt:terra`, and `chatgpt:luna`, or use `--browser-model-strategy current` to keep the active ChatGPT model. API remains the most reliable path, and `--copy` is an easy manual fallback.
 
 ## Quick start
 
@@ -148,7 +148,7 @@ curl -s http://auracall.localhost/v1/response-batches \
 curl -s http://auracall.localhost/v1/tenant-pool-teams/ensure \
   -H "Authorization: Bearer <operator-key>" \
   -H "Content-Type: application/json" \
-  -d '{"teamId":"chatgpt-pro-pool","service":"chatgpt","projectName":"Shared Project","agentModelSelector":"chatgpt:pro-extended","members":[{"agentId":"chatgpt-pro-a","runtimeProfile":"wsl-chrome-1"},{"agentId":"chatgpt-pro-b","runtimeProfile":"wsl-chrome-2"}]}'
+  -d '{"teamId":"chatgpt-sol-pool","service":"chatgpt","projectName":"Shared Project","agentModelSelector":"chatgpt:sol-high","members":[{"agentId":"chatgpt-sol-a","runtimeProfile":"wsl-chrome-1"},{"agentId":"chatgpt-sol-b","runtimeProfile":"wsl-chrome-2"}]}'
 
 # Dispatch a batch through the tenant-pool team. AuraCall expands each child to
 # the next available member agent and records the selected tenant in batch status.
@@ -190,7 +190,7 @@ auracall run status <id> --json
 auracall handoff prepare \
   --source-provider chatgpt --source-profile default --source-ref "https://chatgpt.com/c/..." \
   --target-provider chatgpt --target-profile auracall-chatgpt-pro \
-  --target-model-selector chatgpt:pro-extended \
+  --target-model-selector chatgpt:sol-high \
   --source-context-json /path/to/context.json \
   --source-manifest-json /path/to/manifest.json \
   --source-materialization-job-json /path/to/history-materialization-job.json \
@@ -279,7 +279,7 @@ Current browser-mode default posture:
   `handoff.attachmentPackaging.enabled` and
   `handoff.attachmentPackaging.zipWhenFileCountExceeds` in config. For ChatGPT
   targets, pass
-  `--target-model-selector chatgpt:pro-extended` or another semantic selector
+  `--target-model-selector chatgpt:sol-high` or another semantic selector
   when the live submit path must select a specific model mode instead of
   inheriting the browser's current model. `auracall handoff status
   <handoff_id>` reads the packet ledger back by id, including event count,
@@ -448,7 +448,7 @@ Terminology note:
   `/v1/chat/completions`; agent metadata includes source/revision fields when
   available so clients can distinguish config and registry records.
   semantic provider selectors such as `chatgpt:sol-high` and
-  `chatgpt:pro-extended` include
+  `chatgpt:terra` include
   `metadata.kind="semantic_model_selector"` and `metadata.executionReady` so
   clients can distinguish execution-ready selectors from planned Gemini/Grok
   selectors.
@@ -1792,13 +1792,13 @@ npx -y auracall auracall-mcp
 | `-p, --prompt <text>` | Required prompt. |
 | `-f, --file <paths...>` | Attach files/dirs (globs + `!` excludes). |
 | `-e, --engine <api\|browser>` | Choose API or browser (browser is experimental). |
-| `-m, --model <name>` | Built-ins (`gpt-5.1-pro` default, `gpt-5-pro`, `gpt-5.1`, `gpt-5.1-codex`, `gpt-5.2`, `gpt-5.2-instant`, `gpt-5.2-pro`, `gpt-5.6-sol`, `gemini-3-pro`, `claude-4.5-sonnet`, `claude-4.1-opus`) plus any OpenRouter id (e.g., `minimax/minimax-m2`, `openai/gpt-4o-mini`). Browser ChatGPT also accepts semantic selectors such as `chatgpt:instant`, `chatgpt:sol-high`, `chatgpt:sol-extra-high`, and `chatgpt:sol-pro`. |
+| `-m, --model <name>` | Built-ins (`gpt-5.1-pro` default, `gpt-5-pro`, `gpt-5.1`, `gpt-5.1-codex`, `gpt-5.2`, `gpt-5.2-instant`, `gpt-5.2-pro`, `gpt-5.6-sol`, `gemini-3-pro`, `claude-4.5-sonnet`, `claude-4.1-opus`) plus any OpenRouter id (e.g., `minimax/minimax-m2`, `openai/gpt-4o-mini`). Browser ChatGPT also accepts `chatgpt:sol`, `chatgpt:terra`, `chatgpt:luna`, `chatgpt:gpt-5.5`, and effort aliases such as `chatgpt:sol-high`. `chatgpt:auto` maps to Terra and `chatgpt:instant` maps to Luna. Older raw browser base/Instant/Thinking/Pro labels map to Terra/Luna/Sol without changing API model ids. |
 | `--models <list>` | Comma-separated API models (mix built-ins and OpenRouter ids) for multi-model runs. |
 | `--base-url <url>` | Point API runs at LiteLLM/Azure/OpenRouter/etc. |
 | `--chatgpt-url <url>` | Target a ChatGPT workspace/folder (browser). |
 | `--browser-model-strategy <select\|current\|ignore>` | Control ChatGPT model selection in browser mode (current keeps the active model; ignore skips the picker). |
 | `--browser-manual-login` | Skip cookie copy; reuse a persistent automation profile and wait for manual ChatGPT login. |
-| `--browser-thinking-time <light\|standard\|extended\|heavy>` | Set ChatGPT thinking-time intensity (browser; Sol/Thinking/Pro models only). Prefer semantic selectors such as `--model chatgpt:sol-high`, `--model chatgpt:sol-extra-high`, or `--model chatgpt:pro-extended`; Standard/Extended alone only select the workbench depth and are not proof that the run used Pro. |
+| `--browser-thinking-time <light\|standard\|extended\|heavy>` | Set ChatGPT effort intensity for GPT-5.6 Sol in browser mode. The four AuraCall levels map to ChatGPT's Light, Medium, High, and Extra High choices. Prefer `--model chatgpt:sol-high` or `--model chatgpt:sol-extra-high`; legacy Thinking/Pro semantic aliases now resolve to the matching Sol effort lane because the current picker no longer exposes separate Thinking or Pro model families. |
 | `--browser-composer-tool <tool>` | Select a ChatGPT composer tool/add-on such as `web-search`, `canvas`, or `deep-research`. Deep Research is staged: AuraCall verifies the account tier, submits the prompt, waits for the provider plan, clicks only the Start CTA when available, records timed auto-starts, preserves review evidence in run metadata, and reads completed reports from the Deep Research iframe as Markdown, Word, and PDF conversation artifacts. |
 | `--browser-deep-research-plan-action <start\|edit>` | Control ChatGPT Deep Research after the provider plan appears. `start` accepts the plan; `edit` opens the plan editor before the timed auto-start window, keeps the managed browser open, and stores review evidence including the iframe/DOM edit target and passive screenshot path. |
 | `--browser-port <port>` | Force a fixed Chrome DevTools port (advanced/debugging). Normal WSL -> Windows launches default to auto-discovery instead. |

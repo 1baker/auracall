@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { resolveRunOptionsFromConfig } from '../src/cli/runOptions.js';
-import { estimateRequestTokens } from '../src/oracle/tokenEstimate.js';
 import { DEFAULT_MODEL, MODEL_CONFIGS } from '../src/oracle/config.js';
+import { estimateRequestTokens } from '../src/oracle/tokenEstimate.js';
 
 describe('resolveRunOptionsFromConfig', () => {
   const basePrompt = 'This prompt is comfortably above twenty characters.';
@@ -38,18 +38,21 @@ describe('resolveRunOptionsFromConfig', () => {
     });
     expect(resolvedEngine).toBe('browser');
     expect(runOptions.model).toBe('gpt-5.2-instant');
-    expect(browserModelSelection).toEqual({ desiredModel: 'Instant' });
+    expect(browserModelSelection).toEqual({ desiredModel: 'GPT-5.6 Luna' });
   });
 
-  it('preserves semantic ChatGPT Pro Extended intent for browser runs', () => {
+  it('maps the legacy ChatGPT Pro Extended intent to Sol High', () => {
     const { runOptions, resolvedEngine, browserModelSelection } = resolveRunOptionsFromConfig({
       prompt: basePrompt,
       model: 'chatgpt:pro-extended',
       engine: 'browser',
     });
     expect(resolvedEngine).toBe('browser');
-    expect(runOptions.model).toBe(DEFAULT_MODEL);
-    expect(browserModelSelection).toEqual({ desiredModel: 'Pro', thinkingTime: 'extended' });
+    expect(runOptions.model).toBe('gpt-5.6-sol');
+    expect(browserModelSelection).toEqual({
+      desiredModel: 'GPT-5.6 Sol',
+      thinkingTime: 'extended',
+    });
   });
 
   it('maps semantic ChatGPT Sol High to the Sol browser compatibility model', () => {
@@ -60,7 +63,10 @@ describe('resolveRunOptionsFromConfig', () => {
     });
     expect(resolvedEngine).toBe('browser');
     expect(runOptions.model).toBe('gpt-5.6-sol');
-    expect(browserModelSelection).toEqual({ desiredModel: 'Thinking', thinkingTime: 'extended' });
+    expect(browserModelSelection).toEqual({
+      desiredModel: 'GPT-5.6 Sol',
+      thinkingTime: 'extended',
+    });
   });
 
   it('uses config model when caller does not provide one', () => {
@@ -275,7 +281,11 @@ describe('estimateRequestTokens', () => {
       background: true,
       store: true,
     };
-    const estimate = estimateRequestTokens(request as unknown as Parameters<typeof estimateRequestTokens>[0], modelConfig, 10);
+    const estimate = estimateRequestTokens(
+      request as unknown as Parameters<typeof estimateRequestTokens>[0],
+      modelConfig,
+      10,
+    );
     // Rough sanity: base tokenizer on text parts should be > 0; buffer ensures > base.
     expect(estimate).toBeGreaterThan(10);
   });
@@ -286,7 +296,11 @@ describe('estimateRequestTokens', () => {
       instructions: 'a',
       input: [{ role: 'user', content: [{ type: 'input_text', text: 'b' }] }],
     };
-    const estimate = estimateRequestTokens(request as unknown as Parameters<typeof estimateRequestTokens>[0], modelConfig, 50);
+    const estimate = estimateRequestTokens(
+      request as unknown as Parameters<typeof estimateRequestTokens>[0],
+      modelConfig,
+      50,
+    );
     expect(estimate).toBeGreaterThanOrEqual(50);
   });
 });

@@ -59,8 +59,8 @@ export function resolveRunOptionsFromConfig({
     browserModelSelection
       ? resolveModelForChatgptSemanticSelection(browserModelSelection)
       : resolvedEngine === 'browser' && normalizedRequestedModels.length === 0
-      ? inferModelFromLabel(cliModelArg)
-      : resolveApiModel(cliModelArg);
+        ? inferModelFromLabel(cliModelArg)
+        : resolveApiModel(cliModelArg);
   // Browser engine maps legacy labels to current ChatGPT picker targets while semantic selectors carry durable intent.
   const resolvedModel = resolvedEngine === 'browser' ? normalizeChatGptModelForBrowser(inferredModel) : inferredModel;
   const isCodex = resolvedModel.startsWith('gpt-5.1-codex');
@@ -134,12 +134,11 @@ export function resolveRunOptionsFromConfig({
 
 function resolveModelForChatgptSemanticSelection(selection: ChatgptSemanticModelSelection): ModelName {
   switch (selection.desiredModel) {
-    case 'Pro':
-      return DEFAULT_MODEL;
-    case 'Thinking':
+    case 'GPT-5.6 Sol':
       return BROWSER_COMPAT_THINKING_MODEL;
-    case 'Auto':
-    case 'Instant':
+    case 'GPT-5.6 Terra':
+    case 'GPT-5.6 Luna':
+    case 'GPT-5.5':
       return BROWSER_COMPAT_INSTANT_MODEL;
   }
 }

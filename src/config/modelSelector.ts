@@ -1,7 +1,7 @@
 import type { ThinkingTimeLevel } from '../browser/types.js';
 
 export interface ChatgptSemanticModelSelection {
-  desiredModel: 'Auto' | 'Instant' | 'Thinking' | 'Pro';
+  desiredModel: 'GPT-5.6 Sol' | 'GPT-5.6 Terra' | 'GPT-5.6 Luna' | 'GPT-5.5';
   thinkingTime?: ThinkingTimeLevel;
 }
 
@@ -15,18 +15,27 @@ export interface SemanticModelSelectorDescriptor {
 const CHATGPT_SELECTOR_PREFIX = 'chatgpt:';
 
 export const SEMANTIC_MODEL_SELECTORS: readonly SemanticModelSelectorDescriptor[] = [
-  { id: 'chatgpt:auto', service: 'chatgpt', label: 'ChatGPT Auto', executionReady: true },
-  { id: 'chatgpt:instant', service: 'chatgpt', label: 'ChatGPT Instant', executionReady: true },
+  { id: 'chatgpt:auto', service: 'chatgpt', label: 'ChatGPT Auto (Terra)', executionReady: true },
+  {
+    id: 'chatgpt:instant',
+    service: 'chatgpt',
+    label: 'ChatGPT Instant (Luna)',
+    executionReady: true,
+  },
+  { id: 'chatgpt:sol', service: 'chatgpt', label: 'ChatGPT GPT-5.6 Sol', executionReady: true },
+  { id: 'chatgpt:terra', service: 'chatgpt', label: 'ChatGPT GPT-5.6 Terra', executionReady: true },
+  { id: 'chatgpt:luna', service: 'chatgpt', label: 'ChatGPT GPT-5.6 Luna', executionReady: true },
+  { id: 'chatgpt:gpt-5.5', service: 'chatgpt', label: 'ChatGPT GPT-5.5', executionReady: true },
   {
     id: 'chatgpt:thinking-standard',
     service: 'chatgpt',
-    label: 'ChatGPT Thinking Standard',
+    label: 'ChatGPT Thinking Standard (Sol Medium)',
     executionReady: true,
   },
   {
     id: 'chatgpt:thinking-extended',
     service: 'chatgpt',
-    label: 'ChatGPT Thinking Extended',
+    label: 'ChatGPT Thinking Extended (Sol High)',
     executionReady: true,
   },
   {
@@ -50,19 +59,19 @@ export const SEMANTIC_MODEL_SELECTORS: readonly SemanticModelSelectorDescriptor[
   {
     id: 'chatgpt:pro-standard',
     service: 'chatgpt',
-    label: 'ChatGPT Pro Standard',
+    label: 'ChatGPT Legacy Pro Standard (Sol Medium)',
     executionReady: true,
   },
   {
     id: 'chatgpt:pro-extended',
     service: 'chatgpt',
-    label: 'ChatGPT Pro Extended',
+    label: 'ChatGPT Legacy Pro Extended (Sol High)',
     executionReady: true,
   },
   {
     id: 'chatgpt:sol-pro',
     service: 'chatgpt',
-    label: 'ChatGPT Sol Pro',
+    label: 'ChatGPT Legacy Sol Pro (Sol Extra High)',
     executionReady: true,
   },
   { id: 'gemini:auto', service: 'gemini', label: 'Gemini Auto', executionReady: false },
@@ -86,30 +95,37 @@ export function resolveChatgptSemanticModelSelector(
 
   switch (token) {
     case 'auto':
-      return { desiredModel: 'Auto' };
+    case 'terra':
+    case 'gpt-5.6-terra':
+      return { desiredModel: 'GPT-5.6 Terra' };
     case 'instant':
-      return { desiredModel: 'Instant' };
+    case 'luna':
+    case 'gpt-5.6-luna':
+      return { desiredModel: 'GPT-5.6 Luna' };
     case 'thinking':
     case 'thinking-standard':
     case 'sol':
     case 'sol-medium':
     case 'gpt-5.6-sol':
-      return { desiredModel: 'Thinking', thinkingTime: 'standard' };
+      return { desiredModel: 'GPT-5.6 Sol', thinkingTime: 'standard' };
     case 'thinking-extended':
     case 'sol-high':
     case 'gpt-5.6-sol-high':
-      return { desiredModel: 'Thinking', thinkingTime: 'extended' };
+      return { desiredModel: 'GPT-5.6 Sol', thinkingTime: 'extended' };
     case 'sol-extra-high':
     case 'gpt-5.6-sol-extra-high':
-      return { desiredModel: 'Thinking', thinkingTime: 'heavy' };
+      return { desiredModel: 'GPT-5.6 Sol', thinkingTime: 'heavy' };
     case 'pro':
     case 'pro-standard':
-      return { desiredModel: 'Pro', thinkingTime: 'standard' };
+      return { desiredModel: 'GPT-5.6 Sol', thinkingTime: 'standard' };
     case 'pro-extended':
-      return { desiredModel: 'Pro', thinkingTime: 'extended' };
+      return { desiredModel: 'GPT-5.6 Sol', thinkingTime: 'extended' };
     case 'sol-pro':
     case 'gpt-5.6-sol-pro':
-      return { desiredModel: 'Pro' };
+      return { desiredModel: 'GPT-5.6 Sol', thinkingTime: 'heavy' };
+    case 'gpt-5.5':
+    case '5.5':
+      return { desiredModel: 'GPT-5.5' };
     default:
       return null;
   }

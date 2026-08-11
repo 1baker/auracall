@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import { buildBrowserConfig, mapModelToBrowserLabel, resolveBrowserModelLabel } from '../../src/cli/browserConfig.js';
+import {
+  buildBrowserConfig,
+  mapModelToBrowserLabel,
+  resolveBrowserModelLabel,
+} from '../../src/cli/browserConfig.js';
 
 describe('buildBrowserConfig', () => {
   afterEach(() => {
@@ -20,7 +24,7 @@ describe('buildBrowserConfig', () => {
       headless: undefined,
       keepBrowser: undefined,
       hideWindow: undefined,
-      desiredModel: 'Pro',
+      desiredModel: 'GPT-5.6 Sol',
       debug: undefined,
       allowCookieErrors: true,
     });
@@ -66,9 +70,9 @@ describe('buildBrowserConfig', () => {
   test('uses semantic ChatGPT selector metadata for desired model and thinking time', async () => {
     const config = await buildBrowserConfig({
       model: 'gpt-5.1-pro',
-      chatgptSemanticModelSelection: { desiredModel: 'Pro', thinkingTime: 'extended' },
+      chatgptSemanticModelSelection: { desiredModel: 'GPT-5.6 Sol', thinkingTime: 'extended' },
     });
-    expect(config.desiredModel).toBe('Pro');
+    expect(config.desiredModel).toBe('GPT-5.6 Sol');
     expect(config.thinkingTime).toBe('extended');
   });
 
@@ -76,9 +80,9 @@ describe('buildBrowserConfig', () => {
     const config = await buildBrowserConfig({
       model: 'gpt-5.1-pro',
       browserThinkingTime: 'standard',
-      chatgptSemanticModelSelection: { desiredModel: 'Pro', thinkingTime: 'extended' },
+      chatgptSemanticModelSelection: { desiredModel: 'GPT-5.6 Sol', thinkingTime: 'extended' },
     });
-    expect(config.desiredModel).toBe('Pro');
+    expect(config.desiredModel).toBe('GPT-5.6 Sol');
     expect(config.thinkingTime).toBe('standard');
   });
 
@@ -117,7 +121,7 @@ describe('buildBrowserConfig', () => {
       keepBrowser: true,
       composerTool: 'web-search',
       deepResearchPlanAction: 'edit',
-      desiredModel: 'Instant',
+      desiredModel: 'GPT-5.6 Terra',
       debug: true,
       allowCookieErrors: true,
     });
@@ -128,7 +132,7 @@ describe('buildBrowserConfig', () => {
       model: 'gpt-5.2-pro',
       browserModelLabel: 'Instant',
     });
-    expect(config.desiredModel).toBe('Pro');
+    expect(config.desiredModel).toBe('GPT-5.6 Sol');
   });
 
   test('falls back to canonical label when override matches base model', async () => {
@@ -136,7 +140,7 @@ describe('buildBrowserConfig', () => {
       model: 'gpt-5.1',
       browserModelLabel: 'gpt-5.1',
     });
-    expect(config.desiredModel).toBe('Instant');
+    expect(config.desiredModel).toBe('GPT-5.6 Terra');
   });
 
   test('maps thinking Gemini model to thinking label', async () => {
@@ -147,11 +151,11 @@ describe('buildBrowserConfig', () => {
   });
 
   test('resolves browser picker labels from the bundled services manifest', () => {
-    expect(mapModelToBrowserLabel('gpt-5.2-thinking')).toBe('Thinking');
-    expect(mapModelToBrowserLabel('gpt-5.2')).toBe('Instant');
-    expect(mapModelToBrowserLabel('gpt-5.2-pro')).toBe('Pro');
-    expect(mapModelToBrowserLabel('gpt-5.1')).toBe('Instant');
-    expect(mapModelToBrowserLabel('gpt-5-pro')).toBe('Pro');
+    expect(mapModelToBrowserLabel('gpt-5.2-thinking')).toBe('GPT-5.6 Sol');
+    expect(mapModelToBrowserLabel('gpt-5.2')).toBe('GPT-5.6 Terra');
+    expect(mapModelToBrowserLabel('gpt-5.2-pro')).toBe('GPT-5.6 Sol');
+    expect(mapModelToBrowserLabel('gpt-5.1')).toBe('GPT-5.6 Terra');
+    expect(mapModelToBrowserLabel('gpt-5-pro')).toBe('GPT-5.6 Sol');
     expect(mapModelToBrowserLabel('gemini-3-pro')).toBe('Gemini 3 Pro');
     expect(mapModelToBrowserLabel('grok-4.1')).toBe('Expert');
   });
@@ -176,7 +180,7 @@ describe('buildBrowserConfig', () => {
       model: 'gpt-5.1',
       browserModelLabel: '  ChatGPT 5.1 Instant  ',
     });
-    expect(config.desiredModel).toBe('Instant');
+    expect(config.desiredModel).toBe('GPT-5.6 Terra');
   });
 
   test('parses remoteChrome host targets', async () => {
@@ -204,13 +208,12 @@ describe('buildBrowserConfig', () => {
     ).rejects.toThrow(/http/i);
   });
 
-  test('rejects temporary chat URLs when targeting Pro', async () => {
-    await expect(
-      buildBrowserConfig({
-        model: 'gpt-5.2-pro',
-        chatgptUrl: 'https://chatgpt.com/?temporary-chat=true',
-      }),
-    ).rejects.toThrow(/Temporary Chat/i);
+  test('maps a legacy Pro model to current Sol on temporary chats', async () => {
+    const config = await buildBrowserConfig({
+      model: 'gpt-5.2-pro',
+      chatgptUrl: 'https://chatgpt.com/?temporary-chat=true',
+    });
+    expect(config.desiredModel).toBe('GPT-5.6 Sol');
   });
 
   test('allows temporary chat URLs when model strategy keeps current selection', async () => {
@@ -229,7 +232,7 @@ describe('buildBrowserConfig', () => {
       chatgptUrl: 'https://chatgpt.com/?temporary-chat=true',
     });
     expect(config.url).toBe('https://chatgpt.com/?temporary-chat=true');
-    expect(config.desiredModel).toBe('Instant');
+    expect(config.desiredModel).toBe('GPT-5.6 Terra');
   });
 
   test('accepts IPv6 remoteChrome targets wrapped in brackets', async () => {
@@ -273,11 +276,14 @@ describe('buildBrowserConfig', () => {
     const config = await buildBrowserConfig({
       model: 'grok-4.1',
       browserChromePath: '/mnt/c/Program Files/Google/Chrome/Application/chrome.exe',
-      browserCookiePath: '/mnt/c/Users/ecoch/AppData/Local/Google/Chrome/User Data/Default/Network/Cookies',
+      browserCookiePath:
+        '/mnt/c/Users/ecoch/AppData/Local/Google/Chrome/User Data/Default/Network/Cookies',
       browserWslChrome: 'windows',
     });
 
-    expect(config.managedProfileRoot).toBe('/mnt/c/Users/ecoch/AppData/Local/AuraCall/browser-profiles');
+    expect(config.managedProfileRoot).toBe(
+      '/mnt/c/Users/ecoch/AppData/Local/AuraCall/browser-profiles',
+    );
     expect(config.manualLoginProfileDir).toBe(
       '/mnt/c/Users/ecoch/AppData/Local/AuraCall/browser-profiles/default/grok',
     );
@@ -286,12 +292,12 @@ describe('buildBrowserConfig', () => {
 
 describe('resolveBrowserModelLabel', () => {
   test('returns canonical ChatGPT label when CLI value matches API model', () => {
-    expect(resolveBrowserModelLabel('gpt-5.2-pro', 'gpt-5.2-pro')).toBe('Pro');
-    expect(resolveBrowserModelLabel('GPT-5.1', 'gpt-5.1')).toBe('Instant');
+    expect(resolveBrowserModelLabel('gpt-5.2-pro', 'gpt-5.2-pro')).toBe('GPT-5.6 Sol');
+    expect(resolveBrowserModelLabel('GPT-5.1', 'gpt-5.1')).toBe('GPT-5.6 Terra');
   });
 
   test('falls back to canonical label when input is empty', () => {
-    expect(resolveBrowserModelLabel('', 'gpt-5.1')).toBe('Instant');
+    expect(resolveBrowserModelLabel('', 'gpt-5.1')).toBe('GPT-5.6 Terra');
   });
 
   test('preserves descriptive labels to target alternate picker entries', () => {
@@ -299,12 +305,14 @@ describe('resolveBrowserModelLabel', () => {
   });
 
   test('supports undefined or whitespace-only input', () => {
-    expect(resolveBrowserModelLabel(undefined, 'gpt-5.2-pro')).toBe('Pro');
-    expect(resolveBrowserModelLabel(undefined, 'gpt-5.2-instant')).toBe('Instant');
-    expect(resolveBrowserModelLabel('   ', 'gpt-5.1')).toBe('Instant');
+    expect(resolveBrowserModelLabel(undefined, 'gpt-5.2-pro')).toBe('GPT-5.6 Sol');
+    expect(resolveBrowserModelLabel(undefined, 'gpt-5.2-instant')).toBe('GPT-5.6 Luna');
+    expect(resolveBrowserModelLabel('   ', 'gpt-5.1')).toBe('GPT-5.6 Terra');
   });
 
   test('trims descriptive labels before returning them', () => {
-    expect(resolveBrowserModelLabel('  ChatGPT 5.1 Thinking ', 'gpt-5.1')).toBe('ChatGPT 5.1 Thinking');
+    expect(resolveBrowserModelLabel('  ChatGPT 5.1 Thinking ', 'gpt-5.1')).toBe(
+      'ChatGPT 5.1 Thinking',
+    );
   });
 });

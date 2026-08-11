@@ -32,6 +32,9 @@ describe('browser thinking-time selection expression', () => {
     expect(expression).toContain('medium');
     expect(expression).toContain('findSelectedLevelPill');
     expect(expression).toContain('button.__composer-pill, .__composer-pill-composite button');
+    expect(expression).toContain('show advanced options');
+    expect(expression).toContain("text.startsWith('effort ')");
+    expect(expression).toContain("getAttribute('aria-expanded')");
     expect(expression).toContain('clientX');
     expect(expression).toContain('clientY');
   });

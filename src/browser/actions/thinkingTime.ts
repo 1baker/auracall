@@ -214,9 +214,13 @@ function buildThinkingTimeExpression(level: ThinkingTimeLevel): string {
 
           // GPT-5.6 Sol surfaces can label the same control by reasoning level.
           if (
+            aria.includes('sol') ||
+            aria.includes('light') ||
             aria.includes('medium') ||
             aria.includes('high') ||
             aria.includes('extra high') ||
+            text.includes('sol') ||
+            text.includes('light') ||
             text.includes('medium') ||
             text.includes('high') ||
             text.includes('extra high')
@@ -252,6 +256,8 @@ function buildThinkingTimeExpression(level: ThinkingTimeLevel): string {
       let lastOpenAttemptAt = performance.now();
       let configureOpened = false;
       let depthComboOpened = false;
+      let advancedOpened = false;
+      let effortOpened = false;
 
       const findMenu = () => {
         const menus = document.querySelectorAll(THINKING_MENU_CONTAINER_SELECTOR + ', [role="group"]');
@@ -273,6 +279,14 @@ function buildThinkingTimeExpression(level: ThinkingTimeLevel): string {
           if (text.includes('instant') && text.includes('medium') && text.includes('high')) {
             return menu;
           }
+          if (
+            text.includes('light') &&
+            text.includes('medium') &&
+            text.includes('high') &&
+            text.includes('extra high')
+          ) {
+            return menu;
+          }
         }
         return null;
       };
@@ -280,6 +294,20 @@ function buildThinkingTimeExpression(level: ThinkingTimeLevel): string {
       const findConfigureNode = () => Array.from(document.querySelectorAll(MENU_ITEM_SELECTOR + ', button'))
         .filter(visible)
         .find((node) => normalize([node.textContent ?? '', node.getAttribute?.('aria-label') ?? ''].join(' ')).includes('configure'));
+
+      const findAdvancedNode = () => Array.from(document.querySelectorAll(MENU_ITEM_SELECTOR))
+        .filter(visible)
+        .find((node) => {
+          const text = normalize([node.textContent ?? '', node.getAttribute?.('aria-label') ?? ''].join(' '));
+          return text.startsWith('show advanced options') && node.getAttribute('aria-expanded') !== 'true';
+        });
+
+      const findEffortNode = () => Array.from(document.querySelectorAll(MENU_ITEM_SELECTOR))
+        .filter(visible)
+        .find((node) => {
+          const text = normalize([node.textContent ?? '', node.getAttribute?.('aria-label') ?? ''].join(' '));
+          return text.startsWith('effort ') && node.getAttribute('aria-expanded') !== 'true';
+        });
 
       const findDialog = () => Array.from(document.querySelectorAll('[role="dialog"], [data-radix-dialog-content], div[aria-modal="true"]'))
         .filter(visible)
@@ -387,6 +415,26 @@ function buildThinkingTimeExpression(level: ThinkingTimeLevel): string {
               setTimeout(attempt, 150);
               return true;
             }
+          }
+        }
+
+        if (!advancedOpened) {
+          const advancedNode = findAdvancedNode();
+          if (advancedNode) {
+            dispatchClickSequence(advancedNode);
+            advancedOpened = true;
+            setTimeout(attempt, 150);
+            return true;
+          }
+        }
+
+        if (!effortOpened) {
+          const effortNode = findEffortNode();
+          if (effortNode) {
+            dispatchClickSequence(effortNode);
+            effortOpened = true;
+            setTimeout(attempt, 150);
+            return true;
           }
         }
 

@@ -666,7 +666,7 @@ program
   .option('-s, --slug <words>', 'Custom session slug (3-5 words).')
   .option(
     '-m, --model <model>',
-    'Model to target (API default: gpt-5.1-pro stable alias). Browser ChatGPT runs also support semantic selectors like chatgpt:instant, chatgpt:thinking-extended, and chatgpt:pro-extended.',
+    'Model to target (API default: gpt-5.1-pro stable alias). Browser ChatGPT runs also support current semantic selectors like chatgpt:sol-high, chatgpt:terra, and chatgpt:luna.',
     normalizeModelOption,
   )
   .addOption(

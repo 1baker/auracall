@@ -2,10 +2,13 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { BrowserPassiveObservation, BrowserRunOptions } from '../src/browser/types.js';
 import { setAuracallHomeDirOverrideForTest } from '../src/auracallHome.js';
+import type { BrowserPassiveObservation, BrowserRunOptions } from '../src/browser/types.js';
 import { createConfiguredStoredStepExecutor } from '../src/runtime/configuredExecutor.js';
-import { readLiveRuntimeRunServiceState, resetLiveRuntimeRunServiceStateRegistryForTests } from '../src/runtime/liveServiceStateRegistry.js';
+import {
+  readLiveRuntimeRunServiceState,
+  resetLiveRuntimeRunServiceStateRegistryForTests,
+} from '../src/runtime/liveServiceStateRegistry.js';
 import { AURACALL_STEP_OUTPUT_CONTRACT_VERSION } from '../src/runtime/stepOutputContract.js';
 
 describe('configured stored-step executor', () => {
@@ -213,7 +216,9 @@ describe('configured stored-step executor', () => {
 
     expect(runBrowserModeImpl).toHaveBeenCalledTimes(1);
     const options = capturedOptions[0];
-    expect(options?.prompt).toContain('The full AuraCall request is attached as auracall-request.txt.');
+    expect(options?.prompt).toContain(
+      'The full AuraCall request is attached as auracall-request.txt.',
+    );
     expect(options?.prompt).toContain('Return exactly one valid JSON object');
     expect(options?.prompt.length).toBeLessThan(1000);
     expect(options?.attachments).toHaveLength(1);
@@ -446,8 +451,9 @@ describe('configured stored-step executor', () => {
     });
 
     expect(runBrowserModeImpl).toHaveBeenCalledTimes(1);
-    const browserOptions = (runBrowserModeImpl as unknown as { mock: { calls: Array<[{ prompt: string }]> } }).mock
-      .calls[0]?.[0];
+    const browserOptions = (
+      runBrowserModeImpl as unknown as { mock: { calls: Array<[{ prompt: string }]> } }
+    ).mock.calls[0]?.[0];
     expect(browserOptions?.prompt).toContain(`version "${AURACALL_STEP_OUTPUT_CONTRACT_VERSION}"`);
     expect(browserOptions?.prompt).toContain('User assignment:\nUse the contract.');
     expect(result?.output).toMatchObject({
@@ -606,13 +612,15 @@ describe('configured stored-step executor', () => {
   });
 
   it('publishes transient Gemini live thinking state while the browser-backed executor is in flight', async () => {
-    let resolveGeminiRun: ((value: {
-      answerText: string;
-      answerMarkdown: string;
-      tookMs: number;
-      answerTokens: number;
-      answerChars: number;
-    }) => void) | null = null;
+    let resolveGeminiRun:
+      | ((value: {
+          answerText: string;
+          answerMarkdown: string;
+          tookMs: number;
+          answerTokens: number;
+          answerChars: number;
+        }) => void)
+      | null = null;
     const runGeminiBrowserModeImpl = vi.fn(
       () =>
         new Promise<{
@@ -717,13 +725,15 @@ describe('configured stored-step executor', () => {
   });
 
   it('publishes transient Grok live thinking state while the browser-backed executor is in flight', async () => {
-    let resolveGrokRun: ((value: {
-      answerText: string;
-      answerMarkdown: string;
-      tookMs: number;
-      answerTokens: number;
-      answerChars: number;
-    }) => void) | null = null;
+    let resolveGrokRun:
+      | ((value: {
+          answerText: string;
+          answerMarkdown: string;
+          tookMs: number;
+          answerTokens: number;
+          answerChars: number;
+        }) => void)
+      | null = null;
     const runBrowserModeImpl = vi.fn(
       () =>
         new Promise<{
@@ -956,7 +966,8 @@ describe('configured stored-step executor', () => {
                 email: 'consult@polymerconsultinggroup.com',
                 accountLevel: 'Pro',
               }),
-              configuredServiceAccountId: 'service-account:chatgpt:consult@polymerconsultinggroup.com',
+              configuredServiceAccountId:
+                'service-account:chatgpt:consult@polymerconsultinggroup.com',
             }),
           }),
         }),
@@ -1471,7 +1482,7 @@ describe('configured stored-step executor', () => {
         config: expect.objectContaining({
           target: 'chatgpt',
           selectedAgentId: 'pro-researcher',
-          desiredModel: 'Pro',
+          desiredModel: 'GPT-5.6 Sol',
           thinkingTime: 'extended',
           projectId: 'proj_semantic',
           chatgptUrl: 'https://chatgpt.com/g/proj_semantic/project',
@@ -1485,7 +1496,7 @@ describe('configured stored-step executor', () => {
       agentId: 'pro-researcher',
       projectId: 'proj_semantic',
       configuredUrl: 'https://chatgpt.com/g/proj_semantic/project',
-      desiredModel: 'Pro',
+      desiredModel: 'GPT-5.6 Sol',
       modelSelector: 'chatgpt:pro-extended',
       thinkingTime: 'extended',
     });
@@ -1574,7 +1585,7 @@ describe('configured stored-step executor', () => {
           target: 'chatgpt',
           auracallProfileName: 'default',
           selectedAgentId: 'registry-pro-researcher',
-          desiredModel: 'Pro',
+          desiredModel: 'GPT-5.6 Sol',
           thinkingTime: 'standard',
           projectId: 'proj_registry',
           chatgptUrl: 'https://chatgpt.com/g/proj_registry/project',
@@ -1697,22 +1708,30 @@ describe('configured stored-step executor', () => {
     );
     expect(runBrowserModeImpl).toHaveBeenCalledWith(
       expect.objectContaining({
-        prompt: expect.stringContaining('Create a downloadable/workspace file artifact named exactly legacy_readout.json.'),
+        prompt: expect.stringContaining(
+          'Create a downloadable/workspace file artifact named exactly legacy_readout.json.',
+        ),
       }),
     );
     expect(runBrowserModeImpl).toHaveBeenCalledWith(
       expect.objectContaining({
-        prompt: expect.stringContaining('write the requested output to /mnt/data/legacy_readout.json'),
+        prompt: expect.stringContaining(
+          'write the requested output to /mnt/data/legacy_readout.json',
+        ),
       }),
     );
     expect(runBrowserModeImpl).toHaveBeenCalledWith(
       expect.objectContaining({
-        prompt: expect.stringContaining('[legacy_readout.json](sandbox:/mnt/data/legacy_readout.json)'),
+        prompt: expect.stringContaining(
+          '[legacy_readout.json](sandbox:/mnt/data/legacy_readout.json)',
+        ),
       }),
     );
     expect(runBrowserModeImpl).toHaveBeenCalledWith(
       expect.objectContaining({
-        prompt: expect.stringContaining('Do not reply that legacy_readout.json is ready until the file artifact exists'),
+        prompt: expect.stringContaining(
+          'Do not reply that legacy_readout.json is ready until the file artifact exists',
+        ),
       }),
     );
     expect(result?.output?.artifacts).toEqual([
@@ -1818,37 +1837,39 @@ describe('configured stored-step executor', () => {
       },
     );
 
-    await expect(executeStoredRunStep?.({
-      record: {
-        runId: 'teamrun_registry_artifact_missing_1',
-        revision: 1,
-        bundle: {
-          run: {
-            id: 'teamrun_registry_artifact_missing_1',
-          },
-        },
-      } as never,
-      step: {
-        id: 'teamrun_registry_artifact_missing_1:step:1',
-        agentId: 'registry-pro-researcher',
-        runtimeProfileId: null,
-        browserProfileId: null,
-        service: null,
-        input: {
-          prompt: 'Create legacy_readout.json and reply when ready.',
-          artifacts: [],
-          structuredData: {
-            metadata: {
-              outputContract: {
-                mode: 'chatgpt_workspace_artifact',
-                artifactFileName: 'legacy_readout.json',
-              },
+    await expect(
+      executeStoredRunStep?.({
+        record: {
+          runId: 'teamrun_registry_artifact_missing_1',
+          revision: 1,
+          bundle: {
+            run: {
+              id: 'teamrun_registry_artifact_missing_1',
             },
           },
-          notes: [],
-        },
-      } as never,
-    })).rejects.toThrow(/completed without required artifact legacy_readout\.json/);
+        } as never,
+        step: {
+          id: 'teamrun_registry_artifact_missing_1:step:1',
+          agentId: 'registry-pro-researcher',
+          runtimeProfileId: null,
+          browserProfileId: null,
+          service: null,
+          input: {
+            prompt: 'Create legacy_readout.json and reply when ready.',
+            artifacts: [],
+            structuredData: {
+              metadata: {
+                outputContract: {
+                  mode: 'chatgpt_workspace_artifact',
+                  artifactFileName: 'legacy_readout.json',
+                },
+              },
+            },
+            notes: [],
+          },
+        } as never,
+      }),
+    ).rejects.toThrow(/completed without required artifact legacy_readout\.json/);
   });
 
   it('retries once in the same ChatGPT conversation when a required artifact reply is status-only', async () => {
@@ -1974,15 +1995,20 @@ describe('configured stored-step executor', () => {
     });
 
     expect(runBrowserModeImpl).toHaveBeenCalledTimes(2);
-    expect(runBrowserModeImpl).toHaveBeenNthCalledWith(2, expect.objectContaining({
-      prompt: expect.stringContaining('Your previous reply did not provide a downloadable legacy_readout.json artifact.'),
-      attachments: [],
-      config: expect.objectContaining({
-        conversationId: 'mock-registry-artifact-retry',
-        url: 'https://chatgpt.com/g/proj_registry/c/mock-registry-artifact-retry',
-        chatgptUrl: 'https://chatgpt.com/g/proj_registry/c/mock-registry-artifact-retry',
+    expect(runBrowserModeImpl).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        prompt: expect.stringContaining(
+          'Your previous reply did not provide a downloadable legacy_readout.json artifact.',
+        ),
+        attachments: [],
+        config: expect.objectContaining({
+          conversationId: 'mock-registry-artifact-retry',
+          url: 'https://chatgpt.com/g/proj_registry/c/mock-registry-artifact-retry',
+          chatgptUrl: 'https://chatgpt.com/g/proj_registry/c/mock-registry-artifact-retry',
+        }),
       }),
-    }));
+    );
     expect(browserResponseArtifactMaterializer).toHaveBeenCalledTimes(2);
     expect(result?.output?.artifacts).toEqual([
       {
@@ -1993,7 +2019,9 @@ describe('configured stored-step executor', () => {
         uri: null,
       },
     ]);
-    expect(result?.output?.notes).toContain('browser response artifact correction: retrying once in the same ChatGPT conversation');
+    expect(result?.output?.notes).toContain(
+      'browser response artifact correction: retrying once in the same ChatGPT conversation',
+    );
     expect(result?.output?.summary).toContain('legacy_readout.json');
   });
 
@@ -2073,7 +2101,9 @@ describe('configured stored-step executor', () => {
         }),
       }),
     );
-    const callOptions = runBrowserModeImpl.mock.calls.at(0)?.[0] as { config?: { thinkingTime?: string } } | undefined;
+    const callOptions = runBrowserModeImpl.mock.calls.at(0)?.[0] as
+      | { config?: { thinkingTime?: string } }
+      | undefined;
     expect(callOptions?.config?.thinkingTime).toBeUndefined();
   });
 

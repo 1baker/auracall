@@ -29,7 +29,9 @@ afterEach(async () => {
 
 describe('ChatGPT llm service', () => {
   it('skips model switching for ChatGPT image media runs before selecting Create image', async () => {
-    const { ChatgptService } = await import('../../src/browser/llmService/providers/chatgptService.js');
+    const { ChatgptService } = await import(
+      '../../src/browser/llmService/providers/chatgptService.js'
+    );
     const service = ChatgptService.create({
       browser: {
         target: 'chatgpt',
@@ -57,7 +59,9 @@ describe('ChatGPT llm service', () => {
 
   it('passes configured account identity into ChatGPT browser runs', async () => {
     runBrowserMode.mockClear();
-    const { ChatgptService } = await import('../../src/browser/llmService/providers/chatgptService.js');
+    const { ChatgptService } = await import(
+      '../../src/browser/llmService/providers/chatgptService.js'
+    );
     const service = ChatgptService.create({
       auracallProfile: 'wsl-chrome-2',
       services: {
@@ -88,7 +92,8 @@ describe('ChatGPT llm service', () => {
                 email: 'consult@polymerconsultinggroup.com',
                 accountLevel: 'Pro',
               }),
-              configuredServiceAccountId: 'service-account:chatgpt:consult@polymerconsultinggroup.com',
+              configuredServiceAccountId:
+                'service-account:chatgpt:consult@polymerconsultinggroup.com',
             }),
           }),
         }),
@@ -97,7 +102,9 @@ describe('ChatGPT llm service', () => {
   });
 
   it('passes prompt attachments into ChatGPT browser runs', async () => {
-    const { ChatgptService } = await import('../../src/browser/llmService/providers/chatgptService.js');
+    const { ChatgptService } = await import(
+      '../../src/browser/llmService/providers/chatgptService.js'
+    );
     const service = ChatgptService.create({
       browser: {
         target: 'chatgpt',
@@ -221,7 +228,7 @@ describe('ChatGPT llm service', () => {
           target: 'chatgpt',
           conversationId: 'target-chatgpt-handoff',
           chatgptUrl: 'https://chatgpt.com/c/target-chatgpt-handoff',
-          desiredModel: 'Pro',
+          desiredModel: 'GPT-5.6 Sol',
           thinkingTime: 'extended',
           modelStrategy: 'select',
         }),
@@ -274,9 +281,7 @@ function fixtureConfig(): Record<string, unknown> {
   };
 }
 
-function manifestItemFixture(
-  overrides: Partial<{ id: string; localPath: string | null }> = {},
-): {
+function manifestItemFixture(overrides: Partial<{ id: string; localPath: string | null }> = {}): {
   id: string;
   kind: 'file';
   title: string;
@@ -293,7 +298,9 @@ function manifestItemFixture(
     id: overrides.id ?? 'selected',
     kind: 'file',
     title: 'Selected file',
-    localPath: Object.hasOwn(overrides, 'localPath') ? (overrides.localPath ?? null) : '/tmp/selected.txt',
+    localPath: Object.hasOwn(overrides, 'localPath')
+      ? (overrides.localPath ?? null)
+      : '/tmp/selected.txt',
     archiveItemId: null,
     sourceRef: null,
     mimeType: 'text/plain',

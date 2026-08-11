@@ -15,8 +15,10 @@ Lane: P01
   and exact cleanup. Model selection, prompts, materialization,
   completion/scheduler control, retry, and wider profiles remain excluded.
   Admission found a pre-existing externally owned exact-profile browser, so the
-  current step is reuse-only agent-browser inspection with no launch,
-  navigation, or close; install/canary waits for fresh zero-owner admission.
+  inspection proved the nested Advanced -> Model/Effort structure and the
+  provider-free selector repair is green. The exact browser remains externally
+  owned, so install/canary still waits for fresh zero-owner admission; no
+  navigation, model selection, prompt, materialization, or close ran.
 
 - Closed provider-free context-preflight abort and receipt-envelope repair:
   [docs/dev/plans/0255-2026-08-10-context-preflight-abort-and-receipt-envelope-repair.md](docs/dev/plans/0255-2026-08-10-context-preflight-abort-and-receipt-envelope-repair.md)

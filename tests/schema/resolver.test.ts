@@ -1,18 +1,18 @@
-import { describe, it, expect, vi } from 'vitest';
-import { resolveConfig } from '../../src/schema/resolver.js';
+import { describe, expect, it, vi } from 'vitest';
 import { projectConfigModel } from '../../src/config/model.js';
 import * as configModule from '../../src/config.js';
+import { resolveConfig } from '../../src/schema/resolver.js';
 
 describe('Config Resolver', () => {
   it('should resolve default values when no config/cli provided', async () => {
     vi.spyOn(configModule, 'loadUserConfig').mockResolvedValue({
       config: { model: 'gpt-5.1-pro', browser: {} },
       path: '/tmp/config.json',
-      loaded: false
+      loaded: false,
     });
 
     const result = await resolveConfig({});
-    
+
     expect(result.model).toBe('gpt-5.1-pro');
     expect(result.browser.headless).toBe(undefined);
   });
@@ -30,7 +30,7 @@ describe('Config Resolver', () => {
     expect(result.model).toBe('gpt-5.2-instant');
   });
 
-  it('should resolve semantic ChatGPT Pro Extended selector to the stable Pro compatibility model', async () => {
+  it('should resolve legacy ChatGPT Pro Extended intent to the current Sol compatibility model', async () => {
     vi.spyOn(configModule, 'loadUserConfig').mockResolvedValue({
       config: { browser: {} } as any,
       path: '/tmp/config.json',
@@ -40,7 +40,7 @@ describe('Config Resolver', () => {
     const result = await resolveConfig({ engine: 'browser', model: 'chatgpt:pro-extended' });
 
     expect(result.engine).toBe('browser');
-    expect(result.model).toBe('gpt-5.1-pro');
+    expect(result.model).toBe('gpt-5.6-sol');
   });
 
   it('should resolve semantic ChatGPT Sol High selector to the Sol compatibility model', async () => {
@@ -60,11 +60,11 @@ describe('Config Resolver', () => {
     vi.spyOn(configModule, 'loadUserConfig').mockResolvedValue({
       config: { model: 'gpt-4', browser: { headless: true } },
       path: '/tmp/config.json',
-      loaded: true
+      loaded: true,
     });
 
     const result = await resolveConfig({});
-    
+
     expect(result.model).toBe('gpt-4');
     expect(result.browser.headless).toBe(true);
   });
@@ -104,16 +104,16 @@ describe('Config Resolver', () => {
     vi.spyOn(configModule, 'loadUserConfig').mockResolvedValue({
       config: { model: 'gpt-4', browser: { headless: true } },
       path: '/tmp/config.json',
-      loaded: true
+      loaded: true,
     });
 
     const cliOptions = {
       browserHeadless: false,
-      model: 'gpt-5-pro'
+      model: 'gpt-5-pro',
     };
-    
+
     const result = await resolveConfig(cliOptions);
-    
+
     expect(result.model).toBe('gpt-5-pro');
     expect(result.browser.headless).toBe(false);
   });
@@ -122,13 +122,13 @@ describe('Config Resolver', () => {
     vi.spyOn(configModule, 'loadUserConfig').mockResolvedValue({
       config: { model: 'gpt-5.2-pro', browser: { projectId: 'CONFIG_ID' } },
       path: '/tmp/config.json',
-      loaded: true
+      loaded: true,
     });
 
     const cliOptions = {
-      projectId: 'CLI_ID'
+      projectId: 'CLI_ID',
     };
-    
+
     const result = await resolveConfig(cliOptions);
 
     expect(result.browser.projectId).toBe('CLI_ID');
@@ -269,7 +269,10 @@ describe('Config Resolver', () => {
 
     expect(result.runtimeProfiles).toBeUndefined();
     expect(result.profiles?.default?.services?.grok?.projectId).toBe('cli-project-id');
-    expect(projected.runtimeProfiles.map((profile) => profile.id)).toEqual(['auracall-grok-auto', 'default']);
+    expect(projected.runtimeProfiles.map((profile) => profile.id)).toEqual([
+      'auracall-grok-auto',
+      'default',
+    ]);
     expect(projected.teams.find((team) => team.id === 'solo')?.members[0]).toMatchObject({
       runtimeProfileId: 'auracall-grok-auto',
       browserProfileId: 'default',
@@ -390,8 +393,12 @@ describe('Config Resolver', () => {
 
     expect(result.browser.conversationId).toBe('cli-conversation-id');
     expect(result.browser.conversationName).toBe('CLI Conversation');
-    expect(result.runtimeProfiles?.default?.services?.chatgpt?.conversationId).toBe('cli-conversation-id');
-    expect(result.runtimeProfiles?.default?.services?.chatgpt?.conversationName).toBe('CLI Conversation');
+    expect(result.runtimeProfiles?.default?.services?.chatgpt?.conversationId).toBe(
+      'cli-conversation-id',
+    );
+    expect(result.runtimeProfiles?.default?.services?.chatgpt?.conversationName).toBe(
+      'CLI Conversation',
+    );
   });
 
   it('should leave project selectors on the root browser layer when no concrete default service exists', async () => {
@@ -542,7 +549,7 @@ describe('Config Resolver', () => {
         version: 2,
         model: 'gpt-5.2-pro',
         browser: {},
-          auracallProfile: 'wsl-chrome-2',
+        auracallProfile: 'wsl-chrome-2',
         browserDefaults: {
           chromePath: '/usr/bin/google-chrome',
           chromeCookiePath: '/home/ecochran76/.config/google-chrome/Default/Cookies',
@@ -565,8 +572,10 @@ describe('Config Resolver', () => {
             defaultService: 'grok',
             browser: {
               chromePath: '/mnt/c/Program Files/Google/Chrome/Application/chrome.exe',
-              chromeCookiePath: '/mnt/c/Users/ecoch/AppData/Local/Google/Chrome/User Data/Default/Network/Cookies',
-              bootstrapCookiePath: '/mnt/c/Users/ecoch/AppData/Local/Google/Chrome/User Data/Default/Network/Cookies',
+              chromeCookiePath:
+                '/mnt/c/Users/ecoch/AppData/Local/Google/Chrome/User Data/Default/Network/Cookies',
+              bootstrapCookiePath:
+                '/mnt/c/Users/ecoch/AppData/Local/Google/Chrome/User Data/Default/Network/Cookies',
               managedProfileRoot: '/mnt/c/Users/ecoch/AppData/Local/AuraCall/browser-profiles',
               wslChromePreference: 'windows',
               debugPort: 45920,
@@ -576,7 +585,8 @@ describe('Config Resolver', () => {
             },
             services: {
               grok: {
-                manualLoginProfileDir: '/mnt/c/Users/ecoch/AppData/Local/AuraCall/browser-profiles/windows-chrome-test/grok',
+                manualLoginProfileDir:
+                  '/mnt/c/Users/ecoch/AppData/Local/AuraCall/browser-profiles/windows-chrome-test/grok',
               },
             },
           },
@@ -589,14 +599,18 @@ describe('Config Resolver', () => {
     const result = await resolveConfig({ profile: 'windows-chrome-test' });
 
     expect(result.auracallProfile).toBe('windows-chrome-test');
-    expect(result.browser.chromePath).toBe('/mnt/c/Program Files/Google/Chrome/Application/chrome.exe');
+    expect(result.browser.chromePath).toBe(
+      '/mnt/c/Program Files/Google/Chrome/Application/chrome.exe',
+    );
     expect(result.browser.chromeCookiePath).toBe(
       '/mnt/c/Users/ecoch/AppData/Local/Google/Chrome/User Data/Default/Network/Cookies',
     );
     expect(result.browser.bootstrapCookiePath).toBe(
       '/mnt/c/Users/ecoch/AppData/Local/Google/Chrome/User Data/Default/Network/Cookies',
     );
-    expect(result.browser.managedProfileRoot).toBe('/mnt/c/Users/ecoch/AppData/Local/AuraCall/browser-profiles');
+    expect(result.browser.managedProfileRoot).toBe(
+      '/mnt/c/Users/ecoch/AppData/Local/AuraCall/browser-profiles',
+    );
     expect(result.browser.wslChromePreference).toBe('windows');
     expect(result.browser.manualLoginProfileDir).toBe(
       '/mnt/c/Users/ecoch/AppData/Local/AuraCall/browser-profiles/windows-chrome-test/grok',
@@ -695,11 +709,17 @@ describe('Config Resolver', () => {
     expect(result.auracallProfile).toBe('wsl-chrome-2');
     expect(result.browser.chromePath).toBe('/usr/bin/google-chrome');
     expect(result.browser.display).toBe(':0.0');
-    expect(result.browser.chromeCookiePath).toBe('/home/test/.config/google-chrome/Default/Network/Cookies');
-    expect(result.browser.bootstrapCookiePath).toBe('/home/test/.config/google-chrome/Default/Network/Cookies');
+    expect(result.browser.chromeCookiePath).toBe(
+      '/home/test/.config/google-chrome/Default/Network/Cookies',
+    );
+    expect(result.browser.bootstrapCookiePath).toBe(
+      '/home/test/.config/google-chrome/Default/Network/Cookies',
+    );
     expect(result.browser.managedProfileRoot).toBe('/home/test/.auracall/browser-profiles');
     expect(result.browser.wslChromePreference).toBe('wsl');
-    expect(result.browser.manualLoginProfileDir).toBe('/home/test/.auracall/browser-profiles/wsl-chrome-2/chatgpt');
+    expect(result.browser.manualLoginProfileDir).toBe(
+      '/home/test/.auracall/browser-profiles/wsl-chrome-2/chatgpt',
+    );
   });
 
   it('should use profile-specific service URLs for browser targets', async () => {

@@ -60,6 +60,22 @@
   Plan 0256 version 5 forbids duplicate launch, navigation, or close; it permits
   one in-place model-menu inspection and detach, then provider-free mapping
   repair. Install/canary waits for independent exit or separate close authority.
+- Two named leave-open agent-browser attachments inspected the existing picker
+  without navigation or selection. ChatGPT now nests GPT-5.6 Sol/Terra/Luna
+  and legacy GPT-5.5 under `Show advanced options` -> `Model`; Light/Medium/High/
+  Extra High live under the sibling `Effort` submenu. Exact PID 89142 survived
+  both detach operations unchanged.
+- AuraCall now traverses those semantic submenu controls, rejects GPT-5.6
+  cross-family matches, maps auto/instant to Terra/Luna, preserves Sol effort
+  aliases, and maps legacy Pro/Thinking aliases onto current Sol effort lanes.
+  Focused provider-free validation passes 168 tests. A clean standalone full
+  suite passes 307 files/2794 tests with 65 skipped; typecheck, build, lint,
+  and plan audit are green. Install/restart and the canary remain gated on
+  exact zero-owner admission.
+- Closing readback keeps API PID 64314 active/running with zero restarts,
+  scheduler paused, active history jobs zero, and the target idle-waiting/pass
+  56 with error/next/force null. External exact Chrome PID 89142 still owns the
+  managed browser profile, so no install, restart, or canary has run.
 
 ## Turn 436 | 2026-08-10
 
