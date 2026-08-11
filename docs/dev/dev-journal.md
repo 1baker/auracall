@@ -15,6 +15,21 @@
   hashes intentionally differ at `3068a77b...` and `2acb20a9...`.
 - The activation checkpoint must be committed and pushed, followed by a fresh
   stopped-state readback, before the sole install is spent.
+- Activation commit `6d968222` was pushed and the repeated stopped-state
+  admission stayed green. The sole installer produced exact source/installed
+  adapter parity at `3068a77b...`; API PID 1886 is active/running with
+  `NRestarts=0`.
+- The one zero-retry canary completed in 17258 ms and was accepted as
+  `terminal_unavailable`: child exit 1, attempt 1, no timeout, no parsed
+  context, no pending operation, exact `conversation_unavailable` stage, and
+  `chatgpt_conversation_not_found_or_unavailable`. The repaired exact-route
+  path reached authoritative terminal evidence instead of repeating the prior
+  payload-missing/home-route failure.
+- Exact inspection attributed root PID 4909/port 45015 to this canary. The one
+  port-scoped cleanup removed only that exact managed process tree. Final
+  browser ownership, port listeners, active history jobs, and queued/running
+  completion work are zero. Target pass 56 and scheduler paused/paused are
+  unchanged. Plan 0266 closes accepted; no materialization or wider resume ran.
 
 ## 2026-08-11 | Plan 0265 Route-Bound Payload Repair
 

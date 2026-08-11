@@ -18,6 +18,22 @@
   selection, click, download/upload, guard/config change, direct runtime edit,
   or wider profile is authorized. This activation will be committed and pushed
   before the one install and canary.
+- Activation commit `6d968222` was pushed, and a repeated stopped-state
+  admission remained green. The sole installer established exact source and
+  installed adapter parity at `3068a77b...`; API PID 1886 is active/running
+  with zero restarts.
+- The sole canary completed in 17258 ms with accepted outcome
+  `terminal_unavailable`: child exit 1, attempt 1, no timeout, no parsed
+  context, no pending operation, exact `conversation_unavailable` stage, and
+  `chatgpt_conversation_not_found_or_unavailable`. The former
+  payload-missing/home-route stage did not recur.
+- Exact inspection attributed Chrome root PID 4909/port 45015 to this canary.
+  The one port-scoped cleanup removed only that exact managed process tree.
+  Final browser ownership, port listeners, active history jobs, and
+  queued/running completion work are zero. The target remains
+  idle-waiting/backfill-history/pass 56 and scheduler remains paused/paused.
+  Every excluded effect remained zero. Plan 0266 closes accepted without
+  materialization or wider execution resume.
 
 ## Turn 441 | 2026-08-11
 

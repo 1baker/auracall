@@ -1,19 +1,19 @@
 # WSL Chrome 3 Route-Bound Payload One-Canary Gate | 0266-2026-08-11
 
-State: OPEN
+State: CLOSED
 Lane: P01
-Plan version: 2
-Gate state: ACTIVE_EXACT_ONE_CANARY
-Goal execution state: ACTIVE_BOUNDED_EXECUTION
+Plan version: 3
+Gate state: ACCEPTED_TERMINAL_UNAVAILABLE
+Goal execution state: COMPLETE
 
 ## Current State
 
-Plan 0265's provider-free red proved the ChatGPT payload fallback reloaded home
-instead of reacquiring the admitted conversation route. The repair is green and
-built but intentionally not installed. API PID 21763 is healthy, scheduler is
-paused/paused, the target is idle-waiting at pass 56, active history jobs and
-exact browser ownership are zero, and port 45015 is unbound. Built and installed
-adapter hashes intentionally differ.
+The route-bound repair is installed with exact adapter parity. The sole
+zero-retry canary was accepted as exact terminal unavailability at attempt 1,
+without timeout, pending operation, or the prior payload-missing/home-route
+stage. Exact canary-owned cleanup is complete. API PID 1886 is healthy,
+scheduler is paused/paused, the target remains idle-waiting at pass 56, active
+history jobs and exact browser ownership are zero, and port 45015 is unbound.
 
 ## Stable Objective
 
@@ -40,13 +40,13 @@ exact canary-owned browser, and stop.
 - [x] Provider-free route-bound reacquisition tests, adjacent regressions,
   typecheck, build, dry-run, docs, and audit are green.
 - [x] Separate explicit approval and fresh zero-owner admission.
-- [ ] One install/restart establishes exact source/installed adapter parity and
+- [x] One install/restart establishes exact source/installed adapter parity and
   healthy API with `NRestarts=0`.
-- [ ] Exactly one attempt yields current context or exact terminal 404/410
+- [x] Exactly one attempt yields current context or exact terminal 404/410
   unavailability, without the prior payload-missing/home-route stage.
-- [ ] Exact owned cleanup returns browser ownership, active history jobs, and
+- [x] Exact owned cleanup returns browser ownership, active history jobs, and
   port 45015 to zero.
-- [ ] Target remains pass 56 and scheduler remains paused/paused; every
+- [x] Target remains pass 56 and scheduler remains paused/paused; every
   excluded effect remains zero.
 
 ## Frozen Future Command Packet | Withheld
@@ -120,6 +120,36 @@ exact canary-owned browser, and stop.
 - `next_action_or_stop_reason`: commit and push this activation, repeat the
   stopped-state admission, then spend the sole install and canary without
   retry.
+
+## Terminal Checkpoint | Accepted Terminal Unavailability
+
+- `checkpoint_id`: `P0266-C03`.
+- `state_transition`: P0266_ACTIVE_EXACT_ONE_CANARY -> P0266_COMPLETE.
+- `progress_classification`: outcome_progress.
+- `runtime_evidence`: the sole `install:user-runtime-service` invocation
+  installed exact source/runtime adapter hash parity at
+  `3068a77bb72666335cf9f46beea73eb2a47f4fbf91d7340136dbf36dd8008c8f`
+  and left API PID 1886 active/running with `NRestarts=0`. The sole canary
+  completed in 17258 ms with `accepted=true`,
+  `acceptanceOutcome=terminal_unavailable`, child exit 1, no timeout, no
+  parsed context, attempt count 1, no pending operation, exact stage
+  `provider:chatgpt.readConversationPayload.failed.conversation_unavailable.v1`,
+  and error code `chatgpt_conversation_not_found_or_unavailable`. The prior
+  payload-missing/home-route failure did not recur.
+- `cleanup_evidence`: exact inspection attributed Chrome root PID 4909 and port
+  45015 to the newly launched `wsl-chrome-3/chatgpt` managed browser. The one
+  port-scoped cleanup removed that exact process tree. Final browser-tools is
+  `[]`, port 45015 is unbound, and active history jobs are zero.
+- `preserved_state`: scheduler remains paused/paused; target
+  `acctmirror_completion_fb93ed6c-c57b-40cd-b5dc-ba6322f75446` remains
+  idle-waiting/backfill-history/pass 56 with null error/next; queued/running
+  completion work is zero. No materialization, completion/scheduler control,
+  retry, prompt, model selection, click, download/upload, guard/config change,
+  direct runtime edit, or wider-profile action ran.
+- `authority_classification`: the frozen packet is exhausted and closed; no
+  wider execution is authorized by this plan.
+- `subagent_status`: not_spawned.
+- `next_action_or_stop_reason`: stop with Plan 0266 accepted and complete.
 
 ## Definition Of Done
 
