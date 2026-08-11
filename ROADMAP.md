@@ -7,12 +7,16 @@
 Status: active
 Lane: P01
 
-- Active one-pass account-mirror scheduler resume canary:
+- Closed failed-safe one-pass account-mirror scheduler resume canary:
   [docs/dev/plans/0268-2026-08-11-one-pass-scheduler-resume-canary.md](docs/dev/plans/0268-2026-08-11-one-pass-scheduler-resume-canary.md)
-  The operator approved one short real resume. The packet admits one immediate
-  scheduler pass, restores the durable pause as soon as that pass starts, and
-  contains at most one newly reconciled default completion within its first
-  pass. No second cadence pass or lasting scheduler resume is authorized.
+  The sole pass was promptly re-paused but selected raw-eligible
+  `wsl-chrome-2`, despite operator status projecting it paused, then post-pass
+  reconciliation independently started default. Its pause did not join the
+  in-flight collector: default advanced once and its sole child skipped
+  `0/7/0` on attempt 1 with no downloads. Two owned trees were exactly cleaned,
+  the child-owned third browser exited itself, and no second scheduler pass
+  ran. The C5 mechanism is split scheduler/operator eligibility plus unscoped
+  reconciliation and uncancelled paused-completion work.
 
 - Closed accepted `wsl-chrome-3` pass-57 one-pass live-follow canary:
   [docs/dev/plans/0267-2026-08-11-wsl-chrome-3-pass-57-one-pass-live-follow-canary.md](docs/dev/plans/0267-2026-08-11-wsl-chrome-3-pass-57-one-pass-live-follow-canary.md)

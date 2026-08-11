@@ -19,6 +19,28 @@
   default and `wsl-chrome-3` browser ownership zero, and 38 GiB host memory
   available. Unrelated retained `wsl-chrome-2`/`wsl-chrome-4` owners are
   explicitly excluded from cleanup.
+- Activation commit `65297cf8` was audited and pushed before control. The sole
+  resume started a pass at `20:41:03.286Z`; the sole pause became durable at
+  `20:41:24.885Z`, and no second scheduler pass ran. Contrary to the operator
+  projection, the raw scheduler selector chose `chatgpt/wsl-chrome-2`. Its
+  refresh completed cleanly at `20:47:22.714Z`, improved remaining detail
+  surfaces 11 -> 7, matched the expected Pro identity, and left the guard
+  clear.
+- The mismatch proves scheduler admission does not consume the completion
+  overlay used by status to project `operator_paused`. Post-pass reconciliation
+  then independently started default completion
+  `acctmirror_completion_84251b28-12d9-4d5f-9bdc-3c77bd9eade0`. One exact pause
+  initially read back at pass 0 but did not join its collector; it advanced to
+  pass 1 and queued sole child `hmj_6d0eb37f09fc4ad9a514236b4e658b6a`.
+- The scheduler's same-managed-directory `wsl-chrome-2` launch on dynamic port
+  39418 displaced the retained 45013 owner; cleanup targeted only the new
+  dynamic port. The initial late default owner on 45011 was also exactly
+  closed. The child became running before an exact cancellation attempt, which
+  returned HTTP 409; its sole attempt then skipped `0/7/0` with no downloads
+  and matching identity. Its new PID 99910 browser exited independently. The
+  unrelated 45017 owner was left untouched and active jobs are zero. Plan 0268 closes
+  `C5_control_or_scope_failure`; no scheduler/completion retry or wider resume
+  is authorized.
 
 ## Turn 443 | 2026-08-11
 

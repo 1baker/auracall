@@ -1,29 +1,44 @@
 # One-Pass Scheduler Resume Canary | 0268-2026-08-11
 
-State: OPEN
+State: CLOSED
 Lane: P01
-Plan version: 1
-Gate state: ACTIVE_ONE_SCHEDULER_PASS
-Goal execution state: ACTIVE_BOUNDED_EXECUTION
+Plan version: 2
+Gate state: CLOSED_C5_SELECTOR_SCOPE_FAILURE
+Goal execution state: FAILED_CLOSED
 
 ## Current State
 
-Plan 0267 closed `C1_useful_pass_progress`: exact `wsl-chrome-3` pass 57
-materialized six verified assets with zero failures. Git is clean and
-synchronized at `2030ce52`; API PID 1886 is active/running with
-`NRestarts=0`; source and installed scheduler, reconciler, completion, HTTP,
-and ChatGPT adapter hashes match exactly. The scheduler is enabled in execute
-mode at a 600000 ms cadence but durably paused/paused with no prior wake in
-this process. Active history jobs are zero.
+The sole resume started one scheduler pass at
+`2026-08-11T20:41:03.286Z`; the sole pause was durably written at
+`2026-08-11T20:41:24.885Z`, before any cadence successor. That pass selected
+`chatgpt/wsl-chrome-2`, not the admitted `chatgpt/default`, and completed at
+`2026-08-11T20:47:22.714Z`. Its clean refresh reduced remaining detail
+surfaces 11 -> 7, retained matching `consult@polymerconsultinggroup.com` Pro
+identity, and left the guard clear, but the target mismatch is terminal
+`C5_control_or_scope_failure`.
 
-The deterministic installed selector admits only enabled eligible targets and
-chooses one. Current ChatGPT posture predicts `default`: it is eligible,
-in-progress/pass 9 with 12 detail surfaces, 88 missing-local assets, no active
-completion, and a clear guard. `wsl-chrome-3` is eligible but complete/pass 57;
-`wsl-chrome-2` and `wsl-chrome-4` are operator-paused. Default and
-`wsl-chrome-3` have no browser owner on ports 45011/45015. The unrelated
-retained `wsl-chrome-2` owner on 45013 and `wsl-chrome-4` owner on 45017 are
-outside this packet and must not be touched.
+The exact mechanism is a split control surface. Operator status projects an
+active completion's `operator_paused` state over the mirror target, while the
+scheduler selector admits from the raw mirror registry without that completion
+overlay. Fairness therefore selected raw-eligible `wsl-chrome-2`. After the
+pass, reconciliation independently started a new `chatgpt/default` completion,
+`acctmirror_completion_84251b28-12d9-4d5f-9bdc-3c77bd9eade0`. Its sole pause
+initially read back at pass 0, but did not join the in-flight collector: the
+collector later advanced to pass 1 and queued sole child
+`hmj_6d0eb37f09fc4ad9a514236b4e658b6a`.
+
+The scheduler pass launched PID 1206 on dynamic port 39418 with the managed
+`wsl-chrome-2` browser profile and displaced the retained port-45013 owner.
+Exact cleanup targeted only 39418. The late default preflight then launched PID
+49601 on 45011; the second and final authorized exact cleanup removed only that
+port's owned tree. Those trees stayed absent for 25 seconds, but the delayed
+child later launched a third browser, PID 99910 on 45011. The child settled
+`skipped` on attempt 1 with 4 conversations, 0 materialized, 7 skipped, 0
+failed, matching four-dimension identity, and no downloads; its browser exited
+independently. One attempted queued-child cancellation correctly returned HTTP
+409 because the job had already become running. The unrelated `wsl-chrome-4`
+owner on 45017 remains untouched. Scheduler and new completion are paused at
+pass 1, and active history jobs are zero.
 
 ## Stable Objective
 
@@ -155,15 +170,16 @@ all runtime/file receipts, and stop.
 ## Acceptance Criteria
 
 - [x] Explicit operator approval and provider-free installed-flow proof.
-- [x] Fresh clean/synced admission predicts exactly `chatgpt/default` and
-  proves zero default/`wsl-chrome-3` owners plus zero active jobs.
-- [ ] Active gate is audited, committed, pushed, and freshly reread before the
+- [x] Fresh clean/synced admission captured the operator projection of
+  `chatgpt/default` and proved zero default/`wsl-chrome-3` owners plus zero
+  active jobs; the canary disproved equivalence with raw scheduler admission.
+- [x] Active gate is audited, committed, pushed, and freshly reread before the
   sole resume.
-- [ ] Exactly one operator-resume pass starts and the durable pause is restored
+- [x] Exactly one operator-resume pass starts and the durable pause is restored
   before any second cadence pass.
-- [ ] Sole scheduler refresh and any one new default completion are terminally
+- [x] Sole scheduler refresh and the one new default completion are terminally
   classified with independently verified receipts.
-- [ ] Final scheduler, completions, guards, jobs, browsers, sockets, API,
+- [x] Final scheduler, completions, guards, jobs, browsers, sockets, API,
   parity, Git, docs, audit, commit, and remote readbacks agree.
 
 ## Activation Checkpoint | One Scheduler Pass Authorized
@@ -189,6 +205,44 @@ all runtime/file receipts, and stop.
   unbounded default completion. The frozen packet accepts only one real
   scheduler pass and proactively contains that expected completion before a
   second pass.
+
+## Closing Checkpoint | Failed Closed On Selector Scope
+
+- `checkpoint_id`: `P0268-C02`.
+- `state_transition`: P0268_ACTIVE_ONE_SCHEDULER_PASS ->
+  P0268_CLOSED_C5_SELECTOR_SCOPE_FAILURE.
+- `progress_classification`: mechanism_progress_with_failed_acceptance.
+- `evidence`: activation commit `65297cf8` was audited and pushed before
+  control; sole resume/pass/pause timestamps are
+  `20:41:03.286Z`/`20:41:24.885Z`; sole ledger row selected
+  `chatgpt/wsl-chrome-2` and completed at `20:47:22.714Z`; detail surfaces
+  improved 11 -> 7 with matching identity and clear guard; the scheduler
+  remained paused with no second pass. Reconciliation created exactly default
+  completion `acctmirror_completion_84251b28-12d9-4d5f-9bdc-3c77bd9eade0`.
+  Its pause failed to join the in-flight collector, which advanced to pass 1
+  and created sole child `hmj_6d0eb37f09fc4ad9a514236b4e658b6a` before
+  settling paused. The child was already running when exact cancellation was
+  attempted and rejected with HTTP 409; attempt 1 then settled `skipped` with
+  `0/7/0` materialized/skipped/failed and matching identity. Exact 39418 and
+  initial 45011 owners were closed; the child-owned 45011 browser exited
+  independently; 45017 remained untouched.
+- `subagent_status`: not_spawned.
+- `effect_accounting`: scheduler resume/pause/pass/selection/refresh
+  `1/1/1/1/1`; new default completion/pause/pass/child/attempt/materialization
+  job `1/1/1/1/1/1`; child cancellation attempts/accepted `1/0`; child result
+  `skipped` with materialized/skipped/failed `0/7/0`; browser launches/explicit
+  closes/self-exits `3/2/1`; downloads `0`; second
+  scheduler passes, retries, existing-completion controls, other-provider
+  work, installs/restarts, prompts, model selections, clicks, and uploads `0`.
+- `next_action_or_stop_reason`: stop. A separately authorized provider-free
+  successor should unify scheduler eligibility with the operator-paused
+  completion overlay, scope reconciliation to the selected lane, cancel or
+  join paused completion preflight, and reject same-managed-directory duplicate
+  launches before any further scheduler resume.
+- `authority_classification`: the one-pass live authorization is exhausted;
+  scheduler and wider completion resume remain unauthorized.
+- `review_disposition_summary`: useful wsl-chrome-2 inventory progress does
+  not override the different-target and cross-lane fanout failure. Close C5.
 
 ## Definition Of Done
 

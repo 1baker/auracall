@@ -16,6 +16,27 @@
   active jobs zero, exact default and `wsl-chrome-3` owners zero, and 38 GiB
   available memory. Unrelated retained owners on ports 45013/45017 must remain
   untouched.
+- Activation commit `65297cf8` was audited and pushed. The sole resume started
+  one pass at `20:41:03.286Z`, and the sole pause became durable at
+  `20:41:24.885Z`; no cadence successor ran. The pass unexpectedly selected
+  `chatgpt/wsl-chrome-2`, then completed cleanly at `20:47:22.714Z` with
+  matching Pro identity, clear guard, and detail surfaces reduced 11 -> 7.
+- The canary localized the control failure: operator readback projects
+  completion `operator_paused` over a target, while scheduler selection reads
+  raw registry eligibility. Post-pass reconciliation is separately global and
+  therefore started default completion
+  `acctmirror_completion_84251b28-12d9-4d5f-9bdc-3c77bd9eade0`. Its exact pause
+  initially held pass 0, but did not join the collector: default advanced to
+  pass 1 and queued sole child `hmj_6d0eb37f09fc4ad9a514236b4e658b6a`.
+- Exact cleanup removed the canary's dynamic 39418 `wsl-chrome-2` tree and the
+  initial late default 45011 tree. The retained 45013 owner had already been
+  displaced by the same-managed-directory launch. The child became running
+  before cancellation and rejected the exact attempt with HTTP 409, then
+  settled `skipped` on attempt 1: 4 conversations, 0 materialized, 7 skipped,
+  0 failed, matching identity, and no downloads. Its third canary-owned browser
+  exited itself. The unrelated 45017 owner remained untouched; scheduler and
+  default completion are paused at pass 1 and active jobs are zero. Plan 0268
+  closes failed-safe as C5; no retry or broader resume ran.
 
 ## 2026-08-11 | Plan 0267 Pass-57 One-Pass Activation
 

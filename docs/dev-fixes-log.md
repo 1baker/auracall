@@ -1,3 +1,15 @@
+- 2026-08-11: A scheduler target projection is unsafe for admission when it
+  overlays an active completion's `operator_paused` state but the scheduler
+  selector reads raw mirror-registry eligibility. The two surfaces can name
+  different next targets; a post-pass global reconciler can then start a second
+  lane, so one scheduler resume affects two accounts. Use one canonical
+  scheduler-eligibility decision that includes operator pause, scope post-pass
+  reconciliation to the selected lane or an explicit bounded set, and make a
+  completion pause cancel or join any queued preflight before it launches a
+  browser. Also serialize ownership by managed browser profile directory, not
+  only by requested DevTools port, because dynamic-port fallback can displace a
+  retained owner on the same directory.
+
 - 2026-08-11: An exact `Network.responseReceived` listener cannot reacquire a
   conversation payload if its fallback reloads whatever document is active and
   the provider has already moved the tab home. Arm the exact response/body
