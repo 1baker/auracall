@@ -1,3 +1,16 @@
+## 2026-08-11 | Plan 0262 Experiment 5 Selector Mainline Refresh
+
+- The installed AuraCall update advanced main but omitted the earlier
+  `Advanced`/`Effort` compatibility repair needed by LitScout Experiment 5.
+- A separate worktree now carries only the model/thinking selector and focused
+  test delta. Visible text and aria labels are normalized independently, with
+  exact coverage for compact `Advanced`, `ModelGPT-5.6 Sol`, and
+  `EffortLight` controls.
+- Provider-free validation currently passes 26 focused and 101 adjacent tests
+  plus typecheck. Plan 0261 owns a dirty mainline adapter packet, so install and
+  integration are serialized behind its clean checkpoint; browser, provider,
+  prompt, and LitScout effects remain zero.
+
 ## 2026-08-11 | Plan 0260 Live Gate Activation
 
 - The operator authorized continued work toward the actual context-read fix.

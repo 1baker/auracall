@@ -7,6 +7,13 @@
 Status: active
 Lane: P01
 
+- Active serialized Experiment 5 selector mainline refresh:
+  [docs/dev/plans/0262-2026-08-11-chatgpt-advanced-effort-selector-mainline-refresh.md](docs/dev/plans/0262-2026-08-11-chatgpt-advanced-effort-selector-mainline-refresh.md)
+  The compact `Advanced`/`Effort` repair is green on a separate worktree.
+  Commit/push may proceed provider-free; reconciliation and one install wait
+  for Plan 0261's dirty main worktree to reach a clean checkpoint. Browser,
+  provider, prompt, attachment, scheduler, and LitScout effects remain zero.
+
 - Active `wsl-chrome-3` evaluation-class one-canary gate:
   [docs/dev/plans/0260-2026-08-11-wsl-chrome-3-evaluation-class-one-canary-gate.md](docs/dev/plans/0260-2026-08-11-wsl-chrome-3-evaluation-class-one-canary-gate.md)
   The operator authorized one install/restart and one zero-retry read of the

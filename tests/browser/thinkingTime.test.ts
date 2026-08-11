@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildThinkingTimeExpressionForTest,
+  chooseThinkingTimeNavigationActionForTest,
   evaluateChatgptProModeGate,
   formatChatgptProModeGateError,
   isChatgptProModelTarget,
@@ -8,6 +9,39 @@ import {
 } from '../../src/browser/actions/thinkingTime.js';
 
 describe('browser thinking-time selection expression', () => {
+  it('plans the current compact advanced to effort submenu path', () => {
+    expect(
+      chooseThinkingTimeNavigationActionForTest([
+        {
+          text: 'Advanced',
+          ariaLabel: 'Show advanced options',
+          role: 'menuitem',
+          expanded: 'false',
+        },
+      ]),
+    ).toEqual({ kind: 'open-advanced', index: 0 });
+
+    expect(
+      chooseThinkingTimeNavigationActionForTest([
+        { text: 'ModelGPT-5.6 Sol', role: 'menuitem', expanded: 'false' },
+        {
+          text: 'EffortLight',
+          ariaLabel: 'Effort Light',
+          role: 'menuitem',
+          expanded: 'false',
+        },
+        { text: 'SpeedStandard', role: 'menuitem', expanded: 'false' },
+      ]),
+    ).toEqual({ kind: 'open-effort', index: 1 });
+
+    expect(
+      chooseThinkingTimeNavigationActionForTest([
+        { text: 'ModelGPT-5.6 Sol', role: 'menuitem', expanded: 'false' },
+        { text: 'SpeedStandard', role: 'menuitem', expanded: 'false' },
+      ]),
+    ).toBeNull();
+  });
+
   it('uses centralized menu selectors and normalized matching', () => {
     const expression = buildThinkingTimeExpressionForTest();
     expect(expression).toContain('const MENU_CONTAINER_SELECTOR');
@@ -33,7 +67,8 @@ describe('browser thinking-time selection expression', () => {
     expect(expression).toContain('findSelectedLevelPill');
     expect(expression).toContain('button.__composer-pill, .__composer-pill-composite button');
     expect(expression).toContain('show advanced options');
-    expect(expression).toContain("text.startsWith('effort ')");
+    expect(expression).toContain("label.startsWith('effort ')");
+    expect(expression).toContain("label === 'effortlight'");
     expect(expression).toContain("getAttribute('aria-expanded')");
     expect(expression).toContain('clientX');
     expect(expression).toContain('clientY');

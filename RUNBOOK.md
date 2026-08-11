@@ -1,5 +1,18 @@
 # RUNBOOK
 
+## Turn 440 | 2026-08-11
+
+- LitScout Experiment 5 was reactivated after the user said `go`, but the
+  AuraCall update installed current main without the earlier compact
+  `Advanced`/`Effort` selector repair. Spending the one submission attempt on
+  those bytes would repeat the retained pre-submission failure mechanism.
+- Plan 0262 owns a separate worktree and ports only the four-file repair/test
+  delta. Focused tests pass 26/26, the adjacent selector/config packet passes
+  101/101, and typecheck passes with no browser/profile/port effect.
+- Plan 0261 concurrently owns dirty ChatGPT adapter files in main. Do not
+  overwrite or install across that lane. Commit and push provider-free here,
+  then reconcile only after main reaches a clean pushed checkpoint.
+
 ## Turn 439 | 2026-08-11
 
 - The operator authorized continuing toward the real context-read fix for up

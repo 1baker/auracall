@@ -1,3 +1,11 @@
+- 2026-08-11: When a compact ChatGPT menu exposes visible `Advanced` and an
+  accessible `Show advanced options` label, normalize those channels
+  independently. Concatenating them yields `advanced show advanced options`
+  and can defeat a starts-with predicate even though the correct semantic
+  control is present. Apply the same rule to whitespace-free `Model...` and
+  `Effort...` rows, with closed exact/starts-with allowlists rather than broad
+  substring clicks.
+
 - 2026-08-11: `lastStage=cdp:Runtime.evaluate` proves only that an evaluation
   method counter was the latest completed telemetry update; it does not identify
   the evaluation purpose or exception. At provider-owned evaluation boundaries,
