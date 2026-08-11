@@ -1,5 +1,32 @@
 # RUNBOOK
 
+## Turn 446 | 2026-08-11
+
+- Plan 0269's provider-free repair was already committed and pushed at
+  `8000fdd5`. The sole install completed at
+  `2026-08-11T21:57:44.888Z`, established exact parity across all six touched
+  runtime modules, and restarted the API once to healthy PID 3190 with zero
+  crash restarts. Scheduler pause and the ten-entry history were preserved.
+- The sole paused-scheduler execute canary ran from `22:00:13.498Z` through
+  `22:08:25.264Z` and completed one refresh on the predicted
+  `chatgpt/wsl-chrome-3` lane. Canonical metrics reported exactly one
+  live-follow-eligible target; provider-session identity matched; completion
+  total 4808 plus all six active IDs and pass counts stayed unchanged; active
+  jobs were zero; PID 47807/port 45015 were terminated; the unrelated 45017
+  owner remained untouched.
+- A direct browser check initially attached to the launch-time blank target;
+  the AuraCall-native tab/doctor census on the same port proved the current
+  page was complete authenticated ChatGPT with no blocking state. The pass
+  retained two degraded conversation-context subreads, but they produced no
+  cross-lane, job, pass-count, or cleanup mismatch and the bounded refresh
+  itself completed without error.
+- The sole authorized resume produced one immediate effect-free
+  `skipped/routine-delayed` pass because the canary reset the target's minimum
+  interval. Four observations through `22:11:14Z` stayed unpaused/scheduled,
+  with completion running/queued `0/0`, idle/paused `1/5`, and total 4808.
+  Plan 0269 closes accepted; live follow remains active and no fail-safe pause,
+  retry, second canary, completion control, or excluded provider effect ran.
+
 ## Turn 445 | 2026-08-11
 
 - The operator authorized the full repair/test/canary/reactivation goal.

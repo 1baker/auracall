@@ -7,13 +7,14 @@
 Status: active
 Lane: P01
 
-- Active scheduler pause/scope repair and live-follow reactivation:
+- Closed accepted scheduler pause/scope repair and live-follow reactivation:
   [docs/dev/plans/0269-2026-08-11-scheduler-pause-scope-repair-and-live-follow-reactivation.md](docs/dev/plans/0269-2026-08-11-scheduler-pause-scope-repair-and-live-follow-reactivation.md)
-  Plan 0268 proved scheduler selection ignored the completion-pause overlay,
-  post-pass reconciliation fanned out globally, and completion pause did not
-  abort its active run. This provider-free TDD slice repairs those boundaries
-  plus same-managed-directory launch ownership, then permits one paused
-  run-once canary and conditional live-follow activation only after acceptance.
+  The provider-free repair is pushed at `8000fdd5`. One installed paused-
+  scheduler canary selected only `chatgpt/wsl-chrome-3`, completed cleanly with
+  no cross-lane work, preserved all completion IDs/pass counts, and cleaned its
+  exact browser owner. The sole resume then settled an effect-free delayed pass
+  and remained unpaused/scheduled through four stable readbacks; live follow
+  is active.
 
 - Closed failed-safe one-pass account-mirror scheduler resume canary:
   [docs/dev/plans/0268-2026-08-11-one-pass-scheduler-resume-canary.md](docs/dev/plans/0268-2026-08-11-one-pass-scheduler-resume-canary.md)

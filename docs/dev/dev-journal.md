@@ -1,3 +1,22 @@
+## 2026-08-11 | Plan 0269 Canary Accepted And Live Follow Reactivated
+
+- Provider-free commit `8000fdd5` installed once at
+  `2026-08-11T21:57:44.888Z`; all six touched runtime modules hash-match the
+  build. The user API restarted once to PID 3190 and remains active/running
+  with zero crash restarts while the scheduler stayed durably paused.
+- The sole execute `run-once` selected exactly `chatgpt/wsl-chrome-3`, reported
+  one live-follow-eligible target and matching identity, and completed one
+  refresh from `22:00:13.498Z` through `22:08:25.264Z`. Completion total/IDs/
+  pass counts stayed unchanged, active jobs returned zero, owned PID 47807 and
+  port 45015 were cleaned, and the unrelated retained 45017 owner was
+  untouched.
+- The sole resume produced one effect-free `skipped/routine-delayed` pass
+  because the canary reset the selected lane's minimum interval. Four
+  post-pass snapshots through `22:11:14Z` remained unpaused/scheduled with
+  running/queued `0/0`, idle/paused `1/5`, and completion total 4808. Plan 0269
+  closes accepted with live follow active; no fail-safe pause or excluded
+  effect was needed.
+
 ## 2026-08-11 | Plan 0269 Provider-Free Repair Green
 
 - Four TDD slices now repair the observed control boundaries: scheduler metrics

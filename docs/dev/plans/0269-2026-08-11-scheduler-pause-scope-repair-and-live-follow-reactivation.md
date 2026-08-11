@@ -1,28 +1,29 @@
 # Scheduler Pause/Scope Repair And Live-Follow Reactivation | 0269-2026-08-11
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 1
-Gate state: ACTIVE_PROVIDER_FREE_REPAIR
-Goal execution state: ACTIVE_BOUNDED_EXECUTION
+Gate state: CLOSED_ACCEPTED
+Goal execution state: COMPLETE
 
 ## Current State
 
-Plan 0268 closed failed-safe after one scheduler resume selected raw-eligible
-`chatgpt/wsl-chrome-2` even though operator status projected its active
-completion as paused. The completed scheduler pass then invoked global
-live-follow reconciliation, which independently started `chatgpt/default`.
-Pausing that completion changed its public state but did not abort its active
-collector: it later advanced to pass 1, queued one materialization child, and
-launched another browser. The child settled skipped `0/7/0`; scheduler and
-default completion are now paused, active jobs and canary browser owners are
-zero, and only the unrelated retained `wsl-chrome-4` owner on 45017 remains.
+The provider-free repair is committed and pushed at `8000fdd5`. Nine adjacent
+suites pass `193/193`, scheduler HTTP seams pass `7/7`, typecheck/build/lint
+and deterministic audits are green, and every touched installed module
+hash-matches the build. The sole install completed at
+`2026-08-11T21:57:44.888Z`; API PID 3190 is active/running with zero crash
+restarts.
 
-Git is clean and synchronized at `12841040`. API PID 1886 is active/running
-with zero restarts. Source/build and installed HTTP scheduler, scheduler pass,
-reconciler, completion, and ChatGPT adapter files match. CodeGraph is healthy
-at 882 files, 16,661 nodes, and 56,511 edges. The repo policy selector reports
-the existing `skill-repo-maintainer` composition already aligned.
+The sole paused-scheduler canary selected exactly `chatgpt/wsl-chrome-3` and
+completed one refresh from `22:00:13.498Z` through `22:08:25.264Z`. It reported
+one live-follow-eligible target, matching provider-session identity, no error,
+selected-lane-only reconciliation, unchanged completion IDs/pass counts, zero
+active jobs, and exact cleanup of PID 47807/port 45015. The unrelated retained
+`wsl-chrome-4` owner on 45017 remained untouched. The sole scheduler resume
+then completed one effect-free `operator-resume` pass as
+`skipped/routine-delayed` and remained unpaused/scheduled through four stable
+post-pass readbacks. Live follow is active.
 
 ## Stable Objective
 
@@ -143,14 +144,14 @@ target, target-scoped reconciliation, and no delayed paused-completion work.
   state are re-anchored.
 - [x] Four public-seam tracer bullets fail for the observed behavior before
   minimal implementation changes make them pass.
-- [ ] Focused, adjacent, typecheck, lint, build, diff, CodeGraph, and plan audits
+- [x] Focused, adjacent, typecheck, lint, build, diff, CodeGraph, and plan audits
   pass from the committed provider-free repair.
-- [ ] One install establishes healthy exact installed parity.
-- [ ] One paused-scheduler execute canary proves canonical target selection,
+- [x] One install establishes healthy exact installed parity.
+- [x] One paused-scheduler execute canary proves canonical target selection,
   selected-lane-only reconciliation, pause integrity, and browser ownership.
-- [ ] Live follow is resumed only after canary acceptance and remains healthy
+- [x] Live follow is resumed only after canary acceptance and remains healthy
   through the bounded activation observation with no cross-lane effects.
-- [ ] Final runtime, Git, docs, and remote readbacks agree.
+- [x] Final runtime, Git, docs, and remote readbacks agree.
 
 ## Activation Checkpoint | Provider-Free Repair Authorized
 
@@ -196,6 +197,34 @@ target, target-scoped reconciliation, and no delayed paused-completion work.
   no canary or activation effect is admitted yet.
 - `review_disposition_summary`: all four accepted causal findings have minimal
   implementations and direct regressions; no new blocking finding is open.
+
+## Checkpoint P0269-C03 | Canary Accepted And Live Follow Active
+
+- `state_transition`: PROVIDER_FREE_IMPLEMENTATION_GREEN -> CLOSED_ACCEPTED.
+- `progress_classification`: objective_complete.
+- `evidence`: committed/pushed repair `8000fdd5`; installed timestamp
+  `2026-08-11T21:57:44.888Z`; exact build/install parity across six touched
+  modules; healthy API PID 3190 with zero restarts; sole canary
+  `refresh-completed` on `chatgpt/wsl-chrome-3` at
+  `22:00:13.498Z..22:08:25.264Z`; live-follow eligible count one; completion
+  total 4808 and all six active IDs/pass counts unchanged; active jobs zero;
+  owned PID 47807/port 45015 terminated; unrelated 45017 owner preserved; sole
+  resume pass `skipped/routine-delayed`; four invariant scheduled/unpaused
+  readbacks through `22:11:14Z`.
+- `subagent_status`: not_spawned.
+- `effect_accounting`: install actions 1/1; service restarts 1/1; scheduler
+  run-once actions 1/1; scheduler canary passes 1/1; scheduler resume actions
+  1/1; fail-safe pauses 0/1; provider retries 0; second canaries 0; completion
+  controls 0; other-provider actions 0; prompt/model/click/Answer-now/upload
+  effects 0.
+- `next_action_or_stop_reason`: objective complete; leave the scheduler active
+  in its healthy scheduled successor posture.
+- `authority_classification`: all live effects remained inside the frozen
+  operator-authorized packet.
+- `review_disposition_summary`: the canary's two degraded per-conversation
+  context subreads were nonblocking because the bounded refresh completed with
+  matching identity, no pass error, no cross-lane or delayed paused-completion
+  effect, and exact cleanup; no acceptance mismatch remained.
 
 ## Definition Of Done
 

@@ -1,3 +1,11 @@
+- 2026-08-11: A standalone `agent-browser --cdp` attachment can retain the
+  launch-time `about:blank` target while an AuraCall-managed browser has
+  replaced it with the current provider page. Do not diagnose provider
+  navigation or authentication from that stale attachment alone. Reconcile it
+  against `scripts/browser-tools.ts tabs` or `doctor` on the exact DevTools
+  port; in the accepted scheduler canary the AuraCall-native census proved one
+  complete authenticated `https://chatgpt.com/` page with no blocking state.
+
 - 2026-08-11: Scheduler eligibility, post-pass reconciliation, completion
   control, and managed-browser ownership must form one effect boundary. Exclude
   operator-paused completions from the same target set used for scheduler
