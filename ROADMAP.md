@@ -11,7 +11,9 @@ Lane: P01
   [docs/dev/plans/0262-2026-08-11-wsl-chrome-3-terminal-unavailable-one-canary-gate.md](docs/dev/plans/0262-2026-08-11-wsl-chrome-3-terminal-unavailable-one-canary-gate.md)
   The provider-free repair is green and built but not installed. One fresh
   same-route, zero-retry canary is specified to accept either current context
-  or the exact terminal-unavailable stage. It awaits separate approval;
+  or the exact terminal-unavailable stage. The harness now makes that
+  distinction from sanitized receipt fields only and rejects timeout, retry,
+  pending-operation, and ambiguous-receipt near misses. It awaits approval;
   materialization and scheduler/completion control remain excluded.
 
 - Closed ChatGPT exact-fallback terminal-unavailable provider-free repair:

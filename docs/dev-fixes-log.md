@@ -1,3 +1,14 @@
+- 2026-08-11: A one-canary plan that permits either current context or confirmed
+  online unavailability is not executable if its harness still treats every
+  nonzero child exit as rejection. Classify acceptance from sanitized output
+  and the one exact changed receipt: successful context requires exit 0,
+  nonempty matching context, succeeded receipt, attempt count 1, and no pending
+  operation; terminal unavailability requires exit 1, no timeout or parsed
+  context, failed receipt, attempt count 1, no pending operation, and the exact
+  allowlisted `conversation_unavailable` stage. Never infer terminal acceptance
+  from raw stderr. Keep timeout, retry, ambiguous receipt, and near-match stages
+  fail-closed.
+
 - 2026-08-11: A direct ChatGPT conversation-payload 404 is not by itself
   terminal: the governed reload can still observe the exact API response with
   200 and recover the payload. The fallback Network listener must therefore

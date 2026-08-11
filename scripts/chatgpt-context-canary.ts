@@ -34,6 +34,20 @@ type SanitizedReceipt = {
 	errorCode: string | null;
 };
 
+type ContextSummary = ReturnType<typeof summarizeChatgptContextPayload>;
+
+export type ChatgptContextCanaryOutcome = "context" | "terminal_unavailable";
+
+type ChatgptContextCanaryOutcomeInput = {
+	childExitCode: number | null;
+	timedOut: boolean;
+	expectedConversationId: string;
+	outputParseState: "parsed" | "not_parsed";
+	contextSummary: ContextSummary | null;
+	receiptSelection: "selected" | "missing_or_ambiguous";
+	receipt: SanitizedReceipt | null;
+};
+
 type ParsedArgs = CanaryCommandInput & {
 	auracallBin: string;
 	commandTimeoutMs: number;
@@ -44,6 +58,8 @@ const DEFAULT_CONTEXT_TIMEOUT_MS = 120_000;
 const DEFAULT_COMMAND_TIMEOUT_PADDING_MS = 30_000;
 const MAX_CHILD_OUTPUT_BYTES = 20 * 1024 * 1024;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const CHATGPT_TERMINAL_UNAVAILABLE_STAGE =
+	"provider:chatgpt.readConversationPayload.failed.conversation_unavailable.v1";
 
 function asRecord(value: unknown): Record<string, unknown> | null {
 	return value !== null && typeof value === "object" && !Array.isArray(value)
@@ -106,6 +122,39 @@ export function summarizeChatgptContextPayload(payload: unknown): {
 		artifactCount: readArray(root, "artifacts").length || readArray(nested, "artifacts").length,
 		sourceCount: readArray(root, "sources").length || readArray(nested, "sources").length,
 	};
+}
+
+export function classifyChatgptContextCanaryOutcome(
+	input: ChatgptContextCanaryOutcomeInput,
+): ChatgptContextCanaryOutcome | null {
+	const receipt = input.receipt;
+	const commonReceiptAccepted =
+		input.receiptSelection === "selected" &&
+		receipt?.object === "conversation_context_read_receipt" &&
+		receipt.provider === "chatgpt" &&
+		receipt.conversationId === input.expectedConversationId &&
+		receipt.attemptCount === 1 &&
+		receipt.pendingOperation === null;
+	if (!commonReceiptAccepted || input.timedOut) return null;
+	if (
+		input.childExitCode === 0 &&
+		input.outputParseState === "parsed" &&
+		input.contextSummary?.conversationId === input.expectedConversationId &&
+		input.contextSummary.messageCount > 0 &&
+		receipt.outcome === "succeeded"
+	) {
+		return "context";
+	}
+	if (
+		input.childExitCode === 1 &&
+		input.outputParseState === "not_parsed" &&
+		input.contextSummary === null &&
+		receipt.outcome === "failed" &&
+		receipt.lastStage === CHATGPT_TERMINAL_UNAVAILABLE_STAGE
+	) {
+		return "terminal_unavailable";
+	}
+	return null;
 }
 
 function sanitizeReceipt(payload: unknown): SanitizedReceipt {
@@ -304,7 +353,7 @@ async function main(): Promise<void> {
 	const timedOut =
 		asRecord(child.error)?.code === "ETIMEDOUT" ||
 		(child.signal === "SIGTERM" && elapsedMs >= args.commandTimeoutMs);
-	let contextSummary: ReturnType<typeof summarizeChatgptContextPayload> | null = null;
+	let contextSummary: ContextSummary | null = null;
 	let outputParseState: "parsed" | "not_parsed" = "not_parsed";
 	if (child.status === 0) {
 		try {
@@ -314,24 +363,28 @@ async function main(): Promise<void> {
 			outputParseState = "not_parsed";
 		}
 	}
+	const acceptanceOutcome = classifyChatgptContextCanaryOutcome({
+		childExitCode: child.status,
+		timedOut,
+		expectedConversationId: args.conversationId,
+		outputParseState,
+		contextSummary,
+		receiptSelection,
+		receipt,
+	});
+	const accepted = acceptanceOutcome !== null;
 	const failureClass =
-		classifyChildFailure(`${stdout}\n${stderr}`, timedOut) ??
-		(child.status === 0 ? null : "child_failed");
-	const accepted =
-		child.status === 0 &&
-		outputParseState === "parsed" &&
-		contextSummary?.conversationId === args.conversationId &&
-		(contextSummary.messageCount ?? 0) > 0 &&
-		receiptSelection === "selected" &&
-		receipt?.outcome === "succeeded" &&
-		receipt.attemptCount === 1 &&
-		receipt.pendingOperation === null;
+		acceptanceOutcome === "terminal_unavailable"
+			? "terminal_unavailable"
+			: (classifyChildFailure(`${stdout}\n${stderr}`, timedOut) ??
+				(child.status === 0 ? null : "child_failed"));
 	console.log(
 		JSON.stringify(
 			{
 				object: "chatgpt_context_canary_result",
 				version: 1,
 				accepted,
+				acceptanceOutcome,
 				profile: args.profile,
 				conversationId: args.conversationId,
 				elapsedMs,

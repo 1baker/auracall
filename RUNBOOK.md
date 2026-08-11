@@ -43,6 +43,13 @@
   installed adapter hashes intentionally differ. Scheduler/completion control,
   materialization, prompts, model selection, downloads, retries, guards, and
   wider profiles remain excluded.
+- Provider-free gate review found that the canary harness still accepted only
+  child exit 0 with nonempty context, contradicting Plan 0262's permitted
+  terminal outcome. A pure classifier now accepts the exact sanitized
+  `conversation_unavailable` receipt only with failed outcome, attempt count 1,
+  no timeout or pending operation, and no stderr interpretation. Nine exact and
+  194 adjacent tests, typecheck, build, scoped Biome, and the frozen dry-run
+  pass. The live gate remains withheld and every runtime effect remains zero.
 
 ## Turn 438 | 2026-08-11
 

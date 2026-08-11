@@ -1,5 +1,17 @@
 ## 2026-08-11 | Plan 0262 Classified One-Canary Preparation
 
+- Gate audit found the existing canary harness would reject the newly allowed
+  terminal result because `accepted` required child exit 0 and nonempty
+  context. The deterministic red failed on the absent receipt-driven outcome
+  classifier.
+- The harness now returns `context`, `terminal_unavailable`, or null from only
+  sanitized output/receipt fields. Terminal acceptance requires the exact
+  allowlisted stage, failed receipt, attempt count 1, no child timeout, no
+  pending operation, and no parsed context; raw stderr never authorizes it.
+- Nine exact harness tests and 194 adjacent adapter/context tests pass with
+  typecheck, build, scoped Biome, and the frozen dry-run. Dry-run proves zero
+  provider/browser effects and retains refresh, zero retries, and the exact
+  timeout/profile/route arguments. Plan 0262 remains prepared and unapproved.
 - Plan 0261's exact fake-CDP red returned `pending`: the payload fallback
   listener ignored its exact 404. The repair distinguishes exact fallback
   404/410 from the intentionally recoverable direct-404/fallback-200 path and
