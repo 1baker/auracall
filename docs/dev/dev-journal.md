@@ -13,6 +13,19 @@
   selection, clicks, downloads/uploads, guard/config changes, direct runtime
   edits, and wider profiles remain excluded. Commit/push and a repeated fresh
   admission precede the sole install.
+- The sole installer established exact source/installed adapter parity at
+  `2acb20a9...`; API PID 21763 is active/running with zero restarts. The sole
+  canary completed in 34205 ms with accepted diagnostic outcome
+  `classified_post_payload_failure`: attempt 1, no timeout, no pending
+  operation, payload `missing`, and route `home`.
+- Exact inspection attributed Chrome PID 25740/port 45015 and only ChatGPT home
+  to the canary. One exact cleanup restored zero owners/listeners. Active work
+  remains zero, pass remains 56, scheduler remains paused/paused, and every
+  excluded effect remained zero.
+- Plan 0264 closes accepted as diagnosis. Plan 0265 opens provider-free to
+  reproduce the route-unbound fallback through the exported payload-reader
+  interface, bind its one governed mutation to the exact conversation route,
+  and preserve terminal, timeout, listener-cleanup, and retry controls.
 
 ## 2026-08-11 | Plan 0262 Live Gate Activation
 

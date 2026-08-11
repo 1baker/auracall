@@ -7,16 +7,21 @@
 Status: active
 Lane: P01
 
-- Active `wsl-chrome-3` payload-route-class one-canary gate:
+- Active provider-free ChatGPT route-bound payload reacquisition repair:
+  [docs/dev/plans/0265-2026-08-11-chatgpt-route-bound-payload-reacquisition-provider-free-repair.md](docs/dev/plans/0265-2026-08-11-chatgpt-route-bound-payload-reacquisition-provider-free-repair.md)
+  The sole Plan 0264 canary classified the failure as payload missing on
+  ChatGPT home. CodeGraph localizes the next repair to the fallback's
+  route-unbound reload: exact API listeners are armed, but the mutation does
+  not name the admitted conversation route. Plan 0265 is provider-free only;
+  another install or canary remains withheld.
+
+- Closed accepted `wsl-chrome-3` payload-route-class one-canary gate:
   [docs/dev/plans/0264-2026-08-11-wsl-chrome-3-payload-route-class-one-canary-gate.md](docs/dev/plans/0264-2026-08-11-wsl-chrome-3-payload-route-class-one-canary-gate.md)
-  Provider-free localization is green and built but not installed. One future
-  zero-retry canary can now distinguish mapped, non-mapping, or absent payload
-  from expected, home, other-ChatGPT, non-ChatGPT, or unknown route without
-  retaining content. The operator approved the exact frozen packet and fresh
-  admission is green at Git `2800b472`, API PID 85444, pass 56, zero active
-  work, and zero exact owners. Only one combined install/restart, one exact
-  zero-retry canary, and exact owned cleanup are active; materialization and
-  scheduler/completion control remain excluded.
+  The sole install produced parity and healthy API PID 21763. The sole
+  zero-retry canary was accepted as a classified diagnostic at attempt 1:
+  payload missing, route home, no timeout, and no pending operation. Exact
+  cleanup restored zero ownership. Pass 56 and scheduler pause are unchanged;
+  no retry, materialization, or scheduler/completion control occurred.
 
 - Closed provider-free ChatGPT post-payload route-loss localization:
   [docs/dev/plans/0263-2026-08-11-chatgpt-post-payload-route-loss-provider-free-localization.md](docs/dev/plans/0263-2026-08-11-chatgpt-post-payload-route-loss-provider-free-localization.md)

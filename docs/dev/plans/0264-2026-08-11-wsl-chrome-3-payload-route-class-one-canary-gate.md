@@ -1,19 +1,20 @@
 # WSL Chrome 3 Payload-Route Class One-Canary Gate | 0264-2026-08-11
 
-State: OPEN
+State: CLOSED
 Lane: P01
-Plan version: 2
-Gate state: ACTIVE_INSTALL_AND_ONE_CANARY
-Goal execution state: ACTIVE_BOUNDED_LIVE_PACKET
+Plan version: 3
+Gate state: ACCEPTED_CLASSIFIED_DIAGNOSTIC
+Goal execution state: ACTIVE_PROVIDER_FREE_SUCCESSOR
 
 ## Current State
 
-Plan 0262 consumed its one live attempt and reproduced generic post-payload
-route loss. Plan 0263 is provider-free green and now binds the same failure to
-one closed payload-shape plus route class. The operator approved this exact
-frozen packet with `ok go`. Fresh admission at Git `2800b472` found API PID
-85444 healthy, scheduler paused/paused, the target at pass 56, active work and
-exact browser ownership zero, and the new build not yet installed.
+The operator approved the exact frozen packet with `ok go`. The sole combined
+install established source/installed parity and healthy API PID 21763. The sole
+zero-retry canary was accepted as
+`classified_post_payload_failure`: payload `missing`, route `home`, attempt 1,
+no timeout, and no pending operation. Exact canary-owned cleanup restored zero
+owners and listeners. Scheduler remains paused/paused and the target remains
+idle-waiting at pass 56.
 
 ## Stable Objective
 
@@ -40,13 +41,13 @@ failure stage as a classified diagnostic. Clean up exactly and stop.
 - [x] Provider-free payload-route localization and exact harness acceptance of
   only the closed matrix are green.
 - [x] Separate explicit approval and fresh zero-owner admission.
-- [ ] One install/restart establishes exact source/installed parity and healthy
+- [x] One install/restart establishes exact source/installed parity and healthy
   API with `NRestarts=0`.
-- [ ] Exactly one attempt yields context, exact terminal unavailability, or a
+- [x] Exactly one attempt yields context, exact terminal unavailability, or a
   stage matching the closed payload-shape/route-class matrix.
-- [ ] Exact owned cleanup returns browser/job counts and port 45015 to zero.
-- [ ] Target remains pass 56 and scheduler remains paused/paused.
-- [ ] Every excluded effect remains zero.
+- [x] Exact owned cleanup returns browser/job counts and port 45015 to zero.
+- [x] Target remains pass 56 and scheduler remains paused/paused.
+- [x] Every excluded effect remains zero.
 
 ## Frozen Future Command Packet | Withheld
 
@@ -115,3 +116,29 @@ failure stage as a classified diagnostic. Clean up exactly and stop.
 One separately approved zero-retry canary produces a causally classified
 outcome and exact cleanup, while pass 56 and scheduler pause remain unchanged.
 The plan never materializes or resumes wider execution.
+
+## Terminal Checkpoint | Accepted Missing-Payload Home-Route Diagnosis
+
+- `checkpoint_id`: `P0264-C03`.
+- `state_transition`: P0264_ACTIVE_INSTALL_AND_ONE_CANARY ->
+  P0264_CLOSED_ACCEPTED_CLASSIFIED_DIAGNOSTIC.
+- `progress_classification`: outcome_progress.
+- `install_evidence`: the sole combined installer produced API PID 21763,
+  active/running with `NRestarts=0`, and exact source/installed adapter SHA-256
+  parity at `2acb20a98796e9c69deff9bae8ded21e2acd5fdf80fd57c025cd92e45630bd3b`.
+- `canary_evidence`: one attempt completed in 34205 ms with child exit 1, no
+  timeout, no context, no pending operation, and exact accepted stage
+  `provider:chatgpt.postPayloadReadiness.failed.predicate_unsatisfied.payload_missing.route_home.v1`.
+- `cleanup_evidence`: exact inspection attributed Chrome PID 25740/port 45015
+  to the canary and found only ChatGPT home. One exact port-scoped cleanup
+  restored zero owners/listeners; active completions and history jobs are zero.
+- `runtime_evidence`: API PID 21763 remains healthy; target remains
+  idle-waiting/backfill-history/pass 56; scheduler remains paused/paused.
+- `authority_classification`: the live packet is exhausted. No retry,
+  materialization, completion/scheduler control, prompt, model selection,
+  click, download/upload, guard/config mutation, direct runtime edit, or wider
+  profile occurred.
+- `subagent_status`: not_spawned.
+- `next_action_or_stop_reason`: continue only provider-free in Plan 0265 at the
+  route-unbound fallback mutation seam; another live attempt requires a later
+  bounded gate.
