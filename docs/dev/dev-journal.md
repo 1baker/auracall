@@ -1,3 +1,20 @@
+## 2026-08-11 | Plan 0269 Scheduler Control Repair Activation
+
+- The operator authorized fixing the Plan 0268 scheduler/control failure,
+  testing it, running one canary, and activating live follow only after canary
+  acceptance. Plan 0269 opens provider-free; no install, runtime control,
+  provider work, or browser effect is admitted before the green committed gate.
+- CodeGraph localizes the repair to scheduler selectability, server post-pass
+  reconciliation scope, completion pause abort semantics, and browser-service
+  managed-directory ownership. TDD will add one public-seam red and minimal
+  green per behavior before adjacent validation.
+- Fresh posture is clean/synced Git `12841040`, healthy API PID 1886, durable
+  scheduler pause, default completion paused/pass 1 with terminal skipped
+  child, active jobs and exact default/wsl-chrome-2 owners zero, retained
+  unrelated 45017 owner, exact installed parity, and healthy CodeGraph. The
+  deterministic repo-policy selector reports the current policy composition
+  already aligned.
+
 ## 2026-08-11 | Plan 0268 One-Pass Scheduler Resume Activation
 
 - The operator approved one short scheduler-resume canary. The bounded packet

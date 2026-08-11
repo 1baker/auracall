@@ -1,5 +1,25 @@
 # RUNBOOK
 
+## Turn 445 | 2026-08-11
+
+- The operator authorized the full repair/test/canary/reactivation goal.
+  [Plan 0269](docs/dev/plans/0269-2026-08-11-scheduler-pause-scope-repair-and-live-follow-reactivation.md)
+  opens provider-free on the four Plan 0268 causal boundaries:
+  pause-aware scheduler selection, effect-free dry-run/skip and selected-lane
+  reconciliation, active-run abort on completion pause, and fail-closed
+  same-managed-directory browser ownership.
+- Fresh authority is clean/synced Git `12841040`, scheduler durably paused,
+  default completion paused/pass 1 with terminal skipped child, active jobs and
+  default/wsl-chrome-2 owners zero, unrelated 45017 retained, API PID 1886
+  healthy, and exact installed parity. CodeGraph is healthy at 882 files,
+  16,661 nodes, and 56,511 edges; the repo policy selector reports
+  `skill-repo-maintainer` already aligned.
+- Runtime effects remain gated behind four public-seam red-green slices plus
+  focused/adjacent/typecheck/lint/build/audit acceptance and a committed pushed
+  checkpoint. Thereafter the frozen sequence is one install/restart, one
+  execute run-once while scheduler remains paused, and—only if it passes—one
+  live-follow resume with bounded initial-pass observation and fail-safe pause.
+
 ## Turn 444 | 2026-08-11
 
 - The operator's `ok go` authorizes the recommended short scheduler-resume

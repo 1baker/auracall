@@ -7,6 +7,14 @@
 Status: active
 Lane: P01
 
+- Active scheduler pause/scope repair and live-follow reactivation:
+  [docs/dev/plans/0269-2026-08-11-scheduler-pause-scope-repair-and-live-follow-reactivation.md](docs/dev/plans/0269-2026-08-11-scheduler-pause-scope-repair-and-live-follow-reactivation.md)
+  Plan 0268 proved scheduler selection ignored the completion-pause overlay,
+  post-pass reconciliation fanned out globally, and completion pause did not
+  abort its active run. This provider-free TDD slice repairs those boundaries
+  plus same-managed-directory launch ownership, then permits one paused
+  run-once canary and conditional live-follow activation only after acceptance.
+
 - Closed failed-safe one-pass account-mirror scheduler resume canary:
   [docs/dev/plans/0268-2026-08-11-one-pass-scheduler-resume-canary.md](docs/dev/plans/0268-2026-08-11-one-pass-scheduler-resume-canary.md)
   The sole pass was promptly re-paused but selected raw-eligible
