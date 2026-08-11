@@ -7,13 +7,16 @@
 Status: active
 Lane: P01
 
-- Prepared `wsl-chrome-3` payload-route-class one-canary gate:
+- Active `wsl-chrome-3` payload-route-class one-canary gate:
   [docs/dev/plans/0264-2026-08-11-wsl-chrome-3-payload-route-class-one-canary-gate.md](docs/dev/plans/0264-2026-08-11-wsl-chrome-3-payload-route-class-one-canary-gate.md)
   Provider-free localization is green and built but not installed. One future
   zero-retry canary can now distinguish mapped, non-mapping, or absent payload
   from expected, home, other-ChatGPT, non-ChatGPT, or unknown route without
-  retaining content. It awaits separate approval and fresh admission;
-  materialization and scheduler/completion control remain excluded.
+  retaining content. The operator approved the exact frozen packet and fresh
+  admission is green at Git `2800b472`, API PID 85444, pass 56, zero active
+  work, and zero exact owners. Only one combined install/restart, one exact
+  zero-retry canary, and exact owned cleanup are active; materialization and
+  scheduler/completion control remain excluded.
 
 - Closed provider-free ChatGPT post-payload route-loss localization:
   [docs/dev/plans/0263-2026-08-11-chatgpt-post-payload-route-loss-provider-free-localization.md](docs/dev/plans/0263-2026-08-11-chatgpt-post-payload-route-loss-provider-free-localization.md)

@@ -1,3 +1,19 @@
+## 2026-08-11 | Plan 0264 Live Gate Activation
+
+- The operator approved the exact frozen packet with `ok go`: one combined
+  user-runtime install/API restart, one exact zero-retry `wsl-chrome-3` context
+  canary, and one ownership-checked cleanup only.
+- Fresh admission is green at clean/synchronized Git `2800b472`: API PID 85444
+  is active/running with zero restarts; scheduler is paused/paused; the target
+  is idle-waiting/backfill-history/pass 56 with null error/next/force; active
+  completions and history jobs are zero; exact owners and port 45015 listeners
+  are zero. Built/installed hashes differ as expected at `2acb20a9...` and
+  `1f394126...`.
+- Materialization, completion/scheduler controls, retries, prompts, model
+  selection, clicks, downloads/uploads, guard/config changes, direct runtime
+  edits, and wider profiles remain excluded. Commit/push and a repeated fresh
+  admission precede the sole install.
+
 ## 2026-08-11 | Plan 0262 Live Gate Activation
 
 - The operator approved continuation and separately authorized closing the

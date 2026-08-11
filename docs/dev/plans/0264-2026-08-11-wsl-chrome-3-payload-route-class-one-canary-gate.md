@@ -2,17 +2,18 @@
 
 State: OPEN
 Lane: P01
-Plan version: 1
-Gate state: PREPARED_AWAITING_APPROVAL
-Goal execution state: PAUSED_AT_LIVE_EFFECT_GATE
+Plan version: 2
+Gate state: ACTIVE_INSTALL_AND_ONE_CANARY
+Goal execution state: ACTIVE_BOUNDED_LIVE_PACKET
 
 ## Current State
 
 Plan 0262 consumed its one live attempt and reproduced generic post-payload
 route loss. Plan 0263 is provider-free green and now binds the same failure to
-one closed payload-shape plus route class. The new build is not installed.
-API PID 85444 is healthy, scheduler is paused/paused, the target remains pass
-56, active work and exact browser ownership are zero.
+one closed payload-shape plus route class. The operator approved this exact
+frozen packet with `ok go`. Fresh admission at Git `2800b472` found API PID
+85444 healthy, scheduler paused/paused, the target at pass 56, active work and
+exact browser ownership zero, and the new build not yet installed.
 
 ## Stable Objective
 
@@ -38,7 +39,7 @@ failure stage as a classified diagnostic. Clean up exactly and stop.
 
 - [x] Provider-free payload-route localization and exact harness acceptance of
   only the closed matrix are green.
-- [ ] Separate explicit approval and fresh zero-owner admission.
+- [x] Separate explicit approval and fresh zero-owner admission.
 - [ ] One install/restart establishes exact source/installed parity and healthy
   API with `NRestarts=0`.
 - [ ] Exactly one attempt yields context, exact terminal unavailability, or a
@@ -89,6 +90,25 @@ failure stage as a classified diagnostic. Clean up exactly and stop.
 - `subagent_status`: not_spawned.
 - `next_action_or_stop_reason`: stop at the live-effect gate and require
   separate approval plus a complete fresh admission.
+
+## Activation Checkpoint | One Install And One Canary
+
+- `checkpoint_id`: `P0264-C02`.
+- `state_transition`: P0264_PREPARED_AWAITING_APPROVAL ->
+  P0264_ACTIVE_INSTALL_AND_ONE_CANARY.
+- `progress_classification`: live_gate_admitted.
+- `approval_evidence`: the operator replied `ok go` to the frozen Plan 0264
+  packet.
+- `runtime_evidence`: clean/synchronized Git `2800b472`; API PID 85444 is
+  active/running with `NRestarts=0`; scheduler paused/paused; target
+  idle-waiting/backfill-history/pass 56 with null error/next/force; active
+  completions and history jobs zero; exact profile owners and port 45015
+  listeners zero. Built hash is `2acb20a9...`; installed is `1f394126...`.
+- `authority_classification`: exactly one combined install/service restart,
+  one exact zero-retry canary, and one ownership-checked cleanup only.
+- `subagent_status`: not_spawned.
+- `next_action_or_stop_reason`: commit and push this activation, repeat the
+  stopped-state admission, then spend the sole install and canary attempts.
 
 ## Definition Of Done
 

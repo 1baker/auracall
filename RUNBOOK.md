@@ -1,5 +1,21 @@
 # RUNBOOK
 
+## Turn 441 | 2026-08-11
+
+- The operator approved Plan 0264's frozen packet with `ok go`. This activates
+  exactly one combined user-runtime install/API restart, one exact zero-retry
+  `wsl-chrome-3` context canary, and one ownership-checked cleanup.
+- Fresh admission is green at clean/synchronized Git `2800b472`: API PID 85444
+  is active/running with zero restarts; scheduler is paused/paused; the target
+  is idle-waiting/backfill-history/pass 56 with null error/next/force; active
+  completions and history jobs are zero; exact owners and port 45015 listeners
+  are zero. Built/installed hashes differ as expected at `2acb20a9...` and
+  `1f394126...`.
+- No retry, materialization, completion/scheduler control, prompt, model
+  selection, click, download/upload, guard/config mutation, direct runtime edit,
+  or wider profile is authorized. Activation must be committed and pushed,
+  followed by a fresh stopped-state admission, before spending the install.
+
 ## Turn 440 | 2026-08-11
 
 - The operator approved Plan 0262 continuation and separately authorized
