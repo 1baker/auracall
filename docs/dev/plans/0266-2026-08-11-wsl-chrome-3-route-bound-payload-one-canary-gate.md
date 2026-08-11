@@ -2,9 +2,9 @@
 
 State: OPEN
 Lane: P01
-Plan version: 1
-Gate state: AWAITING_SEPARATE_APPROVAL
-Goal execution state: PAUSED_AT_LIVE_EFFECT_GATE
+Plan version: 2
+Gate state: ACTIVE_EXACT_ONE_CANARY
+Goal execution state: ACTIVE_BOUNDED_EXECUTION
 
 ## Current State
 
@@ -39,7 +39,7 @@ exact canary-owned browser, and stop.
 
 - [x] Provider-free route-bound reacquisition tests, adjacent regressions,
   typecheck, build, dry-run, docs, and audit are green.
-- [ ] Separate explicit approval and fresh zero-owner admission.
+- [x] Separate explicit approval and fresh zero-owner admission.
 - [ ] One install/restart establishes exact source/installed adapter parity and
   healthy API with `NRestarts=0`.
 - [ ] Exactly one attempt yields current context or exact terminal 404/410
@@ -96,6 +96,30 @@ exact canary-owned browser, and stop.
 - `subagent_status`: not_spawned.
 - `next_action_or_stop_reason`: stop at the live-effect gate and require
   separate approval plus a complete fresh admission.
+
+## Activation Checkpoint | Exact Packet Admitted
+
+- `checkpoint_id`: `P0266-C02`.
+- `state_transition`: P0266_PREPARED_AWAITING_APPROVAL ->
+  P0266_ACTIVE_EXACT_ONE_CANARY.
+- `progress_classification`: blocker_reduction.
+- `runtime_evidence`: the operator's explicit `ok go` activates the frozen
+  packet. At `2026-08-11T11:14:25-05:00`, Git is clean and synchronized at
+  `2718e1c5`; API PID 21763 is active/running with `NRestarts=0`; scheduler is
+  paused/paused; target `acctmirror_completion_fb93ed6c-c57b-40cd-b5dc-ba6322f75446`
+  is idle-waiting/backfill-history/pass 56 with null error/next and
+  `materializationForce=false`; queued/running completion count and active
+  history-job count are zero; browser-tools returns `[]`; port 45015 is
+  unbound; no matching agent-browser resource owner exists. Built and installed
+  adapter hashes remain intentionally different at `3068a77b...` and
+  `2acb20a9...` before the sole install.
+- `authority_classification`: exactly the frozen install, canary, inspection,
+  and ownership-checked cleanup packet is active. Every stated non-goal remains
+  excluded.
+- `subagent_status`: not_spawned.
+- `next_action_or_stop_reason`: commit and push this activation, repeat the
+  stopped-state admission, then spend the sole install and canary without
+  retry.
 
 ## Definition Of Done
 

@@ -1,5 +1,24 @@
 # RUNBOOK
 
+## Turn 442 | 2026-08-11
+
+- The operator's explicit `ok go` activates Plan 0266's frozen packet: one
+  combined user-runtime install/API restart, one exact zero-retry
+  `wsl-chrome-3` context canary, and at most one exact ownership-checked
+  cleanup.
+- Fresh admission is green at clean/synchronized Git `2718e1c5`: API PID
+  21763 is active/running with zero restarts; scheduler is paused/paused; target
+  `acctmirror_completion_fb93ed6c-c57b-40cd-b5dc-ba6322f75446` is
+  idle-waiting/backfill-history/pass 56 with null error/next and
+  `materializationForce=false`; queued/running completion work and active
+  history jobs are zero; browser-tools returns `[]`; port 45015 is unbound;
+  agent-browser has no matching resource owner. Built/installed adapter hashes
+  differ as expected at `3068a77b...` and `2acb20a9...`.
+- No materialization, completion/scheduler control, retry, prompt, model
+  selection, click, download/upload, guard/config change, direct runtime edit,
+  or wider profile is authorized. This activation will be committed and pushed
+  before the one install and canary.
+
 ## Turn 441 | 2026-08-11
 
 - The operator approved Plan 0264's frozen packet with `ok go`. This activates

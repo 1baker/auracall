@@ -1,3 +1,21 @@
+## 2026-08-11 | Plan 0266 Live Gate Activation
+
+- The operator's explicit `ok go` activates the frozen one-install,
+  one-zero-retry-canary, exact-cleanup packet. Materialization,
+  completion/scheduler control, retry, prompt, model selection, click,
+  download/upload, guard/config change, direct runtime edit, and wider profiles
+  remain excluded.
+- Fresh admission is green at clean/synchronized Git `2718e1c5`: API PID
+  21763 is active/running with `NRestarts=0`; scheduler is paused/paused; target
+  `acctmirror_completion_fb93ed6c-c57b-40cd-b5dc-ba6322f75446` is
+  idle-waiting/backfill-history/pass 56 with null error/next and
+  `materializationForce=false`; queued/running completion work and active
+  history jobs are zero; browser-tools returns `[]`; port 45015 is unbound;
+  agent-browser reports no matching resource owner. Built/installed adapter
+  hashes intentionally differ at `3068a77b...` and `2acb20a9...`.
+- The activation checkpoint must be committed and pushed, followed by a fresh
+  stopped-state readback, before the sole install is spent.
+
 ## 2026-08-11 | Plan 0265 Route-Bound Payload Repair
 
 - Plan 0264's sole canary classified the causal boundary as payload missing on

@@ -7,13 +7,16 @@
 Status: active
 Lane: P01
 
-- Prepared `wsl-chrome-3` route-bound payload one-canary gate:
+- Active `wsl-chrome-3` route-bound payload one-canary gate:
   [docs/dev/plans/0266-2026-08-11-wsl-chrome-3-route-bound-payload-one-canary-gate.md](docs/dev/plans/0266-2026-08-11-wsl-chrome-3-route-bound-payload-one-canary-gate.md)
   The provider-free repair is green and built but not installed. One exact
   zero-retry canary is frozen to accept current context or exact terminal
   unavailability; a repeated payload-missing/home-route stage fails closed.
-  Separate approval and fresh admission are required. Materialization and all
-  scheduler/completion controls remain excluded.
+  The operator approved the frozen packet and a fresh admission is green at
+  clean/synchronized Git `2718e1c5`, healthy API PID 21763, scheduler
+  paused/paused, target pass 56, and zero exact owners/work. The activation
+  checkpoint must be committed and pushed before the sole install and canary.
+  Materialization and all scheduler/completion controls remain excluded.
 
 - Closed provider-free ChatGPT route-bound payload reacquisition repair:
   [docs/dev/plans/0265-2026-08-11-chatgpt-route-bound-payload-reacquisition-provider-free-repair.md](docs/dev/plans/0265-2026-08-11-chatgpt-route-bound-payload-reacquisition-provider-free-repair.md)
