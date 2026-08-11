@@ -7,7 +7,7 @@
 Status: active
 Lane: P01
 
-- Open provider-free ChatGPT Advanced/Effort selector repair:
+- Closed ChatGPT Advanced/Effort selector repair:
   [docs/dev/plans/0259-2026-08-11-chatgpt-advanced-effort-selector-repair.md](docs/dev/plans/0259-2026-08-11-chatgpt-advanced-effort-selector-repair.md)
   LitScout Experiment 5 reached GPT-5.6 Sol but stopped before submission when
   AuraCall could not traverse the current compact `Advanced` control into the
@@ -17,7 +17,9 @@ Lane: P01
   and LitScout mutation remain excluded until the user's explicit retry `go`.
   The repair is green; one known full-suite reattach e2e unexpectedly launched
   an `about:blank` managed browser, which is fully attributed and stopped. The
-  exact committed user-runtime install and parity readback remain.
+  exact commit `b27b0c99` is pushed and installed with 510-file parity; the API
+  is healthy and the browser remains stopped. Experiment 5 now waits only on a
+  fresh readiness check after the user's explicit retry `go`.
 
 - Closed `wsl-chrome-3` bounded-launch one-canary gate at first CDP evaluation:
   [docs/dev/plans/0258-2026-08-10-wsl-chrome-3-bounded-launch-one-canary-gate.md](docs/dev/plans/0258-2026-08-10-wsl-chrome-3-bounded-launch-one-canary-gate.md)

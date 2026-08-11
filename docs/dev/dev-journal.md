@@ -25,6 +25,12 @@
   did not navigate to ChatGPT or retry Experiment 5. Exact process-group
   SIGTERM restored zero profile processes and a closed port; retained evidence
   was not rewritten or cleaned. The broad suite was not rerun.
+- Closeout: pushed commit `b27b0c99` was installed once. Source and installed
+  runtime match across 510 `dist/` files at aggregate SHA-256
+  `ab2fb590a69ed7c52291959f800148022dbcd463163c662a4c6561828deb96f7`.
+  The API is active at PID 82312 with zero automatic restarts and `/status` 200;
+  the exact browser profile remains absent and port 45015 remains unbound.
+  Experiment 5 was not retried and remains gated on the user's explicit `go`.
 
 ## 2026-08-10 | Plan 0255 Context Preflight Abort Repair
 

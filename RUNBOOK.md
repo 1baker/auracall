@@ -24,8 +24,16 @@
   on port 45015 at `about:blank`, rewriting retained profile History bytes. No
   ChatGPT route, submission, provider call, or Experiment 5 retry occurred. An
   exact process-group SIGTERM restored zero profile processes and an unbound
-  port; no profile or evidence cleanup was performed. Commit/install parity is
-  the remaining Plan 0259 packet.
+  port; no profile or evidence cleanup was performed.
+- Closed Plan 0259 at pushed commit
+  `b27b0c995019bcbc604f425c32abad6cf180c984`. The one allowed user-runtime
+  install produced exact 510-file source/install parity at aggregate SHA-256
+  `ab2fb590a69ed7c52291959f800148022dbcd463163c662a4c6561828deb96f7`;
+  model-selection and thinking-time module hashes match individually. The API
+  restarted once under the installer boundary and is active at PID 82312 with
+  `NRestarts=0` and `/status` HTTP 200. Browser/profile processes remain zero
+  and port 45015 is unbound. No Experiment 5 retry has started; the next live
+  effect requires the user's explicit `go` and fresh readiness admission.
 
 ## Turn 437 | 2026-08-10
 

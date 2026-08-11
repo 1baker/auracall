@@ -1,10 +1,10 @@
 # ChatGPT Advanced Effort Selector Repair | 0259-2026-08-11
 
-State: OPEN
+State: CLOSED
 Lane: P01
-Plan version: 2
-Gate state: REPAIR_GREEN_INSTALL_PENDING
-Goal execution state: ACTIVE_BOUNDED_EXECUTION
+Plan version: 3
+Gate state: READY_FOR_EXPLICIT_USER_RETRY_GO
+Goal execution state: REPAIR_COMPLETE_RETRY_NOT_STARTED
 
 ## Stable Goal Objective
 
@@ -44,6 +44,13 @@ committed build once without submitting a prompt.
   process-group SIGTERM then stopped PID 98032 and all descendants, restoring
   zero profile processes and an unbound port. The profile History bytes changed
   during that test launch and are retained rather than rewritten or cleaned.
+- Commit `b27b0c995019bcbc604f425c32abad6cf180c984` is pushed to
+  `origin/fix/chatgpt-advanced-effort-selector` and installed once. Source and
+  installed `dist/` contain the same 510 files with aggregate manifest SHA-256
+  `ab2fb590a69ed7c52291959f800148022dbcd463163c662a4c6561828deb96f7`.
+  The installed API is active at PID 82312 with `NRestarts=0`, `/status` returns
+  HTTP 200, and the required browser profile remains at zero processes with
+  port 45015 unbound.
 
 ## Authority And Effect Boundary
 
@@ -87,7 +94,7 @@ committed build once without submitting a prompt.
   strict pre-submission failure on missing menu or option.
 - [x] Focused selector/config/runtime tests, typecheck, build, lint/diff, plan
   audit, and goal-policy audit pass.
-- [ ] The committed repair is pushed and installed with exact source/install
+- [x] The committed repair is pushed and installed with exact source/install
   parity while the required browser profile and port remain absent.
 - [x] Governed Experiment 5 browser/submission/provider/LitScout effects remain
   zero. The one unintended full-suite `about:blank` launch is fully attributed,
