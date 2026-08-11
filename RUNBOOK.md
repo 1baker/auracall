@@ -55,6 +55,11 @@
   `wsl-chrome-3` browser lifecycle for a one-menu-open/no-selection inspection,
   provider-free mapping repair, installed parity, the sole zero-retry context
   canary, and exact cleanup. Scheduler and materialization remain excluded.
+- Fresh admission found pre-existing exact Chrome PID 89142/port 45015 with two
+  LitScout project tabs and no active AuraCall job or agent-browser ownership.
+  Plan 0256 version 5 forbids duplicate launch, navigation, or close; it permits
+  one in-place model-menu inspection and detach, then provider-free mapping
+  repair. Install/canary waits for independent exit or separate close authority.
 
 ## Turn 436 | 2026-08-10
 

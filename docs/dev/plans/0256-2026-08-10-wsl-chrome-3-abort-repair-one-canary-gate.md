@@ -2,8 +2,8 @@
 
 State: OPEN
 Lane: P01
-Plan version: 4
-Gate state: APPROVED_ACTIVE_SELECTOR_INSPECTION
+Plan version: 5
+Gate state: ACTIVE_REUSE_ONLY_SELECTOR_INSPECTION
 Goal execution state: ACTIVE_BOUNDED_EXECUTION
 
 ## Stable Goal Objective
@@ -37,6 +37,12 @@ scheduler, submit a prompt, or widen to another route/profile.
   inspection of ChatGPT's updated model selector before AuraCall's mapping is
   changed. One shared exact-profile browser lifecycle owns both inspection and
   the later context canary; no duplicate profile process is permitted.
+- Fresh launch admission found pre-existing exact-profile Chrome PID 89142 on
+  port 45015, started at 17:36:57, with two LitScout project tabs. It is not
+  correlated to an active AuraCall materialization job or an agent-browser
+  owner. Treat it as externally owned: no launch, navigation, or close is
+  admitted. Agent-browser may attach read-only and open the existing model menu
+  once, then must detach.
 
 ## Authority And Effect Boundary
 
@@ -54,23 +60,26 @@ scheduler, submit a prompt, or widen to another route/profile.
 ## Execution Packet After Approval
 
 1. Re-read Git, service, scheduler, completion, active-job, exact-browser, and
-   provider-guard admission. Stop on drift or any exact browser owner.
-2. Launch the exact `wsl-chrome-3/chatgpt` managed browser once, attach one
-   named agent-browser session to its actual DevTools port, confirm the
+   provider-guard admission. Stop on unclassified drift or duplicate ownership.
+2. Reuse the pre-existing exact `wsl-chrome-3/chatgpt` browser without launch,
+   attach one named agent-browser session to port 45015, confirm the
    authenticated challenge-free surface, open the model selector once, and
    retain only sanitized option labels and stable DOM semantics. Do not select
-   a model or submit a prompt.
+   a model, navigate, submit a prompt, or close the browser.
 3. Update AuraCall's semantic model-selector mapping plus deterministic tests,
    validate provider-free, audit, commit, and push while preserving the exact
    browser for later reuse.
-4. Install current committed source once, restart only the AuraCall API, and
+4. Require the pre-existing browser to exit independently or obtain separate
+   authority to close it. Then rerun exact zero-owner admission. Install current
+   committed source once, restart only the AuraCall API, and
    require active/running health, `NRestarts=0`, and exact source/installed
    adapter plus browser-service parity.
 5. Run the redaction-safe context harness once against the retained exact
    browser. Stop on login, CAPTCHA,
    challenge, identity mismatch, `Answer now`, timeout, or any ambiguous
    receipt. Never retry.
-6. Detach agent-browser, close only the shared exact browser, and prove exact
+6. Detach agent-browser after inspection. After the later canary, close only a
+   canary-owned browser and prove exact
    owners/jobs return to zero while scheduler and both tracked completions
    remain unchanged.
 
@@ -195,3 +204,25 @@ remain zero. Any failure closes this plan immediately without another attempt.
 - `review_disposition_summary`: stale source selector labels are accepted as a
   live-evidence requirement; duplicate-profile launch and inference from old
   fixtures are rejected.
+
+## Admission Checkpoint | Pre-Existing Exact Browser Preserved
+
+- `checkpoint_id`: `P0256-C05`.
+- `state_transition`: P0256_APPROVED_ACTIVE_SELECTOR_INSPECTION ->
+  P0256_ACTIVE_REUSE_ONLY_SELECTOR_INSPECTION.
+- `progress_classification`: blocker_reduction.
+- `evidence`: fresh admission found exact Chrome root PID 89142/port 45015,
+  started at 17:36:57 with two LitScout project tabs. Active AuraCall
+  materialization jobs and queued/running completions are zero; agent-browser
+  resource inventory does not claim this process. No duplicate launch ran.
+- `subagent_status`: not_spawned.
+- `next_action_or_stop_reason`: attach one named agent-browser session to the
+  existing port, inspect only the model menu, detach, and complete the
+  provider-free mapping repair. Do not install or run the canary until this
+  pre-existing owner exits independently or separate close authority exists.
+- `authority_classification`: reuse-only inspection; no launch, navigation,
+  model selection, prompt, download, close, materialization,
+  completion/scheduler control, guard action, retry, or wider profile.
+- `review_disposition_summary`: silently treating the existing browser as
+  canary-owned is rejected; bounded attachment preserves operator browser
+  ownership while still collecting the explicitly requested selector evidence.

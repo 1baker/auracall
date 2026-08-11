@@ -14,6 +14,9 @@ Lane: P01
   selector mapping repair, one install/restart, one zero-retry context canary,
   and exact cleanup. Model selection, prompts, materialization,
   completion/scheduler control, retry, and wider profiles remain excluded.
+  Admission found a pre-existing externally owned exact-profile browser, so the
+  current step is reuse-only agent-browser inspection with no launch,
+  navigation, or close; install/canary waits for fresh zero-owner admission.
 
 - Closed provider-free context-preflight abort and receipt-envelope repair:
   [docs/dev/plans/0255-2026-08-10-context-preflight-abort-and-receipt-envelope-repair.md](docs/dev/plans/0255-2026-08-10-context-preflight-abort-and-receipt-envelope-repair.md)

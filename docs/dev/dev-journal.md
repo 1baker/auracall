@@ -53,6 +53,11 @@
   and exact cleanup. The menu may be opened once but no model may be selected;
   prompts, materialization, completion/scheduler controls, retry, and wider
   profiles remain excluded.
+- Admission drift: exact Chrome PID 89142/port 45015 predates this packet and
+  holds two LitScout project tabs. No active AuraCall job or agent-browser owner
+  claims it. Version 5 permits reuse-only attachment and one model-menu open,
+  but no launch, navigation, selection, or close. Install/canary requires a
+  later zero-owner admission or separate close authority.
 
 ## 2026-08-10 | Plan 0254 Provider-Free One-Canary Harness
 
