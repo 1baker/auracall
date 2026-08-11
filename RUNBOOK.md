@@ -50,6 +50,11 @@
   `NRestarts=0`, scheduler paused/paused, no queued or running completion, zero
   active history-materialization jobs, `wsl-chrome-3` idle-waiting/pass 56,
   and zero exact managed Chrome owners.
+- The operator approved Plan 0256 and added a fresh agent-browser inspection of
+  ChatGPT's updated model selector. Version 4 uses one shared exact
+  `wsl-chrome-3` browser lifecycle for a one-menu-open/no-selection inspection,
+  provider-free mapping repair, installed parity, the sole zero-retry context
+  canary, and exact cleanup. Scheduler and materialization remain excluded.
 
 ## Turn 436 | 2026-08-10
 

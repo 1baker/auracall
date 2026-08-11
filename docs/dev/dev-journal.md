@@ -47,6 +47,12 @@
   scheduler posture is paused/paused; queued/running completions, active
   history-materialization jobs, and exact `wsl-chrome-3` Chrome owners are
   zero; the target completion remains idle-waiting/pass 56.
+- Operator activation: Plan 0256 version 4 admits one exact-profile browser
+  lifecycle for fresh agent-browser model-menu inspection, provider-free
+  semantic selector repair, one install/restart, one zero-retry context canary,
+  and exact cleanup. The menu may be opened once but no model may be selected;
+  prompts, materialization, completion/scheduler controls, retry, and wider
+  profiles remain excluded.
 
 ## 2026-08-10 | Plan 0254 Provider-Free One-Canary Harness
 

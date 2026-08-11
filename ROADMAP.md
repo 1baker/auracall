@@ -7,12 +7,13 @@
 Status: active
 Lane: P01
 
-- Prepared installed `wsl-chrome-3` stage-localized one-canary gate:
+- Active approved `wsl-chrome-3` selector inspection and one-canary gate:
   [docs/dev/plans/0256-2026-08-10-wsl-chrome-3-abort-repair-one-canary-gate.md](docs/dev/plans/0256-2026-08-10-wsl-chrome-3-abort-repair-one-canary-gate.md)
-  Cancellation repair and sanitized preflight-stage receipts are green across
-  the full provider-free suite. The gate awaits explicit approval for one
-  install/restart and one zero-retry context canary; it permits no
-  materialization, completion/scheduler control, retry, or wider profile.
+  The operator approved one shared exact-profile browser lifecycle: fresh
+  agent-browser inspection of ChatGPT's changed model menu, provider-free
+  selector mapping repair, one install/restart, one zero-retry context canary,
+  and exact cleanup. Model selection, prompts, materialization,
+  completion/scheduler control, retry, and wider profiles remain excluded.
 
 - Closed provider-free context-preflight abort and receipt-envelope repair:
   [docs/dev/plans/0255-2026-08-10-context-preflight-abort-and-receipt-envelope-repair.md](docs/dev/plans/0255-2026-08-10-context-preflight-abort-and-receipt-envelope-repair.md)

@@ -2,17 +2,19 @@
 
 State: OPEN
 Lane: P01
-Plan version: 3
-Gate state: PREPARED_AWAITING_LIVE_EFFECT_APPROVAL
-Goal execution state: PAUSED_AT_APPROVAL_GATE
+Plan version: 4
+Gate state: APPROVED_ACTIVE_SELECTOR_INSPECTION
+Goal execution state: ACTIVE_BOUNDED_EXECUTION
 
 ## Stable Goal Objective
 
-After explicit approval and fresh clean admission, install the provider-free
-Plan 0255 repair once and run exactly one fresh zero-retry `wsl-chrome-3`
-conversation-context canary. Prove the preflight launch no longer outlives its
-deadline and retain the sanitized terminal receipt. Do not materialize assets,
-control a completion, resume the scheduler, or widen to another route/profile.
+After explicit approval and fresh clean admission, inspect ChatGPT's current
+model selector once with agent-browser, update AuraCall's semantic selector
+mapping provider-free, install the combined repair once, and run exactly one
+fresh zero-retry `wsl-chrome-3` conversation-context canary. Prove the
+preflight launch no longer outlives its deadline and retain the sanitized
+terminal receipt. Do not materialize assets, control a completion, resume the
+scheduler, submit a prompt, or widen to another route/profile.
 
 ## Current State
 
@@ -31,16 +33,21 @@ control a completion, resume the scheduler, or widen to another route/profile.
   scheduler paused/paused, active history materialization jobs zero,
   `wsl-chrome-3` idle-waiting/pass 56, and zero exact default or
   `wsl-chrome-3` Chrome owners.
+- The operator explicitly approved this gate and added a fresh agent-browser
+  inspection of ChatGPT's updated model selector before AuraCall's mapping is
+  changed. One shared exact-profile browser lifecycle owns both inspection and
+  the later context canary; no duplicate profile process is permitted.
 
 ## Authority And Effect Boundary
 
-- Preparation is provider-free and complete. A later explicit approval must
-  cover one install, one API restart, one exact source/installed parity check,
-  one managed-browser launch, one context read, and one exact owned cleanup.
+- Approval covers one exact managed-browser launch, one agent-browser attach,
+  one model-menu open without choosing a model, the provider-free selector
+  mapping/test update, one install, one API restart, one exact
+  source/installed parity check, one context read, and one exact owned cleanup.
 - The sole route is conversation
   `6a40724d-8688-83ea-ab36-7458e921ed19`; the exact child command retains
   `--refresh --retry-attempts 0 --timeout-ms 120000 --json-only`.
-- Prompts, clicks, downloads, uploads, `Answer now`, materialization,
+- Model choice, prompts, other clicks, downloads, uploads, `Answer now`, materialization,
   completion controls, scheduler controls, guard/config changes, direct
   runtime-state edits, wider profiles, and a second attempt remain excluded.
 
@@ -48,18 +55,33 @@ control a completion, resume the scheduler, or widen to another route/profile.
 
 1. Re-read Git, service, scheduler, completion, active-job, exact-browser, and
    provider-guard admission. Stop on drift or any exact browser owner.
-2. Install current committed source once, restart only the AuraCall API, and
+2. Launch the exact `wsl-chrome-3/chatgpt` managed browser once, attach one
+   named agent-browser session to its actual DevTools port, confirm the
+   authenticated challenge-free surface, open the model selector once, and
+   retain only sanitized option labels and stable DOM semantics. Do not select
+   a model or submit a prompt.
+3. Update AuraCall's semantic model-selector mapping plus deterministic tests,
+   validate provider-free, audit, commit, and push while preserving the exact
+   browser for later reuse.
+4. Install current committed source once, restart only the AuraCall API, and
    require active/running health, `NRestarts=0`, and exact source/installed
    adapter plus browser-service parity.
-3. Run the redaction-safe context harness once. Stop on login, CAPTCHA,
+5. Run the redaction-safe context harness once against the retained exact
+   browser. Stop on login, CAPTCHA,
    challenge, identity mismatch, `Answer now`, timeout, or any ambiguous
    receipt. Never retry.
-4. Close only the canary-owned browser and prove exact owners/jobs return to
-   zero while scheduler and both tracked completions remain unchanged.
+6. Detach agent-browser, close only the shared exact browser, and prove exact
+   owners/jobs return to zero while scheduler and both tracked completions
+   remain unchanged.
 
 ## Acceptance Criteria
 
-- [ ] Explicit approval and fresh drift-free admission are recorded.
+- [x] Explicit approval is recorded; fresh drift-free admission remains
+  required immediately before launch.
+- [ ] Fresh agent-browser inspection records the current model options without
+  selecting a model, submitting a prompt, or exposing private page content.
+- [ ] AuraCall's semantic ChatGPT model mapping matches that live selector and
+  passes deterministic provider-free selection tests.
 - [x] Provider-free receipt tests distinguish browser target discovery, debug
   port resolution, Chrome launch, DevTools readiness, and login-tab opening.
 - [ ] Installed/source repair parity follows one healthy API restart.
@@ -76,6 +98,8 @@ control a completion, resume the scheduler, or widen to another route/profile.
 - `max_installs: 1`; `max_api_restarts: 1`; `max_browser_launches: 1`;
   `max_context_reads: 1`; `max_context_retries: 0`;
   `max_browser_closes: 1`; `max_materialization_starts: 0`;
+  `max_agent_browser_attaches: 1`; `max_model_menu_opens: 1`;
+  `max_model_selections: 0`; `max_prompt_submissions: 0`;
   `max_completion_controls: 0`; `max_scheduler_controls: 0`;
   `max_guard_actions: 0`; `max_direct_runtime_edits: 0`;
   `max_subagents: 0`.
@@ -148,3 +172,26 @@ remain zero. Any failure closes this plan immediately without another attempt.
 - `review_disposition_summary`: another canary can now distinguish a repeated
   native-launch stall from later readiness or tab-opening failure without
   widening the one-shot packet.
+
+## Activation Checkpoint | Operator Approval And Selector Refresh
+
+- `checkpoint_id`: `P0256-C04`.
+- `state_transition`: P0256_PREPARED_AWAITING_APPROVAL ->
+  P0256_APPROVED_ACTIVE_SELECTOR_INSPECTION.
+- `progress_classification`: outcome_progress.
+- `evidence`: the operator said `ok go` and explicitly required a fresh
+  agent-browser inspection because ChatGPT's model selector changed again.
+  Git remains clean/synchronized at `e45b397f`; the API is healthy, scheduler
+  paused, target idle-waiting/pass 56, active materialization jobs zero, and
+  exact browser owners zero.
+- `subagent_status`: not_spawned.
+- `next_action_or_stop_reason`: launch the exact managed browser once, inspect
+  the opened model menu without selecting, then update and validate AuraCall's
+  mapping before the approved install and single context canary.
+- `authority_classification`: explicit one-browser inspection plus one
+  install/restart and one context read; no model selection, prompt, download,
+  materialization, completion/scheduler control, guard action, retry, or wider
+  profile.
+- `review_disposition_summary`: stale source selector labels are accepted as a
+  live-evidence requirement; duplicate-profile launch and inference from old
+  fixtures are rejected.
