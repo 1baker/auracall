@@ -1330,6 +1330,55 @@ describe('browser-service ui wait helpers', () => {
     expect(mutationLog.list()).toEqual([]);
   });
 
+  test('navigateAndSettle can force an exact route and settle from external response evidence', async () => {
+    const mutationLog = createInMemoryBrowserMutationLog();
+    let releaseNavigation: (() => void) | undefined;
+    const PAGE = {
+      navigate: vi.fn(() => new Promise<void>((resolve) => {
+        releaseNavigation = resolve;
+      })),
+    };
+    const runtime = {
+      evaluate: vi.fn(async () => ({ result: { value: 'https://chatgpt.com/c/123' } })),
+    };
+
+    try {
+      const result = await navigateAndSettle({ Page: PAGE as never, Runtime: runtime as never }, {
+        url: 'https://chatgpt.com/c/123',
+        forceNavigation: true,
+        waitForDocumentReady: false,
+        mutationAudit: mutationLog.record,
+        mutationSource: 'test:forced-external-navigation',
+        completionSignal: Promise.resolve({ ok: true }),
+      });
+
+      expect(result).toEqual({
+        ok: true,
+        url: 'https://chatgpt.com/c/123',
+        fallbackUsed: false,
+        mutationPerformed: true,
+        phase: 'complete',
+        reason: undefined,
+      });
+      expect(PAGE.navigate).toHaveBeenCalledWith({ url: 'https://chatgpt.com/c/123' });
+      expect(mutationLog.list()).toEqual([
+        expect.objectContaining({
+          phase: 'start',
+          kind: 'navigate',
+          source: 'test:forced-external-navigation',
+        }),
+        expect.objectContaining({
+          phase: 'complete',
+          kind: 'navigate',
+          source: 'test:forced-external-navigation',
+          outcome: 'succeeded',
+        }),
+      ]);
+    } finally {
+      releaseNavigation?.();
+    }
+  });
+
   test('navigateAndSettle preserves a materially different query route', async () => {
     const runtime = createRuntime([
       'https://chatgpt.com/c/123?view=compact',

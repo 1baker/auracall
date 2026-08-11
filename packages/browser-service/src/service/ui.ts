@@ -541,6 +541,7 @@ export type WaitForScriptTextOptions = WaitForPredicateOptions & {
 
 export type NavigateAndSettleOptions = WaitForPredicateOptions & {
   url: string;
+  forceNavigation?: boolean;
   routeExpression?: string;
   routeDescription?: string;
   readyExpression?: string;
@@ -554,6 +555,12 @@ export type NavigateAndSettleOptions = WaitForPredicateOptions & {
   mutationSource?: string;
   interactionGovernor?: BrowserInteractionGovernor;
   interactionClass?: BrowserInteractionClass;
+  /**
+   * Settles the governed navigation audit from caller-owned response evidence
+   * when the CDP Page.navigate acknowledgement may remain pending. A rejected
+   * navigation command still fails the operation.
+   */
+  completionSignal?: Promise<{ ok: boolean; reason?: string }>;
 };
 
 export type NavigateAndSettleResult = {
@@ -1192,7 +1199,7 @@ export async function navigateAndSettle(
     };
   };
 
-  if (areEquivalentNavigationUrls(fromUrl, options.url)) {
+  if (!options.forceNavigation && areEquivalentNavigationUrls(fromUrl, options.url)) {
     const alreadySettled = await evaluateState(options.timeoutMs, false, false);
     if (alreadySettled.ok) {
       return alreadySettled;
@@ -1207,7 +1214,30 @@ export async function navigateAndSettle(
   });
   try {
     await options.interactionGovernor?.beforeInteraction(options.interactionClass ?? 'renavigation');
-    await client.Page.navigate({ url: options.url });
+    const navigationCommand = client.Page.navigate({ url: options.url });
+    if (options.completionSignal) {
+      const commandFailure = new Promise<never>((_resolve, reject) => {
+        void navigationCommand.catch(reject);
+      });
+      const completion = await Promise.race([options.completionSignal, commandFailure]);
+      const externallySettled: NavigateAndSettleResult = {
+        ok: completion.ok,
+        url: options.url,
+        fallbackUsed: false,
+        mutationPerformed: true,
+        phase: 'complete',
+        reason: completion.reason,
+      };
+      await audit.complete({
+        outcome: externallySettled.ok ? 'succeeded' : 'failed',
+        toUrl: mutationAudit ? await readLocationHrefForAudit(client.Runtime) : options.url,
+        fallbackUsed: false,
+        reason: 'external-completion-signal',
+        error: externallySettled.ok ? null : externallySettled.reason ?? null,
+      });
+      return externallySettled;
+    }
+    await navigationCommand;
     const primary = await evaluateState(options.timeoutMs, false, true);
     if (primary.ok || !options.fallbackToLocationAssign) {
       await audit.complete({

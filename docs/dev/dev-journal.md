@@ -1,3 +1,27 @@
+## 2026-08-11 | Plan 0265 Route-Bound Payload Repair
+
+- Plan 0264's sole canary classified the causal boundary as payload missing on
+  ChatGPT home. The Plan 0265 public-seam tracer then failed 1/1 because the
+  armed fallback listeners were paired with a reload of the current home route.
+- The ChatGPT adapter now performs one forced governed navigation to the exact
+  admitted conversation route and settles it from exact Network response
+  evidence. The public payload-reader interface, terminal 404/410 behavior,
+  response/body deadlines, listener cleanup, and zero-retry semantics remain
+  intact.
+- Validation passes 255/255 focused/adjacent tests, 144 wider tests with one
+  intentional skip, typecheck, build, scoped Biome with zero errors, canary
+  dry-run, and diff hygiene. Built adapter hash is `3068a77b...`; installed is
+  intentionally still `2acb20a9...`.
+- API PID 21763 remains active/running with zero restarts; scheduler is
+  paused/paused; the target remains idle-waiting/backfill-history/pass 56;
+  active history jobs, exact browser owners, and port 45015 listeners are zero.
+  No install, browser/provider/context, materialization, completion/scheduler,
+  prompt/model/click/download, direct runtime edit, or subagent effect ran.
+- Plan 0265 closes provider-free. Plan 0266 prepares exactly one later combined
+  install/restart and one zero-retry `wsl-chrome-3` canary, withheld pending
+  separate approval and a fresh admission. Wider completion and scheduler
+  resume remain out of scope.
+
 ## 2026-08-11 | Plan 0264 Live Gate Activation
 
 - The operator approved the exact frozen packet with `ok go`: one combined

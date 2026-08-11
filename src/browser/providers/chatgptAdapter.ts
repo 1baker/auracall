@@ -3126,10 +3126,10 @@ export async function readChatgptConversationPayloadWithClient(
 	await client.Network.enable().catch(() => undefined);
 	await client.Page.enable().catch(() => undefined);
 	// Pacing is outside the response-acquisition window. Starting the fallback
-	// timer before the governor releases the physical reload can exhaust the
-	// entire body deadline without issuing the request, while the detached reload
-	// later outlives this read and its client.
-	await beforeChatgptBrowserInteraction(options, "page-refresh");
+	// timer before the governor releases the physical route reacquisition can
+	// exhaust the entire body deadline without issuing the request, while a
+	// detached navigation later outlives this read and its client.
+	await beforeChatgptBrowserInteraction(options, "renavigation");
 
 	type FallbackBody =
 		| { kind: "body"; body: string; base64Encoded: boolean }
@@ -3194,17 +3194,20 @@ export async function readChatgptConversationPayloadWithClient(
 			disposeLoadingFinished = () => loadingFinishedSubscription();
 		}
 	});
-	// The exact Network response is the payload completion signal. CDP can leave
-	// Page.reload pending after responseReceived/loadingFinished have delivered
-	// a complete body, so its command acknowledgement must not gate this read.
-	await reloadAndSettle(client, {
-		ignoreCache: true,
+	// Bind fallback acquisition to the admitted conversation route. Reloading
+	// the current document is insufficient because ChatGPT can move the tab to
+	// home before the fallback starts. The exact Network response is the payload
+	// completion signal, so a pending Page.navigate acknowledgement must not gate
+	// this read after responseReceived/loadingFinished deliver the complete body.
+	await navigateAndSettle(client, {
+		url: resolveChatgptConversationUrl(conversationId, _projectId),
+		forceNavigation: true,
 		waitForDocumentReady: false,
 		mutationAudit: resolveMutationAudit(client),
 		mutationSource: resolveMutationSource(
 			client,
 			"provider:chatgpt",
-			"fetch-conversation-api-payload-reload",
+			"fetch-conversation-api-payload-navigation",
 		),
 		completionSignal: bodyPromise.then((response) => ({
 			ok: response !== null,

@@ -7,13 +7,21 @@
 Status: active
 Lane: P01
 
-- Active provider-free ChatGPT route-bound payload reacquisition repair:
+- Prepared `wsl-chrome-3` route-bound payload one-canary gate:
+  [docs/dev/plans/0266-2026-08-11-wsl-chrome-3-route-bound-payload-one-canary-gate.md](docs/dev/plans/0266-2026-08-11-wsl-chrome-3-route-bound-payload-one-canary-gate.md)
+  The provider-free repair is green and built but not installed. One exact
+  zero-retry canary is frozen to accept current context or exact terminal
+  unavailability; a repeated payload-missing/home-route stage fails closed.
+  Separate approval and fresh admission are required. Materialization and all
+  scheduler/completion controls remain excluded.
+
+- Closed provider-free ChatGPT route-bound payload reacquisition repair:
   [docs/dev/plans/0265-2026-08-11-chatgpt-route-bound-payload-reacquisition-provider-free-repair.md](docs/dev/plans/0265-2026-08-11-chatgpt-route-bound-payload-reacquisition-provider-free-repair.md)
-  The sole Plan 0264 canary classified the failure as payload missing on
-  ChatGPT home. CodeGraph localizes the next repair to the fallback's
-  route-unbound reload: exact API listeners are armed, but the mutation does
-  not name the admitted conversation route. Plan 0265 is provider-free only;
-  another install or canary remains withheld.
+  The sole public-seam red proved the fallback reloaded ChatGPT home. The
+  adapter now arms exact response listeners and uses the shared governed
+  navigation primitive for one forced exact-route reacquisition. Focused and
+  adjacent tests pass 255/255, wider tests pass 144 with one intentional skip,
+  and typecheck/build are green. Every live/runtime effect remained zero.
 
 - Closed accepted `wsl-chrome-3` payload-route-class one-canary gate:
   [docs/dev/plans/0264-2026-08-11-wsl-chrome-3-payload-route-class-one-canary-gate.md](docs/dev/plans/0264-2026-08-11-wsl-chrome-3-payload-route-class-one-canary-gate.md)

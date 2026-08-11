@@ -1,3 +1,11 @@
+- 2026-08-11: An exact `Network.responseReceived` listener cannot reacquire a
+  conversation payload if its fallback reloads whatever document is active and
+  the provider has already moved the tab home. Arm the exact response/body
+  listeners first, then issue one governed forced navigation to the admitted
+  conversation route. Let exact response evidence settle a pending CDP command,
+  but retain command rejection, terminal 404/410, bounded body reads, listener
+  disposal, mutation-audit settlement, and the no-retry boundary.
+
 - 2026-08-11: A sanitized stage that reports only post-payload predicate
   failure cannot distinguish payload loss from route loss. At that terminal
   boundary, reduce the already-held payload to a closed shape (`mapping`,

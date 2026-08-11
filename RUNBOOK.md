@@ -29,6 +29,24 @@
   bind the single governed payload reacquisition to the exact conversation
   route, and preserve terminal/timeout/listener/retry controls. No new live
   effect is admitted.
+- The Plan 0265 tracer failed exactly 1/1 when direct payload fetch returned
+  404, the active route was ChatGPT home, and the old fallback reloaded that
+  route. The repair keeps the public payload-reader seam unchanged, forces one
+  governed navigation to the admitted conversation URL after listeners are
+  armed, and can settle from exact response evidence while a CDP navigation
+  acknowledgement remains pending.
+- Provider-free validation passes 255/255 focused/adjacent tests and 144 wider
+  tests with one intentional skip, plus typecheck, production build, scoped
+  Biome with zero errors, dry-run, and diff hygiene. Built adapter hash is
+  `3068a77b...`; installed remains `2acb20a9...`.
+- Fresh readback is API PID 21763 healthy with zero restarts, scheduler
+  paused/paused, target idle-waiting/backfill-history/pass 56 with null
+  error/next/force, active history jobs zero, browser-tools `[]`, and port
+  45015 unbound. Every Plan 0265 live/runtime effect remained zero.
+- Plan 0265 closes provider-free. Plan 0266 freezes one combined install/API
+  restart and one exact zero-retry `wsl-chrome-3` canary, but is stopped pending
+  separate approval and a fresh admission. It does not admit materialization or
+  scheduler/completion control.
 
 ## Turn 440 | 2026-08-11
 

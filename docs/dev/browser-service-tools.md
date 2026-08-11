@@ -166,6 +166,11 @@ Current active extraction plan:
   - Otherwise combines `Page.navigate(...)`, document-ready wait, optional route
     predicate, optional ready predicate, and optional in-page
     `location.assign(...)` fallback.
+  - Set `forceNavigation=true` when the requested exact route must be reacquired
+    even if the current canonical URL appears equivalent. A caller that arms
+    stronger response evidence first may also pass `completionSignal`; that
+    evidence can close the mutation audit while a CDP navigation acknowledgement
+    remains pending, but a rejected navigation command still fails.
   - Returns structured phase data (`route`, `document-ready`, `ready`) so
     callers can throw provider-specific errors without reimplementing the
     settling loop.
