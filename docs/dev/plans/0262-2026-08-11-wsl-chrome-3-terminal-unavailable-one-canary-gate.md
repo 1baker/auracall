@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 2
+Plan version: 3
 Gate state: PREPARED_AWAITING_APPROVAL
 Goal execution state: PAUSED_AT_LIVE_EFFECT_GATE
 
@@ -41,9 +41,10 @@ or widen the route or browser profile.
   `1f3941267e762d72b1caf12d41fce6fbd4f70e12cd6300b6c55e6e6d180beb4a`;
   installed remains
   `fac2bd9b1de04ed3ec2ed9b19e64ceb5b1766232224b7d4acb3a7fd2dcd6bea7`.
-- Current read-only posture is API PID 3323 active/running with
-  `NRestarts=0`, scheduler paused/paused, target idle-waiting/pass 56 with null
-  error/next/force, exact profile owners zero, and port 45015 unbound.
+- Fresh read-only posture is API PID 81249 active/running with `NRestarts=0`,
+  scheduler paused/paused, completion queued/running counts 0/0, target
+  idle-waiting/pass 56 with null error/next/force, active history jobs zero,
+  exact profile owners zero, and port 45015 unbound.
 
 ## Authority And Effect Boundary
 
@@ -69,6 +70,44 @@ or widen the route or browser profile.
 - [ ] Exact browser/job cleanup returns to zero.
 - [ ] Target stays pass 56 and scheduler stays paused/paused.
 - [ ] Materialization and every other excluded effect remain zero.
+
+## Frozen Live Command Packet | Withheld Until Approval
+
+1. Re-run read-only admission and stop unless Git is clean and synchronized,
+   the API is active/running, scheduler state and posture are both paused,
+   completion queued/running counts and active history jobs are zero, the
+   target is idle-waiting at pass 56 with null error/next/force, browser-tools
+   reports no port-45015 owner, and `ss` reports no port-45015 listener.
+2. Run exactly `pnpm run install:user-runtime-service` once. This combined
+   command builds and installs the current checkout, refreshes the user API
+   unit, and performs the plan's one API restart. Do not issue a separate
+   `systemctl restart`.
+3. Require `systemctl --user show auracall-api.service -p ActiveState -p
+   SubState -p MainPID -p NRestarts` to report active/running with a nonzero
+   PID and `NRestarts=0`. Require exact SHA-256 parity between
+   `dist/src/browser/providers/chatgptAdapter.js` and
+   `~/.auracall/user-runtime/node_modules/auracall/dist/src/browser/providers/chatgptAdapter.js`.
+4. Run exactly once:
+
+   ```text
+   pnpm tsx scripts/chatgpt-context-canary.ts --profile wsl-chrome-3 --conversation-id 6a40724d-8688-83ea-ab36-7458e921ed19 --timeout-ms 120000 --command-timeout-ms 150000 --auracall-bin /home/ecochran76/.local/bin/auracall
+   ```
+
+   The harness-generated child command is frozen to explicit `--target
+   chatgpt --refresh --retry-attempts 0 --timeout-ms 120000 --json-only`.
+5. Inspect port 45015 with
+   `pnpm tsx scripts/browser-tools.ts --auracall-profile wsl-chrome-3
+   --browser-target chatgpt inspect --ports 45015 --json`. Run the one cleanup
+   command `pnpm tsx scripts/browser-tools.ts --auracall-profile wsl-chrome-3
+   --browser-target chatgpt kill --ports 45015 --force` only if that inspection
+   attributes the listener to the canary-created exact managed browser profile.
+   If no listener exists, no close is needed. Any different ownership stops
+   without killing it.
+6. Re-run the admission reads and require exact zero owners/listeners/jobs,
+   target pass 56, and scheduler paused/paused. Preserve only the harness's
+   sanitized JSON result and exact state counters.
+
+No command in this section is authorized by its presence in the plan.
 
 ## Local Goal Bounds
 
@@ -118,6 +157,32 @@ or widen the route or browser profile.
 - `subagent_status`: not_spawned.
 - `next_action_or_stop_reason`: stop before install/restart and the one canary
   until Plan 0262 receives explicit live-effect approval.
+
+## Preparation Checkpoint | Live Packet Frozen Without Effects
+
+- `checkpoint_id`: `P0262-C03`.
+- `state_transition`: P0262_PREPARED_AMBIGUOUS_LIVE_COMMANDS ->
+  P0262_PREPARED_AWAITING_APPROVAL.
+- `progress_classification`: provider_free_execution_ambiguity_removed.
+- `structural_evidence`: CodeGraph traces the exact UUID command directly to
+  `LlmService.getConversationContext`; CLI-sourced `--refresh` disables cache
+  fallback and retry count zero reaches the retry loop unchanged. The command
+  has no prompt, model-selection, or materialization branch.
+- `install_evidence`: the documented combined installer performs the one
+  build/install and the one API-service restart. A second manual restart is
+  explicitly forbidden.
+- `cleanup_evidence`: browser-tools help confirms exact port-scoped inspect and
+  kill surfaces. Cleanup is admitted only for the canary-created exact profile
+  owner; unrelated ownership is a hard stop.
+- `effect_audit`: only source/plan inspection, command help, and read-only
+  runtime state were used. Installs, restarts, browser launches/attachments,
+  provider calls, context reads, cleanup kills, materialization, and controls
+  remain zero.
+- `authority_classification`: the live gate remains withheld; this checkpoint
+  grants no live-effect or retry authority.
+- `subagent_status`: not_spawned.
+- `next_action_or_stop_reason`: await explicit Plan 0262 approval, then re-run
+  fresh admission and execute the frozen packet once or stop on drift.
 
 ## Definition Of Done
 

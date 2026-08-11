@@ -13,8 +13,11 @@ Lane: P01
   same-route, zero-retry canary is specified to accept either current context
   or the exact terminal-unavailable stage. The harness now makes that
   distinction from sanitized receipt fields only and rejects timeout, retry,
-  pending-operation, and ambiguous-receipt near misses. It awaits approval;
-  materialization and scheduler/completion control remain excluded.
+  pending-operation, and ambiguous-receipt near misses. The live packet is now
+  frozen to one combined install/service restart, one exact canary, and
+  ownership-checked cleanup; a second restart or unrelated-process kill is a
+  hard stop. It awaits approval; materialization and scheduler/completion
+  control remain excluded.
 
 - Closed ChatGPT exact-fallback terminal-unavailable provider-free repair:
   [docs/dev/plans/0261-2026-08-11-chatgpt-fallback-terminal-unavailable-provider-free-repair.md](docs/dev/plans/0261-2026-08-11-chatgpt-fallback-terminal-unavailable-provider-free-repair.md)

@@ -1,3 +1,11 @@
+- 2026-08-11: Freeze a one-canary install packet to the combined
+  `install:user-runtime-service` command when that script already owns the API
+  restart; a later manual restart silently exceeds the declared effect bound.
+  Freeze the exact canary arguments and inspect browser ownership before a
+  port-scoped cleanup. Zero-owner admission plus a sole launched canary permits
+  cleanup only when the resulting listener is attributable to that exact
+  managed browser profile; unrelated ownership must stop without a kill.
+
 - 2026-08-11: A one-canary plan that permits either current context or confirmed
   online unavailability is not executable if its harness still treats every
   nonzero child exit as rejection. Classify acceptance from sanitized output

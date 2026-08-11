@@ -1,5 +1,15 @@
 ## 2026-08-11 | Plan 0262 Classified One-Canary Preparation
 
+- A provider-free execution audit found the plan described install/restart and
+  cleanup semantically but did not freeze the commands. Plan version 3 now uses
+  exactly one `install:user-runtime-service` invocation, forbids a second API
+  restart, freezes the exact canary arguments, and requires ownership-checked
+  port-45015 cleanup.
+- CodeGraph confirms explicit refresh disables cache fallback, retry count zero
+  reaches `LlmService.getConversationContext` unchanged, and this command path
+  cannot prompt, select a model, or materialize. Browser-tools help confirmed
+  exact port-scoped inspect/kill controls. These were provider-free reads only;
+  the live gate remains unapproved.
 - Gate audit found the existing canary harness would reject the newly allowed
   terminal result because `accepted` required child exit 0 and nonempty
   context. The deterministic red failed on the absent receipt-driven outcome

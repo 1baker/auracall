@@ -50,6 +50,18 @@
   no timeout or pending operation, and no stderr interpretation. Nine exact and
   194 adjacent tests, typecheck, build, scoped Biome, and the frozen dry-run
   pass. The live gate remains withheld and every runtime effect remains zero.
+- A second provider-free execution audit removed ambiguity from Plan 0262's
+  live packet. CodeGraph proves the exact UUID route passes explicit refresh,
+  zero retries, and the timeout directly into context retrieval without prompt,
+  model, or materialization branches. The sole install command is frozen to
+  `pnpm run install:user-runtime-service`, which owns the one API restart; no
+  separate restart is allowed.
+- Cleanup is frozen to port-scoped browser-tools inspection followed by one
+  kill only when the listener belongs to the canary-created exact managed
+  profile. Current readback is API PID 81249 healthy, scheduler paused/paused,
+  completion queued/running 0/0, target idle-waiting/pass 56, active history
+  jobs zero, and port 45015 unbound. No live command was executed and approval
+  remains withheld.
 
 ## Turn 438 | 2026-08-11
 
