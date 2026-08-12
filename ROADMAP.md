@@ -7,12 +7,12 @@
 Status: active
 Lane: P01
 
-- Active provider-free ChatGPT Chat/Work docs and skill update:
+- Closed provider-free ChatGPT Chat/Work docs and skill update:
   [docs/dev/plans/0272-2026-08-11-chatgpt-chat-work-docs-skills-update.md](docs/dev/plans/0272-2026-08-11-chatgpt-chat-work-docs-skills-update.md)
-  Preserve Chat as the default and Work as an explicit, separately selected
-  mode in reusable agent guidance and operator validation docs. No browser,
-  provider, runtime, scheduler, completion, or materialization effect is in
-  scope.
+  The repo-local skill, quick-start examples, provider-free test reference,
+  manual regression, and browser-service guidance now preserve Chat as the
+  default and Work as an explicit, separately selected mode. The skill and 111
+  focused tests validate; no live or runtime control effect ran.
 
 - Closed accepted scheduler pause/scope repair and live-follow reactivation:
   [docs/dev/plans/0269-2026-08-11-scheduler-pause-scope-repair-and-live-follow-reactivation.md](docs/dev/plans/0269-2026-08-11-scheduler-pause-scope-repair-and-live-follow-reactivation.md)

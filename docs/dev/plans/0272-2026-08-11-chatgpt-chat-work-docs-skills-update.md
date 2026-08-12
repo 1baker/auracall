@@ -1,9 +1,9 @@
 # ChatGPT Chat/Work Docs And Skill Update | 0272-2026-08-11
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 1
-Gate state: DOCS_SKILL_UPDATE_IN_PROGRESS
+Gate state: DOCS_SKILL_ACCEPTED
 
 ## Current State
 
@@ -43,20 +43,36 @@ validation, then leave `main` clean, committed, and synchronized with origin.
 
 ## Acceptance Criteria
 
-- [ ] A discoverable repo-local skill tells agents when and how to preserve the
+- [x] A discoverable repo-local skill tells agents when and how to preserve the
       Chat/Work boundary, including provider-free validation and live-effect
       gates.
-- [ ] Skill interface metadata matches its trigger and default prompt, and the
+- [x] Skill interface metadata matches its trigger and default prompt, and the
       skill passes the deterministic skill validator.
-- [ ] User/operator docs provide runnable Chat-default and explicit-Work
+- [x] User/operator docs provide runnable Chat-default and explicit-Work
       examples plus a direct manual regression check for selector separation.
-- [ ] Documentation matches the current implementation and links resolve.
-- [ ] Planning audits, docs inventory, diff hygiene, and closed-world review
+- [x] Documentation matches the current implementation and links resolve.
+- [x] Planning audits, docs inventory, diff hygiene, and closed-world review
       pass.
-- [ ] Journal, fixes log, runbook, commits, and origin agree with the outcome.
+- [x] Journal, fixes log, runbook, commits, and origin agree with the outcome.
 
 ## Definition Of Done
 
 Another agent can select the repo-local skill and correctly distinguish Chat
 from Work without relying on prior conversation history. The durable docs and
 skill validate, Plan 0272 is closed, and `main` is clean and synchronized.
+
+## Closeout Evidence
+
+- The repo-local skill validates with the skill-creator `quick_validate.py`
+  contract in an isolated PyYAML environment. Its generated
+  `agents/openai.yaml` matches the skill trigger and default prompt.
+- The focused provider-free Chat/Work suite passes 111/111 across six files.
+  No browser, provider, runtime, service, scheduler, completion, or
+  materialization effect ran.
+- The docs inventory completed, all four new internal links resolve, and the
+  closed-world docs review found no remaining critical or high findings in the
+  changed how-to/reference surfaces.
+- Active planning and goal-contract audits pass with zero findings, and
+  `git diff --check` passes. Functional commit `cc407763` contains the skill
+  and aligned operator docs; the dedicated closeout commit carries this final
+  plan reconciliation before both commits are pushed.

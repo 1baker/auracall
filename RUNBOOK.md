@@ -18410,3 +18410,17 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
 - Browser launch/inspection, prompt submission, runtime installation/restart,
   and scheduler/completion/materialization controls remain excluded. The next
   gate is deterministic skill/docs/planning validation before commit and push.
+
+## Turn 407 | 2026-08-11
+
+- The `auracall-chatgpt-browser` skill validates through the skill-creator
+  contract. It makes Chat the normal omitted-mode path, keeps Work explicit,
+  routes named Work models only through the nested Work slider, and preserves
+  separate authority for any live inspection or canary.
+- The provider-free selector/config/runtime suite passes 111/111. The docs
+  inventory completed, all four new internal links resolve, closed-world docs
+  review has no critical/high finding, both planning audits pass, and diff
+  hygiene is clean.
+- Functional commit `cc407763` contains the reusable skill and aligned docs.
+  Plan 0272 closes accepted; no browser/provider, install/restart, scheduler,
+  completion, or materialization effect ran.

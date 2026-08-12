@@ -7,8 +7,12 @@
 - Added the repo-local `auracall-chatgpt-browser` skill, paired Chat-default and
   explicit-Work examples, a provider-free focused suite, and operator guidance
   that keeps the Work slider distinct from the Chat picker.
-- This packet excludes browser/provider work, runtime installation/restart, and
-  scheduler, completion, or materialization control effects.
+- Skill validation, 111/111 focused provider-free tests, four new-link checks,
+  active/goal planning audits, docs review, and diff hygiene pass. Functional
+  commit `cc407763` carries the reusable contract.
+- Plan 0272 closes accepted. No browser/provider work, runtime
+  installation/restart, or scheduler, completion, or materialization control
+  effect ran.
 
 ## 2026-08-11 | Plan 0271 Installed Work Canary Accepted
 
