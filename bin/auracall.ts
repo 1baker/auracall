@@ -416,6 +416,8 @@ interface CliOptions extends OptionValues {
   forceReseedManagedProfile?: boolean;
   browserTarget?: 'chatgpt' | 'gemini' | 'grok';
   browserThinkingTime?: 'light' | 'standard' | 'extended' | 'heavy';
+  browserChatgptMode?: 'chat' | 'work';
+  browserWorkModel?: string;
   browserComposerTool?: string;
   browserDeepResearchPlanAction?: 'start' | 'edit';
   browserAllowCookieErrors?: boolean;
@@ -871,6 +873,18 @@ program
       '--browser-model-label <label>',
       'Fuzzy label for selecting a model from the browser UI picker (ChatGPT/Grok). Defaults to the --model label.',
     ).hideHelp(),
+  )
+  .addOption(
+    new Option(
+      '--browser-chatgpt-mode <mode>',
+      'Select ChatGPT composer mode. Defaults to Chat; Work must be requested explicitly.',
+    ).choices(['chat', 'work']),
+  )
+  .addOption(
+    new Option(
+      '--browser-work-model <label>',
+      'Select a model through the dedicated ChatGPT Work picker (only with --browser-chatgpt-mode work).',
+    ),
   )
   .addOption(
     new Option(
@@ -9374,6 +9388,9 @@ async function runBrowserSetupCommand(commandOptions: SetupCommandOptions): Prom
       managedProfileRoot: userConfig.browser.managedProfileRoot ?? null,
       model: verifyModel,
       browserTarget: target,
+      browserChatgptMode:
+        (cliOptions as CliOptions).browserChatgptMode ?? userConfig.browser.chatgptMode,
+      browserWorkModel: (cliOptions as CliOptions).browserWorkModel ?? userConfig.browser.workModel,
       browserManualLogin: true,
       browserManualLoginProfileDir: launchOptions.manualLoginProfileDir,
       browserChromeProfile: launchOptions.chromeProfile,
@@ -11094,6 +11111,8 @@ async function runRootCommand(options: CliOptions): Promise<void> {
           model: resolvedModel,
           browserModelLabel: browserModelLabelOverride,
           chatgptSemanticModelSelection,
+          browserChatgptMode: options.browserChatgptMode ?? config.browser.chatgptMode,
+          browserWorkModel: options.browserWorkModel ?? config.browser.workModel,
           browserManualLogin: config.browser.manualLogin ?? true,
           browserManualLoginProfileDir: config.browser.manualLoginProfileDir,
           browserChromeProfile: config.browser.chromeProfile,

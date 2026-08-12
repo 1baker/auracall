@@ -496,6 +496,10 @@ function asThinkingTimeLevel(value: unknown): 'light' | 'standard' | 'extended' 
   return value === 'light' || value === 'standard' || value === 'extended' || value === 'heavy' ? value : null;
 }
 
+function asChatgptMode(value: unknown): 'chat' | 'work' | null {
+  return value === 'chat' || value === 'work' ? value : null;
+}
+
 function readRuntimeServiceConfig(
   runtimeProfile: MutableRecord | null,
   service: 'chatgpt' | 'gemini' | 'grok',
@@ -809,6 +813,22 @@ export function createConfiguredStoredStepExecutor(
       asThinkingTimeLevel(browserProfileConfig?.thinkingTime) ??
       asThinkingTimeLevel(browserConfigRecord?.thinkingTime) ??
       null;
+    const chatgptMode =
+      asChatgptMode(requestAuracall?.chatgptMode) ??
+      asChatgptMode(runtimeServiceConfig?.chatgptMode) ??
+      asChatgptMode(globalServiceConfig?.chatgptMode) ??
+      asChatgptMode(runtimeBrowserConfig?.chatgptMode) ??
+      asChatgptMode(browserProfileConfig?.chatgptMode) ??
+      asChatgptMode(browserConfigRecord?.chatgptMode) ??
+      'chat';
+    const workModel =
+      asNonEmptyString(requestAuracall?.workModel) ??
+      asNonEmptyString(runtimeServiceConfig?.workModel) ??
+      asNonEmptyString(globalServiceConfig?.workModel) ??
+      asNonEmptyString(runtimeBrowserConfig?.workModel) ??
+      asNonEmptyString(browserProfileConfig?.workModel) ??
+      asNonEmptyString(browserConfigRecord?.workModel) ??
+      null;
     const composerTool =
       asNonEmptyString(requestAuracall?.composerTool) ??
       asNonEmptyString(runtimeServiceConfig?.composerTool) ??
@@ -1018,6 +1038,8 @@ export function createConfiguredStoredStepExecutor(
           false,
         manualLogin: true,
         manualLoginProfileDir,
+        chatgptMode: service === 'chatgpt' ? chatgptMode : undefined,
+        workModel: service === 'chatgpt' ? workModel : null,
         chromePath:
           asNonEmptyString(runtimeBrowserConfig?.chromePath) ??
           asNonEmptyString(browserProfileConfig?.chromePath) ??

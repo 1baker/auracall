@@ -76,6 +76,8 @@ export class ChatgptService extends LlmService {
     const browserModelConfig = browserConfig as typeof browserConfig & {
       desiredModel?: string | null;
       thinkingTime?: 'light' | 'standard' | 'extended' | 'heavy' | null;
+      chatgptMode?: 'chat' | 'work' | null;
+      workModel?: string | null;
     };
     const isChatgptImageGeneration = input.capabilityId === 'chatgpt.media.create_image';
     const listOptions = await this.buildListOptions(options, { ensurePort: false });
@@ -95,6 +97,8 @@ export class ChatgptService extends LlmService {
         keepBrowser: true,
         auracallProfileName: this.serviceUserConfig.auracallProfile ?? null,
         desiredModel: input.desiredModel ?? browserModelConfig.desiredModel ?? null,
+        chatgptMode: input.chatgptMode ?? browserModelConfig.chatgptMode ?? 'chat',
+        workModel: input.workModel ?? browserModelConfig.workModel ?? null,
         modelStrategy: isChatgptImageGeneration ? 'ignore' : input.modelStrategy ?? browserConfig.modelStrategy,
         thinkingTime: input.thinkingTime ?? browserModelConfig.thinkingTime,
         composerTool: isChatgptImageGeneration ? 'create image' : (browserConfig.composerTool ?? null),

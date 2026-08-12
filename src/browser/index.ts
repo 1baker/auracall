@@ -13,10 +13,15 @@ import { BrowserAutomationError } from "../oracle/errors.js";
 import { formatElapsed } from "../oracle/format.js";
 import type { ThinkingTimeLevel } from "../oracle/types.js";
 import {
+	ensureChatgptComposerMode,
+	resolveChatgptModelSelectionPlan,
+} from "./actions/chatgptComposerMode.js";
+import {
 	type ChatgptDeepResearchStage,
 	isChatgptDeepResearchTool,
 	startChatgptDeepResearchPlan,
 } from "./actions/chatgptDeepResearch.js";
+import { ensureChatgptWorkModelSelection } from "./actions/chatgptWorkModelSelection.js";
 import {
 	ensureGrokLoggedIn,
 	ensureGrokPromptReady,
@@ -2179,12 +2184,22 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 				});
 		};
 		await captureRuntimeSnapshot();
+		const chatgptMode = config.chatgptMode ?? "chat";
+		await raceWithDisconnect(ensureChatgptComposerMode(Runtime, chatgptMode, logger));
+		await raceWithDisconnect(ensurePromptReady(Runtime, config.inputTimeoutMs, logger));
+		logger(`Prompt textarea ready (after ${chatgptMode} mode, ${promptText.length.toLocaleString()} chars queued)`);
 		const modelStrategy = config.modelStrategy ?? DEFAULT_MODEL_STRATEGY;
-		if (config.desiredModel && modelStrategy !== "ignore") {
+		const modelSelectionPlan = resolveChatgptModelSelectionPlan({
+			mode: chatgptMode,
+			desiredModel: config.desiredModel,
+			workModel: config.workModel,
+			strategy: modelStrategy,
+		});
+		if (modelSelectionPlan.kind === "chat-model") {
 			await raceWithDisconnect(dismissOpenMenus(Runtime).catch(() => false));
 			await raceWithDisconnect(
 				withRetries(
-					() => ensureModelSelection(Runtime, config.desiredModel as string, logger, modelStrategy),
+					() => ensureModelSelection(Runtime, modelSelectionPlan.model, logger, modelSelectionPlan.strategy),
 					{
 						retries: 2,
 						delayMs: 300,
@@ -2209,12 +2224,28 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 			logger(
 				`Prompt textarea ready (after model switch, ${promptText.length.toLocaleString()} chars queued)`,
 			);
-		} else if (modelStrategy === "ignore") {
+		} else if (modelSelectionPlan.kind === "work-model") {
+			await raceWithDisconnect(dismissOpenMenus(Runtime).catch(() => false));
+			await raceWithDisconnect(
+				withRetries(
+					() => ensureChatgptWorkModelSelection(
+						Runtime,
+						modelSelectionPlan.model,
+						logger,
+						modelSelectionPlan.strategy,
+					),
+					{ retries: 2, delayMs: 300 },
+				),
+			);
+			await raceWithDisconnect(ensurePromptReady(Runtime, config.inputTimeoutMs, logger));
+		} else if (modelSelectionPlan.kind === "work-current") {
+			logger("Work model picker: preserving current selection");
+		} else {
 			logger("Model picker: skipped (strategy=ignore)");
 		}
 		// Handle thinking time selection if specified
 		const thinkingTime = config.thinkingTime;
-		if (thinkingTime && shouldApplyThinkingTime(config.desiredModel)) {
+		if (chatgptMode === "chat" && thinkingTime && shouldApplyThinkingTime(config.desiredModel)) {
 			const proModeGate = isChatgptProModelTarget(config.desiredModel)
 				? await raceWithDisconnect(
 						assertChatgptProModeSelectable(Runtime, thinkingTime, logger, modelStrategy),
@@ -2242,6 +2273,11 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 			await emitRuntimeHint();
 		}
 		if (config.composerTool) {
+			if (chatgptMode === "work") {
+				throw new Error(
+					"ChatGPT composer tools currently belong to Chat mode. Request Chat mode or omit --browser-composer-tool for Work.",
+				);
+			}
 			await raceWithDisconnect(dismissOpenMenus(Runtime).catch(() => false));
 			await raceWithDisconnect(
 				withRetries(
@@ -3258,11 +3294,21 @@ async function runRemoteBrowserMode(
 			// ignore
 		}
 
+		const chatgptMode = config.chatgptMode ?? "chat";
+		await ensureChatgptComposerMode(Runtime, chatgptMode, logger);
+		await ensurePromptReady(Runtime, config.inputTimeoutMs, logger);
+		logger(`Prompt textarea ready (after ${chatgptMode} mode, ${promptText.length.toLocaleString()} chars queued)`);
 		const modelStrategy = config.modelStrategy ?? DEFAULT_MODEL_STRATEGY;
-		if (config.desiredModel && modelStrategy !== "ignore") {
+		const modelSelectionPlan = resolveChatgptModelSelectionPlan({
+			mode: chatgptMode,
+			desiredModel: config.desiredModel,
+			workModel: config.workModel,
+			strategy: modelStrategy,
+		});
+		if (modelSelectionPlan.kind === "chat-model") {
 			await dismissOpenMenus(Runtime).catch(() => false);
 			await withRetries(
-				() => ensureModelSelection(Runtime, config.desiredModel as string, logger, modelStrategy),
+				() => ensureModelSelection(Runtime, modelSelectionPlan.model, logger, modelSelectionPlan.strategy),
 				{
 					retries: 2,
 					delayMs: 300,
@@ -3279,12 +3325,26 @@ async function runRemoteBrowserMode(
 			logger(
 				`Prompt textarea ready (after model switch, ${promptText.length.toLocaleString()} chars queued)`,
 			);
-		} else if (modelStrategy === "ignore") {
+		} else if (modelSelectionPlan.kind === "work-model") {
+			await dismissOpenMenus(Runtime).catch(() => false);
+			await withRetries(
+				() => ensureChatgptWorkModelSelection(
+					Runtime,
+					modelSelectionPlan.model,
+					logger,
+					modelSelectionPlan.strategy,
+				),
+				{ retries: 2, delayMs: 300 },
+			);
+			await ensurePromptReady(Runtime, config.inputTimeoutMs, logger);
+		} else if (modelSelectionPlan.kind === "work-current") {
+			logger("Work model picker: preserving current selection");
+		} else {
 			logger("Model picker: skipped (strategy=ignore)");
 		}
 		// Handle thinking time selection if specified
 		const thinkingTime = config.thinkingTime;
-		if (thinkingTime && shouldApplyThinkingTime(config.desiredModel)) {
+		if (chatgptMode === "chat" && thinkingTime && shouldApplyThinkingTime(config.desiredModel)) {
 			const proModeGate = isChatgptProModelTarget(config.desiredModel)
 				? await assertChatgptProModeSelectable(Runtime, thinkingTime, logger, modelStrategy)
 				: null;
@@ -3308,6 +3368,11 @@ async function runRemoteBrowserMode(
 			await emitRuntimeHint();
 		}
 		if (config.composerTool) {
+			if (chatgptMode === "work") {
+				throw new Error(
+					"ChatGPT composer tools currently belong to Chat mode. Request Chat mode or omit --browser-composer-tool for Work.",
+				);
+			}
 			await dismissOpenMenus(Runtime).catch(() => false);
 			await withRetries(
 				() => ensureChatgptComposerTool(client as ChromeClient, config.composerTool as string, logger),

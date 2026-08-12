@@ -25,9 +25,22 @@ describe('buildBrowserConfig', () => {
       keepBrowser: undefined,
       hideWindow: undefined,
       desiredModel: 'GPT-5.6 Sol',
+      chatgptMode: 'chat',
       debug: undefined,
       allowCookieErrors: true,
     });
+  });
+
+  test('requires an explicit request to enter Work and keeps its model separate', async () => {
+    const config = await buildBrowserConfig({
+      model: 'gpt-5.2',
+      browserChatgptMode: 'work',
+      browserWorkModel: 'Research',
+    });
+
+    expect(config.chatgptMode).toBe('work');
+    expect(config.workModel).toBe('Research');
+    expect(config.desiredModel).toBe('GPT-5.6 Terra');
   });
 
   test('preserves the selected AuraCall runtime profile name in browser session config', async () => {

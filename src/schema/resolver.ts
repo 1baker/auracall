@@ -213,6 +213,8 @@ function applyTransitionalCliServiceAliases(merged: MutableConfig, cliOptions: O
   const conversationId = asNonEmptyString((cliOptions as MutableConfig).conversationId);
   const conversationName = asNonEmptyString((cliOptions as MutableConfig).conversationName);
   const modelStrategy = asNonEmptyString((cliOptions as MutableConfig).browserModelStrategy);
+  const chatgptMode = asNonEmptyString((cliOptions as MutableConfig).browserChatgptMode);
+  const workModel = asNonEmptyString((cliOptions as MutableConfig).browserWorkModel);
   const thinkingTime = asNonEmptyString((cliOptions as MutableConfig).browserThinkingTime);
   const composerTool = asNonEmptyString((cliOptions as MutableConfig).browserComposerTool);
   const deepResearchPlanAction = asNonEmptyString((cliOptions as MutableConfig).browserDeepResearchPlanAction);
@@ -222,6 +224,8 @@ function applyTransitionalCliServiceAliases(merged: MutableConfig, cliOptions: O
     !conversationId &&
     !conversationName &&
     !modelStrategy &&
+    !chatgptMode &&
+    !workModel &&
     !thinkingTime &&
     !composerTool &&
     !deepResearchPlanAction
@@ -271,6 +275,12 @@ function applyTransitionalCliServiceAliases(merged: MutableConfig, cliOptions: O
   }
   if (modelStrategy) {
     serviceConfig.modelStrategy = modelStrategy;
+  }
+  if (chatgptMode) {
+    serviceConfig.chatgptMode = chatgptMode;
+  }
+  if (workModel) {
+    serviceConfig.workModel = workModel;
   }
   if (thinkingTime) {
     serviceConfig.thinkingTime = thinkingTime;

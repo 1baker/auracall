@@ -168,6 +168,8 @@ export const ServiceConfigSchema = z.object({
   thinkingTime: z.enum(['light', 'standard', 'extended', 'heavy']).optional(),
   composerTool: z.string().optional(),
   deepResearchPlanAction: z.enum(['start', 'edit']).optional(),
+  chatgptMode: z.enum(['chat', 'work']).optional(),
+  workModel: z.string().optional(),
   features: z.record(z.string(), z.unknown()).optional(),
 });
 
@@ -282,6 +284,8 @@ export const BrowserConfigSchema = z.object({
   
   // Behavior
   modelStrategy: z.enum(['select', 'current', 'ignore']).optional(),
+  chatgptMode: z.enum(['chat', 'work']).optional(),
+  workModel: z.string().optional(),
   thinkingTime: z.enum(['light', 'standard', 'extended', 'heavy']).optional(),
   composerTool: z.string().optional(),
   deepResearchPlanAction: z.enum(['start', 'edit']).optional(),
@@ -322,6 +326,8 @@ export const OracleProfileBrowserSchema = z.object({
   composerTool: z.string().optional(),
   deepResearchPlanAction: z.enum(['start', 'edit']).optional(),
   modelStrategy: z.enum(['select', 'current', 'ignore']).optional(),
+  chatgptMode: z.enum(['chat', 'work']).optional(),
+  workModel: z.string().optional(),
   attachments: z.enum(['auto', 'never', 'always']).optional(),
   inlineFiles: z.boolean().optional(),
   bundleFiles: z.boolean().optional(),

@@ -12,6 +12,7 @@ import {
   isWslEnvironment,
   toWslPath,
 } from '../../packages/browser-service/src/platformPaths.js';
+import { normalizeChatgptComposerMode } from './actions/chatgptComposerMode.js';
 
 export const DEFAULT_BROWSER_CONFIG: ResolvedBrowserConfig = {
   chromeProfile: null,
@@ -42,6 +43,8 @@ export const DEFAULT_BROWSER_CONFIG: ResolvedBrowserConfig = {
   keepBrowser: false,
   hideWindow: false,
   desiredModel: DEFAULT_MODEL_TARGET,
+  chatgptMode: 'chat',
+  workModel: null,
   modelStrategy: DEFAULT_MODEL_STRATEGY,
   composerTool: null,
   deepResearchPlanAction: 'start',
@@ -90,6 +93,7 @@ export function resolveBrowserConfig(
     normalizeBrowserModelStrategy(config?.modelStrategy) ??
     DEFAULT_BROWSER_CONFIG.modelStrategy ??
     DEFAULT_MODEL_STRATEGY;
+  const chatgptMode = normalizeChatgptComposerMode(config?.chatgptMode);
   if (modelStrategy === 'select' && isTemporaryChatUrl(normalizedUrl) && /\bpro\b/i.test(desiredModel)) {
     throw new Error(
       'Temporary Chat mode does not expose Pro models in the ChatGPT model picker. ' +
@@ -241,6 +245,8 @@ export function resolveBrowserConfig(
     keepBrowser: launchProfile.keepBrowser ?? config?.keepBrowser ?? DEFAULT_BROWSER_CONFIG.keepBrowser,
     hideWindow: launchProfile.hideWindow ?? config?.hideWindow ?? DEFAULT_BROWSER_CONFIG.hideWindow,
     desiredModel,
+    chatgptMode,
+    workModel: config?.workModel?.trim() || null,
     modelStrategy,
     composerTool,
     deepResearchPlanAction,

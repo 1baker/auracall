@@ -931,6 +931,8 @@ describe('configured stored-step executor', () => {
             id: 'teamrun_chatgpt_obs_1',
             initialInputs: {
               auracall: {
+                chatgptMode: 'work',
+                workModel: 'Research',
                 composerTool: 'deep-research',
                 deepResearchPlanAction: 'edit',
               },
@@ -958,6 +960,8 @@ describe('configured stored-step executor', () => {
         config: expect.objectContaining({
           manualLogin: true,
           manualLoginWaitForSession: false,
+          chatgptMode: 'work',
+          workModel: 'Research',
           composerTool: 'deep-research',
           deepResearchPlanAction: 'edit',
           providerSessionAuthorization: expect.objectContaining({

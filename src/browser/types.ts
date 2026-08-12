@@ -10,6 +10,7 @@ export type {
 } from '../../packages/browser-service/src/types.js';
 
 export type BrowserModelStrategy = 'select' | 'current' | 'ignore';
+export type ChatgptComposerMode = 'chat' | 'work';
 export type ThinkingTimeLevel = 'light' | 'standard' | 'extended' | 'heavy';
 export type ChatgptDeepResearchPlanAction = 'start' | 'edit';
 export type BrowserPassiveObservationState =
@@ -46,6 +47,8 @@ type LlmBrowserFields = {
   grokUrl?: string | null;
   chatgptUrl?: string | null;
   desiredModel?: string | null;
+  chatgptMode?: ChatgptComposerMode;
+  workModel?: string | null;
   modelStrategy?: BrowserModelStrategy;
   thinkingTime?: ThinkingTimeLevel;
   composerTool?: string | null;

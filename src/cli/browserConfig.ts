@@ -50,6 +50,8 @@ export interface BrowserFlagOptions {
   browserWslChrome?: 'auto' | 'wsl' | 'windows';
   /** Thinking time intensity: 'light', 'standard', 'extended', 'heavy' */
   browserThinkingTime?: ThinkingTimeLevel;
+  browserChatgptMode?: 'chat' | 'work';
+  browserWorkModel?: string;
   browserComposerTool?: string;
   browserDeepResearchPlanAction?: 'start' | 'edit';
   browserModelLabel?: string;
@@ -199,6 +201,8 @@ export async function buildBrowserConfig(options: BrowserFlagOptions): Promise<B
     wslChromePreference: options.browserWslChrome ?? undefined,
     hideWindow: options.browserHideWindow ? true : undefined,
     desiredModel,
+    chatgptMode: target === 'chatgpt' ? options.browserChatgptMode ?? 'chat' : undefined,
+    workModel: target === 'chatgpt' ? options.browserWorkModel?.trim() || null : null,
     modelStrategy,
     debug: options.verbose ? true : undefined,
     // Allow cookie failures by default so runs can continue without Chrome/Keychain secrets.

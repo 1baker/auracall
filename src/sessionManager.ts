@@ -39,6 +39,10 @@ export interface BrowserSessionConfig {
   keepBrowser?: boolean;
   hideWindow?: boolean;
   desiredModel?: string | null;
+  /** ChatGPT composer mode. Defaults to Chat; Work must be explicit. */
+  chatgptMode?: 'chat' | 'work';
+  /** Dedicated ChatGPT Work-mode model label. */
+  workModel?: string | null;
   modelStrategy?: BrowserModelStrategy;
   debug?: boolean;
   allowCookieErrors?: boolean;

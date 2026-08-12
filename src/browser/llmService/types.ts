@@ -75,6 +75,8 @@ export type PromptInput = {
   desiredModel?: string | null;
   modelStrategy?: 'select' | 'current' | 'ignore';
   thinkingTime?: 'light' | 'standard' | 'extended' | 'heavy' | null;
+  chatgptMode?: 'chat' | 'work' | null;
+  workModel?: string | null;
   modelSelector?: string | null;
   timeoutMs?: number | null;
   listOptions?: BrowserProviderListOptions;
