@@ -1809,6 +1809,8 @@ npx -y auracall auracall-mcp
 | `--models <list>` | Comma-separated API models (mix built-ins and OpenRouter ids) for multi-model runs. |
 | `--base-url <url>` | Point API runs at LiteLLM/Azure/OpenRouter/etc. |
 | `--chatgpt-url <url>` | Target a ChatGPT workspace/folder (browser). |
+| `--browser-chatgpt-mode <chat\|work>` | Select the ChatGPT composer mode. AuraCall defaults every ChatGPT browser run to `chat`; `work` must be requested explicitly. |
+| `--browser-work-model <label>` | Select a model through the dedicated Work-mode selector. This is used only with `--browser-chatgpt-mode work` and never falls back to the Chat picker. |
 | `--browser-model-strategy <select\|current\|ignore>` | Control ChatGPT model selection in browser mode (current keeps the active model; ignore skips the picker). |
 | `--browser-manual-login` | Skip cookie copy; reuse a persistent automation profile and wait for manual ChatGPT login. |
 | `--browser-thinking-time <light\|standard\|extended\|heavy>` | Set ChatGPT effort intensity for GPT-5.6 Sol in browser mode. The four AuraCall levels map to ChatGPT's Light, Medium, High, and Extra High choices. Prefer `--model chatgpt:sol-high` or `--model chatgpt:sol-extra-high`; legacy Thinking/Pro semantic aliases now resolve to the matching Sol effort lane because the current picker no longer exposes separate Thinking or Pro model families. |
@@ -1898,7 +1900,7 @@ Advanced flags
 
 | Area | Flags |
 | --- | --- |
-| Browser | `--browser-manual-login`, `--browser-thinking-time`, `--browser-composer-tool`, `--browser-deep-research-plan-action`, `--browser-timeout`, `--browser-input-timeout`, `--browser-cookie-wait`, `--browser-inline-cookies[(-file)]`, `--browser-attachments`, `--browser-inline-files`, `--browser-bundle-files`, `--browser-keep-browser`, `--browser-headless`, `--browser-hide-window`, `--browser-no-cookie-sync`, `--browser-allow-cookie-errors`, `--browser-chrome-path`, `--browser-cookie-path`, `--browser-bootstrap-cookie-path`, `--chatgpt-url` |
+| Browser | `--browser-manual-login`, `--browser-chatgpt-mode`, `--browser-work-model`, `--browser-thinking-time`, `--browser-composer-tool`, `--browser-deep-research-plan-action`, `--browser-timeout`, `--browser-input-timeout`, `--browser-cookie-wait`, `--browser-inline-cookies[(-file)]`, `--browser-attachments`, `--browser-inline-files`, `--browser-bundle-files`, `--browser-keep-browser`, `--browser-headless`, `--browser-hide-window`, `--browser-no-cookie-sync`, `--browser-allow-cookie-errors`, `--browser-chrome-path`, `--browser-cookie-path`, `--browser-bootstrap-cookie-path`, `--chatgpt-url` |
 | Azure/OpenAI | `--azure-endpoint`, `--azure-deployment`, `--azure-api-version`, `--base-url` |
 
 Remote browser example

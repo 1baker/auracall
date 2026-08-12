@@ -29,6 +29,7 @@ Define the target config shape split between BrowserService (browser/process) an
   - `identity.*` (name/handle/email)
   - `interactiveLogin` (alias for `manualLogin`)
   - Service-scoped defaults (LLM domain): `projectName`, `projectId`, `conversationName`, `conversationId`, `model`, `modelStrategy`, `thinkingTime`
+  - ChatGPT-only composer defaults: `chatgptMode` (`chat` by default; `work` explicit), `workModel` (dedicated Work selector only)
 
 ### Profile Overrides
 - `profiles.<name>` (v2) / `auracallProfiles.<name>` (legacy)

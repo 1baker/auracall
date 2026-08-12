@@ -1,3 +1,15 @@
+- 2026-08-11: Treat ChatGPT `Chat` and `Work` as different composer contracts,
+  not sticky UI state around one model picker. Select and verify the exact
+  visible mode radio before model work; default to Chat, require Work
+  explicitly, keep Work model selection on a dedicated path, and never apply
+  Chat thinking-time or composer-tool controls in Work. If Work's dedicated
+  picker cannot be identified, fail closed instead of falling back to Chat.
+
+- 2026-08-11: A Chrome tree appearing during a test window is not sufficient
+  attribution when live follow is active. Correlate the exact managed browser
+  profile with scheduler diagnostics and active job ownership before cleanup;
+  start-time coincidence alone can misclassify scheduler-owned browser work.
+
 - 2026-08-11: A standalone `agent-browser --cdp` attachment can retain the
   launch-time `about:blank` target while an AuraCall-managed browser has
   replaced it with the current provider page. Do not diagnose provider

@@ -3460,6 +3460,9 @@ Safety note:
     `Thinking Extended`, `Pro Standard`, and `Pro Extended` from separate
     model/depth controls, so callers can discover Standard Pro/Thinking even
     when the top-level picker only shows the active depth
+  - Plan 0270 separates ChatGPT composer modes: ordinary browser runs enforce
+    `Chat` by default, `Work` requires an explicit request, and Work model
+    selection cannot fall through to Chat's picker or thinking-time controls
   - ChatGPT image generation is closed under Plan 0062, and lazy-live-follow
     service-mode dogfood is closed under Plan 0063
 

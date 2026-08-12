@@ -1,3 +1,23 @@
+## 2026-08-11 | Plan 0270 Chat And Work Mode Boundary
+
+- ChatGPT browser execution now selects and verifies an exact `Chat` or `Work`
+  radio before any model action. Omitted mode resolves to Chat across CLI,
+  config, stored-run execution, and LLM service entrypoints; Work is explicit.
+- Chat retains the existing model/thinking selector. Work has a separate model
+  input and selector path, preserves its current model when no Work model is
+  named, and cannot fall through to Chat model, thinking-time, or composer-tool
+  automation.
+- Provider-free validation passes 112/112 focused tests, typecheck, touched
+  lint with zero errors, production build, diff hygiene, CodeGraph readback,
+  and plan audit. Feature acceptance itself required no live browser/provider
+  proof, runtime install, scheduler/completion control, or materialization.
+- Broad unit validation overlapped an active live-follow cadence pass. Two
+  newly observed managed Chrome trees were initially misattributed to tests
+  and terminated under cleanup authority; scheduler readback remained running
+  and autonomously relaunched `wsl-chrome-3:45015`. No scheduler/completion
+  control ran, and retained `wsl-chrome-4:45017` plus API PID 3190 were
+  untouched. Do not infer process ownership from start-time coincidence alone.
+
 ## 2026-08-11 | Plan 0269 Canary Accepted And Live Follow Reactivated
 
 - Provider-free commit `8000fdd5` installed once at

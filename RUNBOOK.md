@@ -18344,3 +18344,22 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   7/2/34, scheduler remains paused, active jobs are zero, and API PID 81696 is
   healthy. Plan 0217 closes fail-closed; no retry, second install/restart,
   other completion control, or scheduler control ran.
+
+## Turn 403 | 2026-08-11
+
+- Plan 0270 closes provider-free with ChatGPT composer mode represented as an
+  explicit `chat`/`work` contract. Chat is the default at CLI, schema,
+  browser-config, LLM-service, and stored-run boundaries; Work must be named.
+- Both local and remote browser execution verify the exact visible mode radio
+  before model selection. Work routes only to its dedicated model selector,
+  preserves the current Work model when none is requested, and suppresses the
+  Chat thinking-time and composer-tool paths.
+- Focused validation passes 112/112 tests, typecheck, touched lint with zero
+  errors, production build, diff hygiene, healthy CodeGraph readback, and the
+  active plan audit. No live provider proof or runtime installation ran.
+- Broad unit validation overlapped a live-follow cadence pass. Two managed
+  Chrome trees were initially misattributed to tests and terminated under
+  existing cleanup authority. Scheduler diagnostics remained running and
+  autonomously relaunched `wsl-chrome-3:45015`; no scheduler/completion control
+  or materialization request ran, and retained `wsl-chrome-4:45017` plus API
+  PID 3190 were untouched.
