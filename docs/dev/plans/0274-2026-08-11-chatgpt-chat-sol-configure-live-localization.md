@@ -9,10 +9,10 @@ Gate state: NON_SUBMITTING_INSPECTION_READY
 
 Plan 0273 retained a real provider-free hardening and installed it with exact
 parity, but its sole zero-retry canary still failed before prompt submission at
-the thinking-time menu. The failed page remains an authenticated Chat home
-surface. Its closed composer chip is exactly `Pro`; no canary process or
-browser-operation lock remains. Port 45015 is retained by the scheduler-
-launched PID 23238 and must not be killed as canary cleanup.
+the thinking-time menu. Its failed page showed the closed composer chip exactly
+as `Pro`; no canary process or browser-operation lock remains. The scheduler-
+launched port 45015/PID 23238 then exited naturally, so there is no retained
+browser to inspect or clean.
 
 ## Stable Objective
 
@@ -23,9 +23,11 @@ prompt.
 
 ## Authority And Bounds
 
-- One named read/inspection attachment to current `wsl-chrome-3:45015` is
-  authorized only while no browser-operation lock exists and provider identity
-  remains the configured Pro account.
+- One installed no-prompt `wsl-chrome-3` ChatGPT identity smoke may launch the
+  managed browser if no live DevTools session exists. One named read/inspection
+  attachment to that exact browser is then authorized only while no other
+  browser-operation lock exists and provider identity matches the configured
+  Pro account.
 - The inspection may click the exact `Pro` composer chip once, capture the
   visible menu's bounded element labels/roles/attributes, click the exact
   non-committing `Configure...` control once if present, capture the resulting
@@ -45,8 +47,10 @@ prompt.
   model/effort selection, or upload a file.
 - Do not install or restart the runtime and do not run another canary in this
   plan. A later installed proof requires a separate bounded successor.
-- Do not kill or restart PID 23238 and do not pause, resume, trigger, or mutate
-  scheduler, completion, or materialization controls.
+- Cleanup may close only a browser proven launched by this identity-smoke /
+  inspection packet. Do not kill a scheduler-owned or otherwise unattributed
+  process, and do not pause, resume, trigger, or mutate scheduler, completion,
+  or materialization controls.
 - Stop on CAPTCHA, identity mismatch, unknown ownership, active browser-
   operation lock, missing exact Configure control, or any inspection action
   whose effect cannot be bounded before clicking.

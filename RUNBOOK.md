@@ -18477,3 +18477,15 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   Pro/Configure surface and one provider-free repair cycle. It excludes another
   prompt/canary, install/restart, model/effort change, Work, scheduler/
   completion/materialization control, and process kill.
+
+## Turn 411 | 2026-08-11
+
+- The scheduler-launched 45015/PID 23238 browser exited naturally after Plan
+  0273's failed canary; no canary process, port, or browser-operation lock
+  remains. There is therefore no retained live surface to inspect or clean.
+- Plan 0274 is revised before action to permit one installed no-prompt identity
+  smoke to launch `wsl-chrome-3` if needed, followed by one named attachment
+  for the bounded Pro -> Configure DOM inspection. Cleanup is limited to a
+  process proven owned by this inspection packet. Prompt/model execution,
+  connector calls, effort/model changes, installation, and scheduler/
+  completion/materialization controls remain excluded.
