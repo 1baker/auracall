@@ -1,3 +1,22 @@
+## 2026-08-11 | Plan 0271 Installed Work Canary Accepted
+
+- One combined install produced source/installed parity for composer-mode and
+  Work-model modules. The installer-owned delayed handoff restarted the API
+  from PID 3190 to healthy PID 40601 with zero crash restarts.
+- The one explicit `wsl-chrome-3` canary waited behind scheduler-owned pass 57
+  through the existing browser-operation queue. No control command ran. After
+  the holder released, AuraCall verified the configured Pro identity, retained
+  Work, selected `GPT-5.6 Terra` through the dedicated nested selector, sent
+  one prompt, and returned exactly `AURACALL_WORK_MODE_OK` in 27 seconds with
+  prompt retry count zero.
+- The Work selector's existing bounded retry wrapper emitted two DOM
+  diagnostics before succeeding; this did not fall back to the Chat picker or
+  resubmit the prompt. Pass 57 independently settled at pass 58
+  `idle_waiting`; active completion/materialization work is zero.
+- Exact canary browser root PID 41207 exited on `SIGTERM`; port 45015 and the
+  `wsl-chrome-3` process tree are absent. Plan 0271 closes accepted without a
+  scheduler, completion, or materialization control mutation.
+
 ## 2026-08-11 | Plan 0271 Current Work Selector Repair
 
 - Agent-browser attached read-only to the exact retained AuraCall-owned

@@ -18345,6 +18345,21 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   healthy. Plan 0217 closes fail-closed; no retry, second install/restart,
   other completion control, or scheduler control ran.
 
+## Turn 405 | 2026-08-11
+
+- Plan 0271 installed once with exact source/runtime hashes
+  `d8c2040e...7e17` and `f54bf876...f9d6`. The installer-owned delayed service
+  handoff moved API PID 3190 to healthy PID 40601 with zero crash restarts.
+- The sole `wsl-chrome-3` Work canary queued behind scheduler-owned pass 57;
+  no scheduler/completion control ran. After serialized acquisition it
+  verified authenticated Pro identity, selected Work and `GPT-5.6 Terra`
+  through the dedicated Work path, submitted once, and returned exactly
+  `AURACALL_WORK_MODE_OK` in 27 seconds with prompt retries zero.
+- Pass 57 independently settled at pass 58 `idle_waiting` with no error and
+  active completion/materialization work zero. Exact canary browser root PID
+  41207 exited on `SIGTERM`; port 45015 and the `wsl-chrome-3` process tree are
+  absent. Plan 0271 closes `INSTALLED_CANARY_ACCEPTED`.
+
 ## Turn 404 | 2026-08-11
 
 - Plan 0271 opens as the bounded installed-runtime successor to provider-free
