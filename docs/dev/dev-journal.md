@@ -1,3 +1,20 @@
+## 2026-08-12 | Plan 0279 Reattach Target Fence
+
+- Plan 0278's repair installed at healthy API PID 27211 with exact parity. Its
+  wrapper canary was blocked locally by the stale Plan 0277 session and caused
+  no browser/provider effect.
+- Supported reattach made the stale session terminal but incorrectly bound its
+  absent dedicated target to an unrelated retained root tab and captured an
+  unrelated answer. CodeGraph identifies `pickTarget()` URL/first-page
+  fallback plus unconditional core recovery as the causal boundary.
+- The successor makes a recorded target id authoritative: if it is absent and
+  no conversation id exists, target selection returns none and core recovery
+  fails closed as `stale-target` without connecting or launching recovery.
+- Source gate: the 11-file reattach/current/attachment suite passes 196 tests
+  with one pre-existing skip; typecheck, production build, diff hygiene,
+  zero-warning source lint, CodeGraph, and active/goal audits pass. The focused
+  test file retains 14 pre-existing whole-file lint warnings outside this diff.
+
 ## 2026-08-12 | Plan 0278 Current Strategy Repair
 
 - Plan 0277 installed successfully at API PID 25301 with exact parity, but its

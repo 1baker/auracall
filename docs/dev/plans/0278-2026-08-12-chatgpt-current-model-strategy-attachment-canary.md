@@ -1,10 +1,10 @@
 # ChatGPT Current Model Strategy And Attachment Canary | 0278-2026-08-12
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 1
-Gate state: PROVIDER_FREE_REPAIR_ACTIVE
-Goal execution state: ACTIVE
+Gate state: INSTALLED_REATTACH_FAILED_SAFE
+Goal execution state: COMPLETE
 
 ## Current State
 
@@ -97,6 +97,31 @@ checkpoint once, and prove one zero-retry installed attachment round trip.
 - `subagent_status`: not_spawned.
 - `next_action_or_stop_reason`: commit/push the causal repair, install once,
   verify parity/health, then spend the sole attachment canary.
+
+## Terminal Checkpoint | Stale Reattach Failed Safe
+
+- `checkpoint_id`: `P0278-C03`.
+- `state_transition`: P0278_ACTIVE_INSTALLED_CANARY ->
+  P0278_COMPLETE_FAILED_SAFE.
+- `progress_classification`: blocker_reduction.
+- `runtime_evidence`: the sole install moved API PID 25301 to healthy PID
+  27211 with `NRestarts=0` and exact parity for the model-strategy plus three
+  attachment modules. The first wrapper invocation stopped locally at the
+  duplicate-prompt guard because Plan 0277's interrupted session remained
+  marked running; it acquired no browser lease and caused no provider effect.
+  Supported `auracall session` recovery cleared that marker but, because the
+  recorded dedicated target was gone and no conversation id existed, it
+  rebound to a retained same-origin tab and captured an unrelated answer.
+- `cleanup_evidence`: no Plan 0278 prompt, upload, new browser, or operation
+  lock occurred. API PID 27211 is healthy; the retained browser remains; the
+  stale session is terminal rather than running.
+- `authority_classification`: this plan closes failed-safe. Plan 0279 owns the
+  provider-free exact-target reattach repair and a new installed canary; no
+  direct runtime edit, retry prompt, or scheduler/completion/materialization
+  control is authorized here.
+- `subagent_status`: not_spawned.
+- `next_action_or_stop_reason`: require recorded-target fail-closed behavior
+  before another installed attachment proof.
 
 ## Definition Of Done
 

@@ -190,6 +190,34 @@ describe('resumeBrowserSession', () => {
     expect(connect).toHaveBeenCalledWith(expect.objectContaining({ target: 'devtools-target-1' }));
   });
 
+	test('fails closed when the recorded prompt target is gone and no conversation id exists', async () => {
+		const runtime = {
+			chromePort: 51559,
+			chromeHost: '127.0.0.1',
+			chromeTargetId: 'closed-prompt-target',
+			tabUrl: 'https://chatgpt.com/',
+		};
+		const listTargets = vi.fn(async () =>
+			[
+				{ targetId: 'unrelated-root', type: 'page', url: 'https://chatgpt.com/' },
+				{ targetId: 'unrelated-chat', type: 'page', url: 'https://chatgpt.com/c/other' },
+			] satisfies FakeTarget[],
+		) as unknown as () => Promise<FakeTarget[]>;
+		const connect = vi.fn();
+		const recoverSession = vi.fn(async () => ({
+			answerText: 'unsafe fallback',
+			answerMarkdown: 'unsafe fallback',
+		}));
+		const logger = vi.fn() as BrowserLogger;
+
+		await expect(
+			resumeBrowserSession(runtime, {}, logger, { listTargets, connect, recoverSession }),
+		).rejects.toMatchObject({ details: { kind: 'stale-target' } });
+		expect(connect).not.toHaveBeenCalled();
+		expect(recoverSession).not.toHaveBeenCalled();
+		expect(logger).toHaveBeenCalledWith(expect.stringContaining('refusing to bind an unrelated tab'));
+	});
+
   test('classifies same-origin live wrong browser profile before target matching', async () => {
     const runtime = {
       chromePort: 45013,
@@ -489,6 +517,7 @@ describe('reattach helpers', () => {
       { targetId: 't-3', type: 'page', url: 'about:blank' },
     ];
     expect(pickTarget(targets, { chromeTargetId: 't-2' })).toEqual(targets[1]);
+		expect(pickTarget(targets, { chromeTargetId: 'closed', tabUrl: targets[0]?.url })).toBeUndefined();
     expect(pickTarget(targets, { tabUrl: 'https://chatgpt.com/c/first' })).toEqual(targets[0]);
     expect(pickTarget(targets, {})).toEqual(targets[0]);
   });

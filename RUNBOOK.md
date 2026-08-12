@@ -1,5 +1,20 @@
 # RUNBOOK
 
+## Turn 450 | 2026-08-12
+
+- Plan 0278's non-mutating `current` repair passed source validation, installed
+  with exact four-module parity, and handed the API to healthy PID 27211. Its
+  canary stopped locally because Plan 0277's interrupted prompt session was
+  still marked running; no browser lease, upload, or prompt occurred.
+- Supported session reattach cleared the marker but exposed unsafe association:
+  the recorded exact target was already closed and no conversation id existed,
+  so reattach fell through by root URL to a retained ChatGPT tab and captured
+  an unrelated response.
+- [Plan 0279](docs/dev/plans/0279-2026-08-12-reattach-target-fence-and-attachment-canary.md)
+  now fences missing recorded targets from URL/first-page fallback and recovery
+  when no conversation id exists, before one unique installed attachment
+  proof.
+
 ## Turn 449 | 2026-08-12
 
 - Plan 0277's single install established three-module source/runtime parity and

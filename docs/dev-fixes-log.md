@@ -21493,6 +21493,17 @@ browser-stage lifecycle observability, not transcript truncation.
 - A live canary's absence of fallback provider-action and Page-CDP telemetry is
   decisive branch evidence: it can distinguish fallback eligibility failure
   from resource-content failure without exposing raw response content.
+## 2026-08-12 | A recorded prompt target cannot fall back to another root tab
+
+- An interrupted new-chat run can retain `chromeTargetId` and a root `tabUrl`
+  without a `conversationId`. If that dedicated target closes, URL-prefix or
+  first-page fallback can attach to an unrelated retained ChatGPT tab and
+  misclassify its latest answer as the interrupted run's response.
+- Treat a recorded target id as authoritative. When it is absent and no
+  conversation id can safely reacquire the run, return `stale-target` and do
+  not connect or launch recovery. Exact conversation-id recovery remains a
+  separate safe path.
+
 ## 2026-08-12 | Current model strategy must not traverse the model selector
 
 - `--browser-model-strategy current` means preserve the active ChatGPT model;

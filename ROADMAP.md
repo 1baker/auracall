@@ -7,11 +7,18 @@
 Status: active
 Lane: P01
 
+- Active exact reattach-target fence and installed attachment canary:
+  [docs/dev/plans/0279-2026-08-12-reattach-target-fence-and-attachment-canary.md](docs/dev/plans/0279-2026-08-12-reattach-target-fence-and-attachment-canary.md)
+  A stale interrupted new-chat session rebound to an unrelated retained tab
+  because its exact target was gone and it had no conversation id. The
+  successor fails that state closed before one unique installed attachment
+  proof.
+
 - Active ChatGPT current-model strategy repair and attachment canary:
   [docs/dev/plans/0278-2026-08-12-chatgpt-current-model-strategy-attachment-canary.md](docs/dev/plans/0278-2026-08-12-chatgpt-current-model-strategy-attachment-canary.md)
-  The first installed attachment canary failed safe before upload/prompt when
-  `current` incorrectly entered model-menu retries. The successor makes
-  `current` non-mutating provider-free, then admits one fresh installed proof.
+  Closed with the `current` strategy installed and model-menu traversal
+  removed. Its canary was locally blocked by stale duplicate state; supported
+  reattach then exposed unrelated-tab capture, so no provider prompt ran.
 
 - Active installed ChatGPT workbench attachment canary:
   [docs/dev/plans/0277-2026-08-12-chatgpt-workbench-attachment-installed-canary.md](docs/dev/plans/0277-2026-08-12-chatgpt-workbench-attachment-installed-canary.md)

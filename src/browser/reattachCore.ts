@@ -237,6 +237,10 @@ export async function resumeBrowserSessionCore(
       });
     });
     const targetList = (await listTargets()) as ReattachTargetInfo[];
+		const missingRecordedTarget = classifyMissingRecordedReattachTarget(targetList, runtime);
+		if (missingRecordedTarget) {
+			throw missingRecordedTarget;
+		}
     const ambiguousFailure = classifyAmbiguousReattachTarget(targetList, runtime);
     if (ambiguousFailure) {
       throw ambiguousFailure;
@@ -333,11 +337,42 @@ export async function resumeBrowserSessionCore(
   } catch (error) {
     const classified = describeReattachFailure(error);
     const message = error instanceof Error ? error.message : String(error);
+		if (error instanceof ReattachFailure && error.details.kind === "stale-target") {
+			logger(`Existing Chrome reattach failed closed (${classified ?? message}).`);
+			throw error;
+		}
     logger(
       `Existing Chrome reattach failed (${classified ?? message}); reopening browser to locate the session.`,
     );
     return recoverSession(runtime, config);
   }
+}
+
+function classifyMissingRecordedReattachTarget(
+	targets: ReattachTargetInfo[],
+	runtime: ReattachRuntime,
+): ReattachFailure | null {
+	if (!runtime.chromeTargetId || runtime.conversationId) {
+		return null;
+	}
+	if (targets.some((target) => resolveReattachTargetId(target) === runtime.chromeTargetId)) {
+		return null;
+	}
+	const pageTargets = targets.filter((target) => target.type === "page");
+	const expectedOrigin = extractOrigin(runtime.tabUrl ?? null);
+	const matchingOriginTargetCount = expectedOrigin
+		? pageTargets.filter((target) => extractOrigin(target.url ?? null) === expectedOrigin).length
+		: 0;
+	return new ReattachFailure({
+		kind: "stale-target",
+		message:
+			"The recorded ChatGPT prompt target is gone and no conversation id is available; refusing to bind an unrelated tab.",
+		expectedOrigin,
+		pageTargetCount: pageTargets.length,
+		matchingOriginTargetCount,
+		chromePort: runtime.chromePort ?? null,
+		conversationId: null,
+	});
 }
 
 async function resumeBrowserSessionViaNewChrome(

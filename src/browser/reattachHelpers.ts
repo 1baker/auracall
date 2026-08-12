@@ -29,6 +29,7 @@ export function pickTarget(
   if (runtime.chromeTargetId) {
     const byId = targets.find((t) => readTargetId(t) === runtime.chromeTargetId);
     if (byId) return byId;
+		return undefined;
   }
   if (runtime.tabUrl) {
     const byUrl =
