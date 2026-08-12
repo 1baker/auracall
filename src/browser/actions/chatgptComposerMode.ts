@@ -91,18 +91,55 @@ function buildChatgptComposerModeExpression(desiredMode: ChatgptComposerMode): s
       .filter(visible)
       .map((node) => ({ node, label: normalize(node.textContent) }))
       .filter(({ label }) => label === 'chat' || label === 'work');
-    const target = radios.find(({ label }) => label === DESIRED_MODE);
+    const radioTarget = radios.find(({ label }) => label === DESIRED_MODE);
+    if (radioTarget) {
+      if (isSelected(radioTarget.node)) return { status: 'already-selected', mode: DESIRED_MODE };
+      if (!dispatchClickSequence(radioTarget.node)) return { status: 'selection-not-confirmed', mode: DESIRED_MODE };
+      const startedAt = performance.now();
+      while (performance.now() - startedAt < 5000) {
+        if (isSelected(radioTarget.node)) return { status: 'switched', mode: DESIRED_MODE };
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+      return { status: 'selection-not-confirmed', mode: DESIRED_MODE };
+    }
+    const modeTriggers = Array.from(document.querySelectorAll('button[aria-haspopup="menu"]'))
+      .filter(visible)
+      .map((node) => ({ node, label: normalize(node.textContent) }))
+      .filter(({ label }) => label === 'chat' || label === 'work');
+    const trigger = modeTriggers[0];
+    const triggerLabel = trigger?.label;
+    if (triggerLabel === DESIRED_MODE) {
+      return { status: 'already-selected', mode: DESIRED_MODE };
+    }
+    if (!trigger || !dispatchClickSequence(trigger.node)) {
+      return {
+        status: 'mode-not-found',
+        availableModes: [...radios, ...modeTriggers]
+          .map(({ node }) => String(node.textContent ?? '').trim()).filter(Boolean),
+      };
+    }
+    const menuStartedAt = performance.now();
+    while (performance.now() - menuStartedAt < 2000) {
+      if (trigger.node.getAttribute('aria-expanded') === 'true') break;
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+    const menuItems = Array.from(document.querySelectorAll('[role="menuitemradio"]'))
+      .filter(visible)
+      .map((node) => ({ node, label: normalize(node.textContent) }))
+      .filter(({ label }) => label === 'chat' || label === 'work');
+    const target = menuItems.find(({ label }) => label === DESIRED_MODE);
     if (!target) {
       return {
         status: 'mode-not-found',
-        availableModes: radios.map(({ node }) => String(node.textContent ?? '').trim()).filter(Boolean),
+        availableModes: menuItems.map(({ node }) => String(node.textContent ?? '').trim()).filter(Boolean),
       };
     }
-    if (isSelected(target.node)) return { status: 'already-selected', mode: DESIRED_MODE };
     if (!dispatchClickSequence(target.node)) return { status: 'selection-not-confirmed', mode: DESIRED_MODE };
     const startedAt = performance.now();
     while (performance.now() - startedAt < 5000) {
-      if (isSelected(target.node)) return { status: 'switched', mode: DESIRED_MODE };
+      if (normalize(trigger.node.textContent) === DESIRED_MODE || isSelected(target.node)) {
+        return { status: 'switched', mode: DESIRED_MODE };
+      }
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
     return { status: 'selection-not-confirmed', mode: DESIRED_MODE };
