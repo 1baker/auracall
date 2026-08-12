@@ -1,3 +1,17 @@
+## 2026-08-11 | Plan 0273 Installed Canary Failed Safe
+
+- One install produced exact source/runtime selector parity at
+  `d19612b9...cbac` and the installer-owned service handoff settled healthy at
+  PID 11240 with zero crash restarts.
+- The sole zero-retry read-only LitScout Chat canary waited behind the normal
+  scheduler lease and then reproduced `Unable to find the Thinking time
+  dropdown menu` before prompt submission. No connector, generic search,
+  LitScout action, retry, or database effect occurred.
+- The canary process and lock cleared. The retained 45015/PID 23238 browser was
+  scheduler-launched before the canary and was not killed. Plan 0273 closes
+  fail-safe; Plan 0274 owns one non-submitting live DOM localization and one
+  provider-free successor repair, with no install or second prompt.
+
 ## 2026-08-11 | Plan 0273 Chat Sol Selector Provider-Free Repair
 
 - A fresh explicit-Chat `chatgpt:sol-high` LitScout read canary failed before

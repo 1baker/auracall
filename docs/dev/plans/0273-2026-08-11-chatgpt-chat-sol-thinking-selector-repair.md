@@ -1,9 +1,9 @@
 # ChatGPT Chat Sol Thinking Selector Repair | 0273-2026-08-11
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 1
-Gate state: PROVIDER_FREE_REPAIR_ACTIVE
+Gate state: INSTALLED_CANARY_FAILED_SAFE
 
 ## Current State
 
@@ -78,7 +78,7 @@ canary in Chat mode.
       level without broad ancestor clicks or any Work-path change.
 - [x] Focused and adjacent Chat/Work tests, typecheck, lint, build, diff
       hygiene, CodeGraph readback, and planning audits pass.
-- [ ] Source and installed runtime hashes match after no more than one install
+- [x] Source and installed runtime hashes match after no more than one install
       and its installer-owned API restart.
 - [ ] One zero-retry `wsl-chrome-3` Chat canary submits once, uses LitScout
       `auth_session` and `research_continue` rather than generic search, and
@@ -111,3 +111,28 @@ committed, pushed repository and no broader runtime or LitScout effect.
   service restart, or scheduler/completion/materialization control occurred in
   the provider-free repair. The stale exact `exp6-diagnose` agent-browser
   session was closed without touching scheduler-owned or retained browsers.
+
+## Installed Canary Evidence
+
+- The one installer run completed at `2026-08-12T04:08:13.102Z`. Source and
+  installed `thinkingTime.js` hashes match at
+  `d19612b927929f0a0e9e190227f415441d88d50349ba02bca0d7b03ebe20cbac`.
+  The installer-owned service handoff moved API PID 40601 to healthy PID 11240
+  with zero crash restarts.
+- The one zero-retry Chat canary was collision-suffixed to
+  `litscout-chat-read-canary-2`. It waited behind the scheduler-owned
+  `wsl-chrome-3` lease without control mutation, acquired the lease at
+  `2026-08-12T04:15:50.015Z`, and failed at
+  `2026-08-12T04:16:23.399Z` with `Unable to find the Thinking time dropdown
+  menu.`
+- The retained page stayed at `https://chatgpt.com/`, had no assistant turn,
+  stop button, or `Answer now` control, and exposed the closed composer chip as
+  `Pro`. The canary submitted no prompt, invoked no connector or generic
+  search, and caused no LitScout or database effect.
+- The canary process and browser-operation lock are gone. Port 45015 remains
+  owned by PID 23238, which the scheduler launched before the canary acquired
+  the lease; it is intentionally not treated as canary cleanup authority.
+- Plan 0273 closes fail-safe. Its provider-free fix is retained as a real
+  selector hardening, but the end-to-end connector criterion is unmet. Plan
+  0274 owns exact non-submitting localization of the still-open DOM gap; this
+  plan authorizes no retry.

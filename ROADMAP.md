@@ -7,13 +7,20 @@
 Status: active
 Lane: P01
 
-- Open ChatGPT Chat/Sol integrated thinking-selector repair:
+- Open ChatGPT Chat/Sol Configure live localization:
+  [docs/dev/plans/0274-2026-08-11-chatgpt-chat-sol-configure-live-localization.md](docs/dev/plans/0274-2026-08-11-chatgpt-chat-sol-configure-live-localization.md)
+  Plan 0273's sole installed canary still failed before prompt submission at
+  the thinking-time menu. This successor permits one non-submitting exact DOM
+  inspection and one provider-free repair cycle; installation, another prompt,
+  Work, scheduler control, and process cleanup of the scheduler-launched
+  retained browser remain excluded.
+
+- Closed fail-safe ChatGPT Chat/Sol integrated thinking-selector repair:
   [docs/dev/plans/0273-2026-08-11-chatgpt-chat-sol-thinking-selector-repair.md](docs/dev/plans/0273-2026-08-11-chatgpt-chat-sol-thinking-selector-repair.md)
-  A read-only LitScout Chat canary failed before submission because the current
-  `Pro - Standard` / `Configure...` surface no longer matched AuraCall's
-  thinking-menu traversal. The bounded successor adds one provider-free red,
-  repairs only the Chat selector, then permits one install and one zero-retry
-  read-only LitScout canary; Work and scheduler controls remain excluded.
+  The provider-free fix, 310-test adjacent gate, install, and exact parity
+  passed, but the sole zero-retry canary reproduced `menu-not-found` before
+  prompt submission. No connector or LitScout effect occurred and no retry is
+  authorized by the closed plan.
 
 - Closed provider-free ChatGPT Chat/Work docs and skill update:
   [docs/dev/plans/0272-2026-08-11-chatgpt-chat-work-docs-skills-update.md](docs/dev/plans/0272-2026-08-11-chatgpt-chat-work-docs-skills-update.md)

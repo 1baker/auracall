@@ -18458,3 +18458,22 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   `exp6-diagnose` agent-browser session was closed exactly. The provider-free
   checkpoint is ready to commit and push before the one-install/one-canary
   gate.
+
+## Turn 410 | 2026-08-11
+
+- The one install produced exact source/runtime `thinkingTime.js` parity at
+  `d19612b9...cbac`; the installer-owned handoff moved API PID 40601 to healthy
+  PID 11240 with zero crash restarts.
+- The sole `litscout-chat-read-canary-2` run waited behind the normal scheduler
+  lease without control mutation, acquired it at `04:15:50Z`, and failed at
+  `04:16:23Z` with `Unable to find the Thinking time dropdown menu.` The page
+  remained Chat home with no assistant turn, stop button, or `Answer now`; no
+  prompt, connector, generic search, LitScout action, retry, or database effect
+  occurred.
+- The canary process and lock are gone. Retained port 45015/PID 23238 was
+  launched by the scheduler before canary acquisition and is not a canary
+  cleanup target. Plan 0273 closes `INSTALLED_CANARY_FAILED_SAFE`.
+- Plan 0274 opens for one exact non-submitting inspection of the retained
+  Pro/Configure surface and one provider-free repair cycle. It excludes another
+  prompt/canary, install/restart, model/effort change, Work, scheduler/
+  completion/materialization control, and process kill.
