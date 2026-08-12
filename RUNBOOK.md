@@ -18502,3 +18502,21 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   trusted pointer event sequence on that same exact button, followed only by
   bounded DOM capture. A third attempt, selection change, prompt, connector,
   install, or control effect remains excluded.
+
+## Turn 413 | 2026-08-11
+
+- AuraCall's trusted event sequence opened the current Pro menu. Exact bounded
+  DOM readback is `Advanced Faster Smarter Model GPT-5.6 Sol Effort Pro`; the
+  nested trigger is `role=menuitem`, `aria-haspopup=menu`, textContent
+  `EffortPro`. Current UI has no Configure item, so inspection stopped before a
+  deeper click or any selection change.
+- The live-shaped provider-free fixture failed red with `menu-not-found`. The
+  minimum repair accepts compact `Effort...` only on a structural menu trigger
+  and preserves the older spaced-label path. The focused selector passes 9/9;
+  the adjacent nine-file suite passes 311/311. Typecheck, zero-warning touched
+  lint, build, diff hygiene, CodeGraph, and planning validation pass.
+- Escape dismissed the menu. Named attachment closed and exact inspection PID
+  82451/port 38958 plus its port-sharing children were cleaned. No prompt,
+  connector, effort/model change, install/restart, scheduler/completion/
+  materialization control, or unrelated process kill occurred. Plan 0274
+  closes `PROVIDER_FREE_ACCEPTED`; installed proof requires a successor.

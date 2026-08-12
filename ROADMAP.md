@@ -7,13 +7,12 @@
 Status: active
 Lane: P01
 
-- Open ChatGPT Chat/Sol Configure live localization:
+- Closed provider-free ChatGPT Chat/Sol Configure live localization:
   [docs/dev/plans/0274-2026-08-11-chatgpt-chat-sol-configure-live-localization.md](docs/dev/plans/0274-2026-08-11-chatgpt-chat-sol-configure-live-localization.md)
-  Plan 0273's sole installed canary still failed before prompt submission at
-  the thinking-time menu. This successor permits one non-submitting exact DOM
-  inspection and one provider-free repair cycle; installation, another prompt,
-  Work, scheduler control, and process cleanup of the scheduler-launched
-  retained browser remain excluded.
+  Exact no-prompt inspection found the current compact `EffortPro` submenu
+  trigger and no Configure item. One executable red/green repair now supports
+  that structurally bounded trigger; 311 adjacent tests plus type/build/lint/
+  CodeGraph/planning validation pass. No prompt or runtime install ran.
 
 - Closed fail-safe ChatGPT Chat/Sol integrated thinking-selector repair:
   [docs/dev/plans/0273-2026-08-11-chatgpt-chat-sol-thinking-selector-repair.md](docs/dev/plans/0273-2026-08-11-chatgpt-chat-sol-thinking-selector-repair.md)

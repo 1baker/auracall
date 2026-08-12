@@ -164,6 +164,62 @@ describe('browser thinking-time selection expression', () => {
     await expect(resultPromise).resolves.toEqual({ status: 'switched', label: 'Extended' });
     expect(levelMenuOpen).toBe(true);
   });
+
+  it('opens the current compact EffortPro submenu without requiring Configure', async () => {
+    vi.useFakeTimers();
+    const chip = new FixtureElement('Pro', { 'aria-haspopup': 'menu' });
+    const modelMenu = new FixtureElement(
+      'Advanced Faster Smarter Model GPT-5.6 Sol Effort Pro',
+      { role: 'menu' },
+    );
+    const effort = new FixtureElement('EffortPro', {
+      role: 'menuitem',
+      'aria-haspopup': 'menu',
+      'aria-expanded': 'false',
+    });
+    const extended = new FixtureElement('Extended', { role: 'menuitemradio' });
+    const levelMenu = new FixtureElement('Standard Extended', { role: 'menu' });
+    levelMenu.queryAll = (selector) => selector.includes('[role="menuitemradio"]') ? [extended] : [];
+
+    let modelMenuOpen = false;
+    let levelMenuOpen = false;
+    chip.onClick = () => {
+      modelMenuOpen = true;
+    };
+    effort.onClick = () => {
+      levelMenuOpen = true;
+      effort.setAttribute('aria-expanded', 'true');
+    };
+
+    installFixtureDocument((selector) => {
+      if (selector.includes('button.__composer-pill, .__composer-pill-composite button')) return [chip];
+      if (
+        selector === '[data-testid="composer-footer-actions"] button[aria-haspopup="menu"]' ||
+        selector === 'button.__composer-pill[aria-haspopup="menu"]' ||
+        selector === '.__composer-pill-composite button[aria-haspopup="menu"]'
+      ) return [chip];
+      if (selector.includes('[role="dialog"]')) return [];
+      if (selector.includes('[role="menu"]') && selector.includes('[role="group"]')) {
+        return [
+          ...(modelMenuOpen ? [modelMenu] : []),
+          ...(levelMenuOpen ? [levelMenu] : []),
+        ];
+      }
+      if (selector.includes('[role="menuitem"]') && selector.includes('button')) {
+        return modelMenuOpen ? [effort] : [];
+      }
+      if (selector.includes('[role="menuitem"]')) return modelMenuOpen ? [effort] : [];
+      return [];
+    });
+
+    const resultPromise = new Function(
+      `return ${buildThinkingTimeExpressionForTest('extended')}`,
+    )() as Promise<unknown>;
+    await vi.advanceTimersByTimeAsync(11_000);
+
+    await expect(resultPromise).resolves.toEqual({ status: 'switched', label: 'Extended' });
+    expect(levelMenuOpen).toBe(true);
+  });
 });
 
 describe('ChatGPT Pro mode account gate', () => {

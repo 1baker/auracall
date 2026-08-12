@@ -1,3 +1,9 @@
+- 2026-08-11: ChatGPT's current integrated Pro menu may omit Configure and
+  expose `Model GPT-5.6 Sol` plus an `EffortPro` submenu whose adjacent spans
+  concatenate under textContent. Recognize the compact `Effort...` label only
+  when the node is structurally `aria-haspopup=menu`; requiring a literal space
+  causes `menu-not-found`, while unrestricted prefix matching is too broad.
+
 - 2026-08-11: On ChatGPT's integrated `Pro - Standard` model menu, do not find
   `Configure...` with aggregate-text substring matching. A visible ancestor
   can contain the complete menu text and consume the transition without

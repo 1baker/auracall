@@ -309,7 +309,9 @@ function buildThinkingTimeExpression(level: ThinkingTimeLevel): string {
         .filter(visible)
         .find((node) => {
           const text = normalize([node.textContent ?? '', node.getAttribute?.('aria-label') ?? ''].join(' '));
-          return text.startsWith('effort ') && node.getAttribute('aria-expanded') !== 'true';
+          const isEffortTrigger = text.startsWith('effort ') ||
+            (text.startsWith('effort') && node.getAttribute('aria-haspopup') === 'menu');
+          return isEffortTrigger && node.getAttribute('aria-expanded') !== 'true';
         });
 
       const findDialog = () => Array.from(document.querySelectorAll('[role="dialog"], [data-radix-dialog-content], div[aria-modal="true"]'))

@@ -1,3 +1,21 @@
+## 2026-08-11 | Plan 0274 Compact Effort Selector Repair
+
+- One no-prompt identity smoke matched the configured ChatGPT Pro identity and
+  launched exact PID 82451/port 38958. Named inspection verified Chat selected,
+  Work unselected, and the closed composer button `Pro`.
+- The current open menu is `Advanced Faster Smarter Model GPT-5.6 Sol Effort
+  Pro`; its nested effort trigger is a menuitem with `aria-haspopup=menu` and
+  concatenated textContent `EffortPro`. There is no current Configure item.
+- The exact live-shaped fixture failed red with `menu-not-found`. Compact
+  `Effort...` is now accepted only on a structural submenu trigger. Focused
+  selector validation passes 9/9 and the adjacent nine-file suite passes
+  311/311; typecheck, zero-warning touched lint, build, diff hygiene,
+  CodeGraph, and planning audits pass.
+- The menu was dismissed and the exact inspection browser cleaned. Prompt,
+  connector, model/effort selection, install/restart, and scheduler/
+  completion/materialization effects remained zero. Plan 0274 closes
+  provider-free; installed proof remains separate.
+
 ## 2026-08-11 | Plan 0273 Installed Canary Failed Safe
 
 - One install produced exact source/runtime selector parity at

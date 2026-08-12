@@ -1,9 +1,9 @@
 # ChatGPT Chat Sol Configure Live Localization | 0274-2026-08-11
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 2
-Gate state: NON_SUBMITTING_INSPECTION_READY
+Gate state: PROVIDER_FREE_ACCEPTED
 
 ## Current State
 
@@ -62,17 +62,17 @@ prompt.
 
 ## Acceptance Criteria
 
-- [ ] Exact current DOM evidence identifies the integrated Pro menu and, if
+- [x] Exact current DOM evidence identifies the integrated Pro menu and, if
       safely reachable, the nested Configure/effort surface without prompt or
       selection change.
-- [ ] One executable provider-free red reproduces the live failure mechanism.
-- [ ] The minimal repair passes the focused selector and adjacent Chat/Work
+- [x] One executable provider-free red reproduces the live failure mechanism.
+- [x] The minimal repair passes the focused selector and adjacent Chat/Work
       suites without broad ancestor matching or Work-path change.
-- [ ] Typecheck, touched lint, build, diff hygiene, CodeGraph readback, and
+- [x] Typecheck, touched lint, build, diff hygiene, CodeGraph readback, and
       planning audits pass.
-- [ ] No prompt, connector, model/effort change, install/restart, scheduler/
-      completion/materialization control, or process kill occurs.
-- [ ] The validated provider-free checkpoint is committed and pushed, and the
+- [x] No prompt, connector, model/effort change, install/restart, scheduler/
+      completion/materialization control, or unrelated process kill occurs.
+- [x] The validated provider-free checkpoint is committed and pushed, and the
       next installed proof remains a separately bounded decision.
 
 ## Definition Of Done
@@ -81,3 +81,25 @@ The remaining live selector gap is represented by exact bounded DOM evidence
 and a passing executable fixture, the minimum Chat-only repair is committed and
 pushed, and all provider/runtime effects beyond the non-submitting inspection
 remain zero.
+
+## Closeout Evidence
+
+- The no-prompt identity smoke matched all configured identity dimensions and
+  launched exact PID 82451 on port 38958. Chat was checked and Work unchecked.
+- The current open Pro menu is a `role=menu` containing
+  `Advanced Faster Smarter Model GPT-5.6 Sol Effort Pro`. Its exact nested
+  trigger is `role=menuitem`, `aria-haspopup=menu`, textContent `EffortPro`.
+  There is no `Configure...` item on this current surface, so inspection
+  stopped without clicking a model or effort choice.
+- The executable live-shaped fixture failed red with `menu-not-found`. The
+  minimum repair recognizes a compact `Effort...` label only when it is
+  structurally a menu trigger, while retaining the older spaced-label path.
+- The focused selector passes 9/9; the nine-file adjacent Chat/Work suite
+  passes 311/311. Typecheck, zero-warning touched lint, production build, diff
+  hygiene, current CodeGraph readback, and planning audits pass.
+- Escape dismissed the menu. The named attachment closed, and exact inspection
+  PID 82451/port 38958 plus its port-sharing children were cleaned. No prompt,
+  connector, effort/model selection, install/restart, scheduler/completion/
+  materialization control, or unrelated process kill occurred.
+- Plan 0274 closes provider-free. A separate Plan 0275 may own one install and
+  one zero-retry read-only LitScout connector canary; this plan does not.
