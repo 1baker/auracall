@@ -1,5 +1,19 @@
 # RUNBOOK
 
+## Turn 448 | 2026-08-12
+
+- The operator explicitly authorized all outstanding Git, install, and testing
+  tasks for Plan 0276. [Plan 0277](docs/dev/plans/0277-2026-08-12-chatgpt-workbench-attachment-installed-canary.md)
+  opens one source gate, one canonical install/restart, and one zero-retry
+  installed-wrapper attachment upload/send/readback canary.
+- Admission is clean/synchronized source `3fa4d70c`, current CodeGraph at 888
+  files/16,753 nodes/57,060 edges, healthy API PID 1656 with `NRestarts=0`,
+  scheduled/healthy live follow, and completion queued/running `0/0`.
+- `wsl-chrome-3:45015` is already retained under a shared display allocation.
+  The canary must serialize through the normal operation lane, keep that
+  browser, and never treat it as canary-owned cleanup. Scheduler, completion,
+  account-mirror, live-follow, and materialization controls remain untouched.
+
 ## Turn 447 | 2026-08-12
 
 - The operator requested support for ChatGPT's most recent Chat workbench tool

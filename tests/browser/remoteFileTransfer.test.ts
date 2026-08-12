@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import type { ChromeClient } from '../../src/browser/types.js';
+import type { BrowserLogger, ChromeClient } from '../../src/browser/types.js';
 
 const prepareChatgptWorkbenchLocalAttachment = vi.fn();
 const transferAttachmentViaDataTransfer = vi.fn();
@@ -44,7 +44,7 @@ describe('uploadAttachmentViaDataTransfer', () => {
     await uploadAttachmentViaDataTransfer(
       { runtime, dom, input, page },
       { path: '/tmp/fixture.txt', displayPath: 'fixture.txt' },
-      vi.fn(),
+      vi.fn() as BrowserLogger,
     );
 
     expect(prepareChatgptWorkbenchLocalAttachment).toHaveBeenCalledWith({ runtime, input, page });
@@ -71,7 +71,7 @@ describe('uploadAttachmentViaDataTransfer', () => {
           page: {} as ChromeClient['Page'],
         },
         { path: '/tmp/fixture.txt', displayPath: 'fixture.txt' },
-        vi.fn(),
+        vi.fn() as BrowserLogger,
       ),
     ).rejects.toThrow(/library-action-not-found/);
     expect(transferAttachmentViaDataTransfer).not.toHaveBeenCalled();

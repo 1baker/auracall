@@ -1,3 +1,21 @@
+## 2026-08-12 | Plan 0277 Installed Attachment Canary
+
+- Opened the separately bounded installed-runtime successor requested after
+  Plan 0276. The packet allows one canonical install and one zero-retry Chat
+  upload/send/readback canary using a public tracked fixture through the
+  installed wrapper.
+- Admission is clean/synchronized `3fa4d70c`, CodeGraph current at 888 files,
+  16,753 nodes, and 57,060 edges, API PID 1656 healthy with zero restarts,
+  scheduler scheduled/healthy, and completion queued/running `0/0`.
+- The existing `wsl-chrome-3:45015` browser is protected retained runtime
+  state. The canary will serialize through its normal operation lane and use
+  keep-browser semantics; no scheduler/completion control or cleanup of that
+  shared browser is authorized.
+- Source gate: the exact ten-file suite passes 179 tests with one pre-existing
+  skip; typecheck, touched Biome lint, production build, diff hygiene, and
+  active/goal planning audits pass. Typecheck exposed and closed three
+  test-fixture typing defects before installation.
+
 ## 2026-08-12 | Plan 0276 ChatGPT Workbench Selector And Drawer
 
 - Opened a bounded current-workbench repair for the ChatGPT composer tool

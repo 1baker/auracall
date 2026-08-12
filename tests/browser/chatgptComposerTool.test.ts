@@ -130,7 +130,9 @@ describe('chatgpt composer tool selection', () => {
       return { result: { value: true } };
     });
     const surface = await prepareChatgptWorkbenchLocalAttachment({
-      runtime: { evaluate } as Parameters<typeof prepareChatgptWorkbenchLocalAttachment>[0]['runtime'],
+      runtime: { evaluate } as unknown as Parameters<
+        typeof prepareChatgptWorkbenchLocalAttachment
+      >[0]['runtime'],
       input: {} as Parameters<typeof prepareChatgptWorkbenchLocalAttachment>[0]['input'],
       page: {} as Parameters<typeof prepareChatgptWorkbenchLocalAttachment>[0]['page'],
     });

@@ -7,6 +7,13 @@
 Status: active
 Lane: P01
 
+- Active installed ChatGPT workbench attachment canary:
+  [docs/dev/plans/0277-2026-08-12-chatgpt-workbench-attachment-installed-canary.md](docs/dev/plans/0277-2026-08-12-chatgpt-workbench-attachment-installed-canary.md)
+  The pushed provider-free repair is admitted for one canonical install and
+  one zero-retry installed-wrapper upload/send/readback proof. The canary uses
+  a public tracked fixture and preserves the scheduler/display-owned retained
+  `wsl-chrome-3` browser; scheduler/completion controls remain out of scope.
+
 - Closed provider-free ChatGPT workbench tool-selector and attachment-drawer repair:
   [docs/dev/plans/0276-2026-08-12-chatgpt-workbench-tool-selector-attachment-drawer.md](docs/dev/plans/0276-2026-08-12-chatgpt-workbench-tool-selector-attachment-drawer.md)
   Exact live DOM evidence distinguishes the mixed searchable selector from the
