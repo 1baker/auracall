@@ -7,6 +7,14 @@
 Status: active
 Lane: P01
 
+- Open ChatGPT Chat/Sol integrated thinking-selector repair:
+  [docs/dev/plans/0273-2026-08-11-chatgpt-chat-sol-thinking-selector-repair.md](docs/dev/plans/0273-2026-08-11-chatgpt-chat-sol-thinking-selector-repair.md)
+  A read-only LitScout Chat canary failed before submission because the current
+  `Pro - Standard` / `Configure...` surface no longer matched AuraCall's
+  thinking-menu traversal. The bounded successor adds one provider-free red,
+  repairs only the Chat selector, then permits one install and one zero-retry
+  read-only LitScout canary; Work and scheduler controls remain excluded.
+
 - Closed provider-free ChatGPT Chat/Work docs and skill update:
   [docs/dev/plans/0272-2026-08-11-chatgpt-chat-work-docs-skills-update.md](docs/dev/plans/0272-2026-08-11-chatgpt-chat-work-docs-skills-update.md)
   The repo-local skill, quick-start examples, provider-free test reference,

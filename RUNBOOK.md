@@ -18424,3 +18424,20 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
 - Functional commit `cc407763` contains the reusable skill and aligned docs.
   Plan 0272 closes accepted; no browser/provider, install/restart, scheduler,
   completion, or materialization effect ran.
+
+## Turn 408 | 2026-08-11
+
+- Plan 0273 opens after one explicit-Chat, `chatgpt:sol-high`, read-only
+  LitScout canary serialized behind scheduler-owned `wsl-chrome-3` work and
+  then failed before prompt submission: `Unable to find the Thinking time
+  dropdown menu.` No connector call, LitScout action, or database effect ran.
+- Retained provider-free evidence shows ChatGPT now exposes an integrated
+  `Pro - Standard` model menu with `Configure...`. The current selector's
+  broad text matching can choose a non-interactive ancestor instead of the
+  exact Configure control, leaving the expected level menu undiscovered.
+- The packet is limited to one executable provider-free red/green repair,
+  focused and adjacent validation, then at most one install and one zero-retry
+  read-only LitScout Chat canary. Work mode, generic search, LitScout mutation,
+  Analyze, retry, `Answer now`, and all scheduler/completion/materialization
+  controls remain excluded. Critical path is serialized under root with no
+  subagents.
