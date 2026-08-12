@@ -1,3 +1,17 @@
+## 2026-08-11 | Plan 0275 Chat LitScout Canary Failed Safe
+
+- One install established exact built/runtime compact-effort parity at
+  `1be745a4...63f8` and healthy API PID 31954 with zero crash restarts.
+- The sole explicit-Chat canary submitted once and correctly returned LitScout
+  Session 57's `exact_action_recovery_required` projection. It used no generic
+  search/browse and caused no governed LitScout row change.
+- Exact UI evidence showed `list_resources` plus `auth_session`, whose response
+  was a `litscout.research_continue.v1` payload; it did not show the required
+  distinct `research_continue` call. Current LitScout source exposes the tools
+  separately, so connector routing or cached tool metadata remains unresolved.
+- Exact canary cleanup left the API healthy and unrelated 45017 untouched.
+  Plan 0275 closes failed-safe and authorizes no second canary.
+
 ## 2026-08-11 | Plan 0274 Compact Effort Selector Repair
 
 - One no-prompt identity smoke matched the configured ChatGPT Pro identity and

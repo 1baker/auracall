@@ -7,12 +7,14 @@
 Status: active
 Lane: P01
 
-- Open installed Chat LitScout read canary:
+- Closed failed-safe installed Chat LitScout read canary:
   [docs/dev/plans/0275-2026-08-11-chatgpt-chat-litscout-read-canary.md](docs/dev/plans/0275-2026-08-11-chatgpt-chat-litscout-read-canary.md)
-  The current compact Effort repair is provider-free accepted and pushed at
-  `7bca2532`. This terminal gate permits one install and one zero-retry
-  explicit-Chat LitScout read canary; LitScout mutation, generic search, Work,
-  retries, and scheduler controls remain excluded.
+  Installed parity and the sole explicit-Chat canary passed. Chat invoked the
+  LitScout connector and returned the correct read-only Session 57 projection,
+  but its tool list showed `list_resources` plus `auth_session`; the latter
+  returned a `research_continue` payload without a distinct
+  `research_continue` call. No generic search or mutation occurred. Exact-tool
+  acceptance remains fail-closed pending connector metadata reconciliation.
 
 - Closed provider-free ChatGPT Chat/Sol Configure live localization:
   [docs/dev/plans/0274-2026-08-11-chatgpt-chat-sol-configure-live-localization.md](docs/dev/plans/0274-2026-08-11-chatgpt-chat-sol-configure-live-localization.md)

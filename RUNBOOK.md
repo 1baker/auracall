@@ -18535,3 +18535,26 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
 - Acceptance requires exact source/runtime parity, healthy service readback,
   exact current ChatGPT tool-call evidence, unchanged canonical LitScout state,
   and ownership-bounded cleanup. Critical path remains root with no subagents.
+
+## Turn 415 | 2026-08-11
+
+- The sole installer established exact built/runtime `thinkingTime.js` parity
+  at `1be745a4...63f8`; API PID 31954 is active/running with zero crash
+  restarts. The sole `litscout-chat-read-canary-v3` prompt submitted once in
+  explicit Chat/Sol/High and returned the exact Session 57 state
+  `exact_action_recovery_required`, recommendation `recover_uncertain_action`,
+  and missing-controller-receipt blocker.
+- Current conversation evidence showed only `list_resources` and
+  `auth_session`; no generic search/browse ran, but no distinct
+  `research_continue` call appeared. `auth_session` returned a
+  `litscout.research_continue.v1` payload even though current LitScout source
+  defines separate auth and continuation tools. This unresolved live connector
+  label/payload mismatch fails the exact-tool criterion.
+- Before/after continuation JSON was byte-identical. Session 57 retained 93
+  memberships, six receipts, one exact-action attempt, and one exact-action
+  execution. No LitScout mutation, retry, Work, `Answer now`, scheduler,
+  completion, or materialization control occurred.
+- Exact PID 32054/port 45015 and the named evidence attachment were closed;
+  unrelated `wsl-chrome-4`/45017 remained untouched and the API stayed healthy.
+  Plan 0275 closes `LIVE_CANARY_FAILED_SAFE`. A separately authorized
+  connector-metadata reconciliation must precede another canary.

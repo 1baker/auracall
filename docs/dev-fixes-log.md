@@ -1,3 +1,10 @@
+- 2026-08-11: A correct connector payload is not sufficient proof that ChatGPT
+  routed the requested MCP method. Inspect the current tool-call list and bind
+  method name to response schema. If `auth_session` is displayed with a
+  `litscout.research_continue.v1` response while source defines distinct auth
+  and continuation tools, close the exact-tool gate failed-safe and reconcile
+  live connector metadata before retrying.
+
 - 2026-08-11: ChatGPT's current integrated Pro menu may omit Configure and
   expose `Model GPT-5.6 Sol` plus an `EffortPro` submenu whose adjacent spans
   concatenate under textContent. Recognize the compact `Effort...` label only
