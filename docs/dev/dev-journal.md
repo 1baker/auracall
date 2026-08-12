@@ -15,6 +15,12 @@
 - Source gate: the focused file passes 13/13 and the widened 14-file boundary
   passes 165/165. Typecheck, zero-warning touched lint, production build, diff
   hygiene, current CodeGraph, and both planning audits are green.
+- Installed acceptance: pushed commit `380369c0` installed once with exact
+  parity across six affected modules and healthy API PID 15493. The one
+  zero-retry canary uploaded and verified the tracked fixture, submitted once,
+  and returned exactly `AURACALL_CHATGPT_ATTACHMENT_DRAWER_OK_0277` in 33.5
+  seconds. It used Chat/current with no model picker; exact target/lease cleanup
+  preserved retained PID 39698/port 45015.
 
 ## 2026-08-12 | Plan 0279 Reattach Target Fence
 

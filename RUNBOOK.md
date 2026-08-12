@@ -19,6 +19,17 @@
   165/165. Typecheck, zero-warning touched lint, production build, diff
   hygiene, current CodeGraph, and active/goal audits are green; install and
   canary remain unspent until this checkpoint is committed and pushed.
+- Commit `380369c0` was pushed before the sole installer. It established exact
+  six-module source/runtime parity and handed the API to healthy PID 15493
+  with zero restarts. The sole canary matched Pro/personal identity, retained
+  Chat, skipped the model picker, recognized both current drawer rows, uploaded
+  and verified one tracked file, submitted once, and returned exactly
+  `AURACALL_CHATGPT_ATTACHMENT_DRAWER_OK_0277` in 33.5 seconds with zero
+  retries.
+- Exact target `D539708B…` and its operation lock cleared while retained PID
+  39698/port 45015 remained alive. No model menu, prompt retry, provider-library
+  file, `Answer now`, background control, or retained-browser close occurred.
+  Plan 0280 closes `INSTALLED_CANARY_ACCEPTED`.
 
 ## Turn 450 | 2026-08-12
 

@@ -1,10 +1,10 @@
 # ChatGPT Attachment Drawer Focus Order Canary | 0280-2026-08-12
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 1
-Gate state: PROVIDER_FREE_REPAIR_ACTIVE
-Goal execution state: ACTIVE
+Gate state: INSTALLED_CANARY_ACCEPTED
+Goal execution state: COMPLETE
 
 ## Current State
 
@@ -48,11 +48,11 @@ upload/send/readback canary without model selection or prompt retry.
 - [x] Current drawer rows and unrestricted `#upload-files` validation remain
       green; adjacent tests, typecheck, lint, build, diff hygiene, CodeGraph,
       and planning audits pass.
-- [ ] One install produces source/runtime parity and healthy API handoff.
-- [ ] One unique installed canary uploads once, submits once, returns exactly
+- [x] One install produces source/runtime parity and healthy API handoff.
+- [x] One unique installed canary uploads once, submits once, returns exactly
       `AURACALL_CHATGPT_ATTACHMENT_DRAWER_OK_0277`, and uses no model menu or
       prompt retry.
-- [ ] Exact target/lease cleanup preserves the retained browser and final
+- [x] Exact target/lease cleanup preserves the retained browser and final
       docs, Git, origin, service, scheduler, and installed runtime agree.
 
 ## Local Goal Bounds
@@ -105,3 +105,26 @@ closed.
 - `subagent_status`: not_spawned.
 - `next_action_or_stop_reason`: commit/push the green source gate, run the one
   canonical install, verify parity/health, then run the unique canary once.
+
+## Terminal Checkpoint | Installed Canary Accepted
+
+- `checkpoint_id`: `P0280-C03`.
+- `state_transition`: P0280_ACTIVE_READY_TO_INSTALL ->
+  P0280_COMPLETE_INSTALLED_CANARY_ACCEPTED.
+- `progress_classification`: outcome_complete.
+- `evidence`: pushed source commit `380369c0` installed once; the installer
+  handed the API to healthy PID 15493 with `NRestarts=0`, and all six affected
+  source/runtime modules have exact SHA-256 parity. The sole installed canary
+  reused retained PID 39698/port 45015, matched the configured Pro/personal
+  identity, retained Chat, skipped the model picker for `current`, recognized
+  both current attachment rows, queued and verified one tracked file, clicked
+  send once, and returned exactly
+  `AURACALL_CHATGPT_ATTACHMENT_DRAWER_OK_0277` in 33.5 seconds with zero
+  retries. Exact target `D539708BE881C4258362816C7743B394` and its operation
+  lock cleared while the retained browser remained alive.
+- `authority_classification`: install, upload, prompt, and canary budgets are
+  consumed exactly once; no retry, model menu, background control, or retained
+  browser close occurred.
+- `subagent_status`: not_spawned.
+- `next_action_or_stop_reason`: none; final docs/audits/commit/push close the
+  goal.

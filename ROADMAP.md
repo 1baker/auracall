@@ -7,12 +7,12 @@
 Status: active
 Lane: P01
 
-- Active ChatGPT attachment drawer focus-order repair and installed canary:
+- Closed accepted ChatGPT attachment drawer focus-order repair and installed canary:
   [docs/dev/plans/0280-2026-08-12-chatgpt-attachment-drawer-focus-order-canary.md](docs/dev/plans/0280-2026-08-12-chatgpt-attachment-drawer-focus-order-canary.md)
-  The current retained-tab workbench exposes the exact plus trigger, drawer
-  rows, and unrestricted local input, but the installed opener measured the
-  trigger before foreground focus and clicked stale coordinates. The successor
-  repairs that order before one unique attachment proof.
+  The opener now foregrounds retained tabs before measuring the plus trigger
+  and retains a bounded fallback. Provider-free gates, one install with exact
+  six-module parity, and one zero-retry canary passed; the canary uploaded one
+  tracked file and returned the exact expected token.
 
 - Closed exact reattach-target fence and failed-safe attachment canary:
   [docs/dev/plans/0279-2026-08-12-reattach-target-fence-and-attachment-canary.md](docs/dev/plans/0279-2026-08-12-reattach-target-fence-and-attachment-canary.md)
