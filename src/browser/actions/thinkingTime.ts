@@ -293,7 +293,10 @@ function buildThinkingTimeExpression(level: ThinkingTimeLevel): string {
 
       const findConfigureNode = () => Array.from(document.querySelectorAll(MENU_ITEM_SELECTOR + ', button'))
         .filter(visible)
-        .find((node) => normalize([node.textContent ?? '', node.getAttribute?.('aria-label') ?? ''].join(' ')).includes('configure'));
+        .find((node) => {
+          const text = normalize([node.textContent ?? '', node.getAttribute?.('aria-label') ?? ''].join(' '));
+          return text === 'configure' || text.startsWith('configure ');
+        });
 
       const findAdvancedNode = () => Array.from(document.querySelectorAll(MENU_ITEM_SELECTOR))
         .filter(visible)

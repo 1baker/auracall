@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   buildThinkingTimeExpressionForTest,
   evaluateChatgptProModeGate,
@@ -6,6 +6,63 @@ import {
   isChatgptProModelTarget,
   resolveChatgptProModeFromThinkingTime,
 } from '../../src/browser/actions/thinkingTime.js';
+
+class FixtureElement extends EventTarget {
+  textContent: string;
+  private readonly attributes = new Map<string, string>();
+  onClick?: () => void;
+  queryAll: (selector: string) => FixtureElement[] = () => [];
+
+  constructor(text: string, attributes: Record<string, string> = {}) {
+    super();
+    this.textContent = text;
+    for (const [name, value] of Object.entries(attributes)) this.attributes.set(name, value);
+  }
+
+  getAttribute(name: string): string | null {
+    return this.attributes.get(name) ?? null;
+  }
+
+  setAttribute(name: string, value: string): void {
+    this.attributes.set(name, value);
+  }
+
+  getBoundingClientRect() {
+    return { left: 0, top: 0, width: 100, height: 30 };
+  }
+
+  querySelector(selector: string): FixtureElement | null {
+    return this.queryAll(selector)[0] ?? null;
+  }
+
+  querySelectorAll(selector: string): FixtureElement[] {
+    return this.queryAll(selector);
+  }
+
+  override dispatchEvent(event: Event): boolean {
+    if (event.type === 'click') this.onClick?.();
+    return true;
+  }
+}
+
+class FixtureMouseEvent extends Event {}
+
+function installFixtureDocument(query: (selector: string) => FixtureElement[]): void {
+  vi.stubGlobal('Element', FixtureElement);
+  vi.stubGlobal('HTMLElement', FixtureElement);
+  vi.stubGlobal('MouseEvent', FixtureMouseEvent);
+  vi.stubGlobal('PointerEvent', FixtureMouseEvent);
+  vi.stubGlobal('window', Object.fromEntries([
+    ['PointerEvent', FixtureMouseEvent],
+    ['getComputedStyle', () => ({ visibility: 'visible', display: 'block' })],
+  ]));
+  vi.stubGlobal('document', { querySelectorAll: query });
+}
+
+afterEach(() => {
+  vi.useRealTimers();
+  vi.unstubAllGlobals();
+});
 
 describe('browser thinking-time selection expression', () => {
   it('uses centralized menu selectors and normalized matching', () => {
@@ -55,6 +112,57 @@ describe('browser thinking-time selection expression', () => {
         expect(expression).toContain('"pro extended","extended","high"');
       }
     }
+  });
+
+  it('opens the exact Configure control on the integrated Pro selector', async () => {
+    vi.useFakeTimers();
+    const chip = new FixtureElement('Pro • Standard', { 'aria-haspopup': 'menu' });
+    const broadMenuItem = new FixtureElement(
+      'Latest • 5.5 Instant Thinking • Standard Pro • Standard Configure...',
+      { role: 'menuitem' },
+    );
+    const configure = new FixtureElement('Configure...', { role: 'menuitem' });
+    const extended = new FixtureElement('Extended', { role: 'option' });
+    const levelMenu = new FixtureElement('Standard Extended', { role: 'listbox' });
+    levelMenu.queryAll = (selector) => selector.includes('[role="option"]') ? [extended] : [];
+
+    let modelMenuOpen = false;
+    let levelMenuOpen = false;
+    chip.onClick = () => {
+      modelMenuOpen = true;
+    };
+    configure.onClick = () => {
+      levelMenuOpen = true;
+    };
+
+    installFixtureDocument((selector) => {
+      if (selector.includes('button.__composer-pill, .__composer-pill-composite button')) return [chip];
+      if (
+        selector === '[data-testid="composer-footer-actions"] button[aria-haspopup="menu"]' ||
+        selector === 'button.__composer-pill[aria-haspopup="menu"]' ||
+        selector === '.__composer-pill-composite button[aria-haspopup="menu"]'
+      ) return [chip];
+      if (selector.includes('[role="dialog"]')) return [];
+      if (selector.includes('[role="menu"]') && selector.includes('[role="group"]')) {
+        return [
+          ...(modelMenuOpen ? [broadMenuItem] : []),
+          ...(levelMenuOpen ? [levelMenu] : []),
+        ];
+      }
+      if (selector.includes('[role="menuitem"]') && selector.includes('button')) {
+        return modelMenuOpen ? [broadMenuItem, configure] : [];
+      }
+      if (selector.includes('[role="menuitem"]')) return modelMenuOpen ? [broadMenuItem, configure] : [];
+      return [];
+    });
+
+    const resultPromise = new Function(
+      `return ${buildThinkingTimeExpressionForTest('extended')}`,
+    )() as Promise<unknown>;
+    await vi.advanceTimersByTimeAsync(11_000);
+
+    await expect(resultPromise).resolves.toEqual({ status: 'switched', label: 'Extended' });
+    expect(levelMenuOpen).toBe(true);
   });
 });
 

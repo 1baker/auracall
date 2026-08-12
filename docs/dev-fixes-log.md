@@ -1,3 +1,10 @@
+- 2026-08-11: On ChatGPT's integrated `Pro - Standard` model menu, do not find
+  `Configure...` with aggregate-text substring matching. A visible ancestor
+  can contain the complete menu text and consume the transition without
+  opening the nested effort surface. Match the normalized interactive label
+  exactly (`configure`) or by an explicit `configure ` prefix, and keep one
+  executable fixture that proves the broad ancestor is skipped.
+
 - 2026-08-11: ChatGPT browser instructions must choose the composer mode before
   describing model selection. Treat omitted mode as Chat; require both explicit
   Work mode and the dedicated Work-model input for a named Work model. Keep the

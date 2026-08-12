@@ -1,3 +1,22 @@
+## 2026-08-11 | Plan 0273 Chat Sol Selector Provider-Free Repair
+
+- A fresh explicit-Chat `chatgpt:sol-high` LitScout read canary failed before
+  prompt submission because ChatGPT's current integrated `Pro - Standard` /
+  `Configure...` surface did not satisfy the thinking-time adapter.
+- The provider-free red reproduced the exact `menu-not-found` outcome. Broad
+  substring matching selected a menu ancestor whose aggregate text contained
+  `Configure` before the exact interactive item and then exhausted the
+  Configure transition.
+- The minimal repair restricts Configure discovery to an exact normalized
+  label or a label beginning `configure `. The executable fixture is green;
+  the focused selector passes 8/8 and the adjacent nine-file suite passes
+  310/310. Typecheck, zero-warning touched lint, production build, diff
+  hygiene, planning audits, and CodeGraph readback pass.
+- Provider prompt, connector call, LitScout mutation, runtime install/restart,
+  and scheduler/completion/materialization effects remained zero. One install
+  and one zero-retry read-only LitScout Chat canary remain gated after the
+  committed provider-free checkpoint.
+
 ## 2026-08-11 | Plan 0272 Chat/Work Docs And Skill Update
 
 - Opened one provider-free docs/skill packet after Plans 0270 and 0271 proved

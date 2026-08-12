@@ -71,12 +71,12 @@ canary in Chat mode.
 
 ## Acceptance Criteria
 
-- [ ] One provider-free red reproduces the current integrated
+- [x] One provider-free red reproduces the current integrated
       `Pro - Standard` / `Configure...` surface through the public selector
       expression.
-- [ ] The minimal repair selects and verifies the requested Chat thinking
+- [x] The minimal repair selects and verifies the requested Chat thinking
       level without broad ancestor clicks or any Work-path change.
-- [ ] Focused and adjacent Chat/Work tests, typecheck, lint, build, diff
+- [x] Focused and adjacent Chat/Work tests, typecheck, lint, build, diff
       hygiene, CodeGraph readback, and planning audits pass.
 - [ ] Source and installed runtime hashes match after no more than one install
       and its installer-owned API restart.
@@ -94,3 +94,20 @@ AuraCall's installed Chat/Sol path can traverse ChatGPT's current integrated
 thinking selector and one bounded read-only canary proves that ChatGPT invokes
 the LitScout connector's exact read methods. Plan 0273 then closes with a clean,
 committed, pushed repository and no broader runtime or LitScout effect.
+
+## Provider-Free Evidence
+
+- The exact executable DOM fixture failed before the repair with
+  `{ status: 'menu-not-found' }`: the broad menu item containing the complete
+  model-menu text was selected before the exact `Configure...` item.
+- `findConfigureNode` now accepts only normalized labels equal to `configure`
+  or beginning with `configure `, so a broad ancestor whose text merely
+  contains that word cannot consume the one-shot Configure transition.
+- The focused selector test passes 8/8. The adjacent Chat model, adapter,
+  composer-mode, config, CLI, runtime, and schema suite passes 310/310 across
+  nine files. Typecheck, zero-warning touched-file Biome, production build,
+  diff hygiene, both planning audits, and current CodeGraph readback pass.
+- No provider prompt, connector call, LitScout action, runtime install,
+  service restart, or scheduler/completion/materialization control occurred in
+  the provider-free repair. The stale exact `exp6-diagnose` agent-browser
+  session was closed without touching scheduler-owned or retained browsers.

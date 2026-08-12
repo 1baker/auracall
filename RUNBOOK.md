@@ -18441,3 +18441,20 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   Analyze, retry, `Answer now`, and all scheduler/completion/materialization
   controls remain excluded. Critical path is serialized under root with no
   subagents.
+
+## Turn 409 | 2026-08-11
+
+- The executable current-surface fixture failed red with
+  `{ status: 'menu-not-found' }`: Configure discovery used substring matching,
+  so the first broad menu ancestor containing the whole model-menu text won
+  before the exact `Configure...` control and consumed the one-shot transition.
+- The minimal repair requires an exact normalized `configure` label or a label
+  beginning `configure `. The focused selector passes 8/8; the adjacent Chat/
+  Work/model/config/runtime/schema suite passes 310/310 across nine files.
+  Typecheck, zero-warning touched lint, production build, diff hygiene, both
+  planning audits, and current CodeGraph readback are green.
+- No live provider, connector, LitScout, installation, service-control,
+  scheduler, completion, or materialization effect ran. The stale named
+  `exp6-diagnose` agent-browser session was closed exactly. The provider-free
+  checkpoint is ready to commit and push before the one-install/one-canary
+  gate.
