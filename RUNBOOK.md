@@ -18489,3 +18489,16 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   process proven owned by this inspection packet. Prompt/model execution,
   connector calls, effort/model changes, installation, and scheduler/
   completion/materialization controls remain excluded.
+
+## Turn 412 | 2026-08-11
+
+- The sole identity smoke launched exact PID 82451/port 38958 and matched the
+  configured ChatGPT email, Pro plan, personal structure, and account level.
+  Named attachment `plan0274-inspect` verified Chat checked true, Work false,
+  and the exact closed composer button `Pro`.
+- The attachment's first exact click reported success but was an observed no-
+  op: the button remained `aria-expanded=false` and no menu existed after one
+  second. Plan version 2 permits one sole correction using AuraCall's own
+  trusted pointer event sequence on that same exact button, followed only by
+  bounded DOM capture. A third attempt, selection change, prompt, connector,
+  install, or control effect remains excluded.

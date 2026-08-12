@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 1
+Plan version: 2
 Gate state: NON_SUBMITTING_INSPECTION_READY
 
 ## Current State
@@ -38,6 +38,11 @@ prompt.
 - Maximum implementation cycles: one evidence-backed provider-free red/green
   cycle plus one deterministic correction if adjacent tests reveal a
   regression.
+- The first named-agent inspection click on the exact `Pro` button returned
+  success but left `aria-expanded=false` and exposed no menu. Because it was an
+  observed no-op, one AuraCall-equivalent trusted pointer event sequence on
+  that same exact button is the sole inspection correction. No third open
+  attempt is authorized.
 - Critical-path owner: root. Parallel tracks and subagents: none.
 
 ## Non-Goals And Hard Stops
