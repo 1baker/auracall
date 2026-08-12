@@ -1,40 +1,46 @@
 import path from 'node:path';
 import type { ChromeClient, BrowserAttachment, BrowserLogger } from '../types.js';
-import { FILE_INPUT_SELECTORS } from '../constants.js';
 import { waitForAttachmentVisible } from './attachments.js';
 import { delay } from '../utils.js';
 import { logDomFailure } from '../domDebug.js';
 import { transferAttachmentViaDataTransfer } from './attachmentDataTransfer.js';
+import { prepareChatgptWorkbenchLocalAttachment } from './chatgptComposerTool.js';
 
 /**
  * Upload file to remote Chrome by transferring content via CDP
  * Used when browser is on a different machine than CLI
  */
 export async function uploadAttachmentViaDataTransfer(
-  deps: { runtime: ChromeClient['Runtime']; dom?: ChromeClient['DOM'] },
+  deps: {
+    runtime: ChromeClient['Runtime'];
+    dom?: ChromeClient['DOM'];
+    input: ChromeClient['Input'];
+    page: ChromeClient['Page'];
+  },
   attachment: BrowserAttachment,
   logger: BrowserLogger,
 ): Promise<void> {
-  const { runtime, dom } = deps;
+  const { runtime, dom, input, page } = deps;
   if (!dom) {
     throw new Error('DOM domain unavailable while uploading attachments.');
   }
 
   logger(`Transferring ${path.basename(attachment.path)} to remote browser...`);
 
-  // Find file input element
-  const documentNode = await dom.getDocument();
-  let fileInputSelector: string | undefined;
-
-  for (const selector of FILE_INPUT_SELECTORS) {
-    const result = await dom.querySelector({ nodeId: documentNode.root.nodeId, selector });
-    if (result.nodeId) {
-      fileInputSelector = selector;
-      break;
-    }
+  const workbenchSurface = await prepareChatgptWorkbenchLocalAttachment({ runtime, input, page });
+  if (workbenchSurface.status !== 'ready') {
+    await logDomFailure(runtime, logger, `chatgpt-workbench-remote-attachment-${workbenchSurface.status}`);
+    throw new Error(
+      `ChatGPT workbench attachment surface is not ready (${workbenchSurface.status}). Expected the Add photos & files and Add from library rows plus one unrestricted #upload-files input.`,
+    );
   }
 
-  if (!fileInputSelector) {
+  // Find file input element
+  const documentNode = await dom.getDocument();
+  const fileInputSelector = workbenchSurface.inputSelector;
+  const fileInput = await dom.querySelector({ nodeId: documentNode.root.nodeId, selector: fileInputSelector });
+
+  if (!fileInput.nodeId) {
     await logDomFailure(runtime, logger, 'file-input');
     throw new Error('Unable to locate ChatGPT file attachment input.');
   }

@@ -41,6 +41,28 @@ export type ChatgptComposerToolSelection = {
   availableMore: string[];
 };
 
+export type ChatgptWorkbenchAttachmentSurface =
+  | {
+      status: 'ready';
+      inputSelector: '#upload-files';
+      localFileLabel: string;
+      libraryLabel: string;
+    }
+  | {
+      status:
+        | 'menu-not-found'
+        | 'local-file-action-not-found'
+        | 'library-action-not-found'
+        | 'file-input-not-found'
+        | 'file-input-ambiguous'
+        | 'file-input-restricted';
+    };
+
+type ChatgptWorkbenchAttachmentInventory = {
+  rows: Array<{ label: string; description: string }>;
+  inputs: Array<{ id: string; accept: string | null; multiple: boolean }>;
+};
+
 const COMPOSER_TOOL_ALIASES = resolveBundledServiceComposerAliases('chatgpt', {});
 
 const COMPOSER_TOP_LEVEL_SENTINELS = resolveBundledServiceComposerTopLevelSentinels('chatgpt', []);
@@ -53,6 +75,8 @@ const COMPOSER_CHIP_IGNORE_TOKENS = resolveBundledServiceComposerChipIgnoreToken
 const CHATGPT_COMPOSER_POPOVER_SELECTOR = '.popover';
 const CHATGPT_COMPOSER_POPOVER_ITEM_SELECTOR =
   '.__menu-item[tabindex], [data-fill][tabindex]';
+const CHATGPT_LOCAL_FILE_ACTION_LABEL = 'add photos files';
+const CHATGPT_LIBRARY_ACTION_LABEL = 'add from library';
 
 export async function ensureChatgptComposerTool(
   client: ChromeClient,
@@ -62,7 +86,7 @@ export async function ensureChatgptComposerTool(
   const { Runtime } = client;
   if (isComposerFileRequest(requestedTool)) {
     throw new Error(
-      'ChatGPT file upload stays on the attachment path. Use --file with the normal browser attachment flow instead of --browser-composer-tool for files.',
+      'ChatGPT file sources are not composer tools. Use --file for a local path; Add from library is a separate interactive provider drawer.',
     );
   }
 
@@ -143,6 +167,12 @@ export function isNonPersistentComposerToolForTest(requestedTool: string): boole
   return isNonPersistentComposerTool(resolveComposerToolCandidates(requestedTool));
 }
 
+export function resolveChatgptWorkbenchAttachmentSurfaceForTest(
+  inventory: ChatgptWorkbenchAttachmentInventory,
+): ChatgptWorkbenchAttachmentSurface {
+  return resolveChatgptWorkbenchAttachmentSurface(inventory);
+}
+
 function normalizeComposerToolLabel(value: string): string {
   return value
     .toLowerCase()
@@ -162,6 +192,15 @@ function resolveComposerToolCandidates(requestedTool: string): string[] {
 function isComposerFileRequest(requestedTool: string): boolean {
   const normalized = normalizeComposerToolLabel(requestedTool);
   return COMPOSER_FILE_REQUEST_LABELS.includes(normalized);
+}
+
+function isComposerFileSourceLabel(label: string): boolean {
+  const normalized = normalizeComposerToolLabel(label);
+  return (
+    normalized === CHATGPT_LOCAL_FILE_ACTION_LABEL ||
+    normalized === CHATGPT_LIBRARY_ACTION_LABEL ||
+    COMPOSER_FILE_REQUEST_LABELS.includes(normalized)
+  );
 }
 
 function isNonPersistentComposerTool(toolCandidates: readonly string[]): boolean {
@@ -197,6 +236,7 @@ function findBestComposerToolItem(
   let best: Pick<VisibleMenuInventoryItem, 'label' | 'selected'> | null = null;
   let bestScore = 0;
   for (const item of items) {
+    if (isComposerFileSourceLabel(item.label)) continue;
     const score = scoreComposerToolLabel(item.label, toolCandidates);
     if (score > bestScore) {
       best = item;
@@ -204,6 +244,44 @@ function findBestComposerToolItem(
     }
   }
   return bestScore > 0 ? best : null;
+}
+
+function resolveChatgptWorkbenchAttachmentSurface(
+  inventory: ChatgptWorkbenchAttachmentInventory,
+): ChatgptWorkbenchAttachmentSurface {
+  const localRows = inventory.rows.filter(
+    (row) =>
+      normalizeComposerToolLabel(row.label) === CHATGPT_LOCAL_FILE_ACTION_LABEL &&
+      normalizeComposerToolLabel(row.description) === 'upload from computer',
+  );
+  if (localRows.length !== 1) {
+    return { status: 'local-file-action-not-found' };
+  }
+  const libraryRows = inventory.rows.filter(
+    (row) =>
+      normalizeComposerToolLabel(row.label) === CHATGPT_LIBRARY_ACTION_LABEL &&
+      normalizeComposerToolLabel(row.description) === 'browse and search your files',
+  );
+  if (libraryRows.length !== 1) {
+    return { status: 'library-action-not-found' };
+  }
+  const uploadInputs = inventory.inputs.filter((input) => input.id === 'upload-files');
+  if (uploadInputs.length === 0) {
+    return { status: 'file-input-not-found' };
+  }
+  if (uploadInputs.length !== 1) {
+    return { status: 'file-input-ambiguous' };
+  }
+  const input = uploadInputs[0];
+  if (!input.multiple || (typeof input.accept === 'string' && input.accept.trim().length > 0)) {
+    return { status: 'file-input-restricted' };
+  }
+  return {
+    status: 'ready',
+    inputSelector: '#upload-files',
+    localFileLabel: localRows[0].label,
+    libraryLabel: libraryRows[0].label,
+  };
 }
 
 function findSelectedComposerToolItem(
@@ -414,13 +492,15 @@ async function readComposerPopoverEntry(
 }
 
 async function openComposerPopoverWithCdp(
-  client: ChromeClient,
+  Runtime: ChromeClient['Runtime'],
+  Input: ChromeClient['Input'],
+  Page: ChromeClient['Page'],
 ): Promise<VisibleMenuInventoryEntry | null> {
-  const existing = await readComposerPopoverEntry(client.Runtime);
+  const existing = await readComposerPopoverEntry(Runtime);
   if (existing) return existing;
-  await client.Input.dispatchKeyEvent({ type: 'keyDown', key: 'Escape', code: 'Escape' }).catch(() => undefined);
-  await client.Input.dispatchKeyEvent({ type: 'keyUp', key: 'Escape', code: 'Escape' }).catch(() => undefined);
-  const trigger = await client.Runtime.evaluate({
+  await Input.dispatchKeyEvent({ type: 'keyDown', key: 'Escape', code: 'Escape' }).catch(() => undefined);
+  await Input.dispatchKeyEvent({ type: 'keyUp', key: 'Escape', code: 'Escape' }).catch(() => undefined);
+  const trigger = await Runtime.evaluate({
     expression: `(() => {
       const node = document.querySelector(${JSON.stringify(ATTACHMENT_MENU_SELECTOR)});
       if (!(node instanceof HTMLElement)) return null;
@@ -432,9 +512,9 @@ async function openComposerPopoverWithCdp(
   });
   const point = trigger.result?.value as { x?: number; y?: number } | null | undefined;
   if (typeof point?.x !== 'number' || typeof point.y !== 'number') return null;
-  await client.Page.bringToFront().catch(() => undefined);
-  await client.Input.dispatchMouseEvent({ type: 'mouseMoved', x: point.x, y: point.y });
-  await client.Input.dispatchMouseEvent({
+  await Page.bringToFront().catch(() => undefined);
+  await Input.dispatchMouseEvent({ type: 'mouseMoved', x: point.x, y: point.y });
+  await Input.dispatchMouseEvent({
     type: 'mousePressed',
     x: point.x,
     y: point.y,
@@ -442,7 +522,7 @@ async function openComposerPopoverWithCdp(
     buttons: 1,
     clickCount: 1,
   });
-  await client.Input.dispatchMouseEvent({
+  await Input.dispatchMouseEvent({
     type: 'mouseReleased',
     x: point.x,
     y: point.y,
@@ -451,7 +531,7 @@ async function openComposerPopoverWithCdp(
     clickCount: 1,
   });
   const ready = await waitForPredicate(
-    client.Runtime,
+    Runtime,
     `(() => Array.from(document.querySelectorAll(${JSON.stringify(CHATGPT_COMPOSER_POPOVER_SELECTOR)}))
       .some((node) => {
         if (!(node instanceof HTMLElement)) return false;
@@ -462,7 +542,61 @@ async function openComposerPopoverWithCdp(
     { timeoutMs: 5_000, pollMs: 100 },
   );
   if (!ready.ok) return null;
-  return readComposerPopoverEntry(client.Runtime);
+  return readComposerPopoverEntry(Runtime);
+}
+
+export async function prepareChatgptWorkbenchLocalAttachment(
+  deps: {
+    runtime: ChromeClient['Runtime'];
+    input: ChromeClient['Input'];
+    page: ChromeClient['Page'];
+  },
+): Promise<ChatgptWorkbenchAttachmentSurface> {
+  const { runtime, input, page } = deps;
+  const popover = await openComposerPopoverWithCdp(runtime, input, page);
+  if (!popover) {
+    return { status: 'menu-not-found' };
+  }
+  const result = await runtime.evaluate({
+    expression: `(() => {
+      const visible = (node) => {
+        if (!(node instanceof HTMLElement)) return false;
+        const rect = node.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0;
+      };
+      const normalizeText = (value) => String(value || '').replace(/\\s+/g, ' ').trim();
+      const roots = Array.from(document.querySelectorAll(${JSON.stringify(CHATGPT_COMPOSER_POPOVER_SELECTOR)}))
+        .filter(visible);
+      const root = roots.at(-1);
+      const rows = root
+        ? Array.from(root.querySelectorAll(${JSON.stringify(CHATGPT_COMPOSER_POPOVER_ITEM_SELECTOR)}))
+            .filter(visible)
+            .map((item) => {
+              const primary = item.querySelector('span.max-w-full, span.truncate');
+              const label = normalizeText(primary?.textContent || (item.textContent || '').split('\\n')[0] || '');
+              const fullText = normalizeText(item.innerText || item.textContent || '');
+              const description = fullText.toLowerCase().startsWith(label.toLowerCase())
+                ? normalizeText(fullText.slice(label.length))
+                : fullText;
+              return { label, description };
+            })
+            .filter((row) => row.label)
+        : [];
+      const inputs = Array.from(document.querySelectorAll('input[type="file"]')).map((input) => ({
+        id: input.id || '',
+        accept: input.getAttribute('accept'),
+        multiple: input.hasAttribute('multiple'),
+      }));
+      return { rows, inputs };
+    })()`,
+    returnByValue: true,
+  });
+  await dismissOpenMenus(runtime).catch(() => false);
+  const inventory = result.result?.value as ChatgptWorkbenchAttachmentInventory | null | undefined;
+  if (!inventory || !Array.isArray(inventory.rows) || !Array.isArray(inventory.inputs)) {
+    return { status: 'menu-not-found' };
+  }
+  return resolveChatgptWorkbenchAttachmentSurface(inventory);
 }
 
 async function activateComposerPopoverItem(
@@ -783,7 +917,7 @@ async function selectComposerTool(
     return { status: 'already-selected', label: currentSelection.label };
   }
 
-  const currentPopover = await openComposerPopoverWithCdp(client);
+  const currentPopover = await openComposerPopoverWithCdp(client.Runtime, client.Input, client.Page);
   let directMenu = currentPopover
     ? {
         ok: true as const,

@@ -1,6 +1,9 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import {
+  ensureChatgptComposerTool,
   isNonPersistentComposerToolForTest,
+  prepareChatgptWorkbenchLocalAttachment,
+  resolveChatgptWorkbenchAttachmentSurfaceForTest,
   resolveComposerToolCandidatesForTest,
   resolveComposerToolLocationForTest,
   resolveCurrentComposerToolSelectionForTest,
@@ -48,6 +51,109 @@ describe('chatgpt composer tool selection', () => {
     expect(resolveComposerToolLocationForTest('calendar', ['company knowledge', 'create image', 'more'], ['github'])).toEqual({
       location: 'missing',
     });
+  });
+
+  test('does not treat current workbench file-source rows as composer tools', () => {
+    const currentRows = [
+      'add photos & files',
+      'add from library',
+      'create image',
+      'web search',
+    ];
+    expect(resolveComposerToolLocationForTest('photos', currentRows)).toEqual({ location: 'missing' });
+    expect(resolveComposerToolLocationForTest('library', currentRows)).toEqual({ location: 'missing' });
+    expect(resolveComposerToolLocationForTest('image', currentRows)).toEqual({
+      location: 'top',
+      label: 'create image',
+    });
+  });
+
+  test('routes local files and the provider library drawer away from composer-tool selection', async () => {
+    const client = {} as Parameters<typeof ensureChatgptComposerTool>[0];
+    const logger = () => undefined;
+    await expect(ensureChatgptComposerTool(client, 'files', logger)).rejects.toThrow(/Use --file/);
+    await expect(ensureChatgptComposerTool(client, 'library', logger)).rejects.toThrow(/separate interactive provider drawer/);
+  });
+
+  test('recognizes the current workbench attachment rows and unrestricted local upload input', () => {
+    expect(
+      resolveChatgptWorkbenchAttachmentSurfaceForTest({
+        rows: [
+          { label: 'Add photos & files', description: 'Upload from computer' },
+          { label: 'Add from library', description: 'Browse and search your files' },
+          { label: 'Web search', description: 'Find real-time news and info' },
+        ],
+        inputs: [
+          { id: 'upload-files', accept: null, multiple: true },
+          { id: 'upload-photos', accept: 'image/*', multiple: true },
+        ],
+      }),
+    ).toEqual({
+      status: 'ready',
+      inputSelector: '#upload-files',
+      localFileLabel: 'Add photos & files',
+      libraryLabel: 'Add from library',
+    });
+  });
+
+  test('reads the current open workbench surface before returning the exact local input', async () => {
+    const evaluate = vi.fn().mockImplementation(async ({ expression }: { expression?: string }) => {
+      const source = String(expression ?? '');
+      if (source.includes('data-auracall-chatgpt-composer-menu')) {
+        return {
+          result: {
+            value: {
+              selector: '[data-auracall-chatgpt-composer-menu="true"]',
+              sourceSelector: '.popover',
+              signature: 'current-workbench',
+              rect: { x: 0, y: 0, width: 400, height: 600 },
+              distanceToAnchor: null,
+              items: [],
+              itemLabels: [],
+            },
+          },
+        };
+      }
+      if (source.includes('const rows = root')) {
+        return {
+          result: {
+            value: {
+              rows: [
+                { label: 'Add photos & files', description: 'Upload from computer' },
+                { label: 'Add from library', description: 'Browse and search your files' },
+              ],
+              inputs: [{ id: 'upload-files', accept: null, multiple: true }],
+            },
+          },
+        };
+      }
+      return { result: { value: true } };
+    });
+    const surface = await prepareChatgptWorkbenchLocalAttachment({
+      runtime: { evaluate } as Parameters<typeof prepareChatgptWorkbenchLocalAttachment>[0]['runtime'],
+      input: {} as Parameters<typeof prepareChatgptWorkbenchLocalAttachment>[0]['input'],
+      page: {} as Parameters<typeof prepareChatgptWorkbenchLocalAttachment>[0]['page'],
+    });
+    expect(surface).toMatchObject({ status: 'ready', inputSelector: '#upload-files' });
+    expect(evaluate).toHaveBeenCalledWith(expect.objectContaining({ returnByValue: true }));
+  });
+
+  test('fails closed when the current drawer row or generic input contract drifts', () => {
+    expect(
+      resolveChatgptWorkbenchAttachmentSurfaceForTest({
+        rows: [{ label: 'Add photos & files', description: 'Upload from computer' }],
+        inputs: [{ id: 'upload-files', accept: null, multiple: true }],
+      }),
+    ).toEqual({ status: 'library-action-not-found' });
+    expect(
+      resolveChatgptWorkbenchAttachmentSurfaceForTest({
+        rows: [
+          { label: 'Add photos & files', description: 'Upload from computer' },
+          { label: 'Add from library', description: 'Browse and search your files' },
+        ],
+        inputs: [{ id: 'upload-files', accept: 'image/*', multiple: true }],
+      }),
+    ).toEqual({ status: 'file-input-restricted' });
   });
 
   test('prefers visible composer chip when reading current tool state', () => {

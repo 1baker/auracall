@@ -2347,7 +2347,7 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 					const attachment = submissionAttachments[attachmentIndex];
 					logger(`Uploading attachment: ${attachment.displayPath}`);
 					const uiConfirmed = await uploadAttachmentFile(
-						{ runtime: Runtime, dom: DOM, input: Input },
+						{ runtime: Runtime, dom: DOM, input: Input, page: Page },
 						attachment,
 						logger,
 						{ expectedCount: attachmentIndex + 1 },
@@ -3432,7 +3432,11 @@ async function runRemoteBrowserMode(
 				// Use remote file transfer for remote Chrome (reads local files and injects via CDP)
 				for (const attachment of submissionAttachments) {
 					logger(`Uploading attachment: ${attachment.displayPath}`);
-					await uploadAttachmentViaDataTransfer({ runtime: Runtime, dom: DOM }, attachment, logger);
+					await uploadAttachmentViaDataTransfer(
+						{ runtime: Runtime, dom: DOM, input: Input, page: Page },
+						attachment,
+						logger,
+					);
 					await delay(500);
 				}
 				// Scale timeout based on number of files: base 30s + 15s per additional file

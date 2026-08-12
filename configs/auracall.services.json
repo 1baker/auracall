@@ -236,6 +236,7 @@
         ],
         "topLevelSentinels": [
           "more",
+          "add from library",
           "recent files",
           "company knowledge",
           "create image",
@@ -246,6 +247,7 @@
           "more"
         ],
         "topMenuSignalLabels": [
+          "add from library",
           "recent files"
         ],
         "topMenuSignalSubstrings": [
@@ -259,8 +261,12 @@
         "fileRequestLabels": [
           "file",
           "files",
+          "photos",
+          "library",
           "upload",
           "uploads",
+          "add from library",
+          "add photos and files",
           "recent file",
           "recent files",
           "add photos files"
@@ -398,6 +404,7 @@
           "form"
         ],
         "fileInput": [
+          "#upload-files",
           "form input[type=\"file\"]:not([accept])",
           "input[type=\"file\"][multiple]:not([accept])",
           "input[type=\"file\"][multiple]",

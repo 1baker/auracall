@@ -1,5 +1,21 @@
 # RUNBOOK
 
+## Turn 447 | 2026-08-12
+
+- The operator requested support for ChatGPT's most recent Chat workbench tool
+  selector and file attachment drawer. [Plan 0276](docs/dev/plans/0276-2026-08-12-chatgpt-workbench-tool-selector-attachment-drawer.md)
+  closed provider-free after one bounded, non-submitting current-DOM
+  inspection and one repair slice.
+- Current evidence is one mixed `.popover` with exact local-file and library
+  rows, plus a separate `Add from library` dialog and one unrestricted
+  `#upload-files` input. AuraCall now excludes file rows from tool matching and
+  requires this exact contract before local or remote file transfer.
+- The adjacent gate passed 179 tests with one pre-existing skip; typecheck,
+  touched lint, production build, diff hygiene, CodeGraph, active/goal planning
+  audits, and exact browser cleanup passed. Prompt, tool/file selection,
+  upload, install/restart, and scheduler/completion/materialization effects
+  remained zero; installed upload/send proof is not authorized by this plan.
+
 ## Turn 446 | 2026-08-11
 
 - Plan 0269's provider-free repair was already committed and pushed at

@@ -69,6 +69,7 @@ const CHATGPT_SELECTORS = resolveBundledServiceSelectors('chatgpt', {
     'form',
   ],
   fileInput: [
+    '#upload-files',
     'form input[type="file"]:not([accept])',
     'input[type="file"][multiple]:not([accept])',
     'input[type="file"][multiple]',

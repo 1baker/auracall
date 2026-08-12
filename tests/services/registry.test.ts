@@ -332,6 +332,7 @@ describe('service registry manifest helpers', () => {
     expect(selectors.input).toEqual(
       expect.arrayContaining(['textarea[data-id="prompt-textarea"]', '#prompt-textarea']),
     );
+    expect(selectors.fileInput[0]).toBe('#upload-files');
     expect(selectors.fileInput).toEqual(
       expect.arrayContaining(['input[type="file"]', 'input[type="file"][data-testid*="file"]']),
     );

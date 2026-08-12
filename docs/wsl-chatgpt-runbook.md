@@ -147,6 +147,14 @@ oracle --profile wsl-chrome-3 --engine browser \
 If the mode menu or the Work slider's `advanced options -> Model` submenu is
 not present, AuraCall fails closed. It does not reuse Chat picker selectors.
 
+On the current Chat workbench, `Add files and more` opens one searchable
+popover containing both file sources and tools. Use `--browser-composer-tool`
+only for tool/app rows such as `web-search`, `canvas`, or `deep-research`; use
+`--file` for local paths. AuraCall verifies `Add photos & files / Upload from
+computer` and the unrestricted `#upload-files` input without confusing them
+with `Add from library / Browse and search your files`, which is ChatGPT's
+separate provider-library drawer. Missing or ambiguous rows fail closed.
+
 ## Troubleshooting
 - **Chrome opens but the URL never changes**: Oracle is connecting to the wrong DevTools host.
   - Fix: set `AURACALL_BROWSER_REMOTE_DEBUG_HOST=127.0.0.1` for the run.

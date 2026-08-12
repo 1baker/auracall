@@ -4,14 +4,20 @@ import { CONVERSATION_TURN_SELECTOR, INPUT_SELECTORS, SEND_BUTTON_SELECTORS, UPL
 import { delay } from '../utils.js';
 import { logDomFailure } from '../domDebug.js';
 import { transferAttachmentViaDataTransfer } from './attachmentDataTransfer.js';
+import { prepareChatgptWorkbenchLocalAttachment } from './chatgptComposerTool.js';
 
 export async function uploadAttachmentFile(
-  deps: { runtime: ChromeClient['Runtime']; dom?: ChromeClient['DOM']; input?: ChromeClient['Input'] },
+  deps: {
+    runtime: ChromeClient['Runtime'];
+    dom?: ChromeClient['DOM'];
+    input?: ChromeClient['Input'];
+    page?: ChromeClient['Page'];
+  },
   attachment: BrowserAttachment,
   logger: BrowserLogger,
   options?: { expectedCount?: number },
 ): Promise<boolean> {
-  const { runtime, dom, input } = deps;
+  const { runtime, dom, input, page } = deps;
   if (!dom) {
     throw new Error('DOM domain unavailable while uploading attachments.');
   }
@@ -293,74 +299,6 @@ export async function uploadAttachmentFile(
     };
   };
 
-  // New ChatGPT UI hides the real file input behind a composer "+" menu; click it pre-emptively.
-  // Learned: synthetic `.click()` is sometimes ignored (isTrusted checks). Prefer a CDP mouse click when possible.
-  const clickPlusTrusted = async (): Promise<boolean> => {
-    if (!input || typeof input.dispatchMouseEvent !== 'function') return false;
-    const locate = await runtime
-      .evaluate({
-        expression: `(() => {
-          const selectors = [
-            '#composer-plus-btn',
-            'button[data-testid="composer-plus-btn"]',
-            '[data-testid*="plus"]',
-            'button[aria-label*="add"]',
-            'button[aria-label*="attachment"]',
-            'button[aria-label*="file"]',
-          ];
-          for (const selector of selectors) {
-            const el = document.querySelector(selector);
-            if (!(el instanceof HTMLElement)) continue;
-            const rect = el.getBoundingClientRect();
-            if (rect.width <= 0 || rect.height <= 0) continue;
-            el.scrollIntoView({ block: 'center', inline: 'center' });
-            const nextRect = el.getBoundingClientRect();
-            return { ok: true, x: nextRect.left + nextRect.width / 2, y: nextRect.top + nextRect.height / 2 };
-          }
-          return { ok: false };
-        })()`,
-        returnByValue: true,
-      })
-      .then((res) => res?.result?.value as { ok?: boolean; x?: number; y?: number } | undefined)
-      .catch(() => undefined);
-    if (!locate?.ok || typeof locate.x !== 'number' || typeof locate.y !== 'number') return false;
-    const x = locate.x;
-    const y = locate.y;
-    await input.dispatchMouseEvent({ type: 'mouseMoved', x, y });
-    await input.dispatchMouseEvent({ type: 'mousePressed', x, y, button: 'left', clickCount: 1 });
-    await input.dispatchMouseEvent({ type: 'mouseReleased', x, y, button: 'left', clickCount: 1 });
-    return true;
-  };
-
-  const clickedTrusted = await clickPlusTrusted().catch(() => false);
-  if (!clickedTrusted) {
-    await Promise.resolve(
-      runtime.evaluate({
-        expression: `(() => {
-          const selectors = [
-            '#composer-plus-btn',
-            'button[data-testid="composer-plus-btn"]',
-            '[data-testid*="plus"]',
-            'button[aria-label*="add"]',
-            'button[aria-label*="attachment"]',
-            'button[aria-label*="file"]',
-          ];
-          for (const selector of selectors) {
-            const el = document.querySelector(selector);
-            if (el instanceof HTMLElement) {
-              el.click();
-              return true;
-            }
-          }
-          return false;
-        })()`,
-        returnByValue: true,
-      }),
-    ).catch(() => undefined);
-  }
-
-  await delay(350);
-
   const normalizeForMatch = (value: string): string =>
     String(value || '')
       .toLowerCase()
@@ -410,6 +348,21 @@ export async function uploadAttachmentFile(
   if (initialInputSatisfied || initialSignals.input) {
     logger(`Attachment already queued in file input: ${path.basename(attachment.path)}`);
     return true;
+  }
+
+  let preferredInputSelector: '#upload-files' | null = null;
+  if (input && page) {
+    const workbenchSurface = await prepareChatgptWorkbenchLocalAttachment({ runtime, input, page });
+    if (workbenchSurface.status !== 'ready') {
+      await logDomFailure(runtime, logger, `chatgpt-workbench-attachment-${workbenchSurface.status}`);
+      throw new Error(
+        `ChatGPT workbench attachment surface is not ready (${workbenchSurface.status}). Expected the Add photos & files and Add from library rows plus one unrestricted #upload-files input.`,
+      );
+    }
+    preferredInputSelector = workbenchSurface.inputSelector;
+    logger(
+      `ChatGPT attachment surface ready: ${workbenchSurface.localFileLabel}; ${workbenchSurface.libraryLabel} is a separate library drawer`,
+    );
   }
 
   const documentNode = await dom.getDocument();
@@ -471,8 +424,15 @@ export async function uploadAttachmentFile(
         const parentHasSend = parent && sendSelectors.some((selector) => parent.querySelector(selector));
         return parentHasSend ? parent : root;
       })();
-      const localInputs = scope ? Array.from(scope.querySelectorAll('input[type="file"]')) : [];
-      const globalInputs = Array.from(document.querySelectorAll('input[type="file"]'));
+      const preferredInputSelector = ${JSON.stringify(preferredInputSelector)};
+      const localInputs = preferredInputSelector
+        ? Array.from(scope?.querySelectorAll(preferredInputSelector) ?? [])
+        : scope
+          ? Array.from(scope.querySelectorAll('input[type="file"]'))
+          : [];
+      const globalInputs = preferredInputSelector
+        ? Array.from(document.querySelectorAll(preferredInputSelector))
+        : Array.from(document.querySelectorAll('input[type="file"]'));
       const inputs = [];
       const inputSeen = new Set();
       for (const el of [...localInputs, ...globalInputs]) {

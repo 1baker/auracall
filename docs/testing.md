@@ -737,6 +737,16 @@
     - `curl -s http://127.0.0.1:8080/v1/responses -H 'Content-Type: application/json' -d '{"model":"gpt-5.2","input":"Reply exactly with: local api smoke"}'`
     - browser-backed ChatGPT tool smoke:
       `curl -s http://127.0.0.1:8080/v1/responses -H 'Content-Type: application/json' -d '{"model":"gpt-5.2-thinking","input":"Use Deep Research to prepare a tiny smoke-test plan.","auracall":{"runtimeProfile":"wsl-chrome-3","service":"chatgpt","transport":"browser","composerTool":"deep-research","deepResearchPlanAction":"edit"}}'`
+    - current ChatGPT workbench selector and attachment contract:
+      `pnpm vitest run tests/browser/chatgptComposerTool.test.ts tests/browser/pageActions.test.ts tests/services/registry.test.ts`
+      - the visible `.popover` may mix file-source rows and tool/app rows;
+        file-source rows must never satisfy composer-tool selection
+      - local and remote `--file` paths must verify exactly one
+        `Add photos & files / Upload from computer` row, one
+        `Add from library / Browse and search your files` row, and one
+        unrestricted multi-file `#upload-files` input before transfer
+      - drift, ambiguity, or an image-restricted `#upload-files` input must
+        fail closed before any file transfer or prompt submission
   - read it back:
     - copy the returned `id`, then run `curl http://127.0.0.1:8080/v1/responses/<response_id>`
     - for compact operator status, run

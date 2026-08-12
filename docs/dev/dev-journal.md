@@ -1,3 +1,37 @@
+## 2026-08-12 | Plan 0276 ChatGPT Workbench Selector And Drawer
+
+- Opened a bounded current-workbench repair for the ChatGPT composer tool
+  selector and file attachment drawer. CodeGraph maps tool selection through
+  `ensureChatgptComposerTool(...)` and file upload through
+  `uploadAttachmentFile(...)` before the shared browser run submits a prompt.
+- The tool path already understands the searchable `.popover` introduced in
+  July. The file path still pre-emptively clicks broad `+`/add/file selectors
+  from the 2025 UI and then inventories any mounted file input; no focused test
+  represents the current attachment drawer transition.
+- One non-submitting inspection is authorized to open/dismiss the exact tool
+  selector and attachment drawer and collect bounded DOM structure. Tool or
+  file-source selection, chooser/input use, upload, prompt, model/effort,
+  connector, install/restart, and scheduler/completion/materialization effects
+  remain zero.
+- Progress: The exact authenticated Chat workbench exposes one searchable
+  `.popover` whose focusable rows mix `Add photos & files / Upload from
+  computer`, `Add from library / Browse and search your files`, tools, and
+  installed apps. The library row opens a separate `[role="dialog"]` with an
+  `Add from library` heading and searchbox. Mounted inputs are unrestricted
+  multi-file `#upload-files` plus image-only photo/camera inputs.
+- Progress: Replaced the broad attachment-trigger click with a shared
+  ChatGPT-owned surface resolver. Composer-tool matching now excludes both
+  current file-source rows; local and remote attachment paths require the two
+  exact rows and one unrestricted `#upload-files` input before transfer, with
+  bounded fail-closed drift statuses. README, testing guidance, WSL runbook,
+  provider manifest, and durable fixes log now describe the same contract.
+- Verification: The focused/adjacent ten-file suite passed 179 tests with one
+  pre-existing skip. `pnpm run check`, zero-warning touched `biome lint`,
+  `pnpm run build`, `git diff --check`, CodeGraph current-source readback, and
+  active/goal planning audits passed. Exact inspection PID/port cleanup passed
+  and preserved the unrelated retained browser. No prompt, tool/file result,
+  chooser/input, upload, install/restart, or runtime-control effect occurred.
+
 ## 2026-08-11 | Plan 0275 Chat LitScout Canary Failed Safe
 
 - One install established exact built/runtime compact-effort parity at

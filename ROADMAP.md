@@ -7,6 +7,15 @@
 Status: active
 Lane: P01
 
+- Closed provider-free ChatGPT workbench tool-selector and attachment-drawer repair:
+  [docs/dev/plans/0276-2026-08-12-chatgpt-workbench-tool-selector-attachment-drawer.md](docs/dev/plans/0276-2026-08-12-chatgpt-workbench-tool-selector-attachment-drawer.md)
+  Exact live DOM evidence distinguishes the mixed searchable selector from the
+  provider-library dialog and generic local upload input. Local and remote
+  `--file` paths now require the current two file-source rows plus unrestricted
+  `#upload-files`; composer-tool selection excludes both file rows. The 179-test
+  adjacent gate, type/build/lint/CodeGraph/planning checks, and cleanup pass;
+  installed upload/send proof remains separate.
+
 - Closed failed-safe installed Chat LitScout read canary:
   [docs/dev/plans/0275-2026-08-11-chatgpt-chat-litscout-read-canary.md](docs/dev/plans/0275-2026-08-11-chatgpt-chat-litscout-read-canary.md)
   Installed parity and the sole explicit-Chat canary passed. Chat invoked the

@@ -1,3 +1,12 @@
+- 2026-08-12: ChatGPT's current `Add files and more` workbench popover mixes
+  local-file, provider-library, first-party tool, and connected-app rows. Treat
+  `Add photos & files / Upload from computer` as the local attachment action,
+  `Add from library / Browse and search your files` as a distinct provider
+  drawer, and neither as a composer tool. Before local or remote file transfer,
+  require one unrestricted multi-file `#upload-files` input and fail closed on
+  missing, ambiguous, or restricted surfaces; broad `add`/`file` trigger
+  matching can activate the wrong current row.
+
 - 2026-08-11: A correct connector payload is not sufficient proof that ChatGPT
   routed the requested MCP method. Inspect the current tool-call list and bind
   method name to response schema. If `auth_session` is displayed with a
