@@ -127,19 +127,34 @@ pnpm tsx scripts/browser-tools.ts kill --all --force   # tear down straggler Dev
 
 This mirrors Mario Zechner’s “What if you don’t need MCP?” technique and is handy when you just need a few quick interactions without spinning up additional tooling.
 
-1. **Prompt Submission & Model Switching**
-   - With Chrome signed in and cookie sync enabled, run  
+1. **Chat and Work composer modes**
+   - Use an explicitly authorized AuraCall runtime profile with ChatGPT signed
+     in. Keep the browser for selector inspection:
      ```bash
-     pnpm run auracall -- --engine browser --model "GPT-5.2" \
-       --prompt "Line 1\nLine 2\nLine 3"
+     auracall_runtime_profile=wsl-chrome-3
+     pnpm tsx bin/auracall.ts --profile "${auracall_runtime_profile}" --engine browser \
+       --browser-model-strategy current \
+       --browser-keep-browser --verbose \
+       -p "Reply exactly with: AURACALL_CHAT_MODE_OK"
      ```
-   - Observe logs for:
-     - `Prompt textarea ready (xxx chars queued)` (twice: initial + after model switch).
-     - `Model picker: ... 5.2 ...`.
-     - `Clicked send button` (or Enter fallback).
-   - In the attached Chrome window, verify the multi-line prompt appears exactly as sent.
+   - Confirm the omitted mode selects **Chat**, sends one prompt, and returns
+     `AURACALL_CHAT_MODE_OK`.
+   - Run one separately authorized Work check:
+     ```bash
+     auracall_runtime_profile=wsl-chrome-3
+     pnpm tsx bin/auracall.ts --profile "${auracall_runtime_profile}" --engine browser \
+       --browser-chatgpt-mode work \
+       --browser-work-model "GPT-5.6 Terra" \
+       --browser-keep-browser --verbose \
+       -p "Reply exactly with: AURACALL_WORK_MODE_OK"
+     ```
+   - Confirm AuraCall selects **Work**, reaches `GPT-5.6 Terra` through Work's
+     advanced **Model ...** submenu, sends one prompt, and returns
+     `AURACALL_WORK_MODE_OK`.
+   - Stop if the Work selector is absent. AuraCall must not open the Chat model
+     picker, apply Chat thinking-time controls, or click **Answer now**.
 
-2. **Markdown Capture**
+2. **Markdown capture**
    - Prompt:
      ```bash
      pnpm run auracall -- --engine browser --model "GPT-5.2" \
@@ -149,11 +164,11 @@ This mirrors Mario Zechner’s “What if you don’t need MCP?” technique and
      - `Answer:` section containing bullet list with Markdown preserved (e.g., `- item`, fenced code).
      - Session log (`auracall session <id>`) should show the assistant markdown (confirm via `grep -n '```' ~/.auracall/sessions/<id>/output.log`).
 
-3. **Stop Button Handling**
+3. **Stop button handling**
   - Start a long prompt (`"Write a detailed essay about browsers"`) and once ChatGPT responds, manually click “Stop generating” inside Chrome.
   - Aura-Call should detect the assistant message (partial) and still store the markdown.
 
-4. **Override Flag**
+4. **Override flag**
   - Run with `--browser-allow-cookie-errors` while intentionally breaking bindings.
   - Confirm log shows `Cookie sync failed (continuing with override)` and the run proceeds headless/logged-out.
 - Remember: the browser composer now pastes only the user prompt (plus any inline file blocks). If you see the default “You are Aura-Call…” text or other system-prefixed content in the ChatGPT composer, something regressed in `assembleBrowserPrompt` and you should stop and file a bug.

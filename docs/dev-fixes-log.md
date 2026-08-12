@@ -1,3 +1,9 @@
+- 2026-08-11: ChatGPT browser instructions must choose the composer mode before
+  describing model selection. Treat omitted mode as Chat; require both explicit
+  Work mode and the dedicated Work-model input for a named Work model. Keep the
+  provider-free selector suite ahead of live canaries, and do not let a docs or
+  skill example imply that the Chat picker can operate Work.
+
 - 2026-08-11: ChatGPT's current compact mode control is not the persistent
   `[role="radio"]` shape alone: the selected mode is an exact `Chat` or `Work`
   menu trigger and the opened choices are `menuitemradio` elements. Work's

@@ -8,6 +8,24 @@
   failure and clean up only the exact AuraCall-owned process.
 
 - Unit/type tests: `pnpm test` (Vitest) and `pnpm run check` (typecheck).
+- ChatGPT Chat/Work composer boundary:
+  - normal browser runs default to Chat; Work requires
+    `--browser-chatgpt-mode work`
+  - a named Work model requires `--browser-work-model` and must use Work's
+    dedicated nested slider, never the Chat picker
+  - run the provider-free contract suite before any authorized live canary:
+    ```bash
+    pnpm vitest run \
+      tests/browser/chatgptComposerMode.test.ts \
+      tests/browser/config.test.ts \
+      tests/cli/browserConfig.test.ts \
+      tests/runtime.configuredExecutor.test.ts \
+      tests/schema/chatgptMode.test.ts \
+      tests/schema/resolver.test.ts
+    ```
+  - use the repo-local
+    [`auracall-chatgpt-browser` skill](../.agents/skills/auracall-chatgpt-browser/SKILL.md)
+    for selector boundaries, live-effect gates, and cleanup evidence
 - ChatGPT developer-app lifecycle:
   - provider-free contract tests:
     `pnpm vitest run tests/browser/chatgptDeveloperApps.test.ts tests/cli/chatgptDeveloperAppsCommand.test.ts`

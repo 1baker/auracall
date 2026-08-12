@@ -1,3 +1,15 @@
+## 2026-08-11 | Plan 0272 Chat/Work Docs And Skill Update
+
+- Opened one provider-free docs/skill packet after Plans 0270 and 0271 proved
+  and installed the Chat/Work boundary. The repo had user-facing flags and a
+  WSL example but no reusable skill or direct manual regression for selector
+  separation.
+- Added the repo-local `auracall-chatgpt-browser` skill, paired Chat-default and
+  explicit-Work examples, a provider-free focused suite, and operator guidance
+  that keeps the Work slider distinct from the Chat picker.
+- This packet excludes browser/provider work, runtime installation/restart, and
+  scheduler, completion, or materialization control effects.
+
 ## 2026-08-11 | Plan 0271 Installed Work Canary Accepted
 
 - One combined install produced source/installed parity for composer-mode and

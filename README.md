@@ -35,8 +35,14 @@ auracall -p "Cross-check the data layer assumptions" --models gpt-5.1-pro,gemini
 # Preview without spending tokens
 auracall --dry-run summary -p "Check release notes" --file docs/release-notes.md
 
-# Browser run (no API key, will open ChatGPT)
+# Browser run (no API key, opens ChatGPT in the default Chat mode)
 auracall --engine browser -p "Walk through the UI smoke test" --file "src/**/*.ts"
+
+# Work is opt-in and uses its own model selector
+auracall --profile wsl-chrome-3 --engine browser \
+  --browser-chatgpt-mode work \
+  --browser-work-model "GPT-5.6 Terra" \
+  -p "Reply exactly with: AURACALL_WORK_MODE_OK"
 
 # Preferred first-time browser onboarding (guided config + managed profile + live verification)
 auracall wizard

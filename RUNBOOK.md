@@ -18397,3 +18397,16 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   PID 3190 were untouched. The pass completed at
   `2026-08-12T02:41:43.010Z` with `backpressure=none`, scheduler posture
   returned to scheduled/healthy, and the relaunched `45015` exited normally.
+
+## Turn 406 | 2026-08-11
+
+- Plan 0272 opens as a provider-free documentation and reusable-skill packet:
+  [docs/dev/plans/0272-2026-08-11-chatgpt-chat-work-docs-skills-update.md](docs/dev/plans/0272-2026-08-11-chatgpt-chat-work-docs-skills-update.md).
+  Plans 0270 and 0271 already prove the product behavior; this turn makes the
+  boundary discoverable without relying on prior conversation history.
+- The packet adds one repo-local ChatGPT browser skill and updates the README,
+  testing guide, manual browser checks, browser-service reference, journal,
+  fixes log, and runbook. It does not change source behavior.
+- Browser launch/inspection, prompt submission, runtime installation/restart,
+  and scheduler/completion/materialization controls remain excluded. The next
+  gate is deterministic skill/docs/planning validation before commit and push.

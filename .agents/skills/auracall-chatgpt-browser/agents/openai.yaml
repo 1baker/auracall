@@ -1,0 +1,4 @@
+interface:
+  display_name: "AuraCall ChatGPT Browser"
+  short_description: "Operate ChatGPT Chat and Work modes safely"
+  default_prompt: "Use $auracall-chatgpt-browser to configure and validate a ChatGPT browser run without crossing Chat and Work selectors."

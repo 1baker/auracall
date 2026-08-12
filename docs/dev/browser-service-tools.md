@@ -113,6 +113,27 @@ Current active extraction plan:
   menu markup, prefer the package-owned select-and-reopen helpers before adding
   provider-local reopen logic
 
+## ChatGPT composer-mode boundary
+
+Choose the ChatGPT composer mode before any model action. Chat is AuraCall's
+default. Work must be explicit and uses a different model selector.
+
+Keep these provider-owned contracts separate:
+
+- `src/browser/actions/chatgptComposerMode.ts` selects and verifies exact
+  `Chat` or `Work` state. It supports a persistent `radiogroup` and the compact
+  exact mode trigger whose menu choices are `menuitemradio` elements.
+- `src/browser/actions/modelSelection.ts` owns the Chat picker.
+- `src/browser/actions/chatgptWorkModelSelection.ts` owns Work's animated
+  slider, optional **Show advanced options** expansion, exact **Model ...**
+  submenu, and final Work model `menuitemradio`.
+
+Do not generalize the Work path into the Chat picker. If current provider DOM
+does not expose a distinct Work selector, fail closed and collect bounded DOM
+diagnostics. For the provider-free suite, live-effect gates, and cleanup
+record, follow the repo-local
+[`auracall-chatgpt-browser` skill](../../.agents/skills/auracall-chatgpt-browser/SKILL.md).
+
 ## Core helpers (packages/browser-service/src/service/ui.ts)
 
 - `waitForPredicate(Runtime, expression, options)`
