@@ -1,5 +1,21 @@
 # RUNBOOK
 
+## Turn 449 | 2026-08-12
+
+- Plan 0277's single install established three-module source/runtime parity and
+  healthy API PID 25301 with zero restarts. Its sole canary reused retained
+  `wsl-chrome-3:45015`, passed exact identity and Chat-mode preflight, then
+  failed safe before upload/prompt because `current` entered model-menu retry
+  diagnostics for configured Luna.
+- SIGINT stopped the same process; exact target `17BDB1…` and its operation
+  lock cleared; retained PID 39698/port 45015 remained; completion
+  queued/running stayed `0/0`; no model option, file, prompt, `Answer now`, or
+  runtime control action occurred.
+- [Plan 0278](docs/dev/plans/0278-2026-08-12-chatgpt-current-model-strategy-attachment-canary.md)
+  opens the CodeGraph-localized causal repair: Chat `current` must resolve to
+  no model-menu action. A new install/canary remains gated on green pushed
+  source.
+
 ## Turn 448 | 2026-08-12
 
 - The operator explicitly authorized all outstanding Git, install, and testing

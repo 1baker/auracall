@@ -21493,3 +21493,12 @@ browser-stage lifecycle observability, not transcript truncation.
 - A live canary's absence of fallback provider-action and Page-CDP telemetry is
   decisive branch evidence: it can distinguish fallback eligibility failure
   from resource-content failure without exposing raw response content.
+## 2026-08-12 | Current model strategy must not traverse the model selector
+
+- `--browser-model-strategy current` means preserve the active ChatGPT model;
+  opening the volatile selector to rediscover its checked item can fail on a
+  nested/compact menu and trigger selection retries before unrelated work such
+  as attachment upload.
+- Resolve Chat `current` to no model-menu action at the shared local/remote
+  plan boundary. Keep explicit `select` as the only route that traverses the
+  Chat picker; Work retains its separate model surface.

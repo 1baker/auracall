@@ -143,6 +143,15 @@ describe("ChatGPT composer mode", () => {
 
 		expect(
 			resolveChatgptModelSelectionPlanForTest({
+				mode: "chat",
+				desiredModel: "GPT-5.6 Luna",
+				workModel: null,
+				strategy: "current",
+			}),
+		).toEqual({ kind: "ignore" });
+
+		expect(
+			resolveChatgptModelSelectionPlanForTest({
 				mode: "work",
 				desiredModel: "GPT-5.6 Terra",
 				workModel: null,

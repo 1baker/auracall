@@ -1,3 +1,19 @@
+## 2026-08-12 | Plan 0278 Current Strategy Repair
+
+- Plan 0277 installed successfully at API PID 25301 with exact parity, but its
+  one canary failed safe before attachment upload or prompt submission:
+  `current` still routed to the Chat model selector and its retry wrapper.
+- Exact dedicated target and operation-lock cleanup passed while preserving
+  retained `wsl-chrome-3:45015`; completion queued/running remained `0/0` and
+  scheduler controls remained untouched.
+- CodeGraph localizes the shared local/remote cause to
+  `resolveChatgptModelSelectionPlan()`. The minimal successor maps both
+  `ignore` and `current` to no model-menu action; focused coverage preserves
+  explicit `select` and Work routing.
+- Source gate: focused mode tests pass 8/8; the exact adjacent suite passes
+  179 with one pre-existing skip; typecheck, zero-warning touched lint,
+  production build, diff hygiene, and active/goal audits pass.
+
 ## 2026-08-12 | Plan 0277 Installed Attachment Canary
 
 - Opened the separately bounded installed-runtime successor requested after

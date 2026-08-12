@@ -1,10 +1,10 @@
 # ChatGPT Workbench Attachment Installed Canary | 0277-2026-08-12
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 1
-Gate state: LIVE_CANARY_AUTHORIZED
-Goal execution state: ACTIVE
+Gate state: LIVE_CANARY_FAILED_SAFE
+Goal execution state: COMPLETE
 
 ## Current State
 
@@ -109,6 +109,31 @@ the exact expected token.
 - `subagent_status`: not_spawned.
 - `next_action_or_stop_reason`: commit and push this admitted checkpoint, then
   run the canonical installer exactly once.
+
+## Terminal Checkpoint | Model Current Strategy Failed Safe
+
+- `checkpoint_id`: `P0277-C03`.
+- `state_transition`: P0277_ACTIVE_INSTALLED_CANARY ->
+  P0277_COMPLETE_FAILED_SAFE.
+- `progress_classification`: blocker_reduction.
+- `runtime_evidence`: the sole canonical install moved API PID 1656 to healthy
+  PID 25301 with `NRestarts=0` and exact source/installed parity for the three
+  attachment modules. The sole installed-wrapper canary reused PID 39698/port
+  45015 and passed identity plus Chat-mode preflight, but
+  `--browser-model-strategy current` entered Chat model-menu traversal for
+  desired `GPT-5.6 Luna` and reached its internal retry diagnostics before any
+  attachment upload or prompt submission.
+- `cleanup_evidence`: SIGINT stopped the same process; exact dedicated target
+  `17BDB1D9FB67726AADF27EFF9C943A5B` closed; its operation-lock record is
+  absent; retained PID 39698/port 45015 remains; API PID 25301 is healthy; and
+  completion queued/running remains 0/0.
+- `authority_classification`: this plan's install and canary budgets are
+  exhausted. No file upload, prompt submission, `Answer now`, model option
+  selection, scheduler/completion/materialization control, retry command, or
+  shared-browser cleanup occurred.
+- `subagent_status`: not_spawned.
+- `next_action_or_stop_reason`: Plan 0278 owns the provider-free `current`
+  strategy repair and a separately bounded installed canary.
 
 ## Definition Of Done
 

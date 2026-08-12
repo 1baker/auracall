@@ -7,12 +7,17 @@
 Status: active
 Lane: P01
 
+- Active ChatGPT current-model strategy repair and attachment canary:
+  [docs/dev/plans/0278-2026-08-12-chatgpt-current-model-strategy-attachment-canary.md](docs/dev/plans/0278-2026-08-12-chatgpt-current-model-strategy-attachment-canary.md)
+  The first installed attachment canary failed safe before upload/prompt when
+  `current` incorrectly entered model-menu retries. The successor makes
+  `current` non-mutating provider-free, then admits one fresh installed proof.
+
 - Active installed ChatGPT workbench attachment canary:
   [docs/dev/plans/0277-2026-08-12-chatgpt-workbench-attachment-installed-canary.md](docs/dev/plans/0277-2026-08-12-chatgpt-workbench-attachment-installed-canary.md)
-  The pushed provider-free repair is admitted for one canonical install and
-  one zero-retry installed-wrapper upload/send/readback proof. The canary uses
-  a public tracked fixture and preserves the scheduler/display-owned retained
-  `wsl-chrome-3` browser; scheduler/completion controls remain out of scope.
+  Closed failed-safe after one canonical install: the canary passed identity
+  and Chat-mode preflight but `current` entered model-menu retry diagnostics
+  before upload/prompt. Exact tab/lease cleanup preserved the retained browser.
 
 - Closed provider-free ChatGPT workbench tool-selector and attachment-drawer repair:
   [docs/dev/plans/0276-2026-08-12-chatgpt-workbench-tool-selector-attachment-drawer.md](docs/dev/plans/0276-2026-08-12-chatgpt-workbench-tool-selector-attachment-drawer.md)

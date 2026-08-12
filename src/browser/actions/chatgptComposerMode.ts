@@ -59,7 +59,7 @@ export function resolveChatgptModelSelectionPlan(input: {
 	workModel: string | null | undefined;
 	strategy: BrowserModelStrategy;
 }): ChatgptModelSelectionPlan {
-	if (input.strategy === "ignore") return { kind: "ignore" };
+	if (input.strategy === "ignore" || input.strategy === "current") return { kind: "ignore" };
 	if (input.mode === "work") {
 		const workModel = input.workModel?.trim();
 		return workModel
