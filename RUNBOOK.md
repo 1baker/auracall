@@ -18520,3 +18520,18 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   connector, effort/model change, install/restart, scheduler/completion/
   materialization control, or unrelated process kill occurred. Plan 0274
   closes `PROVIDER_FREE_ACCEPTED`; installed proof requires a successor.
+
+## Turn 414 | 2026-08-11
+
+- Plan 0275 opens as the terminal installed proof for pushed compact-effort
+  commit `7bca2532`. It permits one combined user-runtime install/service
+  handoff and one zero-retry `wsl-chrome-3`, `chatgpt:sol-high`, explicit-Chat
+  canary.
+- The prompt is frozen to LitScout `auth_session` plus `research_continue` for
+  Session 57 and read-only output fields. Generic search/browse, Work,
+  `Answer now`, LitScout create/approve/execute/retry/enrich/Analyze/write,
+  scheduler/completion/materialization control, and a second canary are hard
+  exclusions.
+- Acceptance requires exact source/runtime parity, healthy service readback,
+  exact current ChatGPT tool-call evidence, unchanged canonical LitScout state,
+  and ownership-bounded cleanup. Critical path remains root with no subagents.

@@ -7,6 +7,13 @@
 Status: active
 Lane: P01
 
+- Open installed Chat LitScout read canary:
+  [docs/dev/plans/0275-2026-08-11-chatgpt-chat-litscout-read-canary.md](docs/dev/plans/0275-2026-08-11-chatgpt-chat-litscout-read-canary.md)
+  The current compact Effort repair is provider-free accepted and pushed at
+  `7bca2532`. This terminal gate permits one install and one zero-retry
+  explicit-Chat LitScout read canary; LitScout mutation, generic search, Work,
+  retries, and scheduler controls remain excluded.
+
 - Closed provider-free ChatGPT Chat/Sol Configure live localization:
   [docs/dev/plans/0274-2026-08-11-chatgpt-chat-sol-configure-live-localization.md](docs/dev/plans/0274-2026-08-11-chatgpt-chat-sol-configure-live-localization.md)
   Exact no-prompt inspection found the current compact `EffortPro` submenu
