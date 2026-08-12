@@ -140,6 +140,75 @@ describe('chatgpt composer tool selection', () => {
     expect(evaluate).toHaveBeenCalledWith(expect.objectContaining({ returnByValue: true }));
   });
 
+  test('brings a retained tab forward before measuring the workbench attachment trigger', async () => {
+    const events: string[] = [];
+    let popoverReads = 0;
+    const evaluate = vi.fn().mockImplementation(async ({ expression }: { expression?: string }) => {
+      const source = String(expression ?? '');
+      if (source.includes('data-auracall-chatgpt-composer-menu')) {
+        popoverReads += 1;
+        return {
+          result: {
+            value:
+              popoverReads === 1
+                ? null
+                : {
+                    selector: '[data-auracall-chatgpt-composer-menu="true"]',
+                    sourceSelector: '.popover',
+                    signature: 'current-workbench',
+                    rect: { x: 0, y: 0, width: 400, height: 600 },
+                    distanceToAnchor: null,
+                    items: [],
+                    itemLabels: [],
+                  },
+          },
+        };
+      }
+      if (source.includes('const node = document.querySelector')) {
+        events.push('measure');
+        return { result: { value: { x: 24, y: 24 } } };
+      }
+      if (source.includes('.some((node)')) {
+        return { result: { value: true } };
+      }
+      if (source.includes('const rows = root')) {
+        return {
+          result: {
+            value: {
+              rows: [
+                { label: 'Add photos & files', description: 'Upload from computer' },
+                { label: 'Add from library', description: 'Browse and search your files' },
+              ],
+              inputs: [{ id: 'upload-files', accept: null, multiple: true }],
+            },
+          },
+        };
+      }
+      return { result: { value: false } };
+    });
+    const input = {
+      dispatchKeyEvent: vi.fn().mockResolvedValue(undefined),
+      dispatchMouseEvent: vi.fn().mockResolvedValue(undefined),
+    };
+    const page = {
+      bringToFront: vi.fn().mockImplementation(async () => {
+        events.push('front');
+      }),
+    };
+
+    const surface = await prepareChatgptWorkbenchLocalAttachment({
+      runtime: { evaluate } as unknown as Parameters<
+        typeof prepareChatgptWorkbenchLocalAttachment
+      >[0]['runtime'],
+      input: input as unknown as Parameters<typeof prepareChatgptWorkbenchLocalAttachment>[0]['input'],
+      page: page as unknown as Parameters<typeof prepareChatgptWorkbenchLocalAttachment>[0]['page'],
+    });
+
+    expect(surface).toMatchObject({ status: 'ready', inputSelector: '#upload-files' });
+    expect(events).toEqual(['front', 'measure']);
+    expect(input.dispatchMouseEvent).toHaveBeenCalledTimes(3);
+  });
+
   test('fails closed when the current drawer row or generic input contract drifts', () => {
     expect(
       resolveChatgptWorkbenchAttachmentSurfaceForTest({

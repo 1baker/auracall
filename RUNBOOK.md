@@ -1,5 +1,25 @@
 # RUNBOOK
 
+## Turn 451 | 2026-08-12
+
+- Plan 0279's sole install established exact six-module source/runtime parity
+  and healthy API PID 50659. Its canary reused retained PID 39698/port 45015,
+  passed exact Pro/personal identity, kept Chat, and correctly skipped all model
+  picker activity for `current`.
+- The canary failed before upload or prompt with
+  `chatgpt-workbench-attachment-menu-not-found`. Exact inspection on the same
+  dedicated tab proved `#composer-plus-btn`, both current attachment rows, and
+  unrestricted `#upload-files` were present; a direct click opened `.popover`.
+  The dedicated target/operation lock cleared and retained PID 39698 survived.
+- [Plan 0280](docs/dev/plans/0280-2026-08-12-chatgpt-attachment-drawer-focus-order-canary.md)
+  owns the CodeGraph-localized repair: foreground the retained tab before
+  measuring the trigger, with one bounded shared-helper click fallback, then
+  run provider-free gates before one successor install/canary.
+- Its focused regression passes 13/13 and the widened 14-file boundary passes
+  165/165. Typecheck, zero-warning touched lint, production build, diff
+  hygiene, current CodeGraph, and active/goal audits are green; install and
+  canary remain unspent until this checkpoint is committed and pushed.
+
 ## Turn 450 | 2026-08-12
 
 - Plan 0278's non-mutating `current` repair passed source validation, installed

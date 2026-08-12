@@ -1,10 +1,10 @@
 # Reattach Target Fence And Attachment Canary | 0279-2026-08-12
 
-State: OPEN
+State: CLOSED
 Lane: P01
 Plan version: 1
-Gate state: PROVIDER_FREE_REPAIR_ACTIVE
-Goal execution state: ACTIVE
+Gate state: INSTALLED_CANARY_FAILED_SAFE
+Goal execution state: COMPLETE_FAILED_SAFE
 
 ## Current State
 
@@ -48,10 +48,10 @@ zero-retry current-model attachment upload/send/readback proof.
 - [x] Exact-target and conversation-id reattach tests remain green; adjacent
       attachment/current tests, typecheck, lint, build, diff hygiene,
       CodeGraph, and planning audits pass.
-- [ ] One install produces source/runtime parity and healthy API handoff.
+- [x] One install produces source/runtime parity and healthy API handoff.
 - [ ] One unique installed canary uploads once, submits once, returns the exact
       fixture token, and uses no model menu or retry.
-- [ ] Exact tab/lease cleanup preserves the retained browser and final docs,
+- [x] Exact tab/lease cleanup preserves the retained browser and final docs,
       Git, origin, service, and installed runtime agree.
 
 ## Local Goal Bounds
@@ -101,3 +101,24 @@ zero-retry current-model attachment upload/send/readback proof.
 Stale target recovery cannot capture another tab, the installed runtime is
 current, one unique attachment round trip succeeds, retained runtime state is
 preserved, and all outstanding Git/install/testing work is closed.
+
+## Terminal Checkpoint | Installed Canary Failed Safe
+
+- `checkpoint_id`: `P0279-C03`.
+- `state_transition`: P0279_ACTIVE_READY_TO_INSTALL ->
+  P0279_COMPLETE_FAILED_SAFE.
+- `progress_classification`: blocker_localized.
+- `evidence`: the sole install produced exact six-module source/runtime parity
+  and healthy API PID 50659. The sole canary reused retained PID 39698/port
+  45015, passed exact Pro/personal identity, retained Chat, skipped the model
+  picker for `current`, and failed before upload or prompt with
+  `chatgpt-workbench-attachment-menu-not-found`. Exact retained-tab inspection
+  then proved the current plus trigger, both required rows, and unrestricted
+  `#upload-files` input exist; a direct click opens them. The dedicated target
+  and operation lock cleared without closing the retained browser.
+- `authority_classification`: the prompt/upload budget remained unspent, but
+  this plan's one canary attempt is consumed. Plan 0280 inherits the standing
+  goal and owns the focus-before-measure repair plus successor acceptance.
+- `subagent_status`: not_spawned.
+- `next_action_or_stop_reason`: superseded by Plan 0280; do not retry under
+  this closed plan.

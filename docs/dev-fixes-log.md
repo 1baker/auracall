@@ -1,3 +1,11 @@
+- 2026-08-12: When opening ChatGPT's attachment drawer on a dedicated tab in a
+  retained browser, call `Page.bringToFront()` before reading the composer-plus
+  button rectangle. Foreground focus can reflow the workbench, invalidating
+  coordinates captured while another tab is active. Retain the CDP pointer
+  path, then use one bounded shared-helper DOM click only if the popover did not
+  appear; continue to require both current file-source rows and one unrestricted
+  multi-file `#upload-files` input before transfer.
+
 - 2026-08-12: ChatGPT's current `Add files and more` workbench popover mixes
   local-file, provider-library, first-party tool, and connected-app rows. Treat
   `Add photos & files / Upload from computer` as the local attachment action,

@@ -498,6 +498,10 @@ async function openComposerPopoverWithCdp(
 ): Promise<VisibleMenuInventoryEntry | null> {
   const existing = await readComposerPopoverEntry(Runtime);
   if (existing) return existing;
+  // A retained browser can have another tab focused. Bringing this target to
+  // the front can reflow the workbench, so establish focus before measuring
+  // the composer trigger instead of clicking coordinates captured pre-reflow.
+  await Page.bringToFront().catch(() => undefined);
   await Input.dispatchKeyEvent({ type: 'keyDown', key: 'Escape', code: 'Escape' }).catch(() => undefined);
   await Input.dispatchKeyEvent({ type: 'keyUp', key: 'Escape', code: 'Escape' }).catch(() => undefined);
   const trigger = await Runtime.evaluate({
@@ -512,7 +516,6 @@ async function openComposerPopoverWithCdp(
   });
   const point = trigger.result?.value as { x?: number; y?: number } | null | undefined;
   if (typeof point?.x !== 'number' || typeof point.y !== 'number') return null;
-  await Page.bringToFront().catch(() => undefined);
   await Input.dispatchMouseEvent({ type: 'mouseMoved', x: point.x, y: point.y });
   await Input.dispatchMouseEvent({
     type: 'mousePressed',
@@ -539,9 +542,20 @@ async function openComposerPopoverWithCdp(
         return rect.width > 0 && rect.height > 0
           && Boolean(node.querySelector(${JSON.stringify(CHATGPT_COMPOSER_POPOVER_ITEM_SELECTOR)}));
       }))()`,
-    { timeoutMs: 5_000, pollMs: 100 },
+    { timeoutMs: 2_500, pollMs: 100 },
   );
-  if (!ready.ok) return null;
+  if (!ready.ok) {
+    const fallback = await openMenu(Runtime, {
+      trigger: {
+        ...buildComposerTriggerOptions(),
+        interactionStrategies: ['click'],
+      },
+      menuSelector: CHATGPT_COMPOSER_POPOVER_SELECTOR,
+      anchorSelector: ATTACHMENT_MENU_SELECTOR,
+      timeoutMs: 2_500,
+    });
+    if (!fallback.ok) return null;
+  }
   return readComposerPopoverEntry(Runtime);
 }
 

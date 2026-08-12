@@ -7,12 +7,19 @@
 Status: active
 Lane: P01
 
-- Active exact reattach-target fence and installed attachment canary:
+- Active ChatGPT attachment drawer focus-order repair and installed canary:
+  [docs/dev/plans/0280-2026-08-12-chatgpt-attachment-drawer-focus-order-canary.md](docs/dev/plans/0280-2026-08-12-chatgpt-attachment-drawer-focus-order-canary.md)
+  The current retained-tab workbench exposes the exact plus trigger, drawer
+  rows, and unrestricted local input, but the installed opener measured the
+  trigger before foreground focus and clicked stale coordinates. The successor
+  repairs that order before one unique attachment proof.
+
+- Closed exact reattach-target fence and failed-safe attachment canary:
   [docs/dev/plans/0279-2026-08-12-reattach-target-fence-and-attachment-canary.md](docs/dev/plans/0279-2026-08-12-reattach-target-fence-and-attachment-canary.md)
-  A stale interrupted new-chat session rebound to an unrelated retained tab
-  because its exact target was gone and it had no conversation id. The
-  successor fails that state closed before one unique installed attachment
-  proof.
+  Exact stale-target recovery now fails closed and installed parity/API health
+  passed. The sole canary passed identity, Chat, and current-model gates, then
+  stopped before upload/prompt because foreground focus occurred after trigger
+  measurement; exact cleanup preserved the retained browser.
 
 - Active ChatGPT current-model strategy repair and attachment canary:
   [docs/dev/plans/0278-2026-08-12-chatgpt-current-model-strategy-attachment-canary.md](docs/dev/plans/0278-2026-08-12-chatgpt-current-model-strategy-attachment-canary.md)

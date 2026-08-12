@@ -1,3 +1,21 @@
+## 2026-08-12 | Plan 0280 Attachment Drawer Focus Order
+
+- Plan 0279 installed exact reattach/current/attachment runtime parity at
+  healthy API PID 50659. Its one canary passed configured Pro identity, Chat,
+  and `current` model-skip gates before failing pre-upload/pre-prompt with
+  `chatgpt-workbench-attachment-menu-not-found`.
+- Exact retained-tab inspection found `#composer-plus-btn`, the current local
+  and library rows, and unrestricted `#upload-files`; direct DOM activation
+  opened the drawer. CodeGraph localized the difference to measurement before
+  `Page.bringToFront()` in `openComposerPopoverWithCdp()`.
+- The successor foregrounds before measurement, retains CDP pointer activation,
+  and uses one bounded shared-helper DOM-click fallback. Provider-free tests,
+  broad validation, commit/push, install, and one unique canary remain gated in
+  that order.
+- Source gate: the focused file passes 13/13 and the widened 14-file boundary
+  passes 165/165. Typecheck, zero-warning touched lint, production build, diff
+  hygiene, current CodeGraph, and both planning audits are green.
+
 ## 2026-08-12 | Plan 0279 Reattach Target Fence
 
 - Plan 0278's repair installed at healthy API PID 27211 with exact parity. Its
