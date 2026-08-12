@@ -133,6 +133,20 @@ AURACALL_BROWSER_REMOTE_DEBUG_HOST=127.0.0.1 \
 oracle --profile wsl-chrome-2 --engine browser -p "Say hello from second profile"
 ```
 
+Chat is the default composer mode for every AuraCall ChatGPT browser run. Work
+must be explicit, and its model is selected through a separate nested slider
+menu rather than the Chat model picker:
+
+```bash
+oracle --profile wsl-chrome-3 --engine browser \
+  --browser-chatgpt-mode work \
+  --browser-work-model "GPT-5.6 Terra" \
+  -p "Reply exactly: AURACALL_WORK_MODE_OK"
+```
+
+If the mode menu or the Work slider's `advanced options -> Model` submenu is
+not present, AuraCall fails closed. It does not reuse Chat picker selectors.
+
 ## Troubleshooting
 - **Chrome opens but the URL never changes**: Oracle is connecting to the wrong DevTools host.
   - Fix: set `AURACALL_BROWSER_REMOTE_DEBUG_HOST=127.0.0.1` for the run.

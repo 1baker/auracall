@@ -1,3 +1,13 @@
+- 2026-08-11: ChatGPT's current compact mode control is not the persistent
+  `[role="radio"]` shape alone: the selected mode is an exact `Chat` or `Work`
+  menu trigger and the opened choices are `menuitemradio` elements. Work's
+  model selector is a separate animated slider trigger whose full model list
+  requires `Show advanced options`, then the `Model ...` submenu. Treat the
+  trigger label as selected mode evidence, normalize the slider's omitted
+  `GPT` prefix when verifying a model, and test the nested sequence
+  provider-free. Never infer Work model controls from a speculative
+  `[data-mode="work"]` ancestor or fall back to Chat picker selectors.
+
 - 2026-08-11: Treat ChatGPT `Chat` and `Work` as different composer contracts,
   not sticky UI state around one model picker. Select and verify the exact
   visible mode radio before model work; default to Chat, require Work

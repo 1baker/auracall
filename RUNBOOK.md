@@ -18345,6 +18345,23 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   healthy. Plan 0217 closes fail-closed; no retry, second install/restart,
   other completion control, or scheduler control ran.
 
+## Turn 404 | 2026-08-11
+
+- Plan 0271 opens as the bounded installed-runtime successor to provider-free
+  Plan 0270. Fresh readback is clean/synced at `c65709d1`: API PID 3190 is
+  active, scheduler posture is `scheduled/healthy`, active materialization
+  jobs are zero, and no `wsl-chrome-3` browser owns a process or port.
+- Agent-browser reused the exact retained AuraCall-owned
+  `wsl-chrome-4:45017` browser and found authenticated ChatGPT without a
+  challenge. Current mode uses a `Chat`/`Work` menu trigger plus
+  `menuitemradio` choices. Work model selection is a separate animated slider:
+  `Show advanced options`, `Model ...`, then model `menuitemradio` choices
+  (`GPT-5.6 Sol`, `Terra`, `Luna`, and `GPT-5.5`).
+- Provider-free red/green now covers the supplied persistent radio variant and
+  the observed compact menu variant, plus an executable nested Work-model DOM
+  fixture. The source remains uninstalled pending the complete green gate;
+  no prompt, scheduler/completion control, or materialization effect ran.
+
 ## Turn 403 | 2026-08-11
 
 - Plan 0270 closes provider-free with ChatGPT composer mode represented as an

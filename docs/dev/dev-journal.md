@@ -1,3 +1,23 @@
+## 2026-08-11 | Plan 0271 Current Work Selector Repair
+
+- Agent-browser attached read-only to the exact retained AuraCall-owned
+  `wsl-chrome-4:45017` browser after scheduler diagnostics reported
+  `scheduled/healthy` and active materialization jobs were zero. ChatGPT was
+  authenticated with no challenge surface; no new browser process launched.
+- Current ChatGPT mode selection is a compact `Chat`/`Work` menu whose choices
+  are `menuitemradio` elements. Work's model surface is separately anchored by
+  `data-animated-slider-trigger`, expands from compact to advanced options,
+  then exposes a `Model ...` submenu with model `menuitemradio` choices.
+- Provider-free reds proved the prior radio-only mode expression and
+  speculative Work-root selector did not represent that DOM. The repaired
+  adapters retain support for the supplied persistent radio variant, add the
+  observed menu and nested slider contract, normalize the Work trigger's
+  omitted `GPT` prefix, and remain disjoint from Chat picker selectors.
+- Two executable DOM fixtures plus focused mode/config tests pass. Runtime
+  installation and the single `wsl-chrome-3` Work canary remain gated behind
+  the full source validation and committed checkpoint; scheduler/completion
+  controls remain untouched.
+
 ## 2026-08-11 | Plan 0270 Chat And Work Mode Boundary
 
 - ChatGPT browser execution now selects and verifies an exact `Chat` or `Work`

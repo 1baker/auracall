@@ -1810,7 +1810,7 @@ npx -y auracall auracall-mcp
 | `--base-url <url>` | Point API runs at LiteLLM/Azure/OpenRouter/etc. |
 | `--chatgpt-url <url>` | Target a ChatGPT workspace/folder (browser). |
 | `--browser-chatgpt-mode <chat\|work>` | Select the ChatGPT composer mode. AuraCall defaults every ChatGPT browser run to `chat`; `work` must be requested explicitly. |
-| `--browser-work-model <label>` | Select a model through the dedicated Work-mode selector. This is used only with `--browser-chatgpt-mode work` and never falls back to the Chat picker. |
+| `--browser-work-model <label>` | Select a model through Work's dedicated slider menu (advanced options -> Model). This is used only with `--browser-chatgpt-mode work` and never falls back to the Chat picker. Current labels include `GPT-5.6 Sol`, `GPT-5.6 Terra`, `GPT-5.6 Luna`, and `GPT-5.5`. |
 | `--browser-model-strategy <select\|current\|ignore>` | Control ChatGPT model selection in browser mode (current keeps the active model; ignore skips the picker). |
 | `--browser-manual-login` | Skip cookie copy; reuse a persistent automation profile and wait for manual ChatGPT login. |
 | `--browser-thinking-time <light\|standard\|extended\|heavy>` | Set ChatGPT effort intensity for GPT-5.6 Sol in browser mode. The four AuraCall levels map to ChatGPT's Light, Medium, High, and Extra High choices. Prefer `--model chatgpt:sol-high` or `--model chatgpt:sol-extra-high`; legacy Thinking/Pro semantic aliases now resolve to the matching Sol effort lane because the current picker no longer exposes separate Thinking or Pro model families. |
