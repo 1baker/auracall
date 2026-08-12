@@ -82,4 +82,6 @@ source slice is committed and pushed without installation or provider smoke.
   cleanup authority. Scheduler readback remained running and autonomously
   relaunched `wsl-chrome-3`; no scheduler/completion control, install, or
   materialization request ran. The retained `wsl-chrome-4:45017` and API PID
-  3190 were untouched.
+  3190 were untouched. The cadence pass then completed at
+  `2026-08-12T02:41:43.010Z` with `backpressure=none`, returned the scheduler
+  to `scheduled/healthy`, and its `45015` browser exited normally.

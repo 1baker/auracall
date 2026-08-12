@@ -16,7 +16,10 @@
   and terminated under cleanup authority; scheduler readback remained running
   and autonomously relaunched `wsl-chrome-3:45015`. No scheduler/completion
   control ran, and retained `wsl-chrome-4:45017` plus API PID 3190 were
-  untouched. Do not infer process ownership from start-time coincidence alone.
+  untouched. The pass later completed at `2026-08-12T02:41:43.010Z` with no
+  backpressure, scheduler posture returned to scheduled/healthy, and `45015`
+  exited normally. Do not infer process ownership from start-time coincidence
+  alone.
 
 ## 2026-08-11 | Plan 0269 Canary Accepted And Live Follow Reactivated
 

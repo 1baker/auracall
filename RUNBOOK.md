@@ -18362,4 +18362,6 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   existing cleanup authority. Scheduler diagnostics remained running and
   autonomously relaunched `wsl-chrome-3:45015`; no scheduler/completion control
   or materialization request ran, and retained `wsl-chrome-4:45017` plus API
-  PID 3190 were untouched.
+  PID 3190 were untouched. The pass completed at
+  `2026-08-12T02:41:43.010Z` with `backpressure=none`, scheduler posture
+  returned to scheduled/healthy, and the relaunched `45015` exited normally.
