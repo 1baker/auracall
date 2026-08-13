@@ -3,7 +3,13 @@ import {
   resolveManagedProfileDir,
   resolveManagedProfileName,
 } from '../profileStore.js';
-import type { DebugPortStrategy, ResolvedBrowserConfig } from '../types.js';
+import type {
+  AgentBrowserBuild,
+  AgentBrowserRdpConfig,
+  BrowserProfileFamily,
+  DebugPortStrategy,
+  ResolvedBrowserConfig,
+} from '../types.js';
 import type { BrowserSessionConfig } from '../types.js';
 import {
   getRuntimeProfileBrowserProfile,
@@ -39,6 +45,9 @@ export interface ResolvedProfileFamily {
 }
 
 export interface ResolvedBrowserProfile {
+  browserFamily?: BrowserProfileFamily;
+  browserBuild?: AgentBrowserBuild;
+  agentBrowserRdp?: AgentBrowserRdpConfig;
   chromePath?: string;
   display?: string;
   managedProfileRoot?: string;
@@ -79,6 +88,9 @@ export interface ResolvedServiceBinding {
 export interface ResolvedBrowserLaunchProfile {
   target: ServiceId | null;
   targetUrl: string | null;
+  browserFamily?: BrowserProfileFamily;
+  browserBuild?: AgentBrowserBuild;
+  agentBrowserRdp?: AgentBrowserRdpConfig;
   chromePath?: string;
   display?: string;
   chromeProfile?: string;
@@ -147,6 +159,28 @@ function asNonEmptyString(value: unknown): string | undefined {
 
 function asBoolean(value: unknown): boolean | undefined {
   return typeof value === 'boolean' ? value : undefined;
+}
+
+function asBrowserProfileFamily(value: unknown): BrowserProfileFamily | undefined {
+  return value === 'chrome' || value === 'chromium' ? value : undefined;
+}
+
+function asAgentBrowserBuild(value: unknown): AgentBrowserBuild | undefined {
+  return value === 'stock_chrome' || value === 'stealthcdp_chromium' ? value : undefined;
+}
+
+function asAgentBrowserRdpConfig(value: unknown): AgentBrowserRdpConfig | undefined {
+  if (!isRecord(value) || typeof value.enabled !== 'boolean') return undefined;
+  const runtimeProfile = asNonEmptyString(value.runtimeProfile);
+  if (!runtimeProfile) return undefined;
+  const command = asNonEmptyString(value.command);
+  const jobTimeoutMs = asFiniteNumber(value.jobTimeoutMs);
+  return {
+    enabled: value.enabled,
+    runtimeProfile,
+    ...(command ? { command } : {}),
+    ...(jobTimeoutMs !== undefined && jobTimeoutMs > 0 ? { jobTimeoutMs } : {}),
+  };
 }
 
 function asFiniteNumber(value: unknown): number | undefined {
@@ -431,6 +465,15 @@ export function resolveBrowserProfileResolution(input: {
   };
 
   const browserProfile: ResolvedBrowserProfile = {
+    browserFamily:
+      asBrowserProfileFamily(selectedBrowserProfile.browserFamily) ??
+      asBrowserProfileFamily(profileBrowser.browserFamily),
+    browserBuild:
+      asAgentBrowserBuild(selectedBrowserProfile.browserBuild) ??
+      asAgentBrowserBuild(profileBrowser.browserBuild),
+    agentBrowserRdp:
+      asAgentBrowserRdpConfig(selectedBrowserProfile.agentBrowserRdp) ??
+      asAgentBrowserRdpConfig(profileBrowser.agentBrowserRdp),
     chromePath: asNonEmptyString(selectedBrowserProfile.chromePath) ?? asNonEmptyString(profileBrowser.chromePath),
     display: asNonEmptyString(selectedBrowserProfile.display) ?? asNonEmptyString(profileBrowser.display),
     managedProfileRoot:
@@ -507,6 +550,9 @@ export function resolveBrowserProfileResolution(input: {
   const launchProfile: ResolvedBrowserLaunchProfile = {
     target: defaultService,
     targetUrl: serviceUrl,
+    browserFamily: asBrowserProfileFamily(browser.browserFamily) ?? browserProfile.browserFamily,
+    browserBuild: asAgentBrowserBuild(browser.browserBuild) ?? browserProfile.browserBuild,
+    agentBrowserRdp: asAgentBrowserRdpConfig(browser.agentBrowserRdp) ?? browserProfile.agentBrowserRdp,
     chromePath: asNonEmptyString(browser.chromePath) ?? browserProfile.chromePath,
     display: asNonEmptyString(browser.display) ?? browserProfile.display,
     chromeProfile: effectiveLaunchProfileName,

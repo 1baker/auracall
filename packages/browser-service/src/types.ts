@@ -4,6 +4,15 @@ import type Protocol from 'devtools-protocol';
 export type ChromeClient = Awaited<ReturnType<typeof CDP>>;
 export type CookieParam = Protocol.Network.CookieParam;
 export type DebugPortStrategy = 'fixed' | 'auto';
+export type BrowserProfileFamily = 'chrome' | 'chromium';
+export type AgentBrowserBuild = 'stock_chrome' | 'stealthcdp_chromium';
+
+export interface AgentBrowserRdpConfig {
+  enabled: boolean;
+  runtimeProfile: string;
+  command?: string;
+  jobTimeoutMs?: number;
+}
 
 export type BrowserLogger = ((message: string) => void) & {
   verbose?: boolean;
@@ -41,6 +50,9 @@ export interface BrowserRuntimeMetadata {
 }
 
 export interface BrowserSessionConfig {
+  browserFamily?: BrowserProfileFamily | null;
+  browserBuild?: AgentBrowserBuild | null;
+  agentBrowserRdp?: AgentBrowserRdpConfig | null;
   chromeProfile?: string | null;
   chromePath?: string | null;
   chromeCookiePath?: string | null;
@@ -73,6 +85,9 @@ export interface BrowserSessionConfig {
 }
 
 export interface BrowserAutomationConfig {
+  browserFamily?: BrowserProfileFamily | null;
+  browserBuild?: AgentBrowserBuild | null;
+  agentBrowserRdp?: AgentBrowserRdpConfig | null;
   chromeProfile?: string | null;
   chromePath?: string | null;
   chromeCookiePath?: string | null;
@@ -166,9 +181,15 @@ export type ResolvedBrowserConfig = Required<
       'chromeCookiePath' |
       'bootstrapCookiePath' |
       'remoteChrome' |
-      'profileConflictAction'
+      'profileConflictAction' |
+      'browserFamily' |
+      'browserBuild' |
+      'agentBrowserRdp'
   >
 > & {
+  browserFamily?: BrowserProfileFamily | null;
+  browserBuild?: AgentBrowserBuild | null;
+  agentBrowserRdp?: AgentBrowserRdpConfig | null;
   chromeProfile?: string | null;
   chromePath?: string | null;
   chromeCookiePath?: string | null;

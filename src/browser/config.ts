@@ -15,6 +15,9 @@ import {
 import { normalizeChatgptComposerMode } from './actions/chatgptComposerMode.js';
 
 export const DEFAULT_BROWSER_CONFIG: ResolvedBrowserConfig = {
+  browserFamily: null,
+  browserBuild: null,
+  agentBrowserRdp: null,
   chromeProfile: null,
   chromePath: null,
   chromeCookiePath: null,
@@ -220,6 +223,7 @@ export function resolveBrowserConfig(
     target,
   });
   const launchProfile = launchResolution.launchProfile;
+  const agentBrowserRdpEnabled = launchProfile.agentBrowserRdp?.enabled === true;
   return {
     ...DEFAULT_BROWSER_CONFIG,
     ...(config ?? {}),
@@ -241,15 +245,24 @@ export function resolveBrowserConfig(
     cookieSyncWaitMs: config?.cookieSyncWaitMs ?? DEFAULT_BROWSER_CONFIG.cookieSyncWaitMs,
     inlineCookies: normalizedInlineCookies,
     inlineCookiesSource: config?.inlineCookiesSource ?? DEFAULT_BROWSER_CONFIG.inlineCookiesSource,
-    headless: launchProfile.headless ?? config?.headless ?? DEFAULT_BROWSER_CONFIG.headless,
-    keepBrowser: launchProfile.keepBrowser ?? config?.keepBrowser ?? DEFAULT_BROWSER_CONFIG.keepBrowser,
-    hideWindow: launchProfile.hideWindow ?? config?.hideWindow ?? DEFAULT_BROWSER_CONFIG.hideWindow,
+    headless: agentBrowserRdpEnabled
+      ? false
+      : launchProfile.headless ?? config?.headless ?? DEFAULT_BROWSER_CONFIG.headless,
+    keepBrowser: agentBrowserRdpEnabled
+      ? true
+      : launchProfile.keepBrowser ?? config?.keepBrowser ?? DEFAULT_BROWSER_CONFIG.keepBrowser,
+    hideWindow: agentBrowserRdpEnabled
+      ? false
+      : launchProfile.hideWindow ?? config?.hideWindow ?? DEFAULT_BROWSER_CONFIG.hideWindow,
     desiredModel,
     chatgptMode,
     workModel: config?.workModel?.trim() || null,
     modelStrategy,
     composerTool,
     deepResearchPlanAction,
+    browserFamily: launchProfile.browserFamily ?? config?.browserFamily ?? null,
+    browserBuild: launchProfile.browserBuild ?? config?.browserBuild ?? null,
+    agentBrowserRdp: launchProfile.agentBrowserRdp ?? config?.agentBrowserRdp ?? null,
     chromeProfile: launchProfile.chromeProfile ?? resolvedChromeProfile,
     chromePath: launchProfile.chromePath ?? resolvedChromePath,
     chromeCookiePath: launchProfile.chromeCookiePath ?? resolvedCookiePath,

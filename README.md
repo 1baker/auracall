@@ -223,6 +223,16 @@ Engine auto-picks API when `OPENAI_API_KEY` is set, otherwise browser; browser i
 
 Current browser-mode default posture:
 - browser runs still default to Aura-Call-managed profile launch
+- a browser profile can opt into an agent-browser-owned hidden RDP/Guacamole
+  process with `agentBrowserRdp.enabled: true`; AuraCall still owns and passes
+  the exact managed browser profile directory under `~/.auracall`, then
+  attaches only after agent-browser proves an operator-visible route, the
+  requested browser build, and a responsive CDP endpoint
+- routed Chrome profiles must declare `browserFamily: "chrome"` with
+  `browserBuild: "stock_chrome"`; routed chromium-stealthcdp profiles must
+  declare `browserFamily: "chromium"` with
+  `browserBuild: "stealthcdp_chromium"`. Missing or mixed declarations fail
+  before agent-browser is invoked
 - if you do not set `manualLogin` explicitly, browser config resolution still
   treats interactive login as on and derives
   `manualLoginProfileDir = managedProfileRoot + auracallProfile + service`

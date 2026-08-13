@@ -122,6 +122,7 @@ export function detectChromiumBrowserFamily(value: string | null | undefined): C
     return 'edge';
   }
   if (
+    normalized.includes('/chromium-stealthcdp/') ||
     normalized.includes('/chromium/') ||
     normalized.endsWith('/chromium') ||
     normalized.includes('/program files/chromium/')

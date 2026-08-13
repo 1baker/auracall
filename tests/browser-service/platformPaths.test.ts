@@ -43,6 +43,7 @@ describe('platformPaths (package)', () => {
 
   test('detects Chromium browser family from executable and user-data paths', () => {
     expect(detectChromiumBrowserFamily('/mnt/c/Program Files/Google/Chrome/Application/chrome.exe')).toBe('chrome');
+    expect(detectChromiumBrowserFamily('/opt/chromium-stealthcdp/current/chrome')).toBe('chromium');
     expect(
       detectChromiumBrowserFamily('/mnt/c/Users/ecoch/AppData/Local/BraveSoftware/Brave-Browser/User Data'),
     ).toBe('brave');

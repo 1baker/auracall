@@ -21521,3 +21521,18 @@ browser-stage lifecycle observability, not transcript truncation.
 - Resolve Chat `current` to no model-menu action at the shared local/remote
   plan boundary. Keep explicit `select` as the only route that traverses the
   Chat picker; Work retains its separate model surface.
+
+## 2026-08-12 | External profile ownership needs two family proofs
+
+- Passing an AuraCall-owned managed browser profile to another process manager
+  does not by itself prove that the correct browser executable will open it.
+  Bind each routed profile to a closed-world executable-family/build pair:
+  Chrome to `stock_chrome`, chromium-stealthcdp to `stealthcdp_chromium`.
+- Refuse incompatible declarations and configured executable paths before
+  invoking agent-browser, then independently require its matched build proof
+  and actual executable path before CDP attachment. Do not enable the unsafe
+  family-mismatch override.
+- A chromium-stealthcdp artifact may expose an executable named only `chrome`;
+  preserve family evidence from the containing `chromium-stealthcdp` path.
+  The managed profile directory remains AuraCall-owned and is passed by exact
+  path without copying or conversion.

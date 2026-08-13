@@ -18,6 +18,29 @@ When targeting managed Aura-Call sessions through that wrapper, prefer
 same AuraCall runtime profile and managed browser profile that the real product
 path would use.
 
+## Agent-browser hidden RDP ownership lane
+
+`browserProfiles.<id>.agentBrowserRdp.enabled=true` moves process/display
+ownership to agent-browser while AuraCall retains the exact managed browser
+profile directory. The BrowserService launcher passes that AuraCall path via
+agent-browser's external-profile `--profile` contract, requests
+`remote_headed + rdp_gateway`, waits for `operatorVisible.state=ready`, requires
+matching browser-build proof including the actual executable path, then reads
+the exact opened browser from `service browsers` and attaches to its CDP port.
+
+The compatibility matrix is closed-world:
+
+| AuraCall executable family | agent-browser build |
+| --- | --- |
+| `chrome` | `stock_chrome` |
+| `chromium` | `stealthcdp_chromium` |
+
+Never set `AGENT_BROWSER_ALLOW_PROFILE_BROWSER_MISMATCH`. A healthy
+agent-browser install, matching named runtime profile, available RDP route-pool
+entry, durable handoff URL, and exact executable proof are activation
+prerequisites. Repository contract tests do not authorize or substitute for a
+live browser launch.
+
 ## Metadata-only agent-browser network detail
 
 Do not print `agent-browser --json network requests` or

@@ -7,6 +7,9 @@ export type {
   BrowserLogger,
   BrowserAttachment,
   DebugPortStrategy,
+  BrowserProfileFamily,
+  AgentBrowserBuild,
+  AgentBrowserRdpConfig,
 } from '../../packages/browser-service/src/types.js';
 
 export type BrowserModelStrategy = 'select' | 'current' | 'ignore';

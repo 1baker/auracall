@@ -110,6 +110,16 @@ Aura-Call derives the managed browser profile directory automatically as
 `~/.auracall/browser-profiles/<auracallProfile>/<service>` unless you set
 `manualLoginProfileDir` explicitly.
 
+To run that same AuraCall-owned directory inside an agent-browser hidden
+RDP/Guacamole route, configure its named browser profile with
+`browserFamily: "chrome"`, `browserBuild: "stock_chrome"`, and
+`agentBrowserRdp: { enabled: true, runtimeProfile: "<matching-agent-browser-runtime>" }`.
+Do not move or copy the managed browser profile. AuraCall passes the exact path
+to agent-browser and attaches through the returned CDP endpoint only after the
+remote view and executable-build proofs pass. Keep this option disabled until
+`agent-browser install doctor --json`, remote-view readiness, the named runtime
+profile, and the route pool are healthy.
+
 Seed the second account once:
 
 ```bash

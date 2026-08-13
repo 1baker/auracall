@@ -226,6 +226,12 @@ describe('loadUserConfig', () => {
       defaultRuntimeProfile: 'consulting',
       browserProfiles: {
         consulting: {
+          browserFamily: 'chrome',
+          browserBuild: 'stock_chrome',
+          agentBrowserRdp: {
+            enabled: true,
+            runtimeProfile: 'auracall-consulting',
+          },
           chromePath: '/usr/bin/google-chrome',
         },
       },
@@ -239,6 +245,11 @@ describe('loadUserConfig', () => {
 
     expect(parsed.defaultRuntimeProfile).toBe('consulting');
     expect(parsed.browserProfiles?.consulting?.chromePath).toBe('/usr/bin/google-chrome');
+    expect(parsed.browserProfiles?.consulting?.browserFamily).toBe('chrome');
+    expect(parsed.browserProfiles?.consulting?.browserBuild).toBe('stock_chrome');
+    expect(parsed.browserProfiles?.consulting?.agentBrowserRdp?.runtimeProfile).toBe(
+      'auracall-consulting',
+    );
     expect(parsed.runtimeProfiles?.consulting?.browserProfile).toBe('consulting');
   });
 

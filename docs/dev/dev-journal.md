@@ -46579,3 +46579,23 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   is `ff3fe974...d8baf6`; installed remains `4b2dca82...c4725`.
 - Plan 0246 prepares one install/restart and one pass-56 canary but remains
   `PLANNED` pending explicit effect approval. No runtime/provider effect ran.
+## 2026-08-12 | Agent-browser RDP migration for AuraCall profiles
+
+- Current focus: implement Plan 0281 Slice A, preserving AuraCall ownership of
+  every managed browser profile while routing headed processes through
+  agent-browser remote-view.
+- The compatibility contract is explicit and fail-closed: Chrome profile plus
+  `stock_chrome`, or Chromium profile plus `stealthcdp_chromium`; the configured
+  executable must independently resolve to the same family.
+- Provider-free work is authorized. Live profile registration, browser launch,
+  installed-runtime repair, service restart, and scheduler/completion controls
+  remain outside this checkpoint.
+- Slice A is now implemented: typed config/schema resolution, native-launch
+  preservation, a no-shell agent-browser remote-view launcher, exact managed
+  profile-path retention, headed persistence, and pre/post-launch family proof.
+- Validation is green across 73 focused tests, 20 existing BrowserService
+  tests, typecheck, scoped zero-warning lint, production build, current
+  CodeGraph readback, diff hygiene, and planning/goal audits.
+- No live configuration or runtime state changed. Slice B registration and
+  Slice C activation remain blocked on the installed agent-browser doctor and
+  route-pool defects recorded in Plan 0281.

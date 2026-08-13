@@ -7,6 +7,16 @@
 Status: active
 Lane: P01
 
+- Active agent-browser RDP migration for AuraCall-owned managed profiles:
+  [docs/dev/plans/0281-2026-08-12-agent-browser-rdp-managed-profile-migration.md](docs/dev/plans/0281-2026-08-12-agent-browser-rdp-managed-profile-migration.md)
+  AuraCall will retain the exact managed profile directories while
+  agent-browser owns remote-headed Chrome/Chromium processes and Guacamole/RDP
+  routes. The first slice is provider-free and fail-closed on executable
+  family, browser build, operator-visible proof, and CDP endpoint evidence;
+  that source/config/docs slice is now green. Profile registration and
+  installed activation remain withheld behind current runtime and route
+  readiness.
+
 - Closed accepted ChatGPT attachment drawer focus-order repair and installed canary:
   [docs/dev/plans/0280-2026-08-12-chatgpt-attachment-drawer-focus-order-canary.md](docs/dev/plans/0280-2026-08-12-chatgpt-attachment-drawer-focus-order-canary.md)
   The opener now foregrounds retained tabs before measuring the plus trigger

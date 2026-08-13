@@ -8,6 +8,12 @@
   failure and clean up only the exact AuraCall-owned process.
 
 - Unit/type tests: `pnpm test` (Vitest) and `pnpm run check` (typecheck).
+- Agent-browser RDP managed-profile contract (provider-free):
+  `pnpm vitest run tests/browser/agentBrowserRdpLauncher.test.ts tests/browser/config.test.ts tests/browser/profileConfig.test.ts tests/browser-service/platformPaths.test.ts`
+  followed by `pnpm run typecheck`. This proves exact AuraCall profile-path
+  retention, Chrome/stock-Chrome and chromium/stealthcdp pairing, headed
+  persistence, operator-visible/build-proof gates, and exact CDP inventory
+  selection. It does not launch a browser or prove installed route readiness.
 - ChatGPT Chat/Work composer boundary:
   - normal browser runs default to Chat; Work requires
     `--browser-chatgpt-mode work`

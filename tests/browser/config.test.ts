@@ -80,6 +80,29 @@ describe('resolveBrowserConfig', () => {
     expect(resolved.collapseDisposableWindows).toBe(false);
   });
 
+  test('normalizes agent-browser RDP profiles to persistent headed operation', () => {
+    const resolved = resolveBrowserConfig({
+      browserFamily: 'chrome',
+      browserBuild: 'stock_chrome',
+      chromePath: '/usr/bin/google-chrome',
+      agentBrowserRdp: {
+        enabled: true,
+        runtimeProfile: 'auracall-wsl-chrome-3',
+      },
+      headless: true,
+      hideWindow: true,
+      keepBrowser: false,
+    });
+
+    expect(resolved.agentBrowserRdp).toEqual({
+      enabled: true,
+      runtimeProfile: 'auracall-wsl-chrome-3',
+    });
+    expect(resolved.headless).toBe(false);
+    expect(resolved.hideWindow).toBe(false);
+    expect(resolved.keepBrowser).toBe(true);
+  });
+
   test('prefers WSL-discovered Chrome paths when WSL Chrome is requested', () => {
     vi.stubEnv('WSL_DISTRO_NAME', 'Ubuntu');
     profileMocks.discoverDefaultBrowserProfile.mockReturnValue({

@@ -123,6 +123,25 @@ function applyBrowserProfileDefaults(
   });
   const browserProfile = resolution.browserProfile;
 
+  if (
+    (overrideExisting || browser.browserFamily === undefined) &&
+    browserProfile.browserFamily !== undefined
+  ) {
+    browser.browserFamily = browserProfile.browserFamily;
+  }
+  if (
+    (overrideExisting || browser.browserBuild === undefined) &&
+    browserProfile.browserBuild !== undefined
+  ) {
+    browser.browserBuild = browserProfile.browserBuild;
+  }
+  if (
+    (overrideExisting || browser.agentBrowserRdp === undefined) &&
+    browserProfile.agentBrowserRdp !== undefined
+  ) {
+    browser.agentBrowserRdp = browserProfile.agentBrowserRdp;
+  }
+
   if ((overrideExisting || browser.chromePath === undefined) && browserProfile.chromePath) {
     browser.chromePath = browserProfile.chromePath;
   }

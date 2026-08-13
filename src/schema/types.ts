@@ -227,6 +227,13 @@ export const BrowserSessionOpenConfigSchema = z.object({
   browserProfile: z.string().optional(),
 });
 
+const AGENT_BROWSER_RDP_CONFIG_SCHEMA = z.object({
+  enabled: z.boolean(),
+  runtimeProfile: z.string().trim().min(1),
+  command: z.string().trim().min(1).optional(),
+  jobTimeoutMs: z.number().int().positive().optional(),
+});
+
 // biome-ignore lint/style/useNamingConvention: schema naming is stable.
 export const BrowserConfigSchema = z.object({
   // Targeting
@@ -245,6 +252,9 @@ export const BrowserConfigSchema = z.object({
   url: z.string().optional(), // generic/fallback
   
   // Chrome / Lifecycle
+  browserFamily: z.enum(['chrome', 'chromium']).optional(),
+  browserBuild: z.enum(['stock_chrome', 'stealthcdp_chromium']).optional(),
+  agentBrowserRdp: AGENT_BROWSER_RDP_CONFIG_SCHEMA.optional(),
   chromeProfile: z.string().optional(),
   chromePath: z.string().optional(),
   chromeCookiePath: z.string().optional(),
@@ -301,6 +311,9 @@ export const BrowserConfigSchema = z.object({
 
 // biome-ignore lint/style/useNamingConvention: schema naming is stable.
 export const OracleProfileBrowserSchema = z.object({
+  browserFamily: z.enum(['chrome', 'chromium']).optional(),
+  browserBuild: z.enum(['stock_chrome', 'stealthcdp_chromium']).optional(),
+  agentBrowserRdp: AGENT_BROWSER_RDP_CONFIG_SCHEMA.optional(),
   chromePath: z.string().optional(),
   chromeProfile: z.string().optional(),
   profilePath: z.string().optional(),

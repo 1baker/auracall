@@ -18650,3 +18650,38 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   unrelated `wsl-chrome-4`/45017 remained untouched and the API stayed healthy.
   Plan 0275 closes `LIVE_CANARY_FAILED_SAFE`. A separately authorized
   connector-metadata reconciliation must precede another canary.
+
+## Turn 416 | 2026-08-12
+
+- Plan 0281 opens the migration from AuraCall-launched desktop browsers to
+  agent-browser-owned remote-headed Guacamole/RDP routes while preserving the
+  exact AuraCall managed browser profile directories:
+  [docs/dev/plans/0281-2026-08-12-agent-browser-rdp-managed-profile-migration.md](docs/dev/plans/0281-2026-08-12-agent-browser-rdp-managed-profile-migration.md).
+- Current source confirms agent-browser already supports external BYOP profile
+  records, custom profile paths, remote-view route allocation, operator-visible
+  proof, and a strict runtime-profile browser-family guard. AuraCall will add a
+  first fail-closed mapping: Chrome requires `stock_chrome`, Chromium requires
+  `stealthcdp_chromium`, and the configured executable must match the declared
+  family before agent-browser is invoked.
+- The provider-free slice may change source, tests, and docs only. Installed
+  activation remains withheld: the current install doctor reports binary and
+  workstation drift plus duplicate-profile pressure, and the no-launch RDP
+  preflight has no available route-pool entry.
+
+## Turn 417 | 2026-08-12
+
+- Plan 0281 Slice A is provider-free accepted. Explicit executable family,
+  agent-browser build, and RDP launcher configuration now resolve through the
+  named browser-profile seam; enabled profiles use persistent remote-headed
+  posture while disabled/absent profiles retain the native launcher.
+- The no-shell launcher passes the exact AuraCall managed browser profile path,
+  fails before invocation on family/build/path mismatch, and accepts CDP only
+  after opened, operator-visible, exact build/executable, durable handoff, and
+  exact browser-inventory proof.
+- Evidence is green: 73 focused contract tests, 20 existing BrowserService
+  tests, typecheck, scoped zero-warning lint, production build, current
+  CodeGraph readback, diff hygiene, plan-library audit, active planning audit,
+  and goal audit. No live or installed state changed.
+- Slices B/C remain open and effect-gated. Current agent-browser binary/payload
+  drift, duplicate-profile pressure, and unavailable route-pool capacity must
+  converge before profile registration or a first noncritical activation.

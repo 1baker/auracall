@@ -434,13 +434,35 @@ Handoff packaging policy:
       collapseDisposableWindows: true
     },
     "wsl-chrome-2": {
+      // This is the executable family, not the browser-profile id selected by
+      // runtimeProfiles.<name>.browserProfile.
+      browserFamily: "chrome",
+      browserBuild: "stock_chrome",
       chromePath: "/usr/bin/google-chrome",
       sourceProfileName: "Profile 1",
       sourceCookiePath: "/home/me/.config/google-chrome/Profile 1/Network/Cookies",
       bootstrapCookiePath: "/home/me/.config/google-chrome/Profile 1/Network/Cookies",
       display: ":0.0",
       managedProfileRoot: "/home/me/.auracall/browser-profiles",
-      wslChromePreference: "wsl"
+      wslChromePreference: "wsl",
+      // Optional: agent-browser owns the process and hidden RDP/Guacamole
+      // route; AuraCall keeps ownership of the exact managed profile bytes.
+      agentBrowserRdp: {
+        enabled: true,
+        runtimeProfile: "auracall-wsl-chrome-2",
+        // command: "/absolute/path/to/agent-browser",
+        // jobTimeoutMs: 120000,
+      },
+    },
+    "gemini-stealthcdp": {
+      browserFamily: "chromium",
+      browserBuild: "stealthcdp_chromium",
+      chromePath: "/opt/chromium-stealthcdp/current/chrome",
+      managedProfileRoot: "/home/me/.auracall/browser-profiles",
+      agentBrowserRdp: {
+        enabled: true,
+        runtimeProfile: "auracall-gemini-stealthcdp",
+      },
     }
   },
 
@@ -595,6 +617,15 @@ Handoff packaging policy:
   apiBaseUrl: "https://api.openai.com/v1"
 }
 ```
+
+When `agentBrowserRdp.enabled` is true, AuraCall forces a persistent headed
+posture (`headless: false`, `hideWindow: false`, `keepBrowser: true`) inside the
+remote display. It passes the existing
+`<managedProfileRoot>/<browser-profile-id>/<service>` directory directly to
+agent-browser; it does not copy or convert that directory. Activation requires
+the named agent-browser runtime profile and RDP route pool to be healthy.
+AuraCall rejects a family/build mismatch both before launch and after
+agent-browser reports the actual selected executable.
 
 ## Compatibility Bridge Example
 

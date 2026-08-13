@@ -1,0 +1,234 @@
+import { describe, expect, test, vi } from 'vitest';
+import { DEFAULT_BROWSER_CONFIG } from '../../src/browser/config.js';
+import {
+  buildAgentBrowserRdpOpenPlan,
+  launchAgentBrowserRdpSession,
+  resolveAgentBrowserRdpCompatibility,
+  type AgentBrowserCommandRunner,
+} from '../../src/browser/service/agentBrowserRdpLauncher.js';
+import type { BrowserLogger, ResolvedBrowserConfig } from '../../src/browser/types.js';
+
+function chromeConfig(overrides: Partial<ResolvedBrowserConfig> = {}): ResolvedBrowserConfig {
+  return {
+    ...DEFAULT_BROWSER_CONFIG,
+    browserFamily: 'chrome',
+    browserBuild: 'stock_chrome',
+    chromePath: '/usr/bin/google-chrome',
+    agentBrowserRdp: {
+      enabled: true,
+      runtimeProfile: 'auracall-wsl-chrome-3',
+    },
+    ...overrides,
+  };
+}
+
+function openedResponse(overrides: Record<string, unknown> = {}): string {
+  return JSON.stringify({
+    success: true,
+    data: {
+      status: 'opened',
+      browserId: 'browser-123',
+      handoffUrl: 'https://guac.example.test/#/client/route-123',
+      operatorVisible: {
+        state: 'ready',
+        browserId: 'browser-123',
+      },
+      browserBuildProof: {
+        state: 'matched',
+        requestedBrowserBuild: 'stock_chrome',
+        selectedBrowserBuild: 'stock_chrome',
+        actualExecutablePath: '/usr/bin/google-chrome',
+      },
+      ...overrides,
+    },
+  });
+}
+
+describe('agent-browser RDP launcher', () => {
+  test('maps Chrome and chromium-stealthcdp profiles to only their compatible builds', () => {
+    expect(resolveAgentBrowserRdpCompatibility(chromeConfig())).toEqual({
+      browserFamily: 'chrome',
+      browserBuild: 'stock_chrome',
+      chromePath: '/usr/bin/google-chrome',
+    });
+
+    expect(resolveAgentBrowserRdpCompatibility(chromeConfig({
+      browserFamily: 'chromium',
+      browserBuild: 'stealthcdp_chromium',
+      chromePath: '/opt/chromium-stealthcdp/current/chrome',
+    }))).toEqual({
+      browserFamily: 'chromium',
+      browserBuild: 'stealthcdp_chromium',
+      chromePath: '/opt/chromium-stealthcdp/current/chrome',
+    });
+  });
+
+  test('refuses a build or executable from the wrong browser family', () => {
+    expect(() => resolveAgentBrowserRdpCompatibility(chromeConfig({
+      browserBuild: 'stealthcdp_chromium',
+    }))).toThrow('chrome requires browserBuild=stock_chrome');
+
+    expect(() => resolveAgentBrowserRdpCompatibility(chromeConfig({
+      chromePath: '/opt/chromium-stealthcdp/current/chrome',
+    }))).toThrow('executable-family mismatch');
+  });
+
+  test('builds an exact external-profile remote-view plan without changing AuraCall ownership', () => {
+    const plan = buildAgentBrowserRdpOpenPlan({
+      config: chromeConfig(),
+      userDataDir: '/home/test/.auracall/browser-profiles/wsl-chrome-3/chatgpt',
+      url: 'https://chatgpt.com/',
+      auracallRuntimeProfile: 'default',
+      browserProfileId: 'wsl-chrome-3',
+      serviceTarget: 'chatgpt',
+    });
+
+    expect(plan.session).toBe('auracall-wsl-chrome-3-chatgpt');
+    expect(plan.openArgs).toEqual(expect.arrayContaining([
+      '--runtime-profile',
+      'auracall-wsl-chrome-3',
+      '--profile',
+      '/home/test/.auracall/browser-profiles/wsl-chrome-3/chatgpt',
+      '--browser-host',
+      'remote_headed',
+      '--view-stream-provider',
+      'rdp_gateway',
+      '--browser-build',
+      'stock_chrome',
+    ]));
+    expect(plan.browserInventoryArgs).toEqual([
+      '--json',
+      '--session',
+      'auracall-wsl-chrome-3-chatgpt',
+      'service',
+      'browsers',
+    ]);
+
+    const chromiumPlan = buildAgentBrowserRdpOpenPlan({
+      config: chromeConfig({
+        browserFamily: 'chromium',
+        browserBuild: 'stealthcdp_chromium',
+        chromePath: '/opt/chromium-stealthcdp/current/chrome',
+        agentBrowserRdp: {
+          enabled: true,
+          runtimeProfile: 'auracall-gemini-stealthcdp',
+        },
+      }),
+      userDataDir: '/home/test/.auracall/browser-profiles/gemini-stealthcdp/gemini',
+      url: 'https://gemini.google.com/app',
+      browserProfileId: 'gemini-stealthcdp',
+      serviceTarget: 'gemini',
+    });
+    expect(chromiumPlan.browserFamily).toBe('chromium');
+    expect(chromiumPlan.openArgs).toEqual(expect.arrayContaining([
+      '--profile',
+      '/home/test/.auracall/browser-profiles/gemini-stealthcdp/gemini',
+      '--browser-build',
+      'stealthcdp_chromium',
+    ]));
+  });
+
+  test('accepts only an operator-ready, build-matched browser with an exact CDP inventory record', async () => {
+    const calls: string[][] = [];
+    const runner: AgentBrowserCommandRunner = async (_executable, args) => {
+      calls.push(args);
+      if (calls.length === 1) {
+        return { stdout: openedResponse(), stderr: '' };
+      }
+      return {
+        stdout: JSON.stringify({
+          success: true,
+          data: {
+            browsers: [{
+              id: 'browser-123',
+              cdpHost: '127.0.0.1',
+              cdpPort: 45015,
+              pid: 20260,
+            }],
+          },
+        }),
+        stderr: '',
+      };
+    };
+
+    const result = await launchAgentBrowserRdpSession({
+      config: chromeConfig(),
+      userDataDir: '/home/test/.auracall/browser-profiles/wsl-chrome-3/chatgpt',
+      url: 'https://chatgpt.com/',
+      browserProfileId: 'wsl-chrome-3',
+      serviceTarget: 'chatgpt',
+      logger: vi.fn() as BrowserLogger,
+      runner,
+    });
+
+    expect(calls).toHaveLength(2);
+    expect(result).toEqual({
+      chrome: { host: '127.0.0.1', port: 45015, pid: 20260 },
+      port: 45015,
+      browserId: 'browser-123',
+      session: 'auracall-wsl-chrome-3-chatgpt',
+      handoffUrl: 'https://guac.example.test/#/client/route-123',
+    });
+  });
+
+  test('stops before CDP attachment when the route is not visible or proof is mismatched', async () => {
+    const notReady = vi.fn<AgentBrowserCommandRunner>().mockResolvedValue({
+      stdout: openedResponse({ operatorVisible: { state: 'pending', browserId: 'browser-123' } }),
+      stderr: '',
+    });
+    await expect(launchAgentBrowserRdpSession({
+      config: chromeConfig(),
+      userDataDir: '/home/test/.auracall/browser-profiles/wsl-chrome-3/chatgpt',
+      url: 'https://chatgpt.com/',
+      serviceTarget: 'chatgpt',
+      logger: vi.fn() as BrowserLogger,
+      runner: notReady,
+    })).rejects.toThrow('not operator-visible');
+    expect(notReady).toHaveBeenCalledTimes(1);
+
+    const mismatched = vi.fn<AgentBrowserCommandRunner>().mockResolvedValue({
+      stdout: openedResponse({
+        browserBuildProof: {
+          state: 'matched',
+          requestedBrowserBuild: 'stock_chrome',
+          selectedBrowserBuild: 'stealthcdp_chromium',
+          actualExecutablePath: '/opt/chromium-stealthcdp/current/chrome',
+        },
+      }),
+      stderr: '',
+    });
+    await expect(launchAgentBrowserRdpSession({
+      config: chromeConfig(),
+      userDataDir: '/home/test/.auracall/browser-profiles/wsl-chrome-3/chatgpt',
+      url: 'https://chatgpt.com/',
+      serviceTarget: 'chatgpt',
+      logger: vi.fn() as BrowserLogger,
+      runner: mismatched,
+    })).rejects.toThrow('exact matching browser-build proof');
+    expect(mismatched).toHaveBeenCalledTimes(1);
+  });
+
+  test('refuses attachment when browser inventory cannot prove the exact CDP owner', async () => {
+    const runner = vi.fn<AgentBrowserCommandRunner>()
+      .mockResolvedValueOnce({ stdout: openedResponse(), stderr: '' })
+      .mockResolvedValueOnce({
+        stdout: JSON.stringify({
+          success: true,
+          data: {
+            browsers: [{ id: 'different-browser', cdpPort: 45015 }],
+          },
+        }),
+        stderr: '',
+      });
+
+    await expect(launchAgentBrowserRdpSession({
+      config: chromeConfig(),
+      userDataDir: '/home/test/.auracall/browser-profiles/wsl-chrome-3/chatgpt',
+      url: 'https://chatgpt.com/',
+      serviceTarget: 'chatgpt',
+      logger: vi.fn() as BrowserLogger,
+      runner,
+    })).rejects.toThrow('did not identify one exact opened browser');
+    expect(runner).toHaveBeenCalledTimes(2);
+  });
+});

@@ -44,6 +44,7 @@ import {
 } from '../../../packages/browser-service/src/service/mutationDispatcher.js';
 import type { BrowserOperationQueueObservationSummary } from '../operationQueueObservations.js';
 import { summarizeBrowserOperationQueueObservations } from '../operationQueueObservations.js';
+import { launchAgentBrowserRdpSession } from './agentBrowserRdpLauncher.js';
 
 type ServiceTargetMatchOptions = {
   serviceId: 'chatgpt' | 'grok' | 'gemini';
@@ -84,7 +85,8 @@ export class BrowserService extends BrowserServiceCore {
     target: BrowserProfileTarget,
     private readonly browserProcessOwner?: BrowserProcessOwnerAttribution,
   ) {
-    const { resolvedConfig } = resolveUserBrowserLaunchContext(userConfig, target);
+    const launchContext = resolveUserBrowserLaunchContext(userConfig, target);
+    const { resolvedConfig } = launchContext;
     const registryPath = path.join(getAuracallHomeDir(), 'browser-state.json');
     const deps: BrowserServiceDependencies = {
       resolveBrowserListTarget: () => resolveBrowserListTarget(userConfig, target),
@@ -99,7 +101,19 @@ export class BrowserService extends BrowserServiceCore {
           : null;
       },
       pruneRegistry: () => pruneRegistry(),
-      launchManualLoginSession,
+      launchManualLoginSession: resolvedConfig.agentBrowserRdp?.enabled
+        ? (options) => launchAgentBrowserRdpSession({
+            config: resolvedConfig,
+            userDataDir: options.userDataDir,
+            url: options.url,
+            auracallRuntimeProfile: userConfig.auracallProfile ?? null,
+            browserProfileId: launchContext.resolution.profileFamily.browserProfileId,
+            serviceTarget: target,
+            logger: options.logger,
+            abortSignal: options.abortSignal,
+            onStage: options.onStage,
+          })
+        : launchManualLoginSession,
     };
     super(resolvedConfig, deps);
     this.registryPath = registryPath;

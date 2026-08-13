@@ -324,6 +324,12 @@ describe('applyBrowserProfileOverrides', () => {
       },
       browserFamilies: {
         'gemini-stealthcdp': {
+          browserFamily: 'chromium',
+          browserBuild: 'stealthcdp_chromium',
+          agentBrowserRdp: {
+            enabled: true,
+            runtimeProfile: 'auracall-gemini-stealthcdp',
+          },
           chromePath: '/home/test/chromium-stealthcdp/chrome',
           debugPort: 45019,
           display: ':10',
@@ -358,6 +364,12 @@ describe('applyBrowserProfileOverrides', () => {
       defaultRuntimeProfile: 'auracall-gemini-pro',
       browser: {
         target: 'gemini',
+        browserFamily: 'chromium',
+        browserBuild: 'stealthcdp_chromium',
+        agentBrowserRdp: {
+          enabled: true,
+          runtimeProfile: 'auracall-gemini-stealthcdp',
+        },
         chromePath: '/home/test/chromium-stealthcdp/chrome',
         debugPort: 45019,
         display: ':10',
