@@ -1,7 +1,8 @@
 # ChatGPT Composer Apps Reinspection | 0167-2026-07-24
 
-State: OPEN
+State: CLOSED
 Lane: P01
+Plan version: 2
 
 ## Goal
 
@@ -11,21 +12,16 @@ selected app to a prompt request using the current provider interaction model.
 
 ## Current State
 
-Aura-Call's composer automation still models the March 2026
-`Add files and more` menu with a nested `More` submenu. It treats apps as
-composer tools and verifies selection from a chip or selected menu row.
-
-Live capability discovery is weaker than that interaction path. The ChatGPT
-feature probe scans broad page text for a fixed app-token dictionary, stores
-matching labels in the provider feature signature, and projects them as
-`available` workbench app capabilities. That does not prove an app is
-installed, connected, selectable in the current composer, or attached to the
-next prompt request.
-
-The app repair is installed in the user runtime and the API service is active.
-The live-follow scheduler and all four ChatGPT completion loops remain paused:
-a guarded restoration attempt reproduced unsafe multi-operation memory growth,
-so routine provider work is intentionally not being presented as healthy.
+- The installed app/composer repair uses the current plus-menu interaction,
+  verifies the selected `ecosystemMention` pill, and derives installed truth
+  from the authoritative plugin/link surfaces rather than broad body tokens.
+- Installed CLI, API, and MCP discovery plus guarded selection proof passed.
+- Plan 0169 subsequently repaired the startup/status memory fan-out that was
+  this plan's sole remaining operational gate. Its accepted installed closeout
+  verified the scheduler and all four ChatGPT completions active,
+  provider-serialized, guard-clear, and inside memory thresholds.
+- Later live-follow pauses and repairs have their own plans; they do not reopen
+  this completed composer/apps scope.
 
 ## Scope
 
@@ -102,7 +98,7 @@ so routine provider work is intentionally not being presented as healthy.
   checks pass.
 - [x] Installed-runtime readback and one guarded non-destructive live proof
   show the selected app attached to a prompt with no new rate-limit warning.
-- [ ] Scheduler and all four ChatGPT completion loops are restored to healthy
+- [x] Scheduler and all four ChatGPT completion loops are restored to healthy
   serialized operation after the proof.
 
 ## Execution Evidence
@@ -145,7 +141,7 @@ so routine provider work is intentionally not being presented as healthy.
   concurrency instead of one unbounded `Promise.all`. The installed service
   also has `NODE_OPTIONS=--max-old-space-size=1536`.
 
-## Remaining Operational Gate
+## Historical Operational Gate
 
 The app-composer repair, installed-runtime deployment, installed inventory, and
 installed selection proof are complete. The API is active on port `18095` with
@@ -166,6 +162,11 @@ before completing the long collector pass. Do not restore all persisted
 live-follow operations until startup/resume memory fan-out is repaired and
 revalidated.
 
+This gate was later fulfilled by closed Plan 0169. Its installed closeout
+recorded all four ChatGPT completions and the scheduler active and guard-clear,
+multiple FIFO handoffs and pass/backlog progress, service memory below the
+accepted threshold, and more than 32 GiB host memory available.
+
 ## Stop Conditions
 
 - Pause all ChatGPT work immediately on a new rate-limit observation.
@@ -184,3 +185,15 @@ selection and installed-app surfaces, Aura-Call implements those semantics
 through its existing composer/workbench architecture, installed CLI/API/MCP
 readbacks agree, a guarded live proof succeeds, and routine serialized live
 follow is restored.
+
+## Closeout Reconciliation
+
+- state_transition: OPEN -> CLOSED
+- progress_classification: semantic_reconciliation
+- evidence: all composer/apps criteria were already accepted in this plan;
+  closed Plan 0169 supplies the missing installed scheduler/four-completion
+  restoration evidence with FIFO serialization, guard-clear status, forward
+  progress, and bounded memory.
+- material_blockers: none
+- next_action_or_stop_reason: close the stale predecessor state; later
+  live-follow incidents remain owned by their later plans.

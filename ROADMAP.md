@@ -1098,14 +1098,12 @@ Lane: P01
   job `hmj_a65695afe9704af6b6716bb4c9f063b4` proved a refreshed one-file
   conversation is classified as `known-files-excluded` when terminal-local,
   with zero failures and no provider guard.
-- ChatGPT composer/apps implementation and installed proof complete; live
-  follow remains blocked:
+- Closed accepted ChatGPT composer/apps implementation and installed proof:
   [docs/dev/plans/0167-2026-07-24-chatgpt-composer-apps-reinspection.md](docs/dev/plans/0167-2026-07-24-chatgpt-composer-apps-reinspection.md)
   Current selection, prompt association, and installed/link discovery are
-  repaired, installed, and live-validated. The API is active, but routine
-  live-follow restoration remains paused after all-operation resume reproduced
-  unsafe Node memory growth; a single-profile bounded observation stayed
-  guard-clear and below the diagnostic stop threshold.
+  repaired, installed, and live-validated. Plan 0169 subsequently fulfilled
+  its sole remaining operational gate by restoring the scheduler and all four
+  completion loops under serialized, guard-clear, bounded-memory operation.
 - Completed live-follow startup memory fan-out repair:
   [docs/dev/plans/0169-2026-07-24-live-follow-startup-memory-fanout-repair.md](docs/dev/plans/0169-2026-07-24-live-follow-startup-memory-fanout-repair.md)
   Same-provider startup hydration is inside provider ownership, completion

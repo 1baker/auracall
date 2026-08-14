@@ -1,3 +1,15 @@
+## 2026-08-14 | Close stale Plan 0167 from successor evidence
+
+- Plan 0167 had completed every composer/apps implementation and installed
+  proof criterion but remained OPEN on live-follow restoration after memory
+  fan-out was discovered.
+- Closed Plan 0169 later repaired that exact blocker and verified the scheduler
+  plus all four ChatGPT completion lanes active, FIFO-serialized, guard-clear,
+  progressing, and inside accepted memory limits.
+- Plan 0167 is now CLOSED and its roadmap summary cites the successor evidence.
+  Later operational pauses remain separate plan history rather than retroactive
+  failure of this accepted checkpoint.
+
 ## 2026-08-14 | Cancel superseded Plan 0281 RDP migration
 
 - Plans 0284-0290 made agent-browser's exact service-tab handle authoritative

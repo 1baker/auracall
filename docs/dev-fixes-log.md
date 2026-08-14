@@ -21719,3 +21719,13 @@ browser-stage lifecycle observability, not transcript truncation.
 - Preserve dormant provider-free safety code when it remains useful for a
   future separately authorized optional feature; cancellation does not require
   deleting a sound implementation seam.
+
+## 2026-08-14 | Close predecessors when a successor proves the last criterion
+
+- A predecessor may remain falsely OPEN when its final blocker is repaired and
+  accepted in a dedicated successor plan.
+- Reconcile the predecessor only when the successor evidence maps exactly to
+  the unmet criterion; cite that durable checkpoint rather than re-running
+  historical provider work.
+- Later incidents do not retroactively reopen an accepted plan. Give new drift
+  and repairs their own bounded plan ownership.

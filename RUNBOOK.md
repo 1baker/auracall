@@ -1,5 +1,16 @@
 # RUNBOOK
 
+## Turn 461 | 2026-08-14
+
+- Reconciled Plan 0167 from stale `OPEN` to `CLOSED`. Its composer/apps
+  implementation, installed parity, and guarded proof were already accepted;
+  closed successor Plan 0169 supplied the sole missing scheduler/four-lane
+  restoration criterion with FIFO, guard, progress, and memory evidence.
+- Updated the roadmap to stop presenting the historical memory gate as current.
+  Later live-follow pauses remain owned by their later plans and do not reopen
+  the accepted 0167 scope. No source, runtime, browser, or provider state
+  changed.
+
 ## Turn 460 | 2026-08-14
 
 - Reassessed open Plan 0281 against current source, effective configuration,
