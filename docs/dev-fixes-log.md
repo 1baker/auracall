@@ -21666,3 +21666,14 @@ browser-stage lifecycle observability, not transcript truncation.
 - Keep the warning bounded to the public authority label and bridge mode. Raw
   browser, profile, session, and target provenance remains technical evidence,
   not operator-console presentation.
+
+## 2026-08-14 | Reuse one authority reducer for detail and recent-run discovery
+
+- A selected-run warning is insufficient for fleet discovery when the recent
+  list omits authority. Project the bounded summary directly from each stored
+  run so table badges and filters do not issue an N-plus-one status fan-out.
+- Keep the backward evidence scan and legacy broker inference in one runtime
+  reducer shared by full response status, HTTP recent runs, and MCP recent
+  runs. Duplicated inference can drift and misclassify the same durable run.
+- Treat unreported authority as its own filterable state, not as fallback.
+  Missing or future evidence must not generate a compatibility alarm.

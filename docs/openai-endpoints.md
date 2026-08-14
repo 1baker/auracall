@@ -279,6 +279,11 @@ Current limits:
     `compatibility-fallback`, or `explicit-off`) plus bridge mode when known;
     legacy broker provenance is reduced to `agent-browser` without exposing its
     browser/session/tab identifiers.
+  - `GET /v1/runtime-runs/recent` projects that same bounded
+    `browserAuthoritySummary` from each stored run. The reducer and backward
+    evidence scan are shared with full response status so later provider
+    heartbeats cannot erase the routing decision and recent listing performs no
+    live browser work.
   - `cancel-run` can cancel mutable browser-backed runs that have already lost
     their active lease. If completion already won the race, AuraCall reports the
     terminal state instead of returning an ambiguous no-active-lease conflict.

@@ -12982,6 +12982,71 @@ describe("http responses adapter", () => {
 		}
 	});
 
+	it("projects bounded browser authority in recent runtime runs over HTTP", async () => {
+		const control = createExecutionRuntimeControl();
+		const runId = "runtime_recent_browser_authority";
+		await seedPlannedDirectRun(
+			control,
+			runId,
+			"2026-04-14T16:30:00.000Z",
+			"Inspect recent browser authority.",
+		);
+		const record = await control.readRun(runId);
+		if (!record) throw new Error("Expected seeded runtime run.");
+		await control.persistRun({
+			runId,
+			expectedRevision: record.revision,
+			bundle: {
+				...record.bundle,
+				events: [
+					...record.bundle.events,
+					createExecutionRunEvent({
+						id: `${runId}:event:browser-authority`,
+						runId,
+						type: "note-added",
+						createdAt: "2026-04-14T16:30:01.000Z",
+						payload: {
+							runtimeEvidence: {
+								observedAt: "2026-04-14T16:30:01.000Z",
+								source: "browser-service",
+								details: {
+									browserAuthority: "compatibility-fallback",
+									agentBrowserBridgeMode: "auto",
+									agentBrowserBrowserId: "must-not-leak",
+								},
+							},
+						},
+					}),
+				],
+			},
+		});
+		const server = await createResponsesHttpServer({ host: "127.0.0.1", port: 0 }, { control });
+
+		try {
+			const response = await fetch(
+				`http://127.0.0.1:${server.port}/v1/runtime-runs/recent?limit=5`,
+			);
+			expect(response.status).toBe(200);
+			const payload = (await response.json()) as {
+				data: Array<Record<string, unknown>>;
+			};
+			expect(payload.data[0]).toMatchObject({
+				runId,
+				browserAuthoritySummary: {
+					browserAuthority: "compatibility-fallback",
+					bridgeMode: "auto",
+					observedAt: "2026-04-14T16:30:01.000Z",
+					source: "browser-service",
+				},
+			});
+			expect(payload.data[0]).not.toHaveProperty(
+				"browserAuthoritySummary.agentBrowserBrowserId",
+			);
+		} finally {
+			await server.close();
+		}
+	});
+
 	it("supports all runtime lookup keys for bounded runtime queue projection over HTTP", async () => {
 		const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-http-runtime-inspect-"));
 		cleanup.push(tmp);

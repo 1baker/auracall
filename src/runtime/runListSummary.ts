@@ -1,4 +1,8 @@
 import type { ExecutionRunStoredRecord } from './store.js';
+import {
+  type ExecutionBrowserAuthoritySummary,
+  readExecutionRunBrowserAuthoritySummary,
+} from './browserAuthoritySummary.js';
 import type { ExecutionRunServiceId, ExecutionRunSourceKind, ExecutionRunStatus } from './types.js';
 
 export interface ExecutionRunListItem {
@@ -14,6 +18,7 @@ export interface ExecutionRunListItem {
   runningStepCount: number;
   serviceIds: string[];
   runtimeProfileIds: string[];
+  browserAuthoritySummary: ExecutionBrowserAuthoritySummary | null;
   providerConversationSummary: ExecutionRunListProviderConversationSummary;
 }
 
@@ -51,6 +56,7 @@ export function summarizeExecutionRunListItem(record: ExecutionRunStoredRecord):
     runningStepCount: steps.filter((step) => step.status === 'running').length,
     serviceIds: uniqueStrings(steps.map((step) => step.service).filter(Boolean)),
     runtimeProfileIds: uniqueStrings(steps.map((step) => step.runtimeProfileId).filter(Boolean)),
+    browserAuthoritySummary: readExecutionRunBrowserAuthoritySummary(record.bundle),
     providerConversationSummary: summarizeProviderConversations(record),
   };
 }

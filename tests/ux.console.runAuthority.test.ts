@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { readBrowserAuthorityPresentation } from "../ux/console/src/runAuthority.ts";
+import {
+	matchesBrowserAuthorityFilter,
+	readBrowserAuthorityPresentation,
+	readBrowserAuthoritySummaryPresentation,
+} from "../ux/console/src/runAuthority.ts";
 
 function statusWithAuthority(browserAuthority: unknown, bridgeMode: unknown = null) {
 	return {
@@ -69,5 +73,30 @@ describe("operator console browser authority presentation", () => {
 			tone: "ready",
 			warning: null,
 		});
+	});
+
+	it("reads recent-run summaries without requiring a full status envelope", () => {
+		expect(
+			readBrowserAuthoritySummaryPresentation({
+				browserAuthority: "compatibility-fallback",
+				bridgeMode: "auto",
+			}),
+		).toMatchObject({
+			authority: "compatibility-fallback",
+			mode: "auto",
+			tone: "warning",
+		});
+	});
+
+	it("filters reported and unreported recent-run authority states", () => {
+		const broker = readBrowserAuthoritySummaryPresentation({
+			browserAuthority: "agent-browser",
+			bridgeMode: "required",
+		});
+		expect(matchesBrowserAuthorityFilter(broker, "all")).toBe(true);
+		expect(matchesBrowserAuthorityFilter(broker, "agent-browser")).toBe(true);
+		expect(matchesBrowserAuthorityFilter(broker, "compatibility-fallback")).toBe(false);
+		expect(matchesBrowserAuthorityFilter(null, "unreported")).toBe(true);
+		expect(matchesBrowserAuthorityFilter(null, "explicit-off")).toBe(false);
 	});
 });

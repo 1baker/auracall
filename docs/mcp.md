@@ -495,7 +495,10 @@ log-tail checks as one release gate before live dogfood.
 - Behavior: returns `object = "list"` with the same compact recent runtime-run
   rows exposed by `GET /v1/runtime-runs/recent` and the `/agents` dashboard:
   run id, source kind, team/task aliases, status, timestamps, step counts,
-  service ids, and runtime profile ids.
+  service ids, runtime profile ids, and bounded `browserAuthoritySummary` when
+  persisted authority evidence exists. The summary exposes only authority,
+  bridge mode, observation time, and source; legacy broker provenance reduces
+  to `agent-browser` without exposing browser/session/target identifiers.
 - This is local-state only. It does not launch browsers, touch provider pages,
   or acquire dispatcher access.
 

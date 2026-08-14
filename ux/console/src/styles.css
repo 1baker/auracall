@@ -747,7 +747,7 @@ button:disabled {
 
 .runs-command-bar {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) minmax(150px, 190px) minmax(150px, 190px);
+  grid-template-columns: minmax(220px, 1fr) repeat(3, minmax(130px, 170px));
   gap: 10px;
   align-items: end;
 }
@@ -833,7 +833,7 @@ button:disabled {
 }
 
 .runs-table {
-  min-width: 940px;
+  min-width: 1080px;
 }
 
 .inventory-table th,

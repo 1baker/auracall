@@ -23,6 +23,14 @@ const runtimeRunListItemShape = z.object({
   runningStepCount: z.number().int().nonnegative(),
   serviceIds: z.array(z.string()),
   runtimeProfileIds: z.array(z.string()),
+  browserAuthoritySummary: z
+    .object({
+      browserAuthority: z.enum(['agent-browser', 'compatibility-fallback', 'explicit-off']).nullable().optional(),
+      bridgeMode: z.enum(['auto', 'required', 'off']).nullable().optional(),
+      observedAt: z.string().nullable().optional(),
+      source: z.string().nullable().optional(),
+    })
+    .nullable(),
 });
 
 const runtimeRunsRecentOutputShape = {

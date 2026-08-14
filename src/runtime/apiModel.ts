@@ -6,6 +6,7 @@ import {
   ExecutionResponseSchema,
 } from './apiSchema.js';
 import { normalizeTaskTransfer } from './taskTransfer.js';
+import { readExecutionRunBrowserAuthoritySummary } from './browserAuthoritySummary.js';
 import type {
   ExecutionRequest,
   ExecutionResponse,
@@ -240,7 +241,7 @@ function readExecutionRunRuntimeDiagnosticsSummary(input: {
     leaseState,
     lastLeaseEvent: readLastExecutionRunLeaseEvent(input.runRecord),
     browserTaskState: lastProviderEvidence?.state ?? null,
-    browserAuthoritySummary: readLastBrowserAuthoritySummary(input.runRecord),
+    browserAuthoritySummary: readExecutionRunBrowserAuthoritySummary(input.runRecord),
     lastProviderEvidence,
     terminalTransitionSource,
   };
@@ -343,49 +344,6 @@ function readLastProviderRuntimeEvidence(
     };
   }
   return null;
-}
-
-function readLastBrowserAuthoritySummary(
-  runRecord: ExecutionResponseFromRunRecordInput['runRecord'],
-): NonNullable<ExecutionRuntimeDiagnosticsSummary['browserAuthoritySummary']> | null {
-  for (let index = runRecord.events.length - 1; index >= 0; index -= 1) {
-    const event = runRecord.events[index];
-    const payload = isRecord(event?.payload) ? event.payload : null;
-    const runtimeEvidence = isRecord(payload?.runtimeEvidence) ? payload.runtimeEvidence : null;
-    const details = isRecord(runtimeEvidence?.details) ? runtimeEvidence.details : null;
-    const browserAuthority =
-      readBrowserAuthority(details?.browserAuthority) ??
-      (readString(details?.agentBrowserBrowserId) || readString(details?.agentBrowserProfileId)
-        ? 'agent-browser'
-        : null);
-    const bridgeMode = readAgentBrowserBridgeMode(details?.agentBrowserBridgeMode);
-    if (!browserAuthority) continue;
-    return {
-      browserAuthority,
-      bridgeMode: bridgeMode ?? null,
-      observedAt: readString(runtimeEvidence?.observedAt) ?? event?.createdAt ?? null,
-      source: readString(runtimeEvidence?.source),
-    };
-  }
-  return null;
-}
-
-function readBrowserAuthority(
-  value: unknown,
-): NonNullable<
-  NonNullable<ExecutionRuntimeDiagnosticsSummary['browserAuthoritySummary']>['browserAuthority']
-> | null {
-  return value === 'agent-browser' || value === 'compatibility-fallback' || value === 'explicit-off'
-    ? value
-    : null;
-}
-
-function readAgentBrowserBridgeMode(
-  value: unknown,
-): NonNullable<
-  NonNullable<ExecutionRuntimeDiagnosticsSummary['browserAuthoritySummary']>['bridgeMode']
-> | null {
-  return value === 'auto' || value === 'required' || value === 'off' ? value : null;
 }
 
 function readRuntimeEvidenceDetailsSummary(value: unknown): Record<string, unknown> | null {

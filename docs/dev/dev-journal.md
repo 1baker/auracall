@@ -46827,3 +46827,22 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   `/console?view=runs` serves the rebuilt hashed asset with exact source/install
   HTML, JS, and CSS parity. Persisted authority readback also succeeded with no
   ready broker browser present. Plan 0288 is closed.
+
+## 2026-08-14 | Project browser authority into recent runs
+
+- Plan 0289 moves fallback discovery ahead of row selection. The existing
+  recent-run list will carry the same bounded authority summary as full status,
+  allowing a table badge and closed-world Authority filter.
+- Authority reduction will be shared rather than copied. Recent reads remain
+  local persisted-state operations and will not fan out into per-row status or
+  browser requests.
+- The shared reducer now powers full response status plus HTTP/MCP recent-run
+  summaries. The Runs workbench adds a fallback metric, Authority column,
+  closed-world filter, fallback Attention label, and authority-aware search.
+- Production build, typecheck, 14 selected integration tests, lint at the
+  accepted 208-warning baseline, scoped lint, diff hygiene, and the 290-plan
+  audit passed.
+- Installed `/v1/runtime-runs/recent?limit=100` returned 71 rows and projected
+  the existing broker-backed response as `agent-browser`. The rebuilt console
+  asset exposes the new discovery controls, seven source/install hashes match,
+  and the API is active with zero restarts. Plan 0289 is closed.

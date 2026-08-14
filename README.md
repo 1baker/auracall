@@ -1063,7 +1063,11 @@ Terminology note:
   `GET /v1/runtime-runs/recent` source/status/limit filters and row actions
   that fill, inspect, or jump directly to linked account-mirror detail for
   existing run ids without touching provider browsers. Recent-run rows include
-  a `Mirror` availability summary before the jump action so operators can see
+  a bounded `browserAuthoritySummary` derived from persisted runtime evidence;
+  `/console?view=runs` displays that authority, includes compatibility fallback
+  in Attention, and can filter Agent-browser, Fallback, Explicit off, or
+  Unreported rows before selection. Recent-run rows also include a `Mirror`
+  availability summary before the jump action so operators can see
   whether cached provider detail is available, a single cached conversation
   opens directly from that summary, and the summary hydrates the same
   cache-only transcript/materialization badge as detailed runtime views. Those

@@ -32,6 +32,22 @@ function createStoredRecord(runId = 'runtime_recent_mcp_1') {
       ],
     }),
   );
+  bundle.events.push({
+    id: `${runId}:event:browser-authority`,
+    runId,
+    type: 'note-added',
+    createdAt: '2026-05-05T20:00:00.500Z',
+    payload: {
+      runtimeEvidence: {
+        observedAt: '2026-05-05T20:00:00.500Z',
+        source: 'browser-service',
+        details: {
+          agentBrowserBrowserId: 'private-browser-id',
+          agentBrowserProfileId: 'private-profile-id',
+        },
+      },
+    },
+  });
   return {
     runId,
     revision: 1,
@@ -74,10 +90,19 @@ describe('mcp runtime_runs_recent tool', () => {
             serviceIds: ['chatgpt'],
             runtimeProfileIds: ['default'],
             stepCount: 1,
+            browserAuthoritySummary: {
+              browserAuthority: 'agent-browser',
+              bridgeMode: null,
+              observedAt: '2026-05-05T20:00:00.500Z',
+              source: 'browser-service',
+            },
           },
         ],
       },
     });
+    expect(result.structuredContent).not.toHaveProperty(
+      'data.0.browserAuthoritySummary.agentBrowserBrowserId',
+    );
   });
 
   it('defaults to a bounded recent-run list', async () => {

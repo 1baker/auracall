@@ -1,5 +1,6 @@
 export type BrowserAuthority = "agent-browser" | "compatibility-fallback" | "explicit-off";
 export type AgentBrowserBridgeMode = "auto" | "required" | "off";
+export type BrowserAuthorityFilter = "all" | BrowserAuthority | "unreported";
 
 export interface BrowserAuthorityPresentation {
   authority: BrowserAuthority;
@@ -40,9 +41,13 @@ export function readBrowserAuthorityPresentation(
   const diagnostics = isRecord(metadata?.runtimeDiagnosticsSummary)
     ? metadata.runtimeDiagnosticsSummary
     : null;
-  const summary = isRecord(diagnostics?.browserAuthoritySummary)
-    ? diagnostics.browserAuthoritySummary
-    : null;
+  return readBrowserAuthoritySummaryPresentation(diagnostics?.browserAuthoritySummary);
+}
+
+export function readBrowserAuthoritySummaryPresentation(
+  summaryValue: unknown,
+): BrowserAuthorityPresentation | null {
+  const summary = isRecord(summaryValue) ? summaryValue : null;
   if (!summary || !isBrowserAuthority(summary.browserAuthority)) return null;
   const authority = summary.browserAuthority;
   const presentation = AUTHORITY_PRESENTATION[authority];
@@ -59,6 +64,15 @@ export function readBrowserAuthorityPresentation(
           }
         : null,
   };
+}
+
+export function matchesBrowserAuthorityFilter(
+  presentation: BrowserAuthorityPresentation | null,
+  filter: BrowserAuthorityFilter,
+): boolean {
+  if (filter === "all") return true;
+  if (filter === "unreported") return presentation === null;
+  return presentation?.authority === filter;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

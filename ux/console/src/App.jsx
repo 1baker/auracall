@@ -18,7 +18,11 @@ import {
   XCircle,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { readBrowserAuthorityPresentation } from "./runAuthority.ts";
+import {
+  matchesBrowserAuthorityFilter,
+  readBrowserAuthorityPresentation,
+  readBrowserAuthoritySummaryPresentation,
+} from "./runAuthority.ts";
 
 const EMPTY_FORM = {
   id: "",
@@ -72,6 +76,7 @@ function App() {
   const [runQuery, setRunQuery] = useState("");
   const [runKindFilter, setRunKindFilter] = useState("all");
   const [runStateFilter, setRunStateFilter] = useState("all");
+  const [runAuthorityFilter, setRunAuthorityFilter] = useState("all");
   const [handoffId, setHandoffId] = useState(readParamFromUrl("handoff"));
   const [handoffOutputDir, setHandoffOutputDir] = useState("");
   const [handoffTargetAdapter, setHandoffTargetAdapter] = useState("packet");
@@ -222,8 +227,8 @@ function App() {
     [statusPayload, runtimeRunsPayload, completionRunsPayload, recoveryCandidatesPayload, agents],
   );
   const filteredRunRows = useMemo(
-    () => filterRunRows(runsData.rows, runQuery, runKindFilter, runStateFilter),
-    [runsData.rows, runQuery, runKindFilter, runStateFilter],
+    () => filterRunRows(runsData.rows, runQuery, runKindFilter, runStateFilter, runAuthorityFilter),
+    [runsData.rows, runQuery, runKindFilter, runStateFilter, runAuthorityFilter],
   );
   const selectedRun = useMemo(
     () =>
@@ -541,6 +546,8 @@ function App() {
             onKindFilterChange={setRunKindFilter}
             stateFilter={runStateFilter}
             onStateFilterChange={setRunStateFilter}
+            authorityFilter={runAuthorityFilter}
+            onAuthorityFilterChange={setRunAuthorityFilter}
             onSelect={selectRun}
             onRefresh={validateNow}
             onControl={performRunControl}
@@ -1110,6 +1117,8 @@ function RunsPage({
   onKindFilterChange,
   stateFilter,
   onStateFilterChange,
+  authorityFilter,
+  onAuthorityFilterChange,
   onSelect,
   onRefresh,
   onControl,
@@ -1138,6 +1147,11 @@ function RunsPage({
         <Metric label="Waiting" value={runsData.metrics.waiting} tone={runsData.metrics.waiting > 0 ? "warning" : "muted"} />
         <Metric label="Needs attention" value={runsData.metrics.attention} tone={runsData.metrics.attention > 0 ? "danger" : "ready"} />
         <Metric label="Completed" value={runsData.metrics.completed} tone="ready" />
+        <Metric
+          label="Browser fallback"
+          value={runsData.metrics.browserFallback}
+          tone={runsData.metrics.browserFallback > 0 ? "warning" : "ready"}
+        />
       </section>
 
       <section className="recovery-panel" aria-label="Artifact recovery posture">
@@ -1200,6 +1214,19 @@ function RunsPage({
               </select>
             </label>
             <label className="field compact-field">
+              <span>Authority</span>
+              <select
+                value={authorityFilter}
+                onChange={(event) => onAuthorityFilterChange(event.target.value)}
+              >
+                <option value="all">All</option>
+                <option value="compatibility-fallback">Fallback</option>
+                <option value="agent-browser">Agent-browser</option>
+                <option value="explicit-off">Explicit off</option>
+                <option value="unreported">Unreported</option>
+              </select>
+            </label>
+            <label className="field compact-field">
               <span>State</span>
               <select value={stateFilter} onChange={(event) => onStateFilterChange(event.target.value)}>
                 <option value="all">All</option>
@@ -1226,6 +1253,7 @@ function RunsPage({
                     <th>Work</th>
                     <th>Kind</th>
                     <th>State</th>
+                    <th>Authority</th>
                     <th>Provider / agent</th>
                     <th>Updated</th>
                     <th>Attention</th>
@@ -1242,9 +1270,20 @@ function RunsPage({
                       </td>
                       <td>{row.kindLabel}</td>
                       <td><RunStateChip state={row.stateGroup} label={row.statusLabel} /></td>
+                      <td>
+                        {row.browserAuthority ? (
+                          <span className={`status-pill ${row.browserAuthority.tone}`}>
+                            {row.browserAuthority.label}
+                          </span>
+                        ) : (
+                          <span className="muted-line">Unreported</span>
+                        )}
+                      </td>
                       <td>{row.ownerLabel}</td>
                       <td>{formatTime(row.updatedAt)}</td>
-                      <td>{row.attention || "None"}</td>
+                      <td>
+                        {[row.attention, row.browserAuthority?.warning?.title].filter(Boolean).join(" · ") || "None"}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -2541,6 +2580,9 @@ function buildRunsData({ status, runtimeRuns, completionRuns, recoveryCandidates
       attention: rows.filter((row) => row.stateGroup === "attention").length,
       completed: rows.filter((row) => row.stateGroup === "completed").length,
       cancelled: rows.filter((row) => row.stateGroup === "cancelled").length,
+      browserFallback: rows.filter(
+        (row) => row.browserAuthority?.authority === "compatibility-fallback",
+      ).length,
     },
     recovery: {
       summary: `${recovery.metrics?.actionableCount ?? 0} actionable, ${recovery.metrics?.activeLeaseCount ?? 0} active lease`,
@@ -2607,6 +2649,7 @@ function buildRuntimeRunRow(run, agents, actionsByRunId = {}) {
   const serviceIds = run.serviceIds ?? [];
   const runtimeProfileIds = run.runtimeProfileIds ?? [];
   const stateGroup = groupRuntimeRunState(run.status);
+  const browserAuthority = readBrowserAuthoritySummaryPresentation(run.browserAuthoritySummary);
   const title =
     run.teamRunId ??
     run.taskRunSpecId ??
@@ -2630,6 +2673,7 @@ function buildRuntimeRunRow(run, agents, actionsByRunId = {}) {
     ownerLabel,
     currentStepLabel: `${run.runningStepCount ?? 0} running / ${run.runnableStepCount ?? 0} runnable`,
     attention: stateGroup === "attention" ? formatStatus(run.status) : "",
+    browserAuthority,
     createdAt: run.createdAt,
     updatedAt: run.updatedAt,
     runtimeRunId: run.runId,
@@ -2647,6 +2691,9 @@ function buildRuntimeRunRow(run, agents, actionsByRunId = {}) {
       run.taskRunSpecId,
       run.sourceKind,
       run.status,
+      browserAuthority?.authority,
+      browserAuthority?.label,
+      browserAuthority?.mode,
       ...serviceIds,
       ...runtimeProfileIds,
       ...agentIds,
@@ -2678,6 +2725,7 @@ function buildCompletionRunRow(operation, actionsById = {}) {
     ownerLabel: `${serviceDisplay(operation.provider)} / ${operation.runtimeProfileId}`,
     currentStepLabel: operation.phase ?? operation.sweepMode ?? "live follow",
     attention: operation.error?.message ?? (stateGroup === "attention" ? formatStatus(operation.status) : ""),
+    browserAuthority: null,
     createdAt: operation.startedAt,
     updatedAt: operation.completedAt ?? operation.nextAttemptAt ?? operation.startedAt,
     runtimeRunId: "",
@@ -2738,11 +2786,12 @@ function buildRuntimeProviderLinks(run) {
   return links;
 }
 
-function filterRunRows(rows, query, kindFilter, stateFilter) {
+function filterRunRows(rows, query, kindFilter, stateFilter, authorityFilter) {
   const normalized = query.trim().toLowerCase();
   return rows.filter((row) => {
     if (kindFilter !== "all" && row.kind !== kindFilter) return false;
     if (stateFilter !== "all" && row.stateGroup !== stateFilter) return false;
+    if (!matchesBrowserAuthorityFilter(row.browserAuthority, authorityFilter)) return false;
     if (!normalized) return true;
     return [
       row.title,
@@ -2752,6 +2801,8 @@ function filterRunRows(rows, query, kindFilter, stateFilter) {
       row.ownerLabel,
       row.summary,
       row.attention,
+      row.browserAuthority?.label,
+      row.browserAuthority?.mode,
       ...row.searchable,
     ]
       .filter(Boolean)

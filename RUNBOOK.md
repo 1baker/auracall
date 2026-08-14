@@ -18919,3 +18919,25 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   `resp_5ff8161469f64a61bf12107c2616ad15` while current broker inventory has no
   ready browser, confirming readback requires no live browser. The API is
   active/running with zero restarts, so Plan 0288 closes accepted.
+
+## Turn 425 | 2026-08-14
+
+- Plan 0289 opens the next operator-discovery slice. Selected-run fallback
+  warning is complete, but recent-run rows omit browser authority and cannot be
+  filtered without loading each run status.
+- The implementation boundary is one shared persisted-evidence reducer used by
+  full response status and recent summaries, plus bounded HTTP/MCP contract and
+  console table/filter changes. No endpoint, browser probe, or provider work is
+  added.
+- Full status, HTTP recent runs, and MCP recent runs now share one backward
+  authority-evidence reducer. The console adds a fallback metric, Authority
+  column/filter, and fallback Attention signal while preserving selected-run
+  detail.
+- Production build, typecheck, 14 selected integration tests, lint at the
+  accepted 208-warning baseline, scoped lint, diff hygiene, and the 290-plan
+  audit are green.
+- Installed recent readback returned 71 rows and projected existing response
+  `resp_5ff8161469f64a61bf12107c2616ad15` as `agent-browser`.
+  `/console?view=runs` served hashed asset `index-B3T9BMm5.js`; seven source and
+  installed backend/console hashes matched. The API is active with zero
+  restarts, so Plan 0289 closes accepted.

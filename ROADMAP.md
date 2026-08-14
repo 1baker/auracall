@@ -7,6 +7,13 @@
 Status: active
 Lane: P01
 
+- Closed accepted recent-run browser-authority projection:
+  [docs/dev/plans/0289-2026-08-14-recent-run-browser-authority.md](docs/dev/plans/0289-2026-08-14-recent-run-browser-authority.md)
+  Recent HTTP/MCP run summaries will reuse the durable authority reducer so the
+  `/console` Runs table can badge and filter fallback runs before selection.
+  HTTP/MCP tests, production build, lint gates, and installed persisted-only
+  readback passed.
+
 - Closed accepted operator-console browser-authority warning:
   [docs/dev/plans/0288-2026-08-14-operator-console-browser-authority-warning.md](docs/dev/plans/0288-2026-08-14-operator-console-browser-authority-warning.md)
   The existing selected-run status read now drives a prominent compatibility-
