@@ -351,6 +351,7 @@ export class ChatgptDeveloperAppBrowserAdapter {
 			browser: {
 				...(this.browser.userConfig.browser ?? {}),
 				composerTool: app.name,
+				modelStrategy: "current",
 			},
 		};
 		const testBrowser = await this.createBrowser(testConfig);

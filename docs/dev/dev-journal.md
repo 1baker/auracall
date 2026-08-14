@@ -1,3 +1,20 @@
+## 2026-08-13 | Plan 0282 Developer-App Test Current Model
+
+- LitScout Plan 0412 exposed a deterministic pre-prompt AuraCall failure:
+  submitted developer-app tests inherited generic `select` / `Instant` despite
+  an already-active Chat / GPT-5.6 Sol / Pro client.
+- Exact post-stop evidence proves no prompt, connector, or LitScout canonical
+  effect. CodeGraph maps the narrow repair to the adapter-created test browser,
+  where `current` must override inherited model selection without changing the
+  app tool or submission contract.
+- The regression failed with the submitted browser still carrying
+  `desiredModel=Instant` and `modelStrategy=select`, then passed after the
+  adapter supplied `modelStrategy=current`. The focused 16-test file, 176
+  adjacent tests, typecheck, touched Biome check, build, and CodeGraph readback
+  pass provider-free.
+- Provider-free source, tests, and docs are the only effects; commit/push is the
+  remaining source gate.
+
 ## 2026-08-12 | Plan 0280 Attachment Drawer Focus Order
 
 - Plan 0279 installed exact reattach/current/attachment runtime parity at

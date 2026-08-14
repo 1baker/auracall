@@ -4,6 +4,7 @@ import {
 	CHATGPT_DEVELOPER_APP_SERVER_URL_SELECTOR,
 	chatgptDeveloperAppSelectionMatchesForTest,
 	classifyChatgptDeveloperAppCreatePostconditionForTest,
+	createChatgptDeveloperAppBrowserAdapter,
 	deriveChatgptDeveloperAppState,
 	isCompleteChatgptInstalledAppsPayloadForTest,
 	markExactChatgptDeveloperAppDeleteMenuForTest,
@@ -13,6 +14,48 @@ import {
 } from "../../src/browser/providers/chatgptDeveloperApps.js";
 
 describe("deriveChatgptDeveloperAppState", () => {
+	it("preserves the active model when submitting a developer-app test", async () => {
+		const runPrompt = vi.fn(async () => ({
+			conversationId: "conversation-1",
+			url: "https://chatgpt.com/c/conversation-1",
+		}));
+		const createBrowser = vi.fn(async () => ({ runPrompt }));
+		const adapter = createChatgptDeveloperAppBrowserAdapter(
+			{
+				userConfig: {
+					browser: {
+						desiredModel: "Instant",
+						modelStrategy: "select",
+					},
+				},
+			} as never,
+			createBrowser as never,
+		);
+
+		await adapter.submitTest(
+			{
+				pluginId: "plugin_asdk_app_litscout",
+				appIds: ["asdk_app_litscout"],
+				name: "LitScout",
+			},
+			"Use only LitScout.",
+		);
+
+		expect(createBrowser).toHaveBeenCalledWith(
+			expect.objectContaining({
+				browser: expect.objectContaining({
+					composerTool: "LitScout",
+					modelStrategy: "current",
+				}),
+			}),
+		);
+		expect(runPrompt).toHaveBeenCalledWith({
+			prompt: "Use only LitScout.",
+			completionMode: "prompt_submitted",
+			timeoutMs: 120_000,
+		});
+	});
+
 	it("does not claim an OAuth human gate when no app or fresh handoff exists", () => {
 		expect(
 			classifyChatgptDeveloperAppCreatePostconditionForTest({

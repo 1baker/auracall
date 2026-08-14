@@ -1,5 +1,23 @@
 # RUNBOOK
 
+## Turn 452 | 2026-08-13
+
+- LitScout Plan 0412's sole canary stopped before prompt submission when the
+  AuraCall developer-app test path requested stale option `Instant`; exact
+  readback proves zero prompt/connector/canonical effects and one retained
+  extra empty tab.
+- [Plan 0282](docs/dev/plans/0282-2026-08-13-developer-app-test-current-model.md)
+  localizes the defect through CodeGraph to
+  `ChatgptDeveloperAppBrowserAdapter.submitTest()`: it injects the app tool but
+  inherits generic model selection. Plan 0282 opens provider-free to bind this
+  path to the already-defined `current` no-menu contract.
+- The deterministic regression failed on inherited `select` / `Instant` and
+  passes after the one-line adapter override. The focused 16-test file, 176
+  adjacent tests, typecheck, touched Biome check, build, and current CodeGraph
+  readback pass; source commit/push remains the final provider-free gate.
+- Source/tests/docs only are active. Install, service restart, browser action,
+  LitScout retry, cleanup, and scheduler/completion effects remain zero.
+
 ## Turn 451 | 2026-08-12
 
 - Plan 0279's sole install established exact six-module source/runtime parity
