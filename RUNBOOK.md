@@ -1,5 +1,15 @@
 # RUNBOOK
 
+## Turn 468 | 2026-08-14
+
+- After Plan 0298 isolated warning debt outside production source, ranked the
+  remaining paths and found exactly seven operational-script diagnostics.
+- Closed Plan 0299 by making fixture ids total, replacing reusable sequence
+  assertions with explicit empty-input failures, preserving required uppercase
+  environment names through computed keys, and adding a strict scripts gate.
+- The changed provider-free smoke and broad repository gates passed. Scripts
+  now have zero diagnostics; the full lint baseline is 197 test warnings.
+
 ## Turn 467 | 2026-08-14
 
 - Ranked the accepted 208-warning lint baseline by path and rule. Only four

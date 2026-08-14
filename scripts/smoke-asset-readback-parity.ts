@@ -9,6 +9,7 @@ import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 const execFileAsync = promisify(execFile);
 
 const DEFAULT_MEDIA_GENERATION_ID = 'medgen_cf296426a263400bbd5a2690674052a5';
+const disableKeytarEnvKey = 'AURACALL_DISABLE_KEYTAR';
 
 interface Options {
   mediaGenerationId: string;
@@ -92,7 +93,7 @@ async function runAuracallJson(input: {
   const { stdout } = await execFileAsync(input.auracallBin, input.args, {
     env: {
       ...process.env,
-      AURACALL_DISABLE_KEYTAR: '1',
+      [disableKeytarEnvKey]: '1',
     },
     maxBuffer: 8 * 1024 * 1024,
   });
@@ -154,7 +155,7 @@ async function readSearchProjectionViaMcp(options: Options): Promise<unknown> {
     command: options.mcpBin,
     env: {
       ...process.env,
-      AURACALL_DISABLE_KEYTAR: '1',
+      [disableKeytarEnvKey]: '1',
     },
     stderr: 'pipe',
   });

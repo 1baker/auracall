@@ -1,3 +1,10 @@
+- 2026-08-14: Smoke fixtures should express totality rather than silence
+  possibly-undefined values with non-null assertions. Use fixed tuples when an
+  index is structurally guaranteed, make reusable sequences fail explicitly on
+  empty input, and use computed keys for externally required uppercase
+  environment names. Enforce operational scripts with their own warning-strict
+  lint gate.
+
 - 2026-08-14: A repository-wide warning baseline can hide regressions in
   shipped code when most debt lives in tests and smoke fixtures. Maintain a
   warning-strict `src/` lint gate before the broader report, and reduce source

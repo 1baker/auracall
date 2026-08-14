@@ -1,3 +1,13 @@
+## 2026-08-14 | Plan 0299 operational-scripts zero-warning lint baseline
+
+- The post-Plan 0298 inventory left seven warnings in operational scripts:
+  five unsafe fixture assertions and two required environment-key names.
+- Made fixed ids total, converted reusable sequences to explicit labeled
+  failures, kept environment names exact through computed keys, and inserted
+  `lint:scripts:strict` into the normal lint command without suppressions.
+- The provider-free smoke and broad gates passed. Plan 0299 is CLOSED with
+  zero script diagnostics and 197 remaining test warnings.
+
 ## 2026-08-14 | Plan 0298 production-source zero-warning lint baseline
 
 - Aggregated all 208 accepted lint warnings by path and rule. Four belonged to

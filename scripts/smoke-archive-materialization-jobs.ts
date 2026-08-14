@@ -21,7 +21,7 @@ import {
 } from '../src/runtime/archiveMaterializationJobService.js';
 import type { RunArchiveItem, RunArchiveListRequest, RunArchiveListResult, RunArchiveService } from '../src/runtime/archiveService.js';
 
-const ids = ['ramj_smoke_queued', 'ramj_smoke_succeeded', 'ramj_smoke_skipped', 'ramj_smoke_failed'];
+const ids = ['ramj_smoke_queued', 'ramj_smoke_succeeded', 'ramj_smoke_skipped', 'ramj_smoke_failed'] as const;
 const itemIds = {
   queued: 'generated-artifact:smoke-response:artifact-queued',
   succeeded: 'generated-artifact:smoke-response:artifact-succeeded',
@@ -270,9 +270,9 @@ async function seedJobs(service: ArchiveMaterializationJobService): Promise<void
   await service.createJob({ archiveItemId: itemIds.succeeded });
   await service.createJob({ archiveItemId: itemIds.skipped });
   await service.createJob({ archiveItemId: itemIds.failed });
-  await service.runJob(ids[1]!);
-  await service.runJob(ids[2]!);
-  await service.runJob(ids[3]!);
+  await service.runJob(ids[1]);
+  await service.runJob(ids[2]);
+  await service.runJob(ids[3]);
 }
 
 async function assertSearchAssetReconciliationBefore(port: number): Promise<void> {
@@ -490,14 +490,22 @@ function assertStatus(
   }
 }
 
-function sequenceId(values: string[]): () => string {
+function sequenceId(values: readonly string[]): () => string {
   let index = 0;
-  return () => values[Math.min(index++, values.length - 1)]!;
+  return () => readSequenceValue(values, index++, 'id');
 }
 
-function sequenceNow(values: string[]): () => Date {
+function sequenceNow(values: readonly string[]): () => Date {
   let index = 0;
-  return () => new Date(values[Math.min(index++, values.length - 1)]!);
+  return () => new Date(readSequenceValue(values, index++, 'timestamp'));
+}
+
+function readSequenceValue(values: readonly string[], index: number, label: string): string {
+  const value = values[Math.min(index, values.length - 1)];
+  if (value === undefined) {
+    throw new Error(`Fixture ${label} sequence requires at least one value.`);
+  }
+  return value;
 }
 
 main().catch((error: unknown) => {

@@ -7,6 +7,11 @@
 Status: active
 Lane: P01
 
+- Closed accepted operational-scripts zero-warning lint baseline:
+  [docs/dev/plans/0299-2026-08-14-operational-scripts-lint-zero-baseline.md](docs/dev/plans/0299-2026-08-14-operational-scripts-lint-zero-baseline.md)
+  Operational scripts are warning-clean, fixture sequences fail explicitly,
+  and normal lint now rejects future script warnings before test debt reports.
+
 - Closed accepted production-source zero-warning lint baseline:
   [docs/dev/plans/0298-2026-08-14-production-source-lint-zero-baseline.md](docs/dev/plans/0298-2026-08-14-production-source-lint-zero-baseline.md)
   Shipped `src/` code is warning-clean, and the normal lint command now fails
