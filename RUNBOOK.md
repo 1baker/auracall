@@ -1,5 +1,17 @@
 # RUNBOOK
 
+## Turn 476 | 2026-08-14
+
+- Opened Plan 0307 for the 22-warning provider-free schema resolver cluster.
+- Classified 21 warnings as unchecked `UserConfig` input literals and one as a
+  resolved-model record-boundary assertion; implementation is serialized.
+- The first type pass exposed that `LoadConfigResult.config` contradicted the
+  loader's documented partial-file behavior. Added `UserConfigInput`, checked
+  all affected fixtures against it, and preserved the resolved projection with
+  an object copy.
+- Closed Plan 0307 after 25 resolver tests, 11 loader tests, and broad gates
+  passed. Full lint now reports 83 warnings in four remaining test files.
+
 ## Turn 475 | 2026-08-14
 
 - Selected the two-warning session-display tail after Plan 0305.

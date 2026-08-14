@@ -1,3 +1,9 @@
+- 2026-08-14: Keep loaded config input distinct from the fully resolved config
+  schema. Config files and their merged pre-resolution form may omit required
+  resolved defaults, so `LoadConfigResult.config` should expose a partial
+  `UserConfigInput` while `resolveConfig` remains responsible for validation
+  and defaults.
+
 - 2026-08-14: A hoisted async mock initialized with `null` should declare its
   full nullable production result type. Doing so exposes incomplete non-null
   fixtures at typecheck time instead of hiding missing evidence behind `any`.

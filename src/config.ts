@@ -11,6 +11,7 @@ import { DEFAULT_MODEL } from './oracle.js';
 import { materializeConfigV2 } from './config/migrate.js';
 
 export type UserConfig = OracleConfig;
+export type UserConfigInput = Partial<UserConfig>;
 export type { ResolvedUserConfig };
 
 function resolveUserConfigPath(): string {
@@ -43,7 +44,7 @@ function resolveProjectConfigPaths(cwd: string): string[] {
 }
 
 export interface LoadConfigResult {
-  config: UserConfig;
+  config: UserConfigInput;
   path: string;
   loaded: boolean;
   sources?: {

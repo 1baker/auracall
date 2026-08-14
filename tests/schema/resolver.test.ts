@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { projectConfigModel } from '../../src/config/model.js';
 import * as configModule from '../../src/config.js';
+import type { UserConfigInput } from '../../src/config.js';
 import { resolveConfig } from '../../src/schema/resolver.js';
 
 describe('Config Resolver', () => {
@@ -19,7 +20,7 @@ describe('Config Resolver', () => {
 
   it('should default browser runs through the semantic ChatGPT Instant selector when no model is configured', async () => {
     vi.spyOn(configModule, 'loadUserConfig').mockResolvedValue({
-      config: { browser: {} } as any,
+      config: { browser: {} } satisfies UserConfigInput,
       path: '/tmp/config.json',
       loaded: false,
     });
@@ -32,7 +33,7 @@ describe('Config Resolver', () => {
 
   it('should resolve legacy ChatGPT Pro Extended intent to the current Sol compatibility model', async () => {
     vi.spyOn(configModule, 'loadUserConfig').mockResolvedValue({
-      config: { browser: {} } as any,
+      config: { browser: {} } satisfies UserConfigInput,
       path: '/tmp/config.json',
       loaded: false,
     });
@@ -45,7 +46,7 @@ describe('Config Resolver', () => {
 
   it('should resolve semantic ChatGPT Sol High selector to the Sol compatibility model', async () => {
     vi.spyOn(configModule, 'loadUserConfig').mockResolvedValue({
-      config: { browser: {} } as any,
+      config: { browser: {} } satisfies UserConfigInput,
       path: '/tmp/config.json',
       loaded: false,
     });
@@ -88,7 +89,7 @@ describe('Config Resolver', () => {
             defaultService: 'grok',
           },
         },
-      } as any,
+      } satisfies UserConfigInput,
       path: '/tmp/config.json',
       loaded: true,
     });
@@ -160,7 +161,7 @@ describe('Config Resolver', () => {
             composerTool: 'deep-search',
           },
         },
-      } as any,
+      } satisfies UserConfigInput,
       path: '/tmp/config.json',
       loaded: true,
     });
@@ -206,7 +207,7 @@ describe('Config Resolver', () => {
             },
           },
         },
-      } as any,
+      } satisfies UserConfigInput,
       path: '/tmp/config.json',
       loaded: true,
     });
@@ -256,7 +257,7 @@ describe('Config Resolver', () => {
             agents: ['orchestrator'],
           },
         },
-      } as any,
+      } satisfies UserConfigInput,
       path: '/tmp/config.json',
       loaded: true,
     });
@@ -265,7 +266,7 @@ describe('Config Resolver', () => {
       browserModelStrategy: 'select',
       projectId: 'cli-project-id',
     });
-    const projected = projectConfigModel(result as any);
+    const projected = projectConfigModel({ ...result });
 
     expect(result.runtimeProfiles).toBeUndefined();
     expect(result.profiles?.default?.services?.grok?.projectId).toBe('cli-project-id');
@@ -329,7 +330,7 @@ describe('Config Resolver', () => {
             },
           },
         },
-      } as any,
+      } satisfies UserConfigInput,
       path: '/tmp/config.json',
       loaded: true,
     });
@@ -381,7 +382,7 @@ describe('Config Resolver', () => {
             },
           },
         },
-      } as any,
+      } satisfies UserConfigInput,
       path: '/tmp/config.json',
       loaded: true,
     });
@@ -417,7 +418,7 @@ describe('Config Resolver', () => {
             browserProfile: 'default',
           },
         },
-      } as any,
+      } satisfies UserConfigInput,
       path: '/tmp/config.json',
       loaded: true,
     });
@@ -448,7 +449,7 @@ describe('Config Resolver', () => {
             browserProfile: 'default',
           },
         },
-      } as any,
+      } satisfies UserConfigInput,
       path: '/tmp/config.json',
       loaded: true,
     });
@@ -486,7 +487,7 @@ describe('Config Resolver', () => {
             },
           },
         },
-      } as any,
+      } satisfies UserConfigInput,
       path: '/tmp/config.json',
       loaded: true,
     });
@@ -530,7 +531,7 @@ describe('Config Resolver', () => {
             browserProfile: 'default',
           },
         },
-      } as any,
+      } satisfies UserConfigInput,
       path: '/tmp/config.json',
       loaded: true,
     });
@@ -601,7 +602,7 @@ describe('Config Resolver', () => {
             },
           },
         },
-      } as any,
+      } satisfies UserConfigInput,
       path: '/tmp/config.json',
       loaded: true,
     });
@@ -656,7 +657,7 @@ describe('Config Resolver', () => {
             },
           },
         },
-      } as any,
+      } satisfies UserConfigInput,
       path: '/tmp/config.json',
       loaded: true,
     });
@@ -709,7 +710,7 @@ describe('Config Resolver', () => {
             },
           },
         },
-      } as any,
+      } satisfies UserConfigInput,
       path: '/tmp/config.json',
       loaded: true,
     });
@@ -761,7 +762,7 @@ describe('Config Resolver', () => {
             },
           },
         },
-      } as any,
+      } satisfies UserConfigInput,
       path: '/tmp/config.json',
       loaded: true,
     });
@@ -797,7 +798,7 @@ describe('Config Resolver', () => {
             },
           },
         },
-      } as any,
+      } satisfies UserConfigInput,
       path: '/tmp/config.json',
       loaded: true,
     });
@@ -857,7 +858,7 @@ describe('Config Resolver', () => {
             },
           },
         },
-      } as any,
+      } satisfies UserConfigInput,
       path: '/tmp/config.json',
       loaded: true,
     });
@@ -909,7 +910,7 @@ describe('Config Resolver', () => {
             runtimeProfile: 'work',
           },
         },
-      } as any,
+      } satisfies UserConfigInput,
       path: '/tmp/config.json',
       loaded: true,
     });
@@ -957,7 +958,7 @@ describe('Config Resolver', () => {
             runtimeProfile: 'work',
           },
         },
-      } as any,
+      } satisfies UserConfigInput,
       path: '/tmp/config.json',
       loaded: true,
     });

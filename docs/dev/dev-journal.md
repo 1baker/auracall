@@ -1,3 +1,13 @@
+## 2026-08-14 | Plan 0307 schema resolver fixture lint ratchet
+
+- Selected 22 explicit-any warnings in the provider-free resolver suite.
+- The bounded type pass exposed a real contract mismatch: loaded config is
+  partial before resolution, although its result type claimed the complete
+  schema. Added `UserConfigInput`, checked 21 fixtures against it, and removed
+  the resolved-result projection assertion.
+- All 25 resolver tests, 11 loader tests, typecheck, build, strict gates, full
+  lint at 83 warnings, and plan audit passed. Plan 0307 is CLOSED.
+
 ## 2026-08-14 | Plan 0306 session-display diagnostics fixture ratchet
 
 - Selected the final two warnings in the otherwise-clean session-display

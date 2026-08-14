@@ -7,6 +7,11 @@
 Status: active
 Lane: P01
 
+- Closed accepted schema resolver fixture lint ratchet:
+  [docs/dev/plans/0307-2026-08-14-schema-resolver-fixture-lint-ratchet.md](docs/dev/plans/0307-2026-08-14-schema-resolver-fixture-lint-ratchet.md)
+  Loaded config now exposes its actual partial-input contract, and all resolver
+  fixtures are checked against it without `any`.
+
 - Closed accepted session-display diagnostics fixture ratchet:
   [docs/dev/plans/0306-2026-08-14-session-display-diagnostics-fixture-ratchet.md](docs/dev/plans/0306-2026-08-14-session-display-diagnostics-fixture-ratchet.md)
   The registry mock now uses its exported result contract and complete expected-
