@@ -119,6 +119,20 @@ describe("ChatGPT composer mode", () => {
 		expect(logger).toHaveBeenCalledWith("ChatGPT mode: Chat (already selected)");
 	});
 
+	it("accepts the default Chat composer when the mode switcher is absent", async () => {
+		const composer = new FixtureElement("", { placeholder: "Chat with ChatGPT" });
+		installFixtureDocument((selector) => {
+			if (selector === '[role="radio"]' || selector === 'button[aria-haspopup="menu"]') return [];
+			if (selector === 'textarea, [contenteditable="true"], [role="textbox"]') return [composer];
+			return [];
+		});
+
+		const expression = buildChatgptComposerModeExpressionForTest("chat");
+		const result = await new Function(`return ${expression}`)();
+
+		expect(result).toEqual({ status: "default-chat", mode: "chat" });
+	});
+
 	it("fails clearly when explicit Work is unavailable", async () => {
 		const evaluate = vi.fn().mockResolvedValue({
 			result: { value: { status: "mode-not-found", availableModes: ["Chat"] } },

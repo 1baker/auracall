@@ -46701,3 +46701,18 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Plan 0284 therefore restores required-mode access-plan and service-tab-handle
   authority on current main, preserves RDP as optional, and leaves installed
   provider execution as the explicit closing gate.
+
+## 2026-08-14 | Plan 0284 installed acceptance
+
+- Live acceptance found and repaired two integration seams rather than
+  weakening existing safety: broker process id now participates in
+  provider-session provenance, and the visible default `Chat with ChatGPT`
+  composer is accepted as Chat mode when no Chat/Work switcher exists. Explicit
+  Work requests still fail closed when Work controls are unavailable.
+- A stale retained conversation returned ChatGPT's `Conversation has been
+  deleted` surface. Acceptance moved to a fresh tab in the same agent-browser
+  process/profile and closed only the stale tab after success.
+- Installed response `resp_56867ada05ab4506b7f04a7d6d109107` returned exact
+  `PASS`; the lease released completed and target
+  `3FB398F218E264183A2AD81750AB9791` remains the sole valid reusable ChatGPT tab.
+  Plan 0284 is closed.

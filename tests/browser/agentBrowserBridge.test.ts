@@ -57,6 +57,7 @@ describe("agent-browser bridge", () => {
 						browsers: [
 							{
 								health: "ready",
+								pid: 41234,
 								id: wrongHandle.browserId,
 								profileId: wrongHandle.profileId,
 								tabHandles: exactTabOpened ? [wrongHandle, exactHandle] : [wrongHandle],
@@ -136,6 +137,7 @@ describe("agent-browser bridge", () => {
 						browsers: [
 							{
 								health: "ready",
+								pid: 41234,
 								id: handle.browserId,
 								profileId: handle.profileId,
 								tabHandles: [handle],
@@ -193,6 +195,7 @@ describe("agent-browser bridge", () => {
 
 		expect(result).toMatchObject({
 			browserId: "session:auracall-chatgpt",
+			browserProcessId: 41234,
 			chromeHost: "127.0.0.1",
 			chromePort: 49505,
 			profileId: "chatgpt-pro",
@@ -229,6 +232,7 @@ describe("agent-browser bridge", () => {
 						browsers: [
 							{
 								health: "ready",
+								pid: 41234,
 								id: handle.browserId,
 								profileId: "chatgpt-pro",
 								tabHandles: [handle],
@@ -303,6 +307,7 @@ describe("agent-browser bridge", () => {
 						browsers: [
 							{
 								health: "ready",
+								pid: 41234,
 								id: handle.browserId,
 								profileId: handle.profileId,
 								tabHandles: [handle],
@@ -377,6 +382,7 @@ describe("agent-browser bridge", () => {
 						browsers: [
 							{
 								health: "ready",
+								pid: 41234,
 								id: handle.browserId,
 								profileId: handle.profileId,
 								tabHandles: [handle],
@@ -458,6 +464,7 @@ describe("agent-browser bridge", () => {
 						browsers: [
 							{
 								health: "ready",
+								pid: 41234,
 								id: "session:stale-existing",
 								profileId: "chatgpt-pro",
 								tabHandles: [
@@ -499,6 +506,7 @@ describe("agent-browser bridge", () => {
 						browsers: [
 							{
 								health: "ready",
+								pid: 41234,
 								id: handle.browserId,
 								profileId: "chatgpt-pro",
 								tabHandles: [handle],
@@ -610,6 +618,7 @@ describe("agent-browser bridge", () => {
 					browsers: [
 						{
 							health: "ready",
+							pid: 41234,
 							id: "session:auracall-chatgpt-broker",
 							profileId: "wrong-profile",
 							tabHandles: [
@@ -654,6 +663,7 @@ describe("agent-browser bridge", () => {
 		const url = "https://chatgpt.com/c/existing";
 		const browser = (suffix: string) => ({
 			health: "ready",
+			pid: 41234,
 			id: `session:chatgpt-${suffix}`,
 			profileId: "chatgpt-pro",
 			tabHandles: [

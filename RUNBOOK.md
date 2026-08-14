@@ -18787,3 +18787,22 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   local launch, attaches to that exact target, persists broker identity, and
   verifies detach without closing the retained tab. Focused bridge and browser
   suites pass provider-free. No provider prompt or GitHub write occurred.
+
+## Turn 419 | 2026-08-14
+
+- Installed Plan 0284 and used one durable response id per live attempt. The
+  first gate failed before send because broker process identity was absent from
+  provider-session provenance. The second failed before send because the live
+  default Chat composer had no Chat/Work switcher. Both failures preserved the
+  retained target and were repaired provider-free.
+- A later attempt reached a stale conversation that ChatGPT reported deleted;
+  a fresh tab was opened in the same broker-owned browser/profile without a
+  duplicate browser process. The stale browser tab was closed after acceptance;
+  its ChatGPT history was not deleted.
+- Installed response `resp_56867ada05ab4506b7f04a7d6d109107` completed with
+  exact output `PASS`. Runtime state terminaled, the runner lease released as
+  completed, target `3FB398F218E264183A2AD81750AB9791` remained valid, and
+  agent-browser retained one ready browser process with one reusable live tab.
+- The installed bridge hash matched source at `717fe400...1ec25d`. The
+  user-scoped API service is enabled, active, and running with zero restarts.
+  No GitHub write occurred.

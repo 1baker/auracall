@@ -1,6 +1,6 @@
 # Agent-Browser Broker Authority | 0284-2026-08-14
 
-State: OPEN
+State: CLOSED
 Lane: P01
 
 ## Stable Objective
@@ -60,13 +60,27 @@ response capture, artifacts, and durable run semantics.
   handle identity.
 - [x] Cleanup verifies broker detach and does not close the retained target.
 - [x] Existing RDP launcher and focused browser tests remain green.
-- [ ] The installed AuraCall runtime uses required mode and completes one
+- [x] The installed AuraCall runtime uses required mode and completes one
   bounded retained-target response without creating a duplicate browser or
   conversation.
 
+## Installed Acceptance
+
+- Installed source/runtime bridge hashes matched at
+  `717fe40032f73df285aaf0d50f21cf599845fb24c2a117ca474c332e4d1ec25d`.
+- The live gate first exposed missing broker process provenance and a current
+  default Chat composer with no Chat/Work switcher. Both were repaired and
+  covered provider-free before reinstall.
+- Response `resp_56867ada05ab4506b7f04a7d6d109107` completed with exact output
+  `PASS`, terminal runtime state, and a released lease on broker target
+  `3FB398F218E264183A2AD81750AB9791`.
+- Final agent-browser evidence retained one ready browser process and one valid
+  reusable ChatGPT conversation tab. The stale deleted-conversation tab was
+  closed without deleting its ChatGPT history.
+
 ## Definition Of Done
 
-The plan closes when source and installed runtime prove that one AuraCall
-request can use the exact broker-owned retained target, complete and read the
-provider response, detach cleanly, and leave one healthy reusable browser/tab
-lane, with no AuraCall-owned duplicate Chrome process.
+Complete. Source and installed runtime prove that one AuraCall request can use
+the exact broker-owned retained target, complete and read the provider
+response, detach cleanly, and leave one healthy reusable browser/tab lane, with
+no AuraCall-owned duplicate Chrome process.

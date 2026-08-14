@@ -12,6 +12,7 @@ export type AgentBrowserBridgeMode = "auto" | "required" | "off";
 export type AgentBrowserBridgeResult = {
 	baseUrl: string;
 	browserId: string;
+	browserProcessId?: number;
 	chromeHost?: string;
 	chromePort?: number;
 	detachRequired?: boolean;
@@ -38,6 +39,7 @@ type BrowserRecord = {
 	cdpEndpoint?: string | null;
 	health?: string | null;
 	id?: string | null;
+	pid?: number | null;
 	profileId?: string | null;
 	tabHandles?: Array<Record<string, unknown>>;
 };
@@ -474,6 +476,7 @@ export async function acquireAgentBrowserBrokerTab(
 				);
 				const endpoint = parseBrowserWebSocketEndpoint(attached.data?.browserWebSocketUrl);
 				const browserId = String(serviceTabHandle.browserId ?? attached.data?.browserId ?? "");
+				const browserProcessId = Number(candidate.browser.pid);
 				const sessionName = String(
 					serviceTabHandle.sessionName ??
 						attached.data?.sessionName ??
@@ -481,12 +484,16 @@ export async function acquireAgentBrowserBrokerTab(
 				);
 				if (!browserId || !sessionName)
 					throw new Error("agent-browser retained tab has no browser/session identity");
+				if (!Number.isInteger(browserProcessId) || browserProcessId < 1) {
+					throw new Error("agent-browser retained tab has no live browser process identity");
+				}
 				logger(
 					`[agent-browser] Broker attached ${effectiveProfileId} through ${browserId}; AuraCall will not launch Chrome.`,
 				);
 				return {
 					baseUrl: activeRoute.baseUrl,
 					browserId,
+					browserProcessId,
 					chromeHost: endpoint.host,
 					chromePort: endpoint.port,
 					detachRequired: attached.data?.detachRequired !== false,

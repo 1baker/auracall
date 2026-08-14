@@ -37,6 +37,7 @@ export interface BrowserAttachment {
 export interface BrowserRuntimeMetadata {
   agentBrowserBaseUrl?: string;
   agentBrowserBrowserId?: string;
+  agentBrowserProcessId?: number;
   agentBrowserProfileId?: string;
   agentBrowserServiceTabHandle?: Record<string, unknown>;
   agentBrowserSessionName?: string;

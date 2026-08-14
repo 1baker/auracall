@@ -21591,3 +21591,10 @@ browser-stage lifecycle observability, not transcript truncation.
   process/session lifecycle, target identity, and viewing infrastructure in
   agent-browser. A blocked remote-view privilege layer must not invalidate an
   otherwise healthy broker-owned browser lane.
+- Existing provider-session authorization fingerprints require both browser
+  process and target identity. A broker bridge must carry the service-owned PID
+  with the exact target id instead of treating remote attachment as
+  process-anonymous.
+- Current ChatGPT can expose a normal `Chat with ChatGPT` composer without a
+  Chat/Work switcher. Treat that visible default composer as Chat only; explicit
+  Work requests must still require and verify the Work control.

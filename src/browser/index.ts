@@ -3117,6 +3117,7 @@ function withAgentBrowserRuntimeHints(
 				...hint,
 				agentBrowserBaseUrl: bridge.baseUrl,
 				agentBrowserBrowserId: bridge.browserId,
+				agentBrowserProcessId: bridge.browserProcessId,
 				agentBrowserProfileId: bridge.profileId,
 				agentBrowserServiceTabHandle: bridge.serviceTabHandle,
 				agentBrowserSessionName: bridge.sessionName,
@@ -3360,7 +3361,10 @@ async function runRemoteBrowserMode(
 			Runtime,
 			config,
 			logger,
-			{ browserTargetId: remoteTargetId },
+			{
+				browserProcessId: agentBrowserBridge?.browserProcessId ?? null,
+				browserTargetId: remoteTargetId,
+			},
 		);
 		selectedChatgptAccountLevel = verifiedChatgptIdentity?.accountLevel ?? null;
 		selectedChatgptAccountPlanType = verifiedChatgptIdentity?.accountPlanType ?? null;

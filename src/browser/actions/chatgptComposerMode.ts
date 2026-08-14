@@ -5,7 +5,7 @@ import { buildClickDispatcher } from "./domEvents.js";
 export type ChatgptComposerMode = "chat" | "work";
 
 type ComposerModeOutcome =
-	| { status: "already-selected" | "switched"; mode: ChatgptComposerMode }
+	| { status: "already-selected" | "default-chat" | "switched"; mode: ChatgptComposerMode }
 	| { status: "mode-not-found"; availableModes: string[] }
 	| { status: "selection-not-confirmed"; mode: ChatgptComposerMode };
 
@@ -38,6 +38,10 @@ export async function ensureChatgptComposerMode(
 	const label = desiredMode === "chat" ? "Chat" : "Work";
 	if (result?.status === "already-selected") {
 		logger(`ChatGPT mode: ${label} (already selected)`);
+		return;
+	}
+	if (result?.status === "default-chat") {
+		logger("ChatGPT mode: Chat (default composer; no mode switcher present)");
 		return;
 	}
 	if (result?.status === "switched") {
@@ -110,6 +114,19 @@ function buildChatgptComposerModeExpression(desiredMode: ChatgptComposerMode): s
     const triggerLabel = trigger?.label;
     if (triggerLabel === DESIRED_MODE) {
       return { status: 'already-selected', mode: DESIRED_MODE };
+    }
+    if (!trigger && DESIRED_MODE === 'chat') {
+      const defaultChatComposer = Array.from(document.querySelectorAll('textarea, [contenteditable="true"], [role="textbox"]'))
+        .filter(visible)
+        .find((node) => {
+          const label = normalize(
+            node.getAttribute('aria-label') ||
+            node.getAttribute('placeholder') ||
+            node.textContent,
+          );
+          return label === 'chat with chatgpt';
+        });
+      if (defaultChatComposer) return { status: 'default-chat', mode: DESIRED_MODE };
     }
     if (!trigger || !dispatchClickSequence(trigger.node)) {
       return {
