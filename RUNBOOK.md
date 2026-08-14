@@ -1,5 +1,15 @@
 # RUNBOOK
 
+## Turn 473 | 2026-08-14
+
+- Selected the 14-warning browser reattach suite after Plan 0303 because it is
+  a bounded, provider-free recovery-path fixture surface.
+- Closed Plan 0304 by typing configs and runtime dependencies against exported
+  contracts, normalizing session config through the production resolver, and
+  replacing DevTools-domain suppressions with computed exact-name keys.
+- All 17 suite tests and broad gates passed. Full lint now reports 131 warnings
+  only in the seven remaining test files.
+
 ## Turn 472 | 2026-08-14
 
 - After Plan 0302, selected the ten-warning tail across nine otherwise-near-

@@ -1,19 +1,32 @@
 import { describe, expect, test, vi } from 'vitest';
 import { resumeBrowserSession, describeReattachFailure, ReattachFailure, __test__ } from '../../src/browser/reattach.js';
 import { resumeBrowserSessionCore } from '../../src/browser/reattachCore.js';
-import type { BrowserLogger, ChromeClient } from '../../src/browser/types.js';
+import { resolveBrowserConfig as resolveBrowserConfigFixture } from '../../src/browser/config.js';
+import type { BrowserLogger, BrowserSessionConfig, ChromeClient, ResolvedBrowserConfig } from '../../src/browser/types.js';
 
 type FakeTarget = { id?: string; targetId?: string; type?: string; url?: string };
+const runtimeDomainName = 'Runtime';
+const domDomainName = 'DOM';
+const networkDomainName = 'Network';
+const pageDomainName = 'Page';
+
 type FakeClient = {
-  // biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names
-  Runtime: {
+  [runtimeDomainName]: {
     enable: () => void;
     evaluate: (params: { expression: string; returnByValue?: boolean }) => Promise<{ result: { value: unknown } }>;
   };
-  // biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names
-  DOM: { enable: () => void };
+  [domDomainName]: { enable: () => void };
   close: () => Promise<void> | void;
 };
+
+function resolveReattachTestConfig(config: BrowserSessionConfig): ResolvedBrowserConfig {
+  const { blockingProfileAction, ...compatibleConfig } = config;
+  return resolveBrowserConfigFixture({
+    ...compatibleConfig,
+    blockingProfileAction:
+      blockingProfileAction === 'restart-auracall' ? undefined : blockingProfileAction,
+  });
+}
 
 describe('resumeBrowserSession', () => {
   test('selects target and captures markdown via stubs', async () => {
@@ -40,10 +53,8 @@ describe('resumeBrowserSession', () => {
     });
     const connect = vi.fn(async () =>
       ({
-        // biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names
-        Runtime: { enable: vi.fn(), evaluate },
-        // biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names
-        DOM: { enable: vi.fn() },
+        [runtimeDomainName]: { enable: vi.fn(), evaluate },
+        [domDomainName]: { enable: vi.fn() },
         close: vi.fn(async () => {}),
       } satisfies FakeClient),
     ) as unknown as (options?: unknown) => Promise<ChromeClient>;
@@ -159,10 +170,8 @@ describe('resumeBrowserSession', () => {
     });
     const connect = vi.fn(async () =>
       ({
-        // biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names
-        Runtime: { enable: vi.fn(), evaluate },
-        // biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names
-        DOM: { enable: vi.fn() },
+        [runtimeDomainName]: { enable: vi.fn(), evaluate },
+        [domDomainName]: { enable: vi.fn() },
         close: vi.fn(async () => {}),
       } satisfies FakeClient),
     ) as unknown as (options?: unknown) => Promise<ChromeClient>;
@@ -338,7 +347,7 @@ describe('resumeBrowserSession', () => {
       .fn()
       .mockRejectedValueOnce(new Error('connect ECONNREFUSED 127.0.0.1:51559'))
       .mockResolvedValueOnce({
-        Runtime: {
+        [runtimeDomainName]: {
           enable: vi.fn(),
           evaluate: vi.fn(async ({ expression }: { expression: string }) => {
             if (expression === 'location.href') {
@@ -347,11 +356,11 @@ describe('resumeBrowserSession', () => {
             return { result: { type: 'object', value: null } };
           }),
         },
-        DOM: { enable: vi.fn() },
-        Network: {},
-        Page: {},
+        [domDomainName]: { enable: vi.fn() },
+        [networkDomainName]: {},
+        [pageDomainName]: {},
         close: vi.fn(async () => {}),
-      } as any);
+      } as unknown as ChromeClient);
     const waitForAssistantResponse = vi.fn(async () => ({
       text: 'Recovered after retry',
       meta: { messageId: 'm1', turnId: 'conversation-turn-1' },
@@ -359,13 +368,13 @@ describe('resumeBrowserSession', () => {
     const captureAssistantMarkdown = vi.fn(async () => 'Recovered after retry');
     const result = await resumeBrowserSessionCore(
       runtime,
-        { manualLogin: true, manualLoginProfileDir: '/tmp/profile', target: 'chatgpt' } as any,
-        logger,
-        {
-          listTargets: async () => [],
-          waitForAssistantResponse,
-          captureAssistantMarkdown,
-          helpers: {
+      { manualLogin: true, manualLoginProfileDir: '/tmp/profile', target: 'chatgpt' },
+      logger,
+      {
+        listTargets: async () => [],
+        waitForAssistantResponse,
+        captureAssistantMarkdown,
+        helpers: {
           pickTarget: (targets) => targets[0],
           extractConversationIdFromUrl: () => 'demo',
           buildConversationUrl: () => runtime.tabUrl,
@@ -375,13 +384,13 @@ describe('resumeBrowserSession', () => {
           waitForLocationChange: async () => undefined,
           readConversationTurnIndex: async () => null,
           buildPromptEchoMatcher: () => null,
-          recoverPromptEcho: async (_Runtime, answer) => answer as any,
+          recoverPromptEcho: async (_Runtime, answer) => answer,
           alignPromptEchoMarkdown: (text, markdown) => ({ answerText: text, answerMarkdown: markdown }),
         },
       },
       {
-        resolveBrowserConfig: (config: any) => ({
-          ...config,
+        resolveBrowserConfig: (config) => ({
+          ...resolveReattachTestConfig(config),
           headless: false,
           hideWindow: true,
           keepBrowser: true,
@@ -390,8 +399,8 @@ describe('resumeBrowserSession', () => {
           url: 'https://chatgpt.com/',
           target: 'chatgpt',
         }),
-        launchChrome: launchChrome as any,
-        connectToChrome: connect as any,
+        launchChrome,
+        connectToChrome: connect,
         hideChromeWindow: async () => undefined,
         syncCookies: async () => 0,
         cleanupStaleProfileState: async () => undefined,
@@ -434,7 +443,7 @@ describe('resumeBrowserSession', () => {
           managedProfileRoot: '/tmp/auracall/browser-profiles',
           target: 'chatgpt',
           chromeProfile: 'Profile 1',
-        } as any,
+        },
         logger,
         {
           listTargets: async () => [],
@@ -450,13 +459,13 @@ describe('resumeBrowserSession', () => {
             waitForLocationChange: async () => undefined,
             readConversationTurnIndex: async () => null,
             buildPromptEchoMatcher: () => null,
-            recoverPromptEcho: async (_Runtime, answer) => answer as any,
+            recoverPromptEcho: async (_Runtime, answer) => answer,
             alignPromptEchoMarkdown: (text, markdown) => ({ answerText: text, answerMarkdown: markdown }),
           },
         },
         {
-          resolveBrowserConfig: (config: any) => ({
-            ...config,
+          resolveBrowserConfig: (config) => ({
+            ...resolveReattachTestConfig(config),
             auracallProfileName: 'wsl-chrome-2',
             chromeProfile: 'Profile 1',
             manualLoginProfileDir: '/tmp/auracall/browser-profiles/wsl-chrome-2/chatgpt',
@@ -469,7 +478,7 @@ describe('resumeBrowserSession', () => {
             url: 'https://chatgpt.com/',
             target: 'chatgpt',
           }),
-          launchChrome: launchChrome as any,
+          launchChrome,
           connectToChrome: async () => {
             throw new Error('unreachable');
           },

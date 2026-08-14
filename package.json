@@ -28,7 +28,7 @@
     "lint": "pnpm run typecheck && pnpm run lint:src:strict && pnpm run lint:scripts:strict && pnpm run lint:tests:strict && biome lint .",
     "lint:scripts:strict": "biome lint scripts --error-on-warnings",
     "lint:src:strict": "biome lint src --error-on-warnings",
-    "lint:tests:strict": "biome lint tests/browser-service/chromeLifecycleOwnership.test.ts tests/cli/teamRunCommand.test.ts tests/gemini-web/upload.test.ts tests/http.responsesServer.test.ts tests/inspector/doctor.test.ts tests/mediaGenerationChatgptBrowserExecutor.test.ts tests/mediaGenerationGeminiBrowserExecutor.test.ts tests/mediaGenerationGrokBrowserExecutor.test.ts tests/runtime.projection.test.ts tests/runtime.responsesService.test.ts tests/runtime.runner.test.ts tests/runtime.serviceHost.test.ts tests/util/fixtures.ts tests/workbenchBrowserDiscovery.test.ts --error-on-warnings",
+    "lint:tests:strict": "biome lint tests/browser-service/chromeLifecycleOwnership.test.ts tests/browser/reattach.test.ts tests/cli/teamRunCommand.test.ts tests/gemini-web/upload.test.ts tests/http.responsesServer.test.ts tests/inspector/doctor.test.ts tests/mediaGenerationChatgptBrowserExecutor.test.ts tests/mediaGenerationGeminiBrowserExecutor.test.ts tests/mediaGenerationGrokBrowserExecutor.test.ts tests/runtime.projection.test.ts tests/runtime.responsesService.test.ts tests/runtime.runner.test.ts tests/runtime.serviceHost.test.ts tests/util/fixtures.ts tests/workbenchBrowserDiscovery.test.ts --error-on-warnings",
     "test": "vitest run",
     "test:mcp": "pnpm run build && pnpm run test:mcp:unit && pnpm run test:mcp:mcporter",
     "test:mcp:unit": "vitest run tests/mcp*.test.ts tests/mcp/**/*.test.ts",

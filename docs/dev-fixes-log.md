@@ -1,3 +1,8 @@
+- 2026-08-14: Reattach tests should cross the same session-to-resolved-config
+  boundary as production. A small typed fixture adapter can normalize the one
+  reattach-only action before calling the production resolver, while computed
+  keys preserve exact CDP domains without naming suppressions.
+
 - 2026-08-14: Repeated test-fixture narrowing belongs in one shared utility,
   while exact external identifiers belong at computed-key boundaries. This
   preserves module exports, CDP domains, and platform constants without lint

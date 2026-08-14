@@ -1,3 +1,12 @@
+## 2026-08-14 | Plan 0304 browser reattach fixture lint ratchet
+
+- Selected the central reattach recovery suite's ten explicit-any warnings and
+  four exact-name CDP diagnostics as the next bounded provider-free slice.
+- Typed fixture configs, clients, helpers, and runtime dependencies against
+  exported contracts and removed the remaining suite suppressions.
+- All 17 tests, typecheck, build, strict gates, full lint at 131 warnings, and
+  plan audit passed. Plan 0304 is CLOSED.
+
 ## 2026-08-14 | Plan 0303 test warning tail and shared fixture guard
 
 - Selected the ten-warning tail after Plan 0302: five non-null assertions and
