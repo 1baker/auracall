@@ -1,3 +1,15 @@
+## 2026-08-14 | Plan 0292 Roadmap Active-State Audit
+
+- Manual label repair is not durable when the deterministic planning audit
+  cannot compare an `Active` roadmap link with the target plan's canonical
+  state.
+- Plan 0292 will enforce only that observed mismatch: linked Active bullets
+  must target `OPEN` or `PLANNED` plans. It will not infer state from arbitrary
+  roadmap prose or reinterpret terminal labels.
+- The parser and validator now live behind focused unit coverage and feed the
+  existing plan-library validation error list. Two tests, typecheck, lint, the
+  293-plan audit, and diff hygiene pass with no current state mismatch.
+
 ## 2026-08-14 | Reconcile stale roadmap activity labels
 
 - The current execution board still described Plans 0277 and 0278 as Active,

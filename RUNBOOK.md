@@ -1,5 +1,16 @@
 # RUNBOOK
 
+## Turn 459 | 2026-08-14
+
+- Opened Plan 0292 after proving the existing plan-library audit did not catch
+  the three stale `Active` labels repaired in Turn 458.
+- The guard is deliberately narrow: only an `Active` bullet with a canonical
+  plan link is checked, and the target must be `OPEN` or `PLANNED`. Free-form
+  active prose and terminal-label inference are excluded.
+- Closed Plan 0292 after focused parser/error tests, typecheck, scoped and full
+  lint, plan audit, and diff hygiene passed. The audit now evaluates linked
+  Active labels against canonical state and reports terminal targets.
+
 ## Turn 458 | 2026-08-14
 
 - Reconciled three stale roadmap labels that still said `Active` while linked

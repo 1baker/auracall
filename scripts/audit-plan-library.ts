@@ -4,6 +4,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
+import { collectActiveRoadmapPlanStateErrors } from './roadmapPlanState.js';
 
 type CandidateAction = 'keep' | 'merge' | 'retire';
 
@@ -149,6 +150,13 @@ function collectValidationErrors(
   if (roadmapText.includes(staleWorkspacePath)) {
     errors.push(`ROADMAP.md: contains stale absolute workspace path ${staleWorkspacePath}`);
   }
+
+  errors.push(
+    ...collectActiveRoadmapPlanStateErrors(
+      roadmapText,
+      new Map(rawCandidates.map((candidate) => [candidate.relPath, candidate.contentSignals.planState])),
+    ),
+  );
 
   for (const candidate of rawCandidates) {
     if (!candidate.relPath.startsWith('docs/dev/plans/')) {

@@ -7,6 +7,12 @@
 Status: active
 Lane: P01
 
+- Closed accepted roadmap active-state audit guard:
+  [docs/dev/plans/0292-2026-08-14-roadmap-active-state-audit.md](docs/dev/plans/0292-2026-08-14-roadmap-active-state-audit.md)
+  The plan-library audit now rejects `Active` bullets linked to terminal
+  canonical plans while leaving free-form roadmap prose untouched. Focused
+  tests, typecheck, lint, audit, and diff hygiene passed.
+
 - Closed accepted server-side recent-run authority filtering:
   [docs/dev/plans/0291-2026-08-14-server-side-run-authority-filter.md](docs/dev/plans/0291-2026-08-14-server-side-run-authority-filter.md)
   Authority filtering now occurs below the recent-list limit and the same

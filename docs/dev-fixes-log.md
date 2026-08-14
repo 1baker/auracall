@@ -21698,3 +21698,13 @@ browser-stage lifecycle observability, not transcript truncation.
   HTTP, MCP, and console request wiring.
 - Keep `unreported` distinct from compatibility fallback. Missing or future
   evidence remains non-alarming and can be requested explicitly.
+
+## 2026-08-14 | Audit Active roadmap links against canonical plan state
+
+- Validating a plan's own `State:` header does not catch a roadmap that still
+  calls the linked plan Active after terminal closure.
+- Parse only top-level `Active` bullets with canonical plan links and require
+  their targets to remain `OPEN` or `PLANNED`. This catches the observed drift
+  without guessing state from arbitrary prose.
+- Keep the parser and validation rule independently testable so the migration
+  audit remains a deterministic governance gate rather than a text convention.

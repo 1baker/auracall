@@ -18,6 +18,11 @@
   outlive the caller's outer polling budget even without a separate inner bound.
 
 - Unit/type tests: `pnpm test` (Vitest) and `pnpm run check` (typecheck).
+- Roadmap active-state audit regression:
+  `pnpm vitest run tests/roadmapPlanState.test.ts` followed by
+  `pnpm run plans:audit`. An `Active` roadmap bullet linked to a canonical
+  `CLOSED` or `CANCELLED` plan must fail the audit; unlinked active prose is
+  outside this narrow check.
 - Recent-run browser-authority projection and console filtering are
   provider-free:
   `pnpm vitest run tests/runtime.responsesService.test.ts tests/runtime.control.test.ts tests/mcp.runtimeRunsRecent.test.ts tests/http.responsesServer.test.ts tests/ux.console.runAuthority.test.ts -t "detached|browser authority|runtime_runs_recent|projects bounded browser authority|operator console browser authority"`.
