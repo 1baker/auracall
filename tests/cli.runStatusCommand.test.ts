@@ -212,4 +212,25 @@ describe('run status CLI helpers', () => {
     if (!status) throw new Error('Expected Deep Research run status.');
     expect(formatRunStatusCli(status)).toContain(`Run ${fixture.runId} (response) is completed`);
   });
+
+  it('renders persisted browser authority from generic run status metadata', () => {
+    const formatted = formatRunStatusCli({
+      id: 'resp_authority_status_1',
+      object: 'auracall_run_status',
+      kind: 'response',
+      status: 'in_progress',
+      artifactCount: 0,
+      artifacts: [],
+      metadata: {
+        runtimeDiagnosticsSummary: {
+          browserAuthoritySummary: {
+            browserAuthority: 'agent-browser',
+            bridgeMode: 'auto',
+          },
+        },
+      },
+    });
+
+    expect(formatted).toContain('Browser authority: agent-browser (mode=auto)');
+  });
 });

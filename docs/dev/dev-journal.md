@@ -46790,3 +46790,24 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   and target `3FB398F218E264183A2AD81750AB9791`, and verified detach. The full
   ready-browser inventory was unchanged before/after; no browser or tab was
   created. Plan 0286 is closed.
+
+## 2026-08-14 | Surface browser authority in durable status
+
+- Plan 0286's routing decision was visible only in logs. Plan 0287 records the
+  bounded decision (`agent-browser`, `compatibility-fallback`, or
+  `explicit-off`) plus bridge mode on runtime hints before provider work.
+- Response diagnostics scan backward for the newest authority-bearing event
+  rather than assuming the newest DOM heartbeat repeats routing metadata.
+  Legacy agent-browser provenance reduces to the public `agent-browser` label
+  without surfacing broker ids or the service-tab handle.
+- Generic response run status now preserves runtime diagnostics, and human CLI
+  status renders authority/mode. Readback continues to use local durable state
+  only; it does not call agent-browser or the provider.
+- Broad validation passed the production build, 183 affected tests, typecheck,
+  lint at the accepted 208-warning baseline, scoped lint, diff hygiene, and
+  plan audit.
+- Installed readback of existing response
+  `resp_5ff8161469f64a61bf12107c2616ad15` reports `agent-browser` in JSON and
+  human output. The status-module hashes match source, no browser/provider job
+  was created, and retained PID `184301`/target
+  `3FB398F218E264183A2AD81750AB9791` stayed unchanged. Plan 0287 is closed.

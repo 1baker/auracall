@@ -18879,3 +18879,24 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   `3FB398F218E264183A2AD81750AB9791`, and verified detach. Browser id/PID/valid-
   target inventory was identical before and after. The API service is active on
   18095 with zero restarts, so Plan 0286 closes accepted.
+
+## Turn 423 | 2026-08-14
+
+- Plan 0287 opens the operator-visibility slice. Plan 0286 made routing safe but
+  operators still needed process logs to distinguish broker authority, safe
+  auto fallback, and explicit off.
+- Browser execution now emits bounded authority/mode hints before provider
+  work. Response diagnostics scan durable events independently of the newest
+  provider heartbeat, infer `agent-browser` from legacy broker provenance, and
+  do not expose browser/session/tab identifiers in the summary.
+- Generic response run status preserves runtime diagnostics and human CLI
+  output prints `Browser authority: <authority> (mode=<mode>)` when available.
+  Readback remains provider/browser-free. The production build, 183-test
+  affected matrix, typecheck, lint at the accepted 208-warning baseline,
+  scoped lint, diff hygiene, and plan-library audit are green.
+- Installed JSON and human readback of existing broker-backed response
+  `resp_5ff8161469f64a61bf12107c2616ad15` report `agent-browser` from legacy
+  provenance. Source/installed hashes match for all three status modules. No
+  provider or browser mutation occurred; PID `184301` and target
+  `3FB398F218E264183A2AD81750AB9791` remain unchanged. The API is active on
+  18095 with zero restarts, so Plan 0287 closes accepted.

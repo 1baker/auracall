@@ -937,6 +937,8 @@ export function createConfiguredStoredStepExecutor(
         | 'chromeTargetId'
         | 'tabUrl'
         | 'conversationId'
+        | 'browserAuthority'
+        | 'agentBrowserBridgeMode'
         | 'agentBrowserBaseUrl'
         | 'agentBrowserBrowserId'
         | 'agentBrowserProcessId'
@@ -955,6 +957,8 @@ export function createConfiguredStoredStepExecutor(
       chromeTargetId: runtime?.chromeTargetId ?? null,
       tabUrl: runtime?.tabUrl ?? null,
       conversationId: runtime?.conversationId ?? null,
+      browserAuthority: runtime?.browserAuthority ?? null,
+      agentBrowserBridgeMode: runtime?.agentBrowserBridgeMode ?? null,
       agentBrowserBaseUrl: runtime?.agentBrowserBaseUrl ?? null,
       agentBrowserBrowserId: runtime?.agentBrowserBrowserId ?? null,
       agentBrowserProcessId: runtime?.agentBrowserProcessId ?? null,
@@ -1127,6 +1131,8 @@ export function createConfiguredStoredStepExecutor(
             chromeTargetId: hint.chromeTargetId ?? null,
             tabUrl: hint.tabUrl ?? null,
             conversationId: hint.conversationId ?? null,
+            browserAuthority: hint.browserAuthority ?? null,
+            agentBrowserBridgeMode: hint.agentBrowserBridgeMode ?? null,
             agentBrowserBaseUrl: hint.agentBrowserBaseUrl ?? null,
             agentBrowserBrowserId: hint.agentBrowserBrowserId ?? null,
             agentBrowserProcessId: hint.agentBrowserProcessId ?? null,

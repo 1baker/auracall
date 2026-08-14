@@ -386,7 +386,11 @@ Terminology note:
   `auracall run status <id>` or `auracall run status <id> --json`; this uses
   the same `auracall_run_status` envelope as API `GET /v1/runs/{run_id}/status`
   and MCP `run_status`, including timing and recommended polling details for
-  long-running browser-backed Extended/Pro/Deep Research jobs.
+  long-running browser-backed Extended/Pro/Deep Research jobs. Browser-backed
+  response status also preserves bounded runtime diagnostics; human output
+  prints `Browser authority: agent-browser|compatibility-fallback|explicit-off`
+  plus bridge mode when known. Readback is persisted-only and does not probe or
+  mutate the browser.
 - CLI media creation uses the same durable media-generation contract as local
   API and MCP through `auracall media generate --provider
   chatgpt|gemini|grok --type image|music|video -p <prompt>`. Use `--no-wait` to return a running media id

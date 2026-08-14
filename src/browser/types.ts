@@ -60,6 +60,8 @@ type LlmBrowserFields = {
 };
 
 export type BrowserRuntimeMetadata = BaseTypes.BrowserRuntimeMetadata & {
+  browserAuthority?: 'agent-browser' | 'compatibility-fallback' | 'explicit-off';
+  agentBrowserBridgeMode?: 'auto' | 'required' | 'off';
   agentBrowserBaseUrl?: string;
   agentBrowserBrowserId?: string;
   agentBrowserProcessId?: number;

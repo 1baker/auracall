@@ -140,6 +140,7 @@ import {
 import type { ProviderUserIdentity } from "./providers/types.js";
 import { alignPromptEchoPair, buildPromptEchoMatcher } from "./reattachHelpers.js";
 import {
+	type AgentBrowserBridgeMode,
 	type AgentBrowserBridgeResult,
 	acquireAgentBrowserBrokerTab,
 	resolveAgentBrowserBridgeMode,
@@ -1596,7 +1597,12 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 				keepBrowser: true,
 				remoteChrome: { host: bridge.chromeHost, port: bridge.chromePort },
 			};
-			const bridgedOptions = withAgentBrowserRuntimeHints(options, bridge);
+			const bridgedOptions = withAgentBrowserRuntimeHints(options, bridge, bridgeMode);
+			await emitBrowserAuthorityRuntimeHint(
+				bridgedOptions,
+				{ browserAuthority: "agent-browser", bridgeMode },
+				logger,
+			);
 			return withAgentBrowserBrokerCleanup(bridge, () =>
 				withBrowserExecutionOperation(brokerConfig, target, logger, () =>
 					target === "grok"
@@ -1619,6 +1625,17 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 				),
 			);
 		}
+		await emitBrowserAuthorityRuntimeHint(
+			options,
+			{ browserAuthority: "compatibility-fallback", bridgeMode },
+			logger,
+		);
+	} else if (bridgeMode === "off" && (target === "chatgpt" || target === "grok")) {
+		await emitBrowserAuthorityRuntimeHint(
+			options,
+			{ browserAuthority: "explicit-off", bridgeMode },
+			logger,
+		);
 	}
 
 	// Remote Chrome mode - connect to existing browser
@@ -3111,9 +3128,12 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 function withAgentBrowserRuntimeHints(
 	options: BrowserRunOptions,
 	bridge: AgentBrowserBridgeResult,
+	bridgeMode: AgentBrowserBridgeMode,
 ): BrowserRunOptions {
 	const withBridgeProvenance = (hint: BrowserRuntimeMetadata): BrowserRuntimeMetadata => ({
 		...hint,
+		browserAuthority: "agent-browser",
+		agentBrowserBridgeMode: bridgeMode,
 		agentBrowserBaseUrl: bridge.baseUrl,
 		agentBrowserBrowserId: bridge.browserId,
 		agentBrowserProcessId: bridge.browserProcessId,
@@ -3130,6 +3150,26 @@ function withAgentBrowserRuntimeHints(
 				runtime: evidence.runtime ? withBridgeProvenance(evidence.runtime) : evidence.runtime,
 			}),
 	};
+}
+
+async function emitBrowserAuthorityRuntimeHint(
+	options: BrowserRunOptions,
+	input: {
+		browserAuthority: NonNullable<BrowserRuntimeMetadata["browserAuthority"]>;
+		bridgeMode: AgentBrowserBridgeMode;
+	},
+	logger: BrowserLogger,
+): Promise<void> {
+	if (!options.runtimeHintCb) return;
+	try {
+		await options.runtimeHintCb({
+			browserAuthority: input.browserAuthority,
+			agentBrowserBridgeMode: input.bridgeMode,
+		});
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
+		logger(`[browser] failed to persist browser authority: ${message}`);
+	}
 }
 
 async function waitForLogin({

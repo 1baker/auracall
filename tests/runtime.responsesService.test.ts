@@ -20,6 +20,7 @@ import { createExecutionServiceHost } from '../src/runtime/serviceHost.js';
 import { DEFAULT_TEAM_RUN_EXECUTION_POLICY } from '../src/teams/types.js';
 import { BrowserAutomationError } from '../src/oracle/errors.js';
 import { AURACALL_STEP_OUTPUT_CONTRACT_VERSION } from '../src/runtime/stepOutputContract.js';
+import { summarizeResponseRunStatus } from '../src/runStatus.js';
 
 describe('runtime responses service', () => {
   const cleanup: string[] = [];
@@ -598,6 +599,51 @@ describe('runtime responses service', () => {
     await control.heartbeatLease({
       runId: 'resp_service_detached_1',
       leaseId: 'resp_service_detached_1:lease:runner',
+      heartbeatAt: '2026-04-08T14:18:20.000Z',
+      expiresAt: '2026-04-08T14:19:20.000Z',
+      runtimeEvidence: {
+        observedAt: '2026-04-08T14:18:20.000Z',
+        state: 'browser-runtime-hint',
+        source: 'browser-service',
+        evidenceRef: 'browser-authority',
+        confidence: 'medium',
+        details: {
+          service: 'chatgpt',
+          browserAuthority: 'compatibility-fallback',
+          agentBrowserBridgeMode: 'auto',
+        },
+      },
+    });
+    const explicitAuthorityReadback = await service.readResponse('resp_service_detached_1');
+    expect(
+      explicitAuthorityReadback?.metadata?.executionSummary?.runtimeDiagnosticsSummary
+        ?.browserAuthoritySummary,
+    ).toMatchObject({
+      browserAuthority: 'compatibility-fallback',
+      bridgeMode: 'auto',
+      observedAt: '2026-04-08T14:18:20.000Z',
+    });
+    await control.heartbeatLease({
+      runId: 'resp_service_detached_1',
+      leaseId: 'resp_service_detached_1:lease:runner',
+      heartbeatAt: '2026-04-08T14:18:25.000Z',
+      expiresAt: '2026-04-08T14:19:25.000Z',
+      runtimeEvidence: {
+        observedAt: '2026-04-08T14:18:25.000Z',
+        state: 'browser-runtime-hint',
+        source: 'browser-service',
+        evidenceRef: 'legacy-broker-provenance',
+        confidence: 'medium',
+        details: {
+          service: 'chatgpt',
+          agentBrowserBrowserId: 'session:auracall-chatgpt',
+          agentBrowserProfileId: 'chatgpt-pro',
+        },
+      },
+    });
+    await control.heartbeatLease({
+      runId: 'resp_service_detached_1',
+      leaseId: 'resp_service_detached_1:lease:runner',
       heartbeatAt: '2026-04-08T14:18:30.000Z',
       expiresAt: '2026-04-08T14:19:30.000Z',
       runtimeEvidence: {
@@ -636,6 +682,12 @@ describe('runtime responses service', () => {
             runtimeState: 'recovering',
             leaseState: 'released',
             browserTaskState: 'thinking',
+            browserAuthoritySummary: {
+              browserAuthority: 'agent-browser',
+              bridgeMode: null,
+              observedAt: '2026-04-08T14:18:25.000Z',
+              source: 'browser-service',
+            },
             lastLeaseEvent: {
               type: 'lease-released',
               createdAt: '2026-04-08T14:18:45.000Z',
@@ -665,6 +717,15 @@ describe('runtime responses service', () => {
     expect(
       reread?.metadata?.executionSummary?.runtimeDiagnosticsSummary?.lastProviderEvidence?.details,
     ).not.toHaveProperty('ignoredPrivatePayload');
+    if (!reread) throw new Error('expected detached response readback');
+    expect(summarizeResponseRunStatus(reread).metadata).toMatchObject({
+      runtimeDiagnosticsSummary: {
+        browserAuthoritySummary: {
+          browserAuthority: 'agent-browser',
+          bridgeMode: null,
+        },
+      },
+    });
   });
 
   it('marks response-complete browser evidence as finalizing while the run is still in progress', async () => {

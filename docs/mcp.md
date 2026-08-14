@@ -109,7 +109,10 @@ scoped keys, response batches, attachments, and polling rules, see
   browser-backed run, poll the same id again instead of calling
   `response_create` or `media_generation` a second time.
 - CLI parity: `auracall run status <id> --json` reads the same durable status
-  envelope from local storage.
+  envelope from local storage. Response runs preserve
+  `metadata.runtimeDiagnosticsSummary`, including bounded
+  `browserAuthoritySummary`; text CLI output renders the authority and bridge
+  mode without starting a provider or browser probe.
 
 ### `search_projection`
 - Inputs: accepts optional `query`, `kind`, `provider`, `runtimeProfile`,

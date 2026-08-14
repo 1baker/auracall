@@ -21638,3 +21638,18 @@ browser-stage lifecycle observability, not transcript truncation.
   browser or duplicate provider work and must fail closed.
 - Keep `off` as the explicit operator escape hatch. Log pre-authority auto
   fallback so compatibility behavior is observable rather than silent.
+
+## 2026-08-14 | Persist routing facts independently of provider heartbeats
+
+- Browser authority is a run decision, not a live health probe. Persist a
+  bounded authority/mode hint before provider work and keep status readback
+  provider/browser-free.
+- Do not derive routing only from the newest provider heartbeat; later DOM
+  evidence may omit setup metadata. Scan durable evidence backward for the
+  newest authority-bearing event.
+- Reduce legacy broker provenance to `agent-browser` for compatibility, but do
+  not expose service routes, browser ids, session names, or tab handles through
+  the public status summary.
+- Installed acceptance can safely reuse an older completed broker-backed run:
+  status reconstruction is local, so proving unchanged broker PID/target and
+  no new provider action verifies the read path remains side-effect free.

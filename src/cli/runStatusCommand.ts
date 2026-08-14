@@ -62,6 +62,11 @@ export function formatRunStatusCli(status: AuraCallRunStatus): string {
     lines.push(...mediaDiagnostics);
   }
 
+  const browserAuthority = formatBrowserAuthority(status);
+  if (browserAuthority) {
+    lines.push(browserAuthority);
+  }
+
   for (const artifact of status.artifacts) {
     lines.push(`- ${formatRunStatusArtifact(artifact)}`);
   }
@@ -72,6 +77,20 @@ export function formatRunStatusCli(status: AuraCallRunStatus): string {
   }
 
   return lines.join('\n');
+}
+
+function formatBrowserAuthority(status: AuraCallRunStatus): string | null {
+  const runtimeDiagnostics = isRecord(status.metadata.runtimeDiagnosticsSummary)
+    ? status.metadata.runtimeDiagnosticsSummary
+    : null;
+  const summary = isRecord(runtimeDiagnostics?.browserAuthoritySummary)
+    ? runtimeDiagnostics.browserAuthoritySummary
+    : null;
+  if (!summary) return null;
+  const authority = firstString(summary, ['browserAuthority']);
+  if (!authority) return null;
+  const mode = firstString(summary, ['bridgeMode']);
+  return `Browser authority: ${authority}${mode ? ` (mode=${mode})` : ''}`;
 }
 
 function formatMediaDiagnostics(status: AuraCallRunStatus): string[] {

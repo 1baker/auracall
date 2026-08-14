@@ -7,6 +7,15 @@
 Status: active
 Lane: P01
 
+- Closed accepted browser-authority status projection:
+  [docs/dev/plans/0287-2026-08-14-browser-authority-status.md](docs/dev/plans/0287-2026-08-14-browser-authority-status.md)
+  Durable ChatGPT/Grok runs now record whether agent-browser, safe auto
+  compatibility fallback, or explicit off owns the browser path. Existing
+  response and generic run-status surfaces project that bounded evidence; CLI
+  text renders it without live browser work. The 183-test affected matrix,
+  production build, lint gates, and installed provider-free readback passed;
+  the retained browser PID/target remained unchanged.
+
 - Closed accepted broker-preferred default auto mode:
   [docs/dev/plans/0286-2026-08-14-broker-preferred-auto-mode.md](docs/dev/plans/0286-2026-08-14-broker-preferred-auto-mode.md)
   Default ChatGPT/Grok browser runs now ask agent-browser for authority before

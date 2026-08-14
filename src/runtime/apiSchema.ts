@@ -264,6 +264,18 @@ export const ExecutionResponseSchema: z.ZodType<ExecutionResponse> = z.object({
                 .nullable()
                 .optional(),
               browserTaskState: z.string().nullable().optional(),
+              browserAuthoritySummary: z
+                .object({
+                  browserAuthority: z
+                    .enum(['agent-browser', 'compatibility-fallback', 'explicit-off'])
+                    .nullable()
+                    .optional(),
+                  bridgeMode: z.enum(['auto', 'required', 'off']).nullable().optional(),
+                  observedAt: z.string().nullable().optional(),
+                  source: z.string().nullable().optional(),
+                })
+                .nullable()
+                .optional(),
               lastProviderEvidence: z
                 .object({
                   observedAt: z.string().nullable().optional(),

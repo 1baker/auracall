@@ -120,6 +120,9 @@ export function summarizeResponseRunStatus(
   if (executionSummary?.browserRunSummary) {
     metadata.browserRunSummary = executionSummary.browserRunSummary;
   }
+  if (executionSummary?.runtimeDiagnosticsSummary) {
+    metadata.runtimeDiagnosticsSummary = executionSummary.runtimeDiagnosticsSummary;
+  }
 
   return {
     id: response.id,

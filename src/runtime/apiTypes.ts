@@ -88,6 +88,12 @@ export interface ExecutionRuntimeDiagnosticsSummary {
     releaseReason?: string | null;
   } | null;
   browserTaskState?: string | null;
+  browserAuthoritySummary?: {
+    browserAuthority?: 'agent-browser' | 'compatibility-fallback' | 'explicit-off' | null;
+    bridgeMode?: 'auto' | 'required' | 'off' | null;
+    observedAt?: string | null;
+    source?: string | null;
+  } | null;
   lastProviderEvidence?: {
     observedAt?: string | null;
     state?: string | null;
