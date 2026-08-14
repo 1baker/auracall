@@ -14,8 +14,9 @@
   target resolution and CDP connection, reclaims late clients/endpoints, and
   bounds Runtime/Page enablement before publication. The five-assertion red
   proof is green; the widened affected gate passes 329/329 with typecheck,
-  build, scoped lint, and current graph readback. Commit/push and plan closeout
-  remain; no installed or live validation has run.
+  build, scoped lint, and current graph readback. Exact candidate `c8a54364` is
+  pushed and Plan 0283 is provider-free accepted; no installed or live
+  validation has run.
 
 ## 2026-08-13 | Bounded Navigation Acknowledgement
 

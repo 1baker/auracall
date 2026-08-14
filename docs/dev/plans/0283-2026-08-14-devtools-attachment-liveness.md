@@ -1,7 +1,7 @@
 # DevTools Attachment Liveness And Stage Contract | 0283-2026-08-14
 
-State: OPEN
-Disposition: PROVIDER-FREE ACTIVE
+State: CLOSED
+Disposition: PROVIDER-FREE ACCEPTED
 Lane: P01
 
 ## Stable Objective
@@ -59,7 +59,7 @@ report the exact failed stage before any further live developer-app inventory.
   Mirror DOM-drift evidence.
 - [x] Focused/affected tests, typecheck, lint, build, CodeGraph readback,
   planning audits, and diff hygiene pass provider-free.
-- [ ] Source and docs are committed and pushed before any installed or live
+- [x] Source and docs are committed and pushed before any installed or live
   validation is requested.
 
 ## Provider-Free Checkpoint
@@ -76,6 +76,8 @@ report the exact failed stage before any further live developer-app inventory.
   plus the developer-app and Account Mirror callers.
 - Active-plan audit and goal audit return `ok: true` with no problems; plan
   library audit reports zero validation errors.
+- Exact provider-free implementation and operator-doc candidate `c8a54364` is
+  pushed on `origin/main`.
 - PID 66297 remains the sole listener on port 45015 and the retained registry
   entry is unchanged. No install, restart, browser attachment/navigation,
   inventory replay, prompt, connector, app/OAuth mutation, LitScout mutation,
@@ -94,3 +96,11 @@ Plan 0283 closes provider-free when every attachment stage is demonstrably
 bounded/cancellable at the real shared seams, late resources are reclaimed,
 the affected caller set remains green, and the committed/pushed source is
 ready for a separately authorized installed-runtime replay.
+
+## Closeout
+
+Plan 0283 is provider-free accepted at pushed candidate `c8a54364`. The shared
+attachment path is bounded, cancellable, stage-observable, and covered at its
+direct developer-app and Account Mirror callers. Installed validation and any
+new LitScout replay remain explicitly separate: P3 is not accepted and
+Experiment 6 remains blocked until that authority is granted elsewhere.

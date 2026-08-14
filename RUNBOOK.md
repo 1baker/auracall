@@ -22,6 +22,10 @@
   across validation. No install, service restart, browser attachment,
   inventory replay, prompt, connector, app/OAuth mutation, LitScout mutation,
   or Experiment 6 action ran.
+- Exact implementation and operator-doc candidate `c8a54364` is pushed on
+  `origin/main`; Plan 0283 closes provider-free accepted. No installed-runtime
+  claim follows from source acceptance, and LitScout P3/Experiment 6 remain at
+  their prior gates.
 
 ## Turn 453 | 2026-08-13
 

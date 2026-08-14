@@ -7,14 +7,15 @@
 Status: active
 Lane: P01
 
-- Active provider-free DevTools attachment liveness repair:
+- Closed accepted provider-free DevTools attachment liveness repair:
   [docs/dev/plans/0283-2026-08-14-devtools-attachment-liveness.md](docs/dev/plans/0283-2026-08-14-devtools-attachment-liveness.md)
   LitScout Plan 0411 proved identity and then stalled inside generic attachment.
   The shared path now carries abort/deadline/stage evidence through target
   resolution and CDP connection, closes late clients, and independently bounds
   developer-app Runtime/Page enablement. Provider-free red/green, affected
-  callers, typecheck, build, lint, and CodeGraph pass; commit/push and planning
-  closeout remain before any separately authorized installed replay.
+  callers, typecheck, build, lint, CodeGraph, and planning audits pass at pushed
+  candidate `c8a54364`. Installed validation remains a separately authorized
+  boundary; P3 is not accepted and Experiment 6 remains blocked.
 
 - Active agent-browser RDP migration for AuraCall-owned managed profiles:
   [docs/dev/plans/0281-2026-08-12-agent-browser-rdp-managed-profile-migration.md](docs/dev/plans/0281-2026-08-12-agent-browser-rdp-managed-profile-migration.md)
