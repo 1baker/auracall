@@ -2,6 +2,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { mkdtemp, writeFile } from 'node:fs/promises';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { requireFixtureValue } from '../util/fixtures.js';
 
 describe('gemini-web upload metadata', () => {
   afterEach(() => {
@@ -31,9 +32,9 @@ describe('gemini-web upload metadata', () => {
       }
       if (target.includes('/StreamGenerate')) {
         const params = new URLSearchParams(String(init?.body ?? ''));
-        const freq = params.get('f.req');
+        const freq = requireFixtureValue(params.get('f.req'), 'Gemini StreamGenerate f.req');
         expect(freq).toBeTruthy();
-        const outer = JSON.parse(freq!) as [unknown, string];
+        const outer = JSON.parse(freq) as [unknown, string];
         const inner = JSON.parse(outer[1]) as unknown[];
         const promptPayload = inner[0] as unknown[];
         expect(promptPayload[3]).toEqual([[['upload-id', 1, null, 'image/png'], 'input.png']]);

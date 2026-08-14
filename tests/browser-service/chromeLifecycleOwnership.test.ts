@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
 const ORIGINAL_ENV = { ...process.env };
+const windowsLoopbackRemoteHostExportName = 'WINDOWS_LOOPBACK_REMOTE_HOST';
 
 afterEach(() => {
   vi.resetModules();
@@ -75,7 +76,7 @@ async function importChromeLifecycleWithMocks(options: {
     isWindowsLoopbackRemoteHost: vi.fn((host: string) => host === 'windows-loopback'),
     resolveChromeEndpoint: vi.fn(async (host: string, port: number) => ({ host, port })),
     resolveWindowsPowerShellPath: vi.fn(() => '/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe'),
-    WINDOWS_LOOPBACK_REMOTE_HOST: 'windows-loopback',
+    [windowsLoopbackRemoteHostExportName]: 'windows-loopback',
   }));
 
   const chromeLifecycle = await import('../../packages/browser-service/src/chromeLifecycle.js');

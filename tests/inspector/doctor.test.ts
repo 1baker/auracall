@@ -4,9 +4,11 @@ import { CHATGPT_PROVIDER } from '../../src/browser/providers/chatgpt.js';
 import { GROK_PROVIDER } from '../../src/browser/providers/grok.js';
 import type { ChromeClient } from '../../src/browser/types.js';
 
+const runtimeDomainName = 'Runtime';
+
 function createClient(url: string, counts: Record<string, number>): ChromeClient {
   return {
-    Runtime: {
+    [runtimeDomainName]: {
       evaluate: async ({ expression }: { expression: string }) => {
         if (expression === 'location.href') {
           return { result: { value: url } };

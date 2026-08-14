@@ -1,3 +1,13 @@
+## 2026-08-14 | Plan 0303 test warning tail and shared fixture guard
+
+- Selected the ten-warning tail after Plan 0302: five non-null assertions and
+  five externally required names across nine nearly-clean test files.
+- Centralized four prior guard copies, migrated five new required values, kept
+  exact external names via computed keys, and expanded the strict-test ratchet
+  to 14 files without suppressions.
+- The affected suite matrix and broad gates passed. Plan 0303 is CLOSED with
+  145 warnings remaining in larger test clusters.
+
 ## 2026-08-14 | Plan 0302 runtime-core fixture lint ratchet
 
 - Selected eight runtime-core non-null assertions after Plan 0301: required

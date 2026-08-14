@@ -8,9 +8,10 @@ const browserClient = {
 };
 
 const fromConfig = vi.fn(async () => browserClient);
+const browserAutomationClientExportName = 'BrowserAutomationClient';
 
 vi.mock('../src/browser/client.js', () => ({
-  BrowserAutomationClient: {
+  [browserAutomationClientExportName]: {
     fromConfig,
   },
 }));

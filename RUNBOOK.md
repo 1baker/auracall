@@ -1,5 +1,15 @@
 # RUNBOOK
 
+## Turn 472 | 2026-08-14
+
+- After Plan 0302, selected the ten-warning tail across nine otherwise-near-
+  clean test files: five required-value assertions and five external names.
+- Closed Plan 0303 by centralizing the fixture guard used by eight suites,
+  preserving exact external names through computed keys, and expanding the
+  strict-test ratchet to 13 complete suites plus the helper.
+- The full affected matrix and broad gates passed. Full lint now reports 145
+  warnings only in larger test clusters not yet migrated.
+
 ## Turn 471 | 2026-08-14
 
 - Continued the strict-test ratchet through the runtime core: four runner

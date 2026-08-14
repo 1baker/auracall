@@ -11,6 +11,7 @@ import {
   createExecutionRunStep,
 } from '../src/runtime/model.js';
 import { DEFAULT_TEAM_RUN_EXECUTION_POLICY } from '../src/teams/types.js';
+import { requireFixtureValue } from './util/fixtures.js';
 
 function createInspectableBundle(runId: string, createdAt: string) {
   const stepId = `${runId}:step:1`;
@@ -144,7 +145,7 @@ describe('runtime queue projection', () => {
     const bundle = createInspectableBundle('run_projection_stranded', '2026-04-11T09:02:00.000Z');
     bundle.run.status = 'running';
     bundle.steps[0] = {
-      ...bundle.steps[0]!,
+      ...requireFixtureValue(bundle.steps[0], 'run_projection_stranded first step'),
       status: 'running',
       startedAt: '2026-04-11T09:02:00.000Z',
     };

@@ -8,13 +8,14 @@ const browserClientMock = vi.hoisted(() => {
     getFeatureSignature,
   }));
   return {
+    browserAutomationClientExportName: 'BrowserAutomationClient',
     getFeatureSignature,
     fromConfig,
   };
 });
 
 vi.mock('../src/browser/client.js', () => ({
-  BrowserAutomationClient: {
+  [browserClientMock.browserAutomationClientExportName]: {
     fromConfig: browserClientMock.fromConfig,
   },
 }));

@@ -21,13 +21,7 @@ import { DEFAULT_TEAM_RUN_EXECUTION_POLICY } from '../src/teams/types.js';
 import { BrowserAutomationError } from '../src/oracle/errors.js';
 import { AURACALL_STEP_OUTPUT_CONTRACT_VERSION } from '../src/runtime/stepOutputContract.js';
 import { summarizeResponseRunStatus } from '../src/runStatus.js';
-
-function requireFixtureValue<T>(value: T | null | undefined, label: string): T {
-  if (value == null) {
-    throw new Error(`${label} fixture was missing.`);
-  }
-  return value;
-}
+import { requireFixtureValue } from './util/fixtures.js';
 
 describe('runtime responses service', () => {
   const cleanup: string[] = [];

@@ -1,3 +1,9 @@
+- 2026-08-14: Repeated test-fixture narrowing belongs in one shared utility,
+  while exact external identifiers belong at computed-key boundaries. This
+  preserves module exports, CDP domains, and platform constants without lint
+  suppressions and prevents labeled fixture guards from drifting across
+  ratcheted suites.
+
 - 2026-08-14: When a test mutates a required first runtime step or a nullable
   persisted run, narrow the fixture once with a run-specific guard. Reusing
   the narrowed value improves failure locality and removes repeated

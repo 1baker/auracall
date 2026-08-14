@@ -16,13 +16,7 @@ import { cancelExecutionRun, executeStoredExecutionRunOnce } from '../src/runtim
 import type { ExecuteLocalActionRequestResult, ExecuteStoredRunStepResult } from '../src/runtime/runner.js';
 import { DEFAULT_TEAM_RUN_EXECUTION_POLICY } from '../src/teams/types.js';
 import { BrowserAutomationError } from '../src/oracle/errors.js';
-
-function requireFixtureValue<T>(value: T | null | undefined, label: string): T {
-  if (value == null) {
-    throw new Error(`${label} fixture was missing.`);
-  }
-  return value;
-}
+import { requireFixtureValue } from './util/fixtures.js';
 
 function createDirectBundle(runId: string) {
   const createdAt = '2026-04-08T13:00:00.000Z';

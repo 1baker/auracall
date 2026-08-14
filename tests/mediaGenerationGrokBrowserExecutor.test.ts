@@ -1,5 +1,6 @@
 import path from 'node:path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { requireFixtureValue } from './util/fixtures.js';
 
 const browserClient = {
   runPrompt: vi.fn(),
@@ -8,9 +9,10 @@ const browserClient = {
 };
 
 const fromConfig = vi.fn(async () => browserClient);
+const browserAutomationClientExportName = 'BrowserAutomationClient';
 
 vi.mock('../src/browser/client.js', () => ({
-  BrowserAutomationClient: {
+  [browserAutomationClientExportName]: {
     fromConfig,
   },
 }));
@@ -341,7 +343,11 @@ describe('Grok browser media generation executor', () => {
         timelineEvents.push(event.event);
       },
     );
-    const artifact = await materializeGrokVideoCandidate(readback.materializationCandidate!, artifactDir, 1);
+    const artifact = await materializeGrokVideoCandidate(
+      requireFixtureValue(readback.materializationCandidate, 'Grok video materialization candidate'),
+      artifactDir,
+      1,
+    );
 
     expect(browserClient.runPrompt).not.toHaveBeenCalled();
     expect(browserClient.getFeatureSignature).toHaveBeenCalledWith({

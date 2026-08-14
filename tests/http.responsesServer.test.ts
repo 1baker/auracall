@@ -73,6 +73,7 @@ import { createTaskRunSpec } from "../src/teams/model.js";
 import { writeTaskRunSpecStoredRecord } from "../src/teams/store.js";
 import { DEFAULT_TEAM_RUN_EXECUTION_POLICY } from "../src/teams/types.js";
 import { createChatgptDeepResearchStatusFixture } from "./fixtures/chatgptDeepResearchStatusFixture.js";
+import { requireFixtureValue } from "./util/fixtures.js";
 
 vi.setConfig({ testTimeout: 10000 });
 
@@ -82,13 +83,6 @@ type JsonObject = { [key: string]: JsonValue | undefined };
 function requireJsonObject(value: JsonValue | undefined, label: string): JsonObject {
 	if (!value || typeof value !== "object" || Array.isArray(value)) {
 		throw new Error(`${label} was not a JSON object.`);
-	}
-	return value;
-}
-
-function requireFixtureValue<T>(value: T | null | undefined, label: string): T {
-	if (value == null) {
-		throw new Error(`${label} fixture was missing.`);
 	}
 	return value;
 }

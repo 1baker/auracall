@@ -21,6 +21,7 @@ import {
   type ExecutionServiceHostRunnerLifecycleOptions,
 } from '../src/runtime/serviceHost.js';
 import { DEFAULT_TEAM_RUN_EXECUTION_POLICY } from '../src/teams/types.js';
+import { requireFixtureValue } from './util/fixtures.js';
 
 const CHATGPT_ACCOUNT_AFFINITY_CONFIG = {
   services: {
@@ -31,13 +32,6 @@ const CHATGPT_ACCOUNT_AFFINITY_CONFIG = {
     },
   },
 };
-
-function requireFixtureValue<T>(value: T | null | undefined, label: string): T {
-  if (value == null) {
-    throw new Error(`${label} fixture was missing.`);
-  }
-  return value;
-}
 
 function createDirectBundle(runId: string, createdAt: string, status: 'planned' | 'running' = 'planned') {
   const stepId = `${runId}:step:1`;

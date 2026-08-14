@@ -29,6 +29,7 @@ import type { TeamRuntimeBridge } from '../../src/teams/runtimeBridge.js';
 import { createTaskRunSpec } from '../../src/teams/model.js';
 import { DEFAULT_TEAM_RUN_EXECUTION_POLICY } from '../../src/teams/types.js';
 import { AURACALL_STEP_OUTPUT_CONTRACT_VERSION } from '../../src/runtime/stepOutputContract.js';
+import { requireFixtureValue } from '../util/fixtures.js';
 
 describe('team run CLI helpers', () => {
   const cleanup: string[] = [];
@@ -662,7 +663,10 @@ describe('team run CLI helpers', () => {
 
     const pausedRecord = await runtimeControl.readRun(runId);
     const storedCliRunner = await runnersControl.readRunner(cliRunnerId);
-    const requestId = pausedRecord?.bundle.localActionRequests[0]?.id;
+    const requestId = requireFixtureValue(
+      pausedRecord?.bundle.localActionRequests[0]?.id,
+      `${runId} local action request id`,
+    );
 
     expect(requestId).toBeTruthy();
     expect(pausedRecord?.bundle.run.status).toBe('cancelled');
@@ -715,7 +719,7 @@ describe('team run CLI helpers', () => {
       },
     });
 
-    const resolved = await replacementHost.resolveLocalActionRequest(runId, requestId!, 'approved');
+    const resolved = await replacementHost.resolveLocalActionRequest(runId, requestId, 'approved');
     expect(resolved).toMatchObject({
       action: 'resolve-local-action-request',
       runId,

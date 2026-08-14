@@ -7,6 +7,11 @@
 Status: active
 Lane: P01
 
+- Closed accepted test warning-tail and shared fixture guard:
+  [docs/dev/plans/0303-2026-08-14-test-warning-tail-and-shared-fixture-guard.md](docs/dev/plans/0303-2026-08-14-test-warning-tail-and-shared-fixture-guard.md)
+  Nine more test files are warning-clean, required values share one labeled
+  guard, and exact external names are preserved through computed keys.
+
 - Closed accepted runtime-core fixture lint ratchet:
   [docs/dev/plans/0302-2026-08-14-runtime-core-fixture-lint-ratchet.md](docs/dev/plans/0302-2026-08-14-runtime-core-fixture-lint-ratchet.md)
   Runner and response-service fixtures now fail through labeled guards, and
