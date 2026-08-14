@@ -1,3 +1,4 @@
+import type { DevToolsConnectionOptions } from "../../../packages/browser-service/src/types.js";
 import type { ResolvedUserConfig } from "../../config.js";
 import {
 	navigateAndSettle,
@@ -114,10 +115,14 @@ export type ChatgptDeveloperAppCreatePostcondition =
 export const CHATGPT_DEVELOPER_APP_SERVER_URL_SELECTOR =
 	'[role="dialog"] input[name="custom-connector-url"]';
 
+const CHATGPT_DEVELOPER_APP_ATTACHMENT_STAGE_TIMEOUT_MS = 10_000;
+
 export interface ChatgptDeveloperAppBrowserClient {
 	readonly userConfig: ResolvedUserConfig;
 	getUserIdentity(options?: { abortSignal?: AbortSignal }): Promise<ProviderUserIdentity | null>;
-	connectDevTools(): Promise<{ client: ChromeClient; port: number }>;
+	connectDevTools(
+		options?: DevToolsConnectionOptions,
+	): Promise<{ client: ChromeClient; port: number }>;
 	runPrompt(input: {
 		prompt: string;
 		completionMode: "prompt_submitted";
@@ -474,18 +479,81 @@ export class ChatgptDeveloperAppBrowserAdapter {
 	private async ensureClient(): Promise<ChromeClient> {
 		this.throwIfAborted();
 		if (this.cdpClient) return this.cdpClient;
-		const connected = await this.browser.connectDevTools();
+		const connected = await this.browser.connectDevTools({
+			abortSignal: this.abortSignal,
+			stageTimeoutMs: CHATGPT_DEVELOPER_APP_ATTACHMENT_STAGE_TIMEOUT_MS,
+			onStage: (stage) => debugDeveloperApps(`DevTools attachment stage: ${stage}`),
+		});
 		this.throwIfAborted();
 		this.cdpClient = connected.client;
-		await this.cdpClient.Runtime.enable();
-		await this.cdpClient.Page.enable();
-		this.throwIfAborted();
-		return this.cdpClient;
+		try {
+			await this.runAttachmentStage(
+				"browserDevToolsRuntimeEnable",
+				this.cdpClient.Runtime.enable(),
+			);
+			await this.runAttachmentStage("browserDevToolsPageEnable", this.cdpClient.Page.enable());
+			this.throwIfAborted();
+			return this.cdpClient;
+		} catch (error) {
+			const client = this.cdpClient;
+			this.cdpClient = null;
+			await client.close().catch(() => undefined);
+			throw error;
+		}
+	}
+
+	private runAttachmentStage<T>(stage: string, operation: Promise<T>): Promise<T> {
+		debugDeveloperApps(`DevTools attachment stage: ${stage}`);
+		return runDeveloperAppAttachmentStage(operation, {
+			stage,
+			abortSignal: this.abortSignal,
+			timeoutMs: CHATGPT_DEVELOPER_APP_ATTACHMENT_STAGE_TIMEOUT_MS,
+		});
 	}
 
 	private throwIfAborted(): void {
 		this.abortSignal?.throwIfAborted();
 	}
+}
+
+function runDeveloperAppAttachmentStage<T>(
+	operation: Promise<T>,
+	options: { stage: string; abortSignal?: AbortSignal; timeoutMs: number },
+): Promise<T> {
+	options.abortSignal?.throwIfAborted();
+	let timeout: NodeJS.Timeout | null = null;
+	let onAbort: (() => void) | null = null;
+	return new Promise<T>((resolve, reject) => {
+		const cleanup = () => {
+			if (timeout) clearTimeout(timeout);
+			if (onAbort && options.abortSignal) {
+				options.abortSignal.removeEventListener("abort", onAbort);
+			}
+		};
+		operation.then(
+			(value) => {
+				cleanup();
+				resolve(value);
+			},
+			(error) => {
+				cleanup();
+				reject(error);
+			},
+		);
+		onAbort = () => {
+			cleanup();
+			reject(options.abortSignal?.reason ?? new Error("DevTools attachment aborted."));
+		};
+		options.abortSignal?.addEventListener("abort", onAbort, { once: true });
+		timeout = setTimeout(() => {
+			cleanup();
+			reject(
+				new Error(
+					`DevTools attachment stage ${options.stage} timed out after ${options.timeoutMs}ms.`,
+				),
+			);
+		}, options.timeoutMs);
+	});
 }
 
 export function createChatgptDeveloperAppBrowserAdapter(

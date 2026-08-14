@@ -159,6 +159,21 @@ record, follow the repo-local
 
 ## Core helpers (packages/browser-service/src/service/ui.ts)
 
+Shared DevTools attachment is owned by
+`packages/browser-service/src/service/browserService.ts` and
+`packages/browser-service/src/chromeLifecycle.ts`:
+
+- `BrowserService.connectDevTools(options?)`
+  - accepts an optional caller abort signal, positive per-stage timeout, and
+    stage callback while preserving no-options callers
+  - reports `browserDevToolsTargetResolution`,
+    `browserDevToolsCdpConnection`, and `browserDevToolsConnected`
+  - defaults target resolution and CDP connection to independent 10-second
+    bounds; a late CDP client is closed instead of being published after the
+    caller has already timed out or aborted
+  - provider adapters remain responsible for bounding any domain-enablement or
+    provider-specific readiness work performed after attachment
+
 - `waitForPredicate(Runtime, expression, options)`
   - Generic polling primitive for truthy page predicates.
   - Returns attempts, elapsed time, and the last truthy value when a condition wins.

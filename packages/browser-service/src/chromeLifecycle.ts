@@ -37,6 +37,7 @@ const execFileAsync = promisify(execFile);
 const WINDOWS_WSL_DISCOVERY_ATTEMPTS = 40;
 const WINDOWS_WSL_DISCOVERY_DELAY_MS = 250;
 const DEFAULT_CDP_LIST_TIMEOUT_MS = 5_000;
+const DEFAULT_CDP_CONNECTION_TIMEOUT_MS = 10_000;
 type ManagedChromeHandle = LaunchedChrome & { host?: string; launchedByAuracall?: boolean };
 
 function readAbortReason(signal: AbortSignal): unknown {
@@ -865,21 +866,49 @@ export async function connectToChromeTarget(options: {
   host?: string;
   target?: string;
   logger?: BrowserLogger;
+  abortSignal?: AbortSignal;
+  timeoutMs?: number;
 }): Promise<ChromeClient> {
   const logger = options.logger ?? (() => undefined);
+  options.abortSignal?.throwIfAborted();
   const endpoint = await resolveChromeEndpoint(options.host, options.port, logger);
-  const client = await CDP({
-    port: endpoint.port,
-    host: endpoint.host,
-    target: options.target,
-  });
+  let disposed = false;
+  const disposeEndpoint = async () => {
+    if (disposed) return;
+    disposed = true;
+    await endpoint.dispose?.().catch(() => undefined);
+  };
+  let client: ChromeClient;
+  try {
+    options.abortSignal?.throwIfAborted();
+    client = await runAbortableCdpConnection(
+      Promise.resolve().then(() =>
+        CDP({
+          port: endpoint.port,
+          host: endpoint.host,
+          target: options.target,
+        }),
+      ),
+      {
+        abortSignal: options.abortSignal,
+        timeoutMs: normalizePositiveTimeout(
+          options.timeoutMs,
+          DEFAULT_CDP_CONNECTION_TIMEOUT_MS,
+        ),
+        onLateResolve: async (lateClient) => {
+          await lateClient.close().catch(() => undefined);
+          await disposeEndpoint();
+        },
+      },
+    );
+  } catch (error) {
+    await disposeEndpoint();
+    throw error;
+  }
   if (endpoint.dispose) {
     const originalClose = client.close.bind(client);
-    let disposed = false;
     const cleanup = async () => {
-      if (disposed) return;
-      disposed = true;
-      await endpoint.dispose?.().catch(() => undefined);
+      await disposeEndpoint();
     };
     client.close = async () => {
       try {
@@ -895,10 +924,71 @@ export async function connectToChromeTarget(options: {
   return client;
 }
 
-export async function connectToChrome(port: number, logger: BrowserLogger, host?: string): Promise<ChromeClient> {
-  const client = await connectToChromeTarget({ port, host, logger });
+export async function connectToChrome(
+  port: number,
+  logger: BrowserLogger,
+  host?: string,
+  options: { abortSignal?: AbortSignal; timeoutMs?: number } = {},
+): Promise<ChromeClient> {
+  const client = await connectToChromeTarget({ port, host, logger, ...options });
   logger('Connected to Chrome DevTools protocol');
   return client;
+}
+
+function normalizePositiveTimeout(value: number | undefined, fallback: number): number {
+  return Number.isFinite(value) && Number(value) > 0 ? Math.floor(Number(value)) : fallback;
+}
+
+function runAbortableCdpConnection(
+  operation: Promise<ChromeClient>,
+  options: {
+    abortSignal?: AbortSignal;
+    timeoutMs: number;
+    onLateResolve: (client: ChromeClient) => Promise<void> | void;
+  },
+): Promise<ChromeClient> {
+  options.abortSignal?.throwIfAborted();
+  let settled = false;
+  let timeout: NodeJS.Timeout | null = null;
+  let onAbort: (() => void) | null = null;
+
+  return new Promise<ChromeClient>((resolve, reject) => {
+    const finish = (callback: () => void): boolean => {
+      if (settled) return false;
+      settled = true;
+      if (timeout) clearTimeout(timeout);
+      if (onAbort && options.abortSignal) {
+        options.abortSignal.removeEventListener('abort', onAbort);
+      }
+      callback();
+      return true;
+    };
+
+    operation.then(
+      (client) => {
+        if (!finish(() => resolve(client))) {
+          void Promise.resolve(options.onLateResolve(client)).catch(() => undefined);
+        }
+      },
+      (error) => {
+        finish(() => reject(error));
+      },
+    );
+
+    onAbort = () => {
+      finish(() => reject(options.abortSignal?.reason ?? new Error('DevTools attachment aborted.')));
+    };
+    options.abortSignal?.addEventListener('abort', onAbort, { once: true });
+    timeout = setTimeout(() => {
+      finish(() =>
+        reject(
+          new Error(
+            `DevTools attachment stage browserDevToolsCdpConnection timed out after ${options.timeoutMs}ms.`,
+          ),
+        ),
+      );
+    }, options.timeoutMs);
+  });
 }
 
 export async function listChromeTargets(

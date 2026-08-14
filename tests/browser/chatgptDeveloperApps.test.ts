@@ -52,6 +52,145 @@ describe("deriveChatgptDeveloperAppState", () => {
 		expect(connectDevTools).not.toHaveBeenCalled();
 	});
 
+	it("cancels a stalled DevTools attachment through the shared abort signal", async () => {
+		const abortController = new AbortController();
+		const connectDevTools = vi.fn(
+			(options: { abortSignal?: AbortSignal } = {}) =>
+				new Promise<never>((_resolve, reject) => {
+					options.abortSignal?.addEventListener(
+						"abort",
+						() => reject(options.abortSignal?.reason),
+						{ once: true },
+					);
+				}),
+		);
+		const adapter = createChatgptDeveloperAppBrowserAdapter(
+			{
+				userConfig: {} as never,
+				getUserIdentity: async () => null,
+				connectDevTools,
+				runPrompt: async () => {
+					throw new Error("should not prompt");
+				},
+			},
+			async () => {
+				throw new Error("should not create a browser");
+			},
+			{ abortSignal: abortController.signal },
+		);
+
+		const state = adapter.readState();
+		await vi.waitFor(() => expect(connectDevTools).toHaveBeenCalledOnce());
+		abortController.abort(new Error("list deadline reached"));
+
+		await expect(
+			Promise.race([
+				state,
+				new Promise<never>((_resolve, reject) =>
+					setTimeout(() => reject(new Error("test guard elapsed")), 100),
+				),
+			]),
+		).rejects.toThrow("list deadline reached");
+		expect(connectDevTools).toHaveBeenCalledWith(
+			expect.objectContaining({ abortSignal: abortController.signal }),
+		);
+	});
+
+	it("bounds stalled Runtime enablement and closes the unpublished client", async () => {
+		vi.useFakeTimers();
+		try {
+			const close = vi.fn(async () => undefined);
+			const runtimeEnable = vi.fn(() => new Promise<never>(() => undefined));
+			const pageEnable = vi.fn(async () => undefined);
+			const adapter = createChatgptDeveloperAppBrowserAdapter(
+				{
+					userConfig: {} as never,
+					getUserIdentity: async () => null,
+					connectDevTools: async () => ({
+						client: {
+							// biome-ignore lint/style/useNamingConvention: CDP protocol domains use canonical capitalized names.
+							Runtime: { enable: runtimeEnable },
+							// biome-ignore lint/style/useNamingConvention: CDP protocol domains use canonical capitalized names.
+							Page: { enable: pageEnable },
+							close,
+						} as never,
+						port: 45015,
+					}),
+					runPrompt: async () => {
+						throw new Error("should not prompt");
+					},
+				},
+				async () => {
+					throw new Error("should not create a browser");
+				},
+			);
+
+			const state = adapter.readState().then(
+				() => null,
+				(error: unknown) => error,
+			);
+			await vi.advanceTimersByTimeAsync(10_000);
+
+			expect(await state).toEqual(
+				expect.objectContaining({
+					message:
+						"DevTools attachment stage browserDevToolsRuntimeEnable timed out after 10000ms.",
+				}),
+			);
+			expect(runtimeEnable).toHaveBeenCalledOnce();
+			expect(pageEnable).not.toHaveBeenCalled();
+			expect(close).toHaveBeenCalledOnce();
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	it("bounds stalled Page enablement and closes the unpublished client", async () => {
+		vi.useFakeTimers();
+		try {
+			const close = vi.fn(async () => undefined);
+			const pageEnable = vi.fn(() => new Promise<never>(() => undefined));
+			const adapter = createChatgptDeveloperAppBrowserAdapter(
+				{
+					userConfig: {} as never,
+					getUserIdentity: async () => null,
+					connectDevTools: async () => ({
+						client: {
+							// biome-ignore lint/style/useNamingConvention: CDP protocol domains use canonical capitalized names.
+							Runtime: { enable: vi.fn(async () => undefined) },
+							// biome-ignore lint/style/useNamingConvention: CDP protocol domains use canonical capitalized names.
+							Page: { enable: pageEnable },
+							close,
+						} as never,
+						port: 45015,
+					}),
+					runPrompt: async () => {
+						throw new Error("should not prompt");
+					},
+				},
+				async () => {
+					throw new Error("should not create a browser");
+				},
+			);
+
+			const state = adapter.readState().then(
+				() => null,
+				(error: unknown) => error,
+			);
+			await vi.advanceTimersByTimeAsync(10_000);
+
+			expect(await state).toEqual(
+				expect.objectContaining({
+					message: "DevTools attachment stage browserDevToolsPageEnable timed out after 10000ms.",
+				}),
+			);
+			expect(pageEnable).toHaveBeenCalledOnce();
+			expect(close).toHaveBeenCalledOnce();
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
 	it("preserves the active model when submitting a developer-app test", async () => {
 		const runPrompt = vi.fn(async () => ({
 			conversationId: "conversation-1",

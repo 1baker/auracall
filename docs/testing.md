@@ -44,12 +44,16 @@
     for selector boundaries, live-effect gates, and cleanup evidence
 - ChatGPT developer-app lifecycle:
   - provider-free contract tests:
-    `pnpm vitest run tests/browser/chatgptDeveloperApps.test.ts tests/cli/chatgptDeveloperAppsCommand.test.ts`
+    `pnpm vitest run tests/browser-service/devToolsConnection.test.ts tests/browser-service/browserServiceCore.test.ts tests/browser/chatgptDeveloperApps.test.ts tests/cli/chatgptDeveloperAppsCommand.test.ts`
   - read-only installed smoke:
     `pnpm tsx bin/auracall.ts --profile <runtime> apps --target chatgpt list --json`
   - `apps list` has a 45-second outer deadline plus a bounded browser-client
-    close; a stalled identity or CDP stage must return control so the CLI can
-    release its file-backed browser-operation lease
+    close; target resolution, CDP attachment, Runtime enablement, and Page
+    enablement each have a 10-second bound and report a named debug stage
+  - the shared attachment contract carries the caller abort signal and closes
+    any CDP client that resolves after timeout/abort; a stalled identity or
+    attachment stage must return control so the CLI can release its file-backed
+    browser-operation lease
   - non-submitting app-selection smoke:
     `pnpm tsx bin/auracall.ts --profile <runtime> apps --target chatgpt test <exact-app> --expected-account <email> --json`
   - do not use `--submit`, `create`, `refresh`, or `uninstall` as routine live

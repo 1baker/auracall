@@ -13,6 +13,7 @@ import { BrowserService } from './service/browserService.js';
 import { createLlmService } from './llmService/index.js';
 import type { LlmService } from './llmService/llmService.js';
 import { BrowserAutomationClientCore } from '../../packages/browser-service/src/client.js';
+import type { DevToolsConnectionOptions } from '../../packages/browser-service/src/types.js';
 import type { PromptInput, PromptResult } from './llmService/types.js';
 import type { ProviderSessionProof } from './providers/providerSessionAuthority.js';
 import type { ConversationArtifact, ConversationContext, FileRef } from './providers/domain.js';
@@ -182,8 +183,10 @@ export class BrowserAutomationClient {
     return this.llmService.materializeActiveMediaArtifacts(input, destDir, options);
   }
 
-  async connectDevTools(): Promise<{ client: ChromeClient; port: number }> {
-    return this.browserService.connectDevTools();
+  async connectDevTools(
+    options: DevToolsConnectionOptions = {},
+  ): Promise<{ client: ChromeClient; port: number }> {
+    return this.browserService.connectDevTools(options);
   }
 
   async diagnose(options: { basePath?: string; saveSnapshot?: boolean; quiet?: boolean } = {}): Promise<{

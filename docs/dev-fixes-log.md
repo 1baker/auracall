@@ -1,3 +1,13 @@
+- 2026-08-14: A whole-operation deadline can release a browser-operation lease
+  while leaving its underlying DevTools attachment uncancellable and
+  unobservable. Carry one abort/deadline/stage contract through target
+  resolution and the raw CDP handshake, close clients that resolve after the
+  caller has stopped waiting, and independently bound provider-required
+  `Runtime.enable` / `Page.enable` before publishing the client. Prove target,
+  handshake, late-cleanup, abort, and domain-enable behavior provider-free;
+  the outer deadline remains a final envelope rather than the only liveness
+  mechanism.
+
 - 2026-08-13: A settle timeout applied only after `Page.navigate(...)` cannot
   prevent a lost CDP acknowledgement from holding a managed-profile operation
   lease indefinitely. At the shared `navigateAndSettle(...)` seam, race the

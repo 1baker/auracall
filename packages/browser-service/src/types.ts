@@ -2,6 +2,15 @@ import type CDP from 'chrome-remote-interface';
 import type Protocol from 'devtools-protocol';
 
 export type ChromeClient = Awaited<ReturnType<typeof CDP>>;
+export type DevToolsAttachmentStage =
+  | 'browserDevToolsTargetResolution'
+  | 'browserDevToolsCdpConnection'
+  | 'browserDevToolsConnected';
+export interface DevToolsConnectionOptions {
+  abortSignal?: AbortSignal;
+  stageTimeoutMs?: number;
+  onStage?: (stage: DevToolsAttachmentStage) => void;
+}
 export type CookieParam = Protocol.Network.CookieParam;
 export type DebugPortStrategy = 'fixed' | 'auto';
 export type BrowserProfileFamily = 'chrome' | 'chromium';

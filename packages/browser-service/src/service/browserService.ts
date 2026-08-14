@@ -1,9 +1,16 @@
 import os from 'node:os';
 import path from 'node:path';
-import type { BrowserLogger, ChromeClient, ResolvedBrowserConfig } from '../types.js';
+import type {
+  BrowserLogger,
+  ChromeClient,
+  DevToolsConnectionOptions,
+  ResolvedBrowserConfig,
+} from '../types.js';
 import { isDevToolsResponsive } from '../processCheck.js';
 import type { CredentialHint } from './types.js';
 import { connectToChrome } from '../chromeLifecycle.js';
+
+const DEFAULT_DEVTOOLS_ATTACHMENT_STAGE_TIMEOUT_MS = 10_000;
 
 export type BrowserServiceDependencies = {
   resolveBrowserListTarget: () => Promise<{ host?: string; port?: number } | undefined>;
@@ -159,18 +166,103 @@ export class BrowserService {
     return { debugPort: undefined, debugPortStrategy: 'auto' };
   }
 
-  async connectDevTools(): Promise<{ client: ChromeClient; port: number }> {
-    const target = await this.deps.resolveBrowserListTarget();
+  async connectDevTools(
+    options: DevToolsConnectionOptions = {},
+  ): Promise<{ client: ChromeClient; port: number }> {
+    options.abortSignal?.throwIfAborted();
+    const stageTimeoutMs = normalizePositiveTimeout(
+      options.stageTimeoutMs,
+      DEFAULT_DEVTOOLS_ATTACHMENT_STAGE_TIMEOUT_MS,
+    );
+    options.onStage?.('browserDevToolsTargetResolution');
+    const target = await runDevToolsAttachmentStage(
+      this.deps.resolveBrowserListTarget(),
+      {
+        stage: 'browserDevToolsTargetResolution',
+        timeoutMs: stageTimeoutMs,
+        abortSignal: options.abortSignal,
+      },
+    );
     if (!target?.port) {
       throw new Error(
         'No DevTools port found. Launch a browser run to register the active session or set BROWSER_SERVICE_BROWSER_PORT.',
       );
     }
-    const client = await connectToChrome(target.port, () => undefined, target.host);
+    options.onStage?.('browserDevToolsCdpConnection');
+    const client = await runDevToolsAttachmentStage(
+      connectToChrome(target.port, () => undefined, target.host, {
+        abortSignal: options.abortSignal,
+        timeoutMs: stageTimeoutMs,
+      }),
+      {
+        stage: 'browserDevToolsCdpConnection',
+        timeoutMs: stageTimeoutMs,
+        abortSignal: options.abortSignal,
+        onLateResolve: (lateClient) => lateClient.close().catch(() => undefined),
+      },
+    );
+    options.onStage?.('browserDevToolsConnected');
     return { client, port: target.port };
   }
 
   async resolveCredentials(): Promise<CredentialHint | null> {
     return null;
   }
+}
+
+function normalizePositiveTimeout(value: number | undefined, fallback: number): number {
+  return Number.isFinite(value) && Number(value) > 0 ? Math.floor(Number(value)) : fallback;
+}
+
+function runDevToolsAttachmentStage<T>(
+  operation: Promise<T>,
+  options: {
+    stage: string;
+    timeoutMs: number;
+    abortSignal?: AbortSignal;
+    onLateResolve?: (value: T) => Promise<void> | void;
+  },
+): Promise<T> {
+  options.abortSignal?.throwIfAborted();
+  let settled = false;
+  let timeout: NodeJS.Timeout | null = null;
+  let onAbort: (() => void) | null = null;
+
+  return new Promise<T>((resolve, reject) => {
+    const finish = (callback: () => void): boolean => {
+      if (settled) return false;
+      settled = true;
+      if (timeout) clearTimeout(timeout);
+      if (onAbort && options.abortSignal) {
+        options.abortSignal.removeEventListener('abort', onAbort);
+      }
+      callback();
+      return true;
+    };
+
+    operation.then(
+      (value) => {
+        if (!finish(() => resolve(value))) {
+          void Promise.resolve(options.onLateResolve?.(value)).catch(() => undefined);
+        }
+      },
+      (error) => {
+        finish(() => reject(error));
+      },
+    );
+
+    onAbort = () => {
+      finish(() => reject(options.abortSignal?.reason ?? new Error('DevTools attachment aborted.')));
+    };
+    options.abortSignal?.addEventListener('abort', onAbort, { once: true });
+    timeout = setTimeout(() => {
+      finish(() =>
+        reject(
+          new Error(
+            `DevTools attachment stage ${options.stage} timed out after ${options.timeoutMs}ms.`,
+          ),
+        ),
+      );
+    }, options.timeoutMs);
+  });
 }

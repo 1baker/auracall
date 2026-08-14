@@ -1,3 +1,22 @@
+## 2026-08-14 | Plan 0283 DevTools Attachment Liveness
+
+- A retained LitScout diagnostic proved ChatGPT identity and then exhausted
+  the developer-app list deadline inside `connectDevTools()` before inventory.
+- The current outer deadline releases the operation lease but does not pass its
+  abort signal into browser-service target resolution, the raw CDP handshake,
+  or initial domain enablement. A provider-free harness reproduced the exact
+  zero-argument stalled attachment contract.
+- Plan 0283 is provider-free only: add stage-local bounds, abort propagation,
+  late-client cleanup, and exact regressions before requesting any installed or
+  live replay. The retained `wsl-chrome-3` browser and LitScout effects remain
+  outside this slice.
+- The source slice now carries one shared abort/deadline/stage contract through
+  target resolution and CDP connection, reclaims late clients/endpoints, and
+  bounds Runtime/Page enablement before publication. The five-assertion red
+  proof is green; the widened affected gate passes 329/329 with typecheck,
+  build, scoped lint, and current graph readback. Commit/push and plan closeout
+  remain; no installed or live validation has run.
+
 ## 2026-08-13 | Bounded Navigation Acknowledgement
 
 - A retained LitScout Plan 0414 `apps:list` probe remained alive after 17

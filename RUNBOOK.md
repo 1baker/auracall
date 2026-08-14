@@ -1,5 +1,28 @@
 # RUNBOOK
 
+## Turn 454 | 2026-08-14
+
+- The retained LitScout Plan 0411 receipt localized its terminal inventory
+  failure after successful ChatGPT identity and before installed-app signals to
+  `ensureClient() -> connectDevTools()`. Its 45-second outer deadline released
+  the lease but could not interrupt target resolution or the raw CDP handshake.
+- [Plan 0283](docs/dev/plans/0283-2026-08-14-devtools-attachment-liveness.md)
+  opened provider-free. Five deterministic red assertions reproduced stalled
+  adapter attachment, target resolution, CDP connection, missing stage output,
+  and absent late-client cleanup without browser access.
+- The shared connection contract now accepts caller abort, a positive
+  per-stage timeout, and named stage callbacks. Browser-service independently
+  bounds target resolution and CDP attachment at ten seconds by default;
+  developer-app attachment separately bounds Runtime and Page enablement and
+  closes any client that cannot be published safely.
+- The exact red slice is green at 51/51. The widened browser-service,
+  developer-app, CLI, ChatGPT adapter, and Account Mirror gate passes 329/329;
+  typecheck, zero-warning scoped lint, production build, and current CodeGraph
+  readback pass. PID 66297/port 45015 and its sole registry entry were unchanged
+  across validation. No install, service restart, browser attachment,
+  inventory replay, prompt, connector, app/OAuth mutation, LitScout mutation,
+  or Experiment 6 action ran.
+
 ## Turn 453 | 2026-08-13
 
 - LitScout Goal 0411 current-state readback found the retained Plan 0414

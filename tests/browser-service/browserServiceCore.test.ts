@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { BrowserService } from '../../packages/browser-service/src/service/browserService.js';
 import { createBrowserInteractionGovernor } from '../../packages/browser-service/src/service/interactionGovernor.js';
 import type { ResolvedBrowserConfig } from '../../packages/browser-service/src/types.js';
@@ -8,6 +8,10 @@ const processCheckMocks = vi.hoisted(() => ({
   isDevToolsResponsive: vi.fn(async () => false),
 }));
 
+const chromeLifecycleMocks = vi.hoisted(() => ({
+  connectToChrome: vi.fn(),
+}));
+
 vi.mock('../../packages/browser-service/src/processCheck.js', async (importOriginal) => {
   const actual =
     await importOriginal<typeof import('../../packages/browser-service/src/processCheck.js')>();
@@ -15,6 +19,82 @@ vi.mock('../../packages/browser-service/src/processCheck.js', async (importOrigi
     ...actual,
     isDevToolsResponsive: processCheckMocks.isDevToolsResponsive,
   };
+});
+
+vi.mock('../../packages/browser-service/src/chromeLifecycle.js', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('../../packages/browser-service/src/chromeLifecycle.js')>();
+  return {
+    ...actual,
+    connectToChrome: chromeLifecycleMocks.connectToChrome,
+  };
+});
+
+describe('BrowserService DevTools attachment liveness', () => {
+  beforeEach(() => {
+    chromeLifecycleMocks.connectToChrome.mockReset();
+  });
+
+  test('bounds stalled browser target resolution and reports the active stage', async () => {
+    const stages: string[] = [];
+    const service = new BrowserService(DEFAULT_BROWSER_CONFIG as ResolvedBrowserConfig, {
+      resolveBrowserListTarget: vi.fn(
+        () => new Promise<{ host?: string; port?: number } | undefined>(() => undefined),
+      ),
+      pruneRegistry: vi.fn(async () => {}),
+      launchManualLoginSession: vi.fn(),
+    });
+
+    await expect(
+      Promise.race([
+        service.connectDevTools({
+          stageTimeoutMs: 25,
+          onStage: (stage) => stages.push(stage),
+        }),
+        new Promise<never>((_resolve, reject) =>
+          setTimeout(() => reject(new Error('test guard elapsed')), 100),
+        ),
+      ]),
+    ).rejects.toThrow(
+      'DevTools attachment stage browserDevToolsTargetResolution timed out after 25ms.',
+    );
+    expect(stages).toEqual(['browserDevToolsTargetResolution']);
+    expect(chromeLifecycleMocks.connectToChrome).not.toHaveBeenCalled();
+  });
+
+  test('passes attachment bounds and stage reporting into the CDP connection', async () => {
+    const stages: string[] = [];
+    const abortController = new AbortController();
+    chromeLifecycleMocks.connectToChrome.mockRejectedValueOnce(
+      new Error('DevTools attachment stage browserDevToolsCdpConnection timed out after 25ms.'),
+    );
+    const service = new BrowserService(DEFAULT_BROWSER_CONFIG as ResolvedBrowserConfig, {
+      resolveBrowserListTarget: vi.fn(async () => ({ host: '127.0.0.1', port: 45015 })),
+      pruneRegistry: vi.fn(async () => {}),
+      launchManualLoginSession: vi.fn(),
+    });
+
+    await expect(
+      service.connectDevTools({
+        abortSignal: abortController.signal,
+        stageTimeoutMs: 25,
+        onStage: (stage) => stages.push(stage),
+      }),
+    ).rejects.toThrow('browserDevToolsCdpConnection');
+    expect(stages).toEqual([
+      'browserDevToolsTargetResolution',
+      'browserDevToolsCdpConnection',
+    ]);
+    expect(chromeLifecycleMocks.connectToChrome).toHaveBeenCalledWith(
+      45015,
+      expect.any(Function),
+      '127.0.0.1',
+      expect.objectContaining({
+        abortSignal: abortController.signal,
+        timeoutMs: 25,
+      }),
+    );
+  });
 });
 
 describe('BrowserService core launch port handling', () => {

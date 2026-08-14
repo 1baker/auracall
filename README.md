@@ -83,8 +83,10 @@ auracall capabilities --target grok --entrypoint grok-imagine --discovery-action
 
 # Guarded ChatGPT developer-app lifecycle on the selected AuraCall runtime profile
 auracall --profile wsl-chrome-3 apps --target chatgpt list --json
-# The read-only list operation fails closed after 45 seconds and bounds browser
-# client cleanup, so a stalled provider/CDP stage cannot retain its operation lease.
+# The read-only list operation has a 45-second outer deadline. DevTools target
+# resolution, CDP attachment, Runtime enablement, and Page enablement each have
+# a 10-second stage deadline and emit their exact stage in debug output. Browser
+# client cleanup is separately bounded, so a stalled stage cannot retain its lease.
 auracall --profile wsl-chrome-3 apps --target chatgpt test Corel33t \
   --expected-account eric.cochran@soylei.com --json
 # Create, refresh, submitted tests, and uninstall require --expected-account
