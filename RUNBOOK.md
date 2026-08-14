@@ -1,5 +1,14 @@
 # RUNBOOK
 
+## Turn 458 | 2026-08-14
+
+- Reconciled three stale roadmap labels that still said `Active` while linked
+  Plans 0172, 0277, and 0278 are `CLOSED` and their summaries already record
+  failed-safe terminal outcomes. Genuinely open Plans 0114 and 0281 remain
+  active and unchanged.
+- This is planning-state hygiene only; no source, runtime, browser, provider,
+  or installed-service state changed.
+
 ## Turn 457 | 2026-08-14
 
 - Published closed Plan 0290 to personal GitHub `1baker` as commit

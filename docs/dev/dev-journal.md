@@ -1,3 +1,12 @@
+## 2026-08-14 | Reconcile stale roadmap activity labels
+
+- The current execution board still described Plans 0277 and 0278 as Active,
+  and an older board section did the same for Plan 0172, although all three
+  plan artifacts are `CLOSED` and their adjacent summaries describe terminal
+  failed-safe outcomes.
+- The roadmap labels now match those durable plan states. Plans 0114 and 0281
+  remain genuinely `OPEN` and were preserved.
+
 ## 2026-08-14 | Plan 0291 Server-Side Recent-Run Authority Filter
 
 - Plan 0289 made authority visible but the Runs workbench still filters only

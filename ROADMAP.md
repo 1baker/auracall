@@ -126,13 +126,13 @@ Lane: P01
   stopped before upload/prompt because foreground focus occurred after trigger
   measurement; exact cleanup preserved the retained browser.
 
-- Active ChatGPT current-model strategy repair and attachment canary:
+- Closed failed-safe ChatGPT current-model strategy repair and attachment canary:
   [docs/dev/plans/0278-2026-08-12-chatgpt-current-model-strategy-attachment-canary.md](docs/dev/plans/0278-2026-08-12-chatgpt-current-model-strategy-attachment-canary.md)
   Closed with the `current` strategy installed and model-menu traversal
   removed. Its canary was locally blocked by stale duplicate state; supported
   reattach then exposed unrelated-tab capture, so no provider prompt ran.
 
-- Active installed ChatGPT workbench attachment canary:
+- Closed failed-safe installed ChatGPT workbench attachment canary:
   [docs/dev/plans/0277-2026-08-12-chatgpt-workbench-attachment-installed-canary.md](docs/dev/plans/0277-2026-08-12-chatgpt-workbench-attachment-installed-canary.md)
   Closed failed-safe after one canonical install: the canary passed identity
   and Chat-mode preflight but `current` entered model-menu retry diagnostics
@@ -1081,7 +1081,7 @@ Lane: P01
   Its corrected trusted-pointer attempt also stopped before submission. A
   non-submitting keyboard diagnostic isolated the provider contract; Plan 0174
   owns the final exact recreation.
-- Active ChatGPT developer-app replacement refresh:
+- Closed failed-safe ChatGPT developer-app replacement refresh:
   [docs/dev/plans/0172-2026-07-25-chatgpt-developer-app-replacement-refresh.md](docs/dev/plans/0172-2026-07-25-chatgpt-developer-app-replacement-refresh.md)
   The safe replacement contract is accepted, committed, installed, and the old
   exact identity is deleted. Its sole create attempt stopped pre-submit on
