@@ -46686,3 +46686,18 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   close, and abort propagation before DevTools attachment. No runtime install,
   restart, browser action, provider call, inventory retry, or app mutation was
   performed in this source-only slice.
+
+## 2026-08-14 | Reconcile onto upstream and restore broker authority
+
+- The prior integration branch was 436 commits behind upstream and carried 47
+  dirty paths. It is preserved as local commit `5230f7cc` and an archive branch;
+  current work now starts from fetched `origin/main`.
+- Live inspection distinguishes the two products cleanly: agent-browser owns
+  the reusable browser/profile/session/tab infrastructure, while AuraCall owns
+  provider workflow, durable runs, response extraction, and artifacts.
+- Plan 0281's RDP launcher is useful for operator visibility but cannot be the
+  core dependency because the host still lacks the privileged remote-view
+  installation. The existing broker-owned ChatGPT target is healthy today.
+- Plan 0284 therefore restores required-mode access-plan and service-tab-handle
+  authority on current main, preserves RDP as optional, and leaves installed
+  provider execution as the explicit closing gate.

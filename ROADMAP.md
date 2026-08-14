@@ -7,6 +7,15 @@
 Status: active
 Lane: P01
 
+- Active broker-first agent-browser authority:
+  [docs/dev/plans/0284-2026-08-14-agent-browser-broker-authority.md](docs/dev/plans/0284-2026-08-14-agent-browser-broker-authority.md)
+  Required mode now treats agent-browser's access plan and exact retained
+  `serviceTabHandle` as authoritative before AuraCall can enter a local Chrome
+  path. AuraCall retains provider workflow and durable response semantics;
+  RDP/Guacamole remains an optional operator-view capability rather than a
+  prerequisite for broker reuse. Provider-free gates are green; installed
+  retained-target execution remains the closing acceptance gate.
+
 - Closed accepted provider-free DevTools attachment liveness repair:
   [docs/dev/plans/0283-2026-08-14-devtools-attachment-liveness.md](docs/dev/plans/0283-2026-08-14-devtools-attachment-liveness.md)
   LitScout Plan 0411 proved identity and then stalled inside generic attachment.

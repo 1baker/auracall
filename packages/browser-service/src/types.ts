@@ -35,6 +35,11 @@ export interface BrowserAttachment {
 }
 
 export interface BrowserRuntimeMetadata {
+  agentBrowserBaseUrl?: string;
+  agentBrowserBrowserId?: string;
+  agentBrowserProfileId?: string;
+  agentBrowserServiceTabHandle?: Record<string, unknown>;
+  agentBrowserSessionName?: string;
   chromePid?: number;
   chromePort?: number;
   chromeHost?: string;
@@ -134,6 +139,7 @@ export interface BrowserAutomationConfig {
 
 export interface BrowserRunOptions {
   prompt: string;
+  abortSignal?: AbortSignal;
   attachments?: BrowserAttachment[];
   attachmentMode?: 'inline' | 'upload' | 'bundle';
   completionMode?: 'assistant_response' | 'prompt_submitted';

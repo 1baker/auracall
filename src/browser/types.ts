@@ -60,6 +60,11 @@ type LlmBrowserFields = {
 };
 
 export type BrowserRuntimeMetadata = BaseTypes.BrowserRuntimeMetadata & {
+  agentBrowserBaseUrl?: string;
+  agentBrowserBrowserId?: string;
+  agentBrowserProfileId?: string;
+  agentBrowserServiceTabHandle?: Record<string, unknown>;
+  agentBrowserSessionName?: string;
   selectedAgentId?: string | null;
   conversationId?: string;
   composerTool?: string | null;

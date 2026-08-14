@@ -18771,3 +18771,19 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
 - Slices B/C remain open and effect-gated. Current agent-browser binary/payload
   drift, duplicate-profile pressure, and unavailable route-pool capacity must
   converge before profile registration or a first noncritical activation.
+
+## Turn 418 | 2026-08-14
+
+- Fetched current upstream and preserved the obsolete dirty integration lane
+  at local commit `5230f7cc` plus archive branch
+  `archive/agentic-browser-runtime-bridge-20260814`. The active branch now
+  starts from `origin/main`; historical browser-tool JSON and reviewer-run
+  artifacts moved intact under `~/.auracall/recovered-worktree-artifacts/`.
+- Installed a user-scoped Node 22.18.0 and pnpm 10.23.0 runtime to match the
+  repository engine contract. Current upstream build, typecheck, plan audit,
+  and 92 focused tests passed before the broker port.
+- Plan 0284 ports broker-first lifecycle authority onto current main. Required
+  ChatGPT/Grok execution now acquires an exact agent-browser tab handle before
+  local launch, attaches to that exact target, persists broker identity, and
+  verifies detach without closing the retained tab. Focused bridge and browser
+  suites pass provider-free. No provider prompt or GitHub write occurred.

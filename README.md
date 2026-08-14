@@ -227,6 +227,12 @@ Engine auto-picks API when `OPENAI_API_KEY` is set, otherwise browser; browser i
 
 Current browser-mode default posture:
 - browser runs still default to Aura-Call-managed profile launch
+- set `AURACALL_AGENT_BROWSER_BRIDGE=required` to make agent-browser the
+  fail-closed browser/profile/tab authority for ChatGPT and Grok. AuraCall asks
+  for an access plan, uses one exact retained `serviceTabHandle`, attaches only
+  to that target, and verifies detach without closing the retained browser or
+  conversation. `auto` and `off` retain compatibility behavior while this lane
+  is activated incrementally
 - a browser profile can opt into an agent-browser-owned hidden RDP/Guacamole
   process with `agentBrowserRdp.enabled: true`; AuraCall still owns and passes
   the exact managed browser profile directory under `~/.auracall`, then
@@ -237,6 +243,9 @@ Current browser-mode default posture:
   declare `browserFamily: "chromium"` with
   `browserBuild: "stealthcdp_chromium"`. Missing or mixed declarations fail
   before agent-browser is invoked
+- RDP/Guacamole is an optional operator-view lane; required broker reuse can
+  operate through a healthy service-owned browser even when remote-view host
+  privileges are not installed
 - if you do not set `manualLogin` explicitly, browser config resolution still
   treats interactive login as on and derives
   `manualLoginProfileDir = managedProfileRoot + auracallProfile + service`

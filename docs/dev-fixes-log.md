@@ -21578,3 +21578,16 @@ browser-stage lifecycle observability, not transcript truncation.
   timeout cannot misreport an ambiguous provider mutation.
 - A regression should use a never-resolving adapter read and close, proving the
   outer promise settles without a browser or provider action.
+
+## 2026-08-14 | Remote viewing and browser authority are separate contracts
+
+- A Guacamole/RDP launcher proves that an operator can view an agent-browser
+  process, but querying its CDP inventory afterward still leaves the client
+  responsible for target rediscovery and duplicate-tab risk.
+- Software clients should follow the broker contract: request an access plan,
+  retain one exact `serviceTabHandle`, use the policy-gated attach descriptor,
+  and verify detach without closing the retained target.
+- Keep provider-specific UI semantics in AuraCall. Keep profile leases,
+  process/session lifecycle, target identity, and viewing infrastructure in
+  agent-browser. A blocked remote-view privilege layer must not invalidate an
+  otherwise healthy broker-owned browser lane.

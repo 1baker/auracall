@@ -139,6 +139,14 @@ import {
 } from "./providers/providerSessionAuthority.js";
 import type { ProviderUserIdentity } from "./providers/types.js";
 import { alignPromptEchoPair, buildPromptEchoMatcher } from "./reattachHelpers.js";
+import {
+	type AgentBrowserBridgeResult,
+	acquireAgentBrowserBrokerTab,
+	resolveAgentBrowserBridgeMode,
+	resolveAgentBrowserBrokerProfile,
+	resolveAgentBrowserBrokerUrl,
+	withAgentBrowserBrokerCleanup,
+} from "./service/agentBrowserBridge.js";
 import { resolveManagedBrowserLaunchContextFromResolvedConfig } from "./service/profileResolution.js";
 import { dismissOpenMenus, navigateAndSettle } from "./service/ui.js";
 import {
@@ -585,9 +593,7 @@ async function assertChatgptAccountSessionPreflight(
 		const summary = [
 			result.observation?.email ? `email=${result.observation.email}` : null,
 			result.observation?.accountLevel ? `level=${result.observation.accountLevel}` : null,
-			result.observation?.accountPlanType
-				? `plan=${result.observation.accountPlanType}`
-				: null,
+			result.observation?.accountPlanType ? `plan=${result.observation.accountPlanType}` : null,
 			result.expectation.configuredServiceAccountId
 				? `binding=${result.expectation.configuredServiceAccountId}`
 				: null,
@@ -1567,6 +1573,52 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 		);
 	}
 
+	const bridgeMode = resolveAgentBrowserBridgeMode();
+	if (bridgeMode === "required" && (target === "chatgpt" || target === "grok")) {
+		const brokerUrl = resolveAgentBrowserBrokerUrl(target, config.url);
+		const bridge = await acquireAgentBrowserBrokerTab({
+			abortSignal: options.abortSignal,
+			logger,
+			mode: bridgeMode,
+			profileId: resolveAgentBrowserBrokerProfile(target),
+			targetServiceId: target,
+			url: brokerUrl,
+		});
+		if (!bridge?.chromeHost || !bridge.chromePort) {
+			throw new Error("agent-browser required mode returned no policy-gated CDP endpoint");
+		}
+		const brokerConfig = {
+			...config,
+			url: brokerUrl,
+			chatgptUrl: target === "chatgpt" ? brokerUrl : config.chatgptUrl,
+			grokUrl: target === "grok" ? brokerUrl : config.grokUrl,
+			keepBrowser: true,
+			remoteChrome: { host: bridge.chromeHost, port: bridge.chromePort },
+		};
+		const bridgedOptions = withAgentBrowserRuntimeHints(options, bridge);
+		return withAgentBrowserBrokerCleanup(bridge, () =>
+			withBrowserExecutionOperation(brokerConfig, target, logger, () =>
+				target === "grok"
+					? runRemoteGrokBrowserMode(
+							promptText,
+							attachments,
+							brokerConfig,
+							logger,
+							bridgedOptions,
+							bridge,
+						)
+					: runRemoteBrowserMode(
+							promptText,
+							attachments,
+							brokerConfig,
+							logger,
+							bridgedOptions,
+							bridge,
+						),
+			),
+		);
+	}
+
 	// Remote Chrome mode - connect to existing browser
 	if (config.remoteChrome) {
 		// Warn about ignored local-only options
@@ -2187,7 +2239,9 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 		const chatgptMode = config.chatgptMode ?? "chat";
 		await raceWithDisconnect(ensureChatgptComposerMode(Runtime, chatgptMode, logger));
 		await raceWithDisconnect(ensurePromptReady(Runtime, config.inputTimeoutMs, logger));
-		logger(`Prompt textarea ready (after ${chatgptMode} mode, ${promptText.length.toLocaleString()} chars queued)`);
+		logger(
+			`Prompt textarea ready (after ${chatgptMode} mode, ${promptText.length.toLocaleString()} chars queued)`,
+		);
 		const modelStrategy = config.modelStrategy ?? DEFAULT_MODEL_STRATEGY;
 		const modelSelectionPlan = resolveChatgptModelSelectionPlan({
 			mode: chatgptMode,
@@ -2199,7 +2253,13 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 			await raceWithDisconnect(dismissOpenMenus(Runtime).catch(() => false));
 			await raceWithDisconnect(
 				withRetries(
-					() => ensureModelSelection(Runtime, modelSelectionPlan.model, logger, modelSelectionPlan.strategy),
+					() =>
+						ensureModelSelection(
+							Runtime,
+							modelSelectionPlan.model,
+							logger,
+							modelSelectionPlan.strategy,
+						),
 					{
 						retries: 2,
 						delayMs: 300,
@@ -2228,12 +2288,13 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 			await raceWithDisconnect(dismissOpenMenus(Runtime).catch(() => false));
 			await raceWithDisconnect(
 				withRetries(
-					() => ensureChatgptWorkModelSelection(
-						Runtime,
-						modelSelectionPlan.model,
-						logger,
-						modelSelectionPlan.strategy,
-					),
+					() =>
+						ensureChatgptWorkModelSelection(
+							Runtime,
+							modelSelectionPlan.model,
+							logger,
+							modelSelectionPlan.strategy,
+						),
 					{ retries: 2, delayMs: 300 },
 				),
 			);
@@ -2281,7 +2342,12 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 			await raceWithDisconnect(dismissOpenMenus(Runtime).catch(() => false));
 			await raceWithDisconnect(
 				withRetries(
-					() => ensureChatgptComposerTool(client as ChromeClient, config.composerTool as string, logger),
+					() =>
+						ensureChatgptComposerTool(
+							client as ChromeClient,
+							config.composerTool as string,
+							logger,
+						),
 					{
 						retries: 2,
 						delayMs: 300,
@@ -3040,6 +3106,24 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 	}
 }
 
+function withAgentBrowserRuntimeHints(
+	options: BrowserRunOptions,
+	bridge: AgentBrowserBridgeResult,
+): BrowserRunOptions {
+	return {
+		...options,
+		runtimeHintCb: async (hint) =>
+			options.runtimeHintCb?.({
+				...hint,
+				agentBrowserBaseUrl: bridge.baseUrl,
+				agentBrowserBrowserId: bridge.browserId,
+				agentBrowserProfileId: bridge.profileId,
+				agentBrowserServiceTabHandle: bridge.serviceTabHandle,
+				agentBrowserSessionName: bridge.sessionName,
+			}),
+	};
+}
+
 async function waitForLogin({
 	runtime,
 	logger,
@@ -3152,6 +3236,7 @@ async function runRemoteBrowserMode(
 	config: ReturnType<typeof resolveBrowserConfig>,
 	logger: BrowserLogger,
 	options: BrowserRunOptions,
+	agentBrowserBridge: AgentBrowserBridgeResult | null = null,
 ): Promise<BrowserRunResult> {
 	const remoteChromeConfig = config.remoteChrome;
 	if (!remoteChromeConfig) {
@@ -3222,12 +3307,26 @@ async function runRemoteBrowserMode(
 	const passiveObservations: BrowserPassiveObservation[] = [];
 
 	try {
-		const connection = await connectToRemoteChrome(host, port, logger, config.url, {
-			compatibleHosts: resolveCompatibleHostsForUrl(config.url),
-			serviceTabLimit: config.serviceTabLimit ?? undefined,
-			blankTabLimit: config.blankTabLimit ?? undefined,
-			collapseDisposableWindows: config.collapseDisposableWindows,
-		});
+		const retainedTargetId =
+			typeof agentBrowserBridge?.serviceTabHandle.targetId === "string"
+				? agentBrowserBridge.serviceTabHandle.targetId
+				: null;
+		const connection = retainedTargetId
+			? await connectToChromeTarget({ host, port, target: retainedTargetId, logger }).then(
+					(retainedClient) => ({
+						client: retainedClient,
+						targetId: retainedTargetId,
+						host,
+						port,
+						dispose: undefined,
+					}),
+				)
+			: await connectToRemoteChrome(host, port, logger, config.url, {
+					compatibleHosts: resolveCompatibleHostsForUrl(config.url),
+					serviceTabLimit: config.serviceTabLimit ?? undefined,
+					blankTabLimit: config.blankTabLimit ?? undefined,
+					collapseDisposableWindows: config.collapseDisposableWindows,
+				});
 		client = connection.client;
 		remoteTargetId = connection.targetId ?? null;
 		connectedHost = connection.host;
@@ -3297,7 +3396,9 @@ async function runRemoteBrowserMode(
 		const chatgptMode = config.chatgptMode ?? "chat";
 		await ensureChatgptComposerMode(Runtime, chatgptMode, logger);
 		await ensurePromptReady(Runtime, config.inputTimeoutMs, logger);
-		logger(`Prompt textarea ready (after ${chatgptMode} mode, ${promptText.length.toLocaleString()} chars queued)`);
+		logger(
+			`Prompt textarea ready (after ${chatgptMode} mode, ${promptText.length.toLocaleString()} chars queued)`,
+		);
 		const modelStrategy = config.modelStrategy ?? DEFAULT_MODEL_STRATEGY;
 		const modelSelectionPlan = resolveChatgptModelSelectionPlan({
 			mode: chatgptMode,
@@ -3308,7 +3409,13 @@ async function runRemoteBrowserMode(
 		if (modelSelectionPlan.kind === "chat-model") {
 			await dismissOpenMenus(Runtime).catch(() => false);
 			await withRetries(
-				() => ensureModelSelection(Runtime, modelSelectionPlan.model, logger, modelSelectionPlan.strategy),
+				() =>
+					ensureModelSelection(
+						Runtime,
+						modelSelectionPlan.model,
+						logger,
+						modelSelectionPlan.strategy,
+					),
 				{
 					retries: 2,
 					delayMs: 300,
@@ -3328,12 +3435,13 @@ async function runRemoteBrowserMode(
 		} else if (modelSelectionPlan.kind === "work-model") {
 			await dismissOpenMenus(Runtime).catch(() => false);
 			await withRetries(
-				() => ensureChatgptWorkModelSelection(
-					Runtime,
-					modelSelectionPlan.model,
-					logger,
-					modelSelectionPlan.strategy,
-				),
+				() =>
+					ensureChatgptWorkModelSelection(
+						Runtime,
+						modelSelectionPlan.model,
+						logger,
+						modelSelectionPlan.strategy,
+					),
 				{ retries: 2, delayMs: 300 },
 			);
 			await ensurePromptReady(Runtime, config.inputTimeoutMs, logger);
@@ -3375,7 +3483,8 @@ async function runRemoteBrowserMode(
 			}
 			await dismissOpenMenus(Runtime).catch(() => false);
 			await withRetries(
-				() => ensureChatgptComposerTool(client as ChromeClient, config.composerTool as string, logger),
+				() =>
+					ensureChatgptComposerTool(client as ChromeClient, config.composerTool as string, logger),
 				{
 					retries: 2,
 					delayMs: 300,
@@ -3933,12 +4042,16 @@ async function runRemoteBrowserMode(
 			// ignore
 		}
 		removeDialogHandler?.();
-		await closeRemoteChromeTarget(
-			connectedHost,
-			connectedPort,
-			remoteTargetId ?? undefined,
-			logger,
-		);
+		if (agentBrowserBridge) {
+			logger("agent-browser owns the retained ChatGPT tab; leaving it open for broker reuse.");
+		} else {
+			await closeRemoteChromeTarget(
+				connectedHost,
+				connectedPort,
+				remoteTargetId ?? undefined,
+				logger,
+			);
+		}
 		await disposeRemoteTransport?.().catch(() => undefined);
 		// Don't kill remote Chrome - it's not ours to manage
 		const totalSeconds = (Date.now() - startedAt) / 1000;
@@ -3952,6 +4065,7 @@ async function runRemoteGrokBrowserMode(
 	config: ReturnType<typeof resolveBrowserConfig>,
 	logger: BrowserLogger,
 	options: BrowserRunOptions,
+	agentBrowserBridge: AgentBrowserBridgeResult | null = null,
 ): Promise<BrowserRunResult> {
 	const passiveObservations: BrowserPassiveObservation[] = [];
 	const remoteChromeConfig = config.remoteChrome;
@@ -3997,12 +4111,26 @@ async function runRemoteGrokBrowserMode(
 				? resolveGrokConversationUrl(config.conversationId, config.projectId)
 				: resolveGrokProjectUrl(config.projectId);
 		}
-		const connection = await connectToRemoteChrome(host, port, logger, grokTargetUrl, {
-			compatibleHosts: resolveCompatibleHostsForUrl(grokTargetUrl),
-			serviceTabLimit: config.serviceTabLimit ?? undefined,
-			blankTabLimit: config.blankTabLimit ?? undefined,
-			collapseDisposableWindows: config.collapseDisposableWindows,
-		});
+		const retainedTargetId =
+			typeof agentBrowserBridge?.serviceTabHandle.targetId === "string"
+				? agentBrowserBridge.serviceTabHandle.targetId
+				: null;
+		const connection = retainedTargetId
+			? await connectToChromeTarget({ host, port, target: retainedTargetId, logger }).then(
+					(retainedClient) => ({
+						client: retainedClient,
+						targetId: retainedTargetId,
+						host,
+						port,
+						dispose: undefined,
+					}),
+				)
+			: await connectToRemoteChrome(host, port, logger, grokTargetUrl, {
+					compatibleHosts: resolveCompatibleHostsForUrl(grokTargetUrl),
+					serviceTabLimit: config.serviceTabLimit ?? undefined,
+					blankTabLimit: config.blankTabLimit ?? undefined,
+					collapseDisposableWindows: config.collapseDisposableWindows,
+				});
 		client = connection.client;
 		remoteTargetId = connection.targetId ?? null;
 		connectedHost = connection.host;
@@ -4160,12 +4288,16 @@ async function runRemoteGrokBrowserMode(
 		} catch {
 			// ignore
 		}
-		await closeRemoteChromeTarget(
-			connectedHost,
-			connectedPort,
-			remoteTargetId ?? undefined,
-			logger,
-		);
+		if (agentBrowserBridge) {
+			logger("agent-browser owns the retained Grok tab; leaving it open for broker reuse.");
+		} else {
+			await closeRemoteChromeTarget(
+				connectedHost,
+				connectedPort,
+				remoteTargetId ?? undefined,
+				logger,
+			);
+		}
 		await disposeRemoteTransport?.().catch(() => undefined);
 		const totalSeconds = (Date.now() - startedAt) / 1000;
 		logger(`Remote session complete • ${totalSeconds.toFixed(1)}s total`);
