@@ -1,3 +1,8 @@
+- 2026-08-14: Repeated partial CDP clients should be built by small fixture
+  constructors with computed exact-name keys. This keeps Page, Runtime, and
+  Input contracts visible, removes per-call suppressions, and gives test suites
+  one place to define the intentional unknown-to-protocol boundary.
+
 - 2026-08-14: Reattach tests should cross the same session-to-resolved-config
   boundary as production. A small typed fixture adapter can normalize the one
   reattach-only action before calling the production resolver, while computed

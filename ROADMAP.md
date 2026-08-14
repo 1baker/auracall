@@ -7,6 +7,11 @@
 Status: active
 Lane: P01
 
+- Closed accepted browser UI CDP fixture ratchet:
+  [docs/dev/plans/0305-2026-08-14-browser-ui-cdp-fixture-ratchet.md](docs/dev/plans/0305-2026-08-14-browser-ui-cdp-fixture-ratchet.md)
+  Repeated Page/Runtime/Input test clients now share exact-name constructors,
+  eliminating warnings and suppressions without changing protocol contracts.
+
 - Closed accepted browser reattach fixture lint ratchet:
   [docs/dev/plans/0304-2026-08-14-reattach-fixture-lint-ratchet.md](docs/dev/plans/0304-2026-08-14-reattach-fixture-lint-ratchet.md)
   Recovery fixtures now use exported production contracts, and exact DevTools

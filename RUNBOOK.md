@@ -1,5 +1,14 @@
 # RUNBOOK
 
+## Turn 474 | 2026-08-14
+
+- Selected the 24-warning browser-service UI cluster after Plan 0304 because
+  every diagnostic represented an exact CDP client key.
+- Closed Plan 0305 by centralizing Page/Runtime, Runtime/Input, and Input-only
+  fixture constructors and removing four nearby naming suppressions.
+- All 58 suite tests and broad gates passed. Full lint now reports 107 warnings
+  in the six remaining test files.
+
 ## Turn 473 | 2026-08-14
 
 - Selected the 14-warning browser reattach suite after Plan 0303 because it is

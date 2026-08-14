@@ -42,6 +42,22 @@ import {
 } from '../../packages/browser-service/src/service/ui.js';
 import { createInMemoryBrowserMutationLog } from '../../packages/browser-service/src/service/mutationDispatcher.js';
 
+const pageDomainName = 'Page';
+const runtimeDomainName = 'Runtime';
+const inputDomainName = 'Input';
+
+function createPageRuntimeClient(page: unknown, runtime: unknown) {
+  return { [pageDomainName]: page as never, [runtimeDomainName]: runtime as never };
+}
+
+function createRuntimeInputClient(runtime: unknown, input: unknown) {
+  return { [runtimeDomainName]: runtime as never, [inputDomainName]: input as never };
+}
+
+function createInputClient(input: unknown) {
+  return { [inputDomainName]: input as never };
+}
+
 function createRuntime(values: unknown[]) {
   let callIndex = 0;
   const evaluate = vi.fn(async () => {
@@ -400,8 +416,7 @@ describe('browser-service ui wait helpers', () => {
     };
 
     const result = await pressButtonWithTrustedPointer(
-      // biome-ignore lint/style/useNamingConvention: CDP protocol domains use canonical capitalized names.
-      { Runtime: runtime as never, Input: input as never },
+      createRuntimeInputClient(runtime, input),
       {
         rootSelectors: ['[role="dialog"]'],
         match: { exact: ['refresh'] },
@@ -462,8 +477,7 @@ describe('browser-service ui wait helpers', () => {
     };
 
     const result = await pressButtonWithTrustedPointer(
-      // biome-ignore lint/style/useNamingConvention: CDP protocol domains use canonical capitalized names.
-      { Runtime: runtime as never, Input: input as never },
+      createRuntimeInputClient(runtime, input),
       {
         match: { exact: ['refresh'] },
         timeoutMs: 50,
@@ -1277,7 +1291,7 @@ describe('browser-service ui wait helpers', () => {
       navigate: vi.fn(async () => undefined),
     };
 
-    const result = await navigateAndSettle({ Page: PAGE as never, Runtime: runtime as never }, {
+    const result = await navigateAndSettle(createPageRuntimeClient(PAGE, runtime), {
       url: 'https://grok.com/files',
       routeExpression: 'location.pathname === "/files"',
       readyExpression: 'window.__filesReady',
@@ -1299,8 +1313,7 @@ describe('browser-service ui wait helpers', () => {
       const PAGE = {
         navigate: vi.fn(() => new Promise<never>(() => undefined)),
       };
-      // biome-ignore lint/style/useNamingConvention: CDP protocol domains use canonical capitalized names.
-      const pending = navigateAndSettle({ Page: PAGE as never, Runtime: runtime as never }, {
+      const pending = navigateAndSettle(createPageRuntimeClient(PAGE, runtime), {
         url: 'https://grok.com/files',
         waitForDocumentReady: false,
         timeoutMs: 25,
@@ -1353,7 +1366,7 @@ describe('browser-service ui wait helpers', () => {
       navigate: vi.fn(async () => undefined),
     };
 
-    const result = await navigateAndSettle({ Page: PAGE as never, Runtime: runtime as never }, {
+    const result = await navigateAndSettle(createPageRuntimeClient(PAGE, runtime), {
       url: 'https://grok.com/files',
       routeExpression: 'location.pathname === "/files"',
       readyExpression: 'window.__filesReady',
@@ -1394,7 +1407,7 @@ describe('browser-service ui wait helpers', () => {
       navigate: vi.fn(async () => undefined),
     };
 
-    const result = await navigateAndSettle({ Page: PAGE as never, Runtime: runtime as never }, {
+    const result = await navigateAndSettle(createPageRuntimeClient(PAGE, runtime), {
       url: 'https://grok.com/files?a=1&b=2#new-selection',
       routeExpression: 'location.pathname === "/files"',
       readyExpression: 'window.__filesReady',
@@ -1423,7 +1436,7 @@ describe('browser-service ui wait helpers', () => {
     };
 
     try {
-      const result = await navigateAndSettle({ Page: PAGE as never, Runtime: runtime as never }, {
+      const result = await navigateAndSettle(createPageRuntimeClient(PAGE, runtime), {
         url: 'https://chatgpt.com/c/123',
         forceNavigation: true,
         waitForDocumentReady: false,
@@ -1470,7 +1483,7 @@ describe('browser-service ui wait helpers', () => {
       navigate: vi.fn(async () => undefined),
     };
 
-    const result = await navigateAndSettle({ Page: PAGE as never, Runtime: runtime as never }, {
+    const result = await navigateAndSettle(createPageRuntimeClient(PAGE, runtime), {
       url: 'https://chatgpt.com/c/123?view=full',
       routeExpression: 'location.pathname === "/c/123"',
       readyExpression: 'window.__conversationReady',
@@ -1495,7 +1508,7 @@ describe('browser-service ui wait helpers', () => {
       navigate: vi.fn(async () => undefined),
     };
 
-    const result = await navigateAndSettle({ Page: PAGE as never, Runtime: runtime as never }, {
+    const result = await navigateAndSettle(createPageRuntimeClient(PAGE, runtime), {
       url: 'https://chatgpt.com/c/123',
       routeExpression: 'location.pathname === "/c/123"',
       readyExpression: 'window.__conversationReady',
@@ -1530,7 +1543,7 @@ describe('browser-service ui wait helpers', () => {
       reload: vi.fn(async () => undefined),
     };
 
-    const result = await reloadAndSettle({ Page: PAGE as never, Runtime: runtime as never }, {
+    const result = await reloadAndSettle(createPageRuntimeClient(PAGE, runtime), {
       ignoreCache: true,
       timeoutMs: 50,
       pollMs: 1,
@@ -1580,12 +1593,7 @@ describe('browser-service ui wait helpers', () => {
     const runtime = {
       evaluate: vi.fn(async () => ({ result: { value: 'https://chatgpt.com/c/123' } })),
     };
-    const client = {
-      // biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names.
-      Page: PAGE as never,
-      // biome-ignore lint/style/useNamingConvention: mirrors DevTools protocol domain names.
-      Runtime: runtime as never,
-    };
+    const client = createPageRuntimeClient(PAGE, runtime);
     let outcome:
       | { kind: 'pending' }
       | { kind: 'resolved'; value: unknown }
@@ -1906,7 +1914,7 @@ describe('browser-service ui wait helpers', () => {
     };
 
     const result = await clickRevealedRowAction(
-      { Runtime: runtime as never, Input: input as never },
+      createRuntimeInputClient(runtime, input),
       {
         rowSelector: '[data-row="true"]',
         anchorSelector: '[data-item="true"]',
@@ -1954,7 +1962,7 @@ describe('browser-service ui wait helpers', () => {
     };
 
     const result = await openRevealedRowMenu(
-      { Runtime: runtime as never, Input: input as never },
+      createRuntimeInputClient(runtime, input),
       {
         rowSelector: '[data-row="true"]',
         triggerSelector: '[data-options="true"]',
@@ -2010,7 +2018,7 @@ describe('browser-service ui wait helpers', () => {
     };
 
     const result = await openRevealedRowMenu(
-      { Runtime: runtime as never, Input: input as never },
+      createRuntimeInputClient(runtime, input),
       {
         rowSelector: '[data-row="true"]',
         triggerSelector: '[data-options="true"]',
@@ -2065,7 +2073,7 @@ describe('browser-service ui wait helpers', () => {
     };
 
     const result = await openAndSelectRevealedRowMenuItem(
-      { Runtime: runtime as never, Input: input as never },
+      createRuntimeInputClient(runtime, input),
       {
         rowSelector: '[data-row="true"]',
         triggerSelector: '[data-options="true"]',
@@ -2135,7 +2143,7 @@ describe('browser-service ui wait helpers', () => {
         timeoutMs: 50,
         submitStrategy: 'native-then-synthetic',
       },
-      { Input: input as never },
+      createInputClient(input),
     );
 
     expect(result).toEqual({ ok: true });
@@ -2174,7 +2182,7 @@ describe('browser-service ui wait helpers', () => {
         entryStrategy: 'native-input',
         submitStrategy: 'native-enter',
       },
-      { Input: input as never },
+      createInputClient(input),
     );
 
     expect(result).toEqual({ ok: true });

@@ -1,3 +1,12 @@
+## 2026-08-14 | Plan 0305 browser UI CDP fixture ratchet
+
+- Selected 24 naming warnings plus four nearby suppressions in the
+  browser-service UI suite.
+- Centralized three partial CDP client shapes with computed exact-name keys and
+  added the complete suite to warning-strict lint.
+- All 58 tests, typecheck, build, strict gates, full lint at 107 warnings, and
+  plan audit passed. Plan 0305 is CLOSED.
+
 ## 2026-08-14 | Plan 0304 browser reattach fixture lint ratchet
 
 - Selected the central reattach recovery suite's ten explicit-any warnings and
