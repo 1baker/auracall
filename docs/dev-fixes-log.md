@@ -1,3 +1,9 @@
+- 2026-08-14: Closed-world identifiers exposed through CLI, HTTP validation,
+  machine-readable discovery, and UI selectors must come from one executable
+  contract. Keep presentation labels at the UI boundary, but derive every
+  accepted or advertised value plus the default from the shared tuple so a
+  newly added adapter cannot create silent cross-surface drift.
+
 - 2026-08-14: A whole-operation deadline can release a browser-operation lease
   while leaving its underlying DevTools attachment uncancellable and
   unobservable. Carry one abort/deadline/stage contract through target

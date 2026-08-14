@@ -1969,6 +1969,15 @@ describe("handoff prepare CLI helpers", () => {
 		).rejects.toThrow("Gemini browser handoff recovery requires resolved AuraCall config.");
 	});
 
+	test("CLI live recovery rejects adapter names outside the shared contract", async () => {
+		await expect(
+			recoverLiveHandoffForCli({
+				handoffId: "unsupported-adapter",
+				targetAdapter: "claude-browser" as never,
+			}),
+		).rejects.toThrow("Unsupported handoff target adapter: claude-browser");
+	});
+
 	test("live recovery can execute through an injected provider-native target adapter", async () => {
 		const root = await tempRoot("auracall-handoff-provider-adapter-");
 		const selectedPath = path.join(root, "provider-adapter.txt");

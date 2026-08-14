@@ -1,5 +1,16 @@
 # RUNBOOK
 
+## Turn 466 | 2026-08-14
+
+- The Plan 0294-0296 parity repairs exposed the underlying drift mechanism:
+  CLI, HTTP validation/discovery, and console code each owned independent
+  handoff adapter literals.
+- Closed Plan 0297 after moving the ordered identifiers, inferred type, packet
+  default, and type guard into one source contract. UI labels remain local,
+  while their values derive exhaustively from the shared tuple.
+- Provider-free contract and cross-surface tests plus broad repository gates
+  passed. No adapter behavior or live/runtime state changed.
+
 ## Turn 465 | 2026-08-14
 
 - Compared the corrected human endpoint contract with machine-readable

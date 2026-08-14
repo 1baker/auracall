@@ -135,6 +135,11 @@ import {
 	recoverHandoffLive,
 	repairHandoffPacket,
 } from "../handoff/service.js";
+import {
+	DEFAULT_HANDOFF_TARGET_ADAPTER,
+	HANDOFF_TARGET_ADAPTER_NAMES,
+	type HandoffTargetAdapterName,
+} from "../handoff/targetAdapterContract.js";
 import { probeMediaGenerationBrowserDiagnostics } from "../media/browserDiagnostics.js";
 import {
 	createBrowserMediaGenerationExecutor,
@@ -5070,8 +5075,7 @@ function createHttpStatusResponse(input: {
 			handoffResumeTemplate: 'POST /v1/handoffs/{handoff_id}/resume {"outputDir":"optional"}',
 			handoffRepairTemplate: 'POST /v1/handoffs/{handoff_id}/repair {"outputDir":"optional"}',
 			handoffExportTemplate: 'POST /v1/handoffs/{handoff_id}/export {"outputDir":"optional"}',
-			handoffRecoverLiveTemplate:
-				'POST /v1/handoffs/{handoff_id}/recover-live {"outputDir":"optional","targetAdapter":"packet|chatgpt-browser|gemini-browser"}',
+			handoffRecoverLiveTemplate: `POST /v1/handoffs/{handoff_id}/recover-live {"outputDir":"optional","targetAdapter":"${HANDOFF_TARGET_ADAPTER_NAMES.join("|")}"}`,
 			operatorBrowserDashboard: serviceDiscovery.routing.dashboardPath,
 			operatorDebugDashboard: serviceDiscovery.routing.debugDashboardPath,
 			accountMirrorDashboard: serviceDiscovery.routing.accountMirrorPath,
@@ -8952,21 +8956,21 @@ function parseConfigApiKeyIssueRequest(value: unknown) {
 
 const HANDOFF_OPERATOR_REQUEST_SCHEMA = z.object({
 	outputDir: z.string().trim().min(1).optional(),
-	targetAdapter: z.enum(["packet", "chatgpt-browser", "gemini-browser"]).optional(),
+	targetAdapter: z.enum(HANDOFF_TARGET_ADAPTER_NAMES).optional(),
 });
 
 function parseHandoffOperatorRequestBody(value: unknown): {
 	outputDir?: string;
-	targetAdapter?: "packet" | "chatgpt-browser" | "gemini-browser";
+	targetAdapter?: HandoffTargetAdapterName;
 } {
 	return HANDOFF_OPERATOR_REQUEST_SCHEMA.parse(value);
 }
 
 function resolveHandoffRecoverLiveTargetAdapter(
-	targetAdapter: "packet" | "chatgpt-browser" | "gemini-browser" | undefined,
+	targetAdapter: HandoffTargetAdapterName | undefined,
 	resolvedUserConfig: ResolvedUserConfig | null,
 ) {
-	const adapterName = targetAdapter ?? "packet";
+	const adapterName = targetAdapter ?? DEFAULT_HANDOFF_TARGET_ADAPTER;
 	if (adapterName === "packet") return null;
 	if (!resolvedUserConfig) {
 		throw new HttpInvalidRequestError(

@@ -7,6 +7,11 @@
 Status: active
 Lane: P01
 
+- Closed accepted handoff target-adapter contract centralization:
+  [docs/dev/plans/0297-2026-08-14-handoff-target-adapter-contract-centralization.md](docs/dev/plans/0297-2026-08-14-handoff-target-adapter-contract-centralization.md)
+  CLI, HTTP validation/discovery, and console option values now derive their
+  ordered adapter identifiers and packet default from one tested contract.
+
 - Closed accepted handoff recovery discovery-template parity:
   [docs/dev/plans/0296-2026-08-14-handoff-recovery-discovery-template-parity.md](docs/dev/plans/0296-2026-08-14-handoff-recovery-discovery-template-parity.md)
   Machine-readable `/status` discovery now advertises optional `outputDir` and

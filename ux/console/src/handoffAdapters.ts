@@ -1,13 +1,22 @@
-export const HANDOFF_TARGET_ADAPTER_OPTIONS = [
-	{ value: "packet", label: "Packet" },
-	{ value: "chatgpt-browser", label: "ChatGPT browser" },
-	{ value: "gemini-browser", label: "Gemini browser" },
-] as const;
+import {
+	DEFAULT_HANDOFF_TARGET_ADAPTER,
+	HANDOFF_TARGET_ADAPTER_NAMES,
+	type HandoffTargetAdapterName,
+} from "../../../src/handoff/targetAdapterContract.js";
 
-export type HandoffTargetAdapterName =
-	(typeof HANDOFF_TARGET_ADAPTER_OPTIONS)[number]["value"];
+const HANDOFF_TARGET_ADAPTER_LABELS = {
+	packet: "Packet",
+	"chatgpt-browser": "ChatGPT browser",
+	"gemini-browser": "Gemini browser",
+} satisfies Record<HandoffTargetAdapterName, string>;
 
-export const DEFAULT_HANDOFF_TARGET_ADAPTER: HandoffTargetAdapterName = "packet";
+export { DEFAULT_HANDOFF_TARGET_ADAPTER };
+export type { HandoffTargetAdapterName };
+
+export const HANDOFF_TARGET_ADAPTER_OPTIONS = HANDOFF_TARGET_ADAPTER_NAMES.map((value) => ({
+	value,
+	label: HANDOFF_TARGET_ADAPTER_LABELS[value],
+}));
 
 export function buildHandoffActionBody(
 	action: string,

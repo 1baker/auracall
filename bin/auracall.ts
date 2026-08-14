@@ -210,6 +210,10 @@ import {
   uploadHandoffForCli,
 } from '../src/cli/handoffCommand.js';
 import {
+  DEFAULT_HANDOFF_TARGET_ADAPTER,
+  HANDOFF_TARGET_ADAPTER_NAMES,
+} from '../src/handoff/targetAdapterContract.js';
+import {
   clearApiMirrorProviderGuardForCli,
   formatApiMirrorProviderGuardClearCliSummary,
 } from '../src/cli/apiMirrorProviderGuardCommand.js';
@@ -2032,7 +2036,11 @@ handoffCommand
   .description('Execute the current approved handoff resume action and write live recovery evidence.')
   .argument('<id>', 'Handoff packet id.')
   .option('--output-dir <path>', 'Directory where handoff packet directories are written.')
-  .option('--target-adapter <adapter>', 'Target adapter to execute: packet, chatgpt-browser, or gemini-browser.', 'packet')
+  .option(
+    '--target-adapter <adapter>',
+    `Target adapter to execute: ${HANDOFF_TARGET_ADAPTER_NAMES.join(', ')}.`,
+    DEFAULT_HANDOFF_TARGET_ADAPTER,
+  )
   .option('--json', 'Emit machine-readable JSON output.', false)
   .action(async (id: string, commandOptions) => {
     const parentOptions = program.opts?.() ?? {};

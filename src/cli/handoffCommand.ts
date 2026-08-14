@@ -28,6 +28,11 @@ import {
 	uploadHandoffTargetPackage,
 } from "../handoff/service.js";
 import {
+	DEFAULT_HANDOFF_TARGET_ADAPTER,
+	type HandoffTargetAdapterName,
+	isHandoffTargetAdapterName,
+} from "../handoff/targetAdapterContract.js";
+import {
 	type ApiHistoryMaterializationCreateCliOptions,
 	type ApiHistoryMaterializationStatusCliOptions,
 	createApiHistoryMaterializationJobForCli,
@@ -119,7 +124,7 @@ export interface HandoffRecoverLiveCliOptions {
 	targetAdapterFactory?: ((config: ResolvedUserConfig) => HandoffTargetAdapter) | null;
 }
 
-export type HandoffRecoverLiveTargetAdapterName = "packet" | "chatgpt-browser" | "gemini-browser";
+export type HandoffRecoverLiveTargetAdapterName = HandoffTargetAdapterName;
 
 export interface HandoffMaterializationClient {
 	readJob(options: ApiHistoryMaterializationStatusCliOptions): Promise<unknown>;
@@ -308,9 +313,9 @@ export async function recoverLiveHandoffForCli(
 function resolveHandoffRecoverLiveTargetAdapter(
 	options: HandoffRecoverLiveCliOptions,
 ): HandoffTargetAdapter | null {
-	const adapterName = options.targetAdapter ?? "packet";
+	const adapterName = options.targetAdapter ?? DEFAULT_HANDOFF_TARGET_ADAPTER;
 	if (adapterName === "packet") return null;
-	if (adapterName !== "chatgpt-browser" && adapterName !== "gemini-browser") {
+	if (!isHandoffTargetAdapterName(adapterName)) {
 		throw new Error(`Unsupported handoff target adapter: ${adapterName}`);
 	}
 	if (!options.config) {

@@ -1,3 +1,13 @@
+## 2026-08-14 | Plan 0297 handoff target-adapter contract centralization
+
+- Plans 0294-0296 repaired three visible parity defects, but executable adapter
+  identifiers still lived independently in CLI, HTTP, and console modules.
+- Added one ordered tuple, inferred type, packet default, and runtime guard;
+  validation, discovery, help, and selector values now derive from it while
+  presentation labels remain UI-owned.
+- Provider-free contract and cross-surface tests plus broad repository gates
+  passed. Plan 0297 is CLOSED without live or installed-runtime effects.
+
 ## 2026-08-14 | Plan 0296 handoff recovery discovery-template parity
 
 - The human endpoint reference is now correct, but `/status` discovery still
