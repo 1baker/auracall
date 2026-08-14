@@ -1,5 +1,16 @@
 # RUNBOOK
 
+## Turn 464 | 2026-08-14
+
+- Audited the canonical endpoint contract after closing console handoff parity.
+  `docs/openai-endpoints.md` omitted every handoff operator route even though it
+  declares itself the endpoint authority.
+- Closed Plan 0295 after documenting the exact five-route GET/POST contract,
+  operator auth boundary, optional packet root, three adapter values, packet
+  default, and live-effect gates from direct server evidence.
+- This was docs-only hardening. No source behavior, browser, provider, service,
+  config, or installed runtime changed.
+
 ## Turn 463 | 2026-08-14
 
 - Audited Plan 0293's operator-surface claim after publication and found a

@@ -21749,3 +21749,13 @@ browser-stage lifecycle observability, not transcript truncation.
   module, then test both the option set and request serialization.
 - Verify the production bundle contains the new option. Source tests alone do
   not prove the shipped console asset carries the contract.
+
+## 2026-08-14 | Treat the endpoint index as a complete operator contract
+
+- A workflow description in README does not replace the canonical endpoint
+  index when operators need exact methods, paths, bodies, defaults, and auth.
+- Derive endpoint documentation from the route matcher, request schema, and
+  handler together; documenting only the happy-path URL misses fail-closed
+  boundaries.
+- Do not document approval/upload/submit endpoints merely because matching CLI
+  commands exist. The HTTP contract must list only implemented routes.

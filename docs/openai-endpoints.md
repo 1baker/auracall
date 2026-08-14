@@ -52,6 +52,11 @@ Current endpoints:
 - `POST /v1/tenant-pool-teams/ensure`
 - `POST /v1/agent-setup-packages`
 - `POST /v1/agent-setup-handoffs`
+- `GET /v1/handoffs/{handoff_id}/status`
+- `POST /v1/handoffs/{handoff_id}/resume`
+- `POST /v1/handoffs/{handoff_id}/repair`
+- `POST /v1/handoffs/{handoff_id}/export`
+- `POST /v1/handoffs/{handoff_id}/recover-live`
 - `POST /v1/responses`
 - `GET /v1/responses/{response_id}`
 - `POST /v1/response-batches`
@@ -213,6 +218,22 @@ Current limits:
   - this is the default setup endpoint for privileged agents preparing work for
     downstream clients
   - when API auth is enabled, this route requires an unscoped operator key
+- `/v1/handoffs/{handoff_id}/...` exposes the packet-owned operator workflow:
+  - every route uses the operator authorization boundary when API auth is
+    enabled
+  - `GET .../status` accepts optional `outputDir` as a query parameter, performs
+    no provider work, and returns `404 not_found_error` for a missing packet
+  - `POST .../resume`, `.../repair`, and `.../export` accept optional
+    `{ "outputDir": "..." }`; they operate on durable packet state and do not
+    select a browser adapter
+  - `POST .../recover-live` accepts optional `outputDir` plus
+    `targetAdapter = packet|chatgpt-browser|gemini-browser`
+  - `packet` is the default recovery adapter. Browser adapters require resolved
+    browser-capable AuraCall config and execute only the current approval-
+    validated resume-plan action; missing or stale approvals remain blocked
+  - adapter availability and packet recovery are not live provider proof. A
+    ChatGPT or Gemini browser target mutation remains an explicit operator
+    action subject to provider identity, guard, CAPTCHA, and rate-limit stops
 - `POST /v1/response-batches` is the first nonblocking batch enqueue surface:
   - accepts `{ "requests": [ ... ] }`, where each child request is an ordinary
     `/v1/responses` body, plus optional `metadata`, caller-supplied `id`, and

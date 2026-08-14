@@ -1,3 +1,13 @@
+## 2026-08-14 | Plan 0295 handoff HTTP endpoint reference parity
+
+- The canonical local HTTP reference omitted all five packet-owned handoff
+  routes even though README and the console depended on them.
+- Read the route matcher, request schema, authorization boundary, and handler
+  directly, then documented status, resume, repair, export, and recover-live
+  with exact method/body/default behavior.
+- Plan 0295 is CLOSED as docs-only hardening. Plan audit and diff hygiene pass;
+  no runtime or provider effect occurred.
+
 ## 2026-08-14 | Plan 0294 console Gemini handoff adapter parity
 
 - Post-publication inspection found that Plan 0293 wired CLI and HTTP but left

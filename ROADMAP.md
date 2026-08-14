@@ -7,6 +7,11 @@
 Status: active
 Lane: P01
 
+- Closed accepted handoff HTTP endpoint reference parity:
+  [docs/dev/plans/0295-2026-08-14-handoff-http-endpoint-reference-parity.md](docs/dev/plans/0295-2026-08-14-handoff-http-endpoint-reference-parity.md)
+  The canonical endpoint contract now lists and explains all five handoff
+  operator routes, including auth, packet-root, adapter, and live-effect gates.
+
 - Closed accepted console Gemini handoff adapter parity:
   [docs/dev/plans/0294-2026-08-14-console-gemini-handoff-adapter-parity.md](docs/dev/plans/0294-2026-08-14-console-gemini-handoff-adapter-parity.md)
   The Handoffs selector now exposes the same Packet, ChatGPT, and Gemini
