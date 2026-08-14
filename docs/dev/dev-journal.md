@@ -1,3 +1,13 @@
+## 2026-08-14 | Plan 0300 incremental strict-test lint ratchet
+
+- Ranked the 197 test-only warnings and selected the largest safe cluster: 21
+  non-null assertions around nullable HTTP runtime-control fixture reads.
+- Added one labeled generic fixture guard, removed all compile-only assertions,
+  and added the clean HTTP suite to a warning-strict test lint command wired
+  into normal lint.
+- The complete HTTP suite and broad gates passed. Plan 0300 is CLOSED with 176
+  warnings remaining in test files not yet migrated.
+
 ## 2026-08-14 | Plan 0299 operational-scripts zero-warning lint baseline
 
 - The post-Plan 0298 inventory left seven warnings in operational scripts:

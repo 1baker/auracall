@@ -1,3 +1,9 @@
+- 2026-08-14: Nullable fixture reads should not be followed by repeated
+  compile-only non-null assertions. Narrow once through a labeled runtime guard
+  so missing setup fails at the fixture boundary, then ratchet each cleaned
+  high-value test file into a warning-strict lint command while remaining test
+  debt is migrated incrementally.
+
 - 2026-08-14: Smoke fixtures should express totality rather than silence
   possibly-undefined values with non-null assertions. Use fixed tuples when an
   index is structurally guaranteed, make reusable sequences fail explicitly on

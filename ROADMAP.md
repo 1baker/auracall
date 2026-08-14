@@ -7,6 +7,11 @@
 Status: active
 Lane: P01
 
+- Closed accepted incremental strict-test lint ratchet:
+  [docs/dev/plans/0300-2026-08-14-incremental-strict-test-lint-ratchet.md](docs/dev/plans/0300-2026-08-14-incremental-strict-test-lint-ratchet.md)
+  The largest safe integration-test warning cluster is clean, fixture absence
+  fails explicitly, and normal lint now ratchets cleaned test files strictly.
+
 - Closed accepted operational-scripts zero-warning lint baseline:
   [docs/dev/plans/0299-2026-08-14-operational-scripts-lint-zero-baseline.md](docs/dev/plans/0299-2026-08-14-operational-scripts-lint-zero-baseline.md)
   Operational scripts are warning-clean, fixture sequences fail explicitly,

@@ -1,5 +1,15 @@
 # RUNBOOK
 
+## Turn 469 | 2026-08-14
+
+- Ranked 197 test-only warnings after Plan 0299. The largest safe cohesive
+  cluster was 21 compile-only assertions in the HTTP integration suite.
+- Closed Plan 0300 by routing nullable fixture reads through one labeled guard,
+  removing all assertions, and starting an additive strict-test lint ratchet
+  with the cleaned HTTP test file.
+- The complete provider-free HTTP suite and broad gates passed. Full lint now
+  reports 176 warnings only in test files not yet migrated.
+
 ## Turn 468 | 2026-08-14
 
 - After Plan 0298 isolated warning debt outside production source, ranked the

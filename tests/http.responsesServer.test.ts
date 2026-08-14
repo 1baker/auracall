@@ -86,6 +86,13 @@ function requireJsonObject(value: JsonValue | undefined, label: string): JsonObj
 	return value;
 }
 
+function requireFixtureValue<T>(value: T | null | undefined, label: string): T {
+	if (value == null) {
+		throw new Error(`${label} fixture was missing.`);
+	}
+	return value;
+}
+
 const completeAccountMirror = {
 	state: "complete" as const,
 	summary: "Mirrored metadata indexes are complete within current provider surfaces.",
@@ -10486,18 +10493,21 @@ describe("http responses adapter", () => {
 		try {
 			const runnerId = `runner:http-responses:127.0.0.1:${server.port}`;
 			const stepId = "status_cancel_run:step:1";
-			const record = await control.readRun("status_cancel_run");
+			const record = requireFixtureValue(
+				await control.readRun("status_cancel_run"),
+				"status_cancel_run",
+			);
 			await control.persistRun({
 				runId: "status_cancel_run",
-				expectedRevision: record!.revision,
+				expectedRevision: record.revision,
 				bundle: {
-					...record!.bundle,
+					...record.bundle,
 					run: {
-						...record!.bundle.run,
+						...record.bundle.run,
 						status: "running",
 						updatedAt: "2026-04-08T16:12:00.000Z",
 					},
-					steps: record!.bundle.steps.map((step) =>
+					steps: record.bundle.steps.map((step) =>
 						step.id === stepId
 							? {
 									...step,
@@ -10599,18 +10609,21 @@ describe("http responses adapter", () => {
 		try {
 			const runnerId = `runner:http-responses:127.0.0.1:${server.port}`;
 			const stepId = "status_cancel_recovery:step:1";
-			const record = await control.readRun("status_cancel_recovery");
+			const record = requireFixtureValue(
+				await control.readRun("status_cancel_recovery"),
+				"status_cancel_recovery",
+			);
 			await control.persistRun({
 				runId: "status_cancel_recovery",
-				expectedRevision: record!.revision,
+				expectedRevision: record.revision,
 				bundle: {
-					...record!.bundle,
+					...record.bundle,
 					run: {
-						...record!.bundle.run,
+						...record.bundle.run,
 						status: "running",
 						updatedAt: "2026-04-08T16:12:00.000Z",
 					},
-					steps: record!.bundle.steps.map((step) =>
+					steps: record.bundle.steps.map((step) =>
 						step.id === stepId
 							? {
 									...step,
@@ -10813,18 +10826,21 @@ describe("http responses adapter", () => {
 
 		try {
 			const stepId = "status_cancel_other_owner:step:1";
-			const record = await control.readRun("status_cancel_other_owner");
+			const record = requireFixtureValue(
+				await control.readRun("status_cancel_other_owner"),
+				"status_cancel_other_owner",
+			);
 			await control.persistRun({
 				runId: "status_cancel_other_owner",
-				expectedRevision: record!.revision,
+				expectedRevision: record.revision,
 				bundle: {
-					...record!.bundle,
+					...record.bundle,
 					run: {
-						...record!.bundle.run,
+						...record.bundle.run,
 						status: "running",
 						updatedAt: "2026-04-08T16:12:00.000Z",
 					},
-					steps: record!.bundle.steps.map((step) =>
+					steps: record.bundle.steps.map((step) =>
 						step.id === stepId
 							? {
 									...step,
@@ -11554,14 +11570,17 @@ describe("http responses adapter", () => {
 			"2026-04-12T19:10:00.000Z",
 			"Do not expose direct recovery assignment identity.",
 		);
-		const record = await control.readRun("status_detail_direct_task_spec_hidden");
+		const record = requireFixtureValue(
+			await control.readRun("status_detail_direct_task_spec_hidden"),
+			"status_detail_direct_task_spec_hidden",
+		);
 		await control.persistRun({
 			runId: "status_detail_direct_task_spec_hidden",
-			expectedRevision: record!.revision,
+			expectedRevision: record.revision,
 			bundle: {
-				...record!.bundle,
+				...record.bundle,
 				run: {
-					...record!.bundle.run,
+					...record.bundle.run,
 					taskRunSpecId: "task_spec_http_direct_recovery_hidden_1",
 				},
 			},
@@ -17414,19 +17433,26 @@ describe("http responses adapter", () => {
 			"status_local_action_control_reject",
 			"2026-04-11T18:30:00.000Z",
 		);
-		const record = await control.readRun("status_local_action_control_reject");
+		const record = requireFixtureValue(
+			await control.readRun("status_local_action_control_reject"),
+			"status_local_action_control_reject",
+		);
+		const localActionRequest = requireFixtureValue(
+			record.bundle.localActionRequests[0],
+			"status_local_action_control_reject local action request",
+		);
 		await control.persistRun({
 			runId: "status_local_action_control_reject",
-			expectedRevision: record!.revision,
+			expectedRevision: record.revision,
 			bundle: {
-				...record!.bundle,
+				...record.bundle,
 				run: {
-					...record!.bundle.run,
+					...record.bundle.run,
 					updatedAt: "2026-04-11T18:31:00.000Z",
 				},
 				localActionRequests: [
 					{
-						...record!.bundle.localActionRequests[0]!,
+						...localActionRequest,
 						status: "approved",
 						approvedAt: "2026-04-11T18:31:00.000Z",
 						resultSummary: "approved shell for later execution",
@@ -17434,7 +17460,7 @@ describe("http responses adapter", () => {
 					},
 				],
 				sharedState: {
-					...record!.bundle.sharedState,
+					...record.bundle.sharedState,
 					structuredOutputs: [
 						{
 							key: "step.localActionOutcomes.status_local_action_control_reject:step:1",
