@@ -7,6 +7,12 @@
 Status: active
 Lane: P01
 
+- Closed accepted console Gemini handoff adapter parity:
+  [docs/dev/plans/0294-2026-08-14-console-gemini-handoff-adapter-parity.md](docs/dev/plans/0294-2026-08-14-console-gemini-handoff-adapter-parity.md)
+  The Handoffs selector now exposes the same Packet, ChatGPT, and Gemini
+  adapter contract accepted by HTTP, and Recover Live alone serializes the
+  selected adapter. Provider-free tests and build readback passed.
+
 - Closed accepted Gemini browser handoff adapter:
   [docs/dev/plans/0293-2026-08-14-gemini-browser-handoff-adapter.md](docs/dev/plans/0293-2026-08-14-gemini-browser-handoff-adapter.md)
   Explicit provider-native Gemini recovery now sits behind the existing

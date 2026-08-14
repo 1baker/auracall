@@ -22,6 +22,10 @@
   `pnpm vitest run tests/browser/chatgptService.test.ts tests/browser/geminiHandoffAdapter.test.ts tests/cli/handoffCommand.test.ts tests/http.handoffOperator.test.ts`.
   The fixtures prove explicit ChatGPT/Gemini selection, attachments, compact
   context, and missing-config rejection; they do not launch either provider.
+- Console handoff-adapter parity is provider-free:
+  `pnpm vitest run tests/ux.console.handoffAdapters.test.ts`. It proves the
+  three-value selector contract and that only Recover Live sends the selected
+  adapter.
 - Roadmap active-state audit regression:
   `pnpm vitest run tests/roadmapPlanState.test.ts` followed by
   `pnpm run plans:audit`. An `Active` roadmap bullet linked to a canonical

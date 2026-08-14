@@ -1,5 +1,18 @@
 # RUNBOOK
 
+## Turn 463 | 2026-08-14
+
+- Audited Plan 0293's operator-surface claim after publication and found a
+  concrete parity defect: HTTP accepts `gemini-browser`, but the Handoffs
+  console selector still offers only Packet and ChatGPT browser.
+- Opened Plan 0294 to centralize the console's closed-world adapter choices and
+  Recover Live body serialization under provider-free tests. No live provider
+  work or installed-runtime mutation is in scope.
+- Closed Plan 0294 after adding the typed three-value selector contract,
+  rendering Gemini browser in the Handoffs console, and centralizing request
+  serialization. Focused tests passed 2/2; typecheck and console build passed,
+  and the built asset contains the Gemini option and Recover Live wiring.
+
 ## Turn 462 | 2026-08-14
 
 - Reassessed open parent Plan 0114 after closing stale Plan 0167. Its complete

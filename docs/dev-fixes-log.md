@@ -21740,3 +21740,12 @@ browser-stage lifecycle observability, not transcript truncation.
 - Treat provider-free adapter coverage as blocker reduction, not live proof.
   Keep the parent cross-service criterion open until an authorized target
   mutation verifies the installed path end to end.
+
+## 2026-08-14 | Keep console selectors in parity with closed-world API enums
+
+- Adding a server-accepted enum value does not make a console workflow usable
+  when the selector still renders an older option list.
+- Put operator choices, their labels, and the default in one typed console
+  module, then test both the option set and request serialization.
+- Verify the production bundle contains the new option. Source tests alone do
+  not prove the shipped console asset carries the contract.

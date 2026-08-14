@@ -19,6 +19,11 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import {
+  buildHandoffActionBody,
+  DEFAULT_HANDOFF_TARGET_ADAPTER,
+  HANDOFF_TARGET_ADAPTER_OPTIONS,
+} from "./handoffAdapters.ts";
+import {
   buildRuntimeRunsRecentUrl,
   matchesBrowserAuthorityFilter,
   readBrowserAuthorityPresentation,
@@ -80,7 +85,7 @@ function App() {
   const [runAuthorityFilter, setRunAuthorityFilter] = useState("all");
   const [handoffId, setHandoffId] = useState(readParamFromUrl("handoff"));
   const [handoffOutputDir, setHandoffOutputDir] = useState("");
-  const [handoffTargetAdapter, setHandoffTargetAdapter] = useState("packet");
+  const [handoffTargetAdapter, setHandoffTargetAdapter] = useState(DEFAULT_HANDOFF_TARGET_ADAPTER);
   const [handoffPayload, setHandoffPayload] = useState(null);
   const [handoffBusy, setHandoffBusy] = useState("");
   const [providerReadinessFilter, setProviderReadinessFilter] = useState("all");
@@ -456,8 +461,7 @@ function App() {
         ? `?outputDir=${encodeURIComponent(handoffOutputDir.trim())}`
         : "";
       const endpoint = `/v1/handoffs/${encodeURIComponent(id)}/${action}`;
-      const body = handoffOutputDir.trim() ? { outputDir: handoffOutputDir.trim() } : {};
-      if (action === "recover-live") body.targetAdapter = handoffTargetAdapter;
+      const body = buildHandoffActionBody(action, handoffOutputDir, handoffTargetAdapter);
       const payload =
         action === "status"
           ? await fetchJson(`${endpoint}${query}`)
@@ -681,8 +685,9 @@ function HandoffsPage({
             <label className="field compact-field">
               <span>Target adapter</span>
               <select value={targetAdapter} onChange={(event) => onTargetAdapterChange(event.target.value)}>
-                <option value="packet">Packet</option>
-                <option value="chatgpt-browser">ChatGPT browser</option>
+                {HANDOFF_TARGET_ADAPTER_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
               </select>
             </label>
           </div>

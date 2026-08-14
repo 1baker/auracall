@@ -1,3 +1,19 @@
+## 2026-08-14 | Plan 0294 console Gemini handoff adapter parity
+
+- Post-publication inspection found that Plan 0293 wired CLI and HTTP but left
+  the Handoffs console selector at its old two-value Packet/ChatGPT contract.
+- The request path already carries `targetAdapter` for Recover Live, so the
+  bounded repair is to define one typed three-value option list, render it, and
+  test exact request-body behavior.
+- This is provider-free console parity only. Plan 0114's live cross-service
+  proof remains separately gated.
+- Implemented the shared option/default/request-body module and rendered the
+  selector from it. Focused tests passed 2/2, typecheck and console build
+  passed, and built-asset readback contains the Gemini option plus recovery
+  serialization.
+- Plan 0294 is CLOSED. No browser, provider, service, config, or installed
+  runtime mutation ran.
+
 ## 2026-08-14 | Plan 0293 Gemini browser handoff adapter
 
 - Plan 0114's installed handoff state machine, approval gates, packet adapter,
