@@ -1,12 +1,25 @@
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { resolveBrowserLoginOptionsFromUserConfig } from '../../src/browser/login.js';
 
 describe('resolveBrowserLoginOptionsFromUserConfig', () => {
-  afterEach(() => {
+  const cleanup: string[] = [];
+
+  afterEach(async () => {
     vi.unstubAllEnvs();
+    await Promise.all(cleanup.splice(0).map((entry) => fs.rm(entry, { recursive: true, force: true })));
   });
 
-  test('derives login prep from the resolved launch profile', () => {
+  test('derives login prep from the resolved launch profile', async () => {
+    const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'auracall-login-options-'));
+    cleanup.push(tempRoot);
+    const bootstrapCookiePath = path.join(tempRoot, 'brave', 'Default', 'Network', 'Cookies');
+    const managedProfileRoot = path.join(tempRoot, 'browser-profiles');
+    await fs.mkdir(path.dirname(bootstrapCookiePath), { recursive: true });
+    await fs.writeFile(bootstrapCookiePath, 'cookie fixture', 'utf8');
+
     const options = resolveBrowserLoginOptionsFromUserConfig(
       {
         auracallProfile: 'windows-chrome-test',
@@ -14,11 +27,9 @@ describe('resolveBrowserLoginOptionsFromUserConfig', () => {
           target: 'grok',
           chromePath: '/mnt/c/Program Files/Google/Chrome/Application/chrome.exe',
           chromeProfile: 'Default',
-          chromeCookiePath:
-            '/mnt/c/Users/ecoch/AppData/Local/Google/Chrome/User Data/Default/Network/Cookies',
-          bootstrapCookiePath:
-            '/mnt/c/Users/ecoch/AppData/Local/BraveSoftware/Brave-Browser/User Data/Default/Network/Cookies',
-          managedProfileRoot: '/mnt/c/Users/ecoch/AppData/Local/AuraCall/browser-profiles',
+          chromeCookiePath: '/mnt/c/Users/ecoch/AppData/Local/Google/Chrome/User Data/Default/Network/Cookies',
+          bootstrapCookiePath,
+          managedProfileRoot,
           debugPortStrategy: 'auto',
           serviceTabLimit: 5,
           blankTabLimit: 0,
@@ -32,12 +43,9 @@ describe('resolveBrowserLoginOptionsFromUserConfig', () => {
       target: 'grok',
       chromePath: '/mnt/c/Program Files/Google/Chrome/Application/chrome.exe',
       chromeProfile: 'Default',
-      manualLoginProfileDir:
-        '/mnt/c/Users/ecoch/AppData/Local/AuraCall/browser-profiles/windows-chrome-test/grok',
-      cookiePath:
-        '/mnt/c/Users/ecoch/AppData/Local/Google/Chrome/User Data/Default/Network/Cookies',
-      bootstrapCookiePath:
-        '/mnt/c/Users/ecoch/AppData/Local/BraveSoftware/Brave-Browser/User Data/Default/Network/Cookies',
+      manualLoginProfileDir: path.join(managedProfileRoot, 'windows-chrome-test', 'grok'),
+      cookiePath: '/mnt/c/Users/ecoch/AppData/Local/Google/Chrome/User Data/Default/Network/Cookies',
+      bootstrapCookiePath,
       debugPortStrategy: 'auto',
       serviceTabLimit: 5,
       blankTabLimit: 0,

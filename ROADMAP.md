@@ -7,6 +7,11 @@
 Status: active
 Lane: P01
 
+- Closed accepted full-suite fixture drift repair:
+  [docs/dev/plans/0310-2026-08-14-full-suite-fixture-drift-repair.md](docs/dev/plans/0310-2026-08-14-full-suite-fixture-drift-repair.md)
+  Bootstrap source existence and media queue namespace authority are now
+  explicit, and the complete provider-disabled suite is green.
+
 - Closed accepted live response JSON lint zero baseline:
   [docs/dev/plans/0309-2026-08-14-live-response-json-lint-zero-baseline.md](docs/dev/plans/0309-2026-08-14-live-response-json-lint-zero-baseline.md)
   Opaque HTTP response values now use unknown JSON fields, and source, scripts,

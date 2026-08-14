@@ -2,10 +2,10 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { createFileBackedBrowserOperationDispatcher } from '../packages/browser-service/src/service/operationDispatcher.js';
 import { setAuracallHomeDirOverrideForTest } from '../src/auracallHome.js';
 import { resolveManagedProfileDirForUserConfig } from '../src/browser/profileStore.js';
 import type { MediaGenerationExecutor } from '../src/media/types.js';
-import { createFileBackedBrowserOperationDispatcher } from '../packages/browser-service/src/service/operationDispatcher.js';
 
 const mediaExecutorMocks = vi.hoisted(() => {
   const geminiBrowserExecutor = vi.fn<MediaGenerationExecutor>();
@@ -56,7 +56,9 @@ describe('browser media generation executor queueing', () => {
     const userConfig = {
       auracallProfile: 'default',
       browser: {
+        chromePath: '/usr/bin/google-chrome',
         managedProfileRoot: path.join(homeDir, 'browser-profiles'),
+        wslChromePreference: 'wsl',
       },
     } as never;
     const dispatcher = createFileBackedBrowserOperationDispatcher({
@@ -86,16 +88,25 @@ describe('browser media generation executor queueing', () => {
         executor: 'gemini-browser-test',
       },
     });
-    const { createBrowserMediaGenerationExecutor } = await import('../src/media/browserExecutor.js');
+    const { createBrowserMediaGenerationExecutor, resolveBrowserMediaOperationKeyForTest } = await import(
+      '../src/media/browserExecutor.js'
+    );
     const executor = createBrowserMediaGenerationExecutor(userConfig);
     const timeline: Array<{ event: string; details?: Record<string, unknown> | null }> = [];
+    let resolveQueued: (() => void) | undefined;
+    const queued = new Promise<void>((resolve) => {
+      resolveQueued = resolve;
+    });
 
-    const running = executor({
+    const executorInput: Parameters<MediaGenerationExecutor>[0] = {
       id: 'medgen_queue_1',
       createdAt: '2026-04-25T12:00:00.000Z',
       artifactDir: path.join(homeDir, 'artifacts'),
       emitTimeline: async (event) => {
         timeline.push(event);
+        if (event.event === 'browser_operation_queued') {
+          resolveQueued?.();
+        }
       },
       request: {
         provider: 'gemini',
@@ -107,11 +118,11 @@ describe('browser media generation executor queueing', () => {
           browserOperationQueuePollMs: 5,
         },
       },
-    });
+    };
+    expect(resolveBrowserMediaOperationKeyForTest(userConfig, executorInput)).toBe(active.operation.key);
+    const running = executor(executorInput);
 
-    await vi.waitFor(() => {
-      expect(timeline.some((entry) => entry.event === 'browser_operation_queued')).toBe(true);
-    });
+    await queued;
     await active.release();
     const result = await running;
 
@@ -122,10 +133,7 @@ describe('browser media generation executor queueing', () => {
       },
     });
     expect(mediaExecutorMocks.geminiBrowserExecutor).toHaveBeenCalledTimes(1);
-    expect(timeline.map((entry) => entry.event)).toEqual([
-      'browser_operation_queued',
-      'browser_operation_acquired',
-    ]);
+    expect(timeline.map((entry) => entry.event)).toEqual(['browser_operation_queued', 'browser_operation_acquired']);
     expect(timeline[0]?.details).toMatchObject({
       blockedBy: {
         kind: 'browser-execution',
@@ -168,21 +176,23 @@ describe('browser media generation executor queueing', () => {
     const { createBrowserMediaGenerationExecutor } = await import('../src/media/browserExecutor.js');
     const executor = createBrowserMediaGenerationExecutor(userConfig);
 
-    await expect(executor({
-      id: 'medgen_busy_1',
-      createdAt: '2026-04-25T12:00:00.000Z',
-      artifactDir: path.join(homeDir, 'artifacts'),
-      request: {
-        provider: 'grok',
-        mediaType: 'image',
-        prompt: 'Generate an image of an asphalt secret agent',
-        transport: 'browser',
-        metadata: {
-          browserOperationQueueTimeoutMs: 1,
-          browserOperationQueuePollMs: 1,
+    await expect(
+      executor({
+        id: 'medgen_busy_1',
+        createdAt: '2026-04-25T12:00:00.000Z',
+        artifactDir: path.join(homeDir, 'artifacts'),
+        request: {
+          provider: 'grok',
+          mediaType: 'image',
+          prompt: 'Generate an image of an asphalt secret agent',
+          transport: 'browser',
+          metadata: {
+            browserOperationQueueTimeoutMs: 1,
+            browserOperationQueuePollMs: 1,
+          },
         },
-      },
-    })).rejects.toMatchObject({
+      }),
+    ).rejects.toMatchObject({
       code: 'browser_operation_busy',
       details: {
         blockedBy: {

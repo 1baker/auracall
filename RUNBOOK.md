@@ -1,5 +1,24 @@
 # RUNBOOK
 
+## Turn 479 | 2026-08-14
+
+- Opened Plan 0310 for the two provider-free full-suite failures exposed by the
+  Plan 0309 audit.
+- Diagnosis shows fixture drift: login source validation correctly rejects a
+  nonexistent machine-specific cookie path, while the queue release-path test
+  polls for an async event even though its timeout-path conflict proof passes.
+- Keep the repair test-only unless focused evidence identifies a production
+  defect; no browser or provider work is authorized in this slice.
+- The login fixture now creates a real temporary bootstrap cookie database, so
+  it proves the resolver's existence-gated source contract without depending on
+  an operator path.
+- The media fixture pins WSL Chrome, asserts exact blocker/request dispatcher-
+  key parity, and releases the blocker from a direct queued-event promise.
+- Three consecutive focused runs passed. The isolated full suite passed 2,910
+  tests across 318 files with 65 opt-in skips across 21 files; all 27 discovered
+  live flags were unset. Typecheck, zero-warning lint across 829 files, build,
+  plan audit, and diff hygiene passed. Plan 0310 closes accepted.
+
 ## Turn 478 | 2026-08-14
 
 - Opened Plan 0309 for the final 52 warnings across three opt-in team live

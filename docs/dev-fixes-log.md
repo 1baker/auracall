@@ -1,3 +1,9 @@
+- 2026-08-14: Tests for existence-gated browser bootstrap sources must create
+  the source file they expect to survive resolution. Queue tests that exercise
+  browser profile namespaces should pin browser source selection, assert exact
+  dispatcher-key parity, and synchronize release on the emitted queue event;
+  otherwise host discovery and module-import timing can produce false failures.
+
 - 2026-08-14: Opaque `Response.json()` values used only by structural matchers
   should be `Record<string, unknown>`, not `Record<string, any>`. Once all
   warning-bearing suites are clean, replace enumerated test lint ratchets with

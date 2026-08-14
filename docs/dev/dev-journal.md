@@ -1,3 +1,16 @@
+## 2026-08-14 | Plan 0310 full-suite fixture drift repair
+
+- Repaired the two failures discovered by the Plan 0309 full-suite audit
+  without changing production code.
+- Login resolution now receives a real temporary bootstrap cookie source. The
+  media queue fixture pins WSL browser selection, proves blocker/request key
+  parity, and waits directly for the queued event before releasing the lock.
+- Three repeated focused runs passed. With all 27 discovered live flags unset,
+  the isolated full suite passed 2,910 tests across 318 files; 65 opt-in tests
+  across 21 files skipped.
+- Typecheck, build, zero-warning lint across 829 files, plan audit, and diff
+  hygiene passed. Plan 0310 is CLOSED.
+
 ## 2026-08-14 | Plan 0309 live response JSON lint zero baseline
 
 - Selected the final 52 warnings, all opaque response JSON assertions across
