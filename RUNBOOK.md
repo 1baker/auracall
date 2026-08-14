@@ -1,5 +1,25 @@
 # RUNBOOK
 
+## Turn 455 | 2026-08-14
+
+- [Plan 0284](docs/dev/plans/0284-2026-08-14-devtools-attachment-installed-inventory-replay.md)
+  opens from explicit operator authority for one install and one replay. The
+  packet preserves AuraCall service PID 32268 and Chrome PID 66297/port 45015,
+  installs only the user CLI runtime, requires exact source/runtime parity,
+  and permits one instrumented read-only `apps list` invocation with no retry
+  or downstream action.
+- The sole install completed with exact parity for the four changed modules and
+  no API restart. The sole replay exited 0 in 10.52 seconds, reported all five
+  attachment stages, read installed/linked payloads and Developer mode, and
+  returned `inventoryComplete: true` with 16 apps; Corel33t is enabled with
+  active auth.
+- Client cleanup and lease release completed. PID 32268 remained active,
+  Chrome PID 66297 remained the sole listener on port 45015, and the canonical
+  LitScout DB hash remained `0aab7426...7756623`. No retry, prompt, connector
+  execution, app/OAuth mutation, canonical write, or Experiment 6 action ran.
+  The terminal receipt is
+  [docs/dev/notes/2026-08-14-plan0284-installed-inventory-replay.json](docs/dev/notes/2026-08-14-plan0284-installed-inventory-replay.json).
+
 ## Turn 454 | 2026-08-14
 
 - The retained LitScout Plan 0411 receipt localized its terminal inventory

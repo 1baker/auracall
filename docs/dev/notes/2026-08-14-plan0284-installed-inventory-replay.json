@@ -1,0 +1,105 @@
+{
+  "schema_version": "auracall.plan0284_installed_inventory_replay.v1",
+  "plan_id": 284,
+  "status": "TERMINAL_SUCCESS_INSTALLED_INVENTORY_COMPLETE",
+  "observed_at": "2026-08-14T19:57:31.540Z",
+  "authority": {
+    "operator_message_raw": "ley's install and replay",
+    "operator_message_interpretation": "let's install and replay",
+    "authorized_scope": "one user-runtime install and one instrumented read-only wsl-chrome-3 developer-app inventory replay",
+    "additional_replay_allowed": false,
+    "prompt_allowed": false,
+    "connector_execution_allowed": false,
+    "app_or_oauth_mutation_allowed": false,
+    "experiment_6_allowed": false
+  },
+  "source": {
+    "activation_commit": "8168acf4bfc22ac8b9c1e3c723cfe41c499b17f5",
+    "attachment_repair_commit": "c8a54364",
+    "provider_free_closeout_commit": "e4154c19",
+    "git_clean_upstream_exact_before_install": true
+  },
+  "install": {
+    "command": "pnpm run install:user-runtime",
+    "invocation_count": 1,
+    "status": "passed",
+    "installed_at": "2026-08-14T19:56:43.677Z",
+    "package_version": "0.1.1",
+    "api_service_restart_count": 0,
+    "api_service_pid_before_after": [32268, 32268],
+    "module_parity": {
+      "packages/browser-service/src/chromeLifecycle.js": "a92f8718e8b027e322d6d93ad7170daa2cc4b2249ce5f9a022c630cb38b55386",
+      "packages/browser-service/src/service/browserService.js": "0faf98eb83d29ddfb80bfe0e66616c689727fc0b07afcf518611b92222e58bed",
+      "src/browser/client.js": "9a936ed5b81da5215134dd1f30a0287edb0f00b744aad9cf6fca5c14b734d4a8",
+      "src/browser/providers/chatgptDeveloperApps.js": "1e2ec6092a8bd2244f3fc326f4565d844bae13eaeb35d29a9e2621c4c1b38aad"
+    }
+  },
+  "replay": {
+    "command": "env AURACALL_DEBUG_DEVELOPER_APPS=1 timeout --signal=TERM --kill-after=5s 60s /home/ecochran76/.local/bin/auracall --profile wsl-chrome-3 apps --target chatgpt list --json",
+    "invocation_count": 1,
+    "exit_code": 0,
+    "elapsed_seconds": 10.52,
+    "reported_stages": [
+      "browserDevToolsTargetResolution",
+      "browserDevToolsCdpConnection",
+      "browserDevToolsConnected",
+      "browserDevToolsRuntimeEnable",
+      "browserDevToolsPageEnable"
+    ],
+    "identity_resolved": true,
+    "account_plan": "pro",
+    "installed_and_linked_payloads_read": true,
+    "developer_mode": true,
+    "inventory_complete": true,
+    "app_count": 16,
+    "corel33t": {
+      "status": "ENABLED",
+      "auth_status": "ACTIVE",
+      "review_status": "development",
+      "scope": "USER",
+      "discoverability": "PRIVATE"
+    },
+    "litscout": {
+      "status": "ENABLED",
+      "auth_status": null,
+      "review_status": "development",
+      "scope": "USER",
+      "discoverability": "PRIVATE"
+    },
+    "client_cleanup_completed": true
+  },
+  "protected_readback": {
+    "api_service_active_running": true,
+    "api_service_pid_before_after": [32268, 32268],
+    "api_service_restart_count": 0,
+    "managed_browser_pid_before_after": [66297, 66297],
+    "managed_browser_port_before_after": [45015, 45015],
+    "managed_browser_registry_entry_count": 1,
+    "managed_browser_launch_or_close_count": 0,
+    "operation_lease_directory_empty": true,
+    "inventory_worker_remaining": false,
+    "canonical_db_path": "/home/ecochran76/.local/share/litscout/state/db.sqlite3",
+    "canonical_db_sha256_before_after": [
+      "0aab7426a26c969afa137f53262f4a5eb72421c91649553971c5d838c7756623",
+      "0aab7426a26c969afa137f53262f4a5eb72421c91649553971c5d838c7756623"
+    ]
+  },
+  "effects": {
+    "user_runtime_installs": 1,
+    "api_service_restarts": 0,
+    "instrumented_inventory_replays": 1,
+    "browser_launches_or_closes": 0,
+    "prompt_submissions": 0,
+    "connector_execution_calls": 0,
+    "app_or_oauth_mutations": 0,
+    "litscout_canonical_writes": 0,
+    "experiment_6_runs": 0,
+    "retries": 0
+  },
+  "disposition": {
+    "auracall_plan_0284": "INSTALLED_REPLAY_ACCEPTED",
+    "litscout_p3": "NOT_ADJUDICATED_BY_AURACALL",
+    "experiment_6": "BLOCKED",
+    "next_action": "Return this receipt to LitScout governance; do not run another inventory or downstream action under Plan 0284."
+  }
+}

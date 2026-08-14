@@ -28,6 +28,14 @@ Lane: P01
   response `resp_56867ada05ab4506b7f04a7d6d109107` returned exact `PASS` from
   one broker-owned browser/tab lane with verified lease release.
 
+- Closed accepted installed DevTools attachment inventory replay:
+  [docs/dev/plans/0284-2026-08-14-devtools-attachment-installed-inventory-replay.md](docs/dev/plans/0284-2026-08-14-devtools-attachment-installed-inventory-replay.md)
+  The sole user-runtime install reached exact four-module parity without an API
+  restart. The sole instrumented `wsl-chrome-3` inventory exited 0 in 10.52
+  seconds after reporting every attachment stage and returned a complete
+  16-app inventory. No retry or downstream effect ran; LitScout P3 remains for
+  its own governance and Experiment 6 remains blocked.
+
 - Closed accepted provider-free DevTools attachment liveness repair:
   [docs/dev/plans/0283-2026-08-14-devtools-attachment-liveness.md](docs/dev/plans/0283-2026-08-14-devtools-attachment-liveness.md)
   LitScout Plan 0411 proved identity and then stalled inside generic attachment.
