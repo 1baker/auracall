@@ -46731,4 +46731,25 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Broker-tagged evidence is fail-closed: incomplete provenance or an absent
   exact retained target cannot downgrade to AuraCall Chrome discovery. The
   provider-free slice passes 130 focused tests, typecheck, lint, build, diff
-  hygiene, and plan audit. Installed stop/restart validation remains open.
+  hygiene, and plan audit.
+- Installed acceptance passed on response
+  `resp_5ff8161469f64a61bf12107c2616ad15`: after a forced API-process restart,
+  the same response reattached through exact target
+  `3FB398F218E264183A2AD81750AB9791`, returned
+  `RESTART_RECOVERY_PASS`, terminaled, and released its lease. Agent-browser
+  retained one ready browser and one valid tab, and no legacy Chrome fallback
+  appeared after recovery. Plan 0285 is closed.
+
+## 2026-08-14 | Make the installed user service deterministic
+
+- The runtime installer generated wrappers with `exec node`, allowing systemd's
+  ambient PATH to select Node 18 even though AuraCall requires Node 22. Generated
+  wrappers now pin `process.execPath`, the exact Node executable that ran the
+  installer.
+- The API-service installer wrote 18095 URLs and a 18095 log path but omitted a
+  listen-port argument, so a clean reinstall selected a random port. The unit
+  now carries `api serve --port 18095`, with a bounded `--port` override and
+  integer validation.
+- Final reconciliation must verify the wrapper shebang command, unit
+  `ExecStart`, source/runtime hashes, listener health, and systemd restart
+  count—not merely successful package installation.

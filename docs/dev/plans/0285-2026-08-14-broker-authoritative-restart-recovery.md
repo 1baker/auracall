@@ -1,6 +1,6 @@
 # Broker-Authoritative Restart Recovery | 0285-2026-08-14
 
-State: OPEN
+State: CLOSED
 Lane: P01
 
 ## Stable Objective
@@ -21,7 +21,9 @@ second browser, or bypassing agent-browser's service-tab authority.
   handle through agent-browser before AuraCall resumes provider response
   polling.
 - Focused tests, typecheck, lint, build, diff hygiene, and the plan-library
-  audit pass. Installed stop/restart recovery remains the closing gate.
+  audit pass. Installed response `resp_5ff8161469f64a61bf12107c2616ad15`
+  survived a forced API-process restart and completed on the same retained
+  target with exact output `RESTART_RECOVERY_PASS`.
 
 ## Architecture Boundary
 
@@ -60,13 +62,30 @@ second browser, or bypassing agent-browser's service-tab authority.
   local Chrome launch.
 - [x] Focused recovery/bridge coverage, typecheck, lint, production build, diff
   hygiene, and plan audit pass provider-free.
-- [ ] One installed durable response survives an AuraCall service stop/restart,
+- [x] One installed durable response survives an AuraCall service stop/restart,
   completes on the same response id and retained target, and releases its lease
   without creating a duplicate browser or prompt.
 
+## Installed Acceptance
+
+- The installed bridge and configured-executor hashes matched the built source.
+- Response `resp_5ff8161469f64a61bf12107c2616ad15` submitted once on target
+  `3FB398F218E264183A2AD81750AB9791`. After the AuraCall API main process was
+  killed and restarted, recovery logged a broker reattach for that exact target
+  and did not log legacy Chrome discovery, relay startup, or browser launch.
+- The same response id completed with exact output `RESTART_RECOVERY_PASS`,
+  runtime state `terminal`, and lease state `released`.
+- Agent-browser retained one ready `chatgpt-pro` browser process and one valid
+  ChatGPT tab. Its job history records successful `cdp_attach` for
+  `chatgpt-restart-recovery` followed by successful `cdp_detach`.
+- Installation also exposed two service reproducibility defects. Generated user
+  wrappers now pin the installer's Node 22 executable, and the generated API
+  unit now pins port 18095 instead of selecting a random port inconsistent with
+  its dotenv URLs and log name.
+
 ## Definition Of Done
 
-The installed runtime proves that stopping and restarting AuraCall during one
+Complete. The installed runtime proves that stopping and restarting AuraCall during one
 in-flight ChatGPT response resumes the original broker-owned provider turn and
 returns its result through the same durable response id. Agent-browser retains
 one healthy browser lane, and logs contain no legacy Chrome discovery or prompt

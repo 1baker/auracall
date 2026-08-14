@@ -21613,3 +21613,16 @@ browser-stage lifecycle observability, not transcript truncation.
   policy-gated attach. If broker-tagged provenance is partial or the target is
   gone, fail closed without prompt replay, raw target discovery, or Chrome
   launch.
+
+## 2026-08-14 | Pin user-runtime Node and API listener identity
+
+- A wrapper using `#!/usr/bin/env sh` plus `exec node` is not runtime-pinned:
+  systemd can resolve a different PATH than the interactive installer and start
+  an unsupported Node version. Render the installer's absolute
+  `process.execPath` into every generated wrapper.
+- A service dotenv can advertise one base URL while the server listens on a
+  random port if the unit omits `--port`. Keep the generated unit, default
+  dotenv URLs, and log filename on the same fixed default (18095), and validate
+  any installer port override before writing the unit.
+- Treat package copy, wrapper runtime, unit command, listener health, and
+  source/installed hashes as separate installation acceptance checks.

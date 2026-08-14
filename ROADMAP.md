@@ -7,13 +7,16 @@
 Status: active
 Lane: P01
 
-- Active broker-authoritative restart recovery:
+- Closed accepted broker-authoritative restart recovery:
   [docs/dev/plans/0285-2026-08-14-broker-authoritative-restart-recovery.md](docs/dev/plans/0285-2026-08-14-broker-authoritative-restart-recovery.md)
   Durable ChatGPT heartbeats now preserve agent-browser route, process,
   browser-profile, session, and exact service-tab-handle provenance. Recovered
   steps re-authorize that exact retained target through the broker and fail
-  closed rather than entering legacy Chrome discovery. Provider-free gates are
-  green; one installed stop/restart response is the remaining acceptance gate.
+  closed rather than entering legacy Chrome discovery. Installed response
+  `resp_5ff8161469f64a61bf12107c2616ad15` survived a forced API-process restart,
+  completed on the same target with exact output `RESTART_RECOVERY_PASS`, and
+  released its lease. Agent-browser retained one ready browser and one valid
+  tab.
 
 - Closed accepted broker-first agent-browser authority:
   [docs/dev/plans/0284-2026-08-14-agent-browser-broker-authority.md](docs/dev/plans/0284-2026-08-14-agent-browser-broker-authority.md)

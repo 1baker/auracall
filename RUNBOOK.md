@@ -18821,3 +18821,21 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   typecheck, lint with the accepted 208-warning baseline, production build,
   diff hygiene, and plan-library audit. Installed stop/restart acceptance is
   the sole remaining gate; no GitHub write occurred.
+
+## Turn 421 | 2026-08-14
+
+- Installation first exposed two deterministic service defects: wrappers used
+  ambient `node`, which selected system Node 18 under systemd, and the generated
+  unit omitted `--port`, selecting a random listener despite its 18095 dotenv
+  URLs and log path. Wrappers now pin the installer's Node 22 executable and the
+  unit pins port 18095. The service is active/running on 18095 with zero restarts
+  after final reconciliation.
+- Installed response `resp_5ff8161469f64a61bf12107c2616ad15`
+  submitted once on agent-browser target
+  `3FB398F218E264183A2AD81750AB9791`. A forced API main-process restart then
+  logged exact broker reattach, resumed response polling, and produced
+  `RESTART_RECOVERY_PASS` through the same response id.
+- Final readback is completed/terminal with lease released. Agent-browser
+  records successful recovery attach and detach, one ready `chatgpt-pro`
+  browser, and one valid retained tab. No legacy Chrome discovery appears after
+  the broker recovery line. Plan 0285 closes accepted; no GitHub write occurred.
