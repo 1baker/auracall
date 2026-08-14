@@ -1,5 +1,15 @@
 # RUNBOOK
 
+## Turn 477 | 2026-08-14
+
+- Opened Plan 0308 for the final 31-warning provider-free suite.
+- Classified 24 exact-name boundary diagnostics and seven repeated optional
+  Grok media-materializer assertions; implementation is serialized.
+- Closed Plan 0308 by preserving external names through computed keys and
+  binding the optional materializer through the shared labeled guard.
+- All 41 suite tests and broad gates passed. Full lint now reports 52 warnings
+  exclusively in three opt-in live-test files.
+
 ## Turn 476 | 2026-08-14
 
 - Opened Plan 0307 for the 22-warning provider-free schema resolver cluster.

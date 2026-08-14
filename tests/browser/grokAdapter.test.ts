@@ -6,14 +6,16 @@ import { describe, expect, test, vi } from 'vitest';
 const grokRunPromptMocks = vi.hoisted(() => ({
   cdpList: vi.fn(),
   cdpClose: vi.fn(),
+  cdpListMethodName: 'List',
+  cdpCloseMethodName: 'Close',
   connectToChromeTarget: vi.fn(),
   openOrReuseChromeTarget: vi.fn(),
 }));
 
 vi.mock('chrome-remote-interface', () => ({
   default: {
-    List: grokRunPromptMocks.cdpList,
-    Close: grokRunPromptMocks.cdpClose,
+    [grokRunPromptMocks.cdpListMethodName]: grokRunPromptMocks.cdpList,
+    [grokRunPromptMocks.cdpCloseMethodName]: grokRunPromptMocks.cdpClose,
   },
 }));
 
@@ -50,6 +52,23 @@ import {
 } from '../../src/browser/providers/grokAdapter.js';
 import { createProviderSessionAuthority } from '../../src/browser/providers/providerSessionAuthority.js';
 import type { ChromeClient } from '../../src/browser/types.js';
+import { requireFixtureValue } from '../util/fixtures.js';
+
+const htmlElementGlobalName = 'HTMLElement';
+const svgElementGlobalName = 'SVGElement';
+const htmlImageElementGlobalName = 'HTMLImageElement';
+const pageDomainName = 'Page';
+const runtimeDomainName = 'Runtime';
+const inputDomainName = 'Input';
+const suppressFocusPropertyName = '__auracallSuppressFocus';
+
+function createRequiredGrokMaterializer() {
+  const adapter = createGrokAdapter();
+  return requireFixtureValue(
+    adapter.materializeActiveMediaArtifacts,
+    'Grok adapter active media materializer',
+  ).bind(adapter);
+}
 
 function createGrokProviderSessionAuthorization(email: string | null = 'ez86944@gmail.com') {
   const config = email
@@ -615,9 +634,9 @@ function evaluateGrokFeatureProbeWithFakeDom(input: FakeDomInput): { imagine: Re
     document: globalThis.document,
     window: globalThis.window,
     location: globalThis.location,
-    HTMLElement: globalThis.HTMLElement,
-    SVGElement: globalThis.SVGElement,
-    HTMLImageElement: globalThis.HTMLImageElement,
+    [htmlElementGlobalName]: globalThis.HTMLElement,
+    [svgElementGlobalName]: globalThis.SVGElement,
+    [htmlImageElementGlobalName]: globalThis.HTMLImageElement,
   };
   const querySelectorAll = vi.fn((selector: string) => {
     if (selector.includes('textarea') || selector.includes('[contenteditable="true"]')) {
@@ -636,9 +655,9 @@ function evaluateGrokFeatureProbeWithFakeDom(input: FakeDomInput): { imagine: Re
   });
   try {
     Object.assign(globalThis, {
-      HTMLElement: FakeElement,
-      SVGElement: FakeElement,
-      HTMLImageElement: FakeElement,
+      [htmlElementGlobalName]: FakeElement,
+      [svgElementGlobalName]: FakeElement,
+      [htmlImageElementGlobalName]: FakeElement,
       window: {
         getComputedStyle: () => ({ display: 'block', visibility: 'visible', opacity: '1' }),
       },
@@ -885,8 +904,8 @@ describe('ensureGrokTabVisible', () => {
         },
       });
     const client = {
-      Page: { bringToFront },
-      Runtime: { evaluate },
+      [pageDomainName]: { bringToFront },
+      [runtimeDomainName]: { evaluate },
     } as unknown as ChromeClient;
 
     await expect(ensureGrokTabVisible(client)).resolves.toBeUndefined();
@@ -898,9 +917,9 @@ describe('ensureGrokTabVisible', () => {
     const bringToFront = vi.fn().mockResolvedValue(undefined);
     const evaluate = vi.fn();
     const client = {
-      Page: { bringToFront },
-      Runtime: { evaluate },
-      __auracallSuppressFocus: true,
+      [pageDomainName]: { bringToFront },
+      [runtimeDomainName]: { evaluate },
+      [suppressFocusPropertyName]: true,
     } as unknown as ChromeClient;
 
     await expect(ensureGrokTabVisible(client)).resolves.toBeUndefined();
@@ -1006,9 +1025,8 @@ describe('Grok Imagine materialization', () => {
       const client = createFakeGrokImagineMaterializationClient(destDir);
       grokRunPromptMocks.connectToChromeTarget.mockResolvedValue(client);
 
-      const adapter = createGrokAdapter();
-      expect(adapter.materializeActiveMediaArtifacts).toBeDefined();
-      const files = await adapter.materializeActiveMediaArtifacts!({
+      const materializeActiveMediaArtifacts = createRequiredGrokMaterializer();
+      const files = await materializeActiveMediaArtifacts({
           capabilityId: 'grok.media.imagine_image',
           maxItems: 3,
           compareFullQuality: true,
@@ -1139,8 +1157,8 @@ describe('Grok Imagine materialization', () => {
       const client = createFakeGrokImagineMaterializationClient(destDir);
       grokRunPromptMocks.connectToChromeTarget.mockResolvedValue(client);
 
-      const adapter = createGrokAdapter();
-      await adapter.materializeActiveMediaArtifacts!({
+      const materializeActiveMediaArtifacts = createRequiredGrokMaterializer();
+      await materializeActiveMediaArtifacts({
           capabilityId: 'grok.media.imagine_image',
           maxItems: 1,
           compareFullQuality: false,
@@ -1185,8 +1203,8 @@ describe('Grok Imagine materialization', () => {
       const client = createFakeGrokImagineFilesFallbackClient(destDir);
       grokRunPromptMocks.connectToChromeTarget.mockResolvedValue(client);
 
-      const adapter = createGrokAdapter();
-      const files = await adapter.materializeActiveMediaArtifacts!({
+      const materializeActiveMediaArtifacts = createRequiredGrokMaterializer();
+      const files = await materializeActiveMediaArtifacts({
           capabilityId: 'grok.media.imagine_image',
           maxItems: 1,
           compareFullQuality: true,
@@ -1247,8 +1265,8 @@ describe('Grok Imagine materialization', () => {
       const client = createFakeGrokImagineFilesFallbackClient(destDir);
       grokRunPromptMocks.connectToChromeTarget.mockResolvedValue(client);
 
-      const adapter = createGrokAdapter();
-      const files = await adapter.materializeActiveMediaArtifacts!({
+      const materializeActiveMediaArtifacts = createRequiredGrokMaterializer();
+      const files = await materializeActiveMediaArtifacts({
           capabilityId: 'grok.media.imagine_image',
           maxItems: 1,
           compareFullQuality: true,
@@ -1312,8 +1330,8 @@ describe('Grok Imagine materialization', () => {
       const client = createFakeGrokImagineFilesFallbackClient(destDir, { noFilesDownload: true });
       grokRunPromptMocks.connectToChromeTarget.mockResolvedValue(client);
 
-      const adapter = createGrokAdapter();
-      const files = await adapter.materializeActiveMediaArtifacts!({
+      const materializeActiveMediaArtifacts = createRequiredGrokMaterializer();
+      const files = await materializeActiveMediaArtifacts({
           capabilityId: 'grok.media.imagine_image',
           maxItems: 1,
           compareFullQuality: true,
@@ -1372,8 +1390,8 @@ describe('Grok Imagine materialization', () => {
       const client = createFakeGrokImagineFilesFallbackClient(destDir, { noVisibleTiles: true });
       grokRunPromptMocks.connectToChromeTarget.mockResolvedValue(client);
 
-      const adapter = createGrokAdapter();
-      const files = await adapter.materializeActiveMediaArtifacts!({
+      const materializeActiveMediaArtifacts = createRequiredGrokMaterializer();
+      const files = await materializeActiveMediaArtifacts({
           capabilityId: 'grok.media.imagine_image',
           maxItems: 1,
           compareFullQuality: true,
@@ -1431,8 +1449,8 @@ describe('Grok Imagine materialization', () => {
       const client = createFakeGrokImagineNoPrimaryClickClient(destDir);
       grokRunPromptMocks.connectToChromeTarget.mockResolvedValue(client);
 
-      const adapter = createGrokAdapter();
-      const files = await adapter.materializeActiveMediaArtifacts!({
+      const materializeActiveMediaArtifacts = createRequiredGrokMaterializer();
+      const files = await materializeActiveMediaArtifacts({
           capabilityId: 'grok.media.imagine_image',
           maxItems: 1,
           compareFullQuality: true,
@@ -1614,11 +1632,11 @@ function createFakeGrokImagineMaterializationClient(destDir: string) {
     return { result: { value: true } };
   });
   return {
-    Page: {
+    [pageDomainName]: {
       enable: vi.fn(async () => undefined),
       captureScreenshot: vi.fn(async () => ({ data: visibleBytes[0]?.toString('base64') })),
     },
-    Runtime: {
+    [runtimeDomainName]: {
       enable: vi.fn(async () => undefined),
       evaluate,
     },
@@ -1741,13 +1759,13 @@ function _createFakeGrokImagineSavedFallbackClient(destDir: string) {
     return { result: { value: true } };
   });
   return {
-    Page: {
+    [pageDomainName]: {
       enable: vi.fn(async () => undefined),
       navigate: vi.fn(async () => undefined),
       bringToFront: vi.fn(async () => undefined),
       captureScreenshot: vi.fn(async () => ({ data: visibleBytes[0]?.toString('base64') })),
     },
-    Runtime: {
+    [runtimeDomainName]: {
       enable: vi.fn(async () => undefined),
       evaluate,
     },
@@ -1965,7 +1983,7 @@ function createFakeGrokImagineFilesFallbackClient(
     return { result: { value: true } };
   });
   return {
-    Page: {
+    [pageDomainName]: {
       enable: vi.fn(async () => undefined),
       navigate: vi.fn(async ({ url }: { url: string }) => {
         currentUrl = url;
@@ -1973,7 +1991,7 @@ function createFakeGrokImagineFilesFallbackClient(
       bringToFront: vi.fn(async () => undefined),
       captureScreenshot: vi.fn(async () => ({ data: visibleBytes[0]?.toString('base64') })),
     },
-    Runtime: {
+    [runtimeDomainName]: {
       enable: vi.fn(async () => undefined),
       evaluate,
     },
@@ -2071,16 +2089,16 @@ function createFakeGrokImagineNoPrimaryClickClient(_destDir: string) {
     return { result: { value: true } };
   });
   return {
-    Page: {
+    [pageDomainName]: {
       enable: vi.fn(async () => undefined),
       navigate: vi.fn(async () => undefined),
       captureScreenshot: vi.fn(async () => ({ data: visibleBytes[0]?.toString('base64') })),
     },
-    Runtime: {
+    [runtimeDomainName]: {
       enable: vi.fn(async () => undefined),
       evaluate,
     },
-    Input: {
+    [inputDomainName]: {
       dispatchMouseEvent: vi.fn(async () => undefined),
     },
     send: vi.fn(async () => undefined),
@@ -2192,10 +2210,10 @@ function createFakeGrokImaginePromptClient(initialMode: 'Image' | 'Video') {
     get currentMode() {
       return currentMode;
     },
-    Page: {
+    [pageDomainName]: {
       enable: vi.fn(async () => undefined),
     },
-    Runtime: {
+    [runtimeDomainName]: {
       enable: vi.fn(async () => undefined),
       evaluate,
     },

@@ -1,3 +1,12 @@
+## 2026-08-14 | Plan 0308 Grok adapter fixture lint ratchet
+
+- Selected the final 31-warning provider-free suite: 24 exact external names
+  and seven optional materializer assertions.
+- Introduced computed-key constants for Chrome, DOM, CDP, and focus-sentinel
+  fixtures and a shared labeled materializer guard that preserves binding.
+- All 41 tests, typecheck, build, strict gates, full lint at 52 warnings, and
+  plan audit passed. Plan 0308 is CLOSED.
+
 ## 2026-08-14 | Plan 0307 schema resolver fixture lint ratchet
 
 - Selected 22 explicit-any warnings in the provider-free resolver suite.

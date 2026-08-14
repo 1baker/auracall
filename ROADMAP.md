@@ -7,6 +7,11 @@
 Status: active
 Lane: P01
 
+- Closed accepted Grok adapter fixture lint ratchet:
+  [docs/dev/plans/0308-2026-08-14-grok-adapter-fixture-lint-ratchet.md](docs/dev/plans/0308-2026-08-14-grok-adapter-fixture-lint-ratchet.md)
+  Exact external names now use computed keys, and required media materializers
+  share one labeled, bound fixture guard.
+
 - Closed accepted schema resolver fixture lint ratchet:
   [docs/dev/plans/0307-2026-08-14-schema-resolver-fixture-lint-ratchet.md](docs/dev/plans/0307-2026-08-14-schema-resolver-fixture-lint-ratchet.md)
   Loaded config now exposes its actual partial-input contract, and all resolver

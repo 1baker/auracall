@@ -1,3 +1,8 @@
+- 2026-08-14: Provider adapter fixtures should centralize both sides of their
+  intentional boundary: exact Chrome/DOM/CDP names through computed keys, and
+  required optional adapter methods through a labeled guard bound to the
+  adapter instance. This removes assertions without changing call semantics.
+
 - 2026-08-14: Keep loaded config input distinct from the fully resolved config
   schema. Config files and their merged pre-resolution form may omit required
   resolved defaults, so `LoadConfigResult.config` should expose a partial
