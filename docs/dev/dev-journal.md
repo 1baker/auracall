@@ -1,3 +1,12 @@
+## 2026-08-14 | Plan 0302 runtime-core fixture lint ratchet
+
+- Selected eight runtime-core non-null assertions after Plan 0301: required
+  runner first steps and one nullable persisted response run.
+- Added run-labeled fixture guards, narrowed the response record once, and
+  expanded strict-test lint to cover both complete suites.
+- The suites and broad gates passed. Plan 0302 is CLOSED with 155 warnings
+  remaining in test files not yet migrated.
+
 ## 2026-08-14 | Plan 0301 service-host fixture lint ratchet
 
 - Selected the next safe test-warning cluster after Plan 0300: 13 non-null

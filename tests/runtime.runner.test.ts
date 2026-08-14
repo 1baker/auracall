@@ -17,6 +17,13 @@ import type { ExecuteLocalActionRequestResult, ExecuteStoredRunStepResult } from
 import { DEFAULT_TEAM_RUN_EXECUTION_POLICY } from '../src/teams/types.js';
 import { BrowserAutomationError } from '../src/oracle/errors.js';
 
+function requireFixtureValue<T>(value: T | null | undefined, label: string): T {
+  if (value == null) {
+    throw new Error(`${label} fixture was missing.`);
+  }
+  return value;
+}
+
 function createDirectBundle(runId: string) {
   const createdAt = '2026-04-08T13:00:00.000Z';
   const stepId = `${runId}:step:1`;
@@ -1474,7 +1481,7 @@ describe('runtime runner', () => {
     const control = createExecutionRuntimeControl();
     const bundle = createDirectBundle('run_local_action');
     bundle.steps[0] = {
-      ...bundle.steps[0]!,
+      ...requireFixtureValue(bundle.steps[0], 'run_local_action first step'),
       input: {
         ...bundle.steps[0]?.input,
         structuredData: {
@@ -1569,7 +1576,7 @@ describe('runtime runner', () => {
     const control = createExecutionRuntimeControl();
     const bundle = createDirectBundle('run_local_action_alias');
     bundle.steps[0] = {
-      ...bundle.steps[0]!,
+      ...requireFixtureValue(bundle.steps[0], 'run_local_action_alias first step'),
       input: {
         ...bundle.steps[0]?.input,
         structuredData: {
@@ -1639,7 +1646,7 @@ describe('runtime runner', () => {
     const control = createExecutionRuntimeControl();
     const bundle = createDirectBundle('run_artifact_ref_normalization');
     bundle.steps[0] = {
-      ...bundle.steps[0]!,
+      ...requireFixtureValue(bundle.steps[0], 'run_artifact_ref_normalization first step'),
       input: {
         ...bundle.steps[0]?.input,
         structuredData: {
@@ -1785,7 +1792,7 @@ describe('runtime runner', () => {
     const control = createExecutionRuntimeControl();
     const bundle = createDirectBundle('run_local_action_forbidden');
     bundle.steps[0] = {
-      ...bundle.steps[0]!,
+      ...requireFixtureValue(bundle.steps[0], 'run_local_action_forbidden first step'),
       input: {
         ...bundle.steps[0]?.input,
         structuredData: {

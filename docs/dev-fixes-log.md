@@ -1,3 +1,8 @@
+- 2026-08-14: When a test mutates a required first runtime step or a nullable
+  persisted run, narrow the fixture once with a run-specific guard. Reusing
+  the narrowed value improves failure locality and removes repeated
+  compile-only assertions before the suite joins strict-test lint.
+
 - 2026-08-14: Fixed-position test fixtures are still runtime data even when a
   builder normally supplies them. Replace spread-time non-null assertions with
   labeled guards at the use site so a broken builder reports the missing run

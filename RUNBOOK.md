@@ -1,5 +1,14 @@
 # RUNBOOK
 
+## Turn 471 | 2026-08-14
+
+- Continued the strict-test ratchet through the runtime core: four runner
+  first-step assertions and four repeated response-service run assertions.
+- Closed Plan 0302 by narrowing required fixtures through run-labeled guards
+  and adding both complete suites to the warning-strict test command.
+- Both provider-free suites and broad gates passed. Full lint now reports 155
+  warnings only in test files not yet migrated.
+
 ## Turn 470 | 2026-08-14
 
 - After Plan 0300 established an additive strict-test lint ratchet, selected

@@ -7,6 +7,11 @@
 Status: active
 Lane: P01
 
+- Closed accepted runtime-core fixture lint ratchet:
+  [docs/dev/plans/0302-2026-08-14-runtime-core-fixture-lint-ratchet.md](docs/dev/plans/0302-2026-08-14-runtime-core-fixture-lint-ratchet.md)
+  Runner and response-service fixtures now fail through labeled guards, and
+  four integration suites are covered by the warning-strict test boundary.
+
 - Closed accepted service-host fixture lint ratchet:
   [docs/dev/plans/0301-2026-08-14-service-host-fixture-lint-ratchet.md](docs/dev/plans/0301-2026-08-14-service-host-fixture-lint-ratchet.md)
   Required service-host fixtures now fail through labeled guards, and a second

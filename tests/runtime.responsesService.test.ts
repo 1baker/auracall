@@ -22,6 +22,13 @@ import { BrowserAutomationError } from '../src/oracle/errors.js';
 import { AURACALL_STEP_OUTPUT_CONTRACT_VERSION } from '../src/runtime/stepOutputContract.js';
 import { summarizeResponseRunStatus } from '../src/runStatus.js';
 
+function requireFixtureValue<T>(value: T | null | undefined, label: string): T {
+  if (value == null) {
+    throw new Error(`${label} fixture was missing.`);
+  }
+  return value;
+}
+
 describe('runtime responses service', () => {
   const cleanup: string[] = [];
 
@@ -862,19 +869,22 @@ describe('runtime responses service', () => {
     });
     expect(created.status).toBe('in_progress');
 
-    const record = await control.readRun('resp_service_cancelled_1');
+    const record = requireFixtureValue(
+      await control.readRun('resp_service_cancelled_1'),
+      'resp_service_cancelled_1',
+    );
     await control.persistRun({
       runId: 'resp_service_cancelled_1',
-      expectedRevision: record!.revision,
+      expectedRevision: record.revision,
       bundle: cancelExecutionRun({
         bundle: {
-          ...record!.bundle,
+          ...record.bundle,
           run: {
-            ...record!.bundle.run,
+            ...record.bundle.run,
             status: 'running',
             updatedAt: '2026-04-08T14:20:00.000Z',
           },
-          steps: record!.bundle.steps.map((step) =>
+          steps: record.bundle.steps.map((step) =>
             step.id === 'resp_service_cancelled_1:step:1'
               ? {
                   ...step,
