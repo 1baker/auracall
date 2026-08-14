@@ -303,10 +303,7 @@ export async function reattachAgentBrowserBrokerTab(
 	const fetchImpl = dependencies.fetch ?? globalThis.fetch;
 	const deps = {
 		fetch: fetchImpl,
-		listStreamFiles:
-			dependencies.listStreamFiles ??
-			(async () =>
-				(await readdir(streamDirectory())).map((name) => path.join(streamDirectory(), name))),
+		listStreamFiles: dependencies.listStreamFiles ?? listServiceStreamFiles,
 		readStreamFile:
 			dependencies.readStreamFile ?? ((filePath: string) => readFile(filePath, "utf8")),
 	};
@@ -414,10 +411,7 @@ export async function acquireAgentBrowserBrokerTab(
 	const fetchImpl = dependencies.fetch ?? globalThis.fetch;
 	const deps = {
 		fetch: fetchImpl,
-		listStreamFiles:
-			dependencies.listStreamFiles ??
-			(async () =>
-				(await readdir(streamDirectory())).map((name) => path.join(streamDirectory(), name))),
+		listStreamFiles: dependencies.listStreamFiles ?? listServiceStreamFiles,
 		readStreamFile:
 			dependencies.readStreamFile ?? ((filePath: string) => readFile(filePath, "utf8")),
 	};
@@ -753,11 +747,32 @@ export async function withAgentBrowserBrokerCleanup<T>(
 	return result;
 }
 
-function streamDirectory(): string {
-	return path.join(
-		process.env.XDG_RUNTIME_DIR ?? `/run/user/${process.getuid?.() ?? os.userInfo().uid}`,
-		"agent-browser",
+export function resolveAgentBrowserStreamDirectories(options: {
+	env?: NodeJS.ProcessEnv;
+	homeDir?: string;
+	uid?: number;
+} = {}): string[] {
+	const env = options.env ?? process.env;
+	const homeDir = options.homeDir ?? os.homedir();
+	const uid = options.uid ?? process.getuid?.() ?? os.userInfo().uid;
+	const configuredSocketDir = env.AGENT_BROWSER_SOCKET_DIR?.trim();
+	const agentBrowserHome = env.AGENT_BROWSER_HOME?.trim() || path.join(homeDir, ".agent-browser");
+	const runtimeDir = path.join(env.XDG_RUNTIME_DIR?.trim() || `/run/user/${uid}`, "agent-browser");
+	return [configuredSocketDir, agentBrowserHome, runtimeDir]
+		.filter((directory): directory is string => Boolean(directory))
+		.map((directory) => path.resolve(directory))
+		.filter((directory, index, directories) => directories.indexOf(directory) === index);
+}
+
+async function listServiceStreamFiles(): Promise<string[]> {
+	const entries = await Promise.all(
+		resolveAgentBrowserStreamDirectories().map(async (directory) =>
+			(await readdir(directory).catch(() => []))
+				.filter((name) => name.endsWith(".stream"))
+				.map((name) => path.join(directory, name)),
+		),
 	);
+	return entries.flat();
 }
 
 async function launchBrokerOwnedSession(

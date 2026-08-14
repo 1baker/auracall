@@ -21677,3 +21677,14 @@ browser-stage lifecycle observability, not transcript truncation.
   runs. Duplicated inference can drift and misclassify the same durable run.
 - Treat unreported authority as its own filterable state, not as fallback.
   Missing or future evidence must not generate a compatibility alarm.
+
+## 2026-08-14 | Discover retained broker streams across authoritative roots
+
+- Do not equate the legacy XDG runtime directory with agent-browser authority.
+  A daemon handoff may retain its session stream under the configured socket
+  root or agent-browser home while the runtime directory contains only another
+  session.
+- Search the explicit socket root, agent-browser home, and XDG runtime root in
+  deterministic order; deduplicate equivalent paths and ignore missing roots.
+- Preserve exact profile, browser, session, URL, and target matching after
+  discovery. Wider location discovery must not become looser target authority.

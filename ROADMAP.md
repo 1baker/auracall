@@ -7,6 +7,14 @@
 Status: active
 Lane: P01
 
+- Closed accepted agent-browser retained-stream discovery recovery:
+  [docs/dev/plans/0290-2026-08-14-agent-browser-stream-discovery-recovery.md](docs/dev/plans/0290-2026-08-14-agent-browser-stream-discovery-recovery.md)
+  Required-mode broker discovery now covers the configured socket root,
+  agent-browser home, and XDG runtime root without duplicates. The installed
+  runtime matched the built bridge hash, one no-prompt attach and verified
+  detach reused the exact retained ChatGPT PID/target, and an API restart left
+  that broker-owned browser ready and unchanged.
+
 - Closed accepted recent-run browser-authority projection:
   [docs/dev/plans/0289-2026-08-14-recent-run-browser-authority.md](docs/dev/plans/0289-2026-08-14-recent-run-browser-authority.md)
   Recent HTTP/MCP run summaries will reuse the durable authority reducer so the

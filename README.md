@@ -240,6 +240,11 @@ Current browser-mode default posture:
   API service restart re-authorizes the same retained target and resumes
   response polling without replaying the prompt or rediscovering Chrome.
   Broker-tagged recovery fails closed if the exact handle is unavailable.
+  Broker discovery checks `AGENT_BROWSER_SOCKET_DIR`, `AGENT_BROWSER_HOME` (or
+  `~/.agent-browser`), and the XDG runtime `agent-browser` directory in that
+  order, deduplicating equivalent locations and ignoring missing roots. This
+  keeps retained session streams discoverable after daemon handoff without
+  weakening exact profile, session, URL, and target matching.
   `off` is the explicit compatibility escape hatch that bypasses broker probing
   and retains AuraCall-managed browser behavior
 - a browser profile can opt into an agent-browser-owned hidden RDP/Guacamole

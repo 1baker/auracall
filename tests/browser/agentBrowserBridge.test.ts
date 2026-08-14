@@ -1,3 +1,4 @@
+import path from "node:path";
 import { describe, expect, test, vi } from "vitest";
 import {
 	acquireAgentBrowserBrokerTab,
@@ -5,6 +6,7 @@ import {
 	reattachAgentBrowserBrokerTab,
 	resolveAgentBrowserBridgeMode,
 	resolveAgentBrowserBrokerUrl,
+	resolveAgentBrowserStreamDirectories,
 	withAgentBrowserBrokerCleanup,
 } from "../../src/browser/service/agentBrowserBridge.js";
 
@@ -20,6 +22,37 @@ describe("agent-browser bridge", () => {
 		expect(resolveAgentBrowserBridgeMode(undefined)).toBe("auto");
 		expect(resolveAgentBrowserBridgeMode("required")).toBe("required");
 		expect(resolveAgentBrowserBridgeMode("off")).toBe("off");
+	});
+
+	test("discovers configured, agent-home, and runtime stream directories without duplicates", () => {
+		const env = Object.fromEntries([
+			["AGENT_BROWSER_SOCKET_DIR", "/srv/agent-browser-sockets"],
+			["AGENT_BROWSER_HOME", "/var/lib/agent-browser"],
+			["XDG_RUNTIME_DIR", "/run/custom-user"],
+		]);
+		expect(
+			resolveAgentBrowserStreamDirectories({
+				env,
+				homeDir: "/home/operator",
+				uid: 1234,
+			}),
+		).toEqual([
+			path.resolve("/srv/agent-browser-sockets"),
+			path.resolve("/var/lib/agent-browser"),
+			path.resolve("/run/custom-user/agent-browser"),
+		]);
+		expect(
+			resolveAgentBrowserStreamDirectories({
+				env: Object.fromEntries([
+					["AGENT_BROWSER_SOCKET_DIR", "/home/operator/.agent-browser"],
+				]),
+				homeDir: "/home/operator",
+				uid: 1234,
+			}),
+		).toEqual([
+			path.resolve("/home/operator/.agent-browser"),
+			path.resolve("/run/user/1234/agent-browser"),
+		]);
 	});
 
 	test("auto falls back only when no agent-browser service route is available", async () => {

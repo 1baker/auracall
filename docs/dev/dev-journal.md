@@ -1,3 +1,19 @@
+## 2026-08-14 | Plan 0290 Retained Agent-Browser Stream Discovery
+
+- Live recovery exposed two same-name daemon roots: the retained authoritative
+  session stream lived under `~/.agent-browser`, while AuraCall searched only
+  the XDG runtime directory and therefore reported no managed browser.
+- Broker discovery now checks an explicit socket root, agent-browser home, and
+  XDG runtime root in deterministic order, deduplicates equivalent paths, and
+  ignores missing roots without changing exact-target or fail-closed gates.
+- The affected matrix passed 292/292 with typecheck, targeted lint, production
+  build, plan audit, and diff checks. One no-prompt `cdp_attach` plus one
+  verified `cdp_detach` reused browser PID `1046742` and target
+  `B0EC77F279E5434E33FEA97AB1742B1A`.
+- The user runtime was installed with exact bridge-file hash parity. Restarting
+  only the user API service changed its process while the independently owned
+  browser PID, canonical URL, target, and ready health remained unchanged.
+
 ## 2026-08-14 | Plan 0284 Installed Attachment Replay
 
 - The operator authorized one install and one replay after Plan 0283 closed

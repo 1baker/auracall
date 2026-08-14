@@ -1,5 +1,22 @@
 # RUNBOOK
 
+## Turn 456 | 2026-08-14
+
+- Restored the exact `chatgpt-pro` retained lane after its Linux Chrome process
+  had exited, retired only the stale deleted-binary daemon, and handed the
+  authoritative session to the configured Linux executable. The retained
+  browser now remains one ready PID with one valid exact-target handle.
+- Closed Plan 0290 by widening AuraCall broker stream discovery from only the
+  legacy XDG runtime root to the explicit socket root, agent-browser home, and
+  XDG runtime root with deterministic deduplication and missing-root tolerance.
+- Provider-free verification passed 292 affected tests, typecheck, targeted
+  lint, build, plan audit, and diff checks. One live no-prompt broker attach and
+  one verified detach reused the retained PID and target. The installed bridge
+  hash matches the build, and restarting only `auracall-api.service` preserved
+  the browser PID, canonical URL, and ready health.
+- No ChatGPT prompt, composer action, browser duplication, or GitHub write was
+  performed.
+
 ## Turn 455 | 2026-08-14
 
 - [Plan 0284](docs/dev/plans/0284-2026-08-14-devtools-attachment-installed-inventory-replay.md)
