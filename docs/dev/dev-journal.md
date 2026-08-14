@@ -25,6 +25,13 @@
   explicit smaller inner deadline still wins. The affected suites pass 93/93,
   with typecheck and build green. The consumed inventory was not retried and no
   prompt, connector, or canonical effect ran.
+- The final installed v2 readback still produced no inventory output within its
+  60-second caller deadline. Because both navigation acknowledgement and
+  predicate evaluation are now independently bounded, this proves a remaining
+  unbounded stage earlier or later in the developer-app read path; the exact
+  stage was not established and is not guessed. The final control forbids a
+  third hardening checkpoint or live retry, so the dead owner/lease is retained
+  and LitScout P3 remains unaccepted.
 
 ## 2026-08-13 | Plan 0282 Developer-App Test Current Model
 

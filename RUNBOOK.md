@@ -31,6 +31,14 @@
   a smaller explicit inner deadline. The red-capable default-bound regression
   now passes with the full affected suite at 93/93, plus typecheck and build.
   No second live inventory, canary, prompt, connector, or canonical effect ran.
+- LitScout's separately pushed final v2 control then installed exact
+  `9cea4c57`, restarted AuraCall once, and invoked one final 60-second inventory.
+  It reclaimed the v1 dead lease but again returned no output before the caller
+  deadline, proving a remaining unbounded stage outside the now-bounded
+  navigation acknowledgement and predicate evaluation seams. The v2 owner is
+  dead, its lease is retained, and the browser tabs and canonical LitScout state
+  are unchanged. With hardening checkpoint `2/2` consumed, no further repair or
+  live retry is authorized; P3 remains unaccepted.
 
 ## Turn 452 | 2026-08-13
 
