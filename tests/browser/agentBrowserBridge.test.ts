@@ -2,6 +2,7 @@ import { describe, expect, test, vi } from "vitest";
 import {
 	acquireAgentBrowserBrokerTab,
 	detachAgentBrowserBrokerTab,
+	reattachAgentBrowserBrokerTab,
 	resolveAgentBrowserBrokerUrl,
 	withAgentBrowserBrokerCleanup,
 } from "../../src/browser/service/agentBrowserBridge.js";
@@ -14,6 +15,94 @@ function jsonResponse(body: unknown): Response {
 }
 
 describe("agent-browser bridge", () => {
+	test("reattaches an exact retained broker handle after the AuraCall process restarts", async () => {
+		const handle = {
+			browserId: "session:auracall-chatgpt-broker-v7",
+			profileId: "chatgpt-pro",
+			sessionName: "auracall-chatgpt-broker-v7",
+			targetId: "target-restart",
+			url: "https://chatgpt.com/c/recovered-chat",
+			valid: true,
+		};
+		const requests: Array<Record<string, unknown>> = [];
+		const fetch = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+			const value = String(url);
+			if (value.endsWith("/api/service/browsers")) {
+				return jsonResponse({
+					success: true,
+					data: {
+						browsers: [{
+							health: "ready",
+							pid: 41234,
+							id: handle.browserId,
+							profileId: handle.profileId,
+							tabHandles: [handle],
+						}],
+					},
+				});
+			}
+			const request = JSON.parse(String(init?.body)) as Record<string, unknown>;
+			requests.push(request);
+			return jsonResponse({
+				success: true,
+				data: {
+					browserWebSocketUrl: "ws://127.0.0.1:49505/devtools/browser/example",
+					detachRequired: true,
+				},
+			});
+		});
+
+		const result = await reattachAgentBrowserBrokerTab(
+			{
+				baseUrl: "http://127.0.0.1:47777",
+				browserId: handle.browserId,
+				profileId: handle.profileId,
+				serviceTabHandle: handle,
+				sessionName: handle.sessionName,
+				url: handle.url,
+			},
+			{
+				fetch: fetch as never,
+				listStreamFiles: async () => ["/runtime/dashboard-service-backend.stream"],
+				readStreamFile: async () => "47777\n",
+			},
+		);
+
+		expect(result).toMatchObject({
+			baseUrl: "http://127.0.0.1:47777",
+			browserId: handle.browserId,
+			browserProcessId: 41234,
+			chromeHost: "127.0.0.1",
+			chromePort: 49505,
+			serviceTabHandle: handle,
+		});
+		expect(requests).toHaveLength(1);
+		expect(requests[0]).toMatchObject({
+			action: "cdp_attach",
+			taskName: "chatgpt-restart-recovery",
+			serviceTabHandle: handle,
+		});
+	});
+
+	test("fails restart recovery closed when the retained broker target is gone", async () => {
+		await expect(
+			reattachAgentBrowserBrokerTab(
+				{
+					browserId: "session:auracall-chatgpt",
+					profileId: "chatgpt-pro",
+					serviceTabHandle: { targetId: "closed-target" },
+					sessionName: "auracall-chatgpt",
+					url: "https://chatgpt.com/c/recovered-chat",
+				},
+				{
+					fetch: vi.fn(async () => jsonResponse({ success: true, data: { browsers: [] } })) as never,
+					listStreamFiles: async () => ["/runtime/dashboard-service-backend.stream"],
+					readStreamFile: async () => "47777\n",
+				},
+			),
+		).rejects.toThrow("requires exactly one retained broker target; found 0");
+	});
+
 	test("keeps an explicit canonical ChatGPT conversation URL authoritative over the installed broker default", () => {
 		const previous = process.env.AURACALL_AGENT_BROWSER_URL_CHATGPT;
 		process.env.AURACALL_AGENT_BROWSER_URL_CHATGPT =

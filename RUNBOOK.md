@@ -18806,3 +18806,18 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
 - The installed bridge hash matched source at `717fe400...1ec25d`. The
   user-scoped API service is enabled, active, and running with zero restarts.
   No GitHub write occurred.
+
+## Turn 420 | 2026-08-14
+
+- Plan 0285 opens after a deliberate service restart exposed one remaining
+  durability gap: recovered ChatGPT steps bypassed agent-browser and entered
+  AuraCall's legacy Chrome discovery/new-browser reattach path.
+- Broker route, browser/process, browser profile, session, and exact
+  `serviceTabHandle` now persist on runtime hints and passive response
+  heartbeats. Restart recovery validates the exact retained broker target,
+  requests a fresh policy-gated attach, resumes the existing turn without
+  replay, and verifies detach on exit.
+- Provider-free evidence is green: 130 tests across nine affected files,
+  typecheck, lint with the accepted 208-warning baseline, production build,
+  diff hygiene, and plan-library audit. Installed stop/restart acceptance is
+  the sole remaining gate; no GitHub write occurred.

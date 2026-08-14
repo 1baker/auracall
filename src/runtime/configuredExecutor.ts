@@ -13,6 +13,11 @@ import {
 import { runBrowserMode } from '../browser/index.js';
 import { resumeBrowserSession } from '../browser/reattach.js';
 import { waitForAssistantResponse } from '../browser/actions/assistantResponse.js';
+import {
+  reattachAgentBrowserBrokerTab,
+  withAgentBrowserBrokerCleanup,
+  type AgentBrowserBridgeResult,
+} from '../browser/service/agentBrowserBridge.js';
 import type {
   BrowserAttachment,
   BrowserRunOptions,
@@ -49,6 +54,8 @@ export interface CreateConfiguredStoredStepExecutorDeps {
   runBrowserModeImpl?: (options: BrowserRunOptions) => Promise<Awaited<ReturnType<typeof runBrowserMode>>>;
   runGeminiBrowserModeImpl?: (options: BrowserRunOptions) => Promise<Awaited<ReturnType<typeof runBrowserMode>>>;
   resumeBrowserSessionImpl?: typeof resumeBrowserSession;
+  reattachAgentBrowserBrokerTabImpl?: typeof reattachAgentBrowserBrokerTab;
+  withAgentBrowserBrokerCleanupImpl?: typeof withAgentBrowserBrokerCleanup;
   effectiveConfigProvider?: () => Promise<Record<string, unknown>>;
   browserResponseArtifactMaterializer?: (input: BrowserResponseArtifactMaterializerInput) => Promise<BrowserResponseArtifactMaterializerResult>;
   logger?: (message: string) => void;
@@ -212,6 +219,14 @@ function buildBrowserRuntimeMetadataFromEvidence(input: {
     userDataDir: input.manualLoginProfileDir ?? undefined,
     runtimeProfileId: input.runtimeProfileId,
     browserProfileId: input.browserProfileId,
+    agentBrowserBaseUrl: asNonEmptyString(details.agentBrowserBaseUrl) ?? undefined,
+    agentBrowserBrowserId: asNonEmptyString(details.agentBrowserBrowserId) ?? undefined,
+    agentBrowserProcessId: asFiniteNumber(details.agentBrowserProcessId) ?? undefined,
+    agentBrowserProfileId: asNonEmptyString(details.agentBrowserProfileId) ?? undefined,
+    agentBrowserServiceTabHandle: isRecord(details.agentBrowserServiceTabHandle)
+      ? details.agentBrowserServiceTabHandle
+      : undefined,
+    agentBrowserSessionName: asNonEmptyString(details.agentBrowserSessionName) ?? undefined,
   };
 }
 
@@ -915,7 +930,20 @@ export function createConfiguredStoredStepExecutor(
       await context.runtimeEvidence?.heartbeat(evidence);
     };
     const buildBrowserRuntimeEvidenceDetails = (
-      runtime: Pick<BrowserRuntimeMetadata, 'chromeHost' | 'chromePort' | 'chromeTargetId' | 'tabUrl' | 'conversationId'> | null,
+      runtime: Pick<
+        BrowserRuntimeMetadata,
+        | 'chromeHost'
+        | 'chromePort'
+        | 'chromeTargetId'
+        | 'tabUrl'
+        | 'conversationId'
+        | 'agentBrowserBaseUrl'
+        | 'agentBrowserBrowserId'
+        | 'agentBrowserProcessId'
+        | 'agentBrowserProfileId'
+        | 'agentBrowserServiceTabHandle'
+        | 'agentBrowserSessionName'
+      > | null,
     ): Record<string, unknown> => ({
       service,
       runtimeProfileId: runtimeSelection.runtimeProfileId,
@@ -927,6 +955,12 @@ export function createConfiguredStoredStepExecutor(
       chromeTargetId: runtime?.chromeTargetId ?? null,
       tabUrl: runtime?.tabUrl ?? null,
       conversationId: runtime?.conversationId ?? null,
+      agentBrowserBaseUrl: runtime?.agentBrowserBaseUrl ?? null,
+      agentBrowserBrowserId: runtime?.agentBrowserBrowserId ?? null,
+      agentBrowserProcessId: runtime?.agentBrowserProcessId ?? null,
+      agentBrowserProfileId: runtime?.agentBrowserProfileId ?? null,
+      agentBrowserServiceTabHandle: runtime?.agentBrowserServiceTabHandle ?? null,
+      agentBrowserSessionName: runtime?.agentBrowserSessionName ?? null,
     });
     const recordBrowserRuntimeEvidence = async (evidence: BrowserRuntimeEvidence): Promise<void> => {
       const observation = evidence.observation;
@@ -1093,6 +1127,12 @@ export function createConfiguredStoredStepExecutor(
             chromeTargetId: hint.chromeTargetId ?? null,
             tabUrl: hint.tabUrl ?? null,
             conversationId: hint.conversationId ?? null,
+            agentBrowserBaseUrl: hint.agentBrowserBaseUrl ?? null,
+            agentBrowserBrowserId: hint.agentBrowserBrowserId ?? null,
+            agentBrowserProcessId: hint.agentBrowserProcessId ?? null,
+            agentBrowserProfileId: hint.agentBrowserProfileId ?? null,
+            agentBrowserServiceTabHandle: hint.agentBrowserServiceTabHandle ?? null,
+            agentBrowserSessionName: hint.agentBrowserSessionName ?? null,
           },
         });
       },
@@ -1136,7 +1176,7 @@ export function createConfiguredStoredStepExecutor(
       if (!recoveredRuntimeEvidence) {
         return runBrowserStep(browserRunOptions);
       }
-      const recoveredRuntime = buildBrowserRuntimeMetadataFromEvidence({
+      let recoveredRuntime = buildBrowserRuntimeMetadataFromEvidence({
         evidence: recoveredRuntimeEvidence,
         runtimeProfileId: runtimeSelection.runtimeProfileId ?? context.step.runtimeProfileId ?? 'default',
         browserProfileId: runtimeSelection.browserProfileId,
@@ -1144,6 +1184,51 @@ export function createConfiguredStoredStepExecutor(
         agentId: context.step.agentId,
       });
       try {
+        let recoveredBridge: AgentBrowserBridgeResult | null = null;
+        const hasBrokerEvidence = Boolean(
+          recoveredRuntime.agentBrowserBaseUrl ||
+          recoveredRuntime.agentBrowserBrowserId ||
+          recoveredRuntime.agentBrowserProfileId ||
+          recoveredRuntime.agentBrowserServiceTabHandle ||
+          recoveredRuntime.agentBrowserSessionName
+        );
+        if (hasBrokerEvidence) {
+          if (
+            !recoveredRuntime.agentBrowserBrowserId ||
+            !recoveredRuntime.agentBrowserProfileId ||
+            !recoveredRuntime.agentBrowserServiceTabHandle ||
+            !recoveredRuntime.agentBrowserSessionName
+          ) {
+            throw new Error('recovered agent-browser provenance is incomplete; refusing legacy Chrome discovery');
+          }
+          const reattachBroker = deps.reattachAgentBrowserBrokerTabImpl ?? reattachAgentBrowserBrokerTab;
+          recoveredBridge = await reattachBroker({
+            baseUrl: recoveredRuntime.agentBrowserBaseUrl,
+            browserId: recoveredRuntime.agentBrowserBrowserId,
+            profileId: recoveredRuntime.agentBrowserProfileId,
+            serviceTabHandle: recoveredRuntime.agentBrowserServiceTabHandle,
+            sessionName: recoveredRuntime.agentBrowserSessionName,
+            url: recoveredRuntime.tabUrl,
+            serviceName: 'AuraCall',
+            agentName: context.step.agentId,
+            taskName: 'chatgpt-restart-recovery',
+            logger: deps.logger,
+          });
+          recoveredRuntime = {
+            ...recoveredRuntime,
+            chromeHost: recoveredBridge.chromeHost,
+            chromePort: recoveredBridge.chromePort,
+            chromeTargetId:
+              asNonEmptyString(recoveredBridge.serviceTabHandle.targetId) ??
+              recoveredRuntime.chromeTargetId,
+            agentBrowserBaseUrl: recoveredBridge.baseUrl,
+            agentBrowserBrowserId: recoveredBridge.browserId,
+            agentBrowserProcessId: recoveredBridge.browserProcessId,
+            agentBrowserProfileId: recoveredBridge.profileId,
+            agentBrowserServiceTabHandle: recoveredBridge.serviceTabHandle,
+            agentBrowserSessionName: recoveredBridge.sessionName,
+          };
+        }
         deps.logger?.(
           `reattaching recovered ChatGPT browser-backed run ${context.record.runId} to existing tab ${recoveredRuntime.chromeTargetId ?? recoveredRuntime.tabUrl ?? '(unknown)'}`,
         );
@@ -1182,23 +1267,30 @@ export function createConfiguredStoredStepExecutor(
           });
         };
         await heartbeatRecoveredRuntimeEvidence('thinking', 'chatgpt-reattach-existing-tab', 'medium');
-        const reattached = await resumeBrowserSessionImpl(
-          recoveredRuntime as Parameters<typeof resumeBrowserSession>[0],
-          browserRunOptions.config as Parameters<typeof resumeBrowserSession>[1],
-          browserRunOptions.log as Parameters<typeof resumeBrowserSession>[2],
-          {
-            promptPreview: promptTransport.prompt.slice(0, 2_000),
-            waitForAssistantResponse: (Runtime, timeoutMs, logger, minTurn) =>
-              waitForAssistantResponse(Runtime, timeoutMs, logger, minTurn, {
-                onPassiveDomProbe: () => {
-                  recordRecoveredRuntimeEvidence('thinking', 'chatgpt-passive-dom-probe', 'low');
-                },
-                onResponseIncoming: () => {
-                  recordRecoveredRuntimeEvidence('response-incoming', 'chatgpt-assistant-snapshot', 'high');
-                },
-              }),
-          },
-        );
+        const performReattach = () =>
+          resumeBrowserSessionImpl(
+            recoveredRuntime as Parameters<typeof resumeBrowserSession>[0],
+            browserRunOptions.config as Parameters<typeof resumeBrowserSession>[1],
+            browserRunOptions.log as Parameters<typeof resumeBrowserSession>[2],
+            {
+              promptPreview: promptTransport.prompt.slice(0, 2_000),
+              waitForAssistantResponse: (Runtime, timeoutMs, logger, minTurn) =>
+                waitForAssistantResponse(Runtime, timeoutMs, logger, minTurn, {
+                  onPassiveDomProbe: () => {
+                    recordRecoveredRuntimeEvidence('thinking', 'chatgpt-passive-dom-probe', 'low');
+                  },
+                  onResponseIncoming: () => {
+                    recordRecoveredRuntimeEvidence('response-incoming', 'chatgpt-assistant-snapshot', 'high');
+                  },
+                }),
+            },
+          );
+        const reattached = recoveredBridge
+          ? await (deps.withAgentBrowserBrokerCleanupImpl ?? withAgentBrowserBrokerCleanup)(
+              recoveredBridge,
+              performReattach,
+            )
+          : await performReattach();
         return createBrowserRunResultFromReattach({
           result: reattached,
           runtime: recoveredRuntime,

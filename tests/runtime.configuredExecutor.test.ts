@@ -1163,6 +1163,27 @@ describe('configured stored-step executor', () => {
       answerMarkdown: 'AURACALL_REATTACHED_OK',
     }));
     const runtimeEvidenceHeartbeat = vi.fn(async () => undefined);
+    const brokerHandle = {
+      browserId: 'session:auracall-chatgpt-broker-v7',
+      profileId: 'chatgpt-pro',
+      sessionName: 'auracall-chatgpt-broker-v7',
+      targetId: 'target-restart',
+      url: 'https://chatgpt.com/c/recovered-chat',
+      valid: true,
+    };
+    const reattachAgentBrowserBrokerTabImpl = vi.fn(async () => ({
+      baseUrl: 'http://127.0.0.1:47777',
+      browserId: brokerHandle.browserId,
+      browserProcessId: 41234,
+      chromeHost: '127.0.0.1',
+      chromePort: 49505,
+      detachRequired: true,
+      detachState: 'attached' as const,
+      profileId: brokerHandle.profileId,
+      serviceTabHandle: brokerHandle,
+      sessionName: brokerHandle.sessionName,
+    }));
+    const withAgentBrowserBrokerCleanupImpl = vi.fn(async (_bridge, action) => action());
 
     const executeStoredRunStep = createConfiguredStoredStepExecutor(
       {
@@ -1179,7 +1200,12 @@ describe('configured stored-step executor', () => {
           },
         },
       },
-      { runBrowserModeImpl, resumeBrowserSessionImpl },
+      {
+        runBrowserModeImpl,
+        resumeBrowserSessionImpl,
+        reattachAgentBrowserBrokerTabImpl,
+        withAgentBrowserBrokerCleanupImpl,
+      },
     );
 
     const result = await executeStoredRunStep?.({
@@ -1216,6 +1242,12 @@ describe('configured stored-step executor', () => {
                     chromeTargetId: 'target-restart',
                     tabUrl: 'https://chatgpt.com/c/recovered-chat',
                     conversationId: 'recovered-chat',
+                    agentBrowserBaseUrl: 'http://127.0.0.1:46515',
+                    agentBrowserBrowserId: brokerHandle.browserId,
+                    agentBrowserProcessId: 41234,
+                    agentBrowserProfileId: brokerHandle.profileId,
+                    agentBrowserServiceTabHandle: brokerHandle,
+                    agentBrowserSessionName: brokerHandle.sessionName,
                   },
                 },
               },
@@ -1253,9 +1285,20 @@ describe('configured stored-step executor', () => {
     });
 
     expect(runBrowserModeImpl).not.toHaveBeenCalled();
+    expect(reattachAgentBrowserBrokerTabImpl).toHaveBeenCalledWith(
+      expect.objectContaining({
+        baseUrl: 'http://127.0.0.1:46515',
+        browserId: brokerHandle.browserId,
+        profileId: brokerHandle.profileId,
+        serviceTabHandle: brokerHandle,
+        sessionName: brokerHandle.sessionName,
+        url: 'https://chatgpt.com/c/recovered-chat',
+      }),
+    );
+    expect(withAgentBrowserBrokerCleanupImpl).toHaveBeenCalledTimes(1);
     expect(resumeBrowserSessionImpl).toHaveBeenCalledWith(
       expect.objectContaining({
-        chromePort: 45012,
+        chromePort: 49505,
         chromeHost: '127.0.0.1',
         chromeTargetId: 'target-restart',
         tabUrl: 'https://chatgpt.com/c/recovered-chat',
@@ -1282,11 +1325,17 @@ describe('configured stored-step executor', () => {
           runtimeProfileId: 'default',
           browserProfileId: 'default',
           agentId: 'chatgpt-recovered-agent',
-          chromePort: 45012,
+          chromePort: 49505,
           chromeHost: '127.0.0.1',
           chromeTargetId: 'target-restart',
           tabUrl: 'https://chatgpt.com/c/recovered-chat',
           conversationId: 'recovered-chat',
+          agentBrowserBaseUrl: 'http://127.0.0.1:47777',
+          agentBrowserBrowserId: brokerHandle.browserId,
+          agentBrowserProcessId: 41234,
+          agentBrowserProfileId: brokerHandle.profileId,
+          agentBrowserServiceTabHandle: brokerHandle,
+          agentBrowserSessionName: brokerHandle.sessionName,
         }),
       }),
     );

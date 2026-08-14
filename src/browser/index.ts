@@ -3110,17 +3110,23 @@ function withAgentBrowserRuntimeHints(
 	options: BrowserRunOptions,
 	bridge: AgentBrowserBridgeResult,
 ): BrowserRunOptions {
+	const withBridgeProvenance = (hint: BrowserRuntimeMetadata): BrowserRuntimeMetadata => ({
+		...hint,
+		agentBrowserBaseUrl: bridge.baseUrl,
+		agentBrowserBrowserId: bridge.browserId,
+		agentBrowserProcessId: bridge.browserProcessId,
+		agentBrowserProfileId: bridge.profileId,
+		agentBrowserServiceTabHandle: bridge.serviceTabHandle,
+		agentBrowserSessionName: bridge.sessionName,
+	});
 	return {
 		...options,
 		runtimeHintCb: async (hint) =>
-			options.runtimeHintCb?.({
-				...hint,
-				agentBrowserBaseUrl: bridge.baseUrl,
-				agentBrowserBrowserId: bridge.browserId,
-				agentBrowserProcessId: bridge.browserProcessId,
-				agentBrowserProfileId: bridge.profileId,
-				agentBrowserServiceTabHandle: bridge.serviceTabHandle,
-				agentBrowserSessionName: bridge.sessionName,
+			options.runtimeHintCb?.(withBridgeProvenance(hint)),
+		runtimeEvidenceCb: async (evidence) =>
+			options.runtimeEvidenceCb?.({
+				...evidence,
+				runtime: evidence.runtime ? withBridgeProvenance(evidence.runtime) : evidence.runtime,
 			}),
 	};
 }

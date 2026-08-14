@@ -231,8 +231,12 @@ Current browser-mode default posture:
   fail-closed browser/profile/tab authority for ChatGPT and Grok. AuraCall asks
   for an access plan, uses one exact retained `serviceTabHandle`, attaches only
   to that target, and verifies detach without closing the retained browser or
-  conversation. `auto` and `off` retain compatibility behavior while this lane
-  is activated incrementally
+  conversation. Durable response heartbeats retain that broker identity, so an
+  API service restart re-authorizes the same retained target and resumes
+  response polling without replaying the prompt or rediscovering Chrome.
+  Broker-tagged recovery fails closed if the exact handle is unavailable.
+  `auto` and `off` retain compatibility behavior while this lane is activated
+  incrementally
 - a browser profile can opt into an agent-browser-owned hidden RDP/Guacamole
   process with `agentBrowserRdp.enabled: true`; AuraCall still owns and passes
   the exact managed browser profile directory under `~/.auracall`, then

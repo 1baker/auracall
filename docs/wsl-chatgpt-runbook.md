@@ -185,6 +185,13 @@ separate provider-library drawer. Missing or ambiguous rows fail closed.
   - If Chrome owns the directory but no responsive endpoint can be attributed,
     AuraCall fails closed instead of launching a second Chrome on a dynamic
     port. Inspect or close only the exact owned process before retrying.
+- **AuraCall restarts during a required-mode broker response**:
+  - Keep polling the same durable response id. AuraCall recovers the submitted
+    step by re-authorizing its saved agent-browser `serviceTabHandle`; it does
+    not resubmit the prompt or launch another Chrome process.
+  - If the saved broker identity is incomplete or its exact retained target is
+    gone, recovery fails closed. Inspect agent-browser service browser/tab state
+    instead of enabling raw CDP discovery.
 - **Using Windows Chrome from WSL**:
   - Keep `manualLoginProfileDir` as a WSL path if you override it; Aura-Call converts it to the `\\wsl.localhost\...` path for Windows Chrome.
   - If DevTools can’t be reached, open the Windows firewall for the chosen port or pin a port with `AURACALL_BROWSER_PORT`.

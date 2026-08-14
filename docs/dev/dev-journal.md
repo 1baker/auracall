@@ -46716,3 +46716,19 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   `PASS`; the lease released completed and target
   `3FB398F218E264183A2AD81750AB9791` remains the sole valid reusable ChatGPT tab.
   Plan 0284 is closed.
+
+## 2026-08-14 | Keep restart recovery inside broker authority
+
+- A service stop during an in-flight broker-owned ChatGPT response showed that
+  durable step recovery still called the legacy Chrome reattach path. That path
+  could scan ports, start a Windows relay, or launch Chrome, violating Plan
+  0284's ownership boundary even though ordinary execution was correct.
+- Plan 0285 persists the complete agent-browser provenance envelope on both
+  runtime hints and passive response evidence. The recovery executor resolves a
+  current service route, validates the saved browser/browser-profile/session/
+  target tuple, requests `cdp_attach`, resumes only the submitted turn, and
+  verifies detach through the existing cleanup helper.
+- Broker-tagged evidence is fail-closed: incomplete provenance or an absent
+  exact retained target cannot downgrade to AuraCall Chrome discovery. The
+  provider-free slice passes 130 focused tests, typecheck, lint, build, diff
+  hygiene, and plan audit. Installed stop/restart validation remains open.

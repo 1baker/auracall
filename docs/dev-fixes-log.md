@@ -21598,3 +21598,18 @@ browser-stage lifecycle observability, not transcript truncation.
 - Current ChatGPT can expose a normal `Chat with ChatGPT` composer without a
   Chat/Work switcher. Treat that visible default composer as Chat only; explicit
   Work requests must still require and verify the Work control.
+
+## 2026-08-14 | Persist broker provenance through restart recovery
+
+- A durable provider run cannot safely recover from only a CDP port, target id,
+  and conversation URL when agent-browser owns the browser. Those coordinates
+  omit the service route, browser process, browser profile, session, and
+  policy-bearing service-tab handle that authorize attachment.
+- Carry broker provenance on every durable runtime observation, not only the
+  initial runtime hint; recovery usually selects the newest high-confidence
+  heartbeat.
+- On restart, validate the exact retained browser/browser-profile/session/target
+  tuple through a current agent-browser service endpoint and request a fresh
+  policy-gated attach. If broker-tagged provenance is partial or the target is
+  gone, fail closed without prompt replay, raw target discovery, or Chrome
+  launch.

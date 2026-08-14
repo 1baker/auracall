@@ -35,6 +35,20 @@ export type AgentBrowserBrokerInput = {
 	url: string;
 };
 
+export type AgentBrowserBrokerReattachInput = {
+	abortSignal?: AbortSignal;
+	agentName?: string;
+	baseUrl?: string | null;
+	browserId: string;
+	logger?: (message: string) => void;
+	profileId: string;
+	serviceName?: string;
+	serviceTabHandle: Record<string, unknown>;
+	sessionName: string;
+	taskName?: string;
+	url?: string | null;
+};
+
 type BrowserRecord = {
 	cdpEndpoint?: string | null;
 	health?: string | null;
@@ -251,6 +265,143 @@ function requireUniqueBrokerCandidate(
 		);
 	}
 	return candidates[0];
+}
+
+function retainedBrokerCandidates(input: {
+	browsers: BrowserRecord[];
+	browserId: string;
+	profileId: string;
+	serviceTabHandle: Record<string, unknown>;
+	sessionName: string;
+}): BrokerCandidate[] {
+	const expectedTargetId = String(input.serviceTabHandle.targetId ?? "").trim();
+	if (!expectedTargetId) return [];
+	return input.browsers.flatMap((browser) => {
+		if (
+			browser.health !== "ready" ||
+			browser.id !== input.browserId ||
+			browser.profileId !== input.profileId
+		) {
+			return [];
+		}
+		return (browser.tabHandles ?? []).flatMap((handle) => {
+			const matches =
+				handle.valid === true &&
+				handle.targetId === expectedTargetId &&
+				handle.browserId === input.browserId &&
+				handle.profileId === input.profileId &&
+				handle.sessionName === input.sessionName;
+			return matches ? [{ browser, handle }] : [];
+		});
+	});
+}
+
+export async function reattachAgentBrowserBrokerTab(
+	input: AgentBrowserBrokerReattachInput,
+	dependencies: AgentBrowserBridgeDependencies = {},
+): Promise<AgentBrowserBridgeResult> {
+	const fetchImpl = dependencies.fetch ?? globalThis.fetch;
+	const deps = {
+		fetch: fetchImpl,
+		listStreamFiles:
+			dependencies.listStreamFiles ??
+			(async () =>
+				(await readdir(streamDirectory())).map((name) => path.join(streamDirectory(), name))),
+		readStreamFile:
+			dependencies.readStreamFile ?? ((filePath: string) => readFile(filePath, "utf8")),
+	};
+	const logger = input.logger ?? (() => undefined);
+	const labels = {
+		serviceName: input.serviceName ?? "AuraCall",
+		agentName: input.agentName ?? "codex-backend",
+		taskName: input.taskName ?? "chatgpt-restart-recovery",
+	};
+	const discoveredRoutes = await discoverServiceRoutes(deps, input.abortSignal);
+	const routes = [
+		...new Map(discoveredRoutes.map((route) => [route.baseUrl, route])).values(),
+	];
+	if (input.baseUrl) {
+		routes.sort((left, right) =>
+			Number(right.baseUrl === input.baseUrl) - Number(left.baseUrl === input.baseUrl),
+		);
+	}
+	if (input.baseUrl && !routes.some((route) => route.baseUrl === input.baseUrl)) {
+		try {
+			const response = await requestJson(
+				fetchImpl,
+				input.baseUrl,
+				"/api/service/browsers",
+				{ method: "GET" },
+				input.abortSignal,
+				15_000,
+			);
+			routes.unshift({
+				baseUrl: input.baseUrl,
+				browsers: (response.data?.browsers ?? []) as BrowserRecord[],
+			});
+		} catch {
+			// A service stream port may change across daemon replacement; discovery is authoritative.
+		}
+	}
+	const matchedRoutes = routes.flatMap((route) => {
+		const candidates = retainedBrokerCandidates({
+			browsers: route.browsers,
+			browserId: input.browserId,
+			profileId: input.profileId,
+			serviceTabHandle: input.serviceTabHandle,
+			sessionName: input.sessionName,
+		});
+		if (candidates.length > 1) {
+			throw new Error(
+				`agent-browser restart recovery requires exactly one retained broker target per service route; found ${candidates.length}`,
+			);
+		}
+		return candidates.map((candidate) => ({ route, candidate }));
+	});
+	if (matchedRoutes.length === 0) {
+		throw new Error(
+			"agent-browser restart recovery requires exactly one retained broker target; found 0",
+		);
+	}
+	const { route, candidate } = matchedRoutes[0];
+	const attached = await requestJson(
+		fetchImpl,
+		route.baseUrl,
+		"/api/service/request",
+		{
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify({
+				action: "cdp_attach",
+				...labels,
+				cdpAttachmentAllowed: true,
+				runtimeProfile: input.profileId,
+				serviceTabHandle: candidate.handle,
+			}),
+		},
+		input.abortSignal,
+		15_000,
+	);
+	const endpoint = parseBrowserWebSocketEndpoint(attached.data?.browserWebSocketUrl);
+	const browserProcessId = Number(candidate.browser.pid);
+	if (!Number.isInteger(browserProcessId) || browserProcessId < 1) {
+		throw new Error("agent-browser retained tab has no live browser process identity");
+	}
+	logger(
+		`[agent-browser] Reattached retained target ${String(candidate.handle.targetId)} through ${input.browserId}; AuraCall will not rediscover or launch Chrome.`,
+	);
+	return {
+		baseUrl: route.baseUrl,
+		browserId: input.browserId,
+		browserProcessId,
+		chromeHost: endpoint.host,
+		chromePort: endpoint.port,
+		detachRequired: attached.data?.detachRequired !== false,
+		detachState: attached.data?.detachRequired === false ? "detached" : "attached",
+		profileId: input.profileId,
+		serviceTabHandle: candidate.handle,
+		sessionName: input.sessionName,
+	};
 }
 
 export async function acquireAgentBrowserBrokerTab(
