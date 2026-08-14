@@ -10,6 +10,7 @@ interface InstallServiceOptions {
   binPath: string;
   envPath: string;
   logPath: string;
+  port: number;
   dryRun: boolean;
   enable: boolean;
   start: boolean;
@@ -28,6 +29,7 @@ function parseArgs(argv: string[]): InstallServiceOptions {
     binPath: path.join(os.homedir(), '.local', 'bin', 'auracall'),
     envPath: path.join(os.homedir(), '.auracall', 'api.env'),
     logPath: path.join(os.homedir(), '.auracall', 'logs', 'api-18095.log'),
+    port: 18095,
     dryRun: false,
     enable: true,
     start: true,
@@ -74,6 +76,15 @@ function parseArgs(argv: string[]): InstallServiceOptions {
       index += 1;
       continue;
     }
+    if (arg === '--port') {
+      const value = Number(argv[index + 1]);
+      if (!Number.isInteger(value) || value < 1 || value > 65_535) {
+        throw new Error('--port requires an integer between 1 and 65535.');
+      }
+      options.port = value;
+      index += 1;
+      continue;
+    }
     if (arg === '--env') {
       const value = argv[index + 1];
       if (!value) throw new Error('--env requires a path.');
@@ -105,6 +116,7 @@ Options:
   --bin <path>          Installed auracall binary. Default: ~/.local/bin/auracall
   --env <path>          Dotenv file loaded by systemd. Default: ~/.auracall/api.env
   --log <path>          Service log file. Default: ~/.auracall/logs/api-18095.log
+  --port <number>       Fixed API listen port. Default: 18095
   --no-enable           Write unit but do not enable it
   --no-start            Write unit but do not start it
   --no-restart          Use start instead of restart when starting
@@ -142,7 +154,7 @@ After=default.target
 Type=simple
 WorkingDirectory=%h
 EnvironmentFile=-${options.envPath}
-ExecStart=${options.binPath} api serve
+ExecStart=${options.binPath} api serve --port ${options.port}
 Restart=on-failure
 RestartSec=5s
 TimeoutStopSec=20s
