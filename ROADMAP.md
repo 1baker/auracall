@@ -16,9 +16,10 @@ Lane: P01
   that source/config/docs slice is now green. Profile registration and
   installed activation remain withheld behind current runtime and route
   readiness.
-  The same P01 browser-service maintenance lane now also owns a bounded
-  `Page.navigate` acknowledgement deadline after LitScout Goal 0411 exposed an
-  `apps list` probe holding the managed-profile lease indefinitely.
+  The same P01 browser-service maintenance lane now also owns bounded
+  `Page.navigate` acknowledgements and bounded `Runtime.evaluate` predicate
+  calls after LitScout Goal 0411 exposed both ways an `apps list` probe could
+  outlive its settle deadline and hold the managed-profile lease.
 
 - Closed accepted ChatGPT developer-app submitted-test current-model repair:
   [docs/dev/plans/0282-2026-08-13-developer-app-test-current-model.md](docs/dev/plans/0282-2026-08-13-developer-app-test-current-model.md)

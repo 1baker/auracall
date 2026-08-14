@@ -12,6 +12,11 @@
   This is provider-free and proves a lost CDP navigation acknowledgement cannot
   outlive the caller's existing settle bound.
 
+- Shared predicate liveness regression:
+  `pnpm vitest run tests/browser-service/ui.test.ts -t "bounds an unsettled predicate evaluation by the outer deadline by default"`.
+  This is provider-free and proves an unacknowledged `Runtime.evaluate` cannot
+  outlive the caller's outer polling budget even without a separate inner bound.
+
 - Unit/type tests: `pnpm test` (Vitest) and `pnpm run check` (typecheck).
 - Agent-browser RDP managed-profile contract (provider-free):
   `pnpm vitest run tests/browser/agentBrowserRdpLauncher.test.ts tests/browser/config.test.ts tests/browser/profileConfig.test.ts tests/browser-service/platformPaths.test.ts`

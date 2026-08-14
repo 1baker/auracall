@@ -14,6 +14,17 @@
   developer-app suites pass 92/92 and typecheck passes provider-free. Install,
   restart, stale-process reconciliation, and live canary remain subsequent
   controlled steps.
+- After that repair was installed, exact stale-worker SIGTERM succeeded and a
+  sole bounded inventory reclaimed its dead lease. The call then exposed the
+  already-current-route counterpart: `waitForPredicate(...)` left
+  `Runtime.evaluate(...)` unbounded unless a caller supplied the optional
+  `evaluationTimeoutMs`.
+- A second red-capable public-seam regression proved the predicate remained
+  pending beyond its outer 50 ms budget. Every evaluation now receives a
+  protocol and transport deadline capped by the remaining outer budget; an
+  explicit smaller inner deadline still wins. The affected suites pass 93/93,
+  with typecheck and build green. The consumed inventory was not retried and no
+  prompt, connector, or canonical effect ran.
 
 ## 2026-08-13 | Plan 0282 Developer-App Test Current Model
 

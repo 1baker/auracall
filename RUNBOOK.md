@@ -19,6 +19,18 @@
 - Source/tests/docs only are active at this checkpoint. Runtime install,
   service restart, exact stale-process reconciliation, canary submission,
   connector calls, and LitScout canonical effects have not run.
+- The pushed first repair was installed once and the AuraCall service restarted
+  once under LitScout's frozen Plan-0411 recovery control. Exact old worker PID
+  `87513` exited on SIGTERM; SIGKILL was unnecessary and the browser was not
+  signaled or cleaned up. The next sole inventory reclaimed the dead lease but
+  hit its 30-second outer deadline on the already-current settings route.
+- CodeGraph isolated the remaining path to shared `waitForPredicate(...)`:
+  without an explicit `evaluationTimeoutMs`, one never-settling
+  `Runtime.evaluate(...)` could outlive the outer polling deadline. The new
+  default caps every evaluation by the remaining outer budget while preserving
+  a smaller explicit inner deadline. The red-capable default-bound regression
+  now passes with the full affected suite at 93/93, plus typecheck and build.
+  No second live inventory, canary, prompt, connector, or canonical effect ran.
 
 ## Turn 452 | 2026-08-13
 

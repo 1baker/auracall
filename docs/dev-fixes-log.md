@@ -5,6 +5,12 @@
   the existing positive timeout. Preserve command rejection and mutation-audit
   failure behavior so outer `finally` cleanup can always become reachable.
 
+- 2026-08-13: An outer polling timeout is not a real bound if its first
+  `Runtime.evaluate(...)` can remain pending. `waitForPredicate(...)` must cap
+  every protocol evaluation and its transport promise by the remaining outer
+  budget by default; a smaller explicit `evaluationTimeoutMs` may narrow that
+  bound but callers must not be required to opt into basic liveness.
+
 - 2026-08-13: A ChatGPT developer-app submitted test must preserve the already
   active model. Injecting only `composerTool` into a newly created test browser
   can inherit generic `select` / `Instant` defaults and fail before submission

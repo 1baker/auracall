@@ -936,42 +936,41 @@ export async function waitForPredicate(
   while (Date.now() < deadline) {
     attempts += 1;
     const remainingMs = Math.max(1, deadline - Date.now());
-    const evaluationTimeoutMs = options.evaluationTimeoutMs
-      ? Math.max(1, Math.min(options.evaluationTimeoutMs, remainingMs))
-      : null;
+    const evaluationTimeoutMs = Math.max(
+      1,
+      Math.min(options.evaluationTimeoutMs ?? remainingMs, remainingMs),
+    );
     const evaluation = Runtime.evaluate({
       expression,
       returnByValue: true,
-      ...(evaluationTimeoutMs ? { timeout: evaluationTimeoutMs } : {}),
+      timeout: evaluationTimeoutMs,
     });
-    const { result } = evaluationTimeoutMs
-      ? await new Promise<Awaited<typeof evaluation>>((resolve, reject) => {
-          let settled = false;
-          const timer = setTimeout(() => {
-            if (settled) return;
-            settled = true;
-            reject(
-              new Error(
-                `Timed out waiting for ${options.description ?? 'predicate'} after ${evaluationTimeoutMs}ms.`,
-              ),
-            );
-          }, evaluationTimeoutMs);
-          evaluation.then(
-            (value) => {
-              if (settled) return;
-              settled = true;
-              clearTimeout(timer);
-              resolve(value);
-            },
-            (error: unknown) => {
-              if (settled) return;
-              settled = true;
-              clearTimeout(timer);
-              reject(error);
-            },
-          );
-        })
-      : await evaluation;
+    const { result } = await new Promise<Awaited<typeof evaluation>>((resolve, reject) => {
+      let settled = false;
+      const timer = setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        reject(
+          new Error(
+            `Timed out waiting for ${options.description ?? 'predicate'} after ${evaluationTimeoutMs}ms.`,
+          ),
+        );
+      }, evaluationTimeoutMs);
+      evaluation.then(
+        (value) => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer);
+          resolve(value);
+        },
+        (error: unknown) => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer);
+          reject(error);
+        },
+      );
+    });
     lastValue = result?.value;
     if (result?.value) {
       return {

@@ -182,6 +182,49 @@ describe('browser-service ui wait helpers', () => {
     }
   });
 
+  test('bounds an unsettled predicate evaluation by the outer deadline by default', async () => {
+    vi.useFakeTimers();
+    try {
+      const runtime = {
+        evaluate: vi.fn(
+          (_request: { expression?: string; returnByValue?: boolean; timeout?: number }) =>
+            new Promise<never>(() => undefined),
+        ),
+      };
+      const pending = waitForPredicate(runtime as never, 'window.__ready', {
+        timeoutMs: 50,
+        description: 'default-bounded predicate',
+      });
+      const observed = Promise.race([
+        pending.then(
+          () => ({ status: 'resolved' }),
+          (error: unknown) => ({
+            status: 'rejected',
+            message: error instanceof Error ? error.message : String(error),
+          }),
+        ),
+        new Promise<{ status: 'still-pending' }>((resolve) => {
+          setTimeout(() => resolve({ status: 'still-pending' }), 51);
+        }),
+      ]);
+
+      await vi.advanceTimersByTimeAsync(51);
+
+      expect(await observed).toEqual({
+        status: 'rejected',
+        message: 'Timed out waiting for default-bounded predicate after 50ms.',
+      });
+      expect(runtime.evaluate).toHaveBeenCalledTimes(1);
+      expect(runtime.evaluate.mock.calls[0]?.[0]).toMatchObject({
+        expression: 'window.__ready',
+        returnByValue: true,
+        timeout: 50,
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   test('armDownloadCapture installs window-level capture hooks for the default state key', async () => {
     const runtime = createRuntime([true]);
 
