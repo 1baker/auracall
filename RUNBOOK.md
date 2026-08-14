@@ -1,5 +1,14 @@
 # RUNBOOK
 
+## Turn 455 | 2026-08-14
+
+- [Plan 0284](docs/dev/plans/0284-2026-08-14-devtools-attachment-installed-inventory-replay.md)
+  opens from explicit operator authority for one install and one replay. The
+  packet preserves AuraCall service PID 32268 and Chrome PID 66297/port 45015,
+  installs only the user CLI runtime, requires exact source/runtime parity,
+  and permits one instrumented read-only `apps list` invocation with no retry
+  or downstream action.
+
 ## Turn 454 | 2026-08-14
 
 - The retained LitScout Plan 0411 receipt localized its terminal inventory

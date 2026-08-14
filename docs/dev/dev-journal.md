@@ -1,3 +1,10 @@
+## 2026-08-14 | Plan 0284 Installed Attachment Replay
+
+- The operator authorized one install and one replay after Plan 0283 closed
+  provider-free. Plan 0284 freezes the effect budget at one user-runtime
+  install, zero API restarts, and one instrumented read-only `wsl-chrome-3`
+  developer-app inventory with no retry or downstream action.
+
 ## 2026-08-14 | Plan 0283 DevTools Attachment Liveness
 
 - A retained LitScout diagnostic proved ChatGPT identity and then exhausted

@@ -7,6 +7,13 @@
 Status: active
 Lane: P01
 
+- Active installed DevTools attachment inventory replay:
+  [docs/dev/plans/0284-2026-08-14-devtools-attachment-installed-inventory-replay.md](docs/dev/plans/0284-2026-08-14-devtools-attachment-installed-inventory-replay.md)
+  Operator authority permits one user-runtime install and one instrumented
+  read-only `wsl-chrome-3` developer-app inventory. No API restart, retry,
+  prompt, connector/app mutation, LitScout write, or Experiment 6 action is in
+  scope.
+
 - Closed accepted provider-free DevTools attachment liveness repair:
   [docs/dev/plans/0283-2026-08-14-devtools-attachment-liveness.md](docs/dev/plans/0283-2026-08-14-devtools-attachment-liveness.md)
   LitScout Plan 0411 proved identity and then stalled inside generic attachment.
