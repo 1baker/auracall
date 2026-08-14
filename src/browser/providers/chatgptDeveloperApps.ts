@@ -1,5 +1,4 @@
 import type { ResolvedUserConfig } from "../../config.js";
-import type { BrowserAutomationClient } from "../client.js";
 import {
 	navigateAndSettle,
 	openAndSelectMenuItem,
@@ -117,7 +116,7 @@ export const CHATGPT_DEVELOPER_APP_SERVER_URL_SELECTOR =
 
 export interface ChatgptDeveloperAppBrowserClient {
 	readonly userConfig: ResolvedUserConfig;
-	getUserIdentity(): Promise<ProviderUserIdentity | null>;
+	getUserIdentity(options?: { abortSignal?: AbortSignal }): Promise<ProviderUserIdentity | null>;
 	connectDevTools(): Promise<{ client: ChromeClient; port: number }>;
 	runPrompt(input: {
 		prompt: string;
@@ -139,19 +138,24 @@ export class ChatgptDeveloperAppBrowserAdapter {
 	constructor(
 		private readonly browser: ChatgptDeveloperAppBrowserClient,
 		private readonly createBrowser: ChatgptDeveloperAppBrowserClientFactory,
+		private readonly abortSignal?: AbortSignal,
 	) {}
 
 	async readState(): Promise<ChatgptDeveloperAppBrowserState> {
+		this.throwIfAborted();
 		debugDeveloperApps("reading ChatGPT identity");
-		const identity = await this.browser.getUserIdentity();
+		const identity = await this.browser.getUserIdentity({ abortSignal: this.abortSignal });
+		this.throwIfAborted();
 		debugDeveloperApps("connecting to the managed browser for app inventory");
 		const client = await this.ensureClient();
 		const originalUrl = await readCurrentUrl(client);
 		try {
 			debugDeveloperApps("reading installed and linked app signals");
 			const featureSignature = await captureChatgptDeveloperAppFeatureSignature(client);
+			this.throwIfAborted();
 			debugDeveloperApps("reading Developer mode");
 			const developerMode = await readChatgptDeveloperMode(client);
+			this.throwIfAborted();
 			debugDeveloperApps("developer-app inventory complete");
 			return deriveChatgptDeveloperAppState({
 				identity,
@@ -468,20 +472,28 @@ export class ChatgptDeveloperAppBrowserAdapter {
 	}
 
 	private async ensureClient(): Promise<ChromeClient> {
+		this.throwIfAborted();
 		if (this.cdpClient) return this.cdpClient;
 		const connected = await this.browser.connectDevTools();
+		this.throwIfAborted();
 		this.cdpClient = connected.client;
 		await this.cdpClient.Runtime.enable();
 		await this.cdpClient.Page.enable();
+		this.throwIfAborted();
 		return this.cdpClient;
+	}
+
+	private throwIfAborted(): void {
+		this.abortSignal?.throwIfAborted();
 	}
 }
 
 export function createChatgptDeveloperAppBrowserAdapter(
-	browser: BrowserAutomationClient,
+	browser: ChatgptDeveloperAppBrowserClient,
 	createBrowser: ChatgptDeveloperAppBrowserClientFactory,
+	options: { abortSignal?: AbortSignal } = {},
 ): ChatgptDeveloperAppBrowserAdapter {
-	return new ChatgptDeveloperAppBrowserAdapter(browser, createBrowser);
+	return new ChatgptDeveloperAppBrowserAdapter(browser, createBrowser, options.abortSignal);
 }
 
 export function deriveChatgptDeveloperAppState(

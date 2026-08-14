@@ -1,6 +1,13 @@
 import { BrowserAutomationClient } from "../browser/client.js";
-import { createChatgptDeveloperAppBrowserAdapter } from "../browser/providers/chatgptDeveloperApps.js";
+import {
+	type ChatgptDeveloperAppBrowserClient,
+	type ChatgptDeveloperAppBrowserClientFactory,
+	createChatgptDeveloperAppBrowserAdapter,
+} from "../browser/providers/chatgptDeveloperApps.js";
 import type { ResolvedUserConfig } from "../config.js";
+
+const DEFAULT_CHATGPT_DEVELOPER_APP_LIST_TIMEOUT_MS = 45_000;
+const DEFAULT_CHATGPT_DEVELOPER_APP_CLOSE_TIMEOUT_MS = 5_000;
 
 export interface ChatgptDeveloperAppAccount {
 	email: string | null;
@@ -39,6 +46,24 @@ export interface ChatgptDeveloperAppAdapter {
 	selectForTest(app: ChatgptDeveloperApp): Promise<ChatgptDeveloperAppMutationOutcome>;
 	submitTest(app: ChatgptDeveloperApp, prompt: string): Promise<ChatgptDeveloperAppMutationOutcome>;
 	uninstall(app: ChatgptDeveloperApp): Promise<ChatgptDeveloperAppMutationOutcome>;
+}
+
+type ChatgptDeveloperAppCliAdapter = ChatgptDeveloperAppAdapter & {
+	close(): Promise<void>;
+};
+
+export interface ChatgptDeveloperAppCliDependencies {
+	listTimeoutMs?: number;
+	closeTimeoutMs?: number;
+	createBrowser?: (
+		userConfig: ResolvedUserConfig,
+		options: { target: "chatgpt" },
+	) => Promise<ChatgptDeveloperAppBrowserClient>;
+	createAdapter?: (
+		browser: ChatgptDeveloperAppBrowserClient,
+		createBrowser: ChatgptDeveloperAppBrowserClientFactory,
+		options: { abortSignal?: AbortSignal },
+	) => ChatgptDeveloperAppCliAdapter;
 }
 
 export type ChatgptDeveloperAppAuth = "oauth" | "none" | "mixed";
@@ -263,17 +288,78 @@ export async function executeChatgptDeveloperAppOperation(
 export async function runChatgptDeveloperAppOperationForCli(
 	userConfig: ResolvedUserConfig,
 	input: ChatgptDeveloperAppOperationInput,
+	dependencies: ChatgptDeveloperAppCliDependencies = {},
 ): Promise<ChatgptDeveloperAppOperationResult> {
-	const browser = await BrowserAutomationClient.fromConfig(userConfig, {
-		target: "chatgpt",
-	});
-	const adapter = createChatgptDeveloperAppBrowserAdapter(browser, (config) =>
-		BrowserAutomationClient.fromConfig(config, { target: "chatgpt" }),
-	);
+	const createBrowser = dependencies.createBrowser ?? BrowserAutomationClient.fromConfig;
+	const createAdapter = dependencies.createAdapter ?? createChatgptDeveloperAppBrowserAdapter;
+	const abortController = input.action === "list" ? new AbortController() : null;
+	const active: { adapter: ChatgptDeveloperAppCliAdapter | null } = { adapter: null };
+	const operation = async () => {
+		const browser = await createBrowser(userConfig, { target: "chatgpt" });
+		abortController?.signal.throwIfAborted();
+		active.adapter = createAdapter(
+			browser,
+			(config) => createBrowser(config, { target: "chatgpt" }),
+			{ abortSignal: abortController?.signal },
+		);
+		abortController?.signal.throwIfAborted();
+		return executeChatgptDeveloperAppOperation(input, active.adapter);
+	};
 	try {
-		return await executeChatgptDeveloperAppOperation(input, adapter);
+		if (input.action !== "list") return await operation();
+		const timeoutMs = normalizePositiveTimeout(
+			dependencies.listTimeoutMs,
+			DEFAULT_CHATGPT_DEVELOPER_APP_LIST_TIMEOUT_MS,
+		);
+		return await withChatgptDeveloperAppDeadline(
+			operation(),
+			timeoutMs,
+			`ChatGPT developer-app list timed out after ${timeoutMs}ms.`,
+			(error) => abortController?.abort(error),
+		);
 	} finally {
-		await adapter.close();
+		abortController?.abort();
+		if (active.adapter) {
+			const closeTimeoutMs = normalizePositiveTimeout(
+				dependencies.closeTimeoutMs,
+				DEFAULT_CHATGPT_DEVELOPER_APP_CLOSE_TIMEOUT_MS,
+			);
+			await withChatgptDeveloperAppDeadline(
+				active.adapter.close(),
+				closeTimeoutMs,
+				`ChatGPT developer-app browser client close timed out after ${closeTimeoutMs}ms.`,
+			).catch(() => undefined);
+		}
+	}
+}
+
+function normalizePositiveTimeout(value: number | undefined, fallback: number): number {
+	return Number.isFinite(value) && Number(value) > 0 ? Math.floor(Number(value)) : fallback;
+}
+
+async function withChatgptDeveloperAppDeadline<T>(
+	operation: Promise<T>,
+	timeoutMs: number,
+	message: string,
+	onTimeout?: (error: Error) => void,
+): Promise<T> {
+	let timeout: ReturnType<typeof setTimeout> | null = null;
+	try {
+		return await Promise.race([
+			operation,
+			new Promise<never>((_resolve, reject) => {
+				timeout = setTimeout(() => {
+					const error = new Error(message);
+					try {
+						onTimeout?.(error);
+					} finally {
+						reject(error);
+					}
+				}, timeoutMs);
+			}),
+		]);
+	} finally {
+		if (timeout) clearTimeout(timeout);
 	}
 }
 

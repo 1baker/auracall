@@ -14,6 +14,44 @@ import {
 } from "../../src/browser/providers/chatgptDeveloperApps.js";
 
 describe("deriveChatgptDeveloperAppState", () => {
+	it("cancels a stalled identity read before connecting to DevTools", async () => {
+		const abortController = new AbortController();
+		const getUserIdentity = vi.fn(
+			(options: { abortSignal?: AbortSignal } = {}) =>
+				new Promise<never>((_resolve, reject) => {
+					options.abortSignal?.addEventListener(
+						"abort",
+						() => reject(options.abortSignal?.reason),
+						{ once: true },
+					);
+				}),
+		);
+		const connectDevTools = vi.fn(async () => {
+			throw new Error("should not connect");
+		});
+		const adapter = createChatgptDeveloperAppBrowserAdapter(
+			{
+				userConfig: {} as never,
+				getUserIdentity,
+				connectDevTools,
+				runPrompt: async () => {
+					throw new Error("should not prompt");
+				},
+			},
+			async () => {
+				throw new Error("should not create a browser");
+			},
+			{ abortSignal: abortController.signal },
+		);
+
+		const state = adapter.readState();
+		abortController.abort(new Error("list deadline reached"));
+
+		await expect(state).rejects.toThrow("list deadline reached");
+		expect(getUserIdentity).toHaveBeenCalledWith({ abortSignal: abortController.signal });
+		expect(connectDevTools).not.toHaveBeenCalled();
+	});
+
 	it("preserves the active model when submitting a developer-app test", async () => {
 		const runPrompt = vi.fn(async () => ({
 			conversationId: "conversation-1",

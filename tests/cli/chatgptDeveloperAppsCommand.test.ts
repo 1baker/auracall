@@ -1,7 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
 	type ChatgptDeveloperAppAdapter,
 	executeChatgptDeveloperAppOperation,
+	runChatgptDeveloperAppOperationForCli,
 } from "../../src/cli/chatgptDeveloperAppsCommand.js";
 
 function createAdapter(
@@ -48,6 +49,50 @@ function createAdapter(
 }
 
 describe("executeChatgptDeveloperAppOperation", () => {
+	it("bounds a stalled list operation and closes its adapter", async () => {
+		const close = vi.fn(async () => undefined);
+		const readState = vi.fn(() => new Promise<never>(() => undefined));
+
+		await expect(
+			runChatgptDeveloperAppOperationForCli(
+				{} as never,
+				{ action: "list" },
+				{
+					listTimeoutMs: 10,
+					closeTimeoutMs: 10,
+					createBrowser: async () => ({}) as never,
+					createAdapter: () => ({
+						...createAdapter({ readState }),
+						close,
+					}),
+				},
+			),
+		).rejects.toThrow("ChatGPT developer-app list timed out after 10ms");
+		expect(readState).toHaveBeenCalledOnce();
+		expect(close).toHaveBeenCalledOnce();
+	});
+
+	it("does not let a stalled adapter close retain the outer list operation", async () => {
+		const close = vi.fn(() => new Promise<never>(() => undefined));
+
+		await expect(
+			runChatgptDeveloperAppOperationForCli(
+				{} as never,
+				{ action: "list" },
+				{
+					listTimeoutMs: 10,
+					closeTimeoutMs: 10,
+					createBrowser: async () => ({}) as never,
+					createAdapter: () => ({
+						...createAdapter({ readState: () => new Promise<never>(() => undefined) }),
+						close,
+					}),
+				},
+			),
+		).rejects.toThrow("ChatGPT developer-app list timed out after 10ms");
+		expect(close).toHaveBeenCalledOnce();
+	});
+
 	it("lists the account-bound developer-app state without mutation", async () => {
 		const result = await executeChatgptDeveloperAppOperation(
 			{

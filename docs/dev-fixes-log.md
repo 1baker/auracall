@@ -21556,3 +21556,15 @@ browser-stage lifecycle observability, not transcript truncation.
   preserve family evidence from the containing `chromium-stealthcdp` path.
   The managed profile directory remains AuraCall-owned and is passed by exact
   path without copying or conversion.
+
+## 2026-08-13 | Bound developer-app inventory at the operation boundary
+
+- Per-stage CDP timeouts are necessary but cannot prove that a composite
+  browser inventory will return: identity resolution, attachment, navigation,
+  DOM evaluation, and cleanup are separate asynchronous seams.
+- Put a finite deadline around the complete read-only operation, abort the
+  identity read, and bound adapter close before releasing the operation lease.
+  Keep mutating developer-app actions outside this generic read deadline so a
+  timeout cannot misreport an ambiguous provider mutation.
+- A regression should use a never-resolving adapter read and close, proving the
+  outer promise settles without a browser or provider action.

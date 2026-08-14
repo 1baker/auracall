@@ -46652,3 +46652,17 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - No live configuration or runtime state changed. Slice B registration and
   Slice C activation remain blocked on the installed agent-browser doctor and
   route-pool defects recorded in Plan 0281.
+
+## 2026-08-13 | Bound the outer developer-app inventory operation
+
+- The Plan 0411 recovery inventory exhausted its frozen live-attempt bound
+  after two internal CDP seams were repaired and a later stage still failed to
+  return control to the CLI. The exact remaining internal stage was not proven.
+- Provider-free work now bounds the complete `apps list` operation at 45
+  seconds, propagates cancellation into the account-identity read, closes any
+  attached developer-app CDP client within a separate five-second bound, and
+  returns control to the existing file-backed lease-release `finally`.
+- Red-capable tests cover a never-settling list read, a never-settling client
+  close, and abort propagation before DevTools attachment. No runtime install,
+  restart, browser action, provider call, inventory retry, or app mutation was
+  performed in this source-only slice.

@@ -47,6 +47,9 @@
     `pnpm vitest run tests/browser/chatgptDeveloperApps.test.ts tests/cli/chatgptDeveloperAppsCommand.test.ts`
   - read-only installed smoke:
     `pnpm tsx bin/auracall.ts --profile <runtime> apps --target chatgpt list --json`
+  - `apps list` has a 45-second outer deadline plus a bounded browser-client
+    close; a stalled identity or CDP stage must return control so the CLI can
+    release its file-backed browser-operation lease
   - non-submitting app-selection smoke:
     `pnpm tsx bin/auracall.ts --profile <runtime> apps --target chatgpt test <exact-app> --expected-account <email> --json`
   - do not use `--submit`, `create`, `refresh`, or `uninstall` as routine live
