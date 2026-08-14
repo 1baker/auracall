@@ -15,3 +15,6 @@ vendor/oracle-notifier/OracleIcon.iconset
 /.codex
 # Stray Windows/Lighthouse scratch root created by misresolved temp paths
 undefined:/
+# Browser-tool diagnostics and local reviewer runs belong under ~/.auracall.
+auracall-browser-tools-*.json
+runs/
