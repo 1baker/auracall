@@ -1,5 +1,19 @@
 # RUNBOOK
 
+## Turn 460 | 2026-08-14
+
+- Reassessed open Plan 0281 against current source, effective configuration,
+  broker-first Plans 0284-0290, and live no-launch agent-browser 0.28.0 doctor
+  evidence.
+- The RDP launcher is not enabled in repository or user configuration. Remote
+  control remains blocked by a drifted workstation payload, absent Guacamole
+  stack and route pool, no selected display, and missing privileged
+  group/helper/sudoers installation.
+- Cancelled Plan 0281 as superseded rather than falsely closing its unmet
+  installed-activation criterion. Slice A's dormant provider-free code and
+  safety tests remain preserved; no browser, provider, service, config,
+  privilege, or route mutation ran.
+
 ## Turn 459 | 2026-08-14
 
 - Opened Plan 0292 after proving the existing plan-library audit did not catch

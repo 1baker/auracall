@@ -1,7 +1,8 @@
 # Agent-Browser RDP Managed-Profile Migration | 0281-2026-08-12
 
-State: OPEN
+State: CANCELLED
 Lane: P01
+Plan version: 2
 
 ## Stable Objective
 
@@ -12,25 +13,22 @@ state.
 
 ## Current State
 
-- AuraCall currently launches Chrome directly from
-  `src/browser/service/browserService.ts` through the shared browser-service
-  manual-login launcher.
-- Managed browser profiles are derived under
-  `~/.auracall/browser-profiles/<browser-profile>/<service>` and remain the
-  canonical profile storage authority.
-- The current configured browser profiles include stock Google Chrome families
-  and one `gemini-stealthcdp` Chromium family.
-- agent-browser already supports:
-  - external BYOP profile registration;
-  - exact custom profile paths paired with runtime-profile identity;
-  - remote-headed `rdp_gateway` route allocation;
-  - Guacamole operator-visible proof;
-  - strict runtime-profile browser-family validation;
-  - `stock_chrome` and `stealthcdp_chromium` build selection.
-- Current installed-runtime preflight is not activation-ready:
-  `agent-browser install doctor --json` reports workspace-binary drift,
-  duplicate-profile pressure, and a partial or drifted workstation payload.
-  A no-launch RDP dry run also reports no available route-pool entry.
+- Slice A's provider-free family/build and remote-view launcher contract remains
+  implemented and tested, but it is dormant: neither the repository service
+  config nor `~/.auracall/config.json` enables `agentBrowserRdp`.
+- Plans 0284 through 0290 established the current architecture: agent-browser
+  owns reusable browser/profile/session/tab infrastructure through an exact
+  service-tab handle, while RDP/Guacamole is optional operator visibility and
+  is not a prerequisite for AuraCall browser execution.
+- Current agent-browser 0.28.0 no-launch diagnostics still disprove activation
+  readiness. `install doctor --json` reports a partial or drifted workstation
+  payload. `doctor remote-view --json` reports `remoteControl.status=blocked`,
+  no running Guacamole stack, zero route-pool entries, no selected display, and
+  missing privileged group/helper/sudoers installation.
+- The original blanket migration objective is therefore superseded rather than
+  merely waiting on an implementation step. Any future remote-view activation
+  should be a separate optional-visibility plan with its own interactive
+  privilege and route-provisioning authority.
 
 ## Architecture Decision
 
@@ -120,6 +118,10 @@ state.
 - [ ] Installed activation proves exact ownership, visibility, reuse, and
   rollback for every migrated browser profile.
 
+The final criterion was not met and is intentionally not waived. This plan is
+cancelled because its full-migration objective was superseded, not closed as if
+activation succeeded.
+
 ## Effect Boundary
 
 Slice A may change repository source, tests, and docs and may run no-launch
@@ -165,3 +167,18 @@ tested rollback to the native launcher without profile conversion.
   installed binary, route, service, scheduler, completion, or materialization
   state changed. Slices B and C remain blocked on the recorded installed-runtime
   and route-pool readiness defects.
+
+## Checkpoint 3 | Superseded Objective Reconciled
+
+- state_transition: OPEN -> CANCELLED
+- progress_classification: architecture_reconciliation
+- evidence: broker-first Plans 0284-0290 now provide agent-browser ownership
+  without an RDP dependency; effective AuraCall config does not enable the RDP
+  launcher; agent-browser 0.28.0 no-launch doctor still reports blocked remote
+  control, no Guacamole/route pool, and missing privileged installation.
+- preserved_value: Slice A code, tests, and family/build safety gates remain as
+  dormant optional capability and are not deleted or weakened.
+- material_blockers: none for cancellation; future activation requires a new
+  optional-visibility plan plus explicit interactive privilege/route setup.
+- next_action_or_stop_reason: stop this superseded migration plan and keep the
+  working broker-first path authoritative.

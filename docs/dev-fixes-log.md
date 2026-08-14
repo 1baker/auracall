@@ -21708,3 +21708,14 @@ browser-stage lifecycle observability, not transcript truncation.
   without guessing state from arbitrary prose.
 - Keep the parser and validation rule independently testable so the migration
   audit remains a deterministic governance gate rather than a text convention.
+
+## 2026-08-14 | Cancel superseded activation plans without erasing safe code
+
+- A plan should not remain OPEN indefinitely when a later architecture removes
+  its objective from the critical path and the remaining activation gate is
+  both unavailable and optional.
+- Use `CANCELLED`, not `CLOSED`, when the final acceptance criterion was never
+  met. Record the superseding architecture and current live gate evidence.
+- Preserve dormant provider-free safety code when it remains useful for a
+  future separately authorized optional feature; cancellation does not require
+  deleting a sound implementation seam.

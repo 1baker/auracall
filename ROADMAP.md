@@ -97,15 +97,14 @@ Lane: P01
   candidate `c8a54364`. Installed validation remains a separately authorized
   boundary; P3 is not accepted and Experiment 6 remains blocked.
 
-- Active agent-browser RDP migration for AuraCall-owned managed profiles:
+- Cancelled superseded agent-browser RDP migration for AuraCall-owned managed profiles:
   [docs/dev/plans/0281-2026-08-12-agent-browser-rdp-managed-profile-migration.md](docs/dev/plans/0281-2026-08-12-agent-browser-rdp-managed-profile-migration.md)
-  AuraCall will retain the exact managed profile directories while
-  agent-browser owns remote-headed Chrome/Chromium processes and Guacamole/RDP
-  routes. The first slice is provider-free and fail-closed on executable
-  family, browser build, operator-visible proof, and CDP endpoint evidence;
-  that source/config/docs slice is now green. Profile registration and
-  installed activation remain withheld behind current runtime and route
-  readiness.
+  Slice A's fail-closed family/build and launcher contract remains preserved but
+  dormant. Plans 0284-0290 superseded the blanket RDP migration with an exact
+  broker-owned service-tab path where remote viewing is optional. Current
+  no-launch doctor evidence still reports blocked remote control, no Guacamole
+  route pool, and missing privileged installation; any future visibility
+  activation requires a new explicitly authorized optional plan.
   The same P01 browser-service maintenance lane now also owns bounded
   `Page.navigate` acknowledgements and bounded `Runtime.evaluate` predicate
   calls after LitScout Goal 0411 exposed both ways an `apps list` probe could

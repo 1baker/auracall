@@ -1,3 +1,17 @@
+## 2026-08-14 | Cancel superseded Plan 0281 RDP migration
+
+- Plans 0284-0290 made agent-browser's exact service-tab handle authoritative
+  without requiring Guacamole/RDP. That makes Plan 0281's blanket migration of
+  every AuraCall browser profile an obsolete core objective, while its Slice A
+  launcher and family/build gates remain useful dormant capability.
+- Effective repository and user configuration contains no enabled
+  `agentBrowserRdp` block. No-launch agent-browser 0.28.0 diagnostics still
+  report a partial workstation payload, blocked remote control, no running
+  Guacamole/route pool, no selected display, and missing privileged install.
+- Plan 0281 is now `CANCELLED`, not `CLOSED`: its installed activation criterion
+  remains unmet. Any future remote-view work must open a separate optional
+  visibility plan and obtain the exact interactive privilege/route authority.
+
 ## 2026-08-14 | Plan 0292 Roadmap Active-State Audit
 
 - Manual label repair is not durable when the deterministic planning audit
