@@ -12,8 +12,9 @@
   adapter supplied `modelStrategy=current`. The focused 16-test file, 176
   adjacent tests, typecheck, touched Biome check, build, and CodeGraph readback
   pass provider-free.
-- Provider-free source, tests, and docs are the only effects; commit/push is the
-  remaining source gate.
+- Exact candidate `620f43f0` was pushed before any runtime effect. Plan 0282
+  closes provider-free accepted; install and a new LitScout subject remain a
+  distinct activation boundary.
 
 ## 2026-08-12 | Plan 0280 Attachment Drawer Focus Order
 

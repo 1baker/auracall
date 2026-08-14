@@ -1,3 +1,10 @@
+- 2026-08-13: A ChatGPT developer-app submitted test must preserve the already
+  active model. Injecting only `composerTool` into a newly created test browser
+  can inherit generic `select` / `Instant` defaults and fail before submission
+  even when the retained Chat surface is healthy on another model. Override
+  the submitted-test browser to `modelStrategy=current`, while preserving the
+  app name, exact prompt, one-submission contract, and timeout.
+
 - 2026-08-12: When opening ChatGPT's attachment drawer on a dedicated tab in a
   retained browser, call `Page.bringToFront()` before reading the composer-plus
   button rectangle. Foreground focus can reflow the workbench, invalidating

@@ -17,11 +17,12 @@ Lane: P01
   installed activation remain withheld behind current runtime and route
   readiness.
 
-- Active ChatGPT developer-app submitted-test current-model repair:
+- Closed accepted ChatGPT developer-app submitted-test current-model repair:
   [docs/dev/plans/0282-2026-08-13-developer-app-test-current-model.md](docs/dev/plans/0282-2026-08-13-developer-app-test-current-model.md)
-  The provider-free slice closes the reproduced `apps test --submit` failure
+  The provider-free slice closed the reproduced `apps test --submit` failure
   by preserving the active Chat model rather than inheriting generic
-  `select` / `Instant`; it authorizes no install, browser action, or retry.
+  `select` / `Instant`. Exact candidate `620f43f0` is pushed; runtime install
+  and any new LitScout subject remain a separate activation boundary.
 
 - Closed accepted ChatGPT attachment drawer focus-order repair and installed canary:
   [docs/dev/plans/0280-2026-08-12-chatgpt-attachment-drawer-focus-order-canary.md](docs/dev/plans/0280-2026-08-12-chatgpt-attachment-drawer-focus-order-canary.md)

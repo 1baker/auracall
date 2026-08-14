@@ -14,7 +14,8 @@
 - The deterministic regression failed on inherited `select` / `Instant` and
   passes after the one-line adapter override. The focused 16-test file, 176
   adjacent tests, typecheck, touched Biome check, build, and current CodeGraph
-  readback pass; source commit/push remains the final provider-free gate.
+  readback pass. Exact source candidate `620f43f0` is pushed before any runtime
+  effect, so Plan 0282 closes provider-free accepted.
 - Source/tests/docs only are active. Install, service restart, browser action,
   LitScout retry, cleanup, and scheduler/completion effects remain zero.
 

@@ -1,6 +1,6 @@
 # ChatGPT Developer-App Test Current-Model Contract | 0282-2026-08-13
 
-State: OPEN
+State: CLOSED / PROVIDER-FREE ACCEPTED
 Lane: P01
 
 ## Stable Objective
@@ -53,7 +53,7 @@ unrequested model transition.
   unchanged.
 - [x] Focused and adjacent provider-free tests, typecheck, lint, build,
   CodeGraph, planning audits, and diff hygiene pass.
-- [ ] Source is committed and pushed before any installed-runtime change.
+- [x] Source is committed and pushed before any installed-runtime change.
 
 ## Provider-Free Checkpoint
 
@@ -69,6 +69,8 @@ unrequested model transition.
   accepted historical baseline findings after canonical Plan 0282 wiring.
 - No install, service restart, browser action, prompt submission, connector
   call, LitScout mutation, cleanup, or scheduler/completion effect occurred.
+- Source candidate `620f43f0` is pushed on
+  `origin/fix/chatgpt-app-test-current-model`; the worktree is exact and clean.
 
 ## Effect Boundary
 
@@ -82,3 +84,10 @@ The plan closes provider-free when the submitted developer-app test path
 provably preserves the current model at the real adapter seam and all source
 gates pass. Installation and a new LitScout P3 subject require a distinct
 pushed activation boundary after this repair is accepted.
+
+## Closeout
+
+Plan 0282 is provider-free accepted. The causal source defect is repaired and
+the exact candidate was pushed before any runtime effect. This closeout does
+not itself authorize installation, a ChatGPT prompt, a LitScout connector call,
+browser cleanup, or a retry of Plan 0412.
