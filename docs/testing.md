@@ -18,6 +18,10 @@
   outlive the caller's outer polling budget even without a separate inner bound.
 
 - Unit/type tests: `pnpm test` (Vitest) and `pnpm run check` (typecheck).
+- Handoff browser-adapter selection is provider-free:
+  `pnpm vitest run tests/browser/chatgptService.test.ts tests/browser/geminiHandoffAdapter.test.ts tests/cli/handoffCommand.test.ts tests/http.handoffOperator.test.ts`.
+  The fixtures prove explicit ChatGPT/Gemini selection, attachments, compact
+  context, and missing-config rejection; they do not launch either provider.
 - Roadmap active-state audit regression:
   `pnpm vitest run tests/roadmapPlanState.test.ts` followed by
   `pnpm run plans:audit`. An `Active` roadmap bullet linked to a canonical

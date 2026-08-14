@@ -1,3 +1,22 @@
+## 2026-08-14 | Plan 0293 Gemini browser handoff adapter
+
+- Plan 0114's installed handoff state machine, approval gates, packet adapter,
+  ChatGPT browser adapter, and real Business-to-Pro proof are complete, but
+  the parent exit contract also requires one cross-service handoff.
+- The current recovery selector exposes only `packet` and `chatgpt-browser`
+  despite Gemini already supporting the shared prompt-plus-attachment service
+  seam.
+- Plan 0293 will add the narrow Gemini adapter and explicit CLI/HTTP selection
+  under provider-free tests. It will not launch Gemini or claim the parent live
+  criterion.
+- Implemented `createGeminiBrowserHandoffTargetAdapter` on the existing
+  provider-native upload/prompt seam and exposed `gemini-browser` through the
+  CLI and HTTP closed-world selectors. Provider mismatch writes durable failed
+  upload rows; missing resolved config fails before provider work.
+- Provider-free validation passed 52/52 focused tests, typecheck, build, full
+  lint with the unchanged 208 warnings, the 294-plan audit with zero errors,
+  and diff hygiene. Plan 0293 is CLOSED; Plan 0114 stays OPEN for live proof.
+
 ## 2026-08-14 | Close stale Plan 0167 from successor evidence
 
 - Plan 0167 had completed every composer/apps implementation and installed

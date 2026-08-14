@@ -21729,3 +21729,14 @@ browser-stage lifecycle observability, not transcript truncation.
   historical provider work.
 - Later incidents do not retroactively reopen an accepted plan. Give new drift
   and repairs their own bounded plan ownership.
+
+## 2026-08-14 | Add cross-service handoffs at the provider adapter seam
+
+- A provider-neutral handoff state machine should not learn Gemini-specific
+  browser, URL, model, or attachment behavior merely to add a second target.
+- Reuse the packet ledger, digest-bound approvals, staged upload contract, and
+  readback normalization; keep only provider-specific prompt execution and
+  target parsing in the provider adapter.
+- Treat provider-free adapter coverage as blocker reduction, not live proof.
+  Keep the parent cross-service criterion open until an authorized target
+  mutation verifies the installed path end to end.

@@ -2,6 +2,7 @@
 
 State: OPEN
 Lane: P01
+Plan version: 2
 
 ## Purpose
 
@@ -25,18 +26,20 @@ The desired operator outcome is a supervised handoff run that can:
 
 ## Current State
 
-- Plan 0111 installed the provider-neutral dry-run packet builder and packet
-  layout under user-scoped AuraCall runtime storage.
-- Plan 0112 installed import of existing `history_materialization_job`
-  readbacks into the source manifest and omissions.
-- The command surface is currently `auracall handoff prepare --dry-run`.
-- The packet already carries source context, manifest, omissions, analysis
-  preview, compact context, target primer, target submission plan, skipped
-  submission result, skipped readback, and zero-target-mutation evidence.
-- The remaining gap is an end-to-end supervised workflow that creates or
-  imports source cache/materialization jobs, validates analysis decisions,
-  builds a target package, obtains approval, uploads/submits, and reads back
-  the target.
+- The full supervised workflow is installed: source cache/materialization,
+  schema-validated analysis and target package assembly, digest-bound upload
+  and submit approvals, provider-native upload/submit/readback, repair/resume,
+  manual export, and CLI/API/console operator surfaces.
+- Closed descendant plans 0115-0136 and 0144 supply the deterministic and
+  ChatGPT browser implementation; the accepted ChatGPT Business-to-Pro handoff
+  supplies the required same-provider cross-tenant proof.
+- Closed Plan 0293 adds explicit `gemini-browser` live recovery selection
+  behind the same packet-ledger and approval gates, with provider-free coverage
+  for attachments, compact context, target/model routing, mismatch failure, and
+  CLI/HTTP validation.
+- The sole remaining parent exit criterion is one separately authorized live
+  cross-service handoff through that installed adapter. Provider-free adapter
+  availability is not live target proof.
 
 ## Product Contract
 

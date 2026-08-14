@@ -1,14 +1,24 @@
-import {
-	createApiHistoryMaterializationJobForCli,
-	readApiHistoryMaterializationJobForCli,
-	type ApiHistoryMaterializationCreateCliOptions,
-	type ApiHistoryMaterializationStatusCliOptions,
-} from "./apiHistoryMaterializationCommand.js";
+import type { ResolvedUserConfig } from "../config.js";
+import { createChatgptBrowserHandoffTargetAdapter } from "../handoff/chatgptBrowserAdapter.js";
+import { createGeminiBrowserHandoffTargetAdapter } from "../handoff/geminiBrowserAdapter.js";
 import {
 	approveHandoffTargetSubmit,
 	approveHandoffTargetUpload,
 	buildHandoffResumePlan,
 	exportHandoffManualBundle,
+	type HandoffApproveSubmitResult,
+	type HandoffApproveUploadResult,
+	type HandoffExportResult,
+	type HandoffLiveRecoveryResult,
+	type HandoffPrepareResult,
+	type HandoffProvider,
+	type HandoffRepairResult,
+	type HandoffResumeResult,
+	type HandoffSourceMaterializationImportMethod,
+	type HandoffStatusResult,
+	type HandoffSubmitTargetResult,
+	type HandoffTargetAdapter,
+	type HandoffUploadTargetResult,
 	prepareCrossServiceHandoffPacket,
 	readHandoffStatus,
 	readJsonInputFile,
@@ -16,22 +26,13 @@ import {
 	repairHandoffPacket,
 	submitHandoffTargetPackage,
 	uploadHandoffTargetPackage,
-	type HandoffApproveSubmitResult,
-	type HandoffApproveUploadResult,
-	type HandoffExportResult,
-	type HandoffSourceMaterializationImportMethod,
-	type HandoffPrepareResult,
-	type HandoffProvider,
-	type HandoffLiveRecoveryResult,
-	type HandoffRepairResult,
-	type HandoffResumeResult,
-	type HandoffSubmitTargetResult,
-	type HandoffStatusResult,
-	type HandoffTargetAdapter,
-	type HandoffUploadTargetResult,
 } from "../handoff/service.js";
-import type { ResolvedUserConfig } from "../config.js";
-import { createChatgptBrowserHandoffTargetAdapter } from "../handoff/chatgptBrowserAdapter.js";
+import {
+	type ApiHistoryMaterializationCreateCliOptions,
+	type ApiHistoryMaterializationStatusCliOptions,
+	createApiHistoryMaterializationJobForCli,
+	readApiHistoryMaterializationJobForCli,
+} from "./apiHistoryMaterializationCommand.js";
 
 type MutableRecord = Record<string, unknown>;
 
@@ -118,7 +119,7 @@ export interface HandoffRecoverLiveCliOptions {
 	targetAdapterFactory?: ((config: ResolvedUserConfig) => HandoffTargetAdapter) | null;
 }
 
-export type HandoffRecoverLiveTargetAdapterName = "packet" | "chatgpt-browser";
+export type HandoffRecoverLiveTargetAdapterName = "packet" | "chatgpt-browser" | "gemini-browser";
 
 export interface HandoffMaterializationClient {
 	readJob(options: ApiHistoryMaterializationStatusCliOptions): Promise<unknown>;
@@ -309,13 +310,19 @@ function resolveHandoffRecoverLiveTargetAdapter(
 ): HandoffTargetAdapter | null {
 	const adapterName = options.targetAdapter ?? "packet";
 	if (adapterName === "packet") return null;
-	if (adapterName !== "chatgpt-browser") {
+	if (adapterName !== "chatgpt-browser" && adapterName !== "gemini-browser") {
 		throw new Error(`Unsupported handoff target adapter: ${adapterName}`);
 	}
 	if (!options.config) {
-		throw new Error("ChatGPT browser handoff recovery requires resolved AuraCall config.");
+		throw new Error(
+			`${adapterName === "chatgpt-browser" ? "ChatGPT" : "Gemini"} browser handoff recovery requires resolved AuraCall config.`,
+		);
 	}
-	const factory = options.targetAdapterFactory ?? createChatgptBrowserHandoffTargetAdapter;
+	const factory =
+		options.targetAdapterFactory ??
+		(adapterName === "chatgpt-browser"
+			? createChatgptBrowserHandoffTargetAdapter
+			: createGeminiBrowserHandoffTargetAdapter);
 	return factory(options.config);
 }
 

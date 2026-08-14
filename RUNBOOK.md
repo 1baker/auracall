@@ -1,5 +1,23 @@
 # RUNBOOK
 
+## Turn 462 | 2026-08-14
+
+- Reassessed open parent Plan 0114 after closing stale Plan 0167. Its complete
+  deterministic workflow and ChatGPT Business-to-Pro proof satisfy the
+  same-provider cross-tenant half of the exit contract, but no handoff-native
+  cross-service browser adapter or proof exists.
+- Opened Plan 0293 for the smallest blocker-reducing slice: expose an explicit
+  Gemini browser adapter through the existing approval-gated CLI/HTTP recovery
+  seam, with provider-free validation only. Live Gemini submission remains a
+  separate provider-mutation gate and Plan 0114 stays open.
+- Closed Plan 0293 after installing the Gemini adapter plus explicit
+  `gemini-browser` CLI/HTTP selection. Provider-free validation passed 52/52
+  focused tests, typecheck, production build, full lint at the unchanged
+  208-warning baseline, plan audit with zero errors, and diff hygiene.
+- Updated Plan 0114's stale current-state summary: its sole remaining exit gate
+  is an explicitly authorized live cross-service handoff. No browser, provider,
+  service, installed runtime, or config mutation ran.
+
 ## Turn 461 | 2026-08-14
 
 - Reconciled Plan 0167 from stale `OPEN` to `CLOSED`. Its composer/apps

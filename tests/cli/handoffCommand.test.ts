@@ -1903,6 +1903,72 @@ describe("handoff prepare CLI helpers", () => {
 		});
 	});
 
+	test("CLI live recovery selects the explicit Gemini browser target adapter", async () => {
+		const root = await tempRoot("auracall-handoff-gemini-browser-adapter-select-");
+		const selectedPath = path.join(root, "gemini-browser-adapter.txt");
+		await writeFile(selectedPath, "gemini browser adapter fixture", "utf8");
+		const prepared = await prepareCrossServiceHandoffPacket({
+			config: fixtureConfig(),
+			outputRoot: root,
+			handoffId: "gemini-browser-adapter-select",
+			sourceProvider: "chatgpt",
+			sourceRuntimeProfile: "source-business",
+			sourceRef: "https://chatgpt.com/c/source",
+			targetProvider: "gemini",
+			targetRuntimeProfile: "target-gemini",
+			targetRef: "https://gemini.google.com/app/target",
+			sourceContext: { messages: [{ role: "user", content: "adapter select" }] },
+			sourceManifest: {
+				items: [manifestItemFixture({ id: "gemini_adapter_selected", localPath: selectedPath })],
+			},
+			generatedAt: "2026-08-14T12:00:00.000Z",
+		});
+		const calls: string[] = [];
+		const adapter: HandoffTargetAdapter = {
+			id: "gemini_browser_fixture_adapter",
+			async upload(input) {
+				calls.push(`upload:${input.handoffId}`);
+				return uploadHandoffTargetPackage(input);
+			},
+			async submit(input) {
+				calls.push(`submit:${input.handoffId}`);
+				return submitHandoffTargetPackage(input);
+			},
+		};
+		await approveHandoffUploadForCli({
+			handoffId: prepared.run.id,
+			outputDir: root,
+			packageDigest: prepared.targetPackage.packageDigest,
+		});
+
+		const recovery = await recoverLiveHandoffForCli({
+			handoffId: prepared.run.id,
+			outputDir: root,
+			targetAdapter: "gemini-browser",
+			config: fixtureResolvedUserConfig(),
+			targetAdapterFactory: () => adapter,
+		});
+
+		expect(calls).toEqual(["upload:gemini-browser-adapter-select"]);
+		expect(recovery).toMatchObject({
+			recovery: {
+				status: "recovered",
+				executor: "gemini_browser_fixture_adapter",
+				executedAction: "upload",
+			},
+		});
+	});
+
+	test("CLI Gemini browser recovery fails closed without resolved config", async () => {
+		await expect(
+			recoverLiveHandoffForCli({
+				handoffId: "missing-config",
+				targetAdapter: "gemini-browser",
+				config: null,
+			}),
+		).rejects.toThrow("Gemini browser handoff recovery requires resolved AuraCall config.");
+	});
+
 	test("live recovery can execute through an injected provider-native target adapter", async () => {
 		const root = await tempRoot("auracall-handoff-provider-adapter-");
 		const selectedPath = path.join(root, "provider-adapter.txt");

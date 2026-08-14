@@ -216,6 +216,7 @@ auracall handoff repair <handoff_id> --json
 auracall handoff export <handoff_id> --json
 auracall handoff recover-live <handoff_id> --json
 auracall handoff recover-live <handoff_id> --target-adapter chatgpt-browser --json
+auracall handoff recover-live <handoff_id> --target-adapter gemini-browser --json
 # The console Handoffs view can run the same status/resume/repair/export/recover actions
 open http://127.0.0.1:<api_port>/console?view=handoffs&handoff=<handoff_id>
 
@@ -352,20 +353,21 @@ Current browser-mode default posture:
   bypassing the gate. The live recovery path is adapter-backed: the default
   operator executor remains the packet-owned target adapter, and provider-native
   upload/submit/readback adapters attach behind the same approval-validated
-  contract. `--target-adapter chatgpt-browser` and API/console
-  `targetAdapter=chatgpt-browser` explicitly select the ChatGPT browser prompt
-  attachment adapter; invalid browser-adapter requests fail closed instead of
-  falling back to packet recovery. The first provider-native adapter seam
-  submits the approved primer and compact context through a prompt runner and
-  writes provider-native conversation/message readback evidence. The
-  provider-native file seam can now
+  contract. `--target-adapter chatgpt-browser|gemini-browser` and API/console
+  `targetAdapter=chatgpt-browser|gemini-browser` explicitly select the matching
+  browser prompt-attachment adapter; invalid or provider-mismatched requests
+  fail closed instead of falling back to packet recovery. The provider-native
+  adapter seam submits the approved primer and compact context through a prompt
+  runner and writes provider-native conversation/message readback evidence.
+  The provider-native file seam can now
   pass selected packet files to an upload runner, persist native provider file
   ids, record retryable failed-upload rows, and block submit approval after a
   failed upload. The first provider-specific adapter is ChatGPT browser prompt
   attachment: selected files are staged by the upload recovery step, then the
   submit recovery step sends the approved primer, compact context JSON, and
   selected attachments through the existing ChatGPT browser prompt path. A
-  target-profile live smoke remains the follow-on proof.
+  ChatGPT target-profile proof is accepted. Gemini browser selection is
+  provider-free until a separately authorized cross-service live smoke runs.
 
 WSL quick start: run `./scripts/bootstrap-wsl.sh` to install Node 22 + WSL Chrome + deps, then follow `docs/wsl-chatgpt-runbook.md` for the ChatGPT browser setup. If you are choosing between WSL Chrome and Windows Chrome from WSL, prefer WSL Chrome first and keep it as the primary browser profile; the Windows relay path is still more brittle and is better kept in a separate named browser profile.
 

@@ -7,6 +7,13 @@
 Status: active
 Lane: P01
 
+- Closed accepted Gemini browser handoff adapter:
+  [docs/dev/plans/0293-2026-08-14-gemini-browser-handoff-adapter.md](docs/dev/plans/0293-2026-08-14-gemini-browser-handoff-adapter.md)
+  Explicit provider-native Gemini recovery now sits behind the existing
+  handoff approval and packet-ledger boundary. Provider-free tests, typecheck,
+  build, lint, audit, and diff hygiene passed; Plan 0114 remains open until a
+  separately authorized live cross-service proof passes.
+
 - Closed accepted roadmap active-state audit guard:
   [docs/dev/plans/0292-2026-08-14-roadmap-active-state-audit.md](docs/dev/plans/0292-2026-08-14-roadmap-active-state-audit.md)
   The plan-library audit now rejects `Active` bullets linked to terminal

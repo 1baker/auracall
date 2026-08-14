@@ -144,6 +144,20 @@ describe("http handoff operator API", () => {
 				type: "invalid_request_error",
 				message: "ChatGPT browser handoff recovery requires a browser-capable AuraCall config.",
 			});
+
+			const geminiBrowserResponse = await fetch(`${base}/recover-live`, {
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify({ outputDir: outputRoot, targetAdapter: "gemini-browser" }),
+			});
+			expect(geminiBrowserResponse.status).toBe(400);
+			const geminiBrowserPayload = (await geminiBrowserResponse.json()) as {
+				error?: { message?: string; type?: string };
+			};
+			expect(geminiBrowserPayload.error).toMatchObject({
+				type: "invalid_request_error",
+				message: "Gemini browser handoff recovery requires a browser-capable AuraCall config.",
+			});
 		} finally {
 			await server.close();
 		}

@@ -127,6 +127,7 @@ import { type ProjectedAgent, resolveHostLocalActionExecutionPolicy } from "../c
 import { SEMANTIC_MODEL_SELECTORS } from "../config/modelSelector.js";
 import type { ResolvedUserConfig } from "../config.js";
 import { createChatgptBrowserHandoffTargetAdapter } from "../handoff/chatgptBrowserAdapter.js";
+import { createGeminiBrowserHandoffTargetAdapter } from "../handoff/geminiBrowserAdapter.js";
 import {
 	buildHandoffResumePlan,
 	exportHandoffManualBundle,
@@ -8951,28 +8952,30 @@ function parseConfigApiKeyIssueRequest(value: unknown) {
 
 const HANDOFF_OPERATOR_REQUEST_SCHEMA = z.object({
 	outputDir: z.string().trim().min(1).optional(),
-	targetAdapter: z.enum(["packet", "chatgpt-browser"]).optional(),
+	targetAdapter: z.enum(["packet", "chatgpt-browser", "gemini-browser"]).optional(),
 });
 
 function parseHandoffOperatorRequestBody(value: unknown): {
 	outputDir?: string;
-	targetAdapter?: "packet" | "chatgpt-browser";
+	targetAdapter?: "packet" | "chatgpt-browser" | "gemini-browser";
 } {
 	return HANDOFF_OPERATOR_REQUEST_SCHEMA.parse(value);
 }
 
 function resolveHandoffRecoverLiveTargetAdapter(
-	targetAdapter: "packet" | "chatgpt-browser" | undefined,
+	targetAdapter: "packet" | "chatgpt-browser" | "gemini-browser" | undefined,
 	resolvedUserConfig: ResolvedUserConfig | null,
 ) {
 	const adapterName = targetAdapter ?? "packet";
 	if (adapterName === "packet") return null;
 	if (!resolvedUserConfig) {
 		throw new HttpInvalidRequestError(
-			"ChatGPT browser handoff recovery requires a browser-capable AuraCall config.",
+			`${adapterName === "chatgpt-browser" ? "ChatGPT" : "Gemini"} browser handoff recovery requires a browser-capable AuraCall config.`,
 		);
 	}
-	return createChatgptBrowserHandoffTargetAdapter(resolvedUserConfig);
+	return adapterName === "chatgpt-browser"
+		? createChatgptBrowserHandoffTargetAdapter(resolvedUserConfig)
+		: createGeminiBrowserHandoffTargetAdapter(resolvedUserConfig);
 }
 
 function createTeamRunIdSuffix(): string {
