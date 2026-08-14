@@ -4,6 +4,13 @@
   provider-free. Plan 0284 freezes the effect budget at one user-runtime
   install, zero API restarts, and one instrumented read-only `wsl-chrome-3`
   developer-app inventory with no retry or downstream action.
+- The single install achieved exact changed-module parity without restarting
+  PID 32268. The single replay reported all five attachment stages, exited 0 in
+  10.52 seconds, and returned a complete 16-app inventory with Developer mode
+  enabled and Corel33t enabled/active. Cleanup, the sole Chrome owner/listener,
+  and the canonical DB hash all passed post-readback; Plan 0284 closes installed
+  replay accepted, while LitScout P3 and Experiment 6 remain outside AuraCall's
+  authority.
 
 ## 2026-08-14 | Plan 0283 DevTools Attachment Liveness
 

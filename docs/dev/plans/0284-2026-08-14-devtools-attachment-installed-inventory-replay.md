@@ -1,7 +1,7 @@
 # DevTools Attachment Installed Inventory Replay | 0284-2026-08-14
 
-State: OPEN
-Disposition: INSTALLED REPLAY AUTHORIZED
+State: CLOSED
+Disposition: INSTALLED REPLAY ACCEPTED
 Lane: P01
 
 ## Stable Objective
@@ -49,16 +49,16 @@ developer-app inventory replay on AuraCall runtime profile `wsl-chrome-3`.
 
 ## Acceptance Criteria
 
-- [ ] Preflight proves clean/upstream-exact Git, exact browser ownership, one
+- [x] Preflight proves clean/upstream-exact Git, exact browser ownership, one
   listener/registry entry, active AuraCall service, no live inventory worker or
   operation lease, and the frozen canonical DB hash.
-- [ ] Exactly one user-runtime install succeeds without an API service restart,
+- [x] Exactly one user-runtime install succeeds without an API service restart,
   and changed source/installed module hashes match.
-- [ ] Exactly one instrumented installed inventory reaches a terminal result
+- [x] Exactly one instrumented installed inventory reaches a terminal result
   inside the outer deadline and reports its attachment stages.
-- [ ] Terminal readback proves cleanup and preserves the service, exact managed
+- [x] Terminal readback proves cleanup and preserves the service, exact managed
   browser owner/listener, canonical DB hash, and zero downstream effects.
-- [ ] A durable receipt, roadmap/runbook/journal closeout, planning audits,
+- [x] A durable receipt, roadmap/runbook/journal closeout, planning audits,
   diff hygiene, commit, and push bind the outcome to exact source and runtime.
 
 ## Effect Budget
@@ -79,3 +79,20 @@ developer-app inventory replay on AuraCall runtime profile `wsl-chrome-3`.
 This plan closes after the installed source is proven current, the sole replay
 has one terminal result, protected state is read back, and the exact outcome is
 committed and pushed. A successful inventory does not authorize Experiment 6.
+
+## Terminal Checkpoint | Installed Inventory Passed
+
+- The sole `pnpm run install:user-runtime` completed at
+  `2026-08-14T19:56:43.677Z`; all four changed module hashes match source and
+  API service PID 32268 was not restarted.
+- The sole replay exited 0 in 10.52 seconds. It reported target resolution, CDP
+  connection, connected, Runtime enable, and Page enable; then read installed
+  and linked payloads, confirmed Developer mode, and returned a complete
+  16-app inventory. Corel33t is enabled with active auth.
+- Client cleanup completed, the operation-lease directory is empty, no worker
+  remains, Chrome PID 66297 is still the sole owner/listener on port 45015, and
+  the canonical DB hash remains `0aab7426...7756623`.
+- Durable receipt:
+  [docs/dev/notes/2026-08-14-plan0284-installed-inventory-replay.json](../notes/2026-08-14-plan0284-installed-inventory-replay.json).
+  This closes AuraCall Plan 0284; LitScout P3 requires separate governance
+  adjudication and Experiment 6 remains blocked.

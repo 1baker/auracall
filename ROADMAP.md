@@ -7,12 +7,13 @@
 Status: active
 Lane: P01
 
-- Active installed DevTools attachment inventory replay:
+- Closed accepted installed DevTools attachment inventory replay:
   [docs/dev/plans/0284-2026-08-14-devtools-attachment-installed-inventory-replay.md](docs/dev/plans/0284-2026-08-14-devtools-attachment-installed-inventory-replay.md)
-  Operator authority permits one user-runtime install and one instrumented
-  read-only `wsl-chrome-3` developer-app inventory. No API restart, retry,
-  prompt, connector/app mutation, LitScout write, or Experiment 6 action is in
-  scope.
+  The sole user-runtime install reached exact four-module parity without an API
+  restart. The sole instrumented `wsl-chrome-3` inventory exited 0 in 10.52
+  seconds after reporting every attachment stage and returned a complete
+  16-app inventory. No retry or downstream effect ran; LitScout P3 remains for
+  its own governance and Experiment 6 remains blocked.
 
 - Closed accepted provider-free DevTools attachment liveness repair:
   [docs/dev/plans/0283-2026-08-14-devtools-attachment-liveness.md](docs/dev/plans/0283-2026-08-14-devtools-attachment-liveness.md)
