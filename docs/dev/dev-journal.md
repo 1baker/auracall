@@ -1,3 +1,13 @@
+## 2026-08-14 | Plan 0312 current documentation link portability
+
+- Replaced 28 machine-specific Markdown links across 11 current operator and
+  developer docs with paths relative to each containing document.
+- Added a current-doc absolute-checkout link detector to `plans:audit`, with
+  explicit exclusions for append-only and plan history.
+- Six focused tests, typecheck, zero-warning lint across 833 files, plan audit,
+  and diff hygiene passed. Independent resolution checked 31 local links in the
+  touched docs with zero missing targets. Plan 0312 is CLOSED.
+
 ## 2026-08-14 | Plan 0311 AGENTS policy entry integrity
 
 - Removed 25 nonexistent `AGENTS.md` policy references (`0028` through `0052`)

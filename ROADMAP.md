@@ -7,6 +7,11 @@
 Status: active
 Lane: P01
 
+- Closed accepted current documentation link portability repair:
+  [docs/dev/plans/0312-2026-08-14-current-doc-link-portability.md](docs/dev/plans/0312-2026-08-14-current-doc-link-portability.md)
+  Twenty-eight current-doc links are portable, all checked targets exist, and
+  the governance audit rejects future absolute-checkout Markdown links.
+
 - Closed accepted AGENTS policy entry integrity repair:
   [docs/dev/plans/0311-2026-08-14-agents-policy-entry-integrity.md](docs/dev/plans/0311-2026-08-14-agents-policy-entry-integrity.md)
   All 27 routed policy modules exist, and the deterministic plan audit now

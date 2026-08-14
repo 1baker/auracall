@@ -199,7 +199,7 @@ Use `auracall config doctor` when you want bridge-health checks instead:
 For future troubleshooting of bridge-shape vs target-shape vs mixed-shape
 configs, see:
 
-- [config-shape-troubleshooting.md](/home/ecochran76/workspace.local/auracall/docs/dev/config-shape-troubleshooting.md)
+- [config-shape-troubleshooting.md](dev/config-shape-troubleshooting.md)
 
 ## Terminology
 
@@ -273,7 +273,7 @@ auracall --profile wsl-chrome-3 apps --target chatgpt create \
 
 Target-model note:
 - the preferred public shape is documented in
-  [config-model-target-shape.md](/home/ecochran76/workspace.local/auracall/docs/dev/config-model-target-shape.md)
+  [config-model-target-shape.md](dev/config-model-target-shape.md)
   and uses:
   - `version: 3`
   - `defaultRuntimeProfile`

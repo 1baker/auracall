@@ -1,3 +1,9 @@
+- 2026-08-14: Current documentation must use repository-relative Markdown
+  links, not checkout-specific `/home`, `/Users`, or `/mnt/<drive>` targets.
+  Enforce portability over current docs while explicitly excluding append-only
+  journals, fixes history, notes, policies, and plans whose old paths are
+  historical evidence rather than current operator routing.
+
 - 2026-08-14: Treat `AGENTS.md` policy references as executable routing
   dependencies. Enumerate canonical `docs/dev/policies/*.md` paths and make the
   deterministic governance audit reject missing references; do not preserve a

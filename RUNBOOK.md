@@ -1,5 +1,20 @@
 # RUNBOOK
 
+## Turn 481 | 2026-08-14
+
+- Opened Plan 0312 after the current-authority link audit found 28
+  machine-specific Markdown links across 11 current docs. Every target exists;
+  only the checkout-root encoding is stale.
+- Normalize current docs and add a steady-state audit exclusion for append-only
+  journals, fixes history, notes, policies, and plan history so historical
+  evidence is preserved rather than silently rewritten.
+- Converted all 28 links to paths relative to their containing documents and
+  added a reusable absolute-checkout Markdown-link detector to `plans:audit`.
+- Six focused governance tests, typecheck, zero-warning lint across 833 files,
+  plan audit with zero errors, and diff hygiene passed. An independent scan
+  resolved all 31 local links across the 11 touched current docs with zero
+  missing targets. Plan 0312 closes accepted; historical evidence is unchanged.
+
 ## Turn 480 | 2026-08-14
 
 - Opened Plan 0311 after the clean-baseline audit found that `AGENTS.md`

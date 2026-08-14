@@ -5,6 +5,7 @@ import { join, relative, resolve } from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { collectMissingAgentsPolicyReferenceErrors } from './agentsPolicyEntry.js';
+import { collectCurrentDocAbsoluteLinkErrors } from './currentDocLinks.js';
 import { collectActiveRoadmapPlanStateErrors } from './roadmapPlanState.js';
 
 type CandidateAction = 'keep' | 'merge' | 'retire';
@@ -160,6 +161,7 @@ function collectValidationErrors(
     ),
   );
   errors.push(...collectMissingAgentsPolicyReferenceErrors(agentsText, existingPolicyPaths));
+  errors.push(...collectCurrentDocAbsoluteLinkErrors(currentDocumentation));
 
   for (const candidate of rawCandidates) {
     if (!candidate.relPath.startsWith('docs/dev/plans/')) {
@@ -194,6 +196,21 @@ const existingPolicyPaths = new Set(
     .filter((entry) => entry.isFile() && entry.name.endsWith('.md'))
     .map((entry) => `docs/dev/policies/${entry.name}`),
 );
+const currentDocumentation = [
+  { path: 'README.md', text: readFileSync(join(repoRoot, 'README.md'), 'utf8') },
+  { path: 'AGENTS.md', text: agentsText },
+  ...walkMarkdownFiles(join(repoRoot, 'docs'))
+    .map((absPath) => ({
+      path: relative(repoRoot, absPath).replaceAll('\\', '/'),
+      text: readFileSync(absPath, 'utf8'),
+    }))
+    .filter(
+      (document) =>
+        !document.path.startsWith('docs/dev/plans/') &&
+        document.path !== 'docs/dev-fixes-log.md' &&
+        document.path !== 'docs/dev/dev-journal.md',
+    ),
+];
 
 const rawCandidates = walkMarkdownFiles(docsDevDir)
   .filter(isPlanCandidate)

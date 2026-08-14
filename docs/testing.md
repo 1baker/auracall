@@ -1778,7 +1778,7 @@
       - runnable
       - recoverable stranded
       - then non-executable classes
-- Service-volatility refactor rule: do not treat this as a pure config shuffle. Every extraction phase must keep a named regression set green and every service slice must declare its own acceptance bar before implementation starts. See [service-volatility-refactor-plan.md](/home/ecochran76/workspace.local/auracall/docs/dev/plans/0012-2026-04-14-service-volatility-refactor.md) and [service-volatility-service-plan-template.md](/home/ecochran76/workspace.local/auracall/docs/dev/service-volatility-service-plan-template.md).
+- Service-volatility refactor rule: do not treat this as a pure config shuffle. Every extraction phase must keep a named regression set green and every service slice must declare its own acceptance bar before implementation starts. See [service-volatility-refactor-plan.md](dev/plans/0012-2026-04-14-service-volatility-refactor.md) and [service-volatility-service-plan-template.md](dev/service-volatility-service-plan-template.md).
 - Gemini unit/regression: `pnpm vitest run tests/gemini.test.ts tests/gemini-web`.
 - Gemini support matrix checkpoint:
   - API:
@@ -2833,8 +2833,8 @@
     - `root-followups` green
     - `cleanup` green
   - Existing-conversation browser runs now reject reused assistant turns when a visible ChatGPT rate-limit modal blocks the new send, instead of returning the previous assistant answer as false success.
-  - Post-MVP polish history is archived in [0021-2026-04-08-chatgpt-polish-plan.md](/home/ecochran76/workspace.local/auracall/docs/dev/plans/legacy-archive/0021-2026-04-08-chatgpt-polish-plan.md).
-  - Broader hostile-state hardening history is archived in [0020-2026-04-08-chatgpt-hardening-plan.md](/home/ecochran76/workspace.local/auracall/docs/dev/plans/legacy-archive/0020-2026-04-08-chatgpt-hardening-plan.md).
+  - Post-MVP polish history is archived in [0021-2026-04-08-chatgpt-polish-plan.md](dev/plans/legacy-archive/0021-2026-04-08-chatgpt-polish-plan.md).
+  - Broader hostile-state hardening history is archived in [0020-2026-04-08-chatgpt-hardening-plan.md](dev/plans/legacy-archive/0020-2026-04-08-chatgpt-hardening-plan.md).
 - MCP focused: `pnpm test:mcp` (builds then stdio smoke via mcporter).
 - MCP media/workbench service wiring:
   - `pnpm vitest run tests/mcp.server.test.ts tests/mcp.mediaGeneration.test.ts tests/mcp.runStatus.test.ts tests/mcp.workbenchCapabilities.test.ts --maxWorkers 1`
