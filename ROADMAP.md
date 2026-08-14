@@ -7,6 +7,15 @@
 Status: active
 Lane: P01
 
+- Closed accepted broker-preferred default auto mode:
+  [docs/dev/plans/0286-2026-08-14-broker-preferred-auto-mode.md](docs/dev/plans/0286-2026-08-14-broker-preferred-auto-mode.md)
+  Default ChatGPT/Grok browser runs now ask agent-browser for authority before
+  entering AuraCall's compatibility browser path. Pre-authority unavailability
+  may fall back; any failure after an access plan resolves is fail-closed to
+  prevent duplicate browsers, tabs, or provider work. Provider-free gates and
+  installed no-prompt acceptance passed on the existing `chatgpt-pro` target;
+  verified detach left the complete ready-browser inventory unchanged.
+
 - Closed accepted broker-authoritative restart recovery:
   [docs/dev/plans/0285-2026-08-14-broker-authoritative-restart-recovery.md](docs/dev/plans/0285-2026-08-14-broker-authoritative-restart-recovery.md)
   Durable ChatGPT heartbeats now preserve agent-browser route, process,

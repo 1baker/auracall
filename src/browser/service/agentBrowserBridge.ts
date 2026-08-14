@@ -317,12 +317,11 @@ export async function reattachAgentBrowserBrokerTab(
 		taskName: input.taskName ?? "chatgpt-restart-recovery",
 	};
 	const discoveredRoutes = await discoverServiceRoutes(deps, input.abortSignal);
-	const routes = [
-		...new Map(discoveredRoutes.map((route) => [route.baseUrl, route])).values(),
-	];
+	const routes = [...new Map(discoveredRoutes.map((route) => [route.baseUrl, route])).values()];
 	if (input.baseUrl) {
-		routes.sort((left, right) =>
-			Number(right.baseUrl === input.baseUrl) - Number(left.baseUrl === input.baseUrl),
+		routes.sort(
+			(left, right) =>
+				Number(right.baseUrl === input.baseUrl) - Number(left.baseUrl === input.baseUrl),
 		);
 	}
 	if (input.baseUrl && !routes.some((route) => route.baseUrl === input.baseUrl)) {
@@ -409,8 +408,9 @@ export async function acquireAgentBrowserBrokerTab(
 	dependencies: AgentBrowserBridgeDependencies = {},
 ): Promise<AgentBrowserBridgeResult | null> {
 	const mode = input.mode ?? resolveAgentBrowserBridgeMode();
-	if (mode !== "required") return null;
+	if (mode === "off") return null;
 	const logger = input.logger ?? (() => undefined);
+	let brokerAuthorityClaimed = false;
 	const fetchImpl = dependencies.fetch ?? globalThis.fetch;
 	const deps = {
 		fetch: fetchImpl,
@@ -465,6 +465,7 @@ export async function acquireAgentBrowserBrokerTab(
 					input.abortSignal,
 				);
 				accessPlanResolved = true;
+				brokerAuthorityClaimed = true;
 				const decision = (plan.decision ?? plan.data?.decision) as
 					| Record<string, unknown>
 					| undefined;
@@ -663,6 +664,18 @@ export async function acquireAgentBrowserBrokerTab(
 		throw lastError ?? new Error("no agent-browser service route accepted the browser request");
 	} catch (error) {
 		const message = error instanceof Error ? error.message : String(error);
+		if (mode === "auto" && !brokerAuthorityClaimed && !input.abortSignal?.aborted) {
+			logger(
+				`[agent-browser] No broker authority was established (${message}); continuing through AuraCall's compatibility browser path.`,
+			);
+			return null;
+		}
+		if (mode === "auto" && input.abortSignal?.aborted) {
+			throw new Error(`agent-browser broker auto mode aborted before fallback: ${message}`);
+		}
+		if (mode === "auto") {
+			throw new Error(`agent-browser broker auto mode claimed authority but failed: ${message}`);
+		}
 		throw new Error(`agent-browser broker required but unavailable: ${message}`);
 	}
 }

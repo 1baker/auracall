@@ -18859,3 +18859,23 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   records successful recovery attach and detach, one ready `chatgpt-pro`
   browser, and one valid retained tab. No legacy Chrome discovery appears after
   the broker recovery line. Plan 0285 closes accepted; no GitHub write occurred.
+
+## Turn 422 | 2026-08-14
+
+- Plan 0286 opens the default-mode usability slice. `auto` previously resolved
+  as the environment default but never called agent-browser, so normal users
+  still entered AuraCall's local browser stack unless they manually configured
+  `required`.
+- ChatGPT/Grok `auto` now attempts broker access planning and exact-tab attach
+  first. It returns compatibility control only when every broker route is
+  unavailable before an access plan resolves; post-plan failures are
+  fail-closed. Explicit `required` and `off` semantics remain unchanged.
+- Red tests reproduced both missing auto probing and missing post-authority
+  failure. The focused bridge suite, 134-test affected matrix, typecheck, lint
+  at the accepted 208-warning baseline, production build, scoped formatting,
+  diff hygiene, and 287-plan audit are green.
+- The rebuilt runtime matched source hashes. With only the bridge-mode variable
+  unset, the installed probe resolved `auto`, attached to exact retained target
+  `3FB398F218E264183A2AD81750AB9791`, and verified detach. Browser id/PID/valid-
+  target inventory was identical before and after. The API service is active on
+  18095 with zero restarts, so Plan 0286 closes accepted.

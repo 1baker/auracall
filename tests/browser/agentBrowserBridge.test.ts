@@ -3,6 +3,7 @@ import {
 	acquireAgentBrowserBrokerTab,
 	detachAgentBrowserBrokerTab,
 	reattachAgentBrowserBrokerTab,
+	resolveAgentBrowserBridgeMode,
 	resolveAgentBrowserBrokerUrl,
 	withAgentBrowserBrokerCleanup,
 } from "../../src/browser/service/agentBrowserBridge.js";
@@ -15,6 +16,77 @@ function jsonResponse(body: unknown): Response {
 }
 
 describe("agent-browser bridge", () => {
+	test("defaults bridge selection to auto and preserves explicit overrides", () => {
+		expect(resolveAgentBrowserBridgeMode(undefined)).toBe("auto");
+		expect(resolveAgentBrowserBridgeMode("required")).toBe("required");
+		expect(resolveAgentBrowserBridgeMode("off")).toBe("off");
+	});
+
+	test("auto falls back only when no agent-browser service route is available", async () => {
+		const logs: string[] = [];
+		await expect(
+			acquireAgentBrowserBrokerTab(
+				{
+					logger: (message) => logs.push(message),
+					mode: "auto",
+					targetServiceId: "chatgpt",
+					url: "https://chatgpt.com/",
+				},
+				{ listStreamFiles: async () => [] },
+			),
+		).resolves.toBeNull();
+		expect(logs).toContainEqual(expect.stringContaining("compatibility browser path"));
+	});
+
+	test("auto fails closed after an agent-browser access plan claims authority", async () => {
+		const fetch = vi.fn(async (url: string | URL | Request) => {
+			const value = String(url);
+			if (value.endsWith("/api/service/browsers")) {
+				return jsonResponse({ success: true, data: { browsers: [] } });
+			}
+			return jsonResponse({
+				success: true,
+				data: {
+					selectedProfile: { id: "chatgpt-pro" },
+					decision: {
+						profileReuse: { recommendedAction: "unsupported_action" },
+					},
+				},
+			});
+		});
+
+		await expect(
+			acquireAgentBrowserBrokerTab(
+				{
+					mode: "auto",
+					profileId: "chatgpt-pro",
+					targetServiceId: "chatgpt",
+					url: "https://chatgpt.com/",
+				},
+				{
+					fetch: fetch as never,
+					listStreamFiles: async () => ["/runtime/dashboard-service-backend.stream"],
+					readStreamFile: async () => "46515\n",
+				},
+			),
+		).rejects.toThrow("auto mode claimed authority");
+	});
+
+	test("off never probes agent-browser", async () => {
+		const fetch = vi.fn();
+		await expect(
+			acquireAgentBrowserBrokerTab(
+				{
+					mode: "off",
+					targetServiceId: "chatgpt",
+					url: "https://chatgpt.com/",
+				},
+				{ fetch: fetch as never },
+			),
+		).resolves.toBeNull();
+		expect(fetch).not.toHaveBeenCalled();
+	});
+
 	test("reattaches an exact retained broker handle after the AuraCall process restarts", async () => {
 		const handle = {
 			browserId: "session:auracall-chatgpt-broker-v7",
@@ -31,13 +103,15 @@ describe("agent-browser bridge", () => {
 				return jsonResponse({
 					success: true,
 					data: {
-						browsers: [{
-							health: "ready",
-							pid: 41234,
-							id: handle.browserId,
-							profileId: handle.profileId,
-							tabHandles: [handle],
-						}],
+						browsers: [
+							{
+								health: "ready",
+								pid: 41234,
+								id: handle.browserId,
+								profileId: handle.profileId,
+								tabHandles: [handle],
+							},
+						],
 					},
 				});
 			}
@@ -95,7 +169,9 @@ describe("agent-browser bridge", () => {
 					url: "https://chatgpt.com/c/recovered-chat",
 				},
 				{
-					fetch: vi.fn(async () => jsonResponse({ success: true, data: { browsers: [] } })) as never,
+					fetch: vi.fn(async () =>
+						jsonResponse({ success: true, data: { browsers: [] } }),
+					) as never,
 					listStreamFiles: async () => ["/runtime/dashboard-service-backend.stream"],
 					readStreamFile: async () => "47777\n",
 				},
@@ -207,7 +283,7 @@ describe("agent-browser bridge", () => {
 		expect(requests.map((request) => request.action)).toEqual(["tab_new", "cdp_attach"]);
 	});
 
-	test("acquires and policy-attaches a broker-owned tab before AuraCall browser launch", async () => {
+	test("auto acquires and policy-attaches a broker-owned tab before AuraCall browser launch", async () => {
 		const requests: Array<Record<string, unknown>> = [];
 		const handle = {
 			browserId: "session:auracall-chatgpt",
@@ -269,7 +345,7 @@ describe("agent-browser bridge", () => {
 
 		const result = await acquireAgentBrowserBrokerTab(
 			{
-				mode: "required",
+				mode: "auto",
 				profileId: "chatgpt-pro",
 				targetServiceId: "chatgpt",
 				url: "https://chatgpt.com/c/existing",

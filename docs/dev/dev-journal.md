@@ -46767,3 +46767,26 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Final reconciliation must verify the wrapper shebang command, unit
   `ExecStart`, source/runtime hashes, listener health, and systemd restart
   count—not merely successful package installation.
+
+## 2026-08-14 | Make default auto mode broker-preferred
+
+- `resolveAgentBrowserBridgeMode()` already defaulted to `auto`, but broker
+  acquisition returned immediately for every mode except `required` and the
+  top-level browser runner never called it. The apparent default therefore
+  selected only AuraCall's compatibility browser implementation.
+- `auto` now probes agent-browser for ChatGPT/Grok and uses the same exact
+  service-tab-handle path as `required` when available. It logs and returns
+  compatibility control only when no access plan resolves.
+- Access-plan resolution is the authority boundary. Any later broker launch,
+  target-validation, or attach failure remains an error so AuraCall cannot
+  hide a broker failure by launching a second Chrome or duplicating provider
+  work. Explicit `off` remains the intentional compatibility bypass.
+- Provider-free validation passed 134 affected tests plus typecheck, lint at
+  the accepted 208-warning baseline, production build, scoped formatting, diff
+  hygiene, and the 287-plan audit. The exact built bridge/browser-runner hashes
+  matched the user-runtime install.
+- Installed no-prompt acceptance unset only the bridge-mode variable. Default
+  resolution returned `auto`, attached to the existing `chatgpt-pro` browser
+  and target `3FB398F218E264183A2AD81750AB9791`, and verified detach. The full
+  ready-browser inventory was unchanged before/after; no browser or tab was
+  created. Plan 0286 is closed.

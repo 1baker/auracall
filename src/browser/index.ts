@@ -1574,7 +1574,7 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 	}
 
 	const bridgeMode = resolveAgentBrowserBridgeMode();
-	if (bridgeMode === "required" && (target === "chatgpt" || target === "grok")) {
+	if (bridgeMode !== "off" && (target === "chatgpt" || target === "grok")) {
 		const brokerUrl = resolveAgentBrowserBrokerUrl(target, config.url);
 		const bridge = await acquireAgentBrowserBrokerTab({
 			abortSignal: options.abortSignal,
@@ -1584,39 +1584,41 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 			targetServiceId: target,
 			url: brokerUrl,
 		});
-		if (!bridge?.chromeHost || !bridge.chromePort) {
+		if (bridgeMode === "required" && (!bridge?.chromeHost || !bridge.chromePort)) {
 			throw new Error("agent-browser required mode returned no policy-gated CDP endpoint");
 		}
-		const brokerConfig = {
-			...config,
-			url: brokerUrl,
-			chatgptUrl: target === "chatgpt" ? brokerUrl : config.chatgptUrl,
-			grokUrl: target === "grok" ? brokerUrl : config.grokUrl,
-			keepBrowser: true,
-			remoteChrome: { host: bridge.chromeHost, port: bridge.chromePort },
-		};
-		const bridgedOptions = withAgentBrowserRuntimeHints(options, bridge);
-		return withAgentBrowserBrokerCleanup(bridge, () =>
-			withBrowserExecutionOperation(brokerConfig, target, logger, () =>
-				target === "grok"
-					? runRemoteGrokBrowserMode(
-							promptText,
-							attachments,
-							brokerConfig,
-							logger,
-							bridgedOptions,
-							bridge,
-						)
-					: runRemoteBrowserMode(
-							promptText,
-							attachments,
-							brokerConfig,
-							logger,
-							bridgedOptions,
-							bridge,
-						),
-			),
-		);
+		if (bridge?.chromeHost && bridge.chromePort) {
+			const brokerConfig = {
+				...config,
+				url: brokerUrl,
+				chatgptUrl: target === "chatgpt" ? brokerUrl : config.chatgptUrl,
+				grokUrl: target === "grok" ? brokerUrl : config.grokUrl,
+				keepBrowser: true,
+				remoteChrome: { host: bridge.chromeHost, port: bridge.chromePort },
+			};
+			const bridgedOptions = withAgentBrowserRuntimeHints(options, bridge);
+			return withAgentBrowserBrokerCleanup(bridge, () =>
+				withBrowserExecutionOperation(brokerConfig, target, logger, () =>
+					target === "grok"
+						? runRemoteGrokBrowserMode(
+								promptText,
+								attachments,
+								brokerConfig,
+								logger,
+								bridgedOptions,
+								bridge,
+							)
+						: runRemoteBrowserMode(
+								promptText,
+								attachments,
+								brokerConfig,
+								logger,
+								bridgedOptions,
+								bridge,
+							),
+				),
+			);
+		}
 	}
 
 	// Remote Chrome mode - connect to existing browser
@@ -3121,8 +3123,7 @@ function withAgentBrowserRuntimeHints(
 	});
 	return {
 		...options,
-		runtimeHintCb: async (hint) =>
-			options.runtimeHintCb?.(withBridgeProvenance(hint)),
+		runtimeHintCb: async (hint) => options.runtimeHintCb?.(withBridgeProvenance(hint)),
 		runtimeEvidenceCb: async (evidence) =>
 			options.runtimeEvidenceCb?.({
 				...evidence,

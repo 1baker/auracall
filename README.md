@@ -226,8 +226,13 @@ auracall tui
 Engine auto-picks API when `OPENAI_API_KEY` is set, otherwise browser; browser is stable on macOS and works on Linux and Windows. On Linux pass `--browser-chrome-path/--browser-cookie-path` if detection fails; on Windows prefer `--browser-manual-login` or inline cookies if decryption is blocked. From WSL, integrated Windows Chrome runs now use an auto-assigned DevTools port plus Aura-Call’s built-in `windows-loopback` relay by default, so firewall rules and `portproxy` are only for manual direct-CDP debugging.
 
 Current browser-mode default posture:
-- browser runs still default to Aura-Call-managed profile launch
-- set `AURACALL_AGENT_BROWSER_BRIDGE=required` to make agent-browser the
+- `auto` is the default for ChatGPT and Grok. AuraCall asks agent-browser for
+  an access plan first and uses the exact broker-owned tab when that service is
+  available. It enters the compatibility AuraCall-managed browser path only
+  when no broker route accepts authority. Once an access plan resolves, later
+  tab, launch, target-validation, or CDP-attach failure is fail-closed rather
+  than falling back and risking a second browser or duplicate provider work
+- set `AURACALL_AGENT_BROWSER_BRIDGE=required` to require agent-browser as the
   fail-closed browser/profile/tab authority for ChatGPT and Grok. AuraCall asks
   for an access plan, uses one exact retained `serviceTabHandle`, attaches only
   to that target, and verifies detach without closing the retained browser or
@@ -235,8 +240,8 @@ Current browser-mode default posture:
   API service restart re-authorizes the same retained target and resumes
   response polling without replaying the prompt or rediscovering Chrome.
   Broker-tagged recovery fails closed if the exact handle is unavailable.
-  `auto` and `off` retain compatibility behavior while this lane is activated
-  incrementally
+  `off` is the explicit compatibility escape hatch that bypasses broker probing
+  and retains AuraCall-managed browser behavior
 - a browser profile can opt into an agent-browser-owned hidden RDP/Guacamole
   process with `agentBrowserRdp.enabled: true`; AuraCall still owns and passes
   the exact managed browser profile directory under `~/.auracall`, then

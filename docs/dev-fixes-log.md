@@ -21626,3 +21626,15 @@ browser-stage lifecycle observability, not transcript truncation.
   any installer port override before writing the unit.
 - Treat package copy, wrapper runtime, unit command, listener health, and
   source/installed hashes as separate installation acceptance checks.
+
+## 2026-08-14 | Split auto fallback at the broker authority boundary
+
+- A mode named `auto` is not broker-preferred if both its acquisition helper
+  and its top-level caller skip the broker unless mode is `required`. Cover the
+  resolver, acquisition behavior, and caller gate as one contract.
+- Broker discovery failure and post-plan execution failure are not equivalent.
+  Compatibility fallback is safe only before an access plan establishes
+  browser/profile/tab authority; afterward, fallback can create a second
+  browser or duplicate provider work and must fail closed.
+- Keep `off` as the explicit operator escape hatch. Log pre-authority auto
+  fallback so compatibility behavior is observable rather than silent.

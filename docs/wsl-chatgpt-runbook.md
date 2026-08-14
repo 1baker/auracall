@@ -192,6 +192,13 @@ separate provider-library drawer. Missing or ambiguous rows fail closed.
   - If the saved broker identity is incomplete or its exact retained target is
     gone, recovery fails closed. Inspect agent-browser service browser/tab state
     instead of enabling raw CDP discovery.
+- **Default `auto` browser routing**:
+  - A healthy agent-browser service is attempted first for ChatGPT and Grok.
+    If no broker route accepts an access plan, AuraCall logs the pre-authority
+    fallback and continues through its compatibility managed-browser path.
+  - Once agent-browser returns an access plan, any later acquisition or attach
+    failure is fail-closed. Do not switch to `off` merely to bypass that error;
+    inspect the selected broker profile, session, and tab handle first.
 - **Using Windows Chrome from WSL**:
   - Keep `manualLoginProfileDir` as a WSL path if you override it; Aura-Call converts it to the `\\wsl.localhost\...` path for Windows Chrome.
   - If DevTools can’t be reached, open the Windows firewall for the chosen port or pin a port with `AURACALL_BROWSER_PORT`.
