@@ -18900,3 +18900,22 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   provider or browser mutation occurred; PID `184301` and target
   `3FB398F218E264183A2AD81750AB9791` remain unchanged. The API is active on
   18095 with zero restarts, so Plan 0287 closes accepted.
+
+## Turn 424 | 2026-08-14
+
+- Plan 0288 opens the operator-console follow-through. The `/console` Runs
+  inspector already loads generic run status for the selected response, but it
+  does not interpret the browser-authority summary added by Plan 0287.
+- Scope is presentation-only: map the three public authority labels, warn
+  prominently only for `compatibility-fallback`, show compact authority/mode
+  detail for recognized states, and remain silent for absent/malformed input.
+  No route, provider request, or browser probe is added.
+- The closed-world presentation helper and selected-run alert are implemented.
+  Production build, typecheck, 13 selected tests, lint at the accepted
+  208-warning baseline, diff hygiene, and the 289-plan audit are green.
+- Installed `/console?view=runs` serves hashed asset `index-DD2wVONk.js` with
+  matching source/install HTML, JS, and CSS hashes. Persisted status still
+  reports `agent-browser` for response
+  `resp_5ff8161469f64a61bf12107c2616ad15` while current broker inventory has no
+  ready browser, confirming readback requires no live browser. The API is
+  active/running with zero restarts, so Plan 0288 closes accepted.

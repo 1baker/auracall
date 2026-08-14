@@ -21653,3 +21653,16 @@ browser-stage lifecycle observability, not transcript truncation.
 - Installed acceptance can safely reuse an older completed broker-backed run:
   status reconstruction is local, so proving unchanged broker PID/target and
   no new provider action verifies the read path remains side-effect free.
+
+## 2026-08-14 | Treat compatibility fallback as selected-run operator attention
+
+- The greenfield `/console?view=runs` inspector already reads generic status
+  for the selected response. Consume `browserAuthoritySummary` there instead of
+  adding a second endpoint or a live broker health probe.
+- Warn only when the persisted authority is exactly
+  `compatibility-fallback`. `agent-browser` and `explicit-off` are informative
+  states, while missing, malformed, or future authority values must remain
+  silent rather than creating a false alarm.
+- Keep the warning bounded to the public authority label and bridge mode. Raw
+  browser, profile, session, and target provenance remains technical evidence,
+  not operator-console presentation.

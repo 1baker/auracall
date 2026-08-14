@@ -46811,3 +46811,19 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   human output. The status-module hashes match source, no browser/provider job
   was created, and retained PID `184301`/target
   `3FB398F218E264183A2AD81750AB9791` stayed unchanged. Plan 0287 is closed.
+
+## 2026-08-14 | Warn on compatibility fallback in the operator console
+
+- Plan 0288 uses the selected response's existing generic run-status read. It
+  will not add a live broker/provider check or widen the status contract.
+- The console will warn only on the explicit persisted
+  `compatibility-fallback` label, while broker and explicit-off states receive
+  bounded non-warning detail and missing/malformed summaries stay silent.
+- Implementation adds an accessible selected-run warning plus compact timeline
+  authority/mode detail. Four presentation tests cover fallback, broker,
+  explicit off, and missing/malformed inputs.
+- Production build, typecheck, 13 selected tests, lint at the accepted
+  208-warning baseline, diff hygiene, and the 289-plan audit passed. Installed
+  `/console?view=runs` serves the rebuilt hashed asset with exact source/install
+  HTML, JS, and CSS parity. Persisted authority readback also succeeded with no
+  ready broker browser present. Plan 0288 is closed.

@@ -409,6 +409,34 @@ button:disabled {
   color: var(--text-muted);
 }
 
+.run-authority-alert {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 12px;
+  border: 1px solid #f1d399;
+  border-radius: 8px;
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+
+.run-authority-alert svg {
+  margin-top: 1px;
+}
+
+.run-authority-alert strong {
+  display: block;
+  font-size: 13px;
+}
+
+.run-authority-alert p {
+  margin: 4px 0 0;
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .chip.danger {
   background: var(--danger-soft);
   color: var(--danger);

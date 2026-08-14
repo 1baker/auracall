@@ -18,6 +18,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { readBrowserAuthorityPresentation } from "./runAuthority.ts";
 
 const EMPTY_FORM = {
   id: "",
@@ -1289,6 +1290,7 @@ function RunsInspector({ runsData, run, detail, controlResult, controlBusy, load
   const runtimeInspection = detail?.runtimeInspection?.inspection ?? null;
   const teamInspection = detail?.teamInspection?.inspection ?? null;
   const runStatus = detail?.runStatus ?? null;
+  const browserAuthority = readBrowserAuthorityPresentation(runStatus);
   const conversation = runtimeInspection?.conversation ?? null;
   const firstTurn = conversation?.turns?.find((turn) => turn.role === "assistant") ?? conversation?.turns?.[0] ?? null;
   const providerRefs = conversation?.providerConversationRefs ?? run.providerConversationRefs ?? [];
@@ -1308,6 +1310,20 @@ function RunsInspector({ runsData, run, detail, controlResult, controlBusy, load
         <RunStateChip state={run.stateGroup} label={run.statusLabel} />
       </div>
 
+      {browserAuthority?.warning ? (
+        <div
+          className="run-authority-alert"
+          role="alert"
+          data-browser-authority-warning={browserAuthority.authority}
+        >
+          <AlertTriangle size={18} aria-hidden="true" />
+          <div>
+            <strong>{browserAuthority.warning.title}</strong>
+            <p>{browserAuthority.warning.detail}</p>
+          </div>
+        </div>
+      ) : null}
+
       <div className="inspector-card">
         <h3>Timeline</h3>
         <dl className="compact-details">
@@ -1317,6 +1333,13 @@ function RunsInspector({ runsData, run, detail, controlResult, controlBusy, load
           <Detail label="Source" value={run.sourceLabel} />
           <Detail label="Current step" value={run.currentStepLabel} />
           <Detail label="Recovery" value={runsData.recovery.summary} />
+          {browserAuthority ? (
+            <Detail
+              label="Browser authority"
+              value={<span className={`status-pill ${browserAuthority.tone}`}>{browserAuthority.label}</span>}
+            />
+          ) : null}
+          {browserAuthority?.mode ? <Detail label="Bridge mode" value={browserAuthority.mode} /> : null}
         </dl>
       </div>
 

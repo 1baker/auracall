@@ -7,6 +7,12 @@
 Status: active
 Lane: P01
 
+- Closed accepted operator-console browser-authority warning:
+  [docs/dev/plans/0288-2026-08-14-operator-console-browser-authority-warning.md](docs/dev/plans/0288-2026-08-14-operator-console-browser-authority-warning.md)
+  The existing selected-run status read now drives a prominent compatibility-
+  fallback alert plus bounded authority/mode detail. Provider-free tests,
+  production build, lint gates, and installed hashed-asset acceptance passed.
+
 - Closed accepted browser-authority status projection:
   [docs/dev/plans/0287-2026-08-14-browser-authority-status.md](docs/dev/plans/0287-2026-08-14-browser-authority-status.md)
   Durable ChatGPT/Grok runs now record whether agent-browser, safe auto
