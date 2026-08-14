@@ -1,5 +1,13 @@
 # RUNBOOK
 
+## Turn 475 | 2026-08-14
+
+- Selected the two-warning session-display tail after Plan 0305.
+- Closed Plan 0306 by typing the hoisted registry-diagnostics mock to its
+  exported result contract and completing required expected-profile fields.
+- All eight suite tests and broad gates passed. Full lint now reports 105
+  warnings in five remaining test files.
+
 ## Turn 474 | 2026-08-14
 
 - Selected the 24-warning browser-service UI cluster after Plan 0304 because

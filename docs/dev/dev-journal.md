@@ -1,3 +1,12 @@
+## 2026-08-14 | Plan 0306 session-display diagnostics fixture ratchet
+
+- Selected the final two warnings in the otherwise-clean session-display
+  coverage suite.
+- Typed the hoisted registry-diagnostics mock and completed its required
+  expected-profile fixture fields.
+- All eight tests, typecheck, build, strict gates, full lint at 105 warnings,
+  and plan audit passed. Plan 0306 is CLOSED.
+
 ## 2026-08-14 | Plan 0305 browser UI CDP fixture ratchet
 
 - Selected 24 naming warnings plus four nearby suppressions in the

@@ -7,6 +7,11 @@
 Status: active
 Lane: P01
 
+- Closed accepted session-display diagnostics fixture ratchet:
+  [docs/dev/plans/0306-2026-08-14-session-display-diagnostics-fixture-ratchet.md](docs/dev/plans/0306-2026-08-14-session-display-diagnostics-fixture-ratchet.md)
+  The registry mock now uses its exported result contract and complete expected-
+  profile evidence rather than explicit-any casts.
+
 - Closed accepted browser UI CDP fixture ratchet:
   [docs/dev/plans/0305-2026-08-14-browser-ui-cdp-fixture-ratchet.md](docs/dev/plans/0305-2026-08-14-browser-ui-cdp-fixture-ratchet.md)
   Repeated Page/Runtime/Input test clients now share exact-name constructors,

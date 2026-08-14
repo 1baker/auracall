@@ -1,3 +1,7 @@
+- 2026-08-14: A hoisted async mock initialized with `null` should declare its
+  full nullable production result type. Doing so exposes incomplete non-null
+  fixtures at typecheck time instead of hiding missing evidence behind `any`.
+
 - 2026-08-14: Repeated partial CDP clients should be built by small fixture
   constructors with computed exact-name keys. This keeps Page, Runtime, and
   Input contracts visible, removes per-call suppressions, and gives test suites

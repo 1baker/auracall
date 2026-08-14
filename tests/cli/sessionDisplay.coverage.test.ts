@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { ReattachRegistryDiagnostics } from '../../src/browser/service/registryDiagnostics.js';
 import type { SessionMetadata } from '../../src/sessionStore.js';
 
-const mockCollectReattachRegistryDiagnostics = vi.hoisted(() => vi.fn(async () => null));
+const mockCollectReattachRegistryDiagnostics = vi.hoisted(() =>
+  vi.fn<() => Promise<ReattachRegistryDiagnostics | null>>(async () => null),
+);
 
 const mockSessionStore = {
   listSessions: vi.fn(),
@@ -26,7 +29,7 @@ vi.mock('../../src/browser/service/registryDiagnostics.js', () => ({
 describe('sessionDisplay helpers', () => {
   beforeEach(() => {
     mockCollectReattachRegistryDiagnostics.mockReset();
-    mockCollectReattachRegistryDiagnostics.mockResolvedValue(null as any);
+    mockCollectReattachRegistryDiagnostics.mockResolvedValue(null);
     Object.values(mockSessionStore).forEach((fn) => {
       if ('mockReset' in fn) {
         (fn as unknown as { mockReset: () => void }).mockReset();
@@ -67,6 +70,8 @@ describe('sessionDisplay helpers', () => {
     mockSessionStore.readRequest.mockResolvedValue({ prompt: 'Prompt here' });
     mockCollectReattachRegistryDiagnostics.mockResolvedValue({
       capturedAt: '2026-04-02T02:20:00.000Z',
+      expectedProfilePath: '/tmp/profile',
+      expectedProfileName: 'Default',
       discardedRegistryCandidates: [
         {
           key: '/tmp/profile::default::selected-port-stale',
@@ -79,7 +84,7 @@ describe('sessionDisplay helpers', () => {
           reason: 'selected-port-stale',
         },
       ],
-    } as any);
+    });
     mockResumeBrowserSession.mockRejectedValue(
       new ReattachFailure({
         kind: 'wrong-browser-profile',
