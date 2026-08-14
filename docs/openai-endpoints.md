@@ -283,7 +283,10 @@ Current limits:
     `browserAuthoritySummary` from each stored run. The reducer and backward
     evidence scan are shared with full response status so later provider
     heartbeats cannot erase the routing decision and recent listing performs no
-    live browser work.
+    live browser work. Optional `browserAuthority=agent-browser|compatibility-fallback|explicit-off|unreported`
+    filtering is applied before `limit`, so the bounded result contains the
+    newest matching persisted runs instead of filtering an already-truncated
+    page.
   - `cancel-run` can cancel mutable browser-backed runs that have already lost
     their active lease. If completion already won the race, AuraCall reports the
     terminal state instead of returning an ambiguous no-active-lease conflict.

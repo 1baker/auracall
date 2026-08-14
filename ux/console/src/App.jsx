@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import {
+  buildRuntimeRunsRecentUrl,
   matchesBrowserAuthorityFilter,
   readBrowserAuthorityPresentation,
   readBrowserAuthoritySummaryPresentation,
@@ -107,7 +108,7 @@ function App() {
         fetchJson("/v1/config/agent-choices"),
         fetchJson("/v1/config/agents"),
         fetchJson("/status?recovery=true&sourceKind=all"),
-        fetchJson("/v1/runtime-runs/recent?limit=50"),
+        fetchJson(buildRuntimeRunsRecentUrl(runAuthorityFilter)),
         fetchJson("/v1/account-mirrors/completions?limit=50"),
         fetchJson("/v1/account-mirrors/recovery-candidates?limit=20"),
       ]);
@@ -139,6 +140,23 @@ function App() {
   useEffect(() => {
     void refresh();
   }, []);
+
+  useEffect(() => {
+    if (runtimeRunsPayload === null) return;
+    let cancelled = false;
+    fetchJson(buildRuntimeRunsRecentUrl(runAuthorityFilter))
+      .then((payload) => {
+        if (!cancelled) setRuntimeRunsPayload(payload);
+      })
+      .catch((requestError) => {
+        if (!cancelled) {
+          setError(requestError instanceof Error ? requestError.message : String(requestError));
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [runAuthorityFilter]);
 
   const agents = useMemo(() => choices?.agents ?? agentsPayload?.agents ?? [], [choices, agentsPayload]);
   const selectedAgent = useMemo(

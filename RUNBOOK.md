@@ -1,5 +1,20 @@
 # RUNBOOK
 
+## Turn 457 | 2026-08-14
+
+- Published closed Plan 0290 to personal GitHub `1baker` as commit
+  `1daa4d60`; independent verification passed the 20-test bridge regression,
+  typecheck, plan audit with zero errors, and diff hygiene.
+- Opened Plan 0291 to move browser-authority filtering below the recent-run
+  limit and expose the same persisted-only predicate through HTTP, MCP, and the
+  Runs selector. The packet permits no browser or provider work.
+- Closed Plan 0291 after 268/268 affected tests, typecheck, production build,
+  lint at the unchanged 208-warning baseline, plan audit with zero errors, and
+  diff hygiene passed. The installed authenticated endpoint returned only the
+  matching broker-authority run and rejected an unknown authority with HTTP
+  400; source/install hashes match and the console bundle carries the server
+  request wiring. No browser or provider request ran.
+
 ## Turn 456 | 2026-08-14
 
 - Restored the exact `chatgpt-pro` retained lane after its Linux Chrome process

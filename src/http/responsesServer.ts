@@ -201,6 +201,7 @@ import {
 	type RunArchiveListResult,
 	type RunArchiveService,
 } from "../runtime/archiveService.js";
+import type { ExecutionBrowserAuthorityFilter } from "../runtime/browserAuthoritySummary.js";
 import { createConfiguredExecutionRunAffinity } from "../runtime/configuredAffinity.js";
 import { createConfiguredStoredStepExecutor } from "../runtime/configuredExecutor.js";
 import type { ExecutionRuntimeControlContract } from "../runtime/contract.js";
@@ -4983,7 +4984,7 @@ function createHttpStatusResponse(input: {
 			agentSetupPackagesCreate: "POST /v1/agent-setup-packages",
 			agentSetupHandoffsCreate: "POST /v1/agent-setup-handoffs",
 			runtimeRunsRecent:
-				"/v1/runtime-runs/recent[?sourceKind=team-run|direct][&status=planned|running|succeeded|failed|cancelled][&limit=25]",
+				"/v1/runtime-runs/recent[?sourceKind=team-run|direct][&status=planned|running|succeeded|failed|cancelled][&browserAuthority=agent-browser|compatibility-fallback|explicit-off|unreported][&limit=25]",
 			runtimeRunInspection:
 				"/v1/runtime-runs/inspect?runId={run_id}|teamRunId={team_run_id}|taskRunSpecId={task_run_spec_id}|runtimeRunId={runtime_run_id}[&runnerId={runner_id}][&probe=service-state][&diagnostics=browser-state][&authority=scheduler]",
 			models: "/v1/models",
@@ -8656,6 +8657,7 @@ interface ParsedRuntimeRunListQuery {
 	limit?: number;
 	status?: ExecutionRunStatus;
 	sourceKind?: ExecutionRunSourceKind;
+	browserAuthority?: ExecutionBrowserAuthorityFilter;
 }
 
 interface ParsedRunArchiveQuery extends RunArchiveListRequest {}
@@ -8842,17 +8844,23 @@ function parseRuntimeRunListQuery(searchParams: URLSearchParams): ParsedRuntimeR
 	if (searchParams.has("limit")) raw.limit = searchParams.get("limit");
 	if (searchParams.has("status")) raw.status = searchParams.get("status");
 	if (searchParams.has("sourceKind")) raw.sourceKind = searchParams.get("sourceKind");
+	if (searchParams.has("browserAuthority"))
+		raw.browserAuthority = searchParams.get("browserAuthority");
 	const parsed = z
 		.object({
 			limit: z.coerce.number().int().min(0).max(100).optional(),
 			status: z.enum(["planned", "running", "succeeded", "failed", "cancelled"]).optional(),
 			sourceKind: z.enum(["team-run", "direct"]).optional(),
+			browserAuthority: z
+				.enum(["agent-browser", "compatibility-fallback", "explicit-off", "unreported"])
+				.optional(),
 		})
 		.parse(raw);
 	return {
 		limit: parsed.limit ?? 25,
 		status: parsed.status,
 		sourceKind: parsed.sourceKind,
+		browserAuthority: parsed.browserAuthority,
 	};
 }
 

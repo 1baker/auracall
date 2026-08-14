@@ -1,3 +1,22 @@
+## 2026-08-14 | Plan 0291 Server-Side Recent-Run Authority Filter
+
+- Plan 0289 made authority visible but the Runs workbench still filters only
+  the first 50 returned runtime rows. A matching older fallback can therefore
+  remain undiscoverable behind newer non-matching runs.
+- The runtime store already applies status and source predicates before sort
+  and limit. Plan 0291 will add the shared authority predicate at that seam,
+  then expose it through HTTP, MCP, and the console request without live
+  browser or provider work.
+- The implementation now filters the shared durable authority summary before
+  limit truncation, and HTTP/MCP/console use one four-value contract including
+  `unreported`. The console retains its local predicate for mixed live-follow
+  rows while refetching runtime rows from the server.
+- The 268-test affected matrix, typecheck, production build, lint at 208 known
+  warnings, plan audit, and diff checks passed. Installed authenticated
+  readback returned only matching broker rows, rejected an unknown value with
+  HTTP 400, matched three source/runtime hashes, and served the rebuilt console
+  request wiring with the API active and no provider/browser work.
+
 ## 2026-08-14 | Plan 0290 Retained Agent-Browser Stream Discovery
 
 - Live recovery exposed two same-name daemon roots: the retained authoritative

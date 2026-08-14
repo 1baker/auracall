@@ -75,6 +75,12 @@ export function matchesBrowserAuthorityFilter(
   return presentation?.authority === filter;
 }
 
+export function buildRuntimeRunsRecentUrl(filter: BrowserAuthorityFilter, limit = 50): string {
+  const query = new URLSearchParams({ limit: String(limit) });
+  if (filter !== "all") query.set("browserAuthority", filter);
+  return `/v1/runtime-runs/recent?${query.toString()}`;
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }

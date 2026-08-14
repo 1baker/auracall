@@ -1,4 +1,5 @@
 import type { ExecutionRunDispatchPlan } from './dispatcher.js';
+import type { ExecutionBrowserAuthorityFilter } from './browserAuthoritySummary.js';
 import type { ExecutionRunStoredRecord } from './store.js';
 import type { ExecutionRunLease, ExecutionRunRecordBundle, ExecutionRunSourceKind, ExecutionRunStatus } from './types.js';
 
@@ -42,6 +43,7 @@ export interface ListStoredExecutionRunsInput {
   statuses?: ExecutionRunStatus[];
   sourceKind?: ExecutionRunSourceKind;
   updatedSince?: string;
+  browserAuthority?: ExecutionBrowserAuthorityFilter;
 }
 
 export interface PersistStoredExecutionRunRecordInput {

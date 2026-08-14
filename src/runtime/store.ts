@@ -3,6 +3,10 @@ import type { Dirent } from 'node:fs';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { getAuracallHomeDir } from '../auracallHome.js';
+import {
+  matchesExecutionRunBrowserAuthority,
+  type ExecutionBrowserAuthorityFilter,
+} from './browserAuthoritySummary.js';
 import { ExecutionRunRecordBundleSchema } from './schema.js';
 import type { ExecutionRunRecordBundle, ExecutionRunSourceKind, ExecutionRunStatus } from './types.js';
 
@@ -19,6 +23,7 @@ export interface ListExecutionRunRecordOptions {
   statuses?: ExecutionRunStatus[];
   sourceKind?: ExecutionRunSourceKind;
   updatedSince?: string;
+  browserAuthority?: ExecutionBrowserAuthorityFilter;
 }
 
 export interface ExecutionRunStoredRecord {
@@ -110,6 +115,12 @@ export async function listExecutionRunRecordBundles(
         if (options.status && bundle.run.status !== options.status) return null;
         if (statuses && !statuses.has(bundle.run.status)) return null;
         if (options.sourceKind && bundle.run.sourceKind !== options.sourceKind) return null;
+        if (
+          options.browserAuthority &&
+          !matchesExecutionRunBrowserAuthority(bundle, options.browserAuthority)
+        ) {
+          return null;
+        }
         return bundle;
       },
     )

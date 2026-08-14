@@ -491,7 +491,9 @@ log-tail checks as one release gate before live dogfood.
 ### `runtime_runs_recent`
 - Inputs: optional `limit` from 0 to 100, optional
   `sourceKind: "team-run" | "direct"`, and optional
-  `status: "planned" | "running" | "succeeded" | "failed" | "cancelled"`.
+  `status: "planned" | "running" | "succeeded" | "failed" | "cancelled"`,
+  plus optional `browserAuthority: "agent-browser" | "compatibility-fallback" |
+  "explicit-off" | "unreported"`.
 - Behavior: returns `object = "list"` with the same compact recent runtime-run
   rows exposed by `GET /v1/runtime-runs/recent` and the `/agents` dashboard:
   run id, source kind, team/task aliases, status, timestamps, step counts,
@@ -499,6 +501,8 @@ log-tail checks as one release gate before live dogfood.
   persisted authority evidence exists. The summary exposes only authority,
   bridge mode, observation time, and source; legacy broker provenance reduces
   to `agent-browser` without exposing browser/session/target identifiers.
+  Browser-authority filtering occurs before the requested limit and composes
+  with source/status filters.
 - This is local-state only. It does not launch browsers, touch provider pages,
   or acquire dispatcher access.
 

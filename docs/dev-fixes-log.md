@@ -21688,3 +21688,13 @@ browser-stage lifecycle observability, not transcript truncation.
   deterministic order; deduplicate equivalent paths and ignore missing roots.
 - Preserve exact profile, browser, session, URL, and target matching after
   discovery. Wider location discovery must not become looser target authority.
+
+## 2026-08-14 | Apply recent-run authority filters before the limit
+
+- A client-side filter over a bounded recent page cannot prove discovery of
+  older matches; newer non-matching rows may consume the entire window.
+- Apply the shared persisted authority predicate in the runtime store before
+  sorting and limit truncation, then pass the same closed-world filter through
+  HTTP, MCP, and console request wiring.
+- Keep `unreported` distinct from compatibility fallback. Missing or future
+  evidence remains non-alarming and can be requested explicitly.

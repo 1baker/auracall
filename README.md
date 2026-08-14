@@ -1065,13 +1065,19 @@ Terminology note:
   live-follow desired/actual eligibility view. `/agents` is the read-only
   Agents / Teams page for existing team-run and runtime-run inspection
   endpoints, with a local-state recent runtime-run browser backed by
-  `GET /v1/runtime-runs/recent` source/status/limit filters and row actions
+  `GET /v1/runtime-runs/recent` source/status/browser-authority/limit filters
+  and row actions
   that fill, inspect, or jump directly to linked account-mirror detail for
   existing run ids without touching provider browsers. Recent-run rows include
   a bounded `browserAuthoritySummary` derived from persisted runtime evidence;
   `/console?view=runs` displays that authority, includes compatibility fallback
   in Attention, and can filter Agent-browser, Fallback, Explicit off, or
-  Unreported rows before selection. Recent-run rows also include a `Mirror`
+  Unreported rows before selection.
+  The authority predicate is applied to persisted runs before the requested
+  limit, and changing the Runs authority selector refetches that bounded
+  server-side result. This lets older matching fallback or unreported runs
+  remain discoverable even when newer non-matching rows fill the default
+  window. Recent-run rows also include a `Mirror`
   availability summary before the jump action so operators can see
   whether cached provider detail is available, a single cached conversation
   opens directly from that summary, and the summary hydrates the same

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+	buildRuntimeRunsRecentUrl,
 	matchesBrowserAuthorityFilter,
 	readBrowserAuthorityPresentation,
 	readBrowserAuthoritySummaryPresentation,
@@ -98,5 +99,15 @@ describe("operator console browser authority presentation", () => {
 		expect(matchesBrowserAuthorityFilter(broker, "compatibility-fallback")).toBe(false);
 		expect(matchesBrowserAuthorityFilter(null, "unreported")).toBe(true);
 		expect(matchesBrowserAuthorityFilter(null, "explicit-off")).toBe(false);
+	});
+
+	it("builds bounded server-filter URLs for the Runs selector", () => {
+		expect(buildRuntimeRunsRecentUrl("all")).toBe("/v1/runtime-runs/recent?limit=50");
+		expect(buildRuntimeRunsRecentUrl("compatibility-fallback", 25)).toBe(
+			"/v1/runtime-runs/recent?limit=25&browserAuthority=compatibility-fallback",
+		);
+		expect(buildRuntimeRunsRecentUrl("unreported")).toBe(
+			"/v1/runtime-runs/recent?limit=50&browserAuthority=unreported",
+		);
 	});
 });

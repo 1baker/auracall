@@ -8,6 +8,9 @@ const runtimeRunsRecentInputShape = {
   limit: z.number().int().min(0).max(100).optional(),
   status: z.enum(['planned', 'running', 'succeeded', 'failed', 'cancelled']).optional(),
   sourceKind: z.enum(['team-run', 'direct']).optional(),
+  browserAuthority: z
+    .enum(['agent-browser', 'compatibility-fallback', 'explicit-off', 'unreported'])
+    .optional(),
 } satisfies z.ZodRawShape;
 
 const runtimeRunListItemShape = z.object({
@@ -45,7 +48,7 @@ export function registerRuntimeRunsRecentTool(server: McpServer): void {
     {
       title: 'List recent Aura-Call runtime runs',
       description:
-        'Read recent local runtime-run state with source/status/limit filters. This does not touch provider browsers.',
+        'Read recent local runtime-run state with source/status/browser-authority/limit filters. This does not touch provider browsers.',
       inputSchema: runtimeRunsRecentInputShape,
       outputSchema: runtimeRunsRecentOutputShape,
     },
@@ -65,6 +68,7 @@ export function createRuntimeRunsRecentToolHandler(deps: RegisterRuntimeRunsRece
       limit: payload.limit ?? 25,
       status: payload.status,
       sourceKind: payload.sourceKind,
+      browserAuthority: payload.browserAuthority,
     });
     const data = records.map(summarizeExecutionRunListItem);
     return {

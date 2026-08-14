@@ -8,12 +8,15 @@ import { createExecutionRuntimeControl } from '../src/runtime/control.js';
 import { createExecutionRunRecordBundleFromTeamRun } from '../src/runtime/model.js';
 import { createTeamRunBundle } from '../src/teams/model.js';
 
-function createBundle(runId = 'team_run_control') {
+function createBundle(
+  runId = 'team_run_control',
+  createdAt = '2026-04-08T00:00:00.000Z',
+) {
   return createExecutionRunRecordBundleFromTeamRun(
     createTeamRunBundle({
       runId,
       teamId: 'ops',
-      createdAt: '2026-04-08T00:00:00.000Z',
+      createdAt,
       trigger: 'service',
       steps: [
         {
@@ -126,6 +129,47 @@ describe('runtime control module', () => {
 
     const listed = await control.listRuns({ limit: 10 });
     expect(listed.map((record) => record.runId).sort()).toEqual(['team_run_alpha', 'team_run_beta']);
+  });
+
+  it('filters browser authority before applying the recent-run limit', async () => {
+    const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), 'auracall-runtime-control-'));
+    cleanup.push(homeDir);
+    setAuracallHomeDirOverrideForTest(homeDir);
+
+    const control = createExecutionRuntimeControl();
+    const fallback = createBundle('team_run_fallback', '2026-04-08T00:01:00.000Z');
+    fallback.events.push({
+      id: 'team_run_fallback:event:authority',
+      runId: 'team_run_fallback',
+      type: 'note-added',
+      createdAt: '2026-04-08T00:01:01.000Z',
+      payload: {
+        runtimeEvidence: {
+          details: { browserAuthority: 'compatibility-fallback' },
+        },
+      },
+    });
+    await control.createRun(fallback);
+    await control.createRun(
+      createBundle('team_run_newer_unreported', '2026-04-08T00:02:00.000Z'),
+    );
+
+    const fallbackRuns = await control.listRuns({
+      browserAuthority: 'compatibility-fallback',
+      sourceKind: 'team-run',
+      status: 'planned',
+      limit: 1,
+    });
+    const unreportedRuns = await control.listRuns({ browserAuthority: 'unreported', limit: 1 });
+    const statusMismatch = await control.listRuns({
+      browserAuthority: 'compatibility-fallback',
+      status: 'failed',
+      limit: 1,
+    });
+
+    expect(fallbackRuns.map((record) => record.runId)).toEqual(['team_run_fallback']);
+    expect(unreportedRuns.map((record) => record.runId)).toEqual(['team_run_newer_unreported']);
+    expect(statusMismatch).toEqual([]);
   });
 
   it('persists patched run bundles via the control persist route', async () => {

@@ -69,12 +69,14 @@ describe('mcp runtime_runs_recent tool', () => {
       sourceKind: 'team-run',
       status: 'planned',
       limit: 5,
+      browserAuthority: 'agent-browser',
     });
 
     expect(listRuns).toHaveBeenCalledWith({
       sourceKind: 'team-run',
       status: 'planned',
       limit: 5,
+      browserAuthority: 'agent-browser',
     });
     expect(result).toMatchObject({
       structuredContent: {
@@ -119,11 +121,22 @@ describe('mcp runtime_runs_recent tool', () => {
       limit: 25,
       status: undefined,
       sourceKind: undefined,
+      browserAuthority: undefined,
     });
     expect(result.structuredContent).toEqual({
       object: 'list',
       data: [],
       count: 0,
     });
+  });
+
+  it('rejects unknown browser-authority filters', async () => {
+    const handler = createRuntimeRunsRecentToolHandler({
+      control: {
+        listRuns: vi.fn(async () => []),
+      },
+    });
+
+    await expect(handler({ browserAuthority: 'future-route' })).rejects.toThrow();
   });
 });

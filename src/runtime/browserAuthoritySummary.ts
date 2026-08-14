@@ -4,6 +4,10 @@ import type { ExecutionRunRecordBundle } from './types.js';
 export type ExecutionBrowserAuthoritySummary = NonNullable<
   ExecutionRuntimeDiagnosticsSummary['browserAuthoritySummary']
 >;
+export type ExecutionBrowserAuthority = NonNullable<
+  ExecutionBrowserAuthoritySummary['browserAuthority']
+>;
+export type ExecutionBrowserAuthorityFilter = ExecutionBrowserAuthority | 'unreported';
 
 export function readExecutionRunBrowserAuthoritySummary(
   runRecord: ExecutionRunRecordBundle,
@@ -28,6 +32,16 @@ export function readExecutionRunBrowserAuthoritySummary(
     };
   }
   return null;
+}
+
+export function matchesExecutionRunBrowserAuthority(
+  runRecord: ExecutionRunRecordBundle,
+  filter: ExecutionBrowserAuthorityFilter,
+): boolean {
+  const summary = readExecutionRunBrowserAuthoritySummary(runRecord);
+  return filter === 'unreported'
+    ? summary === null
+    : summary?.browserAuthority === filter;
 }
 
 function readBrowserAuthority(

@@ -2374,7 +2374,7 @@ describe("http responses adapter", () => {
 				routes: {
 					recoveryDetailTemplate: "/status/recovery/{run_id}",
 					runtimeRunsRecent:
-						"/v1/runtime-runs/recent[?sourceKind=team-run|direct][&status=planned|running|succeeded|failed|cancelled][&limit=25]",
+						"/v1/runtime-runs/recent[?sourceKind=team-run|direct][&status=planned|running|succeeded|failed|cancelled][&browserAuthority=agent-browser|compatibility-fallback|explicit-off|unreported][&limit=25]",
 					runtimeRunInspection:
 						"/v1/runtime-runs/inspect?runId={run_id}|teamRunId={team_run_id}|taskRunSpecId={task_run_spec_id}|runtimeRunId={runtime_run_id}[&runnerId={runner_id}][&probe=service-state][&diagnostics=browser-state][&authority=scheduler]",
 					responsesGetTemplate: "/v1/responses/{response_id}",
@@ -13020,11 +13020,17 @@ describe("http responses adapter", () => {
 				],
 			},
 		});
+		await seedPlannedDirectRun(
+			control,
+			"runtime_recent_newer_unreported_authority",
+			"2026-04-14T16:31:00.000Z",
+			"Remain unreported and newer than the matching fallback.",
+		);
 		const server = await createResponsesHttpServer({ host: "127.0.0.1", port: 0 }, { control });
 
 		try {
 			const response = await fetch(
-				`http://127.0.0.1:${server.port}/v1/runtime-runs/recent?limit=5`,
+				`http://127.0.0.1:${server.port}/v1/runtime-runs/recent?browserAuthority=compatibility-fallback&limit=1`,
 			);
 			expect(response.status).toBe(200);
 			const payload = (await response.json()) as {
@@ -13042,6 +13048,25 @@ describe("http responses adapter", () => {
 			expect(payload.data[0]).not.toHaveProperty(
 				"browserAuthoritySummary.agentBrowserBrowserId",
 			);
+
+			const unreportedResponse = await fetch(
+				`http://127.0.0.1:${server.port}/v1/runtime-runs/recent?browserAuthority=unreported&limit=1`,
+			);
+			expect(unreportedResponse.status).toBe(200);
+			await expect(unreportedResponse.json()).resolves.toMatchObject({
+				count: 1,
+				data: [
+					{
+						runId: "runtime_recent_newer_unreported_authority",
+						browserAuthoritySummary: null,
+					},
+				],
+			});
+
+			const invalidResponse = await fetch(
+				`http://127.0.0.1:${server.port}/v1/runtime-runs/recent?browserAuthority=future-route`,
+			);
+			expect(invalidResponse.status).toBe(400);
 		} finally {
 			await server.close();
 		}

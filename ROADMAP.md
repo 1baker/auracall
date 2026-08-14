@@ -7,6 +7,12 @@
 Status: active
 Lane: P01
 
+- Closed accepted server-side recent-run authority filtering:
+  [docs/dev/plans/0291-2026-08-14-server-side-run-authority-filter.md](docs/dev/plans/0291-2026-08-14-server-side-run-authority-filter.md)
+  Authority filtering now occurs below the recent-list limit and the same
+  closed-world predicate is exposed through HTTP, MCP, and the Runs workbench.
+  Provider-free tests, build, lint, audit, and installed readback passed.
+
 - Closed accepted agent-browser retained-stream discovery recovery:
   [docs/dev/plans/0290-2026-08-14-agent-browser-stream-discovery-recovery.md](docs/dev/plans/0290-2026-08-14-agent-browser-stream-discovery-recovery.md)
   Required-mode broker discovery now covers the configured socket root,

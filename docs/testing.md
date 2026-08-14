@@ -20,10 +20,11 @@
 - Unit/type tests: `pnpm test` (Vitest) and `pnpm run check` (typecheck).
 - Recent-run browser-authority projection and console filtering are
   provider-free:
-  `pnpm vitest run tests/runtime.responsesService.test.ts tests/mcp.runtimeRunsRecent.test.ts tests/http.responsesServer.test.ts tests/ux.console.runAuthority.test.ts -t "detached|runtime_runs_recent|projects bounded browser authority|operator console browser authority"`.
+  `pnpm vitest run tests/runtime.responsesService.test.ts tests/runtime.control.test.ts tests/mcp.runtimeRunsRecent.test.ts tests/http.responsesServer.test.ts tests/ux.console.runAuthority.test.ts -t "detached|browser authority|runtime_runs_recent|projects bounded browser authority|operator console browser authority"`.
   This proves the shared backward evidence scan, legacy broker inference,
-  bounded HTTP/MCP output, and closed-world console filter mapping; it does not
-  launch or inspect a browser.
+  pre-limit bounded HTTP/MCP filtering, invalid-input rejection, server-refetch
+  URL mapping, and closed-world console guard; it does not launch or inspect a
+  browser.
 - Agent-browser RDP managed-profile contract (provider-free):
   `pnpm vitest run tests/browser/agentBrowserRdpLauncher.test.ts tests/browser/config.test.ts tests/browser/profileConfig.test.ts tests/browser-service/platformPaths.test.ts`
   followed by `pnpm run typecheck`. This proves exact AuraCall profile-path
