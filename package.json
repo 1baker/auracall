@@ -28,7 +28,7 @@
     "lint": "pnpm run typecheck && pnpm run lint:src:strict && pnpm run lint:scripts:strict && pnpm run lint:tests:strict && biome lint .",
     "lint:scripts:strict": "biome lint scripts --error-on-warnings",
     "lint:src:strict": "biome lint src --error-on-warnings",
-    "lint:tests:strict": "biome lint tests/http.responsesServer.test.ts --error-on-warnings",
+    "lint:tests:strict": "biome lint tests/http.responsesServer.test.ts tests/runtime.serviceHost.test.ts --error-on-warnings",
     "test": "vitest run",
     "test:mcp": "pnpm run build && pnpm run test:mcp:unit && pnpm run test:mcp:mcporter",
     "test:mcp:unit": "vitest run tests/mcp*.test.ts tests/mcp/**/*.test.ts",

@@ -7,6 +7,11 @@
 Status: active
 Lane: P01
 
+- Closed accepted service-host fixture lint ratchet:
+  [docs/dev/plans/0301-2026-08-14-service-host-fixture-lint-ratchet.md](docs/dev/plans/0301-2026-08-14-service-host-fixture-lint-ratchet.md)
+  Required service-host fixtures now fail through labeled guards, and a second
+  integration suite has joined the warning-strict test lint boundary.
+
 - Closed accepted incremental strict-test lint ratchet:
   [docs/dev/plans/0300-2026-08-14-incremental-strict-test-lint-ratchet.md](docs/dev/plans/0300-2026-08-14-incremental-strict-test-lint-ratchet.md)
   The largest safe integration-test warning cluster is clean, fixture absence

@@ -32,6 +32,13 @@ const CHATGPT_ACCOUNT_AFFINITY_CONFIG = {
   },
 };
 
+function requireFixtureValue<T>(value: T | null | undefined, label: string): T {
+  if (value == null) {
+    throw new Error(`${label} fixture was missing.`);
+  }
+  return value;
+}
+
 function createDirectBundle(runId: string, createdAt: string, status: 'planned' | 'running' = 'planned') {
   const stepId = `${runId}:step:1`;
   return createExecutionRunRecordBundle({
@@ -1227,7 +1234,7 @@ describe('runtime service host', () => {
     const control = createExecutionRuntimeControl();
     const bundle = createDirectBundle('run_host_action', '2026-04-08T15:01:00.000Z');
     bundle.steps[0] = {
-      ...bundle.steps[0]!,
+      ...requireFixtureValue(bundle.steps[0], 'run_host_action first step'),
       input: {
         ...bundle.steps[0]?.input,
         structuredData: {
@@ -1287,7 +1294,7 @@ describe('runtime service host', () => {
     const control = createExecutionRuntimeControl();
     const bundle = createDirectBundle('run_host_builtin_action', '2026-04-08T15:03:00.000Z');
     bundle.steps[0] = {
-      ...bundle.steps[0]!,
+      ...requireFixtureValue(bundle.steps[0], 'run_host_builtin_action first step'),
       input: {
         ...bundle.steps[0]?.input,
         structuredData: {
@@ -1350,7 +1357,7 @@ describe('runtime service host', () => {
     const control = createExecutionRuntimeControl();
     const bundle = createDirectBundle('run_host_approval_required_action', '2026-04-08T15:04:30.000Z');
     bundle.steps[0] = {
-      ...bundle.steps[0]!,
+      ...requireFixtureValue(bundle.steps[0], 'run_host_approval_required_action first step'),
       input: {
         ...bundle.steps[0]?.input,
         structuredData: {
@@ -1440,7 +1447,7 @@ describe('runtime service host', () => {
     const control = createExecutionRuntimeControl();
     const bundle = createDirectBundle('run_host_policy_override', '2026-04-08T15:05:00.000Z');
     bundle.steps[0] = {
-      ...bundle.steps[0]!,
+      ...requireFixtureValue(bundle.steps[0], 'run_host_policy_override first step'),
       input: {
         ...bundle.steps[0]?.input,
         structuredData: {
@@ -1651,7 +1658,10 @@ describe('runtime service host', () => {
     const control = createExecutionRuntimeControl();
     const bundle = createRequestedLocalActionBundle('run_host_local_action_resolved', '2026-04-11T18:10:00.000Z');
     bundle.localActionRequests[0] = {
-      ...bundle.localActionRequests[0]!,
+      ...requireFixtureValue(
+        bundle.localActionRequests[0],
+        'run_host_local_action_resolved local action request',
+      ),
       status: 'approved',
       approvedAt: '2026-04-11T18:10:00.000Z',
       resultSummary: 'approved shell for later execution',
@@ -2416,7 +2426,7 @@ describe('runtime service host', () => {
     const idle = createDirectBundle('run_idle_limit', '2026-04-08T15:02:00.000Z');
     idle.run.status = 'succeeded';
     idle.steps[0] = {
-      ...idle.steps[0]!,
+      ...requireFixtureValue(idle.steps[0], 'run_idle_limit first step'),
       status: 'succeeded',
       startedAt: '2026-04-08T15:02:00.000Z',
       completedAt: '2026-04-08T15:02:00.000Z',
@@ -2737,7 +2747,7 @@ describe('runtime service host', () => {
     const idle = createDirectBundle('run_idle', '2026-04-08T15:02:00.000Z');
     idle.run.status = 'succeeded';
     idle.steps[0] = {
-      ...idle.steps[0]!,
+      ...requireFixtureValue(idle.steps[0], 'run_idle first step'),
       status: 'succeeded',
       startedAt: '2026-04-08T15:02:00.000Z',
       completedAt: '2026-04-08T15:02:00.000Z',
@@ -2982,7 +2992,7 @@ describe('runtime service host', () => {
     const control = createExecutionRuntimeControl();
     const bundle = createDirectBundle('run_cancelled_detail', '2026-04-08T15:00:00.000Z', 'running');
     bundle.steps[0] = {
-      ...bundle.steps[0]!,
+      ...requireFixtureValue(bundle.steps[0], 'run_cancelled_detail first step'),
       status: 'running',
       startedAt: '2026-04-08T15:01:00.000Z',
     };
@@ -3040,7 +3050,7 @@ describe('runtime service host', () => {
     bundle.run.status = 'cancelled';
     bundle.run.updatedAt = '2026-04-08T15:03:00.000Z';
     bundle.steps[0] = {
-      ...bundle.steps[0]!,
+      ...requireFixtureValue(bundle.steps[0], 'run_cancelled_detail_fallback first step'),
       status: 'cancelled',
       startedAt: '2026-04-08T15:01:00.000Z',
       completedAt: '2026-04-08T15:03:00.000Z',
@@ -4936,7 +4946,7 @@ describe('runtime service host', () => {
     const control = createExecutionRuntimeControl();
     const bundle = createDirectBundle('run_cancel_owned', '2026-04-08T15:00:00.000Z', 'running');
     bundle.steps[0] = {
-      ...bundle.steps[0]!,
+      ...requireFixtureValue(bundle.steps[0], 'run_cancel_owned first step'),
       status: 'running',
       startedAt: '2026-04-08T15:00:00.000Z',
     };
@@ -4983,7 +4993,7 @@ describe('runtime service host', () => {
     const control = createExecutionRuntimeControl();
     const bundle = createDirectBundle('run_cancel_other_owner', '2026-04-08T15:00:00.000Z', 'running');
     bundle.steps[0] = {
-      ...bundle.steps[0]!,
+      ...requireFixtureValue(bundle.steps[0], 'run_cancel_other_owner first step'),
       status: 'running',
       startedAt: '2026-04-08T15:00:00.000Z',
     };
@@ -5060,7 +5070,7 @@ describe('runtime service host', () => {
     const control = createExecutionRuntimeControl();
     const bundle = createDirectBundle('run_cancel_released_lease', '2026-04-08T15:00:00.000Z', 'running');
     bundle.steps[0] = {
-      ...bundle.steps[0]!,
+      ...requireFixtureValue(bundle.steps[0], 'run_cancel_released_lease first step'),
       status: 'running',
       startedAt: '2026-04-08T15:00:00.000Z',
     };
@@ -5152,7 +5162,7 @@ describe('runtime service host', () => {
     const idle = createDirectBundle('run_idle_batch', '2026-04-08T15:02:00.000Z');
     idle.run.status = 'succeeded';
     idle.steps[0] = {
-      ...idle.steps[0]!,
+      ...requireFixtureValue(idle.steps[0], 'run_idle_batch first step'),
       status: 'succeeded',
       startedAt: '2026-04-08T15:02:00.000Z',
       completedAt: '2026-04-08T15:02:00.000Z',

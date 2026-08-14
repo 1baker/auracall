@@ -1,5 +1,14 @@
 # RUNBOOK
 
+## Turn 470 | 2026-08-14
+
+- After Plan 0300 established an additive strict-test lint ratchet, selected
+  the next safe cluster: 13 fixed-array assertions in service-host fixtures.
+- Closed Plan 0301 by replacing each assertion with a labeled presence guard
+  and adding the complete service-host suite to the strict-test command.
+- The provider-free suite and broad gates passed. Full lint now reports 163
+  warnings only in test files not yet migrated.
+
 ## Turn 469 | 2026-08-14
 
 - Ranked 197 test-only warnings after Plan 0299. The largest safe cohesive

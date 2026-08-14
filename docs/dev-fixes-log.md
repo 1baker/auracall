@@ -1,3 +1,9 @@
+- 2026-08-14: Fixed-position test fixtures are still runtime data even when a
+  builder normally supplies them. Replace spread-time non-null assertions with
+  labeled guards at the use site so a broken builder reports the missing run
+  step or local-action request directly, then add the cleaned suite to the
+  incremental strict-test lint ratchet.
+
 - 2026-08-14: Nullable fixture reads should not be followed by repeated
   compile-only non-null assertions. Narrow once through a labeled runtime guard
   so missing setup fails at the fixture boundary, then ratchet each cleaned

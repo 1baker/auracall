@@ -1,3 +1,12 @@
+## 2026-08-14 | Plan 0301 service-host fixture lint ratchet
+
+- Selected the next safe test-warning cluster after Plan 0300: 13 non-null
+  assertions on required first-step and local-action fixture entries.
+- Replaced them with run-labeled runtime guards and expanded the strict-test
+  lint command to cover the complete service-host integration suite.
+- The suite and broad gates passed. Plan 0301 is CLOSED with 163 warnings
+  remaining in test files not yet migrated.
+
 ## 2026-08-14 | Plan 0300 incremental strict-test lint ratchet
 
 - Ranked the 197 test-only warnings and selected the largest safe cluster: 21
