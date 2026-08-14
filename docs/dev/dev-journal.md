@@ -1,3 +1,13 @@
+## 2026-08-14 | Plan 0296 handoff recovery discovery-template parity
+
+- The human endpoint reference is now correct, but `/status` discovery still
+  exposes the pre-Gemini Recover Live request shape.
+- Plan 0296 will add the exact `packet|chatgpt-browser|gemini-browser` enum to
+  the route template and make the existing HTTP test assert the complete
+  string.
+- Implemented the exact template and regression assertion. Focused HTTP tests
+  passed 2/2 and typecheck passed; Plan 0296 is CLOSED without live effects.
+
 ## 2026-08-14 | Plan 0295 handoff HTTP endpoint reference parity
 
 - The canonical local HTTP reference omitted all five packet-owned handoff

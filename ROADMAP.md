@@ -7,6 +7,12 @@
 Status: active
 Lane: P01
 
+- Closed accepted handoff recovery discovery-template parity:
+  [docs/dev/plans/0296-2026-08-14-handoff-recovery-discovery-template-parity.md](docs/dev/plans/0296-2026-08-14-handoff-recovery-discovery-template-parity.md)
+  Machine-readable `/status` discovery now advertises optional `outputDir` and
+  the exact Packet/ChatGPT/Gemini adapter enum, bound by an exact provider-free
+  HTTP test.
+
 - Closed accepted handoff HTTP endpoint reference parity:
   [docs/dev/plans/0295-2026-08-14-handoff-http-endpoint-reference-parity.md](docs/dev/plans/0295-2026-08-14-handoff-http-endpoint-reference-parity.md)
   The canonical endpoint contract now lists and explains all five handoff

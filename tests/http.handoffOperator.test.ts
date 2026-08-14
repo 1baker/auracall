@@ -60,7 +60,9 @@ describe("http handoff operator API", () => {
 			};
 			expect(rootStatus.routes.handoffStatusTemplate).toContain("/v1/handoffs/");
 			expect(rootStatus.routes.handoffExportTemplate).toContain("/v1/handoffs/");
-			expect(rootStatus.routes.handoffRecoverLiveTemplate).toContain("/v1/handoffs/");
+			expect(rootStatus.routes.handoffRecoverLiveTemplate).toBe(
+				'POST /v1/handoffs/{handoff_id}/recover-live {"outputDir":"optional","targetAdapter":"packet|chatgpt-browser|gemini-browser"}',
+			);
 
 			const base = `http://127.0.0.1:${server.port}/v1/handoffs/${encodeURIComponent(prepared.run.id)}`;
 			const statusResponse = await fetch(

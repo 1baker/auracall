@@ -5071,7 +5071,7 @@ function createHttpStatusResponse(input: {
 			handoffRepairTemplate: 'POST /v1/handoffs/{handoff_id}/repair {"outputDir":"optional"}',
 			handoffExportTemplate: 'POST /v1/handoffs/{handoff_id}/export {"outputDir":"optional"}',
 			handoffRecoverLiveTemplate:
-				'POST /v1/handoffs/{handoff_id}/recover-live {"outputDir":"optional"}',
+				'POST /v1/handoffs/{handoff_id}/recover-live {"outputDir":"optional","targetAdapter":"packet|chatgpt-browser|gemini-browser"}',
 			operatorBrowserDashboard: serviceDiscovery.routing.dashboardPath,
 			operatorDebugDashboard: serviceDiscovery.routing.debugDashboardPath,
 			accountMirrorDashboard: serviceDiscovery.routing.accountMirrorPath,

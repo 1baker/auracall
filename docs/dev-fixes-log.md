@@ -21759,3 +21759,12 @@ browser-stage lifecycle observability, not transcript truncation.
   boundaries.
 - Do not document approval/upload/submit endpoints merely because matching CLI
   commands exist. The HTTP contract must list only implemented routes.
+
+## 2026-08-14 | Keep machine-readable route templates complete
+
+- Human documentation can be correct while `/status.routes` still advertises
+  an older request shape to generated clients and operators.
+- Route templates should name closed-world enum values, not merely the endpoint
+  path, when those values select materially different execution adapters.
+- Assert the complete template in the focused HTTP contract test so future
+  adapter additions cannot silently leave discovery behind.

@@ -1,5 +1,16 @@
 # RUNBOOK
 
+## Turn 465 | 2026-08-14
+
+- Compared the corrected human endpoint contract with machine-readable
+  `/status` discovery and found Recover Live still advertised only
+  `outputDir`, omitting `targetAdapter` and all three supported values.
+- Opened Plan 0296 for one provider-free discovery-template correction and an
+  exact HTTP regression assertion.
+- Closed Plan 0296 after `/status` began advertising optional `outputDir` plus
+  `packet|chatgpt-browser|gemini-browser`. The focused HTTP suite passed 2/2
+  and typecheck passed; no runtime or provider effect occurred.
+
 ## Turn 464 | 2026-08-14
 
 - Audited the canonical endpoint contract after closing console handoff parity.
