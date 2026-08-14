@@ -7,6 +7,11 @@
   not. Treat a newly observed configured-profile process as a test-isolation
   failure and clean up only the exact AuraCall-owned process.
 
+- Shared navigation liveness regression:
+  `pnpm vitest run tests/browser-service/ui.test.ts -t "bounds an unsettled Page.navigate acknowledgement"`.
+  This is provider-free and proves a lost CDP navigation acknowledgement cannot
+  outlive the caller's existing settle bound.
+
 - Unit/type tests: `pnpm test` (Vitest) and `pnpm run check` (typecheck).
 - Agent-browser RDP managed-profile contract (provider-free):
   `pnpm vitest run tests/browser/agentBrowserRdpLauncher.test.ts tests/browser/config.test.ts tests/browser/profileConfig.test.ts tests/browser-service/platformPaths.test.ts`

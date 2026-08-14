@@ -1,5 +1,25 @@
 # RUNBOOK
 
+## Turn 453 | 2026-08-13
+
+- LitScout Goal 0411 current-state readback found the retained Plan 0414
+  `apps:list` process still sleeping after 17 minutes with the same unrefreshed
+  exclusive-probe lease. The AuraCall and LitScout services remained healthy,
+  the managed browser retained exactly the settings and root tabs, and no
+  prompt, connector, or canonical effect ran.
+- CodeGraph traced the liveness defect to shared `navigateAndSettle(...)`:
+  `timeoutMs` bounded only post-navigation predicates, while a never-settling
+  CDP `Page.navigate(...)` acknowledgement could prevent the CLI and its outer
+  lease-release `finally` from completing.
+- The provider-free public-seam regression failed with the navigation still
+  pending after its 25 ms bound and now passes after the shared primitive races
+  command acknowledgement or caller-owned completion evidence against the
+  existing timeout. The affected browser-service and developer-app suites pass
+  92/92 and typecheck passes.
+- Source/tests/docs only are active at this checkpoint. Runtime install,
+  service restart, exact stale-process reconciliation, canary submission,
+  connector calls, and LitScout canonical effects have not run.
+
 ## Turn 452 | 2026-08-13
 
 - LitScout Plan 0412's sole canary stopped before prompt submission when the

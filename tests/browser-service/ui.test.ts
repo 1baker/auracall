@@ -1249,6 +1249,43 @@ describe('browser-service ui wait helpers', () => {
     expect(runtime.evaluate.mock.calls[0]?.[0]?.expression).toBe('location.href');
   });
 
+  test('navigateAndSettle bounds an unsettled Page.navigate acknowledgement', async () => {
+    vi.useFakeTimers();
+    try {
+      const runtime = createRuntime(['https://grok.com/']);
+      const PAGE = {
+        navigate: vi.fn(() => new Promise<never>(() => undefined)),
+      };
+      // biome-ignore lint/style/useNamingConvention: CDP protocol domains use canonical capitalized names.
+      const pending = navigateAndSettle({ Page: PAGE as never, Runtime: runtime as never }, {
+        url: 'https://grok.com/files',
+        waitForDocumentReady: false,
+        timeoutMs: 25,
+      });
+      const observed = Promise.race([
+        pending.then(
+          () => ({ status: 'resolved' as const, error: null }),
+          (error: unknown) => ({ status: 'rejected' as const, error }),
+        ),
+        new Promise<{ status: 'still-pending'; error: null }>((resolve) => {
+          setTimeout(() => resolve({ status: 'still-pending', error: null }), 30);
+        }),
+      ]);
+
+      await vi.advanceTimersByTimeAsync(30);
+
+      expect(await observed).toEqual({
+        status: 'rejected',
+        error: expect.objectContaining({
+          message: 'Timed out waiting for Page.navigate acknowledgement after 25ms.',
+        }),
+      });
+      expect(PAGE.navigate).toHaveBeenCalledWith({ url: 'https://grok.com/files' });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   test('navigateAndSettle retries with location.assign when the first route settle fails', async () => {
     let fallbackTriggered = false;
     const runtime = {

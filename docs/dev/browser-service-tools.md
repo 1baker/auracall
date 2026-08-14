@@ -210,6 +210,9 @@ record, follow the repo-local
   - Otherwise combines `Page.navigate(...)`, document-ready wait, optional route
     predicate, optional ready predicate, and optional in-page
     `location.assign(...)` fallback.
+  - The existing positive `timeoutMs` also bounds the CDP `Page.navigate(...)`
+    acknowledgement. A lost protocol response therefore fails the operation
+    instead of holding an outer managed-profile lease indefinitely.
   - Set `forceNavigation=true` when the requested exact route must be reacquired
     even if the current canonical URL appears equivalent. A caller that arms
     stronger response evidence first may also pass `completionSignal`; that

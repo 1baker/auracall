@@ -1,3 +1,20 @@
+## 2026-08-13 | Bounded Navigation Acknowledgement
+
+- A retained LitScout Plan 0414 `apps:list` probe remained alive after 17
+  minutes even though every provider-facing settle predicate was configured
+  for ten seconds. Its file-backed exclusive-probe lease therefore stayed
+  held and blocked the next safe inventory action.
+- CodeGraph showed the missing bound before those predicates:
+  `navigateAndSettle(...)` awaited the raw CDP `Page.navigate(...)` promise
+  indefinitely. The caller's `timeoutMs` now also bounds that acknowledgement,
+  while an explicit `completionSignal` can still settle first and any command
+  rejection still fails the operation.
+- The public-interface regression was red with a never-settling navigation and
+  is green after the shared repair. The affected browser-service and
+  developer-app suites pass 92/92 and typecheck passes provider-free. Install,
+  restart, stale-process reconciliation, and live canary remain subsequent
+  controlled steps.
+
 ## 2026-08-13 | Plan 0282 Developer-App Test Current Model
 
 - LitScout Plan 0412 exposed a deterministic pre-prompt AuraCall failure:

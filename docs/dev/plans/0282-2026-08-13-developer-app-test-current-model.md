@@ -1,6 +1,7 @@
 # ChatGPT Developer-App Test Current-Model Contract | 0282-2026-08-13
 
-State: CLOSED / PROVIDER-FREE ACCEPTED
+State: CLOSED
+Disposition: PROVIDER-FREE ACCEPTED
 Lane: P01
 
 ## Stable Objective

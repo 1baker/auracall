@@ -1215,11 +1215,13 @@ export async function navigateAndSettle(
   try {
     await options.interactionGovernor?.beforeInteraction(options.interactionClass ?? 'renavigation');
     const navigationCommand = client.Page.navigate({ url: options.url });
-    if (options.completionSignal) {
-      const commandFailure = new Promise<never>((_resolve, reject) => {
-        void navigationCommand.catch(reject);
-      });
-      const completion = await Promise.race([options.completionSignal, commandFailure]);
+    const navigationOutcome = await waitForNavigationCommandOrCompletion(
+      navigationCommand,
+      options.timeoutMs ?? 10_000,
+      options.completionSignal,
+    );
+    if (navigationOutcome.kind === 'external-completion') {
+      const completion = navigationOutcome.completion;
       const externallySettled: NavigateAndSettleResult = {
         ok: completion.ok,
         url: options.url,
@@ -1237,7 +1239,6 @@ export async function navigateAndSettle(
       });
       return externallySettled;
     }
-    await navigationCommand;
     const primary = await evaluateState(options.timeoutMs, false, true);
     if (primary.ok || !options.fallbackToLocationAssign) {
       await audit.complete({
@@ -1279,6 +1280,43 @@ export async function navigateAndSettle(
     });
     throw error;
   }
+}
+
+async function waitForNavigationCommandOrCompletion(
+  navigationCommand: Promise<unknown>,
+  timeoutMs: number,
+  completionSignal?: Promise<{ ok: boolean; reason?: string }>,
+): Promise<
+  | { kind: 'command-acknowledged' }
+  | { kind: 'external-completion'; completion: { ok: boolean; reason?: string } }
+> {
+  const effectiveTimeoutMs = Math.max(1, timeoutMs);
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const finish = <T>(callback: (value: T) => void, value: T) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      callback(value);
+    };
+    const timer = setTimeout(() => {
+      finish(
+        reject,
+        new Error(
+          `Timed out waiting for Page.navigate acknowledgement after ${effectiveTimeoutMs}ms.`,
+        ),
+      );
+    }, effectiveTimeoutMs);
+
+    navigationCommand.then(
+      () => finish(resolve, { kind: 'command-acknowledged' }),
+      (error: unknown) => finish(reject, error),
+    );
+    completionSignal?.then(
+      (completion) => finish(resolve, { kind: 'external-completion', completion }),
+      (error: unknown) => finish(reject, error),
+    );
+  });
 }
 
 function areEquivalentNavigationUrls(currentUrl: string | null, requestedUrl: string): boolean {

@@ -1,3 +1,10 @@
+- 2026-08-13: A settle timeout applied only after `Page.navigate(...)` cannot
+  prevent a lost CDP acknowledgement from holding a managed-profile operation
+  lease indefinitely. At the shared `navigateAndSettle(...)` seam, race the
+  command acknowledgement or explicit caller-owned completion evidence against
+  the existing positive timeout. Preserve command rejection and mutation-audit
+  failure behavior so outer `finally` cleanup can always become reachable.
+
 - 2026-08-13: A ChatGPT developer-app submitted test must preserve the already
   active model. Injecting only `composerTool` into a newly created test browser
   can inherit generic `select` / `Instant` defaults and fail before submission
