@@ -4,6 +4,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
+import { collectMissingAgentsPolicyReferenceErrors } from './agentsPolicyEntry.js';
 import { collectActiveRoadmapPlanStateErrors } from './roadmapPlanState.js';
 
 type CandidateAction = 'keep' | 'merge' | 'retire';
@@ -62,6 +63,7 @@ const plansDir = join(docsDevDir, 'plans');
 const roadmapPath = join(repoRoot, 'ROADMAP.md');
 const runbookPath = join(repoRoot, 'RUNBOOK.md');
 const agentsPath = join(repoRoot, 'AGENTS.md');
+const policiesDir = join(docsDevDir, 'policies');
 const validPlanStates = new Set(['PLANNED', 'OPEN', 'CLOSED', 'CANCELLED']);
 const staleWorkspacePath = '/home/ecochran76/workspace.local/oracle';
 
@@ -157,6 +159,7 @@ function collectValidationErrors(
       new Map(rawCandidates.map((candidate) => [candidate.relPath, candidate.contentSignals.planState])),
     ),
   );
+  errors.push(...collectMissingAgentsPolicyReferenceErrors(agentsText, existingPolicyPaths));
 
   for (const candidate of rawCandidates) {
     if (!candidate.relPath.startsWith('docs/dev/plans/')) {
@@ -186,6 +189,11 @@ function collectValidationErrors(
 const roadmapText = readFileSync(roadmapPath, 'utf8');
 const runbookText = readFileSync(runbookPath, 'utf8');
 const agentsText = readFileSync(agentsPath, 'utf8');
+const existingPolicyPaths = new Set(
+  readdirSync(policiesDir, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith('.md'))
+    .map((entry) => `docs/dev/policies/${entry.name}`),
+);
 
 const rawCandidates = walkMarkdownFiles(docsDevDir)
   .filter(isPlanCandidate)

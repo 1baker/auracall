@@ -7,6 +7,11 @@
 Status: active
 Lane: P01
 
+- Closed accepted AGENTS policy entry integrity repair:
+  [docs/dev/plans/0311-2026-08-14-agents-policy-entry-integrity.md](docs/dev/plans/0311-2026-08-14-agents-policy-entry-integrity.md)
+  All 27 routed policy modules exist, and the deterministic plan audit now
+  rejects any future missing-policy reference.
+
 - Closed accepted full-suite fixture drift repair:
   [docs/dev/plans/0310-2026-08-14-full-suite-fixture-drift-repair.md](docs/dev/plans/0310-2026-08-14-full-suite-fixture-drift-repair.md)
   Bootstrap source existence and media queue namespace authority are now

@@ -1,3 +1,13 @@
+## 2026-08-14 | Plan 0311 AGENTS policy entry integrity
+
+- Removed 25 nonexistent `AGENTS.md` policy references (`0028` through `0052`)
+  that duplicated concepts already installed as modules `0001` through `0027`.
+- Added a reusable canonical-policy reference parser and wired missing-path
+  validation into `plans:audit`, with focused collection and failure tests.
+- Current routing has exact 27 referenced / 27 existing / 0 missing parity.
+  Four focused tests, typecheck, zero-warning lint across 831 files, plan audit,
+  and diff hygiene passed. Plan 0311 is CLOSED.
+
 ## 2026-08-14 | Plan 0310 full-suite fixture drift repair
 
 - Repaired the two failures discovered by the Plan 0309 full-suite audit

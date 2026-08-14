@@ -1,5 +1,20 @@
 # RUNBOOK
 
+## Turn 480 | 2026-08-14
+
+- Opened Plan 0311 after the clean-baseline audit found that `AGENTS.md`
+  references nonexistent policy modules `0028` through `0052` even though the
+  canonical policy directory ends at `0027`.
+- The stale block duplicates already-installed policy concepts. Remove it and
+  extend `plans:audit` with a focused existence check rather than creating
+  placeholder files or renumbering canonical policy history.
+- Removed all 25 nonexistent references and added a reusable parser plus audit
+  integration. The policy entry now has exact 27-of-27 path parity with the
+  canonical directory.
+- Focused governance tests passed 4/4; typecheck, zero-warning lint across 831
+  files, plan audit with zero errors, and diff hygiene passed. Plan 0311 closes
+  accepted without runtime or live-provider work.
+
 ## Turn 479 | 2026-08-14
 
 - Opened Plan 0310 for the two provider-free full-suite failures exposed by the

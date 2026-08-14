@@ -1,3 +1,8 @@
+- 2026-08-14: Treat `AGENTS.md` policy references as executable routing
+  dependencies. Enumerate canonical `docs/dev/policies/*.md` paths and make the
+  deterministic governance audit reject missing references; do not preserve a
+  stale duplicated policy generation by creating empty placeholder modules.
+
 - 2026-08-14: Tests for existence-gated browser bootstrap sources must create
   the source file they expect to survive resolution. Queue tests that exercise
   browser profile namespaces should pin browser source selection, assert exact
