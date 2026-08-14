@@ -97,10 +97,16 @@ function run(command: string, args: string[], options: { cwd?: string; dryRun?: 
   return result.stdout.trim();
 }
 
-function writeWrapper(binDir: string, binary: (typeof BINARIES)[number], installedBinPath: string, dryRun: boolean): void {
+function writeWrapper(
+  binDir: string,
+  binary: (typeof BINARIES)[number],
+  installedBinPath: string,
+  nodePath: string,
+  dryRun: boolean,
+): void {
   const wrapperPath = path.join(binDir, binary);
   const script = `#!/usr/bin/env sh
-exec node ${JSON.stringify(installedBinPath)} "$@"
+exec ${JSON.stringify(nodePath)} ${JSON.stringify(installedBinPath)} "$@"
 `;
   if (dryRun) {
     console.log(`[dry-run] write ${wrapperPath} -> ${installedBinPath}`);
@@ -157,7 +163,7 @@ async function main(): Promise<void> {
     for (const binary of BINARIES) {
       const installedBinPath = path.join(options.prefix, 'node_modules', PACKAGE_NAME, 'dist', 'bin', `${binary}.js`);
       installedBinaryPaths.set(binary, installedBinPath);
-      writeWrapper(options.binDir, binary, installedBinPath, options.dryRun);
+      writeWrapper(options.binDir, binary, installedBinPath, process.execPath, options.dryRun);
     }
     const installedAuracallPath = installedBinaryPaths.get('auracall');
     if (!installedAuracallPath) {
