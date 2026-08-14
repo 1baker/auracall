@@ -7,6 +7,11 @@
 Status: active
 Lane: P01
 
+- Closed accepted production-source zero-warning lint baseline:
+  [docs/dev/plans/0298-2026-08-14-production-source-lint-zero-baseline.md](docs/dev/plans/0298-2026-08-14-production-source-lint-zero-baseline.md)
+  Shipped `src/` code is warning-clean, and the normal lint command now fails
+  on any source warning before reporting remaining test/smoke warning debt.
+
 - Closed accepted handoff target-adapter contract centralization:
   [docs/dev/plans/0297-2026-08-14-handoff-target-adapter-contract-centralization.md](docs/dev/plans/0297-2026-08-14-handoff-target-adapter-contract-centralization.md)
   CLI, HTTP validation/discovery, and console option values now derive their

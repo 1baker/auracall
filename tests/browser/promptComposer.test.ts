@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import { __test__ as promptComposer } from '../../src/browser/actions/promptComposer.js';
+import { promptComposerTestHooks as promptComposer } from '../../src/browser/actions/promptComposer.js';
 
 describe('promptComposer', () => {
   test('does not mistake a selected app pill label for the requested prompt', () => {

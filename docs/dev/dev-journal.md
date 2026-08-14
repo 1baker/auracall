@@ -1,3 +1,13 @@
+## 2026-08-14 | Plan 0298 production-source zero-warning lint baseline
+
+- Aggregated all 208 accepted lint warnings by path and rule. Four belonged to
+  shipped source: three legacy ownership checks and one test-hook identifier.
+- Repaired those warnings without suppression and inserted
+  `lint:src:strict` into the normal lint command so production-source warning
+  regressions fail rather than silently increasing the accepted baseline.
+- Affected tests and broad repository gates passed. Plan 0298 is CLOSED with
+  zero source diagnostics and 204 remaining test/smoke warnings.
+
 ## 2026-08-14 | Plan 0297 handoff target-adapter contract centralization
 
 - Plans 0294-0296 repaired three visible parity defects, but executable adapter

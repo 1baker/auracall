@@ -590,7 +590,7 @@ async function verifyPromptCommitted(
   throw new Error('Prompt did not appear in conversation before timeout (send may have failed)');
 }
 
-export const __test__ = {
+export const promptComposerTestHooks = {
   composerContainsPrompt,
   verifyPromptCommitted,
   waitForComposerReadyToSubmit,

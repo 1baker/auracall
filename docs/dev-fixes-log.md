@@ -1,3 +1,9 @@
+- 2026-08-14: A repository-wide warning baseline can hide regressions in
+  shipped code when most debt lives in tests and smoke fixtures. Maintain a
+  warning-strict `src/` lint gate before the broader report, and reduce source
+  warnings without suppressions so production code cannot inherit fixture
+  debt as its quality threshold.
+
 - 2026-08-14: Closed-world identifiers exposed through CLI, HTTP validation,
   machine-readable discovery, and UI selectors must come from one executable
   contract. Keep presentation labels at the UI boundary, but derive every

@@ -1,5 +1,16 @@
 # RUNBOOK
 
+## Turn 467 | 2026-08-14
+
+- Ranked the accepted 208-warning lint baseline by path and rule. Only four
+  warnings were in shipped `src/`; all others belonged to tests or smoke
+  scripts.
+- Closed Plan 0298 after replacing three legacy prototype ownership calls,
+  renaming one internal prompt-composer test-hook export, and adding a
+  warning-strict source gate to `pnpm lint`.
+- Affected provider-free tests and broad repository gates passed. Production
+  source now has zero diagnostics; the full lint baseline is 204 warnings.
+
 ## Turn 466 | 2026-08-14
 
 - The Plan 0294-0296 parity repairs exposed the underlying drift mechanism:

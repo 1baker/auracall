@@ -90,7 +90,7 @@ export async function deleteApiKey(input: ApiKeyDeleteInput): Promise<ApiKeyDele
     `AURACALL_API_KEY_${suffix}_RUNTIME_PROFILES`,
   ];
   for (const key of scopedKeys) {
-    if (Object.prototype.hasOwnProperty.call(state.values, key)) {
+    if (Object.hasOwn(state.values, key)) {
       deleted = true;
       delete state.values[key];
     }
@@ -105,7 +105,7 @@ export async function deleteApiKey(input: ApiKeyDeleteInput): Promise<ApiKeyDele
       'AURACALL_API_KEY_SERVICES',
       'AURACALL_API_KEY_RUNTIME_PROFILES',
     ]) {
-      if (Object.prototype.hasOwnProperty.call(state.values, key)) {
+      if (Object.hasOwn(state.values, key)) {
         deleted = true;
         delete state.values[key];
       }
@@ -214,7 +214,7 @@ export async function readEnvFile(envPath: string): Promise<EnvFileState> {
 
 export async function writeEnvFile(envPath: string, state: EnvFileState): Promise<void> {
   await fs.mkdir(path.dirname(envPath), { recursive: true });
-  const orderedKeys = state.order.filter((key) => Object.prototype.hasOwnProperty.call(state.values, key));
+  const orderedKeys = state.order.filter((key) => Object.hasOwn(state.values, key));
   const keys = [...orderedKeys, ...Object.keys(state.values).filter((key) => !orderedKeys.includes(key))];
   const body = [
     '# AuraCall local API credentials.',
