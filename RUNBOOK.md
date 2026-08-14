@@ -1,5 +1,23 @@
 # RUNBOOK
 
+## Turn 478 | 2026-08-14
+
+- Opened Plan 0309 for the final 52 warnings across three opt-in team live
+  suites.
+- Confirmed every diagnostic is `Record<string, any>` used only by structural
+  matchers. The slice will validate module loading with live flags disabled and
+  will not invoke providers or browsers.
+- Replaced all 52 boundaries with `Record<string, unknown>` and promoted the
+  whole `tests` tree to warning-strict lint. All 27 affected opt-in cases were
+  skipped while every discovered live flag was explicitly unset.
+- Closed Plan 0309 after typecheck, build, plan audit, and all 829 linted files
+  passed with zero warnings.
+- A full provider-disabled suite audit under isolated `AURACALL_HOME_DIR`
+  exposed two unrelated existing failures, both reproducible without isolation:
+  `browser/login.test.ts` expects a stale bootstrap cookie path, and
+  `mediaBrowserExecutor.test.ts` times out waiting for a queue event. Neither
+  file is touched by Plan 0309; repair them in a separate bounded slice.
+
 ## Turn 477 | 2026-08-14
 
 - Opened Plan 0308 for the final 31-warning provider-free suite.

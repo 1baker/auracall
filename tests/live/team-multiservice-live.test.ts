@@ -1259,7 +1259,7 @@ async function assertCancelledOperatorControlledCrossServiceReadbacks(payload: T
       }),
     });
     expect(resolveResponse.status).toBe(200);
-    const resolvePayload = (await resolveResponse.json()) as Record<string, any>;
+    const resolvePayload = (await resolveResponse.json()) as Record<string, unknown>;
     expect(resolvePayload).toMatchObject({
       controlResult: {
         kind: 'local-action-control',
@@ -1296,7 +1296,7 @@ async function assertCancelledOperatorControlledCrossServiceReadbacks(payload: T
       }),
     });
     expect(resumeResponse.status).toBe(200);
-    const resumePayload = (await resumeResponse.json()) as Record<string, any>;
+    const resumePayload = (await resumeResponse.json()) as Record<string, unknown>;
     expect(resumePayload).toMatchObject({
       controlResult: {
         kind: 'run-control',
@@ -1319,7 +1319,7 @@ async function assertCancelledOperatorControlledCrossServiceReadbacks(payload: T
       }),
     });
     expect(drainResponse.status).toBe(200);
-    const drainPayload = (await drainResponse.json()) as Record<string, any>;
+    const drainPayload = (await drainResponse.json()) as Record<string, unknown>;
     expect(drainPayload).toMatchObject({
       controlResult: {
         kind: 'run-control',
@@ -1495,7 +1495,7 @@ async function assertApprovedOperatorControlledCrossServiceReadbacks(payload: Te
       }),
     });
     expect(resumeResponse.status).toBe(200);
-    const resumePayload = (await resumeResponse.json()) as Record<string, any>;
+    const resumePayload = (await resumeResponse.json()) as Record<string, unknown>;
     expect(resumePayload).toMatchObject({
       controlResult: {
         kind: 'run-control',
@@ -1518,7 +1518,7 @@ async function assertApprovedOperatorControlledCrossServiceReadbacks(payload: Te
       }),
     });
     expect(drainResponse.status).toBe(200);
-    const drainPayload = (await drainResponse.json()) as Record<string, any>;
+    const drainPayload = (await drainResponse.json()) as Record<string, unknown>;
     expect(drainPayload).toMatchObject({
       controlResult: {
         kind: 'run-control',
@@ -1675,7 +1675,7 @@ async function assertApprovedOperatorControlledReverseCrossServiceReadbacks(payl
       }),
     });
     expect(resumeResponse.status).toBe(200);
-    const resumePayload = (await resumeResponse.json()) as Record<string, any>;
+    const resumePayload = (await resumeResponse.json()) as Record<string, unknown>;
     expect(resumePayload).toMatchObject({
       controlResult: {
         kind: 'run-control',
@@ -1698,7 +1698,7 @@ async function assertApprovedOperatorControlledReverseCrossServiceReadbacks(payl
       }),
     });
     expect(drainResponse.status).toBe(200);
-    const drainPayload = (await drainResponse.json()) as Record<string, any>;
+    const drainPayload = (await drainResponse.json()) as Record<string, unknown>;
     expect(drainPayload).toMatchObject({
       controlResult: {
         kind: 'run-control',
@@ -1847,7 +1847,7 @@ async function assertCancelledOperatorControlledReverseCrossServiceReadbacks(pay
       }),
     });
     expect(resolveResponse.status).toBe(200);
-    const resolvePayload = (await resolveResponse.json()) as Record<string, any>;
+    const resolvePayload = (await resolveResponse.json()) as Record<string, unknown>;
     expect(resolvePayload).toMatchObject({
       controlResult: {
         kind: 'local-action-control',
@@ -1884,7 +1884,7 @@ async function assertCancelledOperatorControlledReverseCrossServiceReadbacks(pay
       }),
     });
     expect(resumeResponse.status).toBe(200);
-    const resumePayload = (await resumeResponse.json()) as Record<string, any>;
+    const resumePayload = (await resumeResponse.json()) as Record<string, unknown>;
     expect(resumePayload).toMatchObject({
       controlResult: {
         kind: 'run-control',
@@ -1907,7 +1907,7 @@ async function assertCancelledOperatorControlledReverseCrossServiceReadbacks(pay
       }),
     });
     expect(drainResponse.status).toBe(200);
-    const drainPayload = (await drainResponse.json()) as Record<string, any>;
+    const drainPayload = (await drainResponse.json()) as Record<string, unknown>;
     expect(drainPayload).toMatchObject({
       controlResult: {
         kind: 'run-control',
@@ -2080,7 +2080,7 @@ async function assertRejectedOperatorControlledReverseCrossServiceReadbacks(payl
       }),
     });
     expect(resolveResponse.status).toBe(200);
-    const resolvePayload = (await resolveResponse.json()) as Record<string, any>;
+    const resolvePayload = (await resolveResponse.json()) as Record<string, unknown>;
     expect(resolvePayload).toMatchObject({
       controlResult: {
         kind: 'local-action-control',
@@ -2117,7 +2117,7 @@ async function assertRejectedOperatorControlledReverseCrossServiceReadbacks(payl
       }),
     });
     expect(resumeResponse.status).toBe(200);
-    const resumePayload = (await resumeResponse.json()) as Record<string, any>;
+    const resumePayload = (await resumeResponse.json()) as Record<string, unknown>;
     expect(resumePayload).toMatchObject({
       controlResult: {
         kind: 'run-control',
@@ -2140,7 +2140,7 @@ async function assertRejectedOperatorControlledReverseCrossServiceReadbacks(payl
       }),
     });
     expect(drainResponse.status).toBe(200);
-    const drainPayload = (await drainResponse.json()) as Record<string, any>;
+    const drainPayload = (await drainResponse.json()) as Record<string, unknown>;
     expect(drainPayload).toMatchObject({
       controlResult: {
         kind: 'run-control',
@@ -2316,7 +2316,7 @@ async function assertApprovedOperatorControlledReverseCrossServiceGeminiReadback
       }),
     });
     expect(resumeResponse.status).toBe(200);
-    const resumePayload = (await resumeResponse.json()) as Record<string, any>;
+    const resumePayload = (await resumeResponse.json()) as Record<string, unknown>;
     expect(resumePayload).toMatchObject({
       controlResult: {
         kind: 'run-control',
@@ -2339,7 +2339,7 @@ async function assertApprovedOperatorControlledReverseCrossServiceGeminiReadback
       }),
     });
     expect(drainResponse.status).toBe(200);
-    const drainPayload = (await drainResponse.json()) as Record<string, any>;
+    const drainPayload = (await drainResponse.json()) as Record<string, unknown>;
     expect(drainPayload).toMatchObject({
       controlResult: {
         kind: 'run-control',
@@ -2488,7 +2488,7 @@ async function assertCancelledOperatorControlledReverseCrossServiceGeminiReadbac
       }),
     });
     expect(resolveResponse.status).toBe(200);
-    const resolvePayload = (await resolveResponse.json()) as Record<string, any>;
+    const resolvePayload = (await resolveResponse.json()) as Record<string, unknown>;
     expect(resolvePayload).toMatchObject({
       controlResult: {
         kind: 'local-action-control',
@@ -2525,7 +2525,7 @@ async function assertCancelledOperatorControlledReverseCrossServiceGeminiReadbac
       }),
     });
     expect(resumeResponse.status).toBe(200);
-    const resumePayload = (await resumeResponse.json()) as Record<string, any>;
+    const resumePayload = (await resumeResponse.json()) as Record<string, unknown>;
     expect(resumePayload).toMatchObject({
       controlResult: {
         kind: 'run-control',
@@ -2548,7 +2548,7 @@ async function assertCancelledOperatorControlledReverseCrossServiceGeminiReadbac
       }),
     });
     expect(drainResponse.status).toBe(200);
-    const drainPayload = (await drainResponse.json()) as Record<string, any>;
+    const drainPayload = (await drainResponse.json()) as Record<string, unknown>;
     expect(drainPayload).toMatchObject({
       controlResult: {
         kind: 'run-control',
@@ -2721,7 +2721,7 @@ async function assertRejectedOperatorControlledReverseCrossServiceGeminiReadback
       }),
     });
     expect(resolveResponse.status).toBe(200);
-    const resolvePayload = (await resolveResponse.json()) as Record<string, any>;
+    const resolvePayload = (await resolveResponse.json()) as Record<string, unknown>;
     expect(resolvePayload).toMatchObject({
       controlResult: {
         kind: 'local-action-control',
@@ -2758,7 +2758,7 @@ async function assertRejectedOperatorControlledReverseCrossServiceGeminiReadback
       }),
     });
     expect(resumeResponse.status).toBe(200);
-    const resumePayload = (await resumeResponse.json()) as Record<string, any>;
+    const resumePayload = (await resumeResponse.json()) as Record<string, unknown>;
     expect(resumePayload).toMatchObject({
       controlResult: {
         kind: 'run-control',
@@ -2781,7 +2781,7 @@ async function assertRejectedOperatorControlledReverseCrossServiceGeminiReadback
       }),
     });
     expect(drainResponse.status).toBe(200);
-    const drainPayload = (await drainResponse.json()) as Record<string, any>;
+    const drainPayload = (await drainResponse.json()) as Record<string, unknown>;
     expect(drainPayload).toMatchObject({
       controlResult: {
         kind: 'run-control',
@@ -2957,7 +2957,7 @@ async function assertApprovedOperatorControlledGeminiToChatgptReadbacks(payload:
       }),
     });
     expect(resumeResponse.status).toBe(200);
-    const resumePayload = (await resumeResponse.json()) as Record<string, any>;
+    const resumePayload = (await resumeResponse.json()) as Record<string, unknown>;
     expect(resumePayload).toMatchObject({
       controlResult: {
         kind: 'run-control',
@@ -2980,7 +2980,7 @@ async function assertApprovedOperatorControlledGeminiToChatgptReadbacks(payload:
       }),
     });
     expect(drainResponse.status).toBe(200);
-    const drainPayload = (await drainResponse.json()) as Record<string, any>;
+    const drainPayload = (await drainResponse.json()) as Record<string, unknown>;
     expect(drainPayload).toMatchObject({
       controlResult: {
         kind: 'run-control',
@@ -3129,7 +3129,7 @@ async function assertCancelledOperatorControlledGeminiToChatgptReadbacks(payload
       }),
     });
     expect(resolveResponse.status).toBe(200);
-    const resolvePayload = (await resolveResponse.json()) as Record<string, any>;
+    const resolvePayload = (await resolveResponse.json()) as Record<string, unknown>;
     expect(resolvePayload).toMatchObject({
       controlResult: {
         kind: 'local-action-control',
@@ -3166,7 +3166,7 @@ async function assertCancelledOperatorControlledGeminiToChatgptReadbacks(payload
       }),
     });
     expect(resumeResponse.status).toBe(200);
-    const resumePayload = (await resumeResponse.json()) as Record<string, any>;
+    const resumePayload = (await resumeResponse.json()) as Record<string, unknown>;
     expect(resumePayload).toMatchObject({
       controlResult: {
         kind: 'run-control',
@@ -3189,7 +3189,7 @@ async function assertCancelledOperatorControlledGeminiToChatgptReadbacks(payload
       }),
     });
     expect(drainResponse.status).toBe(200);
-    const drainPayload = (await drainResponse.json()) as Record<string, any>;
+    const drainPayload = (await drainResponse.json()) as Record<string, unknown>;
     expect(drainPayload).toMatchObject({
       controlResult: {
         kind: 'run-control',
@@ -3362,7 +3362,7 @@ async function assertRejectedOperatorControlledGeminiToChatgptReadbacks(payload:
       }),
     });
     expect(resolveResponse.status).toBe(200);
-    const resolvePayload = (await resolveResponse.json()) as Record<string, any>;
+    const resolvePayload = (await resolveResponse.json()) as Record<string, unknown>;
     expect(resolvePayload).toMatchObject({
       controlResult: {
         kind: 'local-action-control',
@@ -3399,7 +3399,7 @@ async function assertRejectedOperatorControlledGeminiToChatgptReadbacks(payload:
       }),
     });
     expect(resumeResponse.status).toBe(200);
-    const resumePayload = (await resumeResponse.json()) as Record<string, any>;
+    const resumePayload = (await resumeResponse.json()) as Record<string, unknown>;
     expect(resumePayload).toMatchObject({
       controlResult: {
         kind: 'run-control',
@@ -3422,7 +3422,7 @@ async function assertRejectedOperatorControlledGeminiToChatgptReadbacks(payload:
       }),
     });
     expect(drainResponse.status).toBe(200);
-    const drainPayload = (await drainResponse.json()) as Record<string, any>;
+    const drainPayload = (await drainResponse.json()) as Record<string, unknown>;
     expect(drainPayload).toMatchObject({
       controlResult: {
         kind: 'run-control',
@@ -3598,7 +3598,7 @@ async function assertApprovedOperatorControlledCrossServiceGeminiReadbacks(paylo
       }),
     });
     expect(resumeResponse.status).toBe(200);
-    const resumePayload = (await resumeResponse.json()) as Record<string, any>;
+    const resumePayload = (await resumeResponse.json()) as Record<string, unknown>;
     expect(resumePayload).toMatchObject({
       controlResult: {
         kind: 'run-control',
@@ -3621,7 +3621,7 @@ async function assertApprovedOperatorControlledCrossServiceGeminiReadbacks(paylo
       }),
     });
     expect(drainResponse.status).toBe(200);
-    const drainPayload = (await drainResponse.json()) as Record<string, any>;
+    const drainPayload = (await drainResponse.json()) as Record<string, unknown>;
     expect(drainPayload).toMatchObject({
       controlResult: {
         kind: 'run-control',
@@ -3770,7 +3770,7 @@ async function assertRejectedOperatorControlledCrossServiceGeminiReadbacks(paylo
       }),
     });
     expect(resolveResponse.status).toBe(200);
-    const resolvePayload = (await resolveResponse.json()) as Record<string, any>;
+    const resolvePayload = (await resolveResponse.json()) as Record<string, unknown>;
     expect(resolvePayload).toMatchObject({
       controlResult: {
         kind: 'local-action-control',
@@ -3807,7 +3807,7 @@ async function assertRejectedOperatorControlledCrossServiceGeminiReadbacks(paylo
       }),
     });
     expect(resumeResponse.status).toBe(200);
-    const resumePayload = (await resumeResponse.json()) as Record<string, any>;
+    const resumePayload = (await resumeResponse.json()) as Record<string, unknown>;
     expect(resumePayload).toMatchObject({
       controlResult: {
         kind: 'run-control',
@@ -3830,7 +3830,7 @@ async function assertRejectedOperatorControlledCrossServiceGeminiReadbacks(paylo
       }),
     });
     expect(drainResponse.status).toBe(200);
-    const drainPayload = (await drainResponse.json()) as Record<string, any>;
+    const drainPayload = (await drainResponse.json()) as Record<string, unknown>;
     expect(drainPayload).toMatchObject({
       controlResult: {
         kind: 'run-control',
@@ -4003,7 +4003,7 @@ async function assertCancelledOperatorControlledCrossServiceGeminiReadbacks(payl
       }),
     });
     expect(resolveResponse.status).toBe(200);
-    const resolvePayload = (await resolveResponse.json()) as Record<string, any>;
+    const resolvePayload = (await resolveResponse.json()) as Record<string, unknown>;
     expect(resolvePayload).toMatchObject({
       controlResult: {
         kind: 'local-action-control',
@@ -4040,7 +4040,7 @@ async function assertCancelledOperatorControlledCrossServiceGeminiReadbacks(payl
       }),
     });
     expect(resumeResponse.status).toBe(200);
-    const resumePayload = (await resumeResponse.json()) as Record<string, any>;
+    const resumePayload = (await resumeResponse.json()) as Record<string, unknown>;
     expect(resumePayload).toMatchObject({
       controlResult: {
         kind: 'run-control',
@@ -4063,7 +4063,7 @@ async function assertCancelledOperatorControlledCrossServiceGeminiReadbacks(payl
       }),
     });
     expect(drainResponse.status).toBe(200);
-    const drainPayload = (await drainResponse.json()) as Record<string, any>;
+    const drainPayload = (await drainResponse.json()) as Record<string, unknown>;
     expect(drainPayload).toMatchObject({
       controlResult: {
         kind: 'run-control',
@@ -4236,7 +4236,7 @@ async function assertRejectedOperatorControlledCrossServiceReadbacks(payload: Te
       }),
     });
     expect(resolveResponse.status).toBe(200);
-    const resolvePayload = (await resolveResponse.json()) as Record<string, any>;
+    const resolvePayload = (await resolveResponse.json()) as Record<string, unknown>;
     expect(resolvePayload).toMatchObject({
       controlResult: {
         kind: 'local-action-control',
@@ -4273,7 +4273,7 @@ async function assertRejectedOperatorControlledCrossServiceReadbacks(payload: Te
       }),
     });
     expect(resumeResponse.status).toBe(200);
-    const resumePayload = (await resumeResponse.json()) as Record<string, any>;
+    const resumePayload = (await resumeResponse.json()) as Record<string, unknown>;
     expect(resumePayload).toMatchObject({
       controlResult: {
         kind: 'run-control',
@@ -4296,7 +4296,7 @@ async function assertRejectedOperatorControlledCrossServiceReadbacks(payload: Te
       }),
     });
     expect(drainResponse.status).toBe(200);
-    const drainPayload = (await drainResponse.json()) as Record<string, any>;
+    const drainPayload = (await drainResponse.json()) as Record<string, unknown>;
     expect(drainPayload).toMatchObject({
       controlResult: {
         kind: 'run-control',

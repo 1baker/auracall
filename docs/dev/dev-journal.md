@@ -1,3 +1,16 @@
+## 2026-08-14 | Plan 0309 live response JSON lint zero baseline
+
+- Selected the final 52 warnings, all opaque response JSON assertions across
+  three opt-in team live suites.
+- Replaced `any` values with `unknown`, promoted the entire test tree to strict
+  lint, and loaded all three modules with every live flag unset; 27 opt-in cases
+  skipped and no provider work ran.
+- Typecheck, build, plan audit, and full lint passed with zero warnings across
+  all 829 files. Plan 0309 is CLOSED.
+- The extra full-suite audit found two unrelated reproducible failures in
+  browser login fixture expectations and media queue event timing; these remain
+  separate test-repair work rather than evidence against the lint slice.
+
 ## 2026-08-14 | Plan 0308 Grok adapter fixture lint ratchet
 
 - Selected the final 31-warning provider-free suite: 24 exact external names

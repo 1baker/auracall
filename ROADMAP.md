@@ -7,6 +7,11 @@
 Status: active
 Lane: P01
 
+- Closed accepted live response JSON lint zero baseline:
+  [docs/dev/plans/0309-2026-08-14-live-response-json-lint-zero-baseline.md](docs/dev/plans/0309-2026-08-14-live-response-json-lint-zero-baseline.md)
+  Opaque HTTP response values now use unknown JSON fields, and source, scripts,
+  the entire test tree, and full repository lint are warning-clean.
+
 - Closed accepted Grok adapter fixture lint ratchet:
   [docs/dev/plans/0308-2026-08-14-grok-adapter-fixture-lint-ratchet.md](docs/dev/plans/0308-2026-08-14-grok-adapter-fixture-lint-ratchet.md)
   Exact external names now use computed keys, and required media materializers

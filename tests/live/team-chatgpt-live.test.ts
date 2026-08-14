@@ -311,7 +311,7 @@ async function assertOperatorControlledReadbacks(payload: TeamRunLivePayload) {
       }),
     });
     expect(resumeResponse.status).toBe(200);
-    const resumePayload = (await resumeResponse.json()) as Record<string, any>;
+    const resumePayload = (await resumeResponse.json()) as Record<string, unknown>;
     expect(resumePayload).toMatchObject({
       controlResult: {
         kind: 'run-control',
@@ -334,7 +334,7 @@ async function assertOperatorControlledReadbacks(payload: TeamRunLivePayload) {
       }),
     });
     expect(drainResponse.status).toBe(200);
-    const drainPayload = (await drainResponse.json()) as Record<string, any>;
+    const drainPayload = (await drainResponse.json()) as Record<string, unknown>;
     expect(drainPayload).toMatchObject({
       controlResult: {
         kind: 'run-control',
@@ -484,7 +484,7 @@ async function assertCancelledOperatorControlledReadbacks(payload: TeamRunLivePa
       }),
     });
     expect(resolveResponse.status).toBe(200);
-    const resolvePayload = (await resolveResponse.json()) as Record<string, any>;
+    const resolvePayload = (await resolveResponse.json()) as Record<string, unknown>;
     expect(resolvePayload).toMatchObject({
       controlResult: {
         kind: 'local-action-control',
@@ -531,7 +531,7 @@ async function assertCancelledOperatorControlledReadbacks(payload: TeamRunLivePa
       }),
     });
     expect(resumeResponse.status).toBe(200);
-    const resumePayload = (await resumeResponse.json()) as Record<string, any>;
+    const resumePayload = (await resumeResponse.json()) as Record<string, unknown>;
     expect(resumePayload).toMatchObject({
       controlResult: {
         kind: 'run-control',
@@ -554,7 +554,7 @@ async function assertCancelledOperatorControlledReadbacks(payload: TeamRunLivePa
       }),
     });
     expect(drainResponse.status).toBe(200);
-    const drainPayload = (await drainResponse.json()) as Record<string, any>;
+    const drainPayload = (await drainResponse.json()) as Record<string, unknown>;
     expect(drainPayload).toMatchObject({
       controlResult: {
         kind: 'run-control',

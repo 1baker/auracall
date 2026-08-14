@@ -1,3 +1,8 @@
+- 2026-08-14: Opaque `Response.json()` values used only by structural matchers
+  should be `Record<string, unknown>`, not `Record<string, any>`. Once all
+  warning-bearing suites are clean, replace enumerated test lint ratchets with
+  `biome lint tests --error-on-warnings` so new debt cannot hide elsewhere.
+
 - 2026-08-14: Provider adapter fixtures should centralize both sides of their
   intentional boundary: exact Chrome/DOM/CDP names through computed keys, and
   required optional adapter methods through a labeled guard bound to the
