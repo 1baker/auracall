@@ -94,6 +94,10 @@ as the endpoint contract and that file as the agent/app integration playbook.
 Current limits:
 
 - loopback by default; non-loopback requires `--listen-public`
+- startup reports the running server's resolved non-secret auth posture and
+  matches `/status.auth`; it reports only required/disabled state, loaded-key
+  count, and whether scoped keys are present, while preserving observable
+  `/status` and trusted-ingress warnings
 - runtime-backed create/read with one bounded local execution pass for direct
   runs
   - direct browser-backed `/v1/responses` runs now execute through the same

@@ -544,7 +544,11 @@ Terminology note:
   the standard OpenAI client interface.
   When enabled, `/v1/*` routes require `Authorization: Bearer <secret>` or
   `X-AuraCall-API-Key: <secret>`. `/status` remains unauthenticated so local
-  operators can discover the service posture. Scoped keys are enforced on
+  operators can discover the service posture. API startup prints the same
+  resolved non-secret auth summary as `/status.auth`: whether auth is required,
+  how many keys loaded, and whether scoped keys are present. It never prints
+  key ids, secrets, or scope values, and warns explicitly when auth is required
+  but no keys loaded. Scoped keys are enforced on
   `/v1/responses` and `/v1/team-runs` against the effective config plus
   registry catalog for agent, team, service, and runtime-profile selectors.
   Operators can inspect non-secret scope health with

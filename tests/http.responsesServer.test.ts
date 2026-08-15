@@ -35,6 +35,7 @@ import {
 	assertResponsesHostAllowed,
 	createDefaultRuntimeRunServiceStateProbe,
 	createResponsesHttpServer,
+	formatApiStartupPosture,
 	serveResponsesHttp,
 	summarizeAccountMirrorDiagnosticsBrowserMutationsForTest,
 	terminateSamePortApiServeProcesses,
@@ -849,6 +850,56 @@ describe("http responses adapter", () => {
 		}
 	});
 
+	it("logs the running server's resolved non-secret API auth posture", async () => {
+		const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-http-api-auth-posture-"));
+		cleanup.push(homeDir);
+		setAuracallHomeDirOverrideForTest(homeDir);
+		await fs.writeFile(
+			path.join(homeDir, "config.json"),
+			JSON.stringify({
+				version: 2,
+				api: {
+					auth: {
+						required: true,
+						keys: [
+							{
+								id: "private-client-id",
+								secret: "private-client-secret",
+								agents: ["private-agent"],
+							},
+						],
+					},
+				},
+				browser: {},
+				browserProfiles: { default: {} },
+				runtimeProfiles: {
+					default: {
+						browserProfile: "default",
+						defaultService: "chatgpt",
+					},
+				},
+			}),
+			"utf8",
+		);
+		const messages: string[] = [];
+
+		await terminateServeResponsesHttp({
+			host: "127.0.0.1",
+			port: 0,
+			recoverRunsOnStart: false,
+			env: {},
+			logger: (message) => messages.push(message),
+		});
+
+		expect(messages).toContain(
+			"Posture: API authentication is enabled for /v1/* (1 API key loaded; scoped keys present); bound to loopback; /status remains observable without authentication.",
+		);
+		const startupOutput = messages.join("\n");
+		expect(startupOutput).not.toContain("private-client-id");
+		expect(startupOutput).not.toContain("private-client-secret");
+		expect(startupOutput).not.toContain("private-agent");
+	});
+
 	it("creates and retrieves persisted bounded responses", async () => {
 		const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-http-responses-"));
 		cleanup.push(homeDir);
@@ -1608,6 +1659,7 @@ describe("http responses adapter", () => {
 			const statusResponse = await fetch(`http://127.0.0.1:${server.port}/status`);
 			expect(statusResponse.status).toBe(200);
 			const statusPayload = (await statusResponse.json()) as JsonObject;
+			expect(statusPayload.auth).toEqual(server.auth);
 			expect(statusPayload).toMatchObject({
 				runner: {
 					id: `runner:http-responses:127.0.0.1:${server.port}`,
@@ -22446,9 +22498,16 @@ describe("http responses adapter", () => {
 		);
 
 		try {
+			expect(server.auth).toEqual({
+				required: true,
+				scheme: "bearer",
+				keyCount: 1,
+				scoped: false,
+			});
 			const statusResponse = await fetch(`http://127.0.0.1:${server.port}/status`);
 			expect(statusResponse.status).toBe(200);
 			const statusPayload = (await statusResponse.json()) as JsonObject;
+			expect(statusPayload.auth).toEqual(server.auth);
 			expect(statusPayload).toMatchObject({
 				binding: { unauthenticated: false },
 				auth: {
@@ -24889,6 +24948,33 @@ describe("http responses adapter", () => {
 		expect(() => assertResponsesHostAllowed("0.0.0.0", false)).toThrow(/--listen-public/);
 		expect(() => assertResponsesHostAllowed("127.0.0.1", false)).not.toThrow();
 		expect(() => assertResponsesHostAllowed("0.0.0.0", true)).not.toThrow();
+	});
+
+	it("formats startup posture for every binding and auth state without secret metadata", () => {
+		expect(
+			formatApiStartupPosture({
+				host: "127.0.0.1",
+				auth: { required: false, scheme: "none", keyCount: 0, scoped: false },
+			}),
+		).toBe("Posture: API authentication disabled; bound to loopback for local development.");
+
+		expect(
+			formatApiStartupPosture({
+				host: "0.0.0.0",
+				auth: { required: true, scheme: "bearer", keyCount: 0, scoped: false },
+			}),
+		).toBe(
+			"Warning: API authentication is required for /v1/*, but no API keys are loaded; 0.0.0.0 is not loopback; use trusted ingress for this development server; /status remains observable without authentication.",
+		);
+
+		expect(
+			formatApiStartupPosture({
+				host: "api.internal.example",
+				auth: { required: true, scheme: "bearer", keyCount: 2, scoped: true },
+			}),
+		).toBe(
+			"Warning: API authentication is enabled for /v1/* (2 API keys loaded; scoped keys present); api.internal.example is not loopback; use trusted ingress for this development server; /status remains observable without authentication.",
+		);
 	});
 
 	it("preserves ChatGPT Deep Research review evidence through generic HTTP run status", async () => {

@@ -414,7 +414,8 @@ export interface ResponsesHttpServerDeps {
 }
 
 export interface ResponsesHttpServerInstance {
-	port: number;
+	readonly port: number;
+	readonly auth: ApiAuthRuntimeStatus;
 	close(): Promise<void>;
 }
 
@@ -440,6 +441,7 @@ interface ServerOwnedDrainOptions {
 export interface ServeResponsesHttpOptions extends ResponsesHttpServerOptions {
 	listenPublic?: boolean;
 	cliOptions?: OptionValues;
+	env?: Record<string, string | undefined>;
 	executeStoredRunStep?: ResponsesHttpServerDeps["executeStoredRunStep"];
 	mediaGenerationExecutor?: ResponsesHttpServerDeps["mediaGenerationExecutor"];
 	probeRuntimeRunServiceState?: ResponsesHttpServerDeps["probeRuntimeRunServiceState"];
@@ -740,6 +742,13 @@ interface ApiAuthPolicy {
 	keys: ApiAuthKeyPolicy[];
 }
 
+export interface ApiAuthRuntimeStatus {
+	readonly required: boolean;
+	readonly scheme: "none" | "bearer";
+	readonly keyCount: number;
+	readonly scoped: boolean;
+}
+
 interface ApiAuthContext {
 	policy: ApiAuthPolicy;
 	key: ApiAuthKeyPolicy | null;
@@ -1002,8 +1011,9 @@ export async function createResponsesHttpServer(
 		? false
 		: (options.reconcileAccountMirrorLiveFollowOnStart ?? true);
 	const configuredRuntimeConfig = deps.config;
+	const runtimeEnv = deps.env ?? process.env;
 	const accountMirrorDevelopmentControlsArmed =
-		(deps.env ?? process.env).AURACALL_ACCOUNT_MIRROR_DEVELOPMENT_CONTROLS === "1";
+		runtimeEnv.AURACALL_ACCOUNT_MIRROR_DEVELOPMENT_CONTROLS === "1";
 	const tenantExecutionLimitsStatusCache = new Map<
 		string,
 		{
@@ -1041,7 +1051,8 @@ export async function createResponsesHttpServer(
 		});
 		return value;
 	};
-	const apiAuthPolicy = readApiAuthPolicy(configuredRuntimeConfig);
+	const apiAuthPolicy = readApiAuthPolicy(configuredRuntimeConfig, runtimeEnv);
+	const apiAuthStatus = createApiAuthRuntimeStatus(apiAuthPolicy);
 	const agentTeamConfigService = createAgentTeamConfigService({
 		activeConfig: configuredRuntimeConfig ?? null,
 		registryStore: deps.agentRegistryStore,
@@ -1870,7 +1881,7 @@ export async function createResponsesHttpServer(
 						},
 					),
 					preflight: await readPreflightStatusSummary(preflightRunner),
-					auth: apiAuthPolicy,
+					auth: apiAuthStatus,
 				});
 				sendJson(res, 200, statusResponse);
 				return;
@@ -3298,7 +3309,7 @@ export async function createResponsesHttpServer(
 					),
 					preflight: await readPreflightStatusSummary(preflightRunner),
 					controlResult,
-					auth: apiAuthPolicy,
+					auth: apiAuthStatus,
 				});
 				sendJson(res, 200, statusResponse);
 				return;
@@ -4355,6 +4366,7 @@ export async function createResponsesHttpServer(
 
 	return {
 		port: address.port,
+		auth: apiAuthStatus,
 		async close() {
 			closed = true;
 			if (runnerHeartbeatTimer) {
@@ -4406,12 +4418,14 @@ export async function serveResponsesHttp(options: ServeResponsesHttpOptions = {}
 		mediaGenerationExecutor: overrideMediaGenerationExecutor,
 		probeRuntimeRunServiceState: overrideProbeRuntimeRunServiceState,
 		terminateProcess: terminateProcessOverride,
+		env: runtimeEnvOverride,
 		...serverOptions
 	} = options;
+	const runtimeEnv = runtimeEnvOverride ?? process.env;
 	const resolvedUserConfig = await resolveConfig(
 		options.cliOptions ?? {},
 		process.cwd(),
-		process.env,
+		runtimeEnv,
 	);
 	const apiConfig = readApiServerConfig(resolvedUserConfig as Record<string, unknown>);
 	serverOptions.host = serverOptions.host ?? apiConfig.host;
@@ -4458,6 +4472,7 @@ export async function serveResponsesHttp(options: ServeResponsesHttpOptions = {}
 		},
 		{
 			config: resolvedUserConfig as Record<string, unknown>,
+			env: runtimeEnv,
 			agentRegistryStore,
 			now: () => new Date(),
 			localActionExecutionPolicy: resolveHostLocalActionExecutionPolicy(
@@ -4483,15 +4498,8 @@ export async function serveResponsesHttp(options: ServeResponsesHttpOptions = {}
 	const host = serverOptions.host ?? "127.0.0.1";
 	const bindAddress = `${host}:${server.port}`;
 	const probeUrl = `http://${localProbeHost(host)}:${server.port}`;
-	const localOnly = isLoopbackHost(host);
 	logger(`AuraCall responses server bound on ${bindAddress}`);
-	if (localOnly) {
-		logger("Posture: local development only; bound to loopback and intentionally unauthenticated.");
-	} else {
-		logger(
-			`Warning: ${host} is not loopback. This server is still unauthenticated and intended for local development only.`,
-		);
-	}
+	logger(formatApiStartupPosture({ host, auth: server.auth }));
 	logger(`Active AuraCall runtime profile: ${resolvedUserConfig.auracallProfile ?? "default"}`);
 	logger(formatHttpEndpointBanner());
 	logger(`Local probe: curl ${probeUrl}/status`);
@@ -4879,8 +4887,29 @@ export function assertResponsesHostAllowed(host: string | undefined, listenPubli
 		return;
 	}
 	throw new Error(
-		`Refusing to bind responses server to non-loopback host "${host}". Re-run with --listen-public if you really want an unauthenticated development server on a public interface.`,
+		`Refusing to bind responses server to non-loopback host "${host}". Re-run with --listen-public if you really want a development server on a non-loopback interface.`,
 	);
+}
+
+export function formatApiStartupPosture(input: {
+	host: string;
+	auth: ApiAuthRuntimeStatus;
+}): string {
+	const localOnly = isLoopbackHost(input.host);
+	if (!input.auth.required) {
+		return localOnly
+			? "Posture: API authentication disabled; bound to loopback for local development."
+			: `Warning: ${input.host} is not loopback. API authentication is disabled; use trusted ingress before exposing this development server.`;
+	}
+
+	const authSummary =
+		input.auth.keyCount === 0
+			? "API authentication is required for /v1/*, but no API keys are loaded"
+			: `API authentication is enabled for /v1/* (${input.auth.keyCount} API ${input.auth.keyCount === 1 ? "key" : "keys"} loaded${input.auth.scoped ? "; scoped keys present" : ""})`;
+	const bindingSummary = localOnly
+		? "bound to loopback"
+		: `${input.host} is not loopback; use trusted ingress for this development server`;
+	return `${localOnly ? "Posture" : "Warning"}: ${authSummary}; ${bindingSummary}; /status remains observable without authentication.`;
 }
 
 function createHttpModelListResponse(catalog: {
@@ -4955,7 +4984,7 @@ function createHttpStatusResponse(input: {
 	accountMirrorProofScope: AccountMirrorProofScopeStatus;
 	preflight?: PreflightStatusSummary;
 	controlResult?: HttpStatusResponse["controlResult"];
-	auth: ApiAuthPolicy;
+	auth: ApiAuthRuntimeStatus;
 }): HttpStatusResponse {
 	const accountMirrorScheduler = {
 		...input.accountMirrorScheduler,
@@ -4988,19 +5017,7 @@ function createHttpStatusResponse(input: {
 			localOnly: isLoopbackHost(input.host),
 			unauthenticated: !input.auth.required,
 		},
-		auth: {
-			required: input.auth.required,
-			scheme: input.auth.required ? "bearer" : "none",
-			keyCount: input.auth.keys.length,
-			scoped: input.auth.keys.some((key) =>
-				Boolean(
-					key.agents?.length ||
-						key.teams?.length ||
-						key.services?.length ||
-						key.runtimeProfiles?.length,
-				),
-			),
-		},
+		auth: { ...input.auth },
 		serviceDiscovery,
 		routes: {
 			...createStaticHttpStatusRoutes(),
@@ -7412,6 +7429,22 @@ function readApiAuthPolicy(
 			readBoolean(env.AURACALL_API_AUTH_ENABLED) ??
 			keys.length > 0,
 		keys,
+	};
+}
+
+function createApiAuthRuntimeStatus(policy: ApiAuthPolicy): ApiAuthRuntimeStatus {
+	return {
+		required: policy.required,
+		scheme: policy.required ? "bearer" : "none",
+		keyCount: policy.keys.length,
+		scoped: policy.keys.some((key) =>
+			Boolean(
+				key.agents?.length ||
+					key.teams?.length ||
+					key.services?.length ||
+					key.runtimeProfiles?.length,
+			),
+		),
 	};
 }
 

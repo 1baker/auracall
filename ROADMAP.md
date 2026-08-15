@@ -7,6 +7,12 @@
 Status: active
 Lane: P01
 
+- Closed accepted API startup authentication posture correction:
+  [docs/dev/plans/0320-2026-08-15-api-startup-auth-posture.md](docs/dev/plans/0320-2026-08-15-api-startup-auth-posture.md)
+  Startup diagnostics and `/status.auth` now consume the running server's same
+  resolved non-secret auth summary, so loopback/public warnings match actual
+  `/v1/*` enforcement and `/status` observability without exposing key data.
+
 - Closed accepted HTTP handler/manifest parity:
   [docs/dev/plans/0319-2026-08-15-http-handler-manifest-parity.md](docs/dev/plans/0319-2026-08-15-http-handler-manifest-parity.md)
   Every static API handler now derives path/method authority from the 81-entry

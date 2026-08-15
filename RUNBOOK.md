@@ -1,5 +1,25 @@
 # RUNBOOK
 
+## Turn 489 | 2026-08-15
+
+- Opened Plan 0320 after source inspection confirmed request authorization and
+  `/status.auth` use resolved API policy while startup and pre-bind text always
+  describe the server as unauthenticated.
+- Expose the running server's non-secret auth summary, reuse it for status and
+  startup diagnostics, and cover authenticated, required-without-keys, and
+  disabled states across loopback/non-loopback binds. Preserve auth semantics,
+  key loading, public-bind opt-in, and live-effect boundaries.
+- Added one immutable auth summary resolved beside request enforcement and
+  shared by the server instance, `/status.auth`, and startup formatter. The
+  wrapper now passes one runtime environment through config and auth policy
+  resolution; logs expose only key count/scoped presence and preserve public
+  binding plus observable-status warnings.
+- Two focused files passed 233 tests; the complete isolated provider-disabled
+  suite passed 2,936 with 65 expected skips across all 840 suites. Typecheck,
+  zero-warning lint across 843 files, production build, 321-plan audit, and
+  diff hygiene passed. Plan 0320 closes accepted without provider, browser,
+  service, ingress, configuration, or key mutation.
+
 ## Turn 488 | 2026-08-15
 
 - Opened Plan 0319 after full request-gate inspection found eight executable

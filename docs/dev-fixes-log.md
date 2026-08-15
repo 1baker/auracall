@@ -1,3 +1,11 @@
+- 2026-08-15: Startup security posture must come from the exact resolved policy
+  enforced by the running server, not a parallel config read or hard-coded
+  assumption. Project a minimal immutable summary (required, scheme, key count,
+  scoped presence), reuse it for status and logs, and keep key ids, secrets, and
+  scope values outside the formatter entirely. Do not run broad tests beside a
+  build whose prebuild step cleans `dist`; MCP discovery can become an
+  incomplete-suite false failure even when no assertion fails.
+
 - 2026-08-15: A typed route inventory becomes executable authority only when
   request gates and dynamic-id matchers consume it. Give shared paths separate
   handler keys when methods have different implementations, model multi-segment

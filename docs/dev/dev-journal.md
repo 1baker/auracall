@@ -1,3 +1,18 @@
+## 2026-08-15 | Plan 0320 API startup authentication posture
+
+- Replaced unconditional unauthenticated startup claims with diagnostics from
+  the same immutable non-secret auth summary used by `/status.auth`. Loopback
+  and non-loopback messages now distinguish disabled, enabled, and required
+  without loaded keys while preserving `/status` and trusted-ingress warnings.
+- The running server exposes only required state, scheme, key count, and scoped
+  presence; key ids, secrets, and scope values never enter the formatter. One
+  injected/runtime environment now feeds both config and server policy
+  resolution.
+- Two focused files passed 233 tests; the isolated provider-disabled suite
+  passed 2,936 with 65 expected skips across all 840 suites. Typecheck,
+  zero-warning lint across 843 files, build, 321-plan audit, and diff hygiene
+  passed. Plan 0320 is CLOSED.
+
 ## 2026-08-15 | Plan 0319 HTTP handler manifest parity
 
 - Expanded the typed manifest from 71 to 81 entries across 73 unique paths and
