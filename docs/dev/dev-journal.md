@@ -47618,3 +47618,16 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   22, Ubuntu 24/Node 24, macOS/Node 22, and Windows/Node 22.
 - Plan 0333 closes with every streaming criterion proven. That satisfies Plan
   0064's final remaining criterion, so the parent plan closes accepted too.
+
+## 2026-08-15 | Plan 0334 opens durable response-batch cancellation
+
+- Response-batch dogfooding and current docs identify cancellation, retry, and
+  priority as missing controls. Cancellation is first because it composes with
+  existing durable host-owned run control; retry and priority need distinct
+  execution-safety designs.
+- The batch operation will attempt every child once, retain terminal results,
+  return per-child partial outcomes, and refuse cancellation of an active lease
+  owned by another runner.
+- HTTP authorization must prove every stored team/agent/service/runtime-profile
+  selection before the first child mutation. MCP will use the same service
+  result rather than a parallel implementation.

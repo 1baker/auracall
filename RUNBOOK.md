@@ -19854,3 +19854,16 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
 - Plan 0333 closes accepted. Its streaming proof satisfies Plan 0064's final
   criterion, so the parent OpenAI agent API and semantic-selector plan also
   closes accepted.
+
+## Turn 430 | 2026-08-15
+
+- Plan 0334 opens the highest-value first response-batch control: durable
+  cancellation. Existing child runs already carry safe host-owned cancellation
+  semantics, while retry and priority would introduce separate duplicate-work
+  and scheduler-order contracts.
+- The bounded slice will expose response cancellation through the response
+  service, aggregate one attempt per child, authorize against stored batch
+  scopes before mutation, and provide HTTP plus MCP parity.
+- Queued and locally owned active children may cancel. Terminal children remain
+  unchanged, and foreign-owned leases must return explicit `not-owned` evidence
+  without force release or prompt replay.
