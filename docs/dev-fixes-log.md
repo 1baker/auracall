@@ -22118,3 +22118,14 @@ browser-stage lifecycle observability, not transcript truncation.
   Vitest run to one worker. Preserve normal concurrency on Ubuntu and macOS.
 - Accept the change only on an exact SHA after every host passes the maintained
   PTY contract, complete provider-disabled suite, and readiness smoke.
+
+## 2026-08-15 | Compose batch cancellation from durable child-run authority
+
+- Treat a batch cancellation result as an operation receipt, not a replacement
+  batch state. Stored child runs remain authoritative and aggregate batch
+  status is recomputed after every child attempt.
+- Authorize every stored child selection before the first mutation. A scoped
+  key must not partially cancel a batch it cannot fully control.
+- Preserve terminal children and refuse foreign lease takeover. Report every
+  child outcome and make partial settlement explicit instead of hiding it
+  behind an overall success response.

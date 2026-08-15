@@ -36,9 +36,18 @@ service. Treat `agent:<agent_id>` as the model name and prefer scoped API keys.
    - call `POST /v1/response-batches` or MCP `response_batch_create` once
    - poll `GET /v1/response-batches/{batch_id}` or MCP
      `response_batch_status`
+   - to stop unfinished work, call
+     `POST /v1/response-batches/{batch_id}/cancel` or MCP
+     `response_batch_cancel` once, then inspect every returned child outcome
    - read child output through `GET /v1/responses/{response_id}` or MCP
      `run_status`
 5. Never resubmit a create request just to check status.
+
+Batch cancellation is durable and idempotent. It cancels queued children and
+active children owned by the local AuraCall runner, preserves completed and
+failed children, and reports `not-owned` for an active foreign lease rather
+than taking it over. Treat `fullySettled = false` or any `not_found`,
+`not_owned`, or `errors` count as an operator-attention result.
 
 Non-streaming chat completions wait for a bounded synchronous window. A
 retryable `503` with `error.type = "auracall_execution_pending"` includes the

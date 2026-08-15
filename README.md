@@ -154,6 +154,12 @@ curl -s http://auracall.localhost/v1/response-batches \
   -H "Content-Type: application/json" \
   -d '{"limits":{"maxConcurrentRuns":1,"maxBrowserInteractionsPerMinute":8},"requests":[{"model":"agent:instant-chatgpt-ecochran76","input":"Job 1"},{"model":"agent:instant-chatgpt-ecochran76","input":"Job 2"}]}'
 
+# Cancel unfinished children without replaying prompts or stealing foreign leases
+curl -s http://auracall.localhost/v1/response-batches/<batch_id>/cancel \
+  -H "Authorization: Bearer <key>" \
+  -H "Content-Type: application/json" \
+  -d '{"note":"operator stopped batch"}'
+
 # Privileged setup for a project-bound tenant-pool team. AuraCall ensures each
 # member project/agent and creates the dispatch-pool team only when missing.
 curl -s http://auracall.localhost/v1/tenant-pool-teams/ensure \

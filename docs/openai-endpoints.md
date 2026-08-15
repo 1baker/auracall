@@ -72,6 +72,7 @@ out the compatibility and operator workflow surface in reference form.
 - `GET /v1/responses/{response_id}`
 - `POST /v1/response-batches`
 - `GET /v1/response-batches/{batch_id}`
+- `POST /v1/response-batches/{batch_id}/cancel`
 - `POST /v1/media-generations`
 - `GET /v1/media-generations/{media_generation_id}`
 - `POST /v1/media-generations/{media_generation_id}/materialize`
@@ -290,6 +291,19 @@ Current limits:
   - `GET /v1/response-batches/{batch_id}` reads aggregate status without
     resubmitting prompts; child responses can also be inspected through
     `/v1/runs/{response_id}/status`
+  - `POST /v1/response-batches/{batch_id}/cancel` accepts an empty body or
+    `{ "note": "..." }`, authorizes every stored child selection before any
+    mutation, and attempts every child exactly once through the existing
+    durable run-cancellation authority
+  - cancellation returns `200` with
+    `object = "response_batch_cancellation"`, per-child outcomes, aggregate
+    `cancelled`, `not_active`, `not_found`, `not_owned`, and `errors` counts,
+    `fullySettled`, and authoritative post-control batch status. Completed,
+    failed, and already-cancelled children remain terminal; an active foreign
+    lease returns `not-owned` and is never taken over
+  - an unknown batch returns `404`; malformed input returns `400`; a scoped
+    key that cannot control every stored team, agent, service, and runtime
+    profile returns `403` before cancellation begins
   - the shared service-host drain path enforces those batch limits before
     acquiring a run lease; skipped child runs remain queued for a later drain
     pass

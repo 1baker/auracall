@@ -28,7 +28,8 @@ foreign leases, or hiding partial outcomes.
 - Expose response cancellation through the existing execution responses
   service so batch orchestration can use the same host authority.
 - Add a batch service operation that attempts each child exactly once, returns
-  per-child `cancelled`, `not-active`, `not-found`, or `not-owned` evidence,
+  per-child `cancelled`, `not-active`, `not-found`, `not-owned`, or unexpected
+  `error` evidence,
   and includes authoritative post-control batch status.
 - Add `POST /v1/response-batches/{batch_id}/cancel` with optional `note`.
 - Authorize batch cancellation against the stored team, agent, service, and
@@ -53,21 +54,21 @@ foreign leases, or hiding partial outcomes.
 
 ## Acceptance Criteria
 
-- [ ] Batch cancellation cancels every queued child and every active child
+- [x] Batch cancellation cancels every queued child and every active child
       owned by the local host through existing durable run cancellation.
-- [ ] Completed and failed children remain unchanged; already-cancelled
+- [x] Completed and failed children remain unchanged; already-cancelled
       children make repeat cancellation idempotent.
-- [ ] Foreign-owned active leases remain running and return `not-owned`
+- [x] Foreign-owned active leases remain running and return `not-owned`
       evidence instead of being force-cancelled.
-- [ ] The cancellation result reports per-child outcomes, aggregate outcome
+- [x] The cancellation result reports per-child outcomes, aggregate outcome
       counts, whether the request fully settled the batch, and authoritative
       post-control batch status.
-- [ ] HTTP cancellation returns `404` for an unknown batch, rejects invalid
+- [x] HTTP cancellation returns `404` for an unknown batch, rejects invalid
       bodies before mutation, and enforces stored batch scopes before any
       child cancellation.
-- [ ] MCP exposes the same service result without inventing separate
+- [x] MCP exposes the same service result without inventing separate
       cancellation semantics.
-- [ ] Route manifest, specialized skill contracts, user docs, and focused
+- [x] Route manifest, specialized skill contracts, user docs, and focused
       service/HTTP/MCP tests agree on the new control.
 - [ ] Typecheck, zero-warning lint, build, plan audit, CodeGraph sync, diff
       hygiene, complete provider-disabled tests, and exact-SHA
@@ -94,3 +95,18 @@ ambiguous partial success.
 - terminal_condition: durable idempotent cancellation and partial-outcome
   evidence pass all local and exact-SHA cross-platform gates, or the existing
   ownership model disproves safe batch composition and the blocker is recorded
+
+## Execution Notes
+
+- The response service now exposes the service host's existing durable cancel
+  result. The batch service attempts every recorded child once, captures
+  unexpected per-child errors, and recomputes authoritative status afterward.
+- HTTP validates its strict optional-note body and authorizes all stored child
+  team, agent, service, and runtime-profile selections before the first
+  cancellation. MCP projects the same service result and marks partial
+  settlement as an error result requiring attention.
+- Five focused service, HTTP, MCP, route-manifest, and specialized-skill suites
+  pass 247 tests. Typecheck, zero-warning lint, production build, 335-plan
+  audit, diff hygiene, and CodeGraph sync pass. The complete provider-disabled
+  suite passes 331 files / 3,010 tests with 19 files / 55 intended live skips;
+  exact-SHA CI remains.

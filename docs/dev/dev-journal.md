@@ -47631,3 +47631,15 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - HTTP authorization must prove every stored team/agent/service/runtime-profile
   selection before the first child mutation. MCP will use the same service
   result rather than a parallel implementation.
+- The implementation now delegates every child to the existing host-owned
+  cancel boundary, catches unexpected failures per child, and recomputes the
+  stored batch view after all attempts. The result makes foreign ownership and
+  partial settlement explicit without changing terminal child state.
+- HTTP strict-body validation and stored-scope authorization precede all
+  mutations. MCP, route discovery, the API workflow skill, and operator docs
+  share the same cancellation vocabulary.
+- Five focused suites pass 247 tests. Typecheck, zero-warning lint, production
+  build, 335-plan audit, diff hygiene, and the synced 926-file CodeGraph index
+  pass. The complete provider-disabled suite passes 331 files / 3,010 tests
+  with 19 files / 55 intended live skips; pre/post browser inventory found no
+  test-created managed process or debug listener. Exact-SHA CI remains.

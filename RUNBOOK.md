@@ -19867,3 +19867,15 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
 - Queued and locally owned active children may cancel. Terminal children remain
   unchanged, and foreign-owned leases must return explicit `not-owned` evidence
   without force release or prompt replay.
+- Implemented one child attempt per cancellation request through the existing
+  service-host authority, post-control status recomputation, per-child error
+  capture, and explicit partial-settlement counts.
+- HTTP validates input and proves every stored child scope before mutation;
+  MCP uses the same service result. Route discovery and the API workflow skill
+  now advertise cancellation, while the stale status streaming flag is aligned
+  with the accepted streaming implementation.
+- Five focused suites pass 247 tests. Typecheck, zero-warning lint, production
+  build, 335-plan audit, diff hygiene, and CodeGraph sync pass. The complete
+  provider-disabled suite passes 331 files / 3,010 tests with 19 files / 55
+  intended live skips; pre/post browser inventory found no test-created managed
+  process or debug listener. Exact-SHA CI remains before acceptance.

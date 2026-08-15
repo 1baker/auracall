@@ -10,23 +10,6 @@ import CDP from "chrome-remote-interface";
 import type { OptionValues } from "commander";
 import { ZodError, z } from "zod";
 import {
-	createStaticHttpStatusRoutes,
-	formatHttpEndpointBanner,
-	HTTP_ROUTE_MANIFEST,
-	matchHttpRoutePath,
-	matchesHttpRoute,
-	type StaticHttpRouteKey,
-	type StaticHttpStatusRoutes,
-} from "./routeManifest.js";
-import {
-	clearDashboardSessionCookie,
-	createDashboardSessionCookie,
-	createDashboardSessionStore,
-	DASHBOARD_SESSION_TTL_MS,
-	readDashboardSessionCookie,
-	type DashboardSessionStore,
-} from "./dashboardSession.js";
-import {
 	findChromeProcessUsingUserDataDir,
 	isDevToolsResponsive,
 } from "../../packages/browser-service/src/processCheck.js";
@@ -109,7 +92,6 @@ import {
 } from "../accountMirror/statusRegistry.js";
 import { getAuracallHomeDir } from "../auracallHome.js";
 import { readChatgptRateLimitGuardState } from "../browser/chatgptRateLimitGuard.js";
-import { clearPersistedBrowserProviderGuard } from "../browser/providerGuardControl.js";
 import {
 	acceptDomDriftObservation,
 	type DomDriftObservationStatus,
@@ -124,6 +106,7 @@ import {
 	probeGeminiBrowserServiceState,
 	probeGrokBrowserServiceState,
 } from "../browser/liveServiceState.js";
+import { clearPersistedBrowserProviderGuard } from "../browser/providerGuardControl.js";
 import { BrowserService } from "../browser/service/browserService.js";
 import {
 	type BrowserInstanceLease,
@@ -263,6 +246,7 @@ import {
 	createResponseBatchService,
 	ResponseBatchCreateRequestSchema,
 	type ResponseBatchService,
+	type ResponseBatchStatus,
 } from "../runtime/responseBatchService.js";
 import {
 	createExecutionRequestFromRecord,
@@ -337,6 +321,23 @@ import {
 	createWorkbenchCapabilityService,
 	type WorkbenchCapabilityServiceDeps,
 } from "../workbench/service.js";
+import {
+	clearDashboardSessionCookie,
+	createDashboardSessionCookie,
+	createDashboardSessionStore,
+	DASHBOARD_SESSION_TTL_MS,
+	type DashboardSessionStore,
+	readDashboardSessionCookie,
+} from "./dashboardSession.js";
+import {
+	createStaticHttpStatusRoutes,
+	formatHttpEndpointBanner,
+	HTTP_ROUTE_MANIFEST,
+	matchesHttpRoute,
+	matchHttpRoutePath,
+	type StaticHttpRouteKey,
+	type StaticHttpStatusRoutes,
+} from "./routeManifest.js";
 
 export const DEFAULT_BACKGROUND_DRAIN_INTERVAL_MS = 60_000;
 const TENANT_EXECUTION_LIMIT_STATUS_CACHE_MS = 5_000;
@@ -907,7 +908,7 @@ interface HttpStatusResponse {
 	compatibility: {
 		openai: true;
 		chatCompletions: boolean;
-		streaming: false;
+		streaming: boolean;
 		auth: boolean;
 	};
 	preflight: PreflightStatusSummary;
@@ -1209,9 +1210,9 @@ export async function createResponsesHttpServer(
 	let accountMirrorArtifactRecoveryPlanner: AccountMirrorArtifactRecoveryPlanner;
 	const accountMirrorSchedulerLedger =
 		deps.accountMirrorSchedulerLedger ??
-			createAccountMirrorSchedulerPassLedger({
-				config: configuredRuntimeConfig,
-			});
+		createAccountMirrorSchedulerPassLedger({
+			config: configuredRuntimeConfig,
+		});
 	const persistedAccountMirrorSchedulerControl =
 		accountMirrorSchedulerIntervalMs > 0
 			? await readAccountMirrorSchedulerControlState().catch((error) => {
@@ -1753,16 +1754,11 @@ export async function createResponsesHttpServer(
 				});
 				return;
 			}
-			const apiAuthContext = authorizeApiRequest(
-				req,
-				apiAuthPolicy,
-				url.pathname,
-				{
-					routes: operatorDashboardRoutes,
-					trustedLocal: apiAuthStatus.trustedLocalOperatorDashboard,
-					sessions: dashboardSessionStore,
-				},
-			);
+			const apiAuthContext = authorizeApiRequest(req, apiAuthPolicy, url.pathname, {
+				routes: operatorDashboardRoutes,
+				trustedLocal: apiAuthStatus.trustedLocalOperatorDashboard,
+				sessions: dashboardSessionStore,
+			});
 			if (!apiAuthContext) {
 				sendJson(res, 401, {
 					error: {
@@ -2767,14 +2763,14 @@ export async function createResponsesHttpServer(
 			}
 
 			if (matchesHttpRoute("accountMirrorCompletionsList", req.method, url.pathname)) {
-					const query = parseAccountMirrorCompletionListQuery(url.searchParams);
-					const listed = accountMirrorCompletionService.list(query);
-					const fullDetail = url.searchParams.get("detail") === "full";
-					const data = fullDetail
-						? accountMirrorCompletionService.refreshMaterializationStatuses
-							? await accountMirrorCompletionService.refreshMaterializationStatuses(listed)
-							: listed
-						: listed.map(projectAccountMirrorCompletionForMonitoring);
+				const query = parseAccountMirrorCompletionListQuery(url.searchParams);
+				const listed = accountMirrorCompletionService.list(query);
+				const fullDetail = url.searchParams.get("detail") === "full";
+				const data = fullDetail
+					? accountMirrorCompletionService.refreshMaterializationStatuses
+						? await accountMirrorCompletionService.refreshMaterializationStatuses(listed)
+						: listed
+					: listed.map(projectAccountMirrorCompletionForMonitoring);
 				sendJson(res, 200, {
 					object: "list",
 					data,
@@ -2783,20 +2779,23 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-				const accountMirrorCompletionId = matchAccountMirrorCompletionRoute(url.pathname);
+			const accountMirrorCompletionId = matchAccountMirrorCompletionRoute(url.pathname);
 			if (
-					req.method === "GET" &&
-					accountMirrorCompletionId &&
-					matchesHttpRoute("accountMirrorCompletionsGetTemplate", req.method, url.pathname)
-				) {
-					const fullDetail = url.searchParams.get("detail") === "full";
-					const fullResult = fullDetail && accountMirrorCompletionService.refreshMaterializationStatus
-						? await accountMirrorCompletionService.refreshMaterializationStatus(accountMirrorCompletionId)
+				req.method === "GET" &&
+				accountMirrorCompletionId &&
+				matchesHttpRoute("accountMirrorCompletionsGetTemplate", req.method, url.pathname)
+			) {
+				const fullDetail = url.searchParams.get("detail") === "full";
+				const fullResult =
+					fullDetail && accountMirrorCompletionService.refreshMaterializationStatus
+						? await accountMirrorCompletionService.refreshMaterializationStatus(
+								accountMirrorCompletionId,
+							)
 						: accountMirrorCompletionService.read(accountMirrorCompletionId);
-					const result =
-						fullDetail || !fullResult
-							? fullResult
-							: projectAccountMirrorCompletionForMonitoring(fullResult);
+				const result =
+					fullDetail || !fullResult
+						? fullResult
+						: projectAccountMirrorCompletionForMonitoring(fullResult);
 				if (!result) {
 					sendJson(res, 404, {
 						error: {
@@ -4229,6 +4228,72 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
+			const responseBatchCancelId = matchResponseBatchCancelRoute(url.pathname);
+			if (
+				responseBatchCancelId &&
+				matchesHttpRoute("responseBatchesCancelTemplate", req.method, url.pathname)
+			) {
+				const endForegroundWork = beginForegroundAuraCallWork();
+				try {
+					const body = await readRequestBody(req);
+					const payload = z
+						.object({ note: z.string().trim().min(1).nullable().optional() })
+						.strict()
+						.parse(JSON.parse(body || "{}"));
+					const currentStatus = await responseBatchService.readBatchStatus(responseBatchCancelId);
+					if (!currentStatus) {
+						sendJson(res, 404, {
+							error: {
+								message: `Response batch ${responseBatchCancelId} was not found`,
+								type: "not_found_error",
+							},
+						} satisfies HttpErrorPayload);
+						return;
+					}
+					const catalog = await agentTeamConfigService.effectiveCatalog();
+					const authorizationError = authorizeResponseBatchControl(
+						apiAuthContext,
+						currentStatus,
+						catalog,
+					);
+					if (authorizationError) {
+						sendJson(res, 403, {
+							error: {
+								message: authorizationError,
+								type: "permission_error",
+							},
+						} satisfies HttpErrorPayload);
+						return;
+					}
+					if (!responseBatchService.cancelBatch) {
+						sendJson(res, 501, {
+							error: {
+								message: "Response batch cancellation is not configured for this runtime.",
+								type: "not_implemented_error",
+							},
+						} satisfies HttpErrorPayload);
+						return;
+					}
+					const result = await responseBatchService.cancelBatch(
+						responseBatchCancelId,
+						payload.note ?? null,
+					);
+					if (!result) {
+						sendJson(res, 404, {
+							error: {
+								message: `Response batch ${responseBatchCancelId} was not found`,
+								type: "not_found_error",
+							},
+						} satisfies HttpErrorPayload);
+						return;
+					}
+					sendJson(res, 200, result);
+					return;
+				} finally {
+					endForegroundWork();
+				}
+			}
+
 			const responseBatchId = matchResponseBatchRoute(url.pathname);
 			if (
 				responseBatchId &&
@@ -5145,7 +5210,7 @@ function createHttpStatusResponse(input: {
 		compatibility: {
 			openai: true,
 			chatCompletions: true,
-			streaming: false,
+			streaming: true,
 			auth: input.auth.required,
 		},
 		preflight: input.preflight ?? {
@@ -6246,9 +6311,9 @@ async function hydrateAccountMirrorStatusMaterializationEvidence(
 		(async () => {
 			if (!runArchiveService) return archiveRequests.map(() => null);
 			if (runArchiveService.listItemsBatch) {
-				return runArchiveService.listItemsBatch(archiveRequests).catch(() =>
-					archiveRequests.map(() => null),
-				);
+				return runArchiveService
+					.listItemsBatch(archiveRequests)
+					.catch(() => archiveRequests.map(() => null));
 			}
 			const results = [];
 			for (const request of archiveRequests) {
@@ -6843,11 +6908,11 @@ function summarizeLiveFollowRoutineDecision(input: {
 	const preemption = summarizeLiveFollowPreemption(entry, scheduler);
 	const accountObservedAt = latestAccountStatusObservedAt(entry);
 	const operationObservedAt =
-			cycle?.updatedAt ??
-			operation?.lastRefresh?.completedAt ??
-			operation?.lifecycleEvents?.at(-1)?.at ??
-			operation?.completedAt ??
-			null;
+		cycle?.updatedAt ??
+		operation?.lastRefresh?.completedAt ??
+		operation?.lifecycleEvents?.at(-1)?.at ??
+		operation?.completedAt ??
+		null;
 	const remainingDetailSurfaces = entry.mirrorCompleteness.remainingDetailSurfaces?.total ?? null;
 	const materializationAssets =
 		materializationBacklog?.remoteKnownMissingLocal.total ??
@@ -7528,8 +7593,7 @@ function readApiAuthPolicy(
 			readBoolean(env.AURACALL_API_AUTH_REQUIRED) ??
 			readBoolean(env.AURACALL_API_AUTH_ENABLED) ??
 			keys.length > 0,
-		trustedLocalOperatorDashboard:
-			readBoolean(auth?.trustedLocalOperatorDashboard) ?? true,
+		trustedLocalOperatorDashboard: readBoolean(auth?.trustedLocalOperatorDashboard) ?? true,
 		keys,
 	};
 }
@@ -7704,9 +7768,7 @@ function authorizeApiRequest(
 		const key = policy.keys.find((candidate) => candidate.secret === token) ?? null;
 		if (key) return { policy, key };
 	}
-	const session = operatorDashboard.sessions.read(
-		readDashboardSessionCookie(req.headers.cookie),
-	);
+	const session = operatorDashboard.sessions.read(readDashboardSessionCookie(req.headers.cookie));
 	if (!session) return null;
 	if (!isSafeDashboardSessionMethod(req.method) && !hasSameOriginBrowserOrigin(req)) {
 		return null;
@@ -7731,8 +7793,7 @@ function handleDashboardSessionRequest(
 ): void {
 	const cookieToken = readDashboardSessionCookie(req.headers.cookie);
 	const session = input.sessions.read(cookieToken);
-	const loginReady =
-		input.policy.required && input.policy.keys.some(isUnscopedOperatorApiKey);
+	const loginReady = input.policy.required && input.policy.keys.some(isUnscopedOperatorApiKey);
 	const trustedLocal = canAuthorizeTrustedLocalOperatorDashboard({
 		enabled: input.trustedLocal,
 		remoteAddress: req.socket.remoteAddress,
@@ -7755,7 +7816,7 @@ function handleDashboardSessionRequest(
 				authenticated: mode !== "unauthenticated",
 				mode,
 				loginReady,
-				expiresAt: mode === "session" ? session?.expiresAt ?? null : null,
+				expiresAt: mode === "session" ? (session?.expiresAt ?? null) : null,
 				ttlSeconds: DASHBOARD_SESSION_TTL_MS / 1000,
 			},
 			{ "Cache-Control": "no-store" },
@@ -7775,7 +7836,7 @@ function handleDashboardSessionRequest(
 		}
 		const bearerToken = readBearerToken(req.headers.authorization);
 		const key = bearerToken
-			? input.policy.keys.find((candidate) => candidate.secret === bearerToken) ?? null
+			? (input.policy.keys.find((candidate) => candidate.secret === bearerToken) ?? null)
 			: null;
 		if (!input.policy.required || !key || !isUnscopedOperatorApiKey(key)) {
 			sendJson(res, 401, {
@@ -7877,9 +7938,7 @@ export function canAuthorizeTrustedLocalOperatorDashboard(input: {
 	browserContextMatches: boolean;
 }): boolean {
 	return (
-		input.enabled &&
-		input.browserContextMatches &&
-		isLoopbackNetworkAddress(input.remoteAddress)
+		input.enabled && input.browserContextMatches && isLoopbackNetworkAddress(input.remoteAddress)
 	);
 }
 
@@ -7962,6 +8021,27 @@ function authorizeExecutionSelection(
 		authorizeScopedValue("service", selection.service, key.services) ??
 		authorizeScopedValue("runtime profile", selection.runtimeProfile, key.runtimeProfiles)
 	);
+}
+
+function authorizeResponseBatchControl(
+	context: ApiAuthContext,
+	status: ResponseBatchStatus,
+	catalog: EffectiveAgentCatalog,
+): string | null {
+	for (const job of status.jobs) {
+		const error = authorizeExecutionSelection(
+			context,
+			{
+				agent: job.agent,
+				team: job.team ?? status.dispatch?.team ?? null,
+				service: job.service,
+				runtimeProfile: job.runtimeProfile,
+			},
+			catalog,
+		);
+		if (error) return error;
+	}
+	return null;
 }
 
 interface ExecutionAuthorizationSelection {
@@ -8260,10 +8340,7 @@ async function streamChatCompletionResponse(input: {
 			(await input.responsesService.readResponse(input.createdResponse.id)) ??
 			input.createdResponse;
 		if (response.status !== "completed") {
-			writeChatCompletionStreamError(
-				input.res,
-				createChatCompletionStreamTerminalError(response),
-			);
+			writeChatCompletionStreamError(input.res, createChatCompletionStreamTerminalError(response));
 			return;
 		}
 
@@ -8373,10 +8450,7 @@ function writeChatCompletionStreamChunk(
 	writeChatCompletionStreamData(res, JSON.stringify(payload));
 }
 
-function writeChatCompletionStreamError(
-	res: http.ServerResponse,
-	payload: HttpErrorPayload,
-): void {
+function writeChatCompletionStreamError(res: http.ServerResponse, payload: HttpErrorPayload): void {
 	writeChatCompletionStreamData(res, JSON.stringify(payload));
 	writeChatCompletionStreamDone(res);
 }
@@ -10591,9 +10665,11 @@ function matchResponseBatchRoute(pathname: string): string | null {
 	return matchHttpRoutePath("responseBatchesGetTemplate", pathname)?.batch_id ?? null;
 }
 
-function matchHandoffOperatorRoute(
-	pathname: string,
-): {
+function matchResponseBatchCancelRoute(pathname: string): string | null {
+	return matchHttpRoutePath("responseBatchesCancelTemplate", pathname)?.batch_id ?? null;
+}
+
+function matchHandoffOperatorRoute(pathname: string): {
 	id: string;
 	action: "status" | "resume" | "repair" | "export" | "recover-live";
 	key: StaticHttpRouteKey;
@@ -10606,10 +10682,7 @@ function matchHandoffOperatorRoute(
 	if (repairId) return { id: repairId, action: "repair", key: "handoffRepairTemplate" };
 	const exportId = matchHttpRoutePath("handoffExportTemplate", pathname)?.handoff_id;
 	if (exportId) return { id: exportId, action: "export", key: "handoffExportTemplate" };
-	const recoverLiveId = matchHttpRoutePath(
-		"handoffRecoverLiveTemplate",
-		pathname,
-	)?.handoff_id;
+	const recoverLiveId = matchHttpRoutePath("handoffRecoverLiveTemplate", pathname)?.handoff_id;
 	if (recoverLiveId) {
 		return {
 			id: recoverLiveId,
@@ -10632,15 +10705,12 @@ function matchConfigApiKeyRoute(pathname: string): string | null {
 }
 
 function matchMediaGenerationRoute(pathname: string): string | null {
-	return (
-		matchHttpRoutePath("mediaGenerationsGetTemplate", pathname)?.media_generation_id ?? null
-	);
+	return matchHttpRoutePath("mediaGenerationsGetTemplate", pathname)?.media_generation_id ?? null;
 }
 
 function matchMediaGenerationMaterializeRoute(pathname: string): string | null {
 	return (
-		matchHttpRoutePath("mediaGenerationsMaterializeTemplate", pathname)?.media_generation_id ??
-		null
+		matchHttpRoutePath("mediaGenerationsMaterializeTemplate", pathname)?.media_generation_id ?? null
 	);
 }
 
@@ -10656,15 +10726,12 @@ function matchRunStatusRoute(pathname: string): string | null {
 
 function matchDomDriftObservationAcceptRoute(pathname: string): string | null {
 	return (
-		matchHttpRoutePath("browserDomDriftObservationAcceptTemplate", pathname)?.observation_id ??
-		null
+		matchHttpRoutePath("browserDomDriftObservationAcceptTemplate", pathname)?.observation_id ?? null
 	);
 }
 
 function matchAccountMirrorCompletionRoute(pathname: string): string | null {
-	return (
-		matchHttpRoutePath("accountMirrorCompletionsGetTemplate", pathname)?.completion_id ?? null
-	);
+	return matchHttpRoutePath("accountMirrorCompletionsGetTemplate", pathname)?.completion_id ?? null;
 }
 
 function matchAccountMirrorReconciliationRoute(pathname: string): string | null {

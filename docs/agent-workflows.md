@@ -175,7 +175,11 @@ limits.
 5. Store the returned batch id and child response ids.
 6. Poll `GET /v1/response-batches/{batch_id}` or MCP
    `response_batch_status`.
-7. Read child output through `GET /v1/responses/{response_id}` or MCP
+7. To stop unfinished children, call
+   `POST /v1/response-batches/{batch_id}/cancel` or MCP
+   `response_batch_cancel` once. Inspect `fullySettled`, aggregate counts, and
+   every child outcome; do not retry cancellation by resubmitting prompts.
+8. Read child output through `GET /v1/responses/{response_id}` or MCP
    `run_status`.
 
 Batch limits are attached to the child runs and enforced by the shared service
@@ -193,6 +197,12 @@ ChatGPT tenant budgets from `GET /status` under `tenantExecutionLimits`; add
 are needed. Recovery replays that reattach an existing ChatGPT tab can record a
 second `step-started` event for the same response step; tenant and batch
 rate-limit usage counts that response step once.
+
+Cancellation reuses the durable child-run control boundary. Queued and locally
+owned active children can be cancelled; completed, failed, and already-
+cancelled children remain unchanged. A foreign-owned active lease returns
+`not-owned`, so `fullySettled = false` is an attention signal rather than
+permission to steal or replay that work.
 
 When one ChatGPT email maps to multiple OpenAI accounts, configure account
 qualifiers on the runtime profile identity. AuraCall includes `accountId`,
@@ -502,12 +512,10 @@ state belongs inside AuraCall provider adapters and browser services.
   provider adapter to current `Flash`, `Flash-Lite`, and `Pro` picker rows.
   Grok resolves the same intent family to `Auto`, `Fast`, and `Expert`. Both
   stop before prompt insertion when exact selected state cannot be proved.
-- Streaming chat completions are deferred.
 - Remote HTTP(S) attachment download/materialization is deferred.
 - API key issuance is local/operator-scoped; remote privileged MCP/API
   exposure needs a first-class principal/role model.
-- Batch cancellation, retry, and per-child priority are not yet first-class
-  batch controls.
+- Batch retry and per-child priority are not yet first-class batch controls.
 - Searchable archive promotion for AuraCall-created runs, uploads, generated
   artifacts, provider conversation ids, and caller-supplied validation evidence
   is now tracked in Plan 0066.

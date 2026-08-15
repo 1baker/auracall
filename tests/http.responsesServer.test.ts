@@ -17,8 +17,8 @@ import type {
 } from "../src/accountMirror/completionService.js";
 import { createAccountMirrorCompletionStore } from "../src/accountMirror/completionStore.js";
 import type { AccountMirrorRefreshService } from "../src/accountMirror/refreshService.js";
-import type { AccountMirrorSchedulerPassLedger } from "../src/accountMirror/schedulerLedger.js";
 import { writeAccountMirrorSchedulerControlState } from "../src/accountMirror/schedulerControlState.js";
+import type { AccountMirrorSchedulerPassLedger } from "../src/accountMirror/schedulerLedger.js";
 import type { AccountMirrorSchedulerPassResult } from "../src/accountMirror/schedulerService.js";
 import {
 	type AccountMirrorStatusSummary,
@@ -43,22 +43,19 @@ import {
 	summarizeAccountMirrorDiagnosticsBrowserMutationsForTest,
 	terminateSamePortApiServeProcesses,
 } from "../src/http/responsesServer.js";
-import type { ExecutionRequest } from "../src/runtime/apiTypes.js";
 import {
 	recordLazyLiveFollowPreflightRun,
 	writeLazyLiveFollowPreflightStatus,
 } from "../src/preflightStatus.js";
+import type { ExecutionRequest } from "../src/runtime/apiTypes.js";
 import type { ArchiveMaterializationJobListRequest } from "../src/runtime/archiveMaterializationJobService.js";
-import type {
-	RunArchiveListRequest,
-	RunArchiveService,
-} from "../src/runtime/archiveService.js";
+import type { RunArchiveListRequest, RunArchiveService } from "../src/runtime/archiveService.js";
 import type { ExecutionRuntimeControlContract } from "../src/runtime/contract.js";
 import { createExecutionRuntimeControl } from "../src/runtime/control.js";
 import {
 	type HistoryMaterializationJob,
-	type HistoryMaterializationJobListRequest,
 	HistoryMaterializationJobControlError,
+	type HistoryMaterializationJobListRequest,
 	type HistoryMaterializationService,
 } from "../src/runtime/historyMaterializationService.js";
 import { resetLiveRuntimeRunServiceStateRegistryForTests } from "../src/runtime/liveServiceStateRegistry.js";
@@ -1453,6 +1450,188 @@ describe("http responses adapter", () => {
 		}
 	});
 
+	it("authorizes and cancels response batches with per-child outcomes", async () => {
+		const homeDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), "auracall-http-response-batch-cancel-"),
+		);
+		cleanup.push(homeDir);
+		setAuracallHomeDirOverrideForTest(homeDir);
+
+		const runningStatus = {
+			id: "batch_cancel_http_1",
+			object: "response_batch_status" as const,
+			status: "running" as const,
+			createdAt: "2026-08-15T22:30:00.000Z",
+			updatedAt: "2026-08-15T22:30:00.000Z",
+			metadata: {},
+			limits: { maxConcurrentRuns: 1, maxBrowserInteractionsPerMinute: null },
+			dispatch: null,
+			counts: {
+				total: 1,
+				in_progress: 1,
+				completed: 0,
+				failed: 0,
+				cancelled: 0,
+				missing: 0,
+			},
+			jobs: [
+				{
+					index: 0,
+					responseId: "resp_cancel_http_1",
+					model: "agent:researcher",
+					agent: "researcher",
+					team: "ops",
+					service: "chatgpt",
+					runtimeProfile: "default",
+					createdAt: "2026-08-15T22:30:00.000Z",
+					status: "in_progress" as const,
+					completedAt: null,
+					failure: null,
+				},
+			],
+		};
+		const cancelledStatus = {
+			...runningStatus,
+			status: "cancelled" as const,
+			counts: { ...runningStatus.counts, in_progress: 0, cancelled: 1 },
+			jobs: runningStatus.jobs.map((job) => ({ ...job, status: "cancelled" as const })),
+		};
+		const readBatchStatus = vi.fn(async (id: string) => (id === "missing" ? null : runningStatus));
+		const cancelBatch = vi.fn(async () => ({
+			id: "batch_cancel_http_1",
+			object: "response_batch_cancellation" as const,
+			requestedAt: "2026-08-15T22:31:00.000Z",
+			note: "stop this batch",
+			fullySettled: true,
+			counts: {
+				total: 1,
+				cancelled: 1,
+				not_active: 0,
+				not_found: 0,
+				not_owned: 0,
+				errors: 0,
+			},
+			jobs: [
+				{
+					...runningStatus.jobs[0],
+					outcome: "cancelled" as const,
+					cancelled: true,
+					reason: "stop this batch",
+				},
+			],
+			batch: cancelledStatus,
+		}));
+		const server = await createResponsesHttpServer(
+			{ host: "127.0.0.1", port: 0, backgroundDrainIntervalMs: 0 },
+			{
+				config: {
+					api: {
+						auth: {
+							required: true,
+							keys: [
+								{
+									id: "batch-cancel-allowed",
+									secret: "batch-cancel-allowed-secret",
+									agents: ["researcher"],
+									teams: ["ops"],
+									services: ["chatgpt"],
+									runtimeProfiles: ["default"],
+								},
+								{
+									id: "batch-cancel-denied",
+									secret: "batch-cancel-denied-secret",
+									agents: ["other-agent"],
+								},
+							],
+						},
+					},
+					browserProfiles: { default: {} },
+					runtimeProfiles: { default: { browserProfile: "default", defaultService: "chatgpt" } },
+					agents: { researcher: { runtimeProfile: "default", service: "chatgpt" } },
+					teams: { ops: { agents: ["researcher"] } },
+				},
+				responseBatchService: {
+					createBatch: vi.fn(),
+					readBatchStatus,
+					cancelBatch,
+				},
+			},
+		);
+
+		try {
+			const invalid = await fetch(
+				`http://127.0.0.1:${server.port}/v1/response-batches/batch_cancel_http_1/cancel`,
+				{
+					method: "POST",
+					headers: {
+						authorization: "Bearer batch-cancel-allowed-secret",
+						"content-type": "application/json",
+					},
+					body: JSON.stringify({ note: " " }),
+				},
+			);
+			expect(invalid.status).toBe(400);
+			expect(readBatchStatus).not.toHaveBeenCalled();
+			expect(cancelBatch).not.toHaveBeenCalled();
+
+			const missing = await fetch(
+				`http://127.0.0.1:${server.port}/v1/response-batches/missing/cancel`,
+				{
+					method: "POST",
+					headers: {
+						authorization: "Bearer batch-cancel-allowed-secret",
+						"content-type": "application/json",
+					},
+					body: "{}",
+				},
+			);
+			expect(missing.status).toBe(404);
+			expect(cancelBatch).not.toHaveBeenCalled();
+
+			const denied = await fetch(
+				`http://127.0.0.1:${server.port}/v1/response-batches/batch_cancel_http_1/cancel`,
+				{
+					method: "POST",
+					headers: {
+						authorization: "Bearer batch-cancel-denied-secret",
+						"content-type": "application/json",
+					},
+					body: "{}",
+				},
+			);
+			expect(denied.status).toBe(403);
+			await expect(denied.json()).resolves.toMatchObject({
+				error: {
+					type: "permission_error",
+					message: 'API key is not authorized for agent "researcher".',
+				},
+			});
+			expect(cancelBatch).not.toHaveBeenCalled();
+
+			const allowed = await fetch(
+				`http://127.0.0.1:${server.port}/v1/response-batches/batch_cancel_http_1/cancel`,
+				{
+					method: "POST",
+					headers: {
+						authorization: "Bearer batch-cancel-allowed-secret",
+						"content-type": "application/json",
+					},
+					body: JSON.stringify({ note: "stop this batch" }),
+				},
+			);
+			expect(allowed.status).toBe(200);
+			await expect(allowed.json()).resolves.toMatchObject({
+				object: "response_batch_cancellation",
+				fullySettled: true,
+				counts: { total: 1, cancelled: 1 },
+				batch: { status: "cancelled" },
+			});
+			expect(cancelBatch).toHaveBeenCalledWith("batch_cancel_http_1", "stop this batch");
+		} finally {
+			await server.close();
+		}
+	});
+
 	it("expands dispatch-pool teams into tenant-specific response batch jobs", async () => {
 		const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-http-response-batch-pools-"));
 		cleanup.push(homeDir);
@@ -2319,7 +2498,7 @@ describe("http responses adapter", () => {
 				compatibility: {
 					openai: true,
 					chatCompletions: true,
-					streaming: false,
+					streaming: true,
 					auth: false,
 				},
 				preflight: {
@@ -2642,7 +2821,7 @@ describe("http responses adapter", () => {
 				},
 			});
 			expect(refreshPayload.mirrorStatus.entries[0]).toMatchObject({
-        detectedIdentityKey: "service-account:chatgpt:ecochran76@gmail.com|structure=business",
+				detectedIdentityKey: "service-account:chatgpt:ecochran76@gmail.com|structure=business",
 				mirrorState: expect.objectContaining({
 					queued: false,
 					running: false,
@@ -3435,11 +3614,11 @@ describe("http responses adapter", () => {
 		});
 		const listHistoryMaterializationJobsBatch = vi.fn(
 			async (requests: HistoryMaterializationJobListRequest[]) => {
-			const results = [];
-			for (const request of requests) {
-				results.push(await listHistoryMaterializationJobs(request));
-			}
-			return results;
+				const results = [];
+				for (const request of requests) {
+					results.push(await listHistoryMaterializationJobs(request));
+				}
+				return results;
 			},
 		);
 
@@ -4516,11 +4695,11 @@ describe("http responses adapter", () => {
 			{
 				accountMirrorCompletionService: {
 					start,
-						read,
-						list,
-						refreshMaterializationStatuses,
-						refreshMaterializationStatus,
-						control,
+					read,
+					list,
+					refreshMaterializationStatuses,
+					refreshMaterializationStatus,
+					control,
 				},
 			},
 		);
@@ -7806,7 +7985,7 @@ describe("http responses adapter", () => {
 			{
 				host: "127.0.0.1",
 				port: 0,
-					accountMirrorSchedulerIntervalMs: 25,
+				accountMirrorSchedulerIntervalMs: 25,
 				accountMirrorSchedulerDryRun: true,
 			},
 			{
@@ -7818,8 +7997,8 @@ describe("http responses adapter", () => {
 		);
 
 		try {
-				await delay(40);
-				const response = await fetch(`http://127.0.0.1:${server.port}/status`);
+			await delay(40);
+			const response = await fetch(`http://127.0.0.1:${server.port}/status`);
 			expect(response.status).toBe(200);
 			const payload = (await response.json()) as {
 				accountMirrorScheduler: {
@@ -7968,7 +8147,7 @@ describe("http responses adapter", () => {
 		}
 	});
 
-		it("reports foreground scheduler preemption on live-follow target routine decisions", async () => {
+	it("reports foreground scheduler preemption on live-follow target routine decisions", async () => {
 		await useTempAuracallHome("auracall-http-scheduler-preemption-");
 		const config = {
 			model: "gpt-5.2",
@@ -8025,7 +8204,7 @@ describe("http responses adapter", () => {
 			{
 				host: "127.0.0.1",
 				port: 0,
-					accountMirrorSchedulerIntervalMs: 250,
+				accountMirrorSchedulerIntervalMs: 250,
 				accountMirrorSchedulerDryRun: false,
 			},
 			{
@@ -8044,9 +8223,9 @@ describe("http responses adapter", () => {
 		);
 
 		try {
-				await vi.waitFor(() => expect(runOnce).toHaveBeenCalledWith({ dryRun: false }), {
-					timeout: 1_000,
-				});
+			await vi.waitFor(() => expect(runOnce).toHaveBeenCalledWith({ dryRun: false }), {
+				timeout: 1_000,
+			});
 			const response = await fetch(`http://127.0.0.1:${server.port}/status`);
 			expect(response.status).toBe(200);
 			const payload = (await response.json()) as {
@@ -10129,7 +10308,7 @@ describe("http responses adapter", () => {
 								? completedCompletion
 								: id === blockedCompletion.id
 									? blockedCompletion
-								: null,
+									: null,
 					),
 					list: vi.fn(() => [runningCompletion, completedCompletion, blockedCompletion]),
 					control: vi.fn(() => runningCompletion),
@@ -13162,9 +13341,7 @@ describe("http responses adapter", () => {
 					source: "browser-service",
 				},
 			});
-			expect(payload.data[0]).not.toHaveProperty(
-				"browserAuthoritySummary.agentBrowserBrowserId",
-			);
+			expect(payload.data[0]).not.toHaveProperty("browserAuthoritySummary.agentBrowserBrowserId");
 
 			const unreportedResponse = await fetch(
 				`http://127.0.0.1:${server.port}/v1/runtime-runs/recent?browserAuthority=unreported&limit=1`,
@@ -23287,9 +23464,11 @@ describe("http responses adapter", () => {
 			});
 			expect(crossOriginLogout.status).toBe(403);
 			expect(
-				(await fetch(`${baseUrl}/v1/api/logs/tail?maxBytes=1`, {
-					headers: { cookie: cookie ?? "" },
-				})).status,
+				(
+					await fetch(`${baseUrl}/v1/api/logs/tail?maxBytes=1`, {
+						headers: { cookie: cookie ?? "" },
+					})
+				).status,
 			).toBe(200);
 
 			const logout = await fetch(`${baseUrl}/v1/dashboard/session`, {
@@ -23306,9 +23485,11 @@ describe("http responses adapter", () => {
 				"__Host-auracall-dashboard=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Strict",
 			);
 			expect(
-				(await fetch(`${baseUrl}/v1/api/logs/tail?maxBytes=1`, {
-					headers: { cookie: cookie ?? "" },
-				})).status,
+				(
+					await fetch(`${baseUrl}/v1/api/logs/tail?maxBytes=1`, {
+						headers: { cookie: cookie ?? "" },
+					})
+				).status,
 			).toBe(401);
 
 			const secondLogin = await fetch(`${baseUrl}/v1/dashboard/session`, {
@@ -23322,9 +23503,11 @@ describe("http responses adapter", () => {
 			const secondCookie = secondLogin.headers.get("set-cookie")?.split(";", 1)[0];
 			now = new Date("2026-08-15T12:15:00.000Z");
 			expect(
-				(await fetch(`${baseUrl}/v1/api/logs/tail?maxBytes=1`, {
-					headers: { cookie: secondCookie ?? "" },
-				})).status,
+				(
+					await fetch(`${baseUrl}/v1/api/logs/tail?maxBytes=1`, {
+						headers: { cookie: secondCookie ?? "" },
+					})
+				).status,
 			).toBe(401);
 		} finally {
 			await server.close();
@@ -23429,21 +23612,18 @@ describe("http responses adapter", () => {
 				},
 			});
 
-			const deniedStream = await fetch(
-				`http://127.0.0.1:${server.port}/v1/chat/completions`,
-				{
-					method: "POST",
-					headers: {
-						Authorization: "Bearer scoped-secret",
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify({
-						model: "agent:reviewer",
-						stream: true,
-						messages: [{ role: "user", content: "This stream should be rejected." }],
-					}),
+			const deniedStream = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
+				method: "POST",
+				headers: {
+					Authorization: "Bearer scoped-secret",
+					"Content-Type": "application/json",
 				},
-			);
+				body: JSON.stringify({
+					model: "agent:reviewer",
+					stream: true,
+					messages: [{ role: "user", content: "This stream should be rejected." }],
+				}),
+			});
 			expect(deniedStream.status).toBe(403);
 			expect(deniedStream.headers.get("content-type")).toBe("application/json");
 			expect(await deniedStream.json()).toMatchObject({
@@ -24588,7 +24768,7 @@ describe("http responses adapter", () => {
 				compatibility: {
 					openai: true,
 					chatCompletions: true,
-					streaming: false,
+					streaming: true,
 					auth: false,
 				},
 				executionHints: {
@@ -24638,6 +24818,9 @@ describe("http responses adapter", () => {
 			);
 			expect((payload.routes as Record<string, unknown>).responseBatchesGetTemplate).toBe(
 				"/v1/response-batches/{batch_id}",
+			);
+			expect((payload.routes as Record<string, unknown>).responseBatchesCancelTemplate).toBe(
+				"POST /v1/response-batches/{batch_id}/cancel",
 			);
 			expect((payload.routes as Record<string, unknown>).runArchiveItemMaterializeTemplate).toBe(
 				"/v1/archive/items/{archive_item_id}/materialize",

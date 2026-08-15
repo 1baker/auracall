@@ -1873,6 +1873,18 @@
     - conversation artifact lane: closed for now at the proven
       image/music/video/canvas/deep-research surfaces; only reopen for
       regressions or newly proven live DOM surfaces
+
+### Response-batch cancellation
+
+- Focused service coverage must prove queued and locally owned active children
+  cancel durably, terminal children remain unchanged, repeat cancellation is
+  idempotent, foreign-owned leases return `not-owned`, and unexpected child
+  failures remain visible as per-child `error` outcomes.
+- Focused HTTP coverage must prove strict body validation, unknown-batch `404`,
+  stored-scope authorization before the first mutation, route discovery, and
+  authoritative post-control status.
+- MCP coverage must parse the registered `response_batch_cancel` output schema
+  and verify it projects the same service result and partial-success signal.
   - browser doctor: partially supported
       - `auracall doctor --target gemini --json` now reports live account
         identity plus detected Gemini feature signature when a managed Gemini
