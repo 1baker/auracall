@@ -2,12 +2,14 @@
 
 - CI Node runtime contract: `pnpm run check:ci-runtime` binds the canonical
   Node 22+ minimum in `package.json` to the GitHub Actions matrix. CI exercises
-  Node 22 on Ubuntu, macOS, and Windows plus active LTS Node 24 on Ubuntu; the
+  Node 22 on Ubuntu, macOS, and the supported Windows 2022 toolchain plus active
+  LTS Node 24 on Ubuntu; the
   checker rejects below-minimum versions, omission of the minimum or newer
   line, disagreement between `engines` and `devEngines`, and setup-node matrix
-  bypass. The workflow retains `workflow_dispatch` so the exact matrix can be
-  reproduced when a fork does not enqueue a push event. Fixture coverage lives in
-  `tests/scripts/ciRuntimeContract.test.ts`.
+  bypass. It also retains the Windows 2022 native-build substrate and the Node
+  24-compatible pnpm setup action. The workflow retains `workflow_dispatch` so
+  the exact matrix can be reproduced when a fork does not enqueue a push event.
+  Fixture coverage lives in `tests/scripts/ciRuntimeContract.test.ts`.
 
 - Trusted-local dashboard configuration and external-routing fail-closed
   regression:

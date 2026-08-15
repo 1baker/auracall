@@ -1,3 +1,12 @@
+- 2026-08-15: A floating `windows-latest` runner can change native compiler
+  generations underneath an old patched test dependency. When node-gyp cannot
+  identify Visual Studio 2026, use GitHub's supported `windows-2022`/VS2022
+  image as the bounded compatibility substrate, record the native dependency
+  migration separately, and guard the chosen runner. Also upgrade JavaScript
+  setup actions when GitHub reports their embedded Node runtime as deprecated;
+  changing the application `setup-node` version does not change an action's
+  own runtime.
+
 - 2026-08-15: CI can silently validate an unsupported runtime when its workflow
   pin drifts below `package.json` engines. Keep the package's canonical minimum
   authoritative, exercise that minimum on every supported OS, add a bounded

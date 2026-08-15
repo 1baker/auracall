@@ -7,6 +7,10 @@
 - The personal fork did not enqueue the first push despite enabled Actions and
   an active workflow. Plan version 2 adds a guarded manual-dispatch path so CI
   acceptance is reproducible rather than inferred.
+- The first dispatch exposed the `windows-latest` migration to Visual Studio
+  2026: node-gyp 11.5 could not rebuild the existing PTY test dependency.
+  Version 3 uses GitHub's supported Windows 2022/VS2022 runner and upgrades
+  pnpm setup from its deprecated Node 20 action runtime to v6.
 
 ## 2026-08-15 | Plan 0326 dashboard-session readiness smoke
 

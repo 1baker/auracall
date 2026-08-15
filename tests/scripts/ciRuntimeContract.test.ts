@@ -54,6 +54,25 @@ describe('CI Node runtime contract', () => {
     ).toContain('.github/workflows/ci.yml: setup-node must use matrix.node');
   });
 
+  it('rejects Windows native-toolchain and action-runtime regressions', () => {
+    expect(
+      collectCiRuntimeContractErrors(
+        currentPackage,
+        currentWorkflow.replaceAll('windows-2022', 'windows-latest'),
+      ),
+    ).toContain(
+      '.github/workflows/ci.yml: matrix.os must retain the supported Windows 2022 toolchain',
+    );
+    expect(
+      collectCiRuntimeContractErrors(
+        currentPackage,
+        currentWorkflow.replace('pnpm/action-setup@v6', 'pnpm/action-setup@v4'),
+      ),
+    ).toContain(
+      '.github/workflows/ci.yml: pnpm/action-setup must use the Node 24-compatible v6 action',
+    );
+  });
+
   it('rejects removal of the reproducible manual CI entrypoint', () => {
     expect(
       collectCiRuntimeContractErrors(

@@ -127,6 +127,12 @@ export function collectCiRuntimeContractErrors(
   if (!workflowText.includes(`node-version: \${{ matrix.node }}`)) {
     errors.push('.github/workflows/ci.yml: setup-node must use matrix.node');
   }
+  if (!workflowText.includes('os: [ubuntu-latest, macos-latest, windows-2022]')) {
+    errors.push('.github/workflows/ci.yml: matrix.os must retain the supported Windows 2022 toolchain');
+  }
+  if (!workflowText.includes('uses: pnpm/action-setup@v6')) {
+    errors.push('.github/workflows/ci.yml: pnpm/action-setup must use the Node 24-compatible v6 action');
+  }
   if (!/^\s*workflow_dispatch:\s*$/mu.test(workflowText)) {
     errors.push('.github/workflows/ci.yml: workflow_dispatch must remain available');
   }

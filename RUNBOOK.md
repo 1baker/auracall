@@ -15,6 +15,13 @@
   the published workflow present, but created no run for the first push. Plan
   version 2 adds and guards `workflow_dispatch` so the exact matrix has a
   reproducible acceptance path without changing repository settings.
+- Manual run 31885972975 instantiated all four intended runtime jobs. The
+  Windows 22 job failed during frozen install because `windows-latest` had
+  moved to Visual Studio 2026, which node-gyp 11.5 cannot identify while
+  rebuilding the existing PTY test dependency; Ubuntu 22/24 and macOS 22 passed
+  install and the runtime checker. Plan version 3 follows GitHub's documented
+  mitigation by pinning `windows-2022` and upgrades the deprecated Node
+  20-based pnpm setup action to v6, with both choices added to the guard.
 
 ## Turn 495 | 2026-08-15
 
