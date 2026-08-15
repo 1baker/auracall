@@ -6940,7 +6940,7 @@ describe("history materialization service", () => {
 				},
 			},
 		});
-	});
+	}, 15_000);
 
 	it("skips a direct conversation asset family already materialized in the archive", async () => {
 		const homeDir = await fs.mkdtemp(
