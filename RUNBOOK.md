@@ -11,6 +11,10 @@
   may change CI, one checker/test, package scripts, and current docs, but it
   will not raise the supported minimum, change product runtime behavior, or
   mutate installation/provider state.
+- GitHub reported Actions enabled, the workflow active, `main` as default, and
+  the published workflow present, but created no run for the first push. Plan
+  version 2 adds and guards `workflow_dispatch` so the exact matrix has a
+  reproducible acceptance path without changing repository settings.
 
 ## Turn 495 | 2026-08-15
 

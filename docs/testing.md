@@ -5,7 +5,8 @@
   Node 22 on Ubuntu, macOS, and Windows plus active LTS Node 24 on Ubuntu; the
   checker rejects below-minimum versions, omission of the minimum or newer
   line, disagreement between `engines` and `devEngines`, and setup-node matrix
-  bypass. Fixture coverage lives in
+  bypass. The workflow retains `workflow_dispatch` so the exact matrix can be
+  reproduced when a fork does not enqueue a push event. Fixture coverage lives in
   `tests/scripts/ciRuntimeContract.test.ts`.
 
 - Trusted-local dashboard configuration and external-routing fail-closed

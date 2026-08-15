@@ -53,4 +53,13 @@ describe('CI Node runtime contract', () => {
       ),
     ).toContain('.github/workflows/ci.yml: setup-node must use matrix.node');
   });
+
+  it('rejects removal of the reproducible manual CI entrypoint', () => {
+    expect(
+      collectCiRuntimeContractErrors(
+        currentPackage,
+        currentWorkflow.replace('  workflow_dispatch:\n', ''),
+      ),
+    ).toContain('.github/workflows/ci.yml: workflow_dispatch must remain available');
+  });
 });

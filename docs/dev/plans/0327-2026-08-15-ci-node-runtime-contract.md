@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 1
+Plan version: 2
 
 ## Goal
 
@@ -27,6 +27,8 @@ workflow/package drift.
   CI versions below the minimum, omission of the minimum, omission of a newer
   supported line, or bypass of the workflow matrix.
 - Run the contract checker directly in CI and through the normal test suite.
+- Retain a manual dispatch entrypoint so fork CI can be reproduced even when a
+  push event is not enqueued.
 - Document the developer command and durable lesson.
 
 ## Non-Goals
@@ -49,6 +51,8 @@ workflow/package drift.
       `setup-node` step that bypasses `matrix.node`.
 - [ ] CI runs the checker immediately after dependency installation, and the
       normal test suite covers both accepted and rejected fixtures.
+- [ ] The workflow can be dispatched manually and the checker rejects removal
+      of that reproducible acceptance path.
 - [ ] Focused tests, checker execution, provider-disabled tests, typecheck,
       zero-warning lint, build, plan audit, CodeGraph sync, and diff hygiene
       pass.

@@ -127,6 +127,9 @@ export function collectCiRuntimeContractErrors(
   if (!workflowText.includes(`node-version: \${{ matrix.node }}`)) {
     errors.push('.github/workflows/ci.yml: setup-node must use matrix.node');
   }
+  if (!/^\s*workflow_dispatch:\s*$/mu.test(workflowText)) {
+    errors.push('.github/workflows/ci.yml: workflow_dispatch must remain available');
+  }
   return errors;
 }
 

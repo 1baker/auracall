@@ -4,6 +4,9 @@
   package and README require Node 22+.
 - Make Node 22 the cross-platform minimum lane, add Node 24 on Ubuntu, and bind
   the package declarations and workflow matrix with an executable drift guard.
+- The personal fork did not enqueue the first push despite enabled Actions and
+  an active workflow. Plan version 2 adds a guarded manual-dispatch path so CI
+  acceptance is reproducible rather than inferred.
 
 ## 2026-08-15 | Plan 0326 dashboard-session readiness smoke
 
