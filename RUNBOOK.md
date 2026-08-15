@@ -1,5 +1,30 @@
 # RUNBOOK
 
+## Turn 494 | 2026-08-15
+
+- Opened Plan 0325 after Plan 0324 made the running server's dashboard-session
+  readiness authoritative but left CLI/MCP automation unable to inspect or
+  enforce it.
+- Extend the existing shared `/status` summary rather than adding a second auth
+  resolver. Add nullable auth projection, human/MCP text parity, a reusable
+  assertion, CLI `--expect-dashboard-session-ready`, and the equivalent MCP
+  boolean expectation.
+- Critical path remains root with no parallel workers. This provider-free slice
+  may change API-status CLI/MCP contracts, focused tests, and current docs, but
+  it will not mutate active config, services, ingress, browsers, providers, or
+  keys.
+- Added nullable complete auth projection to the shared API-status summary,
+  human CLI and MCP text/structured parity, one shared readiness assertion,
+  CLI `--expect-dashboard-session-ready`, and MCP
+  `expectedDashboardSessionReady`.
+- Four focused files passed 24 tests, and a real CLI fixture proved explicit
+  true exits 0 while false exits 1. The isolated provider-disabled suite passed
+  2,952 tests with 65 expected skips across 348 files. Typecheck, zero-warning
+  lint across 846 files, production build, 326-plan audit, current CodeGraph
+  sync/304-test affected analysis, command help, and diff hygiene passed. Plan
+  0325 closes accepted without active config, service, ingress, browser,
+  provider, or key mutation.
+
 ## Turn 493 | 2026-08-15
 
 - Opened Plan 0324 after external-routing hardening exposed a lockout-detection

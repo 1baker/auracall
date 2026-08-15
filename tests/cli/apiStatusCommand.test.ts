@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	assertApiStatusBackpressure,
 	assertApiStatusCompletionMetrics,
+	assertApiStatusDashboardSessionReady,
 	assertApiStatusLiveFollowSeverity,
 	assertApiStatusSchedulerPosture,
 	formatApiStatusCliSummary,
@@ -31,6 +32,17 @@ const statusPayload = {
 			restartCommand: "systemctl --user restart auracall-api.service",
 			statusCommand: "systemctl --user status auracall-api.service",
 		},
+	},
+	auth: {
+		required: true,
+		scheme: "bearer",
+		keyCount: 2,
+		scoped: true,
+		operatorKeyCount: 1,
+		trustedLocalOperatorDashboard: false,
+		trustedLocalOperatorDashboardReason: "external_routing",
+		dashboardSessionRequired: true,
+		dashboardSessionReady: true,
 	},
 	routes: {
 		apiLogTail: "/v1/api/logs/tail[?maxBytes=32768]",
@@ -328,6 +340,17 @@ describe("api status CLI helpers", () => {
 				},
 				logTailRoute: "/v1/api/logs/tail[?maxBytes=32768]",
 			},
+			auth: {
+				required: true,
+				scheme: "bearer",
+				keyCount: 2,
+				scoped: true,
+				operatorKeyCount: 1,
+				trustedLocalOperatorDashboard: false,
+				trustedLocalOperatorDashboardReason: "external_routing",
+				dashboardSessionRequired: true,
+				dashboardSessionReady: true,
+			},
 			scheduler: {
 				enabled: true,
 				state: "idle",
@@ -462,6 +485,9 @@ describe("api status CLI helpers", () => {
 		});
 		expect(formatApiStatusCliSummary(summary)).toContain(
 			"API service: pid=4242 unit=auracall-api.service log=/home/ecochran76/.auracall/logs/api-18080.log tail=/v1/api/logs/tail[?maxBytes=32768]",
+		);
+		expect(formatApiStatusCliSummary(summary)).toContain(
+			"API authentication: required=true scheme=bearer keys=2 scoped=true operator_keys=1 trusted_local=false reason=external_routing dashboard_session_required=true dashboard_session_ready=true",
 		);
 		expect(formatApiStatusCliSummary(summary)).toContain(
 			"Live follow health: severity=attention-needed posture=backpressured state=idle enabled=2 active=2 paused=1 attention=1 backpressure=routine-delayed latestYield=chatgpt/default remaining=4 queued=media-generation:chatgpt:image",
@@ -794,6 +820,50 @@ describe("api status CLI helpers", () => {
 				expectedSeverity: "healthy",
 			}),
 		).toThrow("Expected liveFollow.severity to be healthy, got attention-needed.");
+	});
+
+	it("asserts explicit dashboard-session readiness", () => {
+		const summary = summarizeApiStatusPayload(statusPayload, {
+			host: "127.0.0.1",
+			port: 18080,
+		});
+
+		expect(() =>
+			assertApiStatusDashboardSessionReady(summary, {
+				expectedReady: true,
+			}),
+		).not.toThrow();
+		expect(() =>
+			assertApiStatusDashboardSessionReady(
+				{ ...summary, auth: { ...summary.auth, dashboardSessionReady: false } },
+				{ expectedReady: true },
+			),
+		).toThrow("Expected auth.dashboardSessionReady to be true, got false.");
+		expect(() =>
+			assertApiStatusDashboardSessionReady(
+				{ ...summary, auth: { ...summary.auth, dashboardSessionReady: null } },
+				{ expectedReady: true },
+			),
+		).toThrow("Expected auth.dashboardSessionReady to be true, got unknown.");
+	});
+
+	it("keeps auth projection nullable for older status payloads", () => {
+		const summary = summarizeApiStatusPayload({ ok: true }, {
+			host: "127.0.0.1",
+			port: 18080,
+		});
+
+		expect(summary.auth).toEqual({
+			required: null,
+			scheme: null,
+			keyCount: null,
+			scoped: null,
+			operatorKeyCount: null,
+			trustedLocalOperatorDashboard: null,
+			trustedLocalOperatorDashboardReason: null,
+			dashboardSessionRequired: null,
+			dashboardSessionReady: null,
+		});
 	});
 
 	it("derives live-follow severity from scheduler and completion posture", () => {

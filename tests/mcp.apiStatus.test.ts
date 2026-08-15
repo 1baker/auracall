@@ -21,6 +21,17 @@ const statusPayload = {
       statusCommand: 'systemctl --user status auracall-api.service',
     },
   },
+  auth: {
+    required: true,
+    scheme: 'bearer',
+    keyCount: 2,
+    scoped: true,
+    operatorKeyCount: 1,
+    trustedLocalOperatorDashboard: false,
+    trustedLocalOperatorDashboardReason: 'external_routing',
+    dashboardSessionRequired: true,
+    dashboardSessionReady: true,
+  },
   routes: {
     apiLogTail: '/v1/api/logs/tail[?maxBytes=32768]',
   },
@@ -247,6 +258,7 @@ describe('mcp api_status tool', () => {
       expectedCompletionCancelled: 1,
       expectedCompletionPaused: 0,
       expectedCompletionFailed: 0,
+      expectedDashboardSessionReady: true,
     });
 
     expect(result).toMatchObject({
@@ -254,7 +266,7 @@ describe('mcp api_status tool', () => {
       content: [
         {
           type: 'text',
-          text: 'AuraCall API 127.0.0.1:18080 is ok; pid=5151; log=/home/ecochran76/.auracall/logs/api-18080.log; mirror posture backpressured; scheduler state idle; Live follow health: severity=attention-needed posture=backpressured state=idle enabled=2 active=2 paused=0 attention=1 backpressure=routine-delayed latestYield=chatgpt/default remaining=4 queued=media-generation:chatgpt:image\nScheduler diagnostics: available=2\nScheduler diagnostics command 1 (chatgpt/default): "auracall api scheduler-diagnostics --port 18080 --provider chatgpt --runtime-profile default --completion-id acctmirror_running"\nScheduler diagnostics command 2 (grok/default): "auracall api scheduler-diagnostics --port 18080 --provider grok --runtime-profile default --completion-id acctmirror_grok_running"',
+          text: 'AuraCall API 127.0.0.1:18080 is ok; pid=5151; log=/home/ecochran76/.auracall/logs/api-18080.log; dashboard session required=true ready=true operatorKeys=1; mirror posture backpressured; scheduler state idle; Live follow health: severity=attention-needed posture=backpressured state=idle enabled=2 active=2 paused=0 attention=1 backpressure=routine-delayed latestYield=chatgpt/default remaining=4 queued=media-generation:chatgpt:image\nScheduler diagnostics: available=2\nScheduler diagnostics command 1 (chatgpt/default): "auracall api scheduler-diagnostics --port 18080 --provider chatgpt --runtime-profile default --completion-id acctmirror_running"\nScheduler diagnostics command 2 (grok/default): "auracall api scheduler-diagnostics --port 18080 --provider grok --runtime-profile default --completion-id acctmirror_grok_running"',
         },
       ],
       structuredContent: {
@@ -273,6 +285,17 @@ describe('mcp api_status tool', () => {
             restartCommand: 'systemctl --user restart auracall-api.service',
           },
           logTailRoute: '/v1/api/logs/tail[?maxBytes=32768]',
+        },
+        auth: {
+          required: true,
+          scheme: 'bearer',
+          keyCount: 2,
+          scoped: true,
+          operatorKeyCount: 1,
+          trustedLocalOperatorDashboard: false,
+          trustedLocalOperatorDashboardReason: 'external_routing',
+          dashboardSessionRequired: true,
+          dashboardSessionReady: true,
         },
         scheduler: {
           enabled: true,
@@ -423,6 +446,29 @@ describe('mcp api_status tool', () => {
       expectedLiveFollowSeverity: 'healthy',
     })).rejects.toThrow(
       'Expected liveFollow.severity to be healthy, got attention-needed.',
+    );
+  });
+
+  it('fails when expected dashboard-session readiness is unavailable', async () => {
+    const handler = createApiStatusToolHandler({
+      fetchImpl: async () => new Response(JSON.stringify({
+        ...statusPayload,
+        auth: {
+          ...statusPayload.auth,
+          operatorKeyCount: 0,
+          dashboardSessionReady: false,
+        },
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    });
+
+    await expect(handler({
+      port: 18080,
+      expectedDashboardSessionReady: true,
+    })).rejects.toThrow(
+      'Expected auth.dashboardSessionReady to be true, got false.',
     );
   });
 });

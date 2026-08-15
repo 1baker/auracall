@@ -6,6 +6,7 @@ import {
   API_STATUS_LIVE_FOLLOW_SEVERITIES,
   assertApiStatusBackpressure,
   assertApiStatusCompletionMetrics,
+  assertApiStatusDashboardSessionReady,
   assertApiStatusLiveFollowSeverity,
   assertApiStatusSchedulerPosture,
   readApiStatusForCli,
@@ -22,6 +23,7 @@ const apiStatusInputShape = {
   expectedCompletionCancelled: z.number().int().nonnegative().optional(),
   expectedCompletionFailed: z.number().int().nonnegative().optional(),
   expectedCompletionActive: z.number().int().nonnegative().optional(),
+  expectedDashboardSessionReady: z.boolean().optional(),
 } satisfies z.ZodRawShape;
 
 const apiStatusBackpressureShape = z.object({
@@ -186,6 +188,17 @@ const apiStatusOutputShape = {
     }),
     logTailRoute: z.string().nullable(),
   }),
+  auth: z.object({
+    required: z.boolean().nullable(),
+    scheme: z.string().nullable(),
+    keyCount: z.number().nullable(),
+    scoped: z.boolean().nullable(),
+    operatorKeyCount: z.number().nullable(),
+    trustedLocalOperatorDashboard: z.boolean().nullable(),
+    trustedLocalOperatorDashboardReason: z.string().nullable(),
+    dashboardSessionRequired: z.boolean().nullable(),
+    dashboardSessionReady: z.boolean().nullable(),
+  }),
   scheduler: z.object({
     enabled: z.boolean().nullable(),
     state: z.string().nullable(),
@@ -246,7 +259,7 @@ export function registerApiStatusTool(
     {
       title: 'Read Aura-Call API status',
       description:
-        'Read the local Aura-Call API /status summary, including compact lazy mirror scheduler posture, without launching browsers or provider work.',
+        'Read the local Aura-Call API /status summary, including non-secret dashboard-session readiness and compact lazy mirror scheduler posture, without launching browsers or provider work.',
       inputSchema: apiStatusInputShape,
       outputSchema: apiStatusOutputShape,
     },
@@ -277,6 +290,9 @@ export function createApiStatusToolHandler(deps: RegisterApiStatusToolDeps = {})
       expectedFailed: payload.expectedCompletionFailed,
       expectedActive: payload.expectedCompletionActive,
     });
+    assertApiStatusDashboardSessionReady(summary, {
+      expectedReady: payload.expectedDashboardSessionReady,
+    });
     const posture = summary.scheduler.operatorStatus.posture;
     const state = summary.scheduler.state ?? 'unknown';
     const pid = summary.api.process.pid ?? 'unknown';
@@ -287,7 +303,7 @@ export function createApiStatusToolHandler(deps: RegisterApiStatusToolDeps = {})
       content: [
         {
           type: 'text' as const,
-          text: `AuraCall API ${summary.host}:${summary.port} is ${summary.ok === false ? 'not-ok' : summary.ok === true ? 'ok' : 'unknown'}; pid=${pid}; log=${logPath}; mirror posture ${posture}; scheduler state ${state}; ${summary.liveFollow.line}${diagnosticsText ? `\n${diagnosticsText}` : ''}`,
+          text: `AuraCall API ${summary.host}:${summary.port} is ${summary.ok === false ? 'not-ok' : summary.ok === true ? 'ok' : 'unknown'}; pid=${pid}; log=${logPath}; dashboard session required=${summary.auth.dashboardSessionRequired ?? 'unknown'} ready=${summary.auth.dashboardSessionReady ?? 'unknown'} operatorKeys=${summary.auth.operatorKeyCount ?? 'unknown'}; mirror posture ${posture}; scheduler state ${state}; ${summary.liveFollow.line}${diagnosticsText ? `\n${diagnosticsText}` : ''}`,
         },
       ],
       structuredContent: summary as typeof summary & Record<string, unknown>,

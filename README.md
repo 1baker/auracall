@@ -186,6 +186,8 @@ xdg-open http://auracall.localhost/dashboard
 # If no unscoped operator key is loaded, startup, /status.auth, and the login
 # gate report that secure dashboard login is unavailable instead of accepting a
 # credential submission. Add the key to ~/.auracall/api.env and restart the API.
+# Deployment automation can require the running service to prove readiness:
+auracall api status --expect-dashboard-session-ready
 
 # Explicitly allow a non-loopback bind only when you mean it
 auracall api serve --host 0.0.0.0 --listen-public --port 8080
@@ -845,9 +847,12 @@ Terminology note:
   yielding to API/service work, not unhealthy. The detailed
   `/status.accountMirrorScheduler.foregroundWork` object reports active request
   count, pending drain reservations, scheduled drain state, and background drain
-  state. MCP `api_status` reads the same local
-  `/status` posture and supports expectation fields so agents can assert
-  scheduler readiness without shelling out to the CLI. For live execute
+  state. CLI `api status` and MCP `api_status` also project the non-secret
+  `/status.auth` dashboard-session readiness contract. Use
+  `auracall api status --expect-dashboard-session-ready`, or MCP
+  `expectedDashboardSessionReady: true`, to fail unless the running service
+  explicitly has an eligible unscoped operator-key login path. Both surfaces
+  retain `unknown` for older servers instead of inventing readiness. For live execute
   dogfood, prefer a long interval plus one manual `run-once` request so the
   scheduler proves the refresh path without repeatedly touching bot-sensitive
   provider pages. Gemini uses the most conservative default mirror pacing:

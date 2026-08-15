@@ -112,6 +112,7 @@ import {
 import {
   assertApiStatusBackpressure,
   assertApiStatusCompletionMetrics,
+  assertApiStatusDashboardSessionReady,
   assertApiStatusLiveFollowSeverity,
   assertApiStatusSchedulerPosture,
   formatApiStatusCliSummary,
@@ -1215,6 +1216,10 @@ apiCommand
     'Fail unless accountMirrorCompletions.metrics.active matches.',
     parseIntOption,
   )
+  .option(
+    '--expect-dashboard-session-ready',
+    'Fail unless auth.dashboardSessionReady is explicitly true.',
+  )
   .option('--json', 'Emit machine-readable JSON output.', false)
   .action(async (commandOptions) => {
     const parentOptions = program.opts?.() ?? {};
@@ -1242,6 +1247,9 @@ apiCommand
       expectedCancelled: commandOptions.expectCompletionCancelled,
       expectedFailed: commandOptions.expectCompletionFailed,
       expectedActive: commandOptions.expectCompletionActive,
+    });
+    assertApiStatusDashboardSessionReady(summary, {
+      expectedReady: commandOptions.expectDashboardSessionReady ? true : null,
     });
     if (commandOptions.json) {
       console.log(JSON.stringify(summary, null, 2));

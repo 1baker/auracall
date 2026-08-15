@@ -1,3 +1,22 @@
+## 2026-08-15 | Plan 0325 API-status dashboard-session readiness
+
+- Opened a bounded successor because `/status.auth`, startup, and browser gates
+  now expose readiness while CLI/MCP status automation still discards it.
+- Project the existing resolved auth contract through the shared API-status
+  summary, add a strict CLI/MCP expectation, and retain nullable compatibility
+  for older or malformed server payloads.
+- CLI and MCP now project the complete non-secret auth/readiness summary. One
+  shared assertion powers CLI `--expect-dashboard-session-ready` and MCP
+  `expectedDashboardSessionReady`; false or unknown cannot satisfy a true
+  expectation.
+- Four focused files passed 24 tests, and a real CLI fixture proved true exits
+  0 while false exits 1. The isolated provider-disabled suite passed 2,952
+  tests with 65 expected skips across 348 files. Typecheck, zero-warning lint
+  across 846 files, production build, 326-plan audit, current CodeGraph
+  sync/304-test affected analysis, command help, and diff hygiene passed. Plan
+  0325 is CLOSED without active config, service, ingress, browser, provider, or
+  key effects.
+
 ## 2026-08-15 | Plan 0324 dashboard session readiness
 
 - Opened a bounded successor because external-routing hardening can require a

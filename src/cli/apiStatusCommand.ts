@@ -64,6 +64,10 @@ export interface ApiStatusLiveFollowSeverityExpectation {
 	expectedSeverity?: ApiStatusLiveFollowSeverity | null;
 }
 
+export interface ApiStatusDashboardSessionExpectation {
+	expectedReady?: boolean | null;
+}
+
 export interface ApiStatusApiProcessSummary {
 	pid: number | null;
 	ppid: number | null;
@@ -86,6 +90,18 @@ export interface ApiStatusApiSummary {
 	process: ApiStatusApiProcessSummary;
 	managedService: ApiStatusManagedServiceSummary;
 	logTailRoute: string | null;
+}
+
+export interface ApiStatusAuthSummary {
+	required: boolean | null;
+	scheme: string | null;
+	keyCount: number | null;
+	scoped: boolean | null;
+	operatorKeyCount: number | null;
+	trustedLocalOperatorDashboard: boolean | null;
+	trustedLocalOperatorDashboardReason: string | null;
+	dashboardSessionRequired: boolean | null;
+	dashboardSessionReady: boolean | null;
 }
 
 export interface ApiStatusBackpressureSummary {
@@ -166,6 +182,7 @@ export interface ApiStatusCliSummary {
 	host: string;
 	port: number;
 	api: ApiStatusApiSummary;
+	auth: ApiStatusAuthSummary;
 	scheduler: ApiStatusSchedulerSummary;
 	completions: ApiStatusCompletionControlSummary;
 	proofScope: {
@@ -230,6 +247,7 @@ export function summarizeApiStatusPayload(
 	const foregroundWork = isRecord(scheduler.foregroundWork) ? scheduler.foregroundWork : {};
 	const backpressure = isRecord(lastPass.backpressure) ? lastPass.backpressure : {};
 	const rawLiveFollow = isRecord(record.liveFollow) ? record.liveFollow : {};
+	const auth = summarizeApiAuth(record.auth);
 	const latestYield =
 		summarizeLatestYield(scheduler, lastPass) ?? summarizeRawLatestYield(rawLiveFollow);
 	const completions = summarizeAccountMirrorCompletions(record.accountMirrorCompletions);
@@ -266,6 +284,7 @@ export function summarizeApiStatusPayload(
 		host: source.host,
 		port: source.port,
 		api: summarizeApiRuntime(record.api, routes),
+		auth,
 		scheduler: schedulerSummary,
 		completions,
 		proofScope: summarizeProofScope(record.accountMirrorProofScope),
@@ -331,6 +350,20 @@ export function assertApiStatusCompletionMetrics(
 	}
 }
 
+export function assertApiStatusDashboardSessionReady(
+	summary: ApiStatusCliSummary,
+	expectation: ApiStatusDashboardSessionExpectation = {},
+): void {
+	const expectedReady = expectation.expectedReady ?? null;
+	if (expectedReady === null) return;
+	const actualReady = summary.auth.dashboardSessionReady;
+	if (actualReady !== expectedReady) {
+		throw new Error(
+			`Expected auth.dashboardSessionReady to be ${String(expectedReady)}, got ${actualReady === null ? "unknown" : String(actualReady)}.`,
+		);
+	}
+}
+
 export function assertApiStatusLiveFollowSeverity(
 	summary: ApiStatusCliSummary,
 	expectation: ApiStatusLiveFollowSeverityExpectation = {},
@@ -352,6 +385,7 @@ export function formatApiStatusCliSummary(summary: ApiStatusCliSummary): string 
 	const lines = [
 		`AuraCall API status: ${summary.ok === null ? "unknown" : summary.ok ? "ok" : "not-ok"} (${summary.host}:${summary.port})`,
 		formatApiRuntimeLine(summary.api),
+		formatApiAuthLine(summary.auth),
 		summary.liveFollow.line,
 		`Account mirror scheduler: state=${scheduler.state ?? "unknown"} enabled=${formatNullableBoolean(scheduler.enabled)} dryRun=${formatNullableBoolean(scheduler.dryRun)}`,
 		`Account mirror posture: ${operatorStatus.posture}${operatorStatus.reason ? ` - ${operatorStatus.reason}` : ""}`,
@@ -398,6 +432,10 @@ export function formatApiStatusCliSummary(summary: ApiStatusCliSummary): string 
 		lines.push(recentLine);
 	}
 	return lines.join("\n");
+}
+
+function formatApiAuthLine(auth: ApiStatusAuthSummary): string {
+	return `API authentication: required=${formatNullableBoolean(auth.required)} scheme=${auth.scheme ?? "unknown"} keys=${formatNullableNumber(auth.keyCount)} scoped=${formatNullableBoolean(auth.scoped)} operator_keys=${formatNullableNumber(auth.operatorKeyCount)} trusted_local=${formatNullableBoolean(auth.trustedLocalOperatorDashboard)} reason=${auth.trustedLocalOperatorDashboardReason ?? "unknown"} dashboard_session_required=${formatNullableBoolean(auth.dashboardSessionRequired)} dashboard_session_ready=${formatNullableBoolean(auth.dashboardSessionReady)}`;
 }
 
 function formatSchedulerDiagnosticsHintLines(hints: ApiStatusSchedulerDiagnosticsHint[]): string[] {
@@ -577,6 +615,23 @@ function summarizeApiRuntime(value: unknown, routes: Record<string, unknown>): A
 			statusCommand: readString(managedService.statusCommand),
 		},
 		logTailRoute: readString(routes.apiLogTail),
+	};
+}
+
+function summarizeApiAuth(value: unknown): ApiStatusAuthSummary {
+	const auth = isRecord(value) ? value : {};
+	return {
+		required: readBoolean(auth.required),
+		scheme: readString(auth.scheme),
+		keyCount: readNumber(auth.keyCount),
+		scoped: readBoolean(auth.scoped),
+		operatorKeyCount: readNumber(auth.operatorKeyCount),
+		trustedLocalOperatorDashboard: readBoolean(auth.trustedLocalOperatorDashboard),
+		trustedLocalOperatorDashboardReason: readString(
+			auth.trustedLocalOperatorDashboardReason,
+		),
+		dashboardSessionRequired: readBoolean(auth.dashboardSessionRequired),
+		dashboardSessionReady: readBoolean(auth.dashboardSessionReady),
 	};
 }
 

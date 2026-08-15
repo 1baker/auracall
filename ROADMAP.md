@@ -7,6 +7,11 @@
 Status: active
 Lane: P01
 
+- Closed accepted API-status dashboard-session readiness automation parity:
+  [docs/dev/plans/0325-2026-08-15-api-status-dashboard-session-readiness.md](docs/dev/plans/0325-2026-08-15-api-status-dashboard-session-readiness.md)
+  CLI and MCP status project the running server's non-secret readiness and
+  support a strict deployment expectation before browser access.
+
 - Closed accepted dashboard session readiness posture:
   [docs/dev/plans/0324-2026-08-15-dashboard-session-readiness.md](docs/dev/plans/0324-2026-08-15-dashboard-session-readiness.md)
   Status, startup, and both dashboard gates distinguish an available

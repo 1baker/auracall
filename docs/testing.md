@@ -7,6 +7,15 @@
   explicit opt-out, public/external route precedence, bearer compatibility, and
   secure-session compatibility.
 
+- API-status dashboard-session readiness parity is provider-free:
+  `pnpm exec vitest run tests/cli/apiStatusCommand.test.ts tests/mcp.apiStatus.test.ts tests/mcp.schema.test.ts tests/mcp.apiOpsBrowserStatus.test.ts`.
+  It proves nullable older-server projection, complete non-secret auth readback,
+  CLI/MCP human and structured output, and strict expectation failures for
+  false or unknown readiness. Command registration can be checked with
+  `auracall api status --help`; a fixture `/status` server should return exit 0
+  for explicit true and exit 1 for false under
+  `--expect-dashboard-session-ready`.
+
 - Provider-free runtime work must bracket broad `pnpm test` runs with exact
   managed-browser process/port checks or set an isolated AuraCall home. A
   2026-08-09 broad run coincided with an unexpected launch of the configured
@@ -707,7 +716,9 @@
         inventory completeness
     - MCP parity:
       - `api_status` reads local API `/status` and exposes
-        `scheduler.operatorStatus.posture`
+        `scheduler.operatorStatus.posture` plus the nullable non-secret `auth`
+        readiness projection; `expectedDashboardSessionReady` can assert the
+        running deployment state
       - `account_mirror_status`
       - `account_mirror_catalog`
       - `account_mirror_refresh`

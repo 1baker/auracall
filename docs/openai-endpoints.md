@@ -1091,6 +1091,10 @@ curl http://127.0.0.1:8080/status
 
 auracall api status --port 8080
 
+# Fail unless the running service explicitly has a usable secure dashboard
+# session credential path. False or unknown readiness exits nonzero.
+auracall api status --port 8080 --expect-dashboard-session-ready
+
 curl -s http://127.0.0.1:8080/v1/responses \
   -H 'Content-Type: application/json' \
   -d '{"model":"gpt-5.2","input":"Reply exactly with: local api smoke"}'

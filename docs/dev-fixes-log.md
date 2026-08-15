@@ -1,3 +1,10 @@
+- 2026-08-15: Browser-only readiness warnings are too late for deployment
+  automation. Project the running server's existing non-secret `/status.auth`
+  contract through the shared CLI/MCP status summary, retain nullable `unknown`
+  compatibility for older servers, and make a strict expectation accept only
+  explicit readiness. Do not duplicate environment-backed auth resolution in
+  static `config doctor`, because the running server is the authority.
+
 - 2026-08-15: Total API-key count plus a scoped-key flag cannot prove that an
   externally routed dashboard has any credential capable of opening an
   operator session. Derive a non-secret unscoped operator-key count and
