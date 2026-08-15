@@ -54,6 +54,10 @@
   its real readiness smoke remained stuck for more than four minutes while
   releasing the native process tree. Version 10 retains that real smoke on
   Ubuntu/macOS and runs its deterministic projection contract on Windows.
+- Dispatch 31887893017 passed macOS, Ubuntu 24, and Windows. Ubuntu 22 exposed
+  one fixed-delay scheduler race in the pause/resume HTTP fixture. Version 11
+  polls the observable run status every 25 ms for at most one second instead of
+  assuming completion after exactly 100 ms.
 
 ## Turn 495 | 2026-08-15
 

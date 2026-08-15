@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 10
+Plan version: 11
 
 ## Goal
 
@@ -127,6 +127,10 @@ minimum while the supported matrix also exercises the current active LTS line.
   tree and remained stuck for more than four minutes. Plan version 10 keeps the
   real smoke authoritative on Ubuntu/macOS and exercises its deterministic
   readiness projection contract on native Windows.
+- Dispatch `31887893017` passed macOS, Ubuntu 24, and the bounded Windows lane.
+  Ubuntu 22 alone hit an existing fixed-delay race in the background-drain
+  resume fixture: the run remained `in_progress` after an assumed 100 ms.
+  Plan version 11 replaces that assumption with a bounded 25 ms status poll.
 
 ## Execution Boundary
 

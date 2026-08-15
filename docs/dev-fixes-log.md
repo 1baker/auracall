@@ -38,6 +38,11 @@
   Ubuntu and macOS, run its deterministic projection contract on Windows, and
   treat native process-tree cleanup as a separate portability migration.
 
+- 2026-08-15: A scheduler test should assert eventual observable state within a
+  bounded deadline, not sleep for a fixed multiple of the configured interval.
+  Shared-runner load can delay a valid drain beyond 100 ms; poll the public
+  status every interval and retain a hard one-second terminal assertion.
+
 - 2026-08-15: A floating `windows-latest` runner can change native compiler
   generations underneath an old patched test dependency. When node-gyp cannot
   identify Visual Studio 2026, use GitHub's supported `windows-2022`/VS2022

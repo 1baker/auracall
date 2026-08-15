@@ -39,6 +39,9 @@
   but its cross-process readiness smoke never released the native child tree.
   Version 10 retains real smoke acceptance on Ubuntu/macOS and uses the focused
   readiness projection contract on Windows.
+- Dispatch 31887893017 passed three lanes and found one Ubuntu 22 timing race:
+  the pause/resume fixture assumed a scheduled drain completed after 100 ms.
+  Version 11 replaces the fixed delay with a bounded observable-status poll.
 
 ## 2026-08-15 | Plan 0326 dashboard-session readiness smoke
 

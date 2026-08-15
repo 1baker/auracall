@@ -10021,12 +10021,16 @@ describe("http responses adapter", () => {
 				},
 			});
 
-			await delay(100);
-			const resumedRead = await fetch(
-				`http://127.0.0.1:${server.port}/v1/responses/status_pause_resume_run`,
-			);
-			expect(resumedRead.status).toBe(200);
-			const resumedReadPayload = (await resumedRead.json()) as Record<string, unknown>;
+			let resumedReadPayload: Record<string, unknown> = {};
+			for (let attempt = 0; attempt < 40; attempt += 1) {
+				const resumedRead = await fetch(
+					`http://127.0.0.1:${server.port}/v1/responses/status_pause_resume_run`,
+				);
+				expect(resumedRead.status).toBe(200);
+				resumedReadPayload = (await resumedRead.json()) as Record<string, unknown>;
+				if (resumedReadPayload.status === "completed") break;
+				await delay(25);
+			}
 			expect(resumedReadPayload).toMatchObject({
 				id: "status_pause_resume_run",
 				status: "completed",
