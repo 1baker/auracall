@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 8
+Plan version: 9
 
 ## Goal
 
@@ -115,6 +115,10 @@ minimum while the supported matrix also exercises the current active LTS line.
 - The same dispatch completed the native Windows frozen install and prepare
   build, then found that exact LF substrings in the checker rejected the CRLF
   checkout. Plan version 8 normalizes line endings and guards that behavior.
+- Dispatch `31887239152` passed both Ubuntu lanes and the repaired macOS lane;
+  Windows passed install, checker, and lint but its mutation fixtures still
+  applied LF-only replacements to CRLF source text. Plan version 9 normalizes
+  the shared test fixture before accepted/rejected mutations.
 
 ## Execution Boundary
 

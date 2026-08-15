@@ -46,6 +46,10 @@
   runtime checker rejected two exact LF substrings after Git produced CRLF.
   Version 8 normalizes workflow text before inspection and adds a CRLF fixture;
   the semantic contract remains unchanged.
+- Dispatch 31887239152 passed Ubuntu 22/24 and the complete repaired macOS
+  suite. Windows passed install, the normalized checker, and lint; only its
+  checker mutation fixtures failed because LF replacements did not alter CRLF
+  input. Version 9 normalizes the shared fixture before mutation.
 
 ## Turn 495 | 2026-08-15
 

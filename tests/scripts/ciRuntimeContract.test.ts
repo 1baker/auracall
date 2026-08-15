@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { collectCiRuntimeContractErrors } from '../../scripts/ciRuntimeContract.js';
 
 const currentPackage = readFileSync(resolve('package.json'), 'utf8');
-const currentWorkflow = readFileSync(resolve('.github/workflows/ci.yml'), 'utf8');
+const currentWorkflow = readFileSync(resolve('.github/workflows/ci.yml'), 'utf8').replace(/\r\n?/gu, '\n');
 
 describe('CI Node runtime contract', () => {
   it('accepts the current package declarations and workflow matrix', () => {

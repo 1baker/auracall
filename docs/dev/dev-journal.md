@@ -32,6 +32,9 @@
 - Windows completed frozen install and the package prepare build but rejected
   the workflow contract because its checkout used CRLF. Version 8 normalizes
   line endings before inspection and adds an explicit CRLF acceptance case.
+- Dispatch 31887239152 made the remaining split explicit: production checker
+  parsing passed on Windows, while LF-only mutation fixtures did not change the
+  CRLF file. Version 9 normalizes the fixture before all mutation cases.
 
 ## 2026-08-15 | Plan 0326 dashboard-session readiness smoke
 

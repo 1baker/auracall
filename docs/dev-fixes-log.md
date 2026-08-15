@@ -28,6 +28,11 @@
   applying deterministic YAML-text checks, and retain a CRLF acceptance fixture
   so the checker does not become the cross-platform failure it is meant to stop.
 
+- 2026-08-15: Normalizing production checker input is only half of CRLF-safe
+  validation when rejection fixtures mutate raw source with exact strings.
+  Normalize the shared fixture once before all accepted and rejected mutations,
+  then separately synthesize CRLF to prove the production parser accepts it.
+
 - 2026-08-15: A floating `windows-latest` runner can change native compiler
   generations underneath an old patched test dependency. When node-gyp cannot
   identify Visual Studio 2026, use GitHub's supported `windows-2022`/VS2022
