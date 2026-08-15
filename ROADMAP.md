@@ -7,12 +7,12 @@
 Status: active
 Lane: P01
 
-- Active Grok semantic model selector execution:
+- Closed accepted Grok semantic model selector execution:
   [docs/dev/plans/0331-2026-08-15-grok-semantic-model-selectors.md](docs/dev/plans/0331-2026-08-15-grok-semantic-model-selectors.md)
-  Current state: the current picker labels and adapter selection seam exist,
-  but semantic agent selectors are not resolved and selection failures do not
-  yet stop submission. The bounded slice maps one provider family, fails
-  closed, and keeps Gemini explicitly deferred.
+  Stable semantic intent now resolves to exact adapter-owned picker labels,
+  unknown selectors fail before browser launch, and unproved picker selection
+  stops submission. Discovery readiness and the complete cross-platform CI
+  matrix agree; Gemini remains explicitly deferred.
 
 - Closed accepted maintained cross-platform PTY runtime migration:
   [docs/dev/plans/0330-2026-08-15-maintained-pty-runtime.md](docs/dev/plans/0330-2026-08-15-maintained-pty-runtime.md)

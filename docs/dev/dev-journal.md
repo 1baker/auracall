@@ -47524,5 +47524,12 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   the exact test passed twice without changes and the bounded second complete
   run passed 330 files / 2,986 tests with 19 files / 55 intended skips.
 - The pre/post process and port inventory remained unchanged, so no provider or
-  AuraCall-managed browser effect occurred. Cross-platform current-SHA CI is
-  the remaining Plan 0331 gate.
+  AuraCall-managed browser effect occurred.
+- Exact-SHA acceptance dispatch
+  [31902513247](https://github.com/1baker/auracall/actions/runs/31902513247)
+  passed at `2be386bea4116b95f8781d7929a97ecd07ee5820` across Ubuntu
+  22/Node 22, Ubuntu 24/Node 24, macOS/Node 22, and
+  `windows-latest`/Node 22. Every host passed frozen install, runtime checker,
+  zero-warning lint, maintained PTY coverage, the complete provider-disabled
+  suite, and real readiness smoke; Ubuntu 22 also passed build. Plan 0331
+  closes accepted.

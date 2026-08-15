@@ -19750,4 +19750,12 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   mismatch after 2,985 passes. That exact test passed twice alone without code
   changes, and the bounded second full run passed 330 files / 2,986 tests with
   19 files / 55 intended skips. Browser process and port inventory remained
-  unchanged. Current-SHA cross-platform CI is the remaining gate.
+  unchanged.
+- Acceptance dispatch
+  [31902513247](https://github.com/1baker/auracall/actions/runs/31902513247)
+  passed at exact implementation SHA
+  `2be386bea4116b95f8781d7929a97ecd07ee5820`. Ubuntu 22/Node 22,
+  Ubuntu 24/Node 24, macOS/Node 22, and `windows-latest`/Node 22 all
+  passed frozen install, runtime checking, zero-warning lint, the maintained
+  PTY contract, complete provider-disabled suite, and real readiness smoke;
+  Ubuntu 22 also passed the production build. Plan 0331 closes accepted.

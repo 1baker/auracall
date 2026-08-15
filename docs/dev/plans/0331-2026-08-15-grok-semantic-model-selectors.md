@@ -1,8 +1,8 @@
 # Grok Semantic Model Selector Execution | 0331-2026-08-15
 
-State: OPEN
+State: CLOSED
 Lane: P01
-Plan version: 2
+Plan version: 3
 
 ## Goal
 
@@ -12,13 +12,14 @@ when exact selection cannot be proved.
 
 ## Current State
 
-- Agent discovery publishes `grok:auto`, `grok:instant`, and `grok:thinking`,
-  but marks all three `executionReady=false`.
-- Configured browser execution currently forwards a semantic selector nowhere;
-  only a raw agent model reaches Grok's `desiredModel` control.
-- The Grok adapter already recognizes current picker labels `Auto`, `Fast`, and
-  `Expert` through the bundled service registry, but a missing menu or option is
-  logged and ignored, allowing prompt submission on an unverified model.
+- Agent discovery publishes `grok:auto`, `grok:instant`, and `grok:thinking`
+  as execution-ready selectors backed by deterministic `Auto`, `Fast`, and
+  `Expert` mappings.
+- Configured browser execution resolves those selectors before invoking Grok,
+  preserves the semantic selector in result metadata, and retains raw agent
+  `model` as the explicit higher-priority override.
+- The Grok adapter fails closed when its picker cannot open or the exact mapped
+  option cannot be proved, preventing submission on an unverified model.
 - Gemini selectors remain a separate provider slice because its current native
   adapter does not yet carry model-selection inputs.
 
@@ -57,7 +58,7 @@ when exact selection cannot be proved.
 - [x] Focused selector/runtime/HTTP tests, typecheck, zero-warning lint, build,
       full provider-disabled suite, plan audit, CodeGraph sync, and diff hygiene
       pass.
-- [ ] Current-SHA cross-platform CI passes the existing Ubuntu, macOS, and
+- [x] Current-SHA cross-platform CI passes the existing Ubuntu, macOS, and
       Windows matrix without provider traffic.
 
 ## Definition Of Done
@@ -102,4 +103,12 @@ advertises only the proven readiness, and current-SHA CI passes.
   and after the broad run; no provider request or AuraCall-managed browser
   launch occurred. CodeGraph synced eight changed files and is current at 924
   files, 17,678 nodes, and 69,250 edges.
-- Current-SHA cross-platform CI remains the sole closing gate.
+- Exact-SHA CI dispatch
+  [31902513247](https://github.com/1baker/auracall/actions/runs/31902513247)
+  passed at `2be386bea4116b95f8781d7929a97ecd07ee5820`. Jobs
+  `95055319275` (Ubuntu 22 / Node 22), `95055319221` (Ubuntu 24 /
+  Node 24), `95055319149` (macOS / Node 22), and `95055319185`
+  (Windows latest / Node 22) all passed frozen install, runtime checker,
+  zero-warning lint, maintained PTY contract, complete provider-disabled
+  suite, and real readiness smoke; Ubuntu 22 also passed the production build.
+- All acceptance criteria are satisfied, so Plan 0331 closes accepted.
