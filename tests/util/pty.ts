@@ -11,6 +11,10 @@ export type PtyStep = {
   match: string | RegExp;
   /** Text to write to the PTY once the match is seen (e.g., key sequences). */
   write?: string;
+  /** Complete key sequences to write separately when a PTY coalesces burst input. */
+  writes?: string[];
+  /** Delay between entries in writes. */
+  writeIntervalMs?: number;
 };
 
 export interface RunPtyResult {
@@ -18,6 +22,7 @@ export interface RunPtyResult {
   exitCode: number | null;
   signal: number | null;
   homeDir: string;
+  timedOut: boolean;
 }
 
 /**
@@ -66,6 +71,15 @@ export async function runOracleTuiWithPty({
   let output = '';
   const pending = [...steps];
   const startedAt = Date.now();
+  const writeTimers = new Set<ReturnType<typeof setTimeout>>();
+
+  const writeSafely = (text: string): void => {
+    try {
+      ps.write(text);
+    } catch {
+      // Ignore write errors if PTY closes between match and write.
+    }
+  };
 
   const maybeFlushSteps = (): void => {
     while (pending.length > 0) {
@@ -78,11 +92,16 @@ export async function runOracleTuiWithPty({
         break;
       }
       if (step.write) {
-        try {
-          ps.write(step.write);
-        } catch {
-          // Ignore write errors if PTY closes between match and write.
-        }
+        writeSafely(step.write);
+      }
+      if (step.writes) {
+        step.writes.forEach((text, index) => {
+          const timer = setTimeout(() => {
+            writeTimers.delete(timer);
+            writeSafely(text);
+          }, index * (step.writeIntervalMs ?? 50));
+          writeTimers.add(timer);
+        });
       }
       if (matched) {
         pending.shift();
@@ -95,16 +114,15 @@ export async function runOracleTuiWithPty({
 
   const flushInterval = setInterval(maybeFlushSteps, 200);
 
-  const killTimer =
-    typeof killAfterMs === 'number' && killAfterMs > 0
-      ? setTimeout(() => {
-          try {
-            ps.kill();
-          } catch {
-            // ignore
-          }
-        }, killAfterMs)
-      : null;
+  let timedOut = false;
+  const killTimer = setTimeout(() => {
+    timedOut = true;
+    try {
+      ps.kill();
+    } catch {
+      // The process may have closed between the timer firing and kill.
+    }
+  }, killAfterMs ?? 15_000);
 
   ps.onData((data: string) => {
     output += data;
@@ -118,10 +136,11 @@ export async function runOracleTuiWithPty({
     }));
   });
 
-  if (killTimer) {
-    clearTimeout(killTimer);
+  clearTimeout(killTimer);
+  for (const timer of writeTimers) {
+    clearTimeout(timer);
   }
   clearInterval(flushInterval);
 
-  return { output, ...exit, homeDir: home };
+  return { output, ...exit, homeDir: home, timedOut };
 }

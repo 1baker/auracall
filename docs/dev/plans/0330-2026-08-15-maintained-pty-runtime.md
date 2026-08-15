@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 2
+Plan version: 3
 
 ## Goal
 
@@ -105,3 +105,14 @@ current-SHA CI dispatch proves the maintained runtime on every configured host.
   the exact maintained dependency/build allowlist, removal of the legacy
   package/patch, the focused script and step, and the current Windows runner.
   Current-SHA cross-platform CI remains the closing gate.
+- Diagnostic dispatch `31899873879` at `1e48d02f` proved frozen prebuilt
+  installation on every host and passed all 9 PTY cases on Ubuntu and current
+  Windows. The six streaming cases also passed on macOS, but its TUI fixture
+  retained a child after receiving six arrow-key escapes in one write. The run
+  was cancelled after capturing that boundary rather than left consuming a
+  runner.
+- The TUI driver now writes complete arrow-key sequences separately at bounded
+  intervals and owns a default 15-second kill guard with an explicit
+  `timedOut` result. Tests reject watchdog exits, so this bounds native failures
+  without weakening the clean-exit contract. The repaired three-case TUI suite
+  passes locally; current-SHA CI must be repeated.

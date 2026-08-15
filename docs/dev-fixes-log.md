@@ -1,3 +1,8 @@
+- 2026-08-15: Repeated terminal escape sequences sent in one PTY write can be
+  coalesced differently across native backends. Send complete key sequences at
+  bounded intervals, give every native child a kill watchdog, and surface
+  whether that watchdog fired so liveness cannot masquerade as a clean exit.
+
 - 2026-08-15: A PTY interrupt test should send Ctrl+C after observing a known
   child-output milestone, not at a fixed delay from spawn. Native startup time
   varies by host, and node-pty exit-code/signal fields differ by platform; prove

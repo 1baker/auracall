@@ -22,6 +22,11 @@
 - CI and its executable checker now require the focused PTY behavior contract
   on Ubuntu, macOS, and `windows-latest`. Publication and an exact-SHA matrix
   dispatch are the remaining acceptance gates.
+- Diagnostic dispatch `31899873879` proved the maintained prebuild and all 9
+  PTY cases on Ubuntu and current Windows. macOS passed all six streaming cases
+  but hung in the TUI fixture after a burst write of repeated arrow escapes, so
+  the run was cancelled. The driver now spaces complete key sequences and
+  reports a bounded watchdog exit explicitly; local TUI cases pass again.
 
 ## Turn 498 | 2026-08-15
 

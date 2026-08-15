@@ -17,6 +17,15 @@
   55 intended skips; typecheck, zero-warning lint, build, plan audit, and diff
   hygiene also passed. The workflow and checker require the PTY command on each
   host and select `windows-latest`; exact-SHA CI is still required to close.
+- Dispatch `31899873879` proved maintained prebuilt installation on every host,
+  including darwin-arm64 and current Windows. Ubuntu and Windows passed all 9
+  focused cases; macOS passed all six streaming cases but retained the first
+  TUI child after receiving a burst of arrow escapes. The cancelled run's log
+  narrowed the failure before the complete suite.
+- The TUI fixture now spaces whole key sequences and defaults to a 15-second
+  native-child watchdog. The helper returns `timedOut` and every TUI assertion
+  rejects it, preserving clean-exit proof while guaranteeing bounded failure.
+  All three cases pass locally; repeat exact-SHA CI is pending.
 
 ## 2026-08-15 | Plan 0329 native Windows complete-suite portability
 

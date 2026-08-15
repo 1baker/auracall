@@ -11,14 +11,17 @@ ptyDescribe('TUI (interactive, PTY)', () => {
   it(
     'renders the menu and exits cleanly when selecting Exit',
     async () => {
-      const { output, exitCode, homeDir } = await runOracleTuiWithPty({
+      const { output, exitCode, homeDir, timedOut } = await runOracleTuiWithPty({
         steps: [
-          // Move to the Exit row (ask oracle -> ask oracle -> newer/reset -> exit). Extra downs are harmless.
-          { match: 'Select a session or action', write: '\u001b[B\u001b[B\u001b[B\u001b[B\u001b[B\u001b[B\r' },
+          {
+            match: 'Select a session or action',
+            writes: ['\u001b[B', '\u001b[B', '\u001b[B', '\u001b[B', '\u001b[B', '\u001b[B', '\r'],
+          },
         ],
       });
       await fs.rm(homeDir, { recursive: true, force: true }).catch(() => {});
 
+      expect(timedOut).toBe(false);
       expect(exitCode).toBe(0);
       expect(output).toContain('🧿 auracall');
       expect(output.toLowerCase()).toContain('closing the book');
@@ -29,13 +32,17 @@ ptyDescribe('TUI (interactive, PTY)', () => {
   it(
     'prints the oracle header only once when forcing the TUI',
     async () => {
-      const { output, homeDir } = await runOracleTuiWithPty({
+      const { output, homeDir, timedOut } = await runOracleTuiWithPty({
         steps: [
-          { match: 'Select a session or action', write: '\u001b[B\u001b[B\u001b[B\u001b[B\u001b[B\u001b[B\r' },
+          {
+            match: 'Select a session or action',
+            writes: ['\u001b[B', '\u001b[B', '\u001b[B', '\u001b[B', '\u001b[B', '\u001b[B', '\r'],
+          },
         ],
       });
       await fs.rm(homeDir, { recursive: true, force: true }).catch(() => {});
 
+      expect(timedOut).toBe(false);
       const headerCount = (output.match(/🧿 auracall/g) ?? []).length;
       expect(headerCount).toBe(1);
       expect(output).not.toContain('__disabled__');
@@ -56,12 +63,16 @@ ptyDescribe('TUI (interactive, PTY)', () => {
 	        await sessionStore.createSession({ prompt: 'one', model: 'gpt-5.1' }, process.cwd());
 	        await sessionStore.createSession({ prompt: 'two', model: 'gpt-5.2-pro' }, process.cwd());
 
-        const { output } = await runOracleTuiWithPty({
+        const { output, timedOut } = await runOracleTuiWithPty({
           homeDir,
-          steps: [{ match: 'Select a session or action', write: '\u001b[B\u001b[B\u001b[B\u001b[B\u001b[B\u001b[B\r' }],
+          steps: [{
+            match: 'Select a session or action',
+            writes: ['\u001b[B', '\u001b[B', '\u001b[B', '\u001b[B', '\u001b[B', '\u001b[B', '\r'],
+          }],
           killAfterMs: 10_000,
         });
 
+        expect(timedOut).toBe(false);
         const disabledMatches = output.match(/__disabled__|\(Disabled\)/g) ?? [];
         expect(disabledMatches.length).toBe(0);
         const statusHeaders = output.match(/Status/g) ?? [];
