@@ -1,8 +1,8 @@
 # Native Windows Complete-Suite Portability | 0329-2026-08-15
 
-State: OPEN
+State: CLOSED
 Lane: P01
-Plan version: 3
+Plan version: 4
 
 ## Goal
 
@@ -61,10 +61,10 @@ pretending POSIX-only behavior is portable.
       cannot exist on that host, with the reason visible beside the gate.
 - [x] CI and its drift guard require `pnpm run test` on Ubuntu, macOS, and
       Windows, plus the real readiness smoke on every configured OS.
-- [ ] Focused regressions, the complete isolated provider-disabled suite,
+- [x] Focused regressions, the complete isolated provider-disabled suite,
       typecheck, zero-warning lint, build, plan audit, CodeGraph sync, and diff
       hygiene pass locally.
-- [ ] Current-SHA CI passes all four configured jobs, including the complete
+- [x] Current-SHA CI passes all four configured jobs, including the complete
       native-Windows suite and readiness smoke.
 
 ## Definition Of Done
@@ -121,3 +121,10 @@ host-specific contract rather than a convenience skip.
   rename. Record writes are now serialized per destination, including the
   revision read, while unrelated generation ids remain concurrent. The focused
   media suite passed five consecutive runs; current-SHA CI is being repeated.
+- Acceptance dispatch `31898719395` passed at exact implementation SHA
+  `9298c226cd392219d13601e5ceb3210d913ae010` on Ubuntu 22 job
+  `95045905872`, Ubuntu 24 job `95045905864`, macOS 22 job `95045905863`,
+  and Windows 2022/Node 22 job `95045905840`. Windows passed 327 files and
+  2,928 tests, with 22 files and 101 intended live/host-specific skips, then
+  passed the real readiness smoke (`http=true`, CLI exit 0, `mcp=ok`; scoped-
+  only `http=false`, CLI exit 1, `mcp=error`) and cleanup. Plan 0329 is closed.

@@ -25,6 +25,10 @@
   files and 2,927 tests passed. Windows cannot make remove-then-rename atomic
   across competing writers, so media record writes now queue per destination
   and compute revisions inside that queue; five focused repetitions pass.
+- Acceptance dispatch `31898719395` passed at exact implementation SHA
+  `9298c226cd392219d13601e5ceb3210d913ae010` across Ubuntu 22/24, macOS 22,
+  and Windows 2022/Node 22. Windows passed 327 files and 2,928 tests plus the
+  real ready/scoped-only HTTP/CLI/MCP smoke. Plan 0329 is closed accepted.
 
 ## Turn 497 | 2026-08-15
 

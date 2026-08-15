@@ -27,6 +27,12 @@
   serialization now covers revision read and replacement without reducing
   concurrency across distinct generation ids; the focused suite passed five
   consecutive runs before the next dispatch.
+- Acceptance dispatch `31898719395` passed at
+  `9298c226cd392219d13601e5ceb3210d913ae010` on all four configured jobs.
+  Windows passed 327 files and 2,928 tests with only 22 files and 101 intended
+  skips, then passed the real readiness smoke in both ready and scoped-only
+  postures. Plan 0329 closes accepted; the complete Windows suite is now a
+  required CI contract rather than a focused substitute.
 
 ## 2026-08-15 | Plan 0328 native Windows runner persistence
 

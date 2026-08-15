@@ -7,10 +7,10 @@
 Status: active
 Lane: P01
 
-- Open native Windows complete-suite portability:
+- Closed accepted native Windows complete-suite portability:
   [docs/dev/plans/0329-2026-08-15-native-windows-full-suite.md](docs/dev/plans/0329-2026-08-15-native-windows-full-suite.md)
-  Remove remaining persisted-key and fixture portability failures, then require
-  the complete provider-disabled suite on native Windows.
+  Persisted cache keys and fixtures are portable, and the complete provider-
+  disabled suite plus real readiness smoke pass on native Windows.
 
 - Closed accepted native Windows runner persistence compatibility:
   [docs/dev/plans/0328-2026-08-15-native-windows-runner-persistence.md](docs/dev/plans/0328-2026-08-15-native-windows-runner-persistence.md)
