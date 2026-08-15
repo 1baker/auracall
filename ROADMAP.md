@@ -7,12 +7,12 @@
 Status: active
 Lane: P01
 
-- Active durable response-batch priority:
+- Closed accepted durable response-batch priority:
   [docs/dev/plans/0336-2026-08-15-durable-response-batch-priority.md](docs/dev/plans/0336-2026-08-15-durable-response-batch-priority.md)
-  Current state: service-host drains preserve actionable-class ordering and
-  FIFO but cannot distinguish caller urgency. This slice adds durable
-  closed-world tiers, starvation-bounded aging, operator escalation authority,
-  and actual scheduler selection without preemption or gate bypass.
+  Current state: durable closed-world tiers, starvation-bounded aging,
+  operator escalation authority, retry inheritance, and actual scheduler
+  selection now preserve execution classes, FIFO ties, and every authority or
+  safety gate. Complete local and exact-SHA cross-platform gates pass.
 
 - Closed accepted durable response-batch retry:
   [docs/dev/plans/0335-2026-08-15-durable-response-batch-retry.md](docs/dev/plans/0335-2026-08-15-durable-response-batch-retry.md)

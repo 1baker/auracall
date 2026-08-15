@@ -1,8 +1,8 @@
 # Durable Response-Batch Priority | 0336-2026-08-15
 
-State: OPEN
+State: CLOSED
 Lane: P01
-Plan version: 1
+Plan version: 2
 
 ## Goal
 
@@ -58,23 +58,23 @@ scheduler rather than by metadata-only client convention.
 
 ## Acceptance Criteria
 
-- [ ] Batch create persists one closed-world priority, defaults legacy/new
+- [x] Batch create persists one closed-world priority, defaults legacy/new
       omission to `normal`, and copies it into every child run.
-- [ ] Untargeted capped drains execute higher effective priority before lower
+- [x] Untargeted capped drains execute higher effective priority before lower
       priority within the same actionable class, with FIFO ordering for ties.
-- [ ] Fifteen-minute tier aging is recomputed from durable creation time and
+- [x] Fifteen-minute tier aging is recomputed from durable creation time and
       eventually raises old low/normal/non-batch work to `urgent` without
       mutating stored requested priority.
-- [ ] Priority never bypasses execution gates, active leases, runner affinity,
+- [x] Priority never bypasses execution gates, active leases, runner affinity,
       concurrency/rate/tenant limits, or the existing recovery-slot policy.
-- [ ] HTTP rejects scoped `high` or `urgent` creation before batch/child
+- [x] HTTP rejects scoped `high` or `urgent` creation before batch/child
       persistence, while scoped `low`/`normal`, unscoped operator calls, and
       local MCP use the shared batch service contract.
-- [ ] Retry batches inherit source priority and expose fresh effective-priority
+- [x] Retry batches inherit source priority and expose fresh effective-priority
       aging without accepting escalation in the retry body.
-- [ ] HTTP, MCP, route/status discovery, specialized skills, user docs, and
+- [x] HTTP, MCP, route/status discovery, specialized skills, user docs, and
       focused batch/service-host tests agree on priority semantics.
-- [ ] Typecheck, zero-warning lint, build, plan audit, CodeGraph sync, diff
+- [x] Typecheck, zero-warning lint, build, plan audit, CodeGraph sync, diff
       hygiene, complete provider-disabled tests, and exact-SHA
       Ubuntu/macOS/Windows CI pass.
 
@@ -99,3 +99,28 @@ and is observable and authorized consistently across HTTP and MCP.
   exact-SHA cross-platform gates, or scheduler invariants disprove this design
   and the blocker is recorded
 
+## Execution Notes
+
+- Batch creation now stores requested priority on the durable batch and every
+  child request. Status reports requested/effective tiers, age boost, and the
+  fixed 15-minute interval; legacy and non-batch work safely default to
+  `normal`.
+- The service host resolves priority during candidate inspection, after the
+  actionable execution class is known and before capped selection. Higher
+  effective tiers run first within a class, FIFO breaks ties, and the existing
+  runnable/recovery policy plus reserved recovery capacity remain unchanged.
+- HTTP denies scoped `high`/`urgent` requests before catalog or persistence
+  work while allowing scoped `low`/`normal` and unscoped operators. MCP exposes
+  the complete local-operator vocabulary, and retry inherits source priority.
+- Four focused host/batch/HTTP/MCP suites pass 322 tests. Typecheck,
+  zero-warning lint over 851 files, production build, 337-plan audit with zero
+  validation errors, bundled-skill validation, CodeGraph sync, diff hygiene,
+  and the complete provider-disabled suite pass. The suite reports 328 files /
+  2,977 tests passed with 22 files / 96 intentional live skips.
+- Exact-SHA acceptance run
+  [31915204142](https://github.com/1baker/auracall/actions/runs/31915204142)
+  passed at `cb557d23a9a9aae02384d877c8bafe4e85061586`. Ubuntu 22/Node 22,
+  Ubuntu 24/Node 24, macOS/Node 22, and serialized Windows/Node 22 all
+  passed frozen install, runtime checking, zero-warning lint, maintained PTY
+  coverage, the complete provider-disabled suite, and readiness smoke; Ubuntu
+  22 also passed the production build. Plan 0336 closes accepted.

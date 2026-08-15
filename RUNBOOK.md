@@ -19937,3 +19937,11 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
 - Fifteen-minute aging includes legacy and non-batch work via the `normal`
   compatibility default. Focused host/batch/HTTP/MCP coverage passes 322 tests
   without weakening gates, leases, affinity, or reserved recovery capacity.
+- Typecheck, zero-warning lint, production build, 337-plan audit, bundled-skill
+  validation, CodeGraph sync, diff hygiene, and the complete 328-file / 2,977-
+  test provider-disabled suite pass with 22 files / 96 intentional live skips.
+- Exact-SHA acceptance run
+  [31915204142](https://github.com/1baker/auracall/actions/runs/31915204142)
+  passed at `cb557d23a9a9aae02384d877c8bafe4e85061586` across Ubuntu 22/Node
+  22, Ubuntu 24/Node 24, macOS/Node 22, and serialized Windows/Node 22.
+  Plan 0336 closes accepted.
