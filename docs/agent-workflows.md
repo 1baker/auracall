@@ -305,8 +305,8 @@ When a setup agent can create the project-bound agent and key in one call, use
   "agentId": "pro-extended-chatgpt-soylei-che4470-seminar-grading",
   "agentModelSelector": "chatgpt:sol-high",
   "keyId": "che447-grading-client",
-  "envPath": "/home/ecochran76/.auracall/api.env",
-  "clientEnvPath": "/home/ecochran76/.auracall/clients/che447-grading.env"
+  "envPath": "/home/<you>/.auracall/api.env",
+  "clientEnvPath": "/home/<you>/.auracall/clients/che447-grading.env"
 }
 ```
 
@@ -319,8 +319,8 @@ write the downstream handoff:
   "keyId": "che447-grading-client",
   "services": ["chatgpt"],
   "runtimeProfiles": ["wsl-chrome-3"],
-  "envPath": "/home/ecochran76/.auracall/api.env",
-  "clientEnvPath": "/home/ecochran76/.auracall/clients/che447-grading.env"
+  "envPath": "/home/<you>/.auracall/api.env",
+  "clientEnvPath": "/home/<you>/.auracall/clients/che447-grading.env"
 }
 ```
 

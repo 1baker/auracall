@@ -12,7 +12,7 @@ Shared prereqs
 - `pnpm build` (ensures `dist/bin/auracall-mcp.js` exists)
 - `OPENAI_API_KEY` set in env
 - `config/mcporter.json` contains the `oracle` entry pointing to `npx -y @steipete/oracle auracall-mcp` (already committed).
-- mcporter available at `/Users/steipete/Library/pnpm/global/5/node_modules/.bin/mcporter`
+- `mcporter` available on `PATH` (`command -v mcporter`)
 - For browser runs: Chrome installed; macOS host (headful).
 - macOS notifications: `vendor/oracle-notifier/OracleNotifier.app` ships with the package (preferred); falls back to toasted-notifier if missing/broken.
 
@@ -136,7 +136,7 @@ Prereqs
 Steps
 1) Start Claude in tmux:
    ```bash
-   tmux new -s claude-smoke 'cd /Users/steipete/Projects/oracle && OPENAI_API_KEY=$OPENAI_API_KEY claude --permission-mode bypassPermissions --mcp-config ~/.mcp/oracle.json'
+   tmux new -s claude-smoke 'cd "$(git rev-parse --show-toplevel)" && claude --permission-mode bypassPermissions --mcp-config ~/.mcp/oracle.json'
    ```
 2) From another shell, use the helper to drive it:
    ```bash

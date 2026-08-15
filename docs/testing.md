@@ -2608,11 +2608,11 @@
 - Secondary Gemini pairing check on 2026-04-04:
   - pairing: AuraCall runtime profile `wsl-chrome-2` -> browser profile `wsl-chrome-2`
   - managed Gemini browser profile directory exists under:
-    - `/home/ecochran76/.auracall/browser-profiles/wsl-chrome-2/gemini`
+    - `~/.auracall/browser-profiles/wsl-chrome-2/gemini`
   - login/export state is now green:
     - `auracall --profile wsl-chrome-2 login --target gemini --export-cookies`
       now succeeds and writes:
-      - `/home/ecochran76/.auracall/browser-profiles/wsl-chrome-2/gemini/cookies.json`
+      - `~/.auracall/browser-profiles/wsl-chrome-2/gemini/cookies.json`
     - the current Gemini login flow can click a visible Gemini `Sign in` CTA
       once and wait through the Google handoff when that is sufficient
   - browser text proof is now green:

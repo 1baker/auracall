@@ -1,3 +1,15 @@
+## 2026-08-15 | Plan 0314 current user path portability
+
+- Replaced concrete operator home roots on fourteen lines across five current
+  docs with explicit placeholders, home-relative paths, environment
+  configuration, or repository-root discovery.
+- Added a generic current-doc detector for named Unix, macOS, WSL-mounted
+  Windows, and native Windows user roots. Explicit placeholders, environment
+  variables, and system-shared roots remain valid examples.
+- Nine focused tests, typecheck, warning-strict lint across 833 files, scoped
+  lint, plan audit, shell syntax validation, and diff hygiene passed. No live
+  command ran. Plan 0314 is CLOSED.
+
 ## 2026-08-15 | Plan 0313 current command path portability
 
 - Removed 17 retired checkout-root references from README, manual tests,

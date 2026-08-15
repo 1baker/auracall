@@ -1,3 +1,10 @@
+- 2026-08-15: Current docs should not embed a real operator's Unix, macOS, or
+  Windows user-home path. Normalize examples with explicit placeholders,
+  home-relative paths, environment configuration, or repository-root
+  discovery, and enforce the generic path shape rather than accumulating a
+  denylist of known usernames. Allow unambiguous placeholders and system-shared
+  roots so the guard does not reject portable absolute-path contracts.
+
 - 2026-08-15: Portable Markdown links do not make embedded shell/JSON examples
   portable. Current executable examples should derive an absolute repository
   root with `git rev-parse --show-toplevel`, interpolate it consistently into

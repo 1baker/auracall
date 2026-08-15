@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   collectAbsoluteCheckoutMarkdownLinks,
+  collectConcreteUserHomeRoots,
   collectCurrentDocAbsoluteLinkErrors,
+  collectCurrentDocConcreteUserPathErrors,
   collectCurrentDocRetiredCheckoutErrors,
 } from '../scripts/currentDocLinks.js';
 
@@ -50,6 +52,47 @@ describe('current documentation link portability audit', () => {
       ]),
     ).toEqual([
       'README.md: contains retired checkout path /home/ecochran76/workspace.local/auracall',
+    ]);
+  });
+
+  it('collects named Unix, macOS, and Windows user roots while allowing generic examples', () => {
+    const markdown = [
+      '/home/alice/.auracall/config.json',
+      '/Users/bob/Library/Application Support/AuraCall',
+      '/mnt/c/Users/carol/AppData/Local/AuraCall',
+      String.raw`C:\Users\dave\AppData\Local\AuraCall`,
+      '/home/<you>/.auracall/config.json',
+      '/Users/me/.auracall/config.json',
+      String.raw`C:\Users\<you>\AppData\Local\AuraCall`,
+      '/home/$USER/.auracall/config.json',
+      `/home/\${USER}/.auracall/config.json`,
+      String.raw`C:\Users\%USERNAME%\AppData\Local\AuraCall`,
+      '/Users/Shared/AuraCall',
+    ].join('\n');
+
+    expect(collectConcreteUserHomeRoots(markdown)).toEqual([
+      '/home/alice',
+      '/Users/bob',
+      '/Users/carol',
+      String.raw`\Users\dave`,
+    ]);
+  });
+
+  it('reports each unique concrete user root with its current document path', () => {
+    expect(
+      collectCurrentDocConcreteUserPathErrors([
+        {
+          path: 'docs/windows-work.md',
+          text: '/mnt/c/Users/alice/profile and C:\\Users\\alice\\profile',
+        },
+        {
+          path: 'docs/configuration.md',
+          text: '/home/<you>/.auracall and /Users/me/.auracall',
+        },
+      ]),
+    ).toEqual([
+      'docs/windows-work.md: concrete user-home path /Users/alice',
+      'docs/windows-work.md: concrete user-home path \\Users\\alice',
     ]);
   });
 });

@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { collectMissingAgentsPolicyReferenceErrors } from './agentsPolicyEntry.js';
 import {
   collectCurrentDocAbsoluteLinkErrors,
+  collectCurrentDocConcreteUserPathErrors,
   collectCurrentDocRetiredCheckoutErrors,
 } from './currentDocLinks.js';
 import { collectActiveRoadmapPlanStateErrors } from './roadmapPlanState.js';
@@ -166,6 +167,7 @@ function collectValidationErrors(
   errors.push(...collectMissingAgentsPolicyReferenceErrors(agentsText, existingPolicyPaths));
   errors.push(...collectCurrentDocAbsoluteLinkErrors(currentDocumentation));
   errors.push(...collectCurrentDocRetiredCheckoutErrors(currentDocumentation));
+  errors.push(...collectCurrentDocConcreteUserPathErrors(currentDocumentation));
 
   for (const candidate of rawCandidates) {
     if (!candidate.relPath.startsWith('docs/dev/plans/')) {

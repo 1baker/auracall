@@ -1,5 +1,20 @@
 # RUNBOOK
 
+## Turn 483 | 2026-08-15
+
+- Opened Plan 0314 after the current-doc portability audit found five current
+  documents with concrete `ecochran76`, `ecoch`, or `steipete` user-home roots.
+- Normalize only filesystem identity: preserve factual operational evidence,
+  allow explicit generic placeholders, and keep append-only evidence excluded.
+- Add one generic Unix/macOS/Windows detector to the existing current-doc audit;
+  no release, browser, provider, MCP, or other live command is in scope.
+- Normalized fourteen affected lines across the five documents with explicit
+  placeholders, home-relative paths, environment configuration, or repository-
+  root discovery; factual identity evidence remains unchanged.
+- Nine focused governance tests, typecheck, zero-warning lint across 833 files,
+  scoped lint, plan audit with zero errors, diff hygiene, and shell syntax
+  validation passed. Plan 0314 closes accepted without live execution.
+
 ## Turn 482 | 2026-08-15
 
 - Opened Plan 0313 after current-doc content inspection found 17 retired
