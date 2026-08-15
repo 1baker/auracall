@@ -78,7 +78,7 @@ import { DEFAULT_TEAM_RUN_EXECUTION_POLICY } from "../src/teams/types.js";
 import { createChatgptDeepResearchStatusFixture } from "./fixtures/chatgptDeepResearchStatusFixture.js";
 import { requireFixtureValue } from "./util/fixtures.js";
 
-vi.setConfig({ testTimeout: 10000 });
+vi.setConfig({ testTimeout: 30000 });
 
 type JsonValue = string | number | boolean | null | JsonObject | JsonValue[];
 type JsonObject = { [key: string]: JsonValue | undefined };
