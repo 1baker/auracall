@@ -2,16 +2,19 @@ export type HttpRouteMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
 export type StaticHttpRouteDefinition = {
 	methods: readonly HttpRouteMethod[];
+	pathParameters?: Readonly<Record<string, "segment" | "rest">>;
 	statusTemplate: string;
 };
 
 const route = (
 	methods: readonly HttpRouteMethod[],
 	statusTemplate: string,
-): StaticHttpRouteDefinition => ({ methods, statusTemplate });
+	options: Pick<StaticHttpRouteDefinition, "pathParameters"> = {},
+): StaticHttpRouteDefinition => ({ methods, statusTemplate, ...options });
 
 export const HTTP_ROUTE_MANIFEST = {
-	status: route(["GET", "POST"], "/status"),
+	status: route(["GET"], "/status"),
+	statusControl: route(["POST"], "POST /status"),
 	recoveryDetailTemplate: route(["GET"], "/status/recovery/{run_id}"),
 	teamRunsCreate: route(["POST"], "/v1/team-runs"),
 	teamRunInspection: route(
@@ -60,11 +63,16 @@ export const HTTP_ROUTE_MANIFEST = {
 	),
 	runArchiveBackfill: route(["POST"], "/v1/archive/backfill"),
 	runArchiveEvidenceCreate: route(["POST"], "/v1/archive/evidence"),
-	runArchiveItemTemplate: route(["GET"], "/v1/archive/items/{archive_item_id}"),
-	runArchiveItemAssetTemplate: route(["GET"], "/v1/archive/items/{archive_item_id}/asset"),
+	runArchiveItemTemplate: route(["GET"], "/v1/archive/items/{archive_item_id}", {
+		pathParameters: { archive_item_id: "rest" },
+	}),
+	runArchiveItemAssetTemplate: route(["GET"], "/v1/archive/items/{archive_item_id}/asset", {
+		pathParameters: { archive_item_id: "rest" },
+	}),
 	runArchiveItemMaterializeTemplate: route(
 		["POST"],
 		"/v1/archive/items/{archive_item_id}/materialize",
+		{ pathParameters: { archive_item_id: "rest" } },
 	),
 	runArchiveMaterializationsCreate: route(["POST"], "/v1/archive/materializations"),
 	runArchiveMaterializationsList: route(
@@ -107,7 +115,12 @@ export const HTTP_ROUTE_MANIFEST = {
 		["GET"],
 		"/v1/account-mirrors/catalog/items/{item_id}?provider={chatgpt|gemini|grok}&runtimeProfile={runtime_profile}&kind={kind}",
 	),
-	accountMirrorPreviewSessions: route(["GET", "POST"], "/v1/account-mirrors/preview-sessions"),
+	accountMirrorCatalogItemAssetTemplate: route(
+		["GET"],
+		"/v1/account-mirrors/catalog/items/{item_id}/asset?provider={chatgpt|gemini|grok}&runtimeProfile={runtime_profile}&kind={kind}",
+	),
+	accountMirrorPreviewSessions: route(["GET"], "/v1/account-mirrors/preview-sessions"),
+	accountMirrorPreviewSessionsCreate: route(["POST"], "POST /v1/account-mirrors/preview-sessions"),
 	accountMirrorPreviewSessionTemplate: route(
 		["GET", "PATCH", "DELETE"],
 		"/v1/account-mirrors/preview-sessions/{preview_session_id}",
@@ -139,6 +152,15 @@ export const HTTP_ROUTE_MANIFEST = {
 		["POST"],
 		'POST /v1/account-mirrors/completions/{completion_id} {"action":"pause|resume|cancel|run_one_pass"}',
 	),
+	accountMirrorDevelopmentRunsCreate: route(["POST"], "POST /v1/account-mirrors/development-runs"),
+	accountMirrorDevelopmentRunTemplate: route(
+		["GET", "POST"],
+		'GET/POST /v1/account-mirrors/development-runs/{development_run_id} {"action":"cancel"}',
+	),
+	accountMirrorDevelopmentPolicy: route(
+		["GET", "POST"],
+		"GET/POST /v1/account-mirrors/development-policy",
+	),
 	accountMirrorSchedulerHistory: route(["GET"], "/v1/account-mirrors/scheduler/history[?limit=10]"),
 	accountMirrorSchedulerDiagnostics: route(
 		["GET"],
@@ -153,7 +175,11 @@ export const HTTP_ROUTE_MANIFEST = {
 		["POST"],
 		"POST /v1/browser/dom-drift-observations/{observation_id}/accept",
 	),
+	configAgents: route(["GET"], "/v1/config/agents"),
+	configAgentTemplate: route(["PUT", "DELETE"], "PUT/DELETE /v1/config/agents/{agent_id}"),
 	agentConfigChoices: route(["GET"], "/v1/config/agent-choices"),
+	configTeams: route(["GET"], "/v1/config/teams"),
+	configTeamTemplate: route(["PUT", "DELETE"], "PUT/DELETE /v1/config/teams/{team_id}"),
 	agentRegistryDiagnostics: route(["GET"], "/v1/config/agent-diagnostics"),
 	configApiKeys: route(["GET"], "/v1/config/api-keys"),
 	configApiKeyIssue: route(["POST"], "POST /v1/config/api-keys/issue"),
@@ -207,6 +233,64 @@ export function extractHttpRoutePath(statusTemplate: string): string {
 	].filter((index) => index >= 0);
 	const end = terminators.length > 0 ? Math.min(...terminators) : withoutMethod.length;
 	return withoutMethod.slice(0, end);
+}
+
+type CompiledHttpRoutePath = {
+	parameterNames: readonly string[];
+	pattern: RegExp;
+};
+
+const compiledHttpRoutePaths = new Map<StaticHttpRouteKey, CompiledHttpRoutePath>();
+
+function compileHttpRoutePath(key: StaticHttpRouteKey): CompiledHttpRoutePath {
+	const cached = compiledHttpRoutePaths.get(key);
+	if (cached) return cached;
+	const routePath = extractHttpRoutePath(HTTP_ROUTE_MANIFEST[key].statusTemplate);
+	const parameterNames: string[] = [];
+	const patternSource = routePath
+		.split(/(\{[^}]+\})/u)
+		.map((part) => {
+			const parameterMatch = /^\{([a-z][a-z0-9_]*)\}$/u.exec(part);
+			if (parameterMatch?.[1]) {
+				parameterNames.push(parameterMatch[1]);
+				return HTTP_ROUTE_MANIFEST[key].pathParameters?.[parameterMatch[1]] === "rest"
+					? "(.+)"
+					: "([^/]+)";
+			}
+			return part.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+		})
+		.join("");
+	const compiled = {
+		parameterNames,
+		pattern: new RegExp(`^${patternSource}$`, "u"),
+	};
+	compiledHttpRoutePaths.set(key, compiled);
+	return compiled;
+}
+
+export function matchHttpRoutePath(
+	key: StaticHttpRouteKey,
+	pathname: string,
+): Readonly<Record<string, string>> | null {
+	const compiled = compileHttpRoutePath(key);
+	const match = compiled.pattern.exec(pathname);
+	if (!match) return null;
+	return Object.fromEntries(
+		compiled.parameterNames.map((parameterName, index) => [
+			parameterName,
+			decodeURIComponent(match[index + 1] ?? ""),
+		]),
+	);
+}
+
+export function matchesHttpRoute(
+	key: StaticHttpRouteKey,
+	method: string | undefined,
+	pathname: string,
+): boolean {
+	if (!method || !HTTP_ROUTE_MANIFEST[key].methods.includes(method as HttpRouteMethod))
+		return false;
+	return matchHttpRoutePath(key, pathname) !== null;
 }
 
 const HTTP_METHOD_ORDER: readonly HttpRouteMethod[] = ["GET", "POST", "PUT", "PATCH", "DELETE"];

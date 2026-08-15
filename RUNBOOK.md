@@ -1,5 +1,24 @@
 # RUNBOOK
 
+## Turn 488 | 2026-08-15
+
+- Opened Plan 0319 after full request-gate inspection found eight executable
+  static API contracts absent from the new route manifest and confirmed the
+  dispatcher still owns independent literal/prefix/regex path authority.
+- Add manifest-driven exact/template matching, bind every static API gate or
+  dynamic-id matcher to a manifest key, and enforce both parity directions with
+  deterministic AST validation. Preserve handler order and dynamic dashboard/
+  asset routing; tighten development-run items to intended GET/POST only.
+- Expanded the manifest to 81 entries across 73 unique paths, added decoded
+  segment/rest matching, and bound every static handler and dynamic-id matcher
+  to that authority. The full AST contract now replaces the former eleven-route
+  specialized-skill subset and rejects missing, unknown, or raw bypass gates.
+- Four focused files passed 228 tests; the complete isolated provider-disabled
+  suite passed 2,934 with 65 expected skips. Typecheck, zero-warning lint across
+  843 files, production build, 320-plan audit, and diff hygiene passed. Plan
+  0319 closes accepted without provider, browser, configuration, or live-service
+  effects.
+
 ## Turn 487 | 2026-08-15
 
 - Opened Plan 0318 after direct server and governance inspection found three

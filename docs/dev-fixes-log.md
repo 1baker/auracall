@@ -1,3 +1,10 @@
+- 2026-08-15: A typed route inventory becomes executable authority only when
+  request gates and dynamic-id matchers consume it. Give shared paths separate
+  handler keys when methods have different implementations, model multi-segment
+  opaque ids explicitly, and enforce bidirectional parity with AST validation:
+  every manifest key must be referenced, every reference must exist, and raw
+  static API equality, prefix, or regex gates must fail governance.
+
 - 2026-08-15: Public HTTP diagnostics should project from typed executable route
   metadata, not parallel status types, status literals, and startup strings.
   Keep dynamic service-discovery values outside the static manifest, preserve

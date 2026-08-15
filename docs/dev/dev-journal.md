@@ -1,3 +1,16 @@
+## 2026-08-15 | Plan 0319 HTTP handler manifest parity
+
+- Expanded the typed manifest from 71 to 81 entries across 73 unique paths and
+  made it the path/method authority for every static `/status` and `/v1`
+  handler, including decoded dynamic segments and archive rest ids.
+- Added complete TypeScript AST parity validation for all manifest references
+  and raw path bypasses, then reused it in specialized-skill governance. The
+  sequential dispatcher, dynamic UI routing, and live-effect boundaries remain
+  unchanged; unsupported development-run PUT now correctly returns 404.
+- Four focused files passed 228 tests; the isolated provider-disabled suite
+  passed 2,934 with 65 expected skips. Typecheck, zero-warning lint across 843
+  files, build, 320-plan audit, and diff hygiene passed. Plan 0319 is CLOSED.
+
 ## 2026-08-15 | Plan 0318 HTTP route manifest authority
 
 - Moved 71 advertised static route contracts into one typed manifest and

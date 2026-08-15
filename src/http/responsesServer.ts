@@ -12,6 +12,9 @@ import {
 	createStaticHttpStatusRoutes,
 	formatHttpEndpointBanner,
 	HTTP_ROUTE_MANIFEST,
+	matchHttpRoutePath,
+	matchesHttpRoute,
+	type StaticHttpRouteKey,
 	type StaticHttpStatusRoutes,
 } from "./routeManifest.js";
 import {
@@ -1779,7 +1782,7 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-			if (req.method === "GET" && url.pathname === "/status") {
+			if (matchesHttpRoute("status", req.method, url.pathname)) {
 				const statusQuery = parseStatusQuery(url.searchParams);
 				await accountMirrorStatusRegistry.refreshPersistentState?.({
 					provider: statusQuery.accountMirrorProvider,
@@ -1873,7 +1876,7 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-			if (req.method === "GET" && url.pathname === "/v1/api/logs/tail") {
+			if (matchesHttpRoute("apiLogTail", req.method, url.pathname)) {
 				const address = server.address();
 				const boundPort =
 					address && typeof address !== "string" ? address.port : (options.port ?? 0);
@@ -1882,7 +1885,7 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-			if (req.method === "GET" && url.pathname === "/v1/browser/processes") {
+			if (matchesHttpRoute("browserProcesses", req.method, url.pathname)) {
 				const query = parseBrowserProcessStatusQuery(url.searchParams);
 				await accountMirrorStatusRegistry.refreshPersistentState?.(query);
 				sendJson(
@@ -1900,7 +1903,7 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-			if (req.method === "GET" && url.pathname === "/v1/browser/dom-drift-observations") {
+			if (matchesHttpRoute("browserDomDriftObservations", req.method, url.pathname)) {
 				const operatorAuthError = authorizeOperatorConfigAccess(apiAuthContext);
 				if (operatorAuthError) {
 					sendJson(res, 403, {
@@ -1920,7 +1923,10 @@ export async function createResponsesHttpServer(
 			}
 
 			const domDriftAcceptId = matchDomDriftObservationAcceptRoute(url.pathname);
-			if (req.method === "POST" && domDriftAcceptId) {
+			if (
+				domDriftAcceptId &&
+				matchesHttpRoute("browserDomDriftObservationAcceptTemplate", req.method, url.pathname)
+			) {
 				const operatorAuthError = authorizeOperatorConfigAccess(apiAuthContext);
 				if (operatorAuthError) {
 					sendJson(res, 403, {
@@ -1946,7 +1952,10 @@ export async function createResponsesHttpServer(
 			}
 
 			const preflightRunLogId = matchPreflightRunLogRoute(url.pathname);
-			if (req.method === "GET" && preflightRunLogId) {
+			if (
+				preflightRunLogId &&
+				matchesHttpRoute("preflightRunLogTemplate", req.method, url.pathname)
+			) {
 				const query = parseApiLogTailQuery(url.searchParams);
 				const payload = await readLazyLiveFollowPreflightRunLogTail({
 					id: preflightRunLogId,
@@ -1967,7 +1976,7 @@ export async function createResponsesHttpServer(
 			}
 
 			const preflightRunId = matchPreflightRunRoute(url.pathname);
-			if (req.method === "GET" && preflightRunId) {
+			if (preflightRunId && matchesHttpRoute("preflightRunTemplate", req.method, url.pathname)) {
 				const run = await readLazyLiveFollowPreflightRun(preflightRunId, preflightRunner);
 				if (!run) {
 					sendJson(res, 404, {
@@ -1982,7 +1991,7 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-			if (req.method === "GET" && url.pathname === "/v1/account-mirrors/status") {
+			if (matchesHttpRoute("accountMirrorStatus", req.method, url.pathname)) {
 				const query = parseAccountMirrorStatusQuery(url.searchParams);
 				await accountMirrorStatusRegistry.refreshPersistentState?.({
 					provider: query.provider,
@@ -2000,7 +2009,7 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-			if (req.method === "GET" && url.pathname === "/v1/account-mirrors/catalog") {
+			if (matchesHttpRoute("accountMirrorCatalog", req.method, url.pathname)) {
 				const query = parseAccountMirrorCatalogQuery(url.searchParams);
 				const result: HttpAccountMirrorCatalogResponse =
 					await accountMirrorCatalogService.readCatalog(query);
@@ -2008,7 +2017,7 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-			if (req.method === "GET" && url.pathname === "/v1/account-mirrors/recovery-candidates") {
+			if (matchesHttpRoute("accountMirrorRecoveryCandidates", req.method, url.pathname)) {
 				const query = parseAccountMirrorArtifactRecoveryPlanQuery(url.searchParams);
 				const result: AccountMirrorArtifactRecoveryPlanResult =
 					await accountMirrorArtifactRecoveryPlanner.plan(query);
@@ -2016,7 +2025,7 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-			if (req.method === "GET" && isAccountMirrorCatalogItemAssetRoute(url.pathname)) {
+			if (matchesHttpRoute("accountMirrorCatalogItemAssetTemplate", req.method, url.pathname)) {
 				const query = parseAccountMirrorCatalogItemAssetQuery(url.pathname, url.searchParams);
 				const result: HttpAccountMirrorCatalogItemResponse | null =
 					await accountMirrorCatalogService.readItem(query);
@@ -2043,7 +2052,7 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-			if (req.method === "GET" && url.pathname.startsWith("/v1/account-mirrors/catalog/items/")) {
+			if (matchesHttpRoute("accountMirrorCatalogItemTemplate", req.method, url.pathname)) {
 				const query = parseAccountMirrorCatalogItemQuery(url.pathname, url.searchParams);
 				const result: HttpAccountMirrorCatalogItemResponse | null =
 					await accountMirrorCatalogService.readItem(query);
@@ -2060,21 +2069,21 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-			if (req.method === "GET" && url.pathname === "/v1/archive") {
+			if (matchesHttpRoute("runArchive", req.method, url.pathname)) {
 				const query = parseRunArchiveQuery(url.searchParams);
 				const result: HttpRunArchiveResponse = await runArchiveService.listItems(query);
 				sendJson(res, 200, result);
 				return;
 			}
 
-			if (req.method === "GET" && url.pathname === "/v1/search") {
+			if (matchesHttpRoute("search", req.method, url.pathname)) {
 				const query = parseSearchProjectionQuery(url.searchParams);
 				const result: SearchProjectionResult = await searchProjectionService.search(query);
 				sendJson(res, 200, result);
 				return;
 			}
 
-			if (req.method === "GET" && url.pathname === "/v1/archive/assets/lookup") {
+			if (matchesHttpRoute("runArchiveAssetLookup", req.method, url.pathname)) {
 				const query = parseRunArchiveAssetLookupQuery(url.searchParams);
 				const result: HttpRunArchiveAssetLookupResponse =
 					await runArchiveService.lookupAsset(query);
@@ -2082,13 +2091,13 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-			if (req.method === "POST" && url.pathname === "/v1/archive/backfill") {
+			if (matchesHttpRoute("runArchiveBackfill", req.method, url.pathname)) {
 				const result = await runArchiveService.backfillIndex();
 				sendJson(res, 200, result);
 				return;
 			}
 
-			if (req.method === "POST" && url.pathname === "/v1/archive/evidence") {
+			if (matchesHttpRoute("runArchiveEvidenceCreate", req.method, url.pathname)) {
 				const body = await readRequestBody(req);
 				const payload = parseRunArchiveEvidenceCreateBody(JSON.parse(body || "{}"));
 				const result: HttpRunArchiveEvidenceResponse =
@@ -2097,7 +2106,7 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-			if (req.method === "POST" && url.pathname === "/v1/archive/materializations") {
+			if (matchesHttpRoute("runArchiveMaterializationsCreate", req.method, url.pathname)) {
 				try {
 					const body = await readRequestBody(req);
 					const payload = parseRunArchiveMaterializationCreateBody(JSON.parse(body || "{}"));
@@ -2119,7 +2128,7 @@ export async function createResponsesHttpServer(
 				}
 			}
 
-			if (req.method === "GET" && url.pathname === "/v1/archive/materializations") {
+			if (matchesHttpRoute("runArchiveMaterializationsList", req.method, url.pathname)) {
 				const query = parseRunArchiveMaterializationJobListQuery(url.searchParams);
 				const result: ArchiveMaterializationJobListResult =
 					await archiveMaterializationJobService.listJobs(query);
@@ -2127,7 +2136,7 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-			if (req.method === "POST" && url.pathname === "/v1/account-mirrors/materializations") {
+			if (matchesHttpRoute("historyMaterializationsCreate", req.method, url.pathname)) {
 				try {
 					const body = await readRequestBody(req);
 					const payload = parseHistoryMaterializationCreateBody(JSON.parse(body || "{}"));
@@ -2149,7 +2158,7 @@ export async function createResponsesHttpServer(
 				}
 			}
 
-			if (req.method === "GET" && url.pathname === "/v1/account-mirrors/materializations") {
+			if (matchesHttpRoute("historyMaterializationsList", req.method, url.pathname)) {
 				const query = parseHistoryMaterializationJobListQuery(url.searchParams);
 				const result: HistoryMaterializationJobListResult =
 					await historyMaterializationService.listJobs(query);
@@ -2166,7 +2175,10 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-			if (req.method === "GET" && isHistoryMaterializationJobRoute(url.pathname)) {
+			if (
+				req.method === "GET" &&
+				matchesHttpRoute("historyMaterializationTemplate", req.method, url.pathname)
+			) {
 				const jobId = parseHistoryMaterializationJobId(url.pathname);
 				const result = await historyMaterializationService.readJob(jobId);
 				if (!result) {
@@ -2188,7 +2200,10 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-			if (req.method === "POST" && isHistoryMaterializationJobRoute(url.pathname)) {
+			if (
+				req.method === "POST" &&
+				matchesHttpRoute("historyMaterializationTemplate", req.method, url.pathname)
+			) {
 				try {
 					const jobId = parseHistoryMaterializationJobId(url.pathname);
 					const body = await readRequestBody(req);
@@ -2215,7 +2230,10 @@ export async function createResponsesHttpServer(
 				}
 			}
 
-			if (req.method === "GET" && isRunArchiveMaterializationJobRoute(url.pathname)) {
+			if (
+				req.method === "GET" &&
+				matchesHttpRoute("runArchiveMaterializationTemplate", req.method, url.pathname)
+			) {
 				const jobId = parseRunArchiveMaterializationJobId(url.pathname);
 				const result = await archiveMaterializationJobService.readJob(jobId);
 				if (!result) {
@@ -2231,7 +2249,10 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-			if (req.method === "POST" && isRunArchiveMaterializationJobRoute(url.pathname)) {
+			if (
+				req.method === "POST" &&
+				matchesHttpRoute("runArchiveMaterializationTemplate", req.method, url.pathname)
+			) {
 				try {
 					const jobId = parseRunArchiveMaterializationJobId(url.pathname);
 					const body = await readRequestBody(req);
@@ -2258,7 +2279,7 @@ export async function createResponsesHttpServer(
 				}
 			}
 
-			if (req.method === "POST" && isRunArchiveItemMaterializeRoute(url.pathname)) {
+			if (matchesHttpRoute("runArchiveItemMaterializeTemplate", req.method, url.pathname)) {
 				const endForegroundWork = beginForegroundAuraCallWork();
 				try {
 					const itemId = parseRunArchiveItemMaterializeId(url.pathname);
@@ -2305,7 +2326,7 @@ export async function createResponsesHttpServer(
 				}
 			}
 
-			if (req.method === "GET" && isRunArchiveItemAssetRoute(url.pathname)) {
+			if (matchesHttpRoute("runArchiveItemAssetTemplate", req.method, url.pathname)) {
 				const itemId = parseRunArchiveItemAssetId(url.pathname);
 				const result: HttpRunArchiveAssetResponse | null =
 					await runArchiveService.readAsset(itemId);
@@ -2327,7 +2348,7 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-			if (req.method === "GET" && url.pathname.startsWith("/v1/archive/items/")) {
+			if (matchesHttpRoute("runArchiveItemTemplate", req.method, url.pathname)) {
 				const itemId = parseRunArchiveItemId(url.pathname);
 				const result: HttpRunArchiveItemResponse | null = await runArchiveService.readItem(itemId);
 				if (!result) {
@@ -2343,7 +2364,7 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-			if (req.method === "GET" && url.pathname === "/v1/account-mirrors/scheduler/history") {
+			if (matchesHttpRoute("accountMirrorSchedulerHistory", req.method, url.pathname)) {
 				const limit = parsePositiveIntegerQuery(url.searchParams.get("limit"));
 				const history = await accountMirrorSchedulerLedger.readHistory();
 				accountMirrorSchedulerState.history = history;
@@ -2357,7 +2378,7 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-			if (req.method === "GET" && url.pathname === "/v1/account-mirrors/scheduler/diagnostics") {
+			if (matchesHttpRoute("accountMirrorSchedulerDiagnostics", req.method, url.pathname)) {
 				const query = parseAccountMirrorSchedulerDiagnosticsQuery(url.searchParams);
 				const result = createAccountMirrorSchedulerDiagnosticsBundle({
 					query,
@@ -2411,7 +2432,7 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-			if (req.method === "POST" && url.pathname === "/v1/account-mirrors/preview-sessions") {
+			if (matchesHttpRoute("accountMirrorPreviewSessionsCreate", req.method, url.pathname)) {
 				const body = await readRequestBody(req);
 				const payload = JSON.parse(body || "{}") as {
 					id?: unknown;
@@ -2438,7 +2459,7 @@ export async function createResponsesHttpServer(
 				}
 			}
 
-			if (req.method === "GET" && url.pathname === "/v1/account-mirrors/preview-sessions") {
+			if (matchesHttpRoute("accountMirrorPreviewSessions", req.method, url.pathname)) {
 				const limit = parsePositiveIntegerQuery(url.searchParams.get("limit"));
 				const records = await accountMirrorPreviewSessionStore.listSessions({ limit });
 				sendJson(res, 200, {
@@ -2450,7 +2471,11 @@ export async function createResponsesHttpServer(
 			}
 
 			const accountMirrorPreviewSessionId = matchAccountMirrorPreviewSessionRoute(url.pathname);
-			if (req.method === "GET" && accountMirrorPreviewSessionId) {
+			if (
+				req.method === "GET" &&
+				accountMirrorPreviewSessionId &&
+				matchesHttpRoute("accountMirrorPreviewSessionTemplate", req.method, url.pathname)
+			) {
 				const record = await accountMirrorPreviewSessionStore.readSession(
 					accountMirrorPreviewSessionId,
 				);
@@ -2467,7 +2492,11 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-			if (req.method === "PATCH" && accountMirrorPreviewSessionId) {
+			if (
+				req.method === "PATCH" &&
+				accountMirrorPreviewSessionId &&
+				matchesHttpRoute("accountMirrorPreviewSessionTemplate", req.method, url.pathname)
+			) {
 				const body = await readRequestBody(req);
 				const payload = JSON.parse(body || "{}") as {
 					name?: unknown;
@@ -2501,7 +2530,11 @@ export async function createResponsesHttpServer(
 				}
 			}
 
-			if (req.method === "DELETE" && accountMirrorPreviewSessionId) {
+			if (
+				req.method === "DELETE" &&
+				accountMirrorPreviewSessionId &&
+				matchesHttpRoute("accountMirrorPreviewSessionTemplate", req.method, url.pathname)
+			) {
 				const deleted = await accountMirrorPreviewSessionStore.deleteSession(
 					accountMirrorPreviewSessionId,
 				);
@@ -2522,7 +2555,7 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-			if (req.method === "POST" && url.pathname === "/v1/account-mirrors/reconciliations") {
+			if (matchesHttpRoute("accountMirrorReconciliationsCreate", req.method, url.pathname)) {
 				const body = await readRequestBody(req);
 				const payload = ACCOUNT_MIRROR_RECONCILIATION_REQUEST_SCHEMA.parse(
 					JSON.parse(body || "{}"),
@@ -2559,7 +2592,7 @@ export async function createResponsesHttpServer(
 				}
 			}
 
-			if (req.method === "GET" && url.pathname === "/v1/account-mirrors/reconciliations") {
+			if (matchesHttpRoute("accountMirrorReconciliationsList", req.method, url.pathname)) {
 				const query = parseAccountMirrorReconciliationListQuery(url.searchParams);
 				const data = await accountMirrorReconciliationCampaignService.list(query);
 				sendJson(res, 200, {
@@ -2571,7 +2604,11 @@ export async function createResponsesHttpServer(
 			}
 
 			const accountMirrorReconciliationId = matchAccountMirrorReconciliationRoute(url.pathname);
-			if (req.method === "GET" && accountMirrorReconciliationId) {
+			if (
+				req.method === "GET" &&
+				accountMirrorReconciliationId &&
+				matchesHttpRoute("accountMirrorReconciliationsGetTemplate", req.method, url.pathname)
+			) {
 				const result = await accountMirrorReconciliationCampaignService.read(
 					accountMirrorReconciliationId,
 				);
@@ -2588,7 +2625,11 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-			if (req.method === "POST" && accountMirrorReconciliationId) {
+			if (
+				req.method === "POST" &&
+				accountMirrorReconciliationId &&
+				matchesHttpRoute("accountMirrorReconciliationsControlTemplate", req.method, url.pathname)
+			) {
 				const body = await readRequestBody(req);
 				const payload = ACCOUNT_MIRROR_RECONCILIATION_CONTROL_REQUEST_SCHEMA.parse(
 					JSON.parse(body || "{}"),
@@ -2610,7 +2651,7 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-			if (req.method === "POST" && url.pathname === "/v1/account-mirrors/completions") {
+			if (matchesHttpRoute("accountMirrorCompletionsCreate", req.method, url.pathname)) {
 				const body = await readRequestBody(req);
 				const payload = ACCOUNT_MIRROR_COMPLETION_REQUEST_SCHEMA.parse(JSON.parse(body || "{}"));
 				const result = accountMirrorCompletionService.start({
@@ -2631,7 +2672,7 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-				if (req.method === "GET" && url.pathname === "/v1/account-mirrors/completions") {
+			if (matchesHttpRoute("accountMirrorCompletionsList", req.method, url.pathname)) {
 					const query = parseAccountMirrorCompletionListQuery(url.searchParams);
 					const listed = accountMirrorCompletionService.list(query);
 					const fullDetail = url.searchParams.get("detail") === "full";
@@ -2649,7 +2690,11 @@ export async function createResponsesHttpServer(
 			}
 
 				const accountMirrorCompletionId = matchAccountMirrorCompletionRoute(url.pathname);
-				if (req.method === "GET" && accountMirrorCompletionId) {
+			if (
+					req.method === "GET" &&
+					accountMirrorCompletionId &&
+					matchesHttpRoute("accountMirrorCompletionsGetTemplate", req.method, url.pathname)
+				) {
 					const fullDetail = url.searchParams.get("detail") === "full";
 					const fullResult = fullDetail && accountMirrorCompletionService.refreshMaterializationStatus
 						? await accountMirrorCompletionService.refreshMaterializationStatus(accountMirrorCompletionId)
@@ -2671,7 +2716,11 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-			if (req.method === "POST" && accountMirrorCompletionId) {
+			if (
+				req.method === "POST" &&
+				accountMirrorCompletionId &&
+				matchesHttpRoute("accountMirrorCompletionsControlTemplate", req.method, url.pathname)
+			) {
 				const body = await readRequestBody(req);
 				const payload = ACCOUNT_MIRROR_COMPLETION_CONTROL_REQUEST_SCHEMA.parse(
 					JSON.parse(body || "{}"),
@@ -2693,12 +2742,16 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-			const developmentRunMatch = /^\/v1\/account-mirrors\/development-runs\/([^/]+)$/.exec(
+			const developmentRunMatch = matchHttpRoutePath(
+				"accountMirrorDevelopmentRunTemplate",
 				url.pathname,
 			);
-			if (developmentRunMatch) {
+			if (
+				developmentRunMatch &&
+				matchesHttpRoute("accountMirrorDevelopmentRunTemplate", req.method, url.pathname)
+			) {
 				const developmentRun = accountMirrorDevelopmentRuns.get(
-					decodeURIComponent(developmentRunMatch[1] ?? ""),
+					developmentRunMatch.development_run_id ?? "",
 				);
 				if (!developmentRun) {
 					sendJson(res, 404, {
@@ -2725,7 +2778,7 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-			if (req.method === "POST" && url.pathname === "/v1/account-mirrors/development-runs") {
+			if (matchesHttpRoute("accountMirrorDevelopmentRunsCreate", req.method, url.pathname)) {
 				const body = await readRequestBody(req);
 				const payload = ACCOUNT_MIRROR_REFRESH_REQUEST_SCHEMA.parse(JSON.parse(body || "{}"));
 				if (!payload.development || !payload.provider || !payload.runtimeProfile) {
@@ -2792,7 +2845,7 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-			if (url.pathname === "/v1/account-mirrors/development-policy") {
+			if (matchesHttpRoute("accountMirrorDevelopmentPolicy", req.method, url.pathname)) {
 				if (req.method === "GET") {
 					sendJson(res, 200, {
 						object: "account_mirror_development_capability",
@@ -2848,7 +2901,7 @@ export async function createResponsesHttpServer(
 				}
 			}
 
-			if (req.method === "POST" && url.pathname === "/v1/account-mirrors/refresh") {
+			if (matchesHttpRoute("accountMirrorRefresh", req.method, url.pathname)) {
 				const body = await readRequestBody(req);
 				const payload = ACCOUNT_MIRROR_REFRESH_REQUEST_SCHEMA.parse(JSON.parse(body || "{}"));
 				try {
@@ -2884,7 +2937,10 @@ export async function createResponsesHttpServer(
 			}
 
 			const recoveryDetailRunId = matchStatusRecoveryDetailRoute(url.pathname);
-			if (req.method === "GET" && recoveryDetailRunId) {
+			if (
+				recoveryDetailRunId &&
+				matchesHttpRoute("recoveryDetailTemplate", req.method, url.pathname)
+			) {
 				const detail = await host.readRecoveryDetail(recoveryDetailRunId);
 				if (!detail) {
 					sendJson(res, 404, {
@@ -2902,7 +2958,7 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-			if (req.method === "GET" && url.pathname === "/v1/team-runs/inspect") {
+			if (matchesHttpRoute("teamRunInspection", req.method, url.pathname)) {
 				try {
 					const inspection = await inspectTeamRunLinkage({
 						taskRunSpecId: url.searchParams.get("taskRunSpecId"),
@@ -2929,7 +2985,7 @@ export async function createResponsesHttpServer(
 				}
 			}
 
-			if (req.method === "GET" && url.pathname === "/v1/runtime-runs/recent") {
+			if (matchesHttpRoute("runtimeRunsRecent", req.method, url.pathname)) {
 				const query = parseRuntimeRunListQuery(url.searchParams);
 				const records = await control.listRuns(query);
 				const data = records.map(summarizeExecutionRunListItem);
@@ -2941,7 +2997,7 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-			if (req.method === "GET" && url.pathname === "/v1/runtime-runs/inspect") {
+			if (matchesHttpRoute("runtimeRunInspection", req.method, url.pathname)) {
 				try {
 					const runtimeInspectQuery = parseRuntimeInspectionQuery(url.searchParams);
 					const inspection = await inspectRuntimeRun({
@@ -2979,7 +3035,7 @@ export async function createResponsesHttpServer(
 				}
 			}
 
-			if (req.method === "POST" && url.pathname === "/status") {
+			if (matchesHttpRoute("statusControl", req.method, url.pathname)) {
 				const body = await readRequestBody(req);
 				const payload = STATUS_CONTROL_REQUEST_SCHEMA.parse(JSON.parse(body || "{}"));
 				let controlResult: HttpStatusResponse["controlResult"];
@@ -3248,7 +3304,7 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-			if (req.method === "GET" && url.pathname === "/v1/models") {
+			if (matchesHttpRoute("models", req.method, url.pathname)) {
 				sendJson(
 					res,
 					200,
@@ -3257,18 +3313,22 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-			if (req.method === "GET" && url.pathname === "/v1/config/agents") {
+			if (matchesHttpRoute("configAgents", req.method, url.pathname)) {
 				sendJson(res, 200, await agentTeamConfigService.list("agent"));
 				return;
 			}
 
-			if (req.method === "GET" && url.pathname === "/v1/config/agent-choices") {
+			if (matchesHttpRoute("agentConfigChoices", req.method, url.pathname)) {
 				sendJson(res, 200, await agentTeamConfigService.choices());
 				return;
 			}
 
 			const configAgentId = matchConfigEntityRoute(url.pathname, "agents");
-			if (configAgentId && req.method === "PUT") {
+			if (
+				configAgentId &&
+				req.method === "PUT" &&
+				matchesHttpRoute("configAgentTemplate", req.method, url.pathname)
+			) {
 				const body = await readRequestBody(req);
 				const payload = agentConfigUpsertInputSchema.parse({
 					id: configAgentId,
@@ -3277,18 +3337,26 @@ export async function createResponsesHttpServer(
 				sendJson(res, 200, await agentTeamConfigService.upsertAgent(payload));
 				return;
 			}
-			if (configAgentId && req.method === "DELETE") {
+			if (
+				configAgentId &&
+				req.method === "DELETE" &&
+				matchesHttpRoute("configAgentTemplate", req.method, url.pathname)
+			) {
 				sendJson(res, 200, await agentTeamConfigService.deleteAgent(configAgentId));
 				return;
 			}
 
-			if (req.method === "GET" && url.pathname === "/v1/config/teams") {
+			if (matchesHttpRoute("configTeams", req.method, url.pathname)) {
 				sendJson(res, 200, await agentTeamConfigService.list("team"));
 				return;
 			}
 
 			const configTeamId = matchConfigEntityRoute(url.pathname, "teams");
-			if (configTeamId && req.method === "PUT") {
+			if (
+				configTeamId &&
+				req.method === "PUT" &&
+				matchesHttpRoute("configTeamTemplate", req.method, url.pathname)
+			) {
 				const body = await readRequestBody(req);
 				const payload = teamConfigUpsertInputSchema.parse({
 					id: configTeamId,
@@ -3297,12 +3365,16 @@ export async function createResponsesHttpServer(
 				sendJson(res, 200, await agentTeamConfigService.upsertTeam(payload));
 				return;
 			}
-			if (configTeamId && req.method === "DELETE") {
+			if (
+				configTeamId &&
+				req.method === "DELETE" &&
+				matchesHttpRoute("configTeamTemplate", req.method, url.pathname)
+			) {
 				sendJson(res, 200, await agentTeamConfigService.deleteTeam(configTeamId));
 				return;
 			}
 
-			if (req.method === "GET" && url.pathname === "/v1/config/agent-diagnostics") {
+			if (matchesHttpRoute("agentRegistryDiagnostics", req.method, url.pathname)) {
 				const operatorAuthError = authorizeOperatorConfigAccess(apiAuthContext);
 				if (operatorAuthError) {
 					sendJson(res, 403, {
@@ -3323,7 +3395,7 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-			if (req.method === "POST" && url.pathname === "/v1/config/api-keys/issue") {
+			if (matchesHttpRoute("configApiKeyIssue", req.method, url.pathname)) {
 				const operatorAuthError = authorizeOperatorConfigAccess(apiAuthContext);
 				if (operatorAuthError) {
 					sendJson(res, 403, {
@@ -3340,7 +3412,7 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-			if (req.method === "GET" && url.pathname === "/v1/config/api-keys") {
+			if (matchesHttpRoute("configApiKeys", req.method, url.pathname)) {
 				const operatorAuthError = authorizeOperatorConfigAccess(apiAuthContext);
 				if (operatorAuthError) {
 					sendJson(res, 403, {
@@ -3363,7 +3435,10 @@ export async function createResponsesHttpServer(
 			}
 
 			const configApiKeyId = matchConfigApiKeyRoute(url.pathname);
-			if (configApiKeyId && req.method === "DELETE") {
+			if (
+				configApiKeyId &&
+				matchesHttpRoute("configApiKeyDeleteTemplate", req.method, url.pathname)
+			) {
 				const operatorAuthError = authorizeOperatorConfigAccess(apiAuthContext);
 				if (operatorAuthError) {
 					sendJson(res, 403, {
@@ -3385,7 +3460,7 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-			if (req.method === "POST" && url.pathname === "/v1/config/snapshots/export") {
+			if (matchesHttpRoute("configSnapshotExport", req.method, url.pathname)) {
 				const operatorAuthError = authorizeOperatorConfigAccess(apiAuthContext);
 				if (operatorAuthError) {
 					sendJson(res, 403, {
@@ -3402,7 +3477,7 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-			if (req.method === "POST" && url.pathname === "/v1/config/snapshots/import") {
+			if (matchesHttpRoute("configSnapshotImport", req.method, url.pathname)) {
 				const operatorAuthError = authorizeOperatorConfigAccess(apiAuthContext);
 				if (operatorAuthError) {
 					sendJson(res, 403, {
@@ -3419,7 +3494,7 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-			if (req.method === "GET" && url.pathname === "/v1/workbench-capabilities") {
+			if (matchesHttpRoute("workbenchCapabilitiesList", req.method, url.pathname)) {
 				const request = parseWorkbenchCapabilityQuery(url.searchParams);
 				const response = await workbenchCapabilityService.listCapabilities(request);
 				sendJson(res, 200, response);
@@ -3439,7 +3514,10 @@ export async function createResponsesHttpServer(
 					return;
 				}
 				const outputRootFromQuery = url.searchParams.get("outputDir");
-				if (req.method === "GET" && handoffRoute.action === "status") {
+				if (
+					handoffRoute.action === "status" &&
+					matchesHttpRoute(handoffRoute.key, req.method, url.pathname)
+				) {
 					const status = await readHandoffStatus({
 						handoffId: handoffRoute.id,
 						outputRoot: outputRootFromQuery,
@@ -3456,7 +3534,7 @@ export async function createResponsesHttpServer(
 					sendJson(res, 200, status);
 					return;
 				}
-				if (req.method === "POST") {
+				if (matchesHttpRoute(handoffRoute.key, req.method, url.pathname)) {
 					const body = await readRequestBody(req);
 					const payload = parseHandoffOperatorRequestBody(JSON.parse(body || "{}"));
 					const outputRoot = payload.outputDir ?? outputRootFromQuery;
@@ -3512,7 +3590,7 @@ export async function createResponsesHttpServer(
 				}
 			}
 
-			if (req.method === "POST" && url.pathname === "/v1/projects/ensure") {
+			if (matchesHttpRoute("projectEnsure", req.method, url.pathname)) {
 				const operatorAuthError = authorizeOperatorConfigAccess(apiAuthContext);
 				if (operatorAuthError) {
 					sendJson(res, 403, {
@@ -3534,7 +3612,7 @@ export async function createResponsesHttpServer(
 				}
 			}
 
-			if (req.method === "POST" && url.pathname === "/v1/tenant-pool-teams/ensure") {
+			if (matchesHttpRoute("tenantPoolTeamEnsure", req.method, url.pathname)) {
 				const operatorAuthError = authorizeOperatorConfigAccess(apiAuthContext);
 				if (operatorAuthError) {
 					sendJson(res, 403, {
@@ -3556,7 +3634,7 @@ export async function createResponsesHttpServer(
 				}
 			}
 
-			if (req.method === "POST" && url.pathname === "/v1/agent-setup-packages") {
+			if (matchesHttpRoute("agentSetupPackagesCreate", req.method, url.pathname)) {
 				const operatorAuthError = authorizeOperatorConfigAccess(apiAuthContext);
 				if (operatorAuthError) {
 					sendJson(res, 403, {
@@ -3578,7 +3656,7 @@ export async function createResponsesHttpServer(
 				}
 			}
 
-			if (req.method === "POST" && url.pathname === "/v1/agent-setup-handoffs") {
+			if (matchesHttpRoute("agentSetupHandoffsCreate", req.method, url.pathname)) {
 				const operatorAuthError = authorizeOperatorConfigAccess(apiAuthContext);
 				if (operatorAuthError) {
 					sendJson(res, 403, {
@@ -3600,7 +3678,7 @@ export async function createResponsesHttpServer(
 				}
 			}
 
-			if (req.method === "POST" && url.pathname === "/v1/team-runs") {
+			if (matchesHttpRoute("teamRunsCreate", req.method, url.pathname)) {
 				const endForegroundWork = beginForegroundAuraCallWork();
 				try {
 					const body = await readRequestBody(req);
@@ -3686,7 +3764,7 @@ export async function createResponsesHttpServer(
 				}
 			}
 
-			if (req.method === "POST" && url.pathname === "/v1/chat/completions") {
+			if (matchesHttpRoute("chatCompletionsCreate", req.method, url.pathname)) {
 				const endForegroundWork = beginForegroundAuraCallWork();
 				try {
 					const body = await readRequestBody(req);
@@ -3760,7 +3838,7 @@ export async function createResponsesHttpServer(
 				}
 			}
 
-			if (req.method === "POST" && url.pathname === "/v1/responses") {
+			if (matchesHttpRoute("responsesCreate", req.method, url.pathname)) {
 				const endForegroundWork = beginForegroundAuraCallWork();
 				try {
 					const body = await readRequestBody(req);
@@ -3801,7 +3879,7 @@ export async function createResponsesHttpServer(
 				}
 			}
 
-			if (req.method === "POST" && url.pathname === "/v1/response-batches") {
+			if (matchesHttpRoute("responseBatchesCreate", req.method, url.pathname)) {
 				const endForegroundWork = beginForegroundAuraCallWork();
 				try {
 					const body = await readRequestBody(req);
@@ -3882,7 +3960,7 @@ export async function createResponsesHttpServer(
 				}
 			}
 
-			if (req.method === "POST" && url.pathname === "/v1/media-generations") {
+			if (matchesHttpRoute("mediaGenerationsCreate", req.method, url.pathname)) {
 				const endForegroundWork = beginForegroundAuraCallWork();
 				try {
 					const body = await readRequestBody(req);
@@ -3907,7 +3985,10 @@ export async function createResponsesHttpServer(
 			}
 
 			const mediaGenerationMaterializeId = matchMediaGenerationMaterializeRoute(url.pathname);
-			if (req.method === "POST" && mediaGenerationMaterializeId) {
+			if (
+				mediaGenerationMaterializeId &&
+				matchesHttpRoute("mediaGenerationsMaterializeTemplate", req.method, url.pathname)
+			) {
 				const endForegroundWork = beginForegroundAuraCallWork();
 				try {
 					const body = await readRequestBody(req);
@@ -3949,7 +4030,7 @@ export async function createResponsesHttpServer(
 			}
 
 			const runStatusId = matchRunStatusRoute(url.pathname);
-			if (req.method === "GET" && runStatusId) {
+			if (runStatusId && matchesHttpRoute("runStatusTemplate", req.method, url.pathname)) {
 				const runStatusQuery = parseRunStatusQuery(url.searchParams);
 				const response = await readAuraCallRunStatus(runStatusId, {
 					responsesService,
@@ -3981,7 +4062,10 @@ export async function createResponsesHttpServer(
 			}
 
 			const mediaGenerationStatusId = matchMediaGenerationStatusRoute(url.pathname);
-			if (req.method === "GET" && mediaGenerationStatusId) {
+			if (
+				mediaGenerationStatusId &&
+				matchesHttpRoute("mediaGenerationsStatusTemplate", req.method, url.pathname)
+			) {
 				const runStatusQuery = parseRunStatusQuery(url.searchParams);
 				const response = await mediaGenerationService.readGeneration(mediaGenerationStatusId);
 				if (!response) {
@@ -4006,7 +4090,10 @@ export async function createResponsesHttpServer(
 			}
 
 			const mediaGenerationId = matchMediaGenerationRoute(url.pathname);
-			if (req.method === "GET" && mediaGenerationId) {
+			if (
+				mediaGenerationId &&
+				matchesHttpRoute("mediaGenerationsGetTemplate", req.method, url.pathname)
+			) {
 				const response = await mediaGenerationService.readGeneration(mediaGenerationId);
 				if (!response) {
 					sendJson(res, 404, {
@@ -4022,7 +4109,7 @@ export async function createResponsesHttpServer(
 			}
 
 			const responseId = matchResponseRoute(url.pathname);
-			if (req.method === "GET" && responseId) {
+			if (responseId && matchesHttpRoute("responsesGetTemplate", req.method, url.pathname)) {
 				let response: Awaited<ReturnType<typeof responsesService.readResponse>>;
 				try {
 					response = await responsesService.readResponse(responseId);
@@ -4045,7 +4132,10 @@ export async function createResponsesHttpServer(
 			}
 
 			const responseBatchId = matchResponseBatchRoute(url.pathname);
-			if (req.method === "GET" && responseBatchId) {
+			if (
+				responseBatchId &&
+				matchesHttpRoute("responseBatchesGetTemplate", req.method, url.pathname)
+			) {
 				const status = await responseBatchService.readBatchStatus(responseBatchId);
 				if (!status) {
 					sendJson(res, 404, {
@@ -9386,22 +9476,6 @@ function parseAccountMirrorCatalogItemQuery(
 	};
 }
 
-function isAccountMirrorCatalogItemAssetRoute(pathname: string): boolean {
-	return pathname.startsWith("/v1/account-mirrors/catalog/items/") && pathname.endsWith("/asset");
-}
-
-function isRunArchiveItemAssetRoute(pathname: string): boolean {
-	return pathname.startsWith("/v1/archive/items/") && pathname.endsWith("/asset");
-}
-
-function isRunArchiveMaterializationJobRoute(pathname: string): boolean {
-	return pathname.startsWith("/v1/archive/materializations/");
-}
-
-function isHistoryMaterializationJobRoute(pathname: string): boolean {
-	return pathname.startsWith("/v1/account-mirrors/materializations/");
-}
-
 function parseRunArchiveMaterializationJobId(pathname: string): string {
 	const prefix = "/v1/archive/materializations/";
 	const jobId = decodeURIComponent(
@@ -9422,10 +9496,6 @@ function parseHistoryMaterializationJobId(pathname: string): string {
 		throw new Error("History materialization job id is required.");
 	}
 	return jobId;
-}
-
-function isRunArchiveItemMaterializeRoute(pathname: string): boolean {
-	return pathname.startsWith("/v1/archive/items/") && pathname.endsWith("/materialize");
 }
 
 function parseRunArchiveItemAssetId(pathname: string): string {
@@ -9925,91 +9995,111 @@ function isLoopbackHost(host: string): boolean {
 }
 
 function matchResponseRoute(pathname: string): string | null {
-	const match = /^\/v1\/responses\/([^/]+)$/.exec(pathname);
-	return match?.[1] ?? null;
+	return matchHttpRoutePath("responsesGetTemplate", pathname)?.response_id ?? null;
 }
 
 function matchResponseBatchRoute(pathname: string): string | null {
-	const match = /^\/v1\/response-batches\/([^/]+)$/.exec(pathname);
-	return match?.[1] ?? null;
+	return matchHttpRoutePath("responseBatchesGetTemplate", pathname)?.batch_id ?? null;
 }
 
 function matchHandoffOperatorRoute(
 	pathname: string,
-): { id: string; action: "status" | "resume" | "repair" | "export" | "recover-live" } | null {
-	const match = /^\/v1\/handoffs\/([^/]+)\/(status|resume|repair|export|recover-live)$/.exec(
+): {
+	id: string;
+	action: "status" | "resume" | "repair" | "export" | "recover-live";
+	key: StaticHttpRouteKey;
+} | null {
+	const statusId = matchHttpRoutePath("handoffStatusTemplate", pathname)?.handoff_id;
+	if (statusId) return { id: statusId, action: "status", key: "handoffStatusTemplate" };
+	const resumeId = matchHttpRoutePath("handoffResumeTemplate", pathname)?.handoff_id;
+	if (resumeId) return { id: resumeId, action: "resume", key: "handoffResumeTemplate" };
+	const repairId = matchHttpRoutePath("handoffRepairTemplate", pathname)?.handoff_id;
+	if (repairId) return { id: repairId, action: "repair", key: "handoffRepairTemplate" };
+	const exportId = matchHttpRoutePath("handoffExportTemplate", pathname)?.handoff_id;
+	if (exportId) return { id: exportId, action: "export", key: "handoffExportTemplate" };
+	const recoverLiveId = matchHttpRoutePath(
+		"handoffRecoverLiveTemplate",
 		pathname,
-	);
-	if (!match?.[1] || !match[2]) return null;
-	return {
-		id: decodeURIComponent(match[1]),
-		action: match[2] as "status" | "resume" | "repair" | "export" | "recover-live",
-	};
+	)?.handoff_id;
+	if (recoverLiveId) {
+		return {
+			id: recoverLiveId,
+			action: "recover-live",
+			key: "handoffRecoverLiveTemplate",
+		};
+	}
+	return null;
 }
 
 function matchConfigEntityRoute(pathname: string, kind: "agents" | "teams"): string | null {
-	const match = new RegExp(`^/v1/config/${kind}/([^/]+)$`).exec(pathname);
-	return match?.[1] ? decodeURIComponent(match[1]) : null;
+	if (kind === "agents") {
+		return matchHttpRoutePath("configAgentTemplate", pathname)?.agent_id ?? null;
+	}
+	return matchHttpRoutePath("configTeamTemplate", pathname)?.team_id ?? null;
 }
 
 function matchConfigApiKeyRoute(pathname: string): string | null {
-	const match = /^\/v1\/config\/api-keys\/([^/]+)$/.exec(pathname);
-	return match?.[1] ? decodeURIComponent(match[1]) : null;
+	return matchHttpRoutePath("configApiKeyDeleteTemplate", pathname)?.key_id ?? null;
 }
 
 function matchMediaGenerationRoute(pathname: string): string | null {
-	const match = /^\/v1\/media-generations\/([^/]+)$/.exec(pathname);
-	return match?.[1] ?? null;
+	return (
+		matchHttpRoutePath("mediaGenerationsGetTemplate", pathname)?.media_generation_id ?? null
+	);
 }
 
 function matchMediaGenerationMaterializeRoute(pathname: string): string | null {
-	const match = /^\/v1\/media-generations\/([^/]+)\/materialize$/.exec(pathname);
-	return match?.[1] ? decodeURIComponent(match[1]) : null;
+	return (
+		matchHttpRoutePath("mediaGenerationsMaterializeTemplate", pathname)?.media_generation_id ??
+		null
+	);
 }
 
 function matchMediaGenerationStatusRoute(pathname: string): string | null {
-	const match = /^\/v1\/media-generations\/([^/]+)\/status$/.exec(pathname);
-	return match?.[1] ?? null;
+	return (
+		matchHttpRoutePath("mediaGenerationsStatusTemplate", pathname)?.media_generation_id ?? null
+	);
 }
 
 function matchRunStatusRoute(pathname: string): string | null {
-	const match = /^\/v1\/runs\/([^/]+)\/status$/.exec(pathname);
-	return match?.[1] ?? null;
+	return matchHttpRoutePath("runStatusTemplate", pathname)?.run_id ?? null;
 }
 
 function matchDomDriftObservationAcceptRoute(pathname: string): string | null {
-	const match = /^\/v1\/browser\/dom-drift-observations\/([^/]+)\/accept$/.exec(pathname);
-	return match?.[1] ? decodeURIComponent(match[1]) : null;
+	return (
+		matchHttpRoutePath("browserDomDriftObservationAcceptTemplate", pathname)?.observation_id ??
+		null
+	);
 }
 
 function matchAccountMirrorCompletionRoute(pathname: string): string | null {
-	const match = /^\/v1\/account-mirrors\/completions\/([^/]+)$/.exec(pathname);
-	return match?.[1] ?? null;
+	return (
+		matchHttpRoutePath("accountMirrorCompletionsGetTemplate", pathname)?.completion_id ?? null
+	);
 }
 
 function matchAccountMirrorReconciliationRoute(pathname: string): string | null {
-	const match = /^\/v1\/account-mirrors\/reconciliations\/([^/]+)$/.exec(pathname);
-	return match?.[1] ?? null;
+	return (
+		matchHttpRoutePath("accountMirrorReconciliationsGetTemplate", pathname)?.campaign_id ?? null
+	);
 }
 
 function matchAccountMirrorPreviewSessionRoute(pathname: string): string | null {
-	const match = /^\/v1\/account-mirrors\/preview-sessions\/([^/]+)$/.exec(pathname);
-	return match?.[1] ?? null;
+	return (
+		matchHttpRoutePath("accountMirrorPreviewSessionTemplate", pathname)?.preview_session_id ?? null
+	);
 }
 
 function matchPreflightRunLogRoute(pathname: string): string | null {
-	const match = /^\/v1\/preflight\/lazy-live-follow\/runs\/([^/]+)\/log$/.exec(pathname);
-	return match?.[1] ?? null;
+	return matchHttpRoutePath("preflightRunLogTemplate", pathname)?.run_id ?? null;
 }
 
 function matchPreflightRunRoute(pathname: string): string | null {
-	const match = /^\/v1\/preflight\/lazy-live-follow\/runs\/([^/]+)$/.exec(pathname);
-	return match?.[1] ?? null;
+	return matchHttpRoutePath("preflightRunTemplate", pathname)?.run_id ?? null;
 }
 
 function matchStatusRecoveryDetailRoute(pathname: string): string | null {
-	const match = /^\/status\/recovery\/([^/]+)$/.exec(pathname);
-	return match?.[1] ?? null;
+	return matchHttpRoutePath("recoveryDetailTemplate", pathname)?.run_id ?? null;
 }
 
 async function readRequestBody(req: http.IncomingMessage): Promise<string> {

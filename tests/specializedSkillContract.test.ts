@@ -41,7 +41,6 @@ describe("specialized skill endpoint contract", () => {
 		const errors = collectSpecializedSkillContractErrors({
 			...sources,
 			httpServerText: "",
-			httpRouteManifest: {},
 			mcpToolText: "",
 			packageText: JSON.stringify({ scripts: {} }),
 			agentSetupSkillText: "Confirm `mutationTarget` is `registry` for a new/updated bound agent",
@@ -60,12 +59,7 @@ describe("specialized skill endpoint contract", () => {
 		expect(errors).toContain(
 			"docs/openai-endpoints.md: contains retired chat-completions/auth claim",
 		);
-		expect(errors).toContain(
-			"src/http/routeManifest.ts: missing POST /v1/chat/completions route contract",
-		);
-		expect(errors).toContain(
-			"src/http/responsesServer.ts: missing POST /v1/chat/completions route authority",
-		);
+		expect(errors).toContain("src/http/responsesServer.ts: missing handler reference for models");
 		expect(errors).toContain(
 			"src/mcp/tools: missing agent_setup_handoff_create registration authority",
 		);

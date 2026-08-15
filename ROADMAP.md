@@ -7,6 +7,12 @@
 Status: active
 Lane: P01
 
+- Closed accepted HTTP handler/manifest parity:
+  [docs/dev/plans/0319-2026-08-15-http-handler-manifest-parity.md](docs/dev/plans/0319-2026-08-15-http-handler-manifest-parity.md)
+  Every static API handler now derives path/method authority from the 81-entry
+  typed manifest; all eight prior inventory gaps are advertised and a complete
+  AST contract rejects drift without replacing the sequential dispatcher.
+
 - Closed accepted HTTP route manifest authority cleanup:
   [docs/dev/plans/0318-2026-08-15-http-route-manifest-authority.md](docs/dev/plans/0318-2026-08-15-http-route-manifest-authority.md)
   Static route templates and methods now give `/status.routes`, startup

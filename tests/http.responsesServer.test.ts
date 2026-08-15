@@ -2707,6 +2707,21 @@ describe("http responses adapter", () => {
 				object: "account_mirror_development_run",
 				status: "cancelled",
 			});
+
+			const readback = await fetch(
+				`http://127.0.0.1:${server.port}/v1/account-mirrors/development-runs/${String(run.id)}`,
+			);
+			expect(readback.status).toBe(200);
+			await expect(readback.json()).resolves.toMatchObject({
+				object: "account_mirror_development_run",
+				status: "cancelled",
+			});
+
+			const unsupported = await fetch(
+				`http://127.0.0.1:${server.port}/v1/account-mirrors/development-runs/${String(run.id)}`,
+				{ method: "PUT" },
+			);
+			expect(unsupported.status).toBe(404);
 		} finally {
 			await server.close();
 		}
