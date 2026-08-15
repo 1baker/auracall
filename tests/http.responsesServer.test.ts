@@ -9688,6 +9688,14 @@ describe("http responses adapter", () => {
 		setAuracallHomeDirOverrideForTest(homeDir);
 
 		let drainCalls = 0;
+		let resolveDrainStarted!: () => void;
+		let releaseFirstDrain!: () => void;
+		const drainStarted = new Promise<void>((resolve) => {
+			resolveDrainStarted = resolve;
+		});
+		const firstDrainRelease = new Promise<void>((resolve) => {
+			releaseFirstDrain = resolve;
+		});
 		const server = await createResponsesHttpServer(
 			{ host: "127.0.0.1", port: 0, backgroundDrainIntervalMs: 25 },
 			{
@@ -9897,7 +9905,10 @@ describe("http responses adapter", () => {
 					},
 					async drainRunsUntilIdle() {
 						drainCalls += 1;
-						await delay(75);
+						if (drainCalls === 1) {
+							resolveDrainStarted();
+							await firstDrainRelease;
+						}
 						return {
 							ownerId: "host:test-status-drain",
 							expiredLeaseRunIds: [],
@@ -9918,7 +9929,7 @@ describe("http responses adapter", () => {
 		);
 
 		try {
-			await delay(35);
+			await drainStarted;
 			const runningResponse = await fetch(`http://127.0.0.1:${server.port}/status`);
 			expect(runningResponse.status).toBe(200);
 			const runningPayload = (await runningResponse.json()) as JsonObject;
@@ -9933,6 +9944,7 @@ describe("http responses adapter", () => {
 				},
 			});
 
+			releaseFirstDrain();
 			await delay(90);
 			const idleResponse = await fetch(`http://127.0.0.1:${server.port}/status`);
 			expect(idleResponse.status).toBe(200);
@@ -9952,6 +9964,7 @@ describe("http responses adapter", () => {
 			);
 			expect(drainCalls).toBeGreaterThan(0);
 		} finally {
+			releaseFirstDrain();
 			await server.close();
 		}
 	});
