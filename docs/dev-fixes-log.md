@@ -1,3 +1,9 @@
+- 2026-08-15: Portable Markdown links do not make embedded shell/JSON examples
+  portable. Current executable examples should derive an absolute repository
+  root with `git rev-parse --show-toplevel`, interpolate it consistently into
+  allowed-root and structured-cwd fields, and receive shell syntax validation.
+  Pure JSON contracts should use an explicit generic absolute-path placeholder.
+
 - 2026-08-14: Current documentation must use repository-relative Markdown
   links, not checkout-specific `/home`, `/Users`, or `/mnt/<drive>` targets.
   Enforce portability over current docs while explicitly excluding append-only

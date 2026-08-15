@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   collectAbsoluteCheckoutMarkdownLinks,
   collectCurrentDocAbsoluteLinkErrors,
+  collectCurrentDocRetiredCheckoutErrors,
 } from '../scripts/currentDocLinks.js';
 
 describe('current documentation link portability audit', () => {
@@ -32,6 +33,23 @@ describe('current documentation link portability audit', () => {
       ]),
     ).toEqual([
       'docs/testing.md: absolute checkout Markdown link /Users/example/auracall/docs/dev/plans/example.md',
+    ]);
+  });
+
+  it('reports retired checkout content outside Markdown links', () => {
+    expect(
+      collectCurrentDocRetiredCheckoutErrors([
+        {
+          path: 'README.md',
+          text: '--allow-local-cwd-root /home/ecochran76/workspace.local/auracall',
+        },
+        {
+          path: 'docs/manual-tests.md',
+          text: '--allow-local-cwd-root "$AURACALL_REPO_ROOT"',
+        },
+      ]),
+    ).toEqual([
+      'README.md: contains retired checkout path /home/ecochran76/workspace.local/auracall',
     ]);
   });
 });

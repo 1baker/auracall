@@ -1,5 +1,21 @@
 # RUNBOOK
 
+## Turn 482 | 2026-08-15
+
+- Opened Plan 0313 after current-doc content inspection found 17 retired
+  checkout-root references across README, manual tests, testing guidance, and
+  the response-shape contract.
+- Preserve executable semantics by deriving absolute paths from the current
+  repository root; use a generic placeholder only where the document is a pure
+  JSON contract. Extend steady-state validation without rewriting history.
+- Replaced all 17 current references. Executable examples now resolve
+  `AURACALL_REPO_ROOT` with `git rev-parse --show-toplevel`; the pure JSON
+  contract names `/absolute/path/to/auracall` explicitly.
+- Seven focused governance tests, typecheck, zero-warning lint across 833 files,
+  plan audit with zero errors, and diff hygiene passed. Seven executable
+  tooling examples passed `bash -n` without provider execution. Plan 0313
+  closes accepted.
+
 ## Turn 481 | 2026-08-14
 
 - Opened Plan 0312 after the current-authority link audit found 28

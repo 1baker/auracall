@@ -5,7 +5,10 @@ import { join, relative, resolve } from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { collectMissingAgentsPolicyReferenceErrors } from './agentsPolicyEntry.js';
-import { collectCurrentDocAbsoluteLinkErrors } from './currentDocLinks.js';
+import {
+  collectCurrentDocAbsoluteLinkErrors,
+  collectCurrentDocRetiredCheckoutErrors,
+} from './currentDocLinks.js';
 import { collectActiveRoadmapPlanStateErrors } from './roadmapPlanState.js';
 
 type CandidateAction = 'keep' | 'merge' | 'retire';
@@ -162,6 +165,7 @@ function collectValidationErrors(
   );
   errors.push(...collectMissingAgentsPolicyReferenceErrors(agentsText, existingPolicyPaths));
   errors.push(...collectCurrentDocAbsoluteLinkErrors(currentDocumentation));
+  errors.push(...collectCurrentDocRetiredCheckoutErrors(currentDocumentation));
 
   for (const candidate of rawCandidates) {
     if (!candidate.relPath.startsWith('docs/dev/plans/')) {

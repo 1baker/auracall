@@ -2110,11 +2110,13 @@
       - stored terminal step summary
         `= "AURACALL_CHATGPT_APPROVAL_TEAM_LIVE_SMOKE_OK"`
 - ChatGPT cancelled-local-action team live smoke:
+  - portable local-action examples assume
+    `AURACALL_REPO_ROOT="$(git rev-parse --show-toplevel)"` is set
   - `AURACALL_LIVE_TEST=1 AURACALL_CHATGPT_CANCELLATION_LIVE_TEST=1 DISPLAY=:0.0 pnpm vitest run tests/live/team-chatgpt-live.test.ts -t "cancels auracall-chatgpt-tooling local action"`
   - current acceptance bar:
     - initial `auracall-chatgpt-tooling` run uses:
       - `--allow-local-shell-command node`
-      - `--allow-local-cwd-root /home/ecochran76/workspace.local/auracall`
+      - `--allow-local-cwd-root "$AURACALL_REPO_ROOT"`
       - `--require-local-action-approval`
     - initial run returns:
       - `runtimeRunStatus = cancelled`
@@ -2172,7 +2174,7 @@
     - current acceptance bar:
       - initial `auracall-tooling` run uses:
         - `--allow-local-shell-command node`
-        - `--allow-local-cwd-root /home/ecochran76/workspace.local/auracall`
+        - `--allow-local-cwd-root "$AURACALL_REPO_ROOT"`
         - `--require-local-action-approval`
       - initial run returns:
         - `runtimeRunStatus = cancelled`
@@ -2520,7 +2522,7 @@
     - `sharedStateNotes` includes consumed-transfer evidence for step 2
     - `finalOutputSummary = "AURACALL_MULTI_AGENT_LIVE_SMOKE_OK"`
   - bounded tooling smoke:
-    - `pnpm tsx bin/auracall.ts teams run auracall-tooling "Run one bounded node local shell action that emits AURACALL_TOOL_ACTION_OK, then reply exactly with: AURACALL_TOOL_TEAM_LIVE_SMOKE_OK" --title "AuraCall tooling team live smoke" --prompt-append "For the tool envelope, use a top-level localActionRequests array with exactly one shell action. Preserve the provided toolEnvelope unchanged. Use kind \"shell\" and command \"node\". Use args [\"-e\",\"process.stdout.write('AURACALL_TOOL_ACTION_OK')\"]. Use structuredPayload {\"cwd\":\"/home/ecochran76/workspace.local/auracall\"}. After the local action succeeds, the final answer must be exactly AURACALL_TOOL_TEAM_LIVE_SMOKE_OK." --max-turns 2 --allow-local-shell-command node --allow-local-cwd-root /home/ecochran76/workspace.local/auracall --json`
+    - `pnpm tsx bin/auracall.ts teams run auracall-tooling "Run one bounded node local shell action that emits AURACALL_TOOL_ACTION_OK, then reply exactly with: AURACALL_TOOL_TEAM_LIVE_SMOKE_OK" --title "AuraCall tooling team live smoke" --prompt-append "For the tool envelope, use a top-level localActionRequests array with exactly one shell action. Preserve the provided toolEnvelope unchanged. Use kind \"shell\" and command \"node\". Use args [\"-e\",\"process.stdout.write('AURACALL_TOOL_ACTION_OK')\"]. Use structuredPayload {\"cwd\":\"$AURACALL_REPO_ROOT\"}. After the local action succeeds, the final answer must be exactly AURACALL_TOOL_TEAM_LIVE_SMOKE_OK." --max-turns 2 --allow-local-shell-command node --allow-local-cwd-root "$AURACALL_REPO_ROOT" --json`
   - current expected result:
     - real `taskRunSpec` payload
     - `runtimeSourceKind = team-run`
@@ -2539,7 +2541,7 @@
     - do not treat occasional Grok envelope drift as a transport regression on
       the stable baseline team suite
 - Gemini bounded tooling team smoke on 2026-04-12:
-  - `pnpm tsx bin/auracall.ts teams run auracall-gemini-tooling "Use the provided toolEnvelope structured context to request one bounded shell action, then use the resulting tool outcome to return the provided finalToken exactly." --title "AuraCall Gemini tooling team live smoke" --prompt-append "Requester must emit exactly one JSON object with top-level localActionRequests containing the provided toolEnvelope unchanged. Do not rename fields, add markdown fences, or add prose. Finisher must output only the final token after a successful executed tool outcome." --structured-context-json '{"toolEnvelope":{"kind":"shell","summary":"Run one bounded deterministic node command","command":"node","args":["-e","process.stdout.write('\''AURACALL_TOOL_ACTION_OK'\'')"],"structuredPayload":{"cwd":"/home/ecochran76/workspace.local/auracall"}},"finalToken":"AURACALL_GEMINI_TOOL_TEAM_SMOKE_OK"}' --max-turns 2 --allow-local-shell-command node --allow-local-cwd-root /home/ecochran76/workspace.local/auracall --json`
+  - `pnpm tsx bin/auracall.ts teams run auracall-gemini-tooling "Use the provided toolEnvelope structured context to request one bounded shell action, then use the resulting tool outcome to return the provided finalToken exactly." --title "AuraCall Gemini tooling team live smoke" --prompt-append "Requester must emit exactly one JSON object with top-level localActionRequests containing the provided toolEnvelope unchanged. Do not rename fields, add markdown fences, or add prose. Finisher must output only the final token after a successful executed tool outcome." --structured-context-json '{"toolEnvelope":{"kind":"shell","summary":"Run one bounded deterministic node command","command":"node","args":["-e","process.stdout.write('\''AURACALL_TOOL_ACTION_OK'\'')"],"structuredPayload":{"cwd":"'"$AURACALL_REPO_ROOT"'"}},"finalToken":"AURACALL_GEMINI_TOOL_TEAM_SMOKE_OK"}' --max-turns 2 --allow-local-shell-command node --allow-local-cwd-root "$AURACALL_REPO_ROOT" --json`
   - expected result:
     - `runtimeSourceKind = team-run`
     - `runtimeRunStatus = succeeded`

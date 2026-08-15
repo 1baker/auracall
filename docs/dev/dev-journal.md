@@ -1,3 +1,15 @@
+## 2026-08-15 | Plan 0313 current command path portability
+
+- Removed 17 retired checkout-root references from README, manual tests,
+  testing guidance, and the response-shape contract.
+- Shell examples now derive `AURACALL_REPO_ROOT` from the active checkout and
+  interpolate it into both security allowlists and structured payloads. The
+  JSON-only contract uses `/absolute/path/to/auracall`.
+- Extended current-doc governance to reject the retired root anywhere, not only
+  in links. Seven focused tests, seven shell syntax checks, typecheck,
+  zero-warning lint across 833 files, plan audit, and diff hygiene passed.
+  Plan 0313 is CLOSED.
+
 ## 2026-08-14 | Plan 0312 current documentation link portability
 
 - Replaced 28 machine-specific Markdown links across 11 current operator and

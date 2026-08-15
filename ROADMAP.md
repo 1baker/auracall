@@ -7,6 +7,11 @@
 Status: active
 Lane: P01
 
+- Closed accepted current command path portability repair:
+  [docs/dev/plans/0313-2026-08-15-current-command-path-portability.md](docs/dev/plans/0313-2026-08-15-current-command-path-portability.md)
+  Current command and contract examples contain no retired checkout root, and
+  the governance audit rejects future recurrence outside historical evidence.
+
 - Closed accepted current documentation link portability repair:
   [docs/dev/plans/0312-2026-08-14-current-doc-link-portability.md](docs/dev/plans/0312-2026-08-14-current-doc-link-portability.md)
   Twenty-eight current-doc links are portable, all checked targets exist, and
