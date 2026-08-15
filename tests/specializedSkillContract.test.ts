@@ -5,6 +5,7 @@ import {
 	collectSpecializedSkillContractErrors,
 	type SpecializedSkillContractSources,
 } from "../scripts/specializedSkillContract.js";
+import { HTTP_ROUTE_MANIFEST } from "../src/http/routeManifest.js";
 
 const mcpToolPaths = [
 	"src/mcp/tools/agentSetupPackage.ts",
@@ -20,9 +21,8 @@ const mcpToolPaths = [
 function readRepositorySources(): SpecializedSkillContractSources {
 	return {
 		httpServerText: readFileSync(resolve("src/http/responsesServer.ts"), "utf8"),
-		mcpToolText: mcpToolPaths
-			.map((path) => readFileSync(resolve(path), "utf8"))
-			.join("\n"),
+		httpRouteManifest: HTTP_ROUTE_MANIFEST,
+		mcpToolText: mcpToolPaths.map((path) => readFileSync(resolve(path), "utf8")).join("\n"),
 		packageText: readFileSync(resolve("package.json"), "utf8"),
 		agentSetupSkillText: readFileSync(resolve("skills/auracall-agent-setup/SKILL.md"), "utf8"),
 		apiWorkflowSkillText: readFileSync(resolve("skills/auracall-api-workflow/SKILL.md"), "utf8"),
@@ -41,12 +41,11 @@ describe("specialized skill endpoint contract", () => {
 		const errors = collectSpecializedSkillContractErrors({
 			...sources,
 			httpServerText: "",
+			httpRouteManifest: {},
 			mcpToolText: "",
 			packageText: JSON.stringify({ scripts: {} }),
-			agentSetupSkillText:
-				"Confirm `mutationTarget` is `registry` for a new/updated bound agent",
-			apiWorkflowSkillText:
-				"$OPENAI_BASE_URL/../status smoke:che447-grading-batch",
+			agentSetupSkillText: "Confirm `mutationTarget` is `registry` for a new/updated bound agent",
+			apiWorkflowSkillText: "$OPENAI_BASE_URL/../status smoke:che447-grading-batch",
 			endpointDocText:
 				"no `POST /v1/chat/completions` adapter yet; no streaming, auth, or chat/completions adapter",
 			workflowDocText: "",
@@ -60,6 +59,9 @@ describe("specialized skill endpoint contract", () => {
 		);
 		expect(errors).toContain(
 			"docs/openai-endpoints.md: contains retired chat-completions/auth claim",
+		);
+		expect(errors).toContain(
+			"src/http/routeManifest.ts: missing POST /v1/chat/completions route contract",
 		);
 		expect(errors).toContain(
 			"src/http/responsesServer.ts: missing POST /v1/chat/completions route authority",

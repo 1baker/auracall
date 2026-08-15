@@ -1,3 +1,15 @@
+## 2026-08-15 | Plan 0318 HTTP route manifest authority
+
+- Moved 71 advertised static route contracts into one typed manifest and
+  derived both `/status.routes` and a 65-path method-qualified startup inventory
+  from it. Dynamic adapter, dashboard, and base-URL values remain runtime-owned.
+- Specialized-skill governance now proves manifest presence and executable
+  handler authority independently. An AST comparison preserved all 70 prior
+  literal status templates exactly.
+- Three focused files passed 223 tests; the complete provider-disabled suite
+  passed 2,929 tests with 65 expected skips. Typecheck, zero-warning lint across
+  841 files, build, 319-plan audit, and diff hygiene passed. Plan 0318 is CLOSED.
+
 ## 2026-08-15 | Plan 0317 specialized skill endpoint contract
 
 - Corrected the setup skill so redacted handoff verification uses only returned

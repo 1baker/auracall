@@ -1,3 +1,10 @@
+- 2026-08-15: Public HTTP diagnostics should project from typed executable route
+  metadata, not parallel status types, status literals, and startup strings.
+  Keep dynamic service-discovery values outside the static manifest, preserve
+  operator-facing templates exactly, coalesce shared paths by method for human
+  output, and validate both manifest declaration and handler authority so an
+  advertised route cannot become aspirational.
+
 - 2026-08-15: Specialized workflow skills must distinguish response projection
   from lower-level mutation evidence and fixture proof from real-client effects.
   A redacted setup handoff cannot prove fields it intentionally omits; verify

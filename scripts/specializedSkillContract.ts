@@ -1,5 +1,12 @@
+import {
+	HTTP_ROUTE_MANIFEST,
+	type HttpRouteMethod,
+	type StaticHttpRouteDefinition,
+} from "../src/http/routeManifest.js";
+
 export type SpecializedSkillContractSources = {
 	httpServerText: string;
+	httpRouteManifest?: Readonly<Record<string, StaticHttpRouteDefinition>>;
 	mcpToolText: string;
 	packageText: string;
 	agentSetupSkillText: string;
@@ -9,50 +16,77 @@ export type SpecializedSkillContractSources = {
 };
 
 type RequiredFragment = {
+	key: string;
 	label: string;
+	method: HttpRouteMethod;
 	fragment: string;
 };
 
 const HTTP_ROUTE_FRAGMENTS: readonly RequiredFragment[] = [
-	{ label: "GET /v1/models", fragment: 'req.method === "GET" && url.pathname === "/v1/models"' },
 	{
+		key: "models",
+		label: "GET /v1/models",
+		method: "GET",
+		fragment: 'req.method === "GET" && url.pathname === "/v1/models"',
+	},
+	{
+		key: "agentRegistryDiagnostics",
 		label: "GET /v1/config/agent-diagnostics",
+		method: "GET",
 		fragment: 'req.method === "GET" && url.pathname === "/v1/config/agent-diagnostics"',
 	},
 	{
+		key: "configApiKeyIssue",
 		label: "POST /v1/config/api-keys/issue",
+		method: "POST",
 		fragment: 'req.method === "POST" && url.pathname === "/v1/config/api-keys/issue"',
 	},
 	{
+		key: "projectEnsure",
 		label: "POST /v1/projects/ensure",
+		method: "POST",
 		fragment: 'req.method === "POST" && url.pathname === "/v1/projects/ensure"',
 	},
 	{
+		key: "agentSetupPackagesCreate",
 		label: "POST /v1/agent-setup-packages",
+		method: "POST",
 		fragment: 'req.method === "POST" && url.pathname === "/v1/agent-setup-packages"',
 	},
 	{
+		key: "agentSetupHandoffsCreate",
 		label: "POST /v1/agent-setup-handoffs",
+		method: "POST",
 		fragment: 'req.method === "POST" && url.pathname === "/v1/agent-setup-handoffs"',
 	},
 	{
+		key: "chatCompletionsCreate",
 		label: "POST /v1/chat/completions",
+		method: "POST",
 		fragment: 'req.method === "POST" && url.pathname === "/v1/chat/completions"',
 	},
 	{
+		key: "responsesCreate",
 		label: "POST /v1/responses",
+		method: "POST",
 		fragment: 'req.method === "POST" && url.pathname === "/v1/responses"',
 	},
 	{
+		key: "responseBatchesCreate",
 		label: "POST /v1/response-batches",
+		method: "POST",
 		fragment: 'req.method === "POST" && url.pathname === "/v1/response-batches"',
 	},
 	{
+		key: "responsesGetTemplate",
 		label: "GET /v1/responses/{response_id}",
+		method: "GET",
 		fragment: 'if (req.method === "GET" && responseId)',
 	},
 	{
+		key: "responseBatchesGetTemplate",
 		label: "GET /v1/response-batches/{batch_id}",
+		method: "GET",
 		fragment: 'if (req.method === "GET" && responseBatchId)',
 	},
 ];
@@ -136,7 +170,13 @@ export function collectSpecializedSkillContractErrors(
 ): string[] {
 	const errors: string[] = [];
 
-	for (const { label, fragment } of HTTP_ROUTE_FRAGMENTS) {
+	const routeManifest: Readonly<Record<string, StaticHttpRouteDefinition>> =
+		sources.httpRouteManifest ?? HTTP_ROUTE_MANIFEST;
+	for (const { key, label, method, fragment } of HTTP_ROUTE_FRAGMENTS) {
+		const routeDefinition = routeManifest[key];
+		if (!routeDefinition || !routeDefinition.methods.includes(method)) {
+			errors.push(`src/http/routeManifest.ts: missing ${label} route contract`);
+		}
 		if (!sources.httpServerText.includes(fragment)) {
 			errors.push(`src/http/responsesServer.ts: missing ${label} route authority`);
 		}
@@ -168,7 +208,11 @@ export function collectSpecializedSkillContractErrors(
 		errors,
 	);
 
-	if (sources.agentSetupSkillText.includes("Confirm `mutationTarget` is `registry` for a new/updated bound agent")) {
+	if (
+		sources.agentSetupSkillText.includes(
+			"Confirm `mutationTarget` is `registry` for a new/updated bound agent",
+		)
+	) {
 		errors.push(
 			"skills/auracall-agent-setup/SKILL.md: redacted handoff cannot expose mutationTarget",
 		);
@@ -182,11 +226,7 @@ export function collectSpecializedSkillContractErrors(
 	requireFragments(
 		sources.endpointDocText,
 		"docs/openai-endpoints.md",
-		[
-			"- `POST /v1/chat/completions`",
-			"accepts non-streaming requests",
-			"optional API-key auth",
-		],
+		["- `POST /v1/chat/completions`", "accepts non-streaming requests", "optional API-key auth"],
 		errors,
 	);
 	for (const pattern of [/no `POST \/v1\/chat\/completions` adapter/iu, /no streaming, auth/iu]) {

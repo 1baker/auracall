@@ -9,6 +9,12 @@ import CDP from "chrome-remote-interface";
 import type { OptionValues } from "commander";
 import { ZodError, z } from "zod";
 import {
+	createStaticHttpStatusRoutes,
+	formatHttpEndpointBanner,
+	HTTP_ROUTE_MANIFEST,
+	type StaticHttpStatusRoutes,
+} from "./routeManifest.js";
+import {
 	findChromeProcessUsingUserDataDir,
 	isDevToolsResponsive,
 } from "../../packages/browser-service/src/processCheck.js";
@@ -818,78 +824,7 @@ interface HttpStatusResponse {
 		scoped: boolean;
 	};
 	serviceDiscovery: ApiServiceDiscovery;
-	routes: {
-		status: string;
-		recoveryDetailTemplate: string;
-		teamRunsCreate: string;
-		teamRunInspection: string;
-		projectEnsure: string;
-		tenantPoolTeamEnsure: string;
-		agentSetupPackagesCreate: string;
-		agentSetupHandoffsCreate: string;
-		runtimeRunsRecent: string;
-		runtimeRunInspection: string;
-		models: string;
-		chatCompletionsCreate: string;
-		responsesCreate: string;
-		responsesGetTemplate: string;
-		responseBatchesCreate: string;
-		responseBatchesGetTemplate: string;
-		mediaGenerationsCreate: string;
-		mediaGenerationsGetTemplate: string;
-		mediaGenerationsMaterializeTemplate: string;
-		mediaGenerationsStatusTemplate: string;
-		runArchive: string;
-		runArchiveAssetLookup: string;
-		search: string;
-		runArchiveBackfill: string;
-		runArchiveEvidenceCreate: string;
-		runArchiveItemTemplate: string;
-		runArchiveItemAssetTemplate: string;
-		runArchiveItemMaterializeTemplate: string;
-		runArchiveMaterializationsCreate: string;
-		runArchiveMaterializationsList: string;
-		runArchiveMaterializationTemplate: string;
-		historyMaterializationsCreate: string;
-		historyMaterializationsList: string;
-		historyMaterializationTemplate: string;
-		accountMirrorRecoveryCandidates: string;
-		runStatusTemplate: string;
-		apiLogTail: string;
-		preflightRunTemplate: string;
-		preflightRunLogTemplate: string;
-		accountMirrorStatus: string;
-		accountMirrorCatalog: string;
-		accountMirrorCatalogItemTemplate: string;
-		accountMirrorPreviewSessions: string;
-		accountMirrorPreviewSessionTemplate: string;
-		accountMirrorRefresh: string;
-		accountMirrorReconciliationsCreate: string;
-		accountMirrorReconciliationsList: string;
-		accountMirrorReconciliationsGetTemplate: string;
-		accountMirrorReconciliationsControlTemplate: string;
-		accountMirrorCompletionsCreate: string;
-		accountMirrorCompletionsList: string;
-		accountMirrorCompletionsGetTemplate: string;
-		accountMirrorCompletionsControlTemplate: string;
-		accountMirrorSchedulerHistory: string;
-		accountMirrorSchedulerDiagnostics: string;
-		browserProcesses: string;
-		browserDomDriftObservations: string;
-		browserDomDriftObservationAcceptTemplate: string;
-		workbenchCapabilitiesList: string;
-		handoffStatusTemplate: string;
-		handoffResumeTemplate: string;
-		handoffRepairTemplate: string;
-		handoffExportTemplate: string;
-		handoffRecoverLiveTemplate: string;
-		agentConfigChoices: string;
-		agentRegistryDiagnostics: string;
-		configApiKeys: string;
-		configApiKeyIssue: string;
-		configApiKeyDeleteTemplate: string;
-		configSnapshotExport: string;
-		configSnapshotImport: string;
+	routes: StaticHttpStatusRoutes & {
 		operatorBrowserDashboard: string;
 		operatorDebugDashboard: string;
 		accountMirrorDashboard: string;
@@ -4468,9 +4403,7 @@ export async function serveResponsesHttp(options: ServeResponsesHttpOptions = {}
 		);
 	}
 	logger(`Active AuraCall runtime profile: ${resolvedUserConfig.auracallProfile ?? "default"}`);
-	logger(
-		"Endpoints: GET /status, GET /v1/api/logs/tail, GET /status/recovery/{run_id}, POST /v1/team-runs, GET /v1/team-runs/inspect, POST /v1/projects/ensure, POST /v1/tenant-pool-teams/ensure, POST /v1/agent-setup-packages, POST /v1/agent-setup-handoffs, GET /v1/runtime-runs/recent, GET /v1/runtime-runs/inspect, GET /v1/models, GET /v1/workbench-capabilities, POST /v1/chat/completions, POST /v1/responses, GET /v1/responses/{response_id}, POST /v1/media-generations, GET /v1/media-generations/{media_generation_id}, POST /v1/media-generations/{media_generation_id}/materialize, GET /v1/search, GET /v1/archive, POST /v1/archive/backfill, POST /v1/archive/evidence, GET/POST /v1/archive/materializations, GET/POST /v1/archive/materializations/{job_id}, GET /v1/archive/items/{archive_item_id}, GET /v1/archive/items/{archive_item_id}/asset, POST /v1/archive/items/{archive_item_id}/materialize, GET /v1/account-mirrors/status, GET /v1/account-mirrors/catalog, GET /v1/account-mirrors/recovery-candidates, GET/POST /v1/account-mirrors/materializations, GET/POST /v1/account-mirrors/materializations/{job_id}, GET /v1/account-mirrors/scheduler/history, POST /v1/account-mirrors/preview-sessions, GET /v1/account-mirrors/preview-sessions, GET/PATCH/DELETE /v1/account-mirrors/preview-sessions/{preview_session_id}, POST /v1/account-mirrors/refresh, POST /v1/account-mirrors/reconciliations, GET /v1/account-mirrors/reconciliations, GET/POST /v1/account-mirrors/reconciliations/{campaign_id}, POST /v1/account-mirrors/completions, GET /v1/account-mirrors/completions, GET/POST /v1/account-mirrors/completions/{completion_id}",
-	);
+	logger(formatHttpEndpointBanner());
 	logger(`Local probe: curl ${probeUrl}/status`);
 	if (serverOptions.dashboardUrl) {
 		logger(`Operator dashboard: ${serverOptions.dashboardUrl}`);
@@ -4980,102 +4913,12 @@ function createHttpStatusResponse(input: {
 		},
 		serviceDiscovery,
 		routes: {
-			status: "/status",
-			recoveryDetailTemplate: "/status/recovery/{run_id}",
-			teamRunsCreate: "/v1/team-runs",
-			teamRunInspection:
-				"/v1/team-runs/inspect?taskRunSpecId={task_run_spec_id}|teamRunId={team_run_id}|runtimeRunId={runtime_run_id}",
-			projectEnsure: "POST /v1/projects/ensure",
-			tenantPoolTeamEnsure: "POST /v1/tenant-pool-teams/ensure",
-			agentSetupPackagesCreate: "POST /v1/agent-setup-packages",
-			agentSetupHandoffsCreate: "POST /v1/agent-setup-handoffs",
-			runtimeRunsRecent:
-				"/v1/runtime-runs/recent[?sourceKind=team-run|direct][&status=planned|running|succeeded|failed|cancelled][&browserAuthority=agent-browser|compatibility-fallback|explicit-off|unreported][&limit=25]",
-			runtimeRunInspection:
-				"/v1/runtime-runs/inspect?runId={run_id}|teamRunId={team_run_id}|taskRunSpecId={task_run_spec_id}|runtimeRunId={runtime_run_id}[&runnerId={runner_id}][&probe=service-state][&diagnostics=browser-state][&authority=scheduler]",
-			models: "/v1/models",
-			chatCompletionsCreate: "/v1/chat/completions",
-			responsesCreate: "/v1/responses",
-			responsesGetTemplate: "/v1/responses/{response_id}",
-			responseBatchesCreate: "/v1/response-batches",
-			responseBatchesGetTemplate: "/v1/response-batches/{batch_id}",
-			mediaGenerationsCreate: "/v1/media-generations",
-			mediaGenerationsGetTemplate: "/v1/media-generations/{media_generation_id}",
-			mediaGenerationsMaterializeTemplate:
-				"POST /v1/media-generations/{media_generation_id}/materialize",
-			mediaGenerationsStatusTemplate:
-				"/v1/media-generations/{media_generation_id}/status[?diagnostics=browser-state]",
-			runArchive:
-				"/v1/archive[?kind=response|response_batch|team_run|media_generation|upload|generated_artifact|provider_conversation|evidence][&provider={chatgpt|gemini|grok}][&runtimeProfile={runtime_profile}][&projectId={provider_project_id}][&agent={agent_id}][&team={team_id}][&responseId={response_id}][&batchId={batch_id}][&status={status}][&fileAvailable=true|false][&assetAvailability=available|unavailable|pending][&q={query}][&limit=50]",
-			runArchiveAssetLookup:
-				"/v1/archive/assets/lookup?checksumSha256={sha256}|cacheKey={cache_key}|providerArtifactId={provider_artifact_id}|artifactId={artifact_id}[&limit=50]",
-			search:
-				"/v1/search[?q={query}][&kind=conversation|artifact|upload|run|evidence][&provider={chatgpt|gemini|grok}][&runtimeProfile={runtime_profile}][&tenant={bound_identity_key}][&status={status}][&fileAvailable=true|false][&assetAvailability=available|unavailable|pending][&materialization=queued|running|succeeded|skipped|failed|cancelled|active|terminal][&limit=80][&cursor={cursor}]",
-			runArchiveBackfill: "/v1/archive/backfill",
-			runArchiveEvidenceCreate: "/v1/archive/evidence",
-			runArchiveItemTemplate: "/v1/archive/items/{archive_item_id}",
-			runArchiveItemAssetTemplate: "/v1/archive/items/{archive_item_id}/asset",
-			runArchiveItemMaterializeTemplate: "/v1/archive/items/{archive_item_id}/materialize",
-			runArchiveMaterializationsCreate: "/v1/archive/materializations",
-			runArchiveMaterializationsList:
-				"/v1/archive/materializations[?status=queued|running|succeeded|skipped|failed|cancelled|active|terminal][&archiveItemId={archive_item_id}][&limit=50]",
-			runArchiveMaterializationTemplate: "/v1/archive/materializations/{job_id}",
-			historyMaterializationsCreate: "/v1/account-mirrors/materializations",
-			historyMaterializationsList:
-				"/v1/account-mirrors/materializations[?detail=summary|full][&status=queued|running|succeeded|skipped|failed|cancelled|active|terminal][&provider={chatgpt|gemini|grok}][&runtimeProfile={runtime_profile}][&sourceType=conversation|project_sources|catalog_item|archive_item|reconciliation|account_library_reconciliation][&limit=50]",
-			historyMaterializationTemplate:
-				"/v1/account-mirrors/materializations/{job_id}[?detail=summary|full]",
-			accountMirrorRecoveryCandidates:
-				"/v1/account-mirrors/recovery-candidates[?provider={chatgpt|gemini|grok}][&runtimeProfile={runtime_profile}][&tenant={bound_identity_key}][&status=eligible|needs_detail_refresh|deferred|blocked|unsupported|terminal][&action={action}][&includeSearchRows=true|false][&limit=50]",
-			runStatusTemplate: "/v1/runs/{run_id}/status[?diagnostics=browser-state]",
-			apiLogTail: "/v1/api/logs/tail[?maxBytes=32768]",
-			preflightRunTemplate: "/v1/preflight/lazy-live-follow/runs/{run_id}",
-			preflightRunLogTemplate: "/v1/preflight/lazy-live-follow/runs/{run_id}/log[?maxBytes=32768]",
-			accountMirrorStatus:
-				"/v1/account-mirrors/status[?provider={chatgpt|gemini|grok}][&runtimeProfile={runtime_profile}][&explicitRefresh=true]",
-			accountMirrorCatalog:
-				"/v1/account-mirrors/catalog[?provider={chatgpt|gemini|grok}][&runtimeProfile={runtime_profile}][&kind=projects|conversations|artifacts|files|media|all][&limit=50]",
-			accountMirrorCatalogItemTemplate:
-				"/v1/account-mirrors/catalog/items/{item_id}?provider={chatgpt|gemini|grok}&runtimeProfile={runtime_profile}&kind={kind}",
-			accountMirrorPreviewSessions: "/v1/account-mirrors/preview-sessions",
-			accountMirrorPreviewSessionTemplate:
-				"/v1/account-mirrors/preview-sessions/{preview_session_id}",
-			accountMirrorRefresh: "/v1/account-mirrors/refresh",
-			accountMirrorReconciliationsCreate: "/v1/account-mirrors/reconciliations",
-			accountMirrorReconciliationsList:
-				"/v1/account-mirrors/reconciliations[?status=active|planned|queued|running|idle_waiting|paused|blocked|completed|completed_with_skips|cancelled|failed][&limit=50]",
-			accountMirrorReconciliationsGetTemplate: "/v1/account-mirrors/reconciliations/{campaign_id}",
-			accountMirrorReconciliationsControlTemplate:
-				'POST /v1/account-mirrors/reconciliations/{campaign_id} {"action":"pause|resume|cancel|run_next_pass"}',
-			accountMirrorCompletionsCreate: "/v1/account-mirrors/completions",
-			accountMirrorCompletionsList:
-				"/v1/account-mirrors/completions[?detail=summary|full][&status=active|queued|running|idle_waiting|paused|completed|blocked|failed|cancelled][&provider={chatgpt|gemini|grok}][&runtimeProfile={runtime_profile}][&limit=50]",
-			accountMirrorCompletionsGetTemplate:
-				"/v1/account-mirrors/completions/{completion_id}[?detail=summary|full]",
-			accountMirrorCompletionsControlTemplate:
-				'POST /v1/account-mirrors/completions/{completion_id} {"action":"pause|resume|cancel|run_one_pass"}',
-			accountMirrorSchedulerHistory: "/v1/account-mirrors/scheduler/history[?limit=10]",
-			accountMirrorSchedulerDiagnostics:
-				"/v1/account-mirrors/scheduler/diagnostics[?provider={chatgpt|gemini|grok}&runtimeProfile={runtime_profile}|completionId={completion_id}]",
-			browserProcesses: "/v1/browser/processes",
-			browserDomDriftObservations:
-				"/v1/browser/dom-drift-observations[?service={chatgpt|gemini|grok}&surface={surface}&status=observed|accepted|rejected&limit=50]",
-			browserDomDriftObservationAcceptTemplate:
-				"POST /v1/browser/dom-drift-observations/{observation_id}/accept",
-			agentConfigChoices: "/v1/config/agent-choices",
-			agentRegistryDiagnostics: "/v1/config/agent-diagnostics",
-			configApiKeys: "/v1/config/api-keys",
-			configApiKeyIssue: "POST /v1/config/api-keys/issue",
-			configApiKeyDeleteTemplate: "DELETE /v1/config/api-keys/{key_id}",
-			configSnapshotExport: "POST /v1/config/snapshots/export",
-			configSnapshotImport: "POST /v1/config/snapshots/import",
-			workbenchCapabilitiesList:
-				"/v1/workbench-capabilities?provider={chatgpt|gemini|grok}&category={category}[&entrypoint=grok-imagine][&diagnostics=browser-state][&discoveryAction=grok-imagine-video-mode]",
-			handoffStatusTemplate: "/v1/handoffs/{handoff_id}/status[?outputDir={path}]",
-			handoffResumeTemplate: 'POST /v1/handoffs/{handoff_id}/resume {"outputDir":"optional"}',
-			handoffRepairTemplate: 'POST /v1/handoffs/{handoff_id}/repair {"outputDir":"optional"}',
-			handoffExportTemplate: 'POST /v1/handoffs/{handoff_id}/export {"outputDir":"optional"}',
-			handoffRecoverLiveTemplate: `POST /v1/handoffs/{handoff_id}/recover-live {"outputDir":"optional","targetAdapter":"${HANDOFF_TARGET_ADAPTER_NAMES.join("|")}"}`,
+			...createStaticHttpStatusRoutes(),
+			handoffRecoverLiveTemplate:
+				HTTP_ROUTE_MANIFEST.handoffRecoverLiveTemplate.statusTemplate.replace(
+					"{target_adapter}",
+					HANDOFF_TARGET_ADAPTER_NAMES.join("|"),
+				),
 			operatorBrowserDashboard: serviceDiscovery.routing.dashboardPath,
 			operatorDebugDashboard: serviceDiscovery.routing.debugDashboardPath,
 			accountMirrorDashboard: serviceDiscovery.routing.accountMirrorPath,

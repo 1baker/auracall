@@ -1,5 +1,21 @@
 # RUNBOOK
 
+## Turn 487 | 2026-08-15
+
+- Opened Plan 0318 after direct server and governance inspection found three
+  duplicated static route catalogs and confirmed the startup banner has already
+  omitted implemented response-batch and other advertised routes.
+- Introduce one typed manifest for static route templates and methods; derive
+  status and startup projections from it while leaving dispatch, dynamic
+  dashboard/base URLs, authentication, providers, and browsers unchanged.
+- Added the 71-entry typed manifest, preserved all 70 prior literal status
+  templates exactly, retained runtime adapter/service-discovery projections,
+  and generated 65 unique method-qualified startup paths from that authority.
+- Focused route/server/governance tests, the complete 2,929-test
+  provider-disabled suite, typecheck, zero-warning lint across 841 files,
+  production build, 319-plan audit, and diff hygiene passed. Plan 0318 closes
+  accepted without provider, browser, configuration, or live-service effects.
+
 ## Turn 486 | 2026-08-15
 
 - Opened Plan 0317 after direct HTTP matcher, MCP registration, handoff schema,

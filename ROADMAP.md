@@ -7,6 +7,12 @@
 Status: active
 Lane: P01
 
+- Closed accepted HTTP route manifest authority cleanup:
+  [docs/dev/plans/0318-2026-08-15-http-route-manifest-authority.md](docs/dev/plans/0318-2026-08-15-http-route-manifest-authority.md)
+  Static route templates and methods now give `/status.routes`, startup
+  diagnostics, and specialized-skill governance one executable source without
+  changing dispatch or dynamic service-discovery paths.
+
 - Closed accepted specialized skill endpoint contract reconciliation:
   [docs/dev/plans/0317-2026-08-15-specialized-skill-endpoint-contract.md](docs/dev/plans/0317-2026-08-15-specialized-skill-endpoint-contract.md)
   The setup and API workflow skills now match current redacted handoff, HTTP,

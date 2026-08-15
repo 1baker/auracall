@@ -32,6 +32,12 @@ auracall api serve --host 0.0.0.0 --listen-public --port 8080
 
 Current endpoints:
 
+The executable static catalog is `HTTP_ROUTE_MANIFEST` in
+`src/http/routeManifest.ts`. The server derives both its startup inventory and
+the static portion of `GET /status` -> `routes` from that manifest; dynamic
+dashboard and base URLs remain service-discovery values. The list below calls
+out the compatibility and operator workflow surface in reference form.
+
 - `GET /status`
 - `GET /status/recovery/{run_id}`
 - `POST /v1/team-runs`
