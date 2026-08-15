@@ -19742,3 +19742,12 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   `grok:thinking` to `Auto`, `Fast`, and `Expert`, rejects unsupported `grok:`
   tokens before launch, and makes picker selection fail closed. No browser,
   provider, installed-runtime, credential, or account mutation is authorized.
+- The resolver, configured executor, exact picker, and both discovery surfaces
+  are implemented provider-free. Focused coverage passes 30 selected tests;
+  typecheck, strict zero-warning lint, build, plan audit, and CodeGraph sync
+  pass.
+- The first complete suite had one unrelated HTTP materialization fixture
+  mismatch after 2,985 passes. That exact test passed twice alone without code
+  changes, and the bounded second full run passed 330 files / 2,986 tests with
+  19 files / 55 intended skips. Browser process and port inventory remained
+  unchanged. Current-SHA cross-platform CI is the remaining gate.

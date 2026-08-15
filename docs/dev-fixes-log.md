@@ -22000,6 +22000,19 @@ browser-stage lifecycle observability, not transcript truncation.
 - Keep `unreported` distinct from compatibility fallback. Missing or future
   evidence remains non-alarming and can be requested explicitly.
 
+## 2026-08-15 | Fail closed when semantic provider selection cannot be proved
+
+- Advertising a semantic selector as execution-ready requires more than a
+  token-to-label mapping. The configured executor must resolve it before
+  browser launch, and the provider picker must stop if its menu or exact option
+  cannot be proved.
+- Keep stable intent and volatile UI labels separate. Grok's public
+  `auto`/`instant`/`thinking` contract maps at one boundary to the adapter-owned
+  `Auto`/`Fast`/`Expert` labels; raw models remain explicit overrides.
+- Readiness is provider-family evidence, not a global flag. Mark the proven
+  Grok family ready while leaving Gemini discoverable and deferred until its
+  native adapter carries equivalent selection and fail-closed proof.
+
 ## 2026-08-14 | Audit Active roadmap links against canonical plan state
 
 - Validating a plan's own `State:` header does not catch a roadmap that still

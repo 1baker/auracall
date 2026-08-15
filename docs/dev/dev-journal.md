@@ -47514,3 +47514,15 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   an unverified model.
 - This slice is provider-free. It does not launch a browser, send a prompt,
   install runtime code, or mutate provider/account state.
+- Grok semantic selectors now resolve to exact current labels before browser
+  execution, unknown `grok:` tokens fail before launch, and an unavailable menu
+  or missing exact option throws instead of allowing prompt submission on the
+  current model. Discovery marks Grok ready and leaves Gemini deferred.
+- Focused coverage passes 30 selected tests. Typecheck, zero-warning lint over
+  849 files, production build, 332-plan audit, diff hygiene, and CodeGraph sync
+  pass. The first complete suite exposed one unrelated HTTP fixture mismatch;
+  the exact test passed twice without changes and the bounded second complete
+  run passed 330 files / 2,986 tests with 19 files / 55 intended skips.
+- The pre/post process and port inventory remained unchanged, so no provider or
+  AuraCall-managed browser effect occurred. Cross-platform current-SHA CI is
+  the remaining Plan 0331 gate.
