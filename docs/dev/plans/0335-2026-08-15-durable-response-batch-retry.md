@@ -1,8 +1,8 @@
 # Durable Response-Batch Retry | 0335-2026-08-15
 
-State: OPEN
+State: CLOSED
 Lane: P01
-Plan version: 1
+Plan version: 2
 
 ## Goal
 
@@ -77,7 +77,7 @@ idempotency, and crash-safe partial recovery.
       retry implementation.
 - [x] Route manifest, specialized skill contracts, user docs, and focused
       response-service/batch-service/HTTP/MCP tests agree on the control.
-- [ ] Typecheck, zero-warning lint, build, plan audit, CodeGraph sync, diff
+- [x] Typecheck, zero-warning lint, build, plan audit, CodeGraph sync, diff
       hygiene, complete provider-disabled tests, and exact-SHA
       Ubuntu/macOS/Windows CI pass.
 
@@ -122,4 +122,11 @@ response back to its source.
   zero-warning lint over 851 files, production build, 336-plan audit with zero
   validation errors, CodeGraph sync, diff hygiene, and the complete
   provider-disabled suite pass. The suite reports 331 files / 3,015 tests
-  passed with 19 files / 55 intentional live skips. Exact-SHA CI remains.
+  passed with 19 files / 55 intentional live skips.
+- Exact-SHA acceptance run
+  [31913863421](https://github.com/1baker/auracall/actions/runs/31913863421)
+  passed at `e8f6be8a6f10e3346d374b04bb516d3fc6f42d54`. Ubuntu 22/Node 22,
+  Ubuntu 24/Node 24, macOS/Node 22, and serialized Windows/Node 22 all
+  passed frozen install, runtime checking, zero-warning lint, maintained PTY
+  coverage, the complete provider-disabled suite, and readiness smoke; Ubuntu
+  22 also passed the production build. Plan 0335 closes accepted.

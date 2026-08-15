@@ -19909,4 +19909,9 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
 - Four focused suites pass 252 tests. Typecheck, zero-warning lint, production
   build, 336-plan audit, CodeGraph sync, and diff hygiene pass. The complete
   provider-disabled suite passes 331 files / 3,015 tests with 19 files / 55
-  intentional live skips. Exact-SHA cross-platform CI remains.
+  intentional live skips.
+- Exact-SHA acceptance run
+  [31913863421](https://github.com/1baker/auracall/actions/runs/31913863421)
+  passed at `e8f6be8a6f10e3346d374b04bb516d3fc6f42d54` across Ubuntu 22/Node
+  22, Ubuntu 24/Node 24, macOS/Node 22, and serialized Windows/Node 22.
+  Plan 0335 closes accepted.

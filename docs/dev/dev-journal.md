@@ -47672,4 +47672,9 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   discovery, specialized skill contracts, and operator docs now agree. Four
   focused suites pass 252 tests; typecheck, zero-warning lint, production
   build, 336-plan audit, CodeGraph sync, diff hygiene, and the complete 331-file
-  / 3,015-test provider-disabled suite pass. Exact-SHA CI remains.
+  / 3,015-test provider-disabled suite pass.
+- Exact-SHA acceptance run
+  [31913863421](https://github.com/1baker/auracall/actions/runs/31913863421)
+  passed at `e8f6be8a6f10e3346d374b04bb516d3fc6f42d54` across Ubuntu 22/Node
+  22, Ubuntu 24/Node 24, macOS/Node 22, and serialized Windows/Node 22.
+  Plan 0335 closes accepted.
