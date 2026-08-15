@@ -22094,3 +22094,17 @@ browser-stage lifecycle observability, not transcript truncation.
 - File chooser completion is not attachment readiness. Set the exact local
   files through CDP, verify every filename in prompt previews, and always
   release file-chooser interception on success or failure.
+
+## 2026-08-15 | Keep streaming transport subordinate to durable response authority
+
+- OpenAI-compatible SSE does not require inventing provider token deltas. Emit
+  a valid assistant-role chunk after one durable response is created, then
+  project authoritative settled text, stop, optional usage, and `[DONE]` from
+  stored readback.
+- Put the durable response id in `X-AuraCall-Response-Id` before the long wait.
+  Pending and failed execution should use an SSE object with `error` plus the
+  id and poll path; the OpenAI SDK turns that object into an API error without
+  losing recovery authority.
+- Client transport lifetime must not own execution lifetime. A broken or
+  aborted stream stops writes only; the single host-owned drain continues and
+  later `/v1/responses/{response_id}` readback remains authoritative.

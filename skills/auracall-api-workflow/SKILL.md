@@ -29,7 +29,7 @@ service. Treat `agent:<agent_id>` as the model name and prefer scoped API keys.
    - `GET /v1/models`
    - confirm the intended `agent:<agent_id>` appears.
 3. For one prompt:
-   - call `POST /v1/responses` or non-streaming
+   - call `POST /v1/responses` or streaming/non-streaming
      `POST /v1/chat/completions`.
    - with MCP, call `response_create` and retain its returned id
 4. For many independent prompts:
@@ -43,7 +43,11 @@ service. Treat `agent:<agent_id>` as the model name and prefer scoped API keys.
 Non-streaming chat completions wait for a bounded synchronous window. A
 retryable `503` with `error.type = "auracall_execution_pending"` includes the
 durable `response_id` and `response_poll_path`; poll that response instead of
-submitting the chat request again. Streaming chat completions are unsupported.
+submitting the chat request again. With `stream: true`, consume OpenAI-compatible
+SSE until `[DONE]`. The `X-AuraCall-Response-Id` header identifies the durable
+run. Pending or failed execution appears as a structured SSE `error` with that
+id and poll path; an OpenAI SDK surfaces it as an API error. Client stream
+cancellation stops delivery but does not cancel the AuraCall run.
 
 ## Response Request Shape
 

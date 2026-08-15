@@ -3,6 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { pathToFileURL } from "node:url";
+import OpenAI from "openai";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { AccountMirrorArtifactRecoveryPlanResult } from "../src/accountMirror/artifactRecoveryPlanner.js";
 import type { AccountMirrorBackfillLedger } from "../src/accountMirror/backfillLedger.js";
@@ -42,6 +43,7 @@ import {
 	summarizeAccountMirrorDiagnosticsBrowserMutationsForTest,
 	terminateSamePortApiServeProcesses,
 } from "../src/http/responsesServer.js";
+import type { ExecutionRequest } from "../src/runtime/apiTypes.js";
 import {
 	recordLazyLiveFollowPreflightRun,
 	writeLazyLiveFollowPreflightStatus,
@@ -88,6 +90,22 @@ function requireJsonObject(value: JsonValue | undefined, label: string): JsonObj
 		throw new Error(`${label} was not a JSON object.`);
 	}
 	return value;
+}
+
+function parseChatCompletionSse(text: string): Array<JsonObject | "[DONE]"> {
+	return text
+		.split(/\r?\n\r?\n/u)
+		.map((event) => event.trim())
+		.filter((event) => event.length > 0)
+		.map((event) => {
+			const data = event
+				.split(/\r?\n/u)
+				.filter((line) => line.startsWith("data:"))
+				.map((line) => line.slice("data:".length).trimStart())
+				.join("\n");
+			if (data === "[DONE]") return data;
+			return JSON.parse(data) as JsonObject;
+		});
 }
 
 const completeAccountMirror = {
@@ -22496,8 +22514,40 @@ describe("http responses adapter", () => {
 		}
 	});
 
-	it("rejects streaming chat completions explicitly", async () => {
-		const server = await createResponsesHttpServer({ host: "127.0.0.1", port: 0 });
+	it("streams OpenAI-compatible chat completion chunks with optional usage", async () => {
+		const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-http-chat-stream-"));
+		cleanup.push(homeDir);
+		setAuracallHomeDirOverrideForTest(homeDir);
+		const executeStoredRunStep = vi.fn(async (_request: ExecutionRequest) => ({
+			sharedState: {
+				structuredOutputs: [
+					{
+						key: "response.output",
+						value: [
+							{
+								type: "message",
+								role: "assistant",
+								content: [{ type: "output_text", text: "Hello from AuraCall SSE." }],
+							},
+						],
+					},
+				],
+			},
+			usage: {
+				inputTokens: 8,
+				outputTokens: 6,
+				reasoningTokens: 0,
+				totalTokens: 14,
+			},
+		}));
+		const server = await createResponsesHttpServer(
+			{ host: "127.0.0.1", port: 0, backgroundDrainIntervalMs: 60_000 },
+			{
+				now: () => new Date("2026-08-15T21:30:00.000Z"),
+				generateResponseId: () => "chatcmpl_stream_1",
+				executeStoredRunStep,
+			},
+		);
 
 		try {
 			const response = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
@@ -22506,17 +22556,296 @@ describe("http responses adapter", () => {
 				body: JSON.stringify({
 					model: "agent:researcher",
 					stream: true,
+					stream_options: { include_usage: true },
 					messages: [{ role: "user", content: "Say hello." }],
 				}),
 			});
-			expect(response.status).toBe(400);
-			expect(await response.json()).toMatchObject({
+			expect(response.status).toBe(200);
+			expect(response.headers.get("content-type")).toBe("text/event-stream; charset=utf-8");
+			expect(response.headers.get("cache-control")).toBe("no-cache, no-transform");
+			expect(response.headers.get("x-auracall-response-id")).toBe("chatcmpl_stream_1");
+			const events = parseChatCompletionSse(await response.text());
+			expect(events).toHaveLength(5);
+			expect(events[0]).toMatchObject({
+				id: "chatcmpl_stream_1",
+				object: "chat.completion.chunk",
+				created: 1_786_829_400,
+				model: "agent:researcher",
+				choices: [{ index: 0, delta: { role: "assistant" }, finish_reason: null }],
+				usage: null,
+			});
+			expect(events[1]).toMatchObject({
+				id: "chatcmpl_stream_1",
+				choices: [
+					{ index: 0, delta: { content: "Hello from AuraCall SSE." }, finish_reason: null },
+				],
+				usage: null,
+			});
+			expect(events[2]).toMatchObject({
+				id: "chatcmpl_stream_1",
+				choices: [{ index: 0, delta: {}, finish_reason: "stop" }],
+				usage: null,
+			});
+			expect(events[3]).toMatchObject({
+				id: "chatcmpl_stream_1",
+				choices: [],
+				usage: { prompt_tokens: 8, completion_tokens: 6, total_tokens: 14 },
+			});
+			expect(events[4]).toBe("[DONE]");
+			expect(executeStoredRunStep).toHaveBeenCalledTimes(1);
+			expect(executeStoredRunStep.mock.calls[0]?.[0]).toMatchObject({
+				model: "agent:researcher",
+				auracall: { agent: "researcher" },
+			});
+		} finally {
+			await server.close();
+		}
+	});
+
+	it("streams through the installed OpenAI Node SDK", async () => {
+		const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-http-chat-sdk-stream-"));
+		cleanup.push(homeDir);
+		setAuracallHomeDirOverrideForTest(homeDir);
+		const server = await createResponsesHttpServer(
+			{ host: "127.0.0.1", port: 0, backgroundDrainIntervalMs: 60_000 },
+			{
+				generateResponseId: () => "chatcmpl_sdk_stream_1",
+				executeStoredRunStep: async () => ({
+					sharedState: {
+						structuredOutputs: [
+							{
+								key: "response.output",
+								value: [
+									{
+										type: "message",
+										role: "assistant",
+										content: [{ type: "output_text", text: "OPENAI_SDK_STREAM_OK" }],
+									},
+								],
+							},
+						],
+					},
+				}),
+			},
+		);
+
+		try {
+			const client = new OpenAI({
+				apiKey: "local-test-key",
+				baseURL: `http://127.0.0.1:${server.port}/v1`,
+				maxRetries: 0,
+			});
+			const stream = await client.chat.completions.create({
+				model: "agent:researcher",
+				stream: true,
+				messages: [{ role: "user", content: "Return the stream token." }],
+			});
+			const chunks = [];
+			for await (const chunk of stream) chunks.push(chunk);
+			expect(chunks).toHaveLength(3);
+			expect(chunks.every((chunk) => chunk.id === "chatcmpl_sdk_stream_1")).toBe(true);
+			expect(chunks[0]?.choices[0]?.delta.role).toBe("assistant");
+			expect(chunks.map((chunk) => chunk.choices[0]?.delta.content ?? "").join("")).toBe(
+				"OPENAI_SDK_STREAM_OK",
+			);
+			expect(chunks.at(-1)?.choices[0]?.finish_reason).toBe("stop");
+			expect(chunks.every((chunk) => !("usage" in chunk))).toBe(true);
+		} finally {
+			await server.close();
+		}
+	});
+
+	it("streams recoverable pending and terminal execution errors", async () => {
+		const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-http-chat-stream-errors-"));
+		cleanup.push(homeDir);
+		setAuracallHomeDirOverrideForTest(homeDir);
+		let unblockExecution: () => void = () => {};
+		const blockedExecution = new Promise<void>((resolve) => {
+			unblockExecution = resolve;
+		});
+		let requestNumber = 0;
+		const server = await createResponsesHttpServer(
+			{ host: "127.0.0.1", port: 0, backgroundDrainIntervalMs: 60_000 },
+			{
+				generateResponseId: () => `chatcmpl_stream_error_${++requestNumber}`,
+				executeStoredRunStep: async (request) => {
+					if (request.metadata?.case === "pending") {
+						await blockedExecution;
+						return {
+							output: {
+								summary: "released pending stream",
+								artifacts: [],
+								structuredData: {},
+								notes: [],
+							},
+						};
+					}
+					throw new Error("simulated streaming execution failure");
+				},
+			},
+		);
+
+		try {
+			const pending = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify({
+					model: "agent:researcher",
+					stream: true,
+					metadata: { case: "pending" },
+					messages: [{ role: "user", content: "Wait." }],
+					auracall: { chatCompletionSyncTimeoutMs: 1 },
+				}),
+			});
+			const pendingEvents = parseChatCompletionSse(await pending.text());
+			expect(pending.status).toBe(200);
+			expect(pendingEvents).toHaveLength(3);
+			expect(pendingEvents[1]).toMatchObject({
 				error: {
-					type: "invalid_request_error",
-					message: "Streaming chat completions are not supported by this AuraCall adapter yet.",
+					type: "auracall_execution_pending",
+					response_id: "chatcmpl_stream_error_1",
+					response_poll_path: "/v1/responses/chatcmpl_stream_error_1",
+					retry_after_seconds: 30,
+				},
+			});
+			expect(pendingEvents[2]).toBe("[DONE]");
+			unblockExecution();
+			for (let attempt = 0; attempt < 100; attempt += 1) {
+				const readback = await fetch(
+					`http://127.0.0.1:${server.port}/v1/responses/chatcmpl_stream_error_1`,
+				);
+				const payload = (await readback.json()) as JsonObject;
+				if (payload.status === "completed") break;
+				await delay(10);
+			}
+
+			const failed = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify({
+					model: "agent:researcher",
+					stream: true,
+					metadata: { case: "failed" },
+					messages: [{ role: "user", content: "Fail." }],
+				}),
+			});
+			const failedEvents = parseChatCompletionSse(await failed.text());
+			expect(failed.status).toBe(200);
+			expect(failedEvents).toHaveLength(3);
+			expect(failedEvents[1]).toMatchObject({
+				error: {
+					type: "auracall_execution_error",
+					response_id: "chatcmpl_stream_error_2",
+					response_status: "failed",
+					response_poll_path: "/v1/responses/chatcmpl_stream_error_2",
+				},
+			});
+			expect(failedEvents[2]).toBe("[DONE]");
+
+			const client = new OpenAI({
+				apiKey: "local-test-key",
+				baseURL: `http://127.0.0.1:${server.port}/v1`,
+				maxRetries: 0,
+			});
+			const failedSdkStream = await client.chat.completions.create({
+				model: "agent:researcher",
+				stream: true,
+				messages: [{ role: "user", content: "Surface one SDK stream error." }],
+				metadata: { case: "failed" },
+			});
+			await expect(
+				(async () => {
+					for await (const _chunk of failedSdkStream) {
+						// The role chunk arrives before the durable execution failure.
+					}
+				})(),
+			).rejects.toMatchObject({
+				type: "auracall_execution_error",
+				error: {
+					response_id: "chatcmpl_stream_error_3",
+					response_status: "failed",
+					response_poll_path: "/v1/responses/chatcmpl_stream_error_3",
 				},
 			});
 		} finally {
+			unblockExecution();
+			await server.close();
+		}
+	});
+
+	it("continues one durable response after a streaming client disconnects", async () => {
+		const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-http-chat-stream-abort-"));
+		cleanup.push(homeDir);
+		setAuracallHomeDirOverrideForTest(homeDir);
+		let unblockExecution: () => void = () => {};
+		const blockedExecution = new Promise<void>((resolve) => {
+			unblockExecution = resolve;
+		});
+		const executeStoredRunStep = vi.fn(async () => {
+			await blockedExecution;
+			return {
+				sharedState: {
+					structuredOutputs: [
+						{
+							key: "response.output",
+							value: [
+								{
+									type: "message",
+									role: "assistant",
+									content: [{ type: "output_text", text: "DURABLE_AFTER_ABORT" }],
+								},
+							],
+						},
+					],
+				},
+			};
+		});
+		const server = await createResponsesHttpServer(
+			{ host: "127.0.0.1", port: 0, backgroundDrainIntervalMs: 60_000 },
+			{
+				generateResponseId: () => "chatcmpl_stream_abort_1",
+				executeStoredRunStep,
+			},
+		);
+		const controller = new AbortController();
+
+		try {
+			const response = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify({
+					model: "agent:researcher",
+					stream: true,
+					messages: [{ role: "user", content: "Keep running." }],
+				}),
+				signal: controller.signal,
+			});
+			expect(response.headers.get("x-auracall-response-id")).toBe("chatcmpl_stream_abort_1");
+			controller.abort();
+			unblockExecution();
+
+			let readback: JsonObject | null = null;
+			for (let attempt = 0; attempt < 100; attempt += 1) {
+				const current = await fetch(
+					`http://127.0.0.1:${server.port}/v1/responses/chatcmpl_stream_abort_1`,
+				);
+				readback = (await current.json()) as JsonObject;
+				if (readback.status === "completed") break;
+				await delay(10);
+			}
+			expect(readback).toMatchObject({
+				id: "chatcmpl_stream_abort_1",
+				status: "completed",
+				output: [
+					{
+						type: "message",
+						content: [{ type: "output_text", text: "DURABLE_AFTER_ABORT" }],
+					},
+				],
+			});
+			expect(executeStoredRunStep).toHaveBeenCalledTimes(1);
+		} finally {
+			unblockExecution();
 			await server.close();
 		}
 	});
@@ -23094,6 +23423,30 @@ describe("http responses adapter", () => {
 			});
 			expect(deniedResponse.status).toBe(403);
 			expect(await deniedResponse.json()).toMatchObject({
+				error: {
+					type: "permission_error",
+					message: 'API key is not authorized for agent "reviewer".',
+				},
+			});
+
+			const deniedStream = await fetch(
+				`http://127.0.0.1:${server.port}/v1/chat/completions`,
+				{
+					method: "POST",
+					headers: {
+						Authorization: "Bearer scoped-secret",
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({
+						model: "agent:reviewer",
+						stream: true,
+						messages: [{ role: "user", content: "This stream should be rejected." }],
+					}),
+				},
+			);
+			expect(deniedStream.status).toBe(403);
+			expect(deniedStream.headers.get("content-type")).toBe("application/json");
+			expect(await deniedStream.json()).toMatchObject({
 				error: {
 					type: "permission_error",
 					message: 'API key is not authorized for agent "reviewer".',

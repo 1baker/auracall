@@ -19821,3 +19821,11 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   iteration, optional usage, auth/error/disconnect coverage, complete local
   gates, and exact-SHA cross-platform CI. No browser/provider/runtime mutation
   is authorized.
+- Implemented one common authorized durable-create/drain path with JSON or SSE
+  projection. SSE publishes the response id before settlement, supports
+  optional usage, emits structured recoverable errors, and stops transport
+  writes without cancelling execution when the client disconnects.
+- The complete 227-test HTTP adapter file, raw SSE assertions, installed OpenAI
+  SDK iteration, scoped authorization, specialized/bundled skill contracts,
+  typecheck, strict source/script/test lint, and the scoped-key SDK smoke pass.
+  Full suite, build, and exact-SHA CI remain before acceptance.

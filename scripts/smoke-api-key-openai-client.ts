@@ -132,11 +132,12 @@ async function main(): Promise<void> {
       process.env[key] = value;
     }
 
+    let responseNumber = 0;
     const clientServer = await createResponsesHttpServer(
       { host: '127.0.0.1', port: 0, backgroundDrainIntervalMs: 60_000 },
       {
         config,
-        generateResponseId: () => 'openai_client_smoke_resp_1',
+        generateResponseId: () => `openai_client_smoke_resp_${++responseNumber}`,
         now: () => new Date('2026-05-12T12:00:00.000Z'),
         executeStoredRunStep: async (request) => {
           assertEqual(request.model, 'agent:smoke', 'executor model');
@@ -178,7 +179,25 @@ async function main(): Promise<void> {
       });
       assertEqual(completion.choices[0]?.message?.content, 'AURACALL_OPENAI_CLIENT_KEY_OK', 'OpenAI client response');
       assertEqual(completion.model, 'agent:smoke', 'OpenAI client model');
-      console.log(`api-key-openai-client smoke: pass issuePort=${issuerServer.port} clientPort=${clientServer.port} keyId=${issued.keyId} model=${completion.model}`);
+      const stream = await openai.chat.completions.create({
+        model: 'agent:smoke',
+        messages: [{ role: 'user', content: 'Return the streaming smoke token.' }],
+        stream: true,
+        stream_options: { include_usage: true },
+      });
+      let streamedContent = '';
+      let finishReason: string | null = null;
+      let totalTokens: number | null = null;
+      for await (const chunk of stream) {
+        assertEqual(chunk.id, 'openai_client_smoke_resp_2', 'OpenAI stream response id');
+        streamedContent += chunk.choices[0]?.delta.content ?? '';
+        finishReason = chunk.choices[0]?.finish_reason ?? finishReason;
+        totalTokens = chunk.usage?.total_tokens ?? totalTokens;
+      }
+      assertEqual(streamedContent, 'AURACALL_OPENAI_CLIENT_KEY_OK', 'OpenAI stream content');
+      assertEqual(finishReason, 'stop', 'OpenAI stream finish reason');
+      assertEqual(totalTokens, 7, 'OpenAI stream usage');
+      console.log(`api-key-openai-client smoke: pass issuePort=${issuerServer.port} clientPort=${clientServer.port} keyId=${issued.keyId} model=${completion.model} streaming=true`);
     } finally {
       await clientServer.close();
     }

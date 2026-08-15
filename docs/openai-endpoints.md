@@ -942,8 +942,9 @@ Current limits:
   unscoped operator key for direct/non-loopback access when auth is enabled,
   while the built-in dashboard exception requires verified loopback bind/peer
   transport plus same-origin browser context
-- no streaming/SSE; `POST /v1/chat/completions` accepts non-streaming requests
-  and rejects `stream: true`
+- `POST /v1/chat/completions` supports bounded JSON responses plus
+  OpenAI-compatible SSE for `stream: true`; SSE projects authoritative settled
+  text from the same durable response rather than claiming provider token deltas
 - local `api serve` now self-registers one persisted runner record and
   heartbeats it while the server is alive; shutdown marks that runner stale
 - successful bounded direct-run execution now also updates that runner record
@@ -973,8 +974,11 @@ Current direct-run behavior:
     future
 - optional API-key auth applies to `/v1/*` and `POST /status`; `GET /status`
   remains observable
-- non-streaming `POST /v1/chat/completions` adapts OpenAI-style messages to the
-  durable response service; streaming remains unsupported
+- `POST /v1/chat/completions` adapts OpenAI-style messages to the durable
+  response service. `stream: true` returns stable `chat.completion.chunk`
+  role/content/stop events, an optional usage chunk, and `[DONE]`. Pending or
+  failed runs emit a structured SSE `error` with the durable response id and
+  poll path; disconnecting the client does not cancel the stored run.
 
 Current response readback note:
 

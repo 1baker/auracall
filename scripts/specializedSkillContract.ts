@@ -42,6 +42,7 @@ const API_WORKFLOW_SKILL_FRAGMENTS = [
 	"response_batch_status",
 	"run_status",
 	"auracall_execution_pending",
+	"X-AuraCall-Response-Id",
 	"pnpm run smoke:scoped-client-handoff",
 	"pnpm run smoke:scoped-client-env -- <client.env>",
 	"Treat it as effectful",
@@ -142,10 +143,15 @@ export function collectSpecializedSkillContractErrors(
 	requireFragments(
 		sources.endpointDocText,
 		"docs/openai-endpoints.md",
-		["- `POST /v1/chat/completions`", "accepts non-streaming requests", "optional API-key auth"],
+		["- `POST /v1/chat/completions`", "OpenAI-compatible SSE", "optional API-key auth"],
 		errors,
 	);
-	for (const pattern of [/no `POST \/v1\/chat\/completions` adapter/iu, /no streaming, auth/iu]) {
+	for (const pattern of [
+		/no `POST \/v1\/chat\/completions` adapter/iu,
+		/no streaming, auth/iu,
+		/streaming remains unsupported/iu,
+		/rejects `stream: true`/iu,
+	]) {
 		if (pattern.test(sources.endpointDocText)) {
 			errors.push("docs/openai-endpoints.md: contains retired chat-completions/auth claim");
 		}
@@ -153,7 +159,12 @@ export function collectSpecializedSkillContractErrors(
 	requireFragments(
 		sources.workflowDocText,
 		"docs/agent-workflows.md",
-		["non-streaming", "auracall_execution_pending", "agent_setup_handoff_create"],
+		[
+			"streaming/non-streaming",
+			"auracall_execution_pending",
+			"X-AuraCall-Response-Id",
+			"agent_setup_handoff_create",
+		],
 		errors,
 	);
 

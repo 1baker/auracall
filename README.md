@@ -490,18 +490,25 @@ Terminology note:
     - both default to a bounded, side-effect-free monitoring projection;
       append `?detail=full` only for one-off diagnostics that require the full
       refresh receipt or lifecycle history
-- `POST /v1/chat/completions` accepts non-streaming OpenAI-style chat requests,
-  maps `system` messages to instructions, joins the remaining chat messages
-  into the existing `/v1/responses` runtime path, drains one host-owned run
-  before returning, and returns a standard `chat.completion` object. If a
-  browser-backed run cannot finish inside the bounded synchronous wait window,
-  the endpoint returns `503` with `Retry-After`, `error.type =
-  "auracall_execution_pending"`, `response_id`, and `response_poll_path` for
-  `GET /v1/responses/{response_id}` polling instead of holding the client
-  request indefinitely. The default wait is 30 seconds; set
-  `auracall.chatCompletionSyncTimeoutMs` on a request to tune it. `stream:
-  true` is rejected explicitly until the
-  streaming adapter is implemented.
+- `POST /v1/chat/completions` accepts OpenAI-style chat requests, maps `system`
+  messages to instructions, and routes the remaining messages through the same
+  durable `/v1/responses` runtime. With `stream: false` or no stream option, it
+  drains one host-owned run and returns a standard `chat.completion` object.
+  With `stream: true`, it returns OpenAI-compatible `text/event-stream`: one
+  assistant-role chunk is sent after durable response creation, authoritative
+  settled text follows as a content chunk, a stop chunk terminates the choice,
+  optional `stream_options.include_usage` adds the final empty-choice usage
+  chunk, and `data: [DONE]` closes the stream. AuraCall does not claim provider
+  token deltas through this seam yet.
+- A non-streaming browser-backed run that exceeds the bounded synchronous wait
+  returns `503` with `Retry-After`, `error.type =
+  "auracall_execution_pending"`, `response_id`, and `response_poll_path`.
+  Streaming pending or failed execution emits the equivalent structured
+  `error` object inside SSE before `[DONE]`; the OpenAI Node SDK raises that
+  object as an API error. The `X-AuraCall-Response-Id` stream header identifies
+  the durable run for polling. Client disconnect ends transport delivery but
+  does not cancel or duplicate that run. The default wait is 30 seconds; set
+  `auracall.chatCompletionSyncTimeoutMs` on a request to tune it.
 - Once AuraCall has issued a `response_id`, clients should keep polling that
   same id. `GET /v1/responses/{response_id}` returns structured JSON for
   pending, recovering, finalizing, completed, failed, and cancelled run states;
@@ -509,8 +516,8 @@ Terminology note:
   than an empty response.
 - `GET /v1/models` returns the static provider model catalog plus AuraCall
   discovery entries. Effective config-defined and registry-backed agents appear
-  as `agent:<agent_id>` model ids usable with `/v1/responses` and non-streaming
-  `/v1/chat/completions`; agent metadata includes source/revision fields when
+  as `agent:<agent_id>` model ids usable with `/v1/responses` and streaming or
+  non-streaming `/v1/chat/completions`; agent metadata includes source/revision fields when
   available so clients can distinguish config and registry records.
   semantic provider selectors such as `chatgpt:sol-high` and
   `chatgpt:terra` include
@@ -1675,10 +1682,9 @@ Terminology note:
     - `X-AuraCall-Team`
     - `X-AuraCall-Service`
   - optional local API-key auth for `/v1/*`; no auth unless configured
-  - no streaming
-  - bounded non-streaming `/v1/chat/completions` compatibility routes through
-    the existing `/v1/responses` runtime path and drains synchronously before
-    returning
+  - OpenAI-compatible `/v1/chat/completions` JSON and SSE projection over the
+    existing durable `/v1/responses` runtime path; SSE emits settled text rather
+    than claiming unavailable provider token deltas
   - runner self-registration + heartbeat now exist for the local `api serve`
     host, but there is still no broader multi-runner claim/reassignment mode
   - direct-run responses now include bounded execution readback under

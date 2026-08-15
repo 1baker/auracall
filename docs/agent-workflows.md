@@ -95,7 +95,7 @@ Use this when a client app needs one answer from one configured agent.
 
 1. Discover available agents with `GET /v1/models`.
 2. Select an `agent:<agent_id>` model id.
-3. Submit `POST /v1/responses` or non-streaming
+3. Submit `POST /v1/responses` or streaming/non-streaming
    `POST /v1/chat/completions`.
 4. Read the response body. If the run is asynchronous or detached, keep the
    response id and poll `GET /v1/responses/{response_id}` or MCP `run_status`.
@@ -104,6 +104,11 @@ Use this when a client app needs one answer from one configured agent.
    `response_poll_path`, and `Retry-After` when the browser-backed run is still
    blocked after the bounded synchronous wait. The default wait is 30 seconds;
    set `auracall.chatCompletionSyncTimeoutMs` on a request to tune it.
+   Streaming calls receive the durable response id in
+   `X-AuraCall-Response-Id`, then OpenAI-compatible SSE role/content/stop
+   chunks and `[DONE]`. Pending or failed execution is an SSE `error` carrying
+   the same poll path; keep polling that id rather than resubmitting. Breaking
+   or aborting the client stream does not cancel the durable run.
 5. After a `response_id` exists, polling that id is durable: recovering and
    finalizing browser-backed runs return structured JSON, and true readback
    faults return structured JSON that repeats the `response_id`.

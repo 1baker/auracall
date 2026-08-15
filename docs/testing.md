@@ -47,6 +47,14 @@
   not. Treat a newly observed configured-profile process as a test-isolation
   failure and clean up only the exact AuraCall-owned process.
 
+- OpenAI-compatible chat-completion streaming is provider-free:
+  `pnpm exec vitest run tests/http.responsesServer.test.ts -t "chat completions|streaming client"`.
+  It proves raw SSE framing, stable chunk identity, optional usage, structured
+  pending/failure recovery, installed OpenAI Node SDK iteration, and durable
+  completion after client disconnect. Run
+  `pnpm run smoke:api-key-openai-client` for the isolated scoped-key end-to-end
+  proof of both JSON and streaming SDK calls.
+
 - Shared navigation liveness regression:
   `pnpm vitest run tests/browser-service/ui.test.ts -t "bounds an unsettled Page.navigate acknowledgement"`.
   This is provider-free and proves a lost CDP navigation acknowledgement cannot

@@ -40,9 +40,10 @@ prefer semantic intent and keep exact provider-version pins as escape hatches.
   scope `/v1/responses` calls by agent, team, service, and runtime profile.
   Keys can live in config or in the user-scoped service dotenv file at
   `~/.auracall/api.env`.
-- Non-streaming `/v1/chat/completions` requests now adapt OpenAI-style chat
-  messages into the existing `/v1/responses` runtime path, drain one host-owned
-  run synchronously, and return a standard `chat.completion` object.
+- `/v1/chat/completions` requests now adapt OpenAI-style chat messages into the
+  existing `/v1/responses` runtime path. Non-streaming calls drain one
+  host-owned run and return a standard `chat.completion`; streaming calls emit
+  OpenAI-compatible SSE over the same durable response.
 - `docs/agent-workflows.md` defines the general agent/app workflow pattern:
   privileged setup, scoped execution, durable observation, response batches,
   and skill split. The ChE grading smoke is one fixture-backed proof of that
@@ -105,13 +106,14 @@ Implemented:
 - `~/.auracall/api.env` is loaded by the installed user service and can define
   `AURACALL_API_KEY`, `OPENAI_API_KEY`, `OPENAI_BASE_URL`, and `AURACALL_MODEL`
   for local client agents without storing secrets in the repo.
-- `/v1/chat/completions` is implemented for non-streaming calls. It reuses the
+- `/v1/chat/completions` is implemented for JSON and SSE calls. Both reuse the
   same execution authorization, agent shorthand, response drain, and stored-run
-  readback as `/v1/responses`, but blocks for the one created run only inside a
-  bounded synchronous wait window. If browser-backed execution is still blocked,
-  the adapter returns retryable `503` metadata with the persisted response id so
-  client apps can poll `/v1/responses/{response_id}` instead of tying up their
-  own workers indefinitely.
+  readback as `/v1/responses`, and wait only for the one created run inside a
+  bounded window. Non-streaming pending execution returns retryable `503`
+  metadata. Streaming emits role, settled content, stop, optional usage, and
+  `[DONE]`; pending or failed execution emits a structured SSE error with the
+  persisted response id and poll path. Client disconnect does not cancel the
+  durable run.
 - `POST /v1/projects/ensure` and `POST /v1/response-batches` combine into the
   first documented deterministic setup plus stochastic execution workflow for
   external agents.
@@ -125,7 +127,7 @@ Implemented:
 
 Remaining:
 
-- streaming `/v1/chat/completions` compatibility is still deferred
+- exact-SHA cross-platform acceptance for the streaming compatibility slice
 
 ## Acceptance Criteria
 
@@ -134,6 +136,9 @@ Remaining:
 - A client can call non-streaming `/v1/chat/completions` with `model:
   "agent:<agent_id>"` and receive a `chat.completion` projection from the same
   configured-agent runtime path.
+- A client can call streaming `/v1/chat/completions` with `model:
+  "agent:<agent_id>"`, consume valid `chat.completion.chunk` SSE through the
+  official OpenAI SDK, and retain the durable response id for recovery.
 - Agent config can express service, raw model, semantic selector, project,
   knowledge, and prompt intent without polluting output with unset fields.
 - Provider-specific adapters resolve semantic selectors against current
@@ -160,8 +165,8 @@ Remaining:
 
 ## Next Work
 
-- Add streaming compatibility after non-streaming OpenAI client dogfooding proves
-  the basic route and response shape.
+- Accept the streaming compatibility slice on the exact implementation SHA,
+  then close this parent plan if its complete criteria remain proven.
 - Add first-class batch retry/cancel/priority controls once response-batch
   dogfooding shows the minimal status contract is stable.
 - Ensure `/v1/responses`, `/v1/chat/completions`, `/v1/response-batches`, and

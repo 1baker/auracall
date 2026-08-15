@@ -47590,3 +47590,11 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Raw HTTP plus the installed OpenAI Node SDK must prove role/content/terminal
   chunks, optional usage, `[DONE]`, structured pending/failure errors, and
   disconnect-safe continued durable execution before cross-platform acceptance.
+- The shared handler now authorizes and creates one durable response before
+  choosing JSON or SSE projection. SSE sends the stable id in a response header
+  and assistant-role chunk, then settled content, stop, optional usage, and
+  `[DONE]`; pending/failed paths emit SDK-native structured errors.
+- Raw framing, installed OpenAI SDK iteration, scoped auth rejection, timeout,
+  terminal failure, and disconnected-client durable readback pass. The full
+  227-test HTTP file, skill contracts, typecheck, strict lint, and isolated
+  scoped-key SDK smoke are green; broad validation remains.

@@ -52,18 +52,18 @@ response runtime.
 
 ## Acceptance Criteria
 
-- [ ] `stream: true` returns `text/event-stream` with a stable id, timestamp,
+- [x] `stream: true` returns `text/event-stream` with a stable id, timestamp,
       model, assistant-role chunk, content chunk, stop chunk, and `[DONE]`.
-- [ ] `stream_options.include_usage=true` adds one final empty-choice usage
+- [x] `stream_options.include_usage=true` adds one final empty-choice usage
       chunk; false or absent does not.
-- [ ] The official installed OpenAI Node SDK can consume the stream with
+- [x] The official installed OpenAI Node SDK can consume the stream with
       `for await` and reconstruct the expected assistant text.
-- [ ] Streaming uses the same catalog hydration, scoped authorization, durable
+- [x] Streaming uses the same catalog hydration, scoped authorization, durable
       response creation, single host drain, and stored response readback as the
       non-streaming path.
-- [ ] Pending and failed execution become structured SSE errors with durable
+- [x] Pending and failed execution become structured SSE errors with durable
       response recovery metadata, and no successful terminal chunk is emitted.
-- [ ] A disconnected client does not cancel, duplicate, or corrupt the durable
+- [x] A disconnected client does not cancel, duplicate, or corrupt the durable
       response run; later `/v1/responses/{response_id}` readback remains valid.
 - [ ] Existing non-streaming, auth, route-manifest, readiness, and complete
       provider-disabled tests remain green.
@@ -92,3 +92,18 @@ machine-readable, and cross-platform CI accepts the exact implementation SHA.
   complete local gates, and exact-SHA CI pass, or an executable SDK/runtime
   contract disproves compatibility and the exact blocker is recorded
 
+## Execution Notes
+
+- The handler now shares request normalization, catalog hydration, scoped
+  authorization, durable create, and one host drain before branching into JSON
+  or SSE result projection.
+- SSE sends a stable assistant-role chunk immediately after response creation,
+  then settled content, stop, optional usage, and `[DONE]`. The durable id is
+  also available in `X-AuraCall-Response-Id` before settlement.
+- Pending and failed runs emit an SSE object with `error`, response id/status,
+  and poll path. The installed OpenAI Node SDK consumes successful streams and
+  converts error objects to API errors through its native parser.
+- Raw-wire, SDK, auth, failure, timeout, and disconnect tests pass. The complete
+  227-test HTTP adapter file, specialized/bundled skill contracts, typecheck,
+  strict source/script/test lint, and scoped-key SDK smoke also pass without
+  browser or provider effects. Full suite, build, and exact-SHA CI remain.

@@ -503,6 +503,9 @@ interface HttpChatCompletionRequest {
 	model: string;
 	messages: HttpChatCompletionMessage[];
 	stream?: boolean;
+	stream_options?: {
+		include_usage?: boolean;
+	};
 	response_format?: Record<string, unknown>;
 	metadata?: Record<string, unknown>;
 	tools?: Array<Record<string, unknown>>;
@@ -529,6 +532,26 @@ interface HttpChatCompletionResponse {
 		total_tokens: number | null;
 	};
 	metadata?: ExecutionResponse["metadata"];
+}
+
+interface HttpChatCompletionChunk {
+	id: string;
+	object: "chat.completion.chunk";
+	created: number;
+	model: string;
+	choices: Array<{
+		index: number;
+		delta: {
+			role?: "assistant";
+			content?: string;
+		};
+		finish_reason: "stop" | null;
+	}>;
+	usage?: {
+		prompt_tokens: number;
+		completion_tokens: number;
+		total_tokens: number;
+	} | null;
 }
 
 const DEFAULT_CHAT_COMPLETION_SYNC_TIMEOUT_MS = 30_000;
@@ -3840,16 +3863,6 @@ export async function createResponsesHttpServer(
 				try {
 					const body = await readRequestBody(req);
 					const chatRequest = parseChatCompletionRequest(JSON.parse(body || "{}"));
-					if (chatRequest.stream) {
-						sendJson(res, 400, {
-							error: {
-								message:
-									"Streaming chat completions are not supported by this AuraCall adapter yet.",
-								type: "invalid_request_error",
-							},
-						} satisfies HttpErrorPayload);
-						return;
-					}
 					const catalog = await agentTeamConfigService.effectiveCatalog();
 					const request = hydrateExecutionRequestFromCatalog(
 						createExecutionRequest(
@@ -3876,6 +3889,20 @@ export async function createResponsesHttpServer(
 						maxRuns: 1,
 						trigger: "request-create",
 					});
+					if (chatRequest.stream) {
+						await streamChatCompletionResponse({
+							res,
+							request: chatRequest,
+							createdResponse,
+							drain,
+							responsesService,
+							now,
+							onDrainCompleted: () =>
+								scheduleAccountMirrorSchedulerFollowUp(0, "response-drain-completed"),
+							logger,
+						});
+						return;
+					}
 					const drainedInSyncWindow = await waitForChatCompletionDrain(
 						drain,
 						chatRequest.syncTimeoutMs,
@@ -4229,6 +4256,10 @@ export async function createResponsesHttpServer(
 			} satisfies HttpErrorPayload);
 		} catch (error) {
 			logger(error instanceof Error ? error.message : String(error));
+			if (res.headersSent) {
+				if (!res.writableEnded && !res.destroyed) res.end();
+				return;
+			}
 			if (
 				error instanceof SyntaxError ||
 				error instanceof ZodError ||
@@ -8040,10 +8071,16 @@ function parseChatCompletionRequest(value: unknown): HttpChatCompletionRequest {
 	const syncTimeoutMs = readNonNegativeInteger(
 		auracall?.chatCompletionSyncTimeoutMs ?? auracall?.syncTimeoutMs,
 	);
+	const streamOptions = isRecord(value.stream_options)
+		? {
+				include_usage: readBoolean(value.stream_options.include_usage) ?? false,
+			}
+		: undefined;
 	return {
 		model,
 		messages,
 		stream: readBoolean(value.stream) ?? false,
+		...(streamOptions ? { stream_options: streamOptions } : {}),
 		...(responseFormat ? { response_format: responseFormat } : {}),
 		...(metadata ? { metadata } : {}),
 		...(tools ? { tools } : {}),
@@ -8126,6 +8163,18 @@ function createChatCompletionPendingResponse(response: ExecutionResponse): HttpE
 	};
 }
 
+function createChatCompletionStreamTerminalError(response: ExecutionResponse): HttpErrorPayload {
+	const payload = createChatCompletionErrorResponse(response);
+	return {
+		error: {
+			...payload.error,
+			response_id: response.id,
+			response_status: response.status,
+			response_poll_path: `/v1/responses/${encodeURIComponent(response.id)}`,
+		},
+	};
+}
+
 function createResponseReadbackErrorPayload(responseId: string, error: unknown): HttpErrorPayload {
 	return {
 		error: {
@@ -8155,6 +8204,202 @@ async function waitForChatCompletionDrain(
 		]);
 	} finally {
 		if (timeout) clearTimeout(timeout);
+	}
+}
+
+async function streamChatCompletionResponse(input: {
+	res: http.ServerResponse;
+	request: HttpChatCompletionRequest;
+	createdResponse: ExecutionResponse;
+	drain: Promise<unknown>;
+	responsesService: ReturnType<typeof createExecutionResponsesService>;
+	now: () => Date;
+	onDrainCompleted: () => void;
+	logger: (message: string) => void;
+}): Promise<void> {
+	const created = Math.floor(input.now().getTime() / 1000);
+	const model = input.createdResponse.model ?? input.request.model;
+	startChatCompletionStream(input.res, input.createdResponse.id);
+	writeChatCompletionStreamChunk(
+		input.res,
+		createChatCompletionStreamChunk({
+			id: input.createdResponse.id,
+			created,
+			model,
+			delta: { role: "assistant" },
+			finishReason: null,
+			includeUsage: input.request.stream_options?.include_usage === true,
+		}),
+	);
+
+	try {
+		const drainedInSyncWindow = await waitForChatCompletionDrain(
+			input.drain,
+			input.request.syncTimeoutMs,
+		);
+		if (!drainedInSyncWindow) {
+			input.drain.catch((error) => {
+				input.logger(
+					`streaming chat completion background drain failed after sync timeout: ${
+						error instanceof Error ? error.message : String(error)
+					}`,
+				);
+			});
+			const pendingResponse =
+				(await input.responsesService.readResponse(input.createdResponse.id)) ??
+				input.createdResponse;
+			writeChatCompletionStreamError(
+				input.res,
+				createChatCompletionPendingResponse(pendingResponse),
+			);
+			return;
+		}
+
+		input.onDrainCompleted();
+		const response =
+			(await input.responsesService.readResponse(input.createdResponse.id)) ??
+			input.createdResponse;
+		if (response.status !== "completed") {
+			writeChatCompletionStreamError(
+				input.res,
+				createChatCompletionStreamTerminalError(response),
+			);
+			return;
+		}
+
+		writeChatCompletionStreamChunk(
+			input.res,
+			createChatCompletionStreamChunk({
+				id: response.id,
+				created,
+				model: response.model ?? model,
+				delta: { content: extractChatCompletionText(response) },
+				finishReason: null,
+				includeUsage: input.request.stream_options?.include_usage === true,
+			}),
+		);
+		writeChatCompletionStreamChunk(
+			input.res,
+			createChatCompletionStreamChunk({
+				id: response.id,
+				created,
+				model: response.model ?? model,
+				delta: {},
+				finishReason: "stop",
+				includeUsage: input.request.stream_options?.include_usage === true,
+			}),
+		);
+		if (input.request.stream_options?.include_usage === true) {
+			writeChatCompletionStreamChunk(
+				input.res,
+				createChatCompletionStreamUsageChunk(response, created, response.model ?? model),
+			);
+		}
+		writeChatCompletionStreamDone(input.res);
+	} catch (error) {
+		input.logger(
+			`streaming chat completion ${input.createdResponse.id} failed: ${
+				error instanceof Error ? error.message : String(error)
+			}`,
+		);
+		writeChatCompletionStreamError(
+			input.res,
+			createResponseReadbackErrorPayload(input.createdResponse.id, error),
+		);
+	} finally {
+		endChatCompletionStream(input.res);
+	}
+}
+
+function startChatCompletionStream(res: http.ServerResponse, responseId: string): void {
+	res.writeHead(200, {
+		"Content-Type": "text/event-stream; charset=utf-8",
+		"Cache-Control": "no-cache, no-transform",
+		connection: "keep-alive",
+		"X-Accel-Buffering": "no",
+		"X-AuraCall-Response-Id": responseId,
+	});
+	res.flushHeaders();
+}
+
+function createChatCompletionStreamChunk(input: {
+	id: string;
+	created: number;
+	model: string;
+	delta: HttpChatCompletionChunk["choices"][number]["delta"];
+	finishReason: "stop" | null;
+	includeUsage: boolean;
+}): HttpChatCompletionChunk {
+	return {
+		id: input.id,
+		object: "chat.completion.chunk",
+		created: input.created,
+		model: input.model,
+		choices: [
+			{
+				index: 0,
+				delta: input.delta,
+				finish_reason: input.finishReason,
+			},
+		],
+		...(input.includeUsage ? { usage: null } : {}),
+	};
+}
+
+function createChatCompletionStreamUsageChunk(
+	response: ExecutionResponse,
+	created: number,
+	model: string,
+): HttpChatCompletionChunk {
+	const usage = response.metadata?.executionSummary?.providerUsageSummary;
+	return {
+		id: response.id,
+		object: "chat.completion.chunk",
+		created,
+		model,
+		choices: [],
+		usage: {
+			prompt_tokens: usage?.inputTokens ?? 0,
+			completion_tokens: usage?.outputTokens ?? 0,
+			total_tokens: usage?.totalTokens ?? 0,
+		},
+	};
+}
+
+function writeChatCompletionStreamChunk(
+	res: http.ServerResponse,
+	payload: HttpChatCompletionChunk,
+): void {
+	writeChatCompletionStreamData(res, JSON.stringify(payload));
+}
+
+function writeChatCompletionStreamError(
+	res: http.ServerResponse,
+	payload: HttpErrorPayload,
+): void {
+	writeChatCompletionStreamData(res, JSON.stringify(payload));
+	writeChatCompletionStreamDone(res);
+}
+
+function writeChatCompletionStreamDone(res: http.ServerResponse): void {
+	writeChatCompletionStreamData(res, "[DONE]");
+}
+
+function writeChatCompletionStreamData(res: http.ServerResponse, data: string): void {
+	if (res.destroyed || res.writableEnded) return;
+	try {
+		res.write(`data: ${data}\n\n`);
+	} catch {
+		// The durable response continues even when the client transport disappears.
+	}
+}
+
+function endChatCompletionStream(res: http.ServerResponse): void {
+	if (res.destroyed || res.writableEnded) return;
+	try {
+		res.end();
+	} catch {
+		// A disconnected client does not own or cancel the durable response run.
 	}
 }
 
