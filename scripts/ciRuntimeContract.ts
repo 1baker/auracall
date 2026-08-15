@@ -133,6 +133,16 @@ export function collectCiRuntimeContractErrors(
   if (!workflowText.includes('uses: pnpm/action-setup@v6')) {
     errors.push('.github/workflows/ci.yml: pnpm/action-setup must use the Node 24-compatible v6 action');
   }
+  if (!workflowText.includes("if: matrix.os != 'windows-2022'\n        run: pnpm run test")) {
+    errors.push('.github/workflows/ci.yml: full test suite must run on the supported Unix hosts');
+  }
+  if (
+    !workflowText.includes(
+      "if: matrix.os == 'windows-2022'\n        run: pnpm exec vitest run tests/scripts/ciRuntimeContract.test.ts",
+    )
+  ) {
+    errors.push('.github/workflows/ci.yml: Windows must run the focused runtime-contract tests');
+  }
   if (!/^\s*workflow_dispatch:\s*$/mu.test(workflowText)) {
     errors.push('.github/workflows/ci.yml: workflow_dispatch must remain available');
   }

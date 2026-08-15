@@ -73,6 +73,24 @@ describe('CI Node runtime contract', () => {
     );
   });
 
+  it('rejects cross-platform test-lane drift', () => {
+    expect(
+      collectCiRuntimeContractErrors(
+        currentPackage,
+        currentWorkflow.replace("if: matrix.os != 'windows-2022'", "if: matrix.os == 'ubuntu-latest'"),
+      ),
+    ).toContain('.github/workflows/ci.yml: full test suite must run on the supported Unix hosts');
+    expect(
+      collectCiRuntimeContractErrors(
+        currentPackage,
+        currentWorkflow.replace(
+          'pnpm exec vitest run tests/scripts/ciRuntimeContract.test.ts',
+          'pnpm run test',
+        ),
+      ),
+    ).toContain('.github/workflows/ci.yml: Windows must run the focused runtime-contract tests');
+  });
+
   it('rejects removal of the reproducible manual CI entrypoint', () => {
     expect(
       collectCiRuntimeContractErrors(

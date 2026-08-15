@@ -50,7 +50,7 @@ describe('processCheck (package)', () => {
     expect(match?.port).toBe(9222);
   });
 
-  test('matches the requested Windows user-data-dir exactly on WSL and extracts the debug port', async () => {
+  test.runIf(process.platform === 'linux')('matches the requested Windows user-data-dir exactly on WSL and extracts the debug port', async () => {
     process.env.WSL_DISTRO_NAME = 'Ubuntu';
     const tempDir = await mkdtemp(path.join(os.tmpdir(), 'auracall-processcheck-'));
     const fakePowerShell = path.join(tempDir, 'powershell.exe');
@@ -97,7 +97,7 @@ describe('processCheck (package)', () => {
     }
   }, 15_000);
 
-  test('discovers a responsive Windows DevTools port for a user-data-dir when the advertised port is dead', async () => {
+  test.runIf(process.platform === 'linux')('discovers a responsive Windows DevTools port for a user-data-dir when the advertised port is dead', async () => {
     process.env.WSL_DISTRO_NAME = 'Ubuntu';
     const tempDir = await mkdtemp(path.join(os.tmpdir(), 'auracall-processcheck-'));
     const fakePowerShell = path.join(tempDir, 'powershell.exe');
@@ -145,7 +145,7 @@ esac
     }
   }, 15_000);
 
-  test('treats a responsive Windows-local DevTools endpoint as alive even when the original PID path is unreliable', async () => {
+  test.runIf(process.platform === 'linux')('treats a responsive Windows-local DevTools endpoint as alive even when the original PID path is unreliable', async () => {
     process.env.WSL_DISTRO_NAME = 'Ubuntu';
     const tempDir = await mkdtemp(path.join(os.tmpdir(), 'auracall-processcheck-'));
     const fakePowerShell = path.join(tempDir, 'powershell.exe');

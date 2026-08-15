@@ -30,12 +30,12 @@ describe('chromeLifecycle (package)', () => {
     expect(resolveWslHost()).toBe('10.0.0.5');
   });
 
-  test('resolveUserDataBaseDir keeps WSL Chrome on the Linux temp root', async () => {
+  test.runIf(process.platform === 'linux')('resolveUserDataBaseDir keeps WSL Chrome on the Linux temp root', async () => {
     process.env.WSL_DISTRO_NAME = 'Ubuntu';
     await expect(resolveUserDataBaseDir('/usr/bin/google-chrome')).resolves.toBe(os.tmpdir());
   });
 
-  test('resolveChromeLauncherTempPrefix keeps WSL launcher bookkeeping out of the working tree', () => {
+  test.runIf(process.platform === 'linux')('resolveChromeLauncherTempPrefix keeps WSL launcher bookkeeping out of the working tree', () => {
     process.env.WSL_DISTRO_NAME = 'Ubuntu';
     expect(resolveChromeLauncherTempPrefix('/usr/bin/google-chrome')).toBe(
       path.join(os.tmpdir(), 'auracall-chrome-launcher-'),
@@ -45,7 +45,7 @@ describe('chromeLifecycle (package)', () => {
     ).toBeNull();
   });
 
-  test('resolveUserDataDirFlag wraps Windows WSL paths in quotes for chrome.exe', () => {
+  test.runIf(process.platform === 'linux')('resolveUserDataDirFlag wraps Windows WSL paths in quotes for chrome.exe', () => {
     process.env.WSL_DISTRO_NAME = 'Ubuntu';
     expect(
       resolveUserDataDirFlag(
@@ -85,7 +85,7 @@ describe('chromeLifecycle (package)', () => {
     },
   );
 
-  test.runIf(process.platform !== 'win32')(
+  test.runIf(process.platform === 'linux')(
     'buildChromeFlags keeps desktop keyring bypass enabled inside WSL',
     () => {
       process.env.WSL_DISTRO_NAME = 'Ubuntu';

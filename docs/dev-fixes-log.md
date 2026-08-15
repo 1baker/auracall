@@ -1,3 +1,17 @@
+- 2026-08-15: Setting `WSL_DISTRO_NAME` does not turn macOS or native Windows
+  into a valid WSL fixture because production correctly joins that marker with
+  a Linux host check. Scope WSL behavior cases to Linux and keep portable cases
+  active everywhere. For PTY CLI validation, force `--wait` so the assertion
+  path executes before platform-specific background-detach behavior.
+
+- 2026-08-15: A native Windows install check and a native Windows full-suite
+  claim are different contracts. AuraCall's historical runtime identifiers use
+  POSIX-safe colons as directory components, so a broad Windows run fails before
+  exercising many assertions. Keep Windows CI bounded to dependency install,
+  runtime-contract, lint, focused contract tests, and a real cross-platform
+  smoke; require the complete provider-disabled suite on Ubuntu and macOS until
+  persisted-key portability has a dedicated migration.
+
 - 2026-08-15: A floating `windows-latest` runner can change native compiler
   generations underneath an old patched test dependency. When node-gyp cannot
   identify Visual Studio 2026, use GitHub's supported `windows-2022`/VS2022

@@ -11,6 +11,16 @@
   2026: node-gyp 11.5 could not rebuild the existing PTY test dependency.
   Version 3 uses GitHub's supported Windows 2022/VS2022 runner and upgrades
   pnpm setup from its deprecated Node 20 action runtime to v6.
+- Dispatch 31886180876 passed Ubuntu 22/24 and crossed the repaired native
+  install boundary on Windows 2022. macOS identified 21 WSL fixtures that were
+  valid only on a Linux host plus two PTY fixtures that detached before model
+  validation. Version 4 gates only the WSL cases on Linux and runs PTY guards
+  inline with `--wait`, preserving the full matrix and production semantics.
+- The completed Windows job independently exposed colon-delimited runtime/cache
+  directory keys and POSIX-only expectations across the historical suite.
+  Version 5 preserves Windows install/checker/lint/readiness-smoke acceptance
+  plus focused contract tests, while the complete suite remains mandatory on
+  Ubuntu and macOS. Native persisted-key portability is a separate migration.
 
 ## 2026-08-15 | Plan 0326 dashboard-session readiness smoke
 

@@ -18,7 +18,7 @@ afterEach(() => {
 });
 
 describe('profileDiscovery (package)', () => {
-  test('prefers the matching Windows browser family on WSL when a browser-path hint is provided', async () => {
+  test.runIf(process.platform === 'linux')('prefers the matching Windows browser family on WSL when a browser-path hint is provided', async () => {
     process.env.WSL_DISTRO_NAME = 'Ubuntu';
 
     const tempDir = await mkdtemp(path.join(os.tmpdir(), 'auracall-profile-discovery-'));

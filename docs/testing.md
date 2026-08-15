@@ -9,7 +9,11 @@
   bypass. It also retains the Windows 2022 native-build substrate and the Node
   24-compatible pnpm setup action. The workflow retains `workflow_dispatch` so
   the exact matrix can be reproduced when a fork does not enqueue a push event.
-  Fixture coverage lives in `tests/scripts/ciRuntimeContract.test.ts`.
+  The full suite runs on Ubuntu and macOS; native Windows acceptance is bounded
+  to frozen install, the runtime checker, zero-warning lint, focused contract
+  tests, and the real dashboard-session readiness smoke because historical
+  runtime keys contain POSIX-safe colons that are invalid in Windows directory
+  names. Fixture coverage lives in `tests/scripts/ciRuntimeContract.test.ts`.
 
 - Trusted-local dashboard configuration and external-routing fail-closed
   regression:

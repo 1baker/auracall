@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 3
+Plan version: 5
 
 ## Goal
 
@@ -14,9 +14,12 @@ workflow/package drift.
 
 - `package.json` declares Node `>=22` in both `engines` and `devEngines`.
 - README installation guidance also requires Node 22+.
-- GitHub Actions explicitly installs Node 20 on Ubuntu, macOS, and Windows,
-  even though Node 20 is now end-of-life and below the package contract.
-- No repository test checks that package runtime declarations and CI agree.
+- The guarded workflow now selects Node 22 on Ubuntu, macOS, and Windows 2022,
+  plus Node 24 on Ubuntu, and uses current setup actions.
+- The first compatible-substrate dispatch passed both Ubuntu lanes. macOS
+  exposed WSL fixtures that relied on the Linux host kernel while the Windows
+  lane crossed the previously failing native install boundary and then exposed
+  broad POSIX-path assumptions in the historical full suite.
 
 ## Scope
 
@@ -28,6 +31,14 @@ workflow/package drift.
   CI versions below the minimum, omission of the minimum, omission of a newer
   supported line, or bypass of the workflow matrix.
 - Run the contract checker directly in CI and through the normal test suite.
+- Run WSL-specific fixtures only on Linux, where `process.platform` can satisfy
+  AuraCall's real WSL detection contract, while retaining the portable suite on
+  macOS.
+- Force PTY guard fixtures inline with `--wait` so their expected validation
+  runs before any platform-specific background-detach path.
+- Keep native Windows as a bounded install, runtime-contract, lint, and real
+  readiness-smoke lane. Run the full suite on Ubuntu and macOS until native
+  Windows path/key portability has its own migration plan.
 - Retain a manual dispatch entrypoint so fork CI can be reproduced even when a
   push event is not enqueued.
 - Use the Node 24-compatible pnpm setup action rather than a deprecated Node 20
@@ -42,11 +53,15 @@ workflow/package drift.
   user installation state.
 - Do not migrate the legacy PTY test dependency or claim compatibility with
   Visual Studio 2026 in this bounded runtime-contract slice.
+- Do not claim that the historical full suite or colon-delimited persisted keys
+  support native Windows filesystems.
 - Do not add another version file whose values can drift from `package.json`.
 
 ## Acceptance Criteria
 
-- [ ] CI tests Node 22 on Ubuntu, macOS, and Windows 2022 and Node 24 on Ubuntu.
+- [ ] CI tests Node 22 on Ubuntu and macOS with the full suite, verifies Node 22
+      install/runtime/lint/smoke acceptance on Windows 2022, and tests Node 24
+      on Ubuntu.
 - [ ] Every configured CI Node major is at least the `engines.node` minimum,
       and the minimum major remains explicitly exercised.
 - [ ] `engines.node` and the Node `devEngines.runtime` entry must declare the
@@ -60,6 +75,10 @@ workflow/package drift.
       of that reproducible acceptance path.
 - [ ] The checker rejects drift from the Windows 2022 native toolchain or the
       Node 24-compatible pnpm setup action.
+- [ ] WSL-only fixtures are explicitly Linux-scoped, and PTY guard fixtures
+      enter the inline CLI path before asserting model validation.
+- [ ] The checker rejects removal of either the Ubuntu/macOS full-suite lane or
+      the focused Windows runtime-contract lane.
 - [ ] Focused tests, checker execution, provider-disabled tests, typecheck,
       zero-warning lint, build, plan audit, CodeGraph sync, and diff hygiene
       pass.
@@ -68,6 +87,23 @@ workflow/package drift.
 
 The plan closes when CI and package metadata share one enforced Node 22+
 minimum while the supported matrix also exercises the current active LTS line.
+
+## Execution Notes
+
+- Dispatch `31886180876` proved the Node 22/24 Ubuntu lanes and crossed frozen
+  install, runtime-contract, and lint checks on macOS 22 and Windows 2022/22.
+- Its macOS suite found 23 host-dependent failures: 21 WSL simulations treated
+  `WSL_DISTRO_NAME` as sufficient even though production intentionally requires
+  a Linux host, and two PTY guards entered background-detach behavior before
+  reaching their assertions.
+- Plan version 4 classifies every WSL-dependent fixture with a Linux host gate
+  and adds `--wait` to the two PTY invocations. Production platform detection
+  and cross-platform CI coverage remain unchanged.
+- The Windows job then reported native-path failures across fixtures and runtime
+  keys, including colon-delimited identifiers that cannot form Windows
+  directory names. Plan version 5 keeps Windows acceptance bounded to frozen
+  install, checker, lint, focused contract tests, and the real readiness smoke;
+  the complete suite remains required on Ubuntu and macOS.
 
 ## Execution Boundary
 

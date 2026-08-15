@@ -22,6 +22,17 @@
   install and the runtime checker. Plan version 3 follows GitHub's documented
   mitigation by pinning `windows-2022` and upgrades the deprecated Node
   20-based pnpm setup action to v6, with both choices added to the guard.
+- Run 31886180876 passed both Ubuntu lanes and proved Windows 2022 can install
+  the legacy PTY dependency. macOS then exposed 21 WSL fixtures whose simulated
+  environment still requires a Linux host, plus two PTY guard cases that took
+  the background path before validation. Plan version 4 scopes only the WSL
+  fixtures to Linux and gives the PTY cases `--wait`; it does not weaken the
+  matrix or production platform detection.
+- The same run's Windows suite exposed a separate native-filesystem boundary:
+  many persisted runner/cache keys contain colons and many fixtures assert
+  POSIX paths. Plan version 5 keeps the Windows lane meaningful and bounded to
+  frozen install, checker, lint, focused contract tests, and the real readiness
+  smoke, while requiring the complete suite on Ubuntu and macOS.
 
 ## Turn 495 | 2026-08-15
 

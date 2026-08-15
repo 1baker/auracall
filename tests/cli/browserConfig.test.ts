@@ -283,7 +283,7 @@ describe('buildBrowserConfig', () => {
     ).rejects.toThrow(/between 1 and 65535/i);
   });
 
-  test('uses a Windows-backed managed profile root for WSL Windows Chrome by default', async () => {
+  test.runIf(process.platform === 'linux')('uses a Windows-backed managed profile root for WSL Windows Chrome by default', async () => {
     vi.stubEnv('WSL_DISTRO_NAME', 'Ubuntu');
 
     const config = await buildBrowserConfig({

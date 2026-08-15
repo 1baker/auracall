@@ -103,7 +103,7 @@ describe('resolveBrowserConfig', () => {
     expect(resolved.keepBrowser).toBe(true);
   });
 
-  test('prefers WSL-discovered Chrome paths when WSL Chrome is requested', () => {
+  test.runIf(process.platform === 'linux')('prefers WSL-discovered Chrome paths when WSL Chrome is requested', () => {
     vi.stubEnv('WSL_DISTRO_NAME', 'Ubuntu');
     profileMocks.discoverDefaultBrowserProfile.mockReturnValue({
       userDataDir: '/home/ecochran76/.config/google-chrome',
@@ -126,7 +126,7 @@ describe('resolveBrowserConfig', () => {
     expect(resolved.display).toBe(':0.0');
   });
 
-  test('defaults WSL Linux Chrome display to :0.0 when not explicitly configured', () => {
+  test.runIf(process.platform === 'linux')('defaults WSL Linux Chrome display to :0.0 when not explicitly configured', () => {
     vi.stubEnv('WSL_DISTRO_NAME', 'Ubuntu');
     profileMocks.discoverDefaultBrowserProfile.mockReturnValue({
       userDataDir: '/home/ecochran76/.config/google-chrome',
@@ -144,7 +144,7 @@ describe('resolveBrowserConfig', () => {
     expect(resolved.display).toBe(':0.0');
   });
 
-  test('defaults WSL display to :0.0 even before Linux Chrome path discovery', () => {
+  test.runIf(process.platform === 'linux')('defaults WSL display to :0.0 even before Linux Chrome path discovery', () => {
     vi.stubEnv('WSL_DISTRO_NAME', 'Ubuntu');
 
     const resolved = resolveBrowserConfig({
@@ -155,7 +155,7 @@ describe('resolveBrowserConfig', () => {
     expect(resolved.display).toBe(':0.0');
   });
 
-  test('keeps WSL display unset for explicit Windows-hosted Chrome', () => {
+  test.runIf(process.platform === 'linux')('keeps WSL display unset for explicit Windows-hosted Chrome', () => {
     vi.stubEnv('WSL_DISTRO_NAME', 'Ubuntu');
 
     const resolved = resolveBrowserConfig({
@@ -166,7 +166,7 @@ describe('resolveBrowserConfig', () => {
     expect(resolved.display).toBeNull();
   });
 
-  test('keeps an explicit display override for WSL Linux Chrome', () => {
+  test.runIf(process.platform === 'linux')('keeps an explicit display override for WSL Linux Chrome', () => {
     vi.stubEnv('WSL_DISTRO_NAME', 'Ubuntu');
     profileMocks.discoverDefaultBrowserProfile.mockReturnValue({
       userDataDir: '/home/ecochran76/.config/google-chrome',
@@ -184,7 +184,7 @@ describe('resolveBrowserConfig', () => {
     expect(resolved.display).toBe(':1');
   });
 
-  test('prefers AURACALL_BROWSER_DISPLAY over the WSL default', () => {
+  test.runIf(process.platform === 'linux')('prefers AURACALL_BROWSER_DISPLAY over the WSL default', () => {
     vi.stubEnv('WSL_DISTRO_NAME', 'Ubuntu');
     vi.stubEnv('AURACALL_BROWSER_DISPLAY', ':5');
 
@@ -195,7 +195,7 @@ describe('resolveBrowserConfig', () => {
     expect(resolved.display).toBe(':5');
   });
 
-  test('keeps an explicit bootstrap cookie path even when WSL runtime Chrome is preferred', () => {
+  test.runIf(process.platform === 'linux')('keeps an explicit bootstrap cookie path even when WSL runtime Chrome is preferred', () => {
     vi.stubEnv('WSL_DISTRO_NAME', 'Ubuntu');
     profileMocks.discoverDefaultBrowserProfile.mockReturnValue({
       userDataDir: '/home/ecochran76/.config/google-chrome',
@@ -220,7 +220,7 @@ describe('resolveBrowserConfig', () => {
     );
   });
 
-  test('lets AURACALL_WSL_CHROME override config preference', () => {
+  test.runIf(process.platform === 'linux')('lets AURACALL_WSL_CHROME override config preference', () => {
     vi.stubEnv('WSL_DISTRO_NAME', 'Ubuntu');
     vi.stubEnv('AURACALL_WSL_CHROME', 'wsl');
     profileMocks.discoverDefaultBrowserProfile.mockReturnValue({
@@ -251,7 +251,7 @@ describe('resolveBrowserConfig', () => {
     expect(resolved.manualLoginProfileDir).toBe('/tmp/auracall-profile');
   });
 
-  test('normalizes WSL UNC manual-login profile dirs back to Linux paths', () => {
+  test.runIf(process.platform === 'linux')('normalizes WSL UNC manual-login profile dirs back to Linux paths', () => {
     vi.stubEnv('WSL_DISTRO_NAME', 'Ubuntu');
 
     const resolved = resolveBrowserConfig({
@@ -316,7 +316,7 @@ describe('resolveBrowserConfig', () => {
     expect(resolved.geminiUrl).toBe(GEMINI_URL);
   });
 
-  test('uses a Windows-backed managed profile root for WSL Windows Chrome by default', () => {
+  test.runIf(process.platform === 'linux')('uses a Windows-backed managed profile root for WSL Windows Chrome by default', () => {
     vi.stubEnv('WSL_DISTRO_NAME', 'Ubuntu');
 
     const resolved = resolveBrowserConfig({
@@ -332,7 +332,7 @@ describe('resolveBrowserConfig', () => {
     );
   });
 
-  test('infers the Windows-backed managed profile root from Windows drive cookie paths too', () => {
+  test.runIf(process.platform === 'linux')('infers the Windows-backed managed profile root from Windows drive cookie paths too', () => {
     vi.stubEnv('WSL_DISTRO_NAME', 'Ubuntu');
 
     const resolved = resolveBrowserConfig({

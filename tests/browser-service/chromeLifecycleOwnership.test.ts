@@ -93,7 +93,7 @@ async function importChromeLifecycleWithMocks(options: {
 }
 
 describe('chromeLifecycle ownership', () => {
-  test('keeps shutdown ownership when reusing a registry instance started by the current run', async () => {
+  test.runIf(process.platform === 'linux')('keeps shutdown ownership when reusing a registry instance started by the current run', async () => {
     process.env.WSL_DISTRO_NAME = 'Ubuntu';
     const { chromeLifecycle, execFileMock, unregisterInstance } = await importChromeLifecycleWithMocks({
       registeredPid: 41234,
@@ -127,7 +127,7 @@ describe('chromeLifecycle ownership', () => {
     );
   });
 
-  test('keeps shutdown ownership when re-adopting a live process started by the current run', async () => {
+  test.runIf(process.platform === 'linux')('keeps shutdown ownership when re-adopting a live process started by the current run', async () => {
     process.env.WSL_DISTRO_NAME = 'Ubuntu';
     const messages: string[] = [];
     const userDataDir = '/mnt/c/Users/ecoch/AppData/Local/AuraCall/browser-profiles/test/ownership-grok';
@@ -168,7 +168,7 @@ describe('chromeLifecycle ownership', () => {
     );
   });
 
-  test('still skips shutdown for genuinely reused registry instances', async () => {
+  test.runIf(process.platform === 'linux')('still skips shutdown for genuinely reused registry instances', async () => {
     process.env.WSL_DISTRO_NAME = 'Ubuntu';
     const messages: string[] = [];
     const { chromeLifecycle, execFileMock } = await importChromeLifecycleWithMocks({

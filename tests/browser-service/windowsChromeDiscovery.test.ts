@@ -51,7 +51,7 @@ afterEach(() => {
 });
 
 describe('discoverWindowsChromeDevToolsPort', () => {
-  test('discovers an auto-assigned Windows DevTools port from DevToolsActivePort when the requested port is zero', async () => {
+  test.runIf(process.platform === 'linux')('discovers an auto-assigned Windows DevTools port from DevToolsActivePort when the requested port is zero', async () => {
     process.env.WSL_DISTRO_NAME = 'Ubuntu';
     mocks.readDevToolsPort.mockResolvedValue(65184);
     mocks.findChromeProcessUsingUserDataDir.mockResolvedValue({
@@ -70,7 +70,7 @@ describe('discoverWindowsChromeDevToolsPort', () => {
     expect(mocks.findResponsiveWindowsDevToolsPortForUserDataDir).not.toHaveBeenCalled();
   });
 
-  test('prefers a discovered responsive Windows port over the advertised command-line port', async () => {
+  test.runIf(process.platform === 'linux')('prefers a discovered responsive Windows port over the advertised command-line port', async () => {
     process.env.WSL_DISTRO_NAME = 'Ubuntu';
     mocks.readDevToolsPort.mockResolvedValueOnce(null).mockResolvedValue(45921);
     mocks.findChromeProcessUsingUserDataDir.mockResolvedValue({
@@ -89,7 +89,7 @@ describe('discoverWindowsChromeDevToolsPort', () => {
     expect(mocks.findResponsiveWindowsDevToolsPortForUserDataDir).not.toHaveBeenCalled();
   });
 
-  test('returns the recorded DevTools port when it is still responsive', async () => {
+  test.runIf(process.platform === 'linux')('returns the recorded DevTools port when it is still responsive', async () => {
     process.env.WSL_DISTRO_NAME = 'Ubuntu';
     mocks.readDevToolsPort.mockResolvedValue(45894);
     mocks.findChromeProcessUsingUserDataDir.mockResolvedValue(null);

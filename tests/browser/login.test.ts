@@ -54,7 +54,7 @@ describe('resolveBrowserLoginOptionsFromUserConfig', () => {
     });
   });
 
-  test('carries the resolved WSL display into login options', () => {
+  test.runIf(process.platform === 'linux')('carries the resolved WSL display into login options', () => {
     vi.stubEnv('WSL_DISTRO_NAME', 'Ubuntu');
 
     const options = resolveBrowserLoginOptionsFromUserConfig(

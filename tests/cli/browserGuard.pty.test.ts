@@ -73,6 +73,7 @@ async function runCliPty(args: string[]): Promise<{ output: string; code: number
 ptyDescribe('oracle CLI browser guard (PTY)', () => {
   it('fails fast when grok is paired with --engine browser', async () => {
     const { output, code } = await runCliPty([
+      '--wait',
       '--engine',
       'browser',
       '--model',
@@ -86,6 +87,7 @@ ptyDescribe('oracle CLI browser guard (PTY)', () => {
 
   it('fails fast when multi-model list includes non-GPT under browser engine', async () => {
     const { output, code } = await runCliPty([
+      '--wait',
       '--engine',
       'browser',
       '--models',
