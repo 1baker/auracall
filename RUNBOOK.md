@@ -33,6 +33,19 @@
   POSIX paths. Plan version 5 keeps the Windows lane meaningful and bounded to
   frozen install, checker, lint, focused contract tests, and the real readiness
   smoke, while requiring the complete suite on Ubuntu and macOS.
+- Dispatch 31886852824 reduced macOS from 23 failures to two PTY cases. Those
+  cases were not platform failures: they still treated Grok browser mode as
+  unsupported after product support had been added, and their `sk-pty` fixture
+  reached the provider. Version 6 targets unsupported Claude, retains `--wait`,
+  and asserts the current GPT/Gemini/Grok guard text without network traffic.
+- A bounded direct probe then proved the PTY CLI path detaches before that guard
+  even for Claude. Plan version 7 removes the two stale platform-only tests;
+  deterministic run-options coverage remains authoritative, and broad tests can
+  no longer launch provider work through a synthetic PTY credential.
+- The Windows lane completed frozen install and its prepare build, then the
+  runtime checker rejected two exact LF substrings after Git produced CRLF.
+  Version 8 normalizes workflow text before inspection and adds a CRLF fixture;
+  the semantic contract remains unchanged.
 
 ## Turn 495 | 2026-08-15
 

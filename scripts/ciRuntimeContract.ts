@@ -102,9 +102,10 @@ export function collectCiRuntimeContractErrors(
   workflowText: string,
 ): string[] {
   const errors: string[] = [];
+  const normalizedWorkflowText = workflowText.replace(/\r\n?/gu, '\n');
   const packageJson = parsePackage(packageText, errors);
   const minimumMajor = packageJson ? readPackageMinimumMajor(packageJson, errors) : null;
-  const workflowMajors = readWorkflowNodeMajors(workflowText, errors);
+  const workflowMajors = readWorkflowNodeMajors(normalizedWorkflowText, errors);
 
   if (workflowMajors.length < 2) {
     errors.push(
@@ -124,26 +125,26 @@ export function collectCiRuntimeContractErrors(
       );
     }
   }
-  if (!workflowText.includes(`node-version: \${{ matrix.node }}`)) {
+  if (!normalizedWorkflowText.includes(`node-version: \${{ matrix.node }}`)) {
     errors.push('.github/workflows/ci.yml: setup-node must use matrix.node');
   }
-  if (!workflowText.includes('os: [ubuntu-latest, macos-latest, windows-2022]')) {
+  if (!normalizedWorkflowText.includes('os: [ubuntu-latest, macos-latest, windows-2022]')) {
     errors.push('.github/workflows/ci.yml: matrix.os must retain the supported Windows 2022 toolchain');
   }
-  if (!workflowText.includes('uses: pnpm/action-setup@v6')) {
+  if (!normalizedWorkflowText.includes('uses: pnpm/action-setup@v6')) {
     errors.push('.github/workflows/ci.yml: pnpm/action-setup must use the Node 24-compatible v6 action');
   }
-  if (!workflowText.includes("if: matrix.os != 'windows-2022'\n        run: pnpm run test")) {
+  if (!normalizedWorkflowText.includes("if: matrix.os != 'windows-2022'\n        run: pnpm run test")) {
     errors.push('.github/workflows/ci.yml: full test suite must run on the supported Unix hosts');
   }
   if (
-    !workflowText.includes(
+    !normalizedWorkflowText.includes(
       "if: matrix.os == 'windows-2022'\n        run: pnpm exec vitest run tests/scripts/ciRuntimeContract.test.ts",
     )
   ) {
     errors.push('.github/workflows/ci.yml: Windows must run the focused runtime-contract tests');
   }
-  if (!/^\s*workflow_dispatch:\s*$/mu.test(workflowText)) {
+  if (!/^\s*workflow_dispatch:\s*$/mu.test(normalizedWorkflowText)) {
     errors.push('.github/workflows/ci.yml: workflow_dispatch must remain available');
   }
   return errors;

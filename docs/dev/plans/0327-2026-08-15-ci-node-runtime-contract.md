@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 5
+Plan version: 8
 
 ## Goal
 
@@ -30,12 +30,15 @@ workflow/package drift.
 - Add a reusable contract checker that rejects package declaration mismatch,
   CI versions below the minimum, omission of the minimum, omission of a newer
   supported line, or bypass of the workflow matrix.
+- Normalize checkout line endings before workflow inspection so the checker is
+  deterministic on LF and CRLF filesystems.
 - Run the contract checker directly in CI and through the normal test suite.
 - Run WSL-specific fixtures only on Linux, where `process.platform` can satisfy
   AuraCall's real WSL detection contract, while retaining the portable suite on
   macOS.
-- Force PTY guard fixtures inline with `--wait` so their expected validation
-  runs before any platform-specific background-detach path.
+- Remove two stale platform-only PTY guard fixtures whose detached CLI path can
+  reach provider transport. Keep the browser compatibility guard covered at
+  the deterministic run-options seam.
 - Keep native Windows as a bounded install, runtime-contract, lint, and real
   readiness-smoke lane. Run the full suite on Ubuntu and macOS until native
   Windows path/key portability has its own migration plan.
@@ -75,10 +78,11 @@ workflow/package drift.
       of that reproducible acceptance path.
 - [ ] The checker rejects drift from the Windows 2022 native toolchain or the
       Node 24-compatible pnpm setup action.
-- [ ] WSL-only fixtures are explicitly Linux-scoped, and PTY guard fixtures
-      enter the inline CLI path before asserting model validation.
+- [ ] WSL-only fixtures are explicitly Linux-scoped, and obsolete PTY guard
+      fixtures cannot start provider work from the test suite.
 - [ ] The checker rejects removal of either the Ubuntu/macOS full-suite lane or
       the focused Windows runtime-contract lane.
+- [ ] The checker accepts semantically identical LF and CRLF workflow text.
 - [ ] Focused tests, checker execution, provider-disabled tests, typecheck,
       zero-warning lint, build, plan audit, CodeGraph sync, and diff hygiene
       pass.
@@ -94,16 +98,23 @@ minimum while the supported matrix also exercises the current active LTS line.
   install, runtime-contract, and lint checks on macOS 22 and Windows 2022/22.
 - Its macOS suite found 23 host-dependent failures: 21 WSL simulations treated
   `WSL_DISTRO_NAME` as sufficient even though production intentionally requires
-  a Linux host, and two PTY guards entered background-detach behavior before
-  reaching their assertions.
-- Plan version 4 classifies every WSL-dependent fixture with a Linux host gate
-  and adds `--wait` to the two PTY invocations. Production platform detection
-  and cross-platform CI coverage remain unchanged.
+  a Linux host, and two PTY guards still asserted that Grok browser mode was
+  unsupported.
+- Plan version 4 classifies every WSL-dependent fixture with a Linux host gate.
+  Production platform detection and cross-platform CI coverage remain unchanged.
 - The Windows job then reported native-path failures across fixtures and runtime
   keys, including colon-delimited identifiers that cannot form Windows
   directory names. Plan version 5 keeps Windows acceptance bounded to frozen
   install, checker, lint, focused contract tests, and the real readiness smoke;
   the complete suite remains required on Ubuntu and macOS.
+- Dispatch `31886852824` confirmed all WSL classifications on macOS, reducing
+  that lane from 23 failures to the two stale PTY expectations. Plan version 6
+  showed that changing the rejected model was insufficient because the PTY CLI
+  path detached before the guard. Plan version 7 removes those obsolete tests;
+  `tests/runOptions.test.ts` retains deterministic compatibility coverage.
+- The same dispatch completed the native Windows frozen install and prepare
+  build, then found that exact LF substrings in the checker rejected the CRLF
+  checkout. Plan version 8 normalizes line endings and guards that behavior.
 
 ## Execution Boundary
 

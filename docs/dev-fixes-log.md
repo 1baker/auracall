@@ -12,6 +12,22 @@
   smoke; require the complete provider-disabled suite on Ubuntu and macOS until
   persisted-key portability has a dedicated migration.
 
+- 2026-08-15: A platform-only PTY suite can conceal stale product semantics.
+  Once Grok browser mode became supported, an old rejection fixture started a
+  real provider path when finally exercised on macOS. Use a currently
+  unsupported model (Claude), force inline execution, and assert the complete
+  current compatibility message so the test fails before transport.
+
+- 2026-08-15: Delete a stale PTY integration test when the CLI detaches before
+  the behavior it claims to validate and the same compatibility contract is
+  already covered at the deterministic options seam. A fake API key is not a
+  sufficient provider-free boundary if the test can still open transport.
+
+- 2026-08-15: Repository-owned workflow guards must parse semantically
+  identical Windows checkouts. Normalize CRLF and legacy CR line endings before
+  applying deterministic YAML-text checks, and retain a CRLF acceptance fixture
+  so the checker does not become the cross-platform failure it is meant to stop.
+
 - 2026-08-15: A floating `windows-latest` runner can change native compiler
   generations underneath an old patched test dependency. When node-gyp cannot
   identify Visual Studio 2026, use GitHub's supported `windows-2022`/VS2022

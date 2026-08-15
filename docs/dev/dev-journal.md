@@ -21,6 +21,17 @@
   Version 5 preserves Windows install/checker/lint/readiness-smoke acceptance
   plus focused contract tests, while the complete suite remains mandatory on
   Ubuntu and macOS. Native persisted-key portability is a separate migration.
+- Dispatch 31886852824 showed the WSL host gates worked: macOS retained only
+  two stale PTY guard failures. Grok is now a supported browser target, so the
+  old synthetic key reached provider transport. Version 6 uses unsupported
+  Claude and the current GPT/Gemini/Grok guard, preserving provider-free intent.
+- A direct bounded probe showed the PTY entrypoint detaches before the guard for
+  Claude too. Version 7 removes those two obsolete platform-only tests and
+  relies on the existing run-options unit contract, eliminating synthetic-key
+  provider transport from broad CI.
+- Windows completed frozen install and the package prepare build but rejected
+  the workflow contract because its checkout used CRLF. Version 8 normalizes
+  line endings before inspection and adds an explicit CRLF acceptance case.
 
 ## 2026-08-15 | Plan 0326 dashboard-session readiness smoke
 

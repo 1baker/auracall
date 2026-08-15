@@ -9,6 +9,7 @@ const currentWorkflow = readFileSync(resolve('.github/workflows/ci.yml'), 'utf8'
 describe('CI Node runtime contract', () => {
   it('accepts the current package declarations and workflow matrix', () => {
     expect(collectCiRuntimeContractErrors(currentPackage, currentWorkflow)).toEqual([]);
+    expect(collectCiRuntimeContractErrors(currentPackage, currentWorkflow.replaceAll('\n', '\r\n'))).toEqual([]);
   });
 
   it('rejects mismatched package minimum declarations', () => {
