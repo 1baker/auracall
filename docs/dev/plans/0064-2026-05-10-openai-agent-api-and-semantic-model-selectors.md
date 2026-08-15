@@ -76,6 +76,11 @@ Implemented:
   - `chatgpt:thinking-extended` -> `Thinking` + `extended`
   - `chatgpt:pro-standard` -> `Pro` + `standard`
   - `chatgpt:pro-extended` -> `Pro` + `extended`
+- Grok semantic selectors resolve into current browser controls:
+  - `grok:auto` -> `Auto`
+  - `grok:instant` -> `Fast`
+  - `grok:thinking` -> `Expert`
+  - missing menus or exact options fail before prompt submission
 - local agent/team management writes are available at:
   - `GET|PUT|DELETE /v1/config/agents`
   - `GET|PUT|DELETE /v1/config/teams`
@@ -84,9 +89,9 @@ Implemented:
   - writes target the user-scoped registry by default; config-defined overlay
     ids remain pinned and return blocked mutation results
 - `/v1/models` includes configured agents and semantic selector entries for
-  client-side discovery. ChatGPT semantic selectors are marked
-  `executionReady=true`; Gemini/Grok selector entries are visible but remain
-  `executionReady=false` until their provider adapters resolve them.
+  client-side discovery. ChatGPT and Grok semantic selectors are marked
+  `executionReady=true`; Gemini selector entries remain visible with
+  `executionReady=false` until its provider adapter resolves them.
 - `api.auth.required=true` with `api.auth.keys[]` enables bearer-key
   authorization for `/v1/*`. `/status` remains open for operator discovery and
   reports the active auth posture. Keys may carry `agents`, `teams`,
@@ -114,8 +119,8 @@ Implemented:
 
 Remaining:
 
-- Grok and Gemini semantic `modelSelector` execution still needs
-  provider-adapter resolution
+- Gemini semantic `modelSelector` execution still needs provider-adapter
+  resolution
 - streaming `/v1/chat/completions` compatibility is still deferred
 
 ## Acceptance Criteria
@@ -151,8 +156,8 @@ Remaining:
 
 ## Next Work
 
-- Resolve Grok and Gemini `modelSelector` values through provider-specific
-  browser adapters rather than feeding semantic tokens directly into raw model
+- Resolve Gemini `modelSelector` values through its provider-specific browser
+  adapter rather than feeding semantic tokens directly into raw model
   selection.
 - Add streaming compatibility after non-streaming OpenAI client dogfooding proves
   the basic route and response shape.

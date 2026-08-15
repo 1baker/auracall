@@ -147,6 +147,125 @@ describe('configured stored-step executor', () => {
     ]);
   });
 
+  it('resolves Grok semantic agent selectors before browser execution', async () => {
+    const runBrowserModeImpl = vi.fn(async () => ({
+      answerText: 'AURACALL_GROK_SELECTOR_OK',
+      answerMarkdown: 'AURACALL_GROK_SELECTOR_OK',
+      tookMs: 800,
+      answerTokens: 9,
+      answerChars: 26,
+      tabUrl: 'https://grok.com/c/mock-selector',
+      conversationId: 'mock-selector',
+    }));
+    const executeStoredRunStep = createConfiguredStoredStepExecutor(
+      {
+        browserProfiles: {
+          default: {
+            managedProfileRoot: '/tmp/auracall/browser-profiles',
+          },
+        },
+        runtimeProfiles: {
+          'grok-selector': {
+            engine: 'browser',
+            defaultService: 'grok',
+            browserProfile: 'default',
+            services: {
+              grok: {
+                manualLoginProfileDir: '/tmp/auracall/browser-profiles/default/grok',
+              },
+            },
+          },
+        },
+        agents: {
+          'grok-thinker': {
+            runtimeProfile: 'grok-selector',
+            service: 'grok',
+            modelSelector: 'grok:thinking',
+          },
+        },
+      },
+      { runBrowserModeImpl },
+    );
+
+    const result = await executeStoredRunStep?.({
+      record: {
+        runId: 'teamrun_grok_selector_1',
+        revision: 1,
+        bundle: { run: { id: 'teamrun_grok_selector_1' } },
+      } as never,
+      step: {
+        id: 'teamrun_grok_selector_1:step:1',
+        agentId: 'grok-thinker',
+        runtimeProfileId: 'grok-selector',
+        browserProfileId: 'default',
+        service: 'grok',
+        input: {
+          prompt: 'Reply exactly with AURACALL_GROK_SELECTOR_OK',
+          artifacts: [],
+          structuredData: {},
+          notes: [],
+        },
+      } as never,
+    });
+
+    expect(runBrowserModeImpl).toHaveBeenCalledWith(
+      expect.objectContaining({
+        config: expect.objectContaining({
+          target: 'grok',
+          desiredModel: 'Expert',
+          modelStrategy: 'select',
+        }),
+      }),
+    );
+    expect(result?.output?.structuredData?.browserRun).toMatchObject({
+      service: 'grok',
+      desiredModel: 'Expert',
+      modelSelector: 'grok:thinking',
+    });
+  });
+
+  it('rejects unsupported Grok semantic selectors before browser execution', async () => {
+    const runBrowserModeImpl = vi.fn();
+    const executeStoredRunStep = createConfiguredStoredStepExecutor(
+      {
+        runtimeProfiles: {
+          default: {
+            engine: 'browser',
+            defaultService: 'grok',
+            services: { grok: {} },
+          },
+        },
+        agents: {
+          invalid: {
+            runtimeProfile: 'default',
+            service: 'grok',
+            modelSelector: 'grok:heavy',
+          },
+        },
+      },
+      { runBrowserModeImpl },
+    );
+
+    await expect(executeStoredRunStep?.({
+      record: {
+        runId: 'teamrun_grok_selector_invalid',
+        revision: 1,
+        bundle: { run: { id: 'teamrun_grok_selector_invalid' } },
+      } as never,
+      step: {
+        id: 'teamrun_grok_selector_invalid:step:1',
+        agentId: 'invalid',
+        runtimeProfileId: 'default',
+        browserProfileId: null,
+        service: 'grok',
+        input: { prompt: 'must not run', artifacts: [], structuredData: {}, notes: [] },
+      } as never,
+    })).rejects.toThrow(
+      'Stored team step teamrun_grok_selector_invalid:step:1 has unsupported Grok modelSelector "grok:heavy".',
+    );
+    expect(runBrowserModeImpl).not.toHaveBeenCalled();
+  });
+
   it('spills large API prompts to a browser attachment without truncating caller input', async () => {
     const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), 'auracall-configured-executor-'));
     setAuracallHomeDirOverrideForTest(homeDir);

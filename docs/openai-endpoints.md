@@ -914,15 +914,20 @@ Current limits:
     `chatgpt:thinking-extended`, `chatgpt:sol-medium`,
     `chatgpt:sol-high`, `chatgpt:sol-extra-high`, `chatgpt:sol-pro`,
     `chatgpt:pro-standard`, `chatgpt:pro-extended`, `grok:auto`,
-    `grok:thinking`, or `gemini:thinking`
+    `grok:instant`, `grok:thinking`, or `gemini:thinking`
   - provider adapters should resolve semantic selectors against the current
     workbench UI; older exact version selectors are non-urgent compatibility
     pins, not the default config posture
   - ChatGPT browser-backed execution resolves those selectors through the
     current nested `Advanced` model picker. `auto` targets GPT-5.6 Terra,
     `instant` targets GPT-5.6 Luna, and Sol/Thinking/Pro effort aliases target
-    GPT-5.6 Sol plus Light/Medium/High/Extra High; Grok and Gemini semantic
-    execution remain follow-up work
+    GPT-5.6 Sol plus Light/Medium/High/Extra High
+  - Grok browser-backed execution resolves `grok:auto`, `grok:instant`, and
+    `grok:thinking` to the current `Auto`, `Fast`, and `Expert` picker rows;
+    missing menus or exact options stop execution before prompt submission
+  - Gemini semantic selectors remain discoverable with
+    `executionReady=false`; use a raw model pin only when that compatibility
+    behavior is intentional
 - MCP exposes the same trusted local agent/team config surface through
   `config_entities_list`, `config_agent_upsert`, `config_agent_delete`,
   `config_team_upsert`, and `config_team_delete`; list responses include

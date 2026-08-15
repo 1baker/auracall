@@ -4,6 +4,7 @@ import {
   buildGrokAssistantSnapshotExpressionForTest,
   ensureGrokLoggedIn,
   ensureGrokPromptReady,
+  selectGrokMode,
   setGrokPrompt,
   submitGrokPrompt,
   waitForGrokAssistantResult,
@@ -11,6 +12,53 @@ import {
 } from '../../src/browser/actions/grok.js';
 
 describe('grok actions', () => {
+  test('selectGrokMode resolves semantic intent through current picker labels', async () => {
+    const logger = vi.fn();
+    const evaluate = vi
+      .fn()
+      .mockResolvedValueOnce({ result: { value: true } })
+      .mockResolvedValueOnce({ result: { value: true } })
+      .mockResolvedValueOnce({ result: { value: { ok: true } } });
+    const runtime = { evaluate } as unknown as ChromeClient['Runtime'];
+    const input = { dispatchKeyEvent: vi.fn() } as unknown as ChromeClient['Input'];
+
+    await expect(selectGrokMode(input, runtime, 'Expert', logger)).resolves.toBeUndefined();
+
+    const selectionExpression = String(evaluate.mock.calls[2]?.[0]?.expression ?? '');
+    expect(selectionExpression).toContain('["Expert"]');
+    expect(logger).toHaveBeenCalledWith('Selected Grok mode: Expert');
+  });
+
+  test('selectGrokMode fails closed when the exact picker option is absent', async () => {
+    const logger = vi.fn();
+    const evaluate = vi
+      .fn()
+      .mockResolvedValueOnce({ result: { value: true } })
+      .mockResolvedValueOnce({ result: { value: true } })
+      .mockResolvedValueOnce({ result: { value: { ok: false, available: ['Auto', 'Fast'] } } });
+    const runtime = { evaluate } as unknown as ChromeClient['Runtime'];
+    const input = { dispatchKeyEvent: vi.fn() } as unknown as ChromeClient['Input'];
+
+    await expect(selectGrokMode(input, runtime, 'Expert', logger)).rejects.toThrow(
+      'Unable to find Grok mode "Expert" in menu. Available: Auto, Fast.',
+    );
+    expect(logger).not.toHaveBeenCalledWith(expect.stringContaining('Selected Grok mode'));
+  });
+
+  test('selectGrokMode fails closed when the picker cannot be opened', async () => {
+    const logger = vi.fn();
+    const runtime = {
+      evaluate: vi.fn().mockResolvedValue({ result: { value: false } }),
+    } as unknown as ChromeClient['Runtime'];
+    const input = {
+      dispatchKeyEvent: vi.fn().mockResolvedValue(undefined),
+    } as unknown as ChromeClient['Input'];
+
+    await expect(selectGrokMode(input, runtime, 'Fast', logger)).rejects.toThrow(
+      'Unable to open Grok model menu via click or keyboard.',
+    );
+    expect(input.dispatchKeyEvent).toHaveBeenCalledTimes(6);
+  });
   test('ensureGrokPromptReady accepts the current textarea-based composer', async () => {
     const logger = vi.fn();
     const runtime = {

@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   isChatgptSemanticModelSelector,
+  isGrokSemanticModelSelector,
   resolveChatgptSemanticModelSelector,
+  resolveGrokSemanticModelSelector,
 } from '../../src/config/modelSelector.js';
 
 describe('semantic model selectors', () => {
@@ -30,5 +32,21 @@ describe('semantic model selectors', () => {
     expect(isChatgptSemanticModelSelector('chatgpt:pro-long')).toBe(true);
     expect(resolveChatgptSemanticModelSelector('chatgpt:pro-long')).toBeNull();
     expect(isChatgptSemanticModelSelector('grok:thinking')).toBe(false);
+  });
+
+  it.each([
+    ['grok:auto', { desiredModel: 'Auto' }],
+    ['grok:instant', { desiredModel: 'Fast' }],
+    ['grok:fast', { desiredModel: 'Fast' }],
+    ['grok:thinking', { desiredModel: 'Expert' }],
+    ['grok:expert', { desiredModel: 'Expert' }],
+  ])('resolves %s to current Grok picker controls', (selector, expected) => {
+    expect(resolveGrokSemanticModelSelector(selector)).toEqual(expected);
+  });
+
+  it('detects Grok selector typos separately from absent selectors', () => {
+    expect(isGrokSemanticModelSelector('grok:heavy')).toBe(true);
+    expect(resolveGrokSemanticModelSelector('grok:heavy')).toBeNull();
+    expect(isGrokSemanticModelSelector('gemini:thinking')).toBe(false);
   });
 });

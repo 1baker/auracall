@@ -240,6 +240,16 @@ describe('agent and team config service', () => {
         service: 'chatgpt',
         executionReady: true,
       }),
+      expect.objectContaining({
+        id: 'grok:thinking',
+        service: 'grok',
+        executionReady: true,
+      }),
+      expect.objectContaining({
+        id: 'gemini:thinking',
+        service: 'gemini',
+        executionReady: false,
+      }),
     ]));
     expect(choices.projectBindings).toEqual(expect.arrayContaining([
       expect.objectContaining({

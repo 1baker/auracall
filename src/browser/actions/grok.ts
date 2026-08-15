@@ -419,8 +419,7 @@ export async function selectGrokMode(
     .filter(Boolean);
   const menuOpened = await openGrokModelMenu(Runtime, Input);
   if (!menuOpened) {
-    logger('Unable to open Grok model menu via click or keyboard.');
-    return;
+    throw new Error('Unable to open Grok model menu via click or keyboard.');
   }
   const outcome = await Runtime.evaluate({
     expression: `(() => {
@@ -450,10 +449,9 @@ export async function selectGrokMode(
   if (!result?.ok) {
     const available = (result?.available ?? []).filter(Boolean);
     const availableHint = available.length > 0 ? ` Available: ${available.join(', ')}.` : '';
-    logger(
+    throw new Error(
       `Unable to find Grok mode "${normalizedCandidates.join('" / "') || label}" in menu.${availableHint}`,
     );
-    return;
   }
   logger(`Selected Grok mode: ${normalizedCandidates[0] ?? label}`);
 }

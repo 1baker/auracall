@@ -21930,6 +21930,22 @@ describe("http responses adapter", () => {
 					executionReady: true,
 				},
 			});
+			const grokSelectorEntry = payload.data.find((entry) => entry.id === "grok:thinking");
+			expect(grokSelectorEntry).toMatchObject({
+				metadata: {
+					kind: "semantic_model_selector",
+					service: "grok",
+					executionReady: true,
+				},
+			});
+			const geminiSelectorEntry = payload.data.find((entry) => entry.id === "gemini:thinking");
+			expect(geminiSelectorEntry).toMatchObject({
+				metadata: {
+					kind: "semantic_model_selector",
+					service: "gemini",
+					executionReady: false,
+				},
+			});
 		} finally {
 			await server.close();
 		}

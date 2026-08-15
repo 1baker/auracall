@@ -5,6 +5,10 @@ export interface ChatgptSemanticModelSelection {
   thinkingTime?: ThinkingTimeLevel;
 }
 
+export interface GrokSemanticModelSelection {
+  desiredModel: 'Auto' | 'Fast' | 'Expert';
+}
+
 export interface SemanticModelSelectorDescriptor {
   id: string;
   service: 'chatgpt' | 'gemini' | 'grok';
@@ -13,6 +17,7 @@ export interface SemanticModelSelectorDescriptor {
 }
 
 const CHATGPT_SELECTOR_PREFIX = 'chatgpt:';
+const GROK_SELECTOR_PREFIX = 'grok:';
 
 export const SEMANTIC_MODEL_SELECTORS: readonly SemanticModelSelectorDescriptor[] = [
   { id: 'chatgpt:auto', service: 'chatgpt', label: 'ChatGPT Auto (Terra)', executionReady: true },
@@ -77,9 +82,9 @@ export const SEMANTIC_MODEL_SELECTORS: readonly SemanticModelSelectorDescriptor[
   { id: 'gemini:auto', service: 'gemini', label: 'Gemini Auto', executionReady: false },
   { id: 'gemini:instant', service: 'gemini', label: 'Gemini Instant', executionReady: false },
   { id: 'gemini:thinking', service: 'gemini', label: 'Gemini Thinking', executionReady: false },
-  { id: 'grok:auto', service: 'grok', label: 'Grok Auto', executionReady: false },
-  { id: 'grok:instant', service: 'grok', label: 'Grok Instant', executionReady: false },
-  { id: 'grok:thinking', service: 'grok', label: 'Grok Thinking', executionReady: false },
+  { id: 'grok:auto', service: 'grok', label: 'Grok Auto', executionReady: true },
+  { id: 'grok:instant', service: 'grok', label: 'Grok Instant (Fast)', executionReady: true },
+  { id: 'grok:thinking', service: 'grok', label: 'Grok Thinking (Expert)', executionReady: true },
 ];
 
 export function resolveChatgptSemanticModelSelector(
@@ -134,6 +139,36 @@ export function resolveChatgptSemanticModelSelector(
 export function isChatgptSemanticModelSelector(value: unknown): boolean {
   const selector = normalizeSelector(value);
   return selector ? selector.startsWith(CHATGPT_SELECTOR_PREFIX) : false;
+}
+
+export function resolveGrokSemanticModelSelector(
+  value: unknown,
+): GrokSemanticModelSelection | null {
+  const selector = normalizeSelector(value);
+  if (!selector) {
+    return null;
+  }
+  const token = selector.startsWith(GROK_SELECTOR_PREFIX)
+    ? selector.slice(GROK_SELECTOR_PREFIX.length)
+    : selector;
+
+  switch (token) {
+    case 'auto':
+      return { desiredModel: 'Auto' };
+    case 'instant':
+    case 'fast':
+      return { desiredModel: 'Fast' };
+    case 'thinking':
+    case 'expert':
+      return { desiredModel: 'Expert' };
+    default:
+      return null;
+  }
+}
+
+export function isGrokSemanticModelSelector(value: unknown): boolean {
+  const selector = normalizeSelector(value);
+  return selector ? selector.startsWith(GROK_SELECTOR_PREFIX) : false;
 }
 
 function normalizeSelector(value: unknown): string | null {

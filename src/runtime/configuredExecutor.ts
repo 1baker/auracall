@@ -8,7 +8,9 @@ import { getAgent, getRuntimeProfileBrowserProfileId, resolveRuntimeSelection } 
 import { resolveConfiguredServiceAccountId } from '../config/serviceAccountIdentity.js';
 import {
   isChatgptSemanticModelSelector,
+  isGrokSemanticModelSelector,
   resolveChatgptSemanticModelSelector,
+  resolveGrokSemanticModelSelector,
 } from '../config/modelSelector.js';
 import { runBrowserMode } from '../browser/index.js';
 import { resumeBrowserSession } from '../browser/reattach.js';
@@ -807,15 +809,25 @@ export function createConfiguredStoredStepExecutor(
       service === 'chatgpt' && !agentModel
         ? resolveChatgptSemanticModelSelector(agentModelSelector)
         : null;
+    const grokSemanticSelection =
+      service === 'grok' && !agentModel
+        ? resolveGrokSemanticModelSelector(agentModelSelector)
+        : null;
     if (service === 'chatgpt' && !agentModel && agentModelSelector && !chatgptSemanticSelection && isChatgptSemanticModelSelector(agentModelSelector)) {
       throw new Error(
         `Stored team step ${context.step.id} has unsupported ChatGPT modelSelector "${agentModelSelector}".`,
+      );
+    }
+    if (service === 'grok' && !agentModel && agentModelSelector && !grokSemanticSelection && isGrokSemanticModelSelector(agentModelSelector)) {
+      throw new Error(
+        `Stored team step ${context.step.id} has unsupported Grok modelSelector "${agentModelSelector}".`,
       );
     }
 
     const desiredModel =
       agentModel ??
       chatgptSemanticSelection?.desiredModel ??
+      grokSemanticSelection?.desiredModel ??
       asNonEmptyString(runtimeServiceConfig?.model) ??
       asNonEmptyString(globalServiceConfig?.model) ??
       null;

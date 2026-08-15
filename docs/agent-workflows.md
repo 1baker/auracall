@@ -73,7 +73,8 @@ An agent can carry:
 - `runtimeProfile`: AuraCall runtime profile such as `default` or
   `wsl-chrome-3`
 - `service`: provider family such as `chatgpt`, `gemini`, or `grok`
-- `modelSelector`: semantic intent such as `chatgpt:sol-high`
+- `modelSelector`: semantic intent such as `chatgpt:sol-high` or
+  `grok:thinking`
 - raw `model`: provider-version escape hatch when semantic selectors are not
   enough
 - `projectId` and `projectName`: provider-side project binding
@@ -492,8 +493,9 @@ state belongs inside AuraCall provider adapters and browser services.
 
 ## Current Gaps
 
-- Grok and Gemini semantic selector execution are visible in discovery but not
-  fully execution-ready.
+- Gemini semantic selector execution is visible in discovery but not yet
+  execution-ready. Grok's `auto`, `instant`, and `thinking` family resolves to
+  current `Auto`, `Fast`, and `Expert` picker rows and fails closed on drift.
 - Streaming chat completions are deferred.
 - Remote HTTP(S) attachment download/materialization is deferred.
 - API key issuance is local/operator-scoped; remote privileged MCP/API
