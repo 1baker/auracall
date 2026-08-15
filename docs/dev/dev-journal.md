@@ -42,6 +42,12 @@
 - Dispatch 31887893017 passed three lanes and found one Ubuntu 22 timing race:
   the pause/resume fixture assumed a scheduled drain completed after 100 ms.
   Version 11 replaces the fixed delay with a bounded observable-status poll.
+- Dispatch 31888163009 passed all four acceptance jobs at implementation SHA
+  `0235724aa0da4782443ffcdca27176863365b960`. Ubuntu 22/24 and macOS 22 passed
+  the full portable suite and real readiness smoke; Windows 2022/22 passed the
+  bounded native contract; Ubuntu 22 built the package. Local validation and
+  repository audits passed, so Plan 0327 closes accepted without active-state
+  effects.
 
 ## 2026-08-15 | Plan 0326 dashboard-session readiness smoke
 

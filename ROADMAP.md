@@ -7,11 +7,11 @@
 Status: active
 Lane: P01
 
-- Open CI Node runtime contract alignment:
+- Closed accepted CI Node runtime contract alignment:
   [docs/dev/plans/0327-2026-08-15-ci-node-runtime-contract.md](docs/dev/plans/0327-2026-08-15-ci-node-runtime-contract.md)
-  CI will exercise the declared Node 22 minimum across all supported operating
-  systems plus Node 24 on Ubuntu, with deterministic package/workflow drift
-  enforcement.
+  CI exercises the declared Node 22 minimum across supported operating systems
+  plus Node 24 on Ubuntu, with deterministic package/workflow drift enforcement
+  and an explicitly bounded native Windows acceptance lane.
 
 - Closed accepted dashboard-session readiness end-to-end smoke:
   [docs/dev/plans/0326-2026-08-15-dashboard-session-readiness-smoke.md](docs/dev/plans/0326-2026-08-15-dashboard-session-readiness-smoke.md)

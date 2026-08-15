@@ -58,6 +58,16 @@
   one fixed-delay scheduler race in the pause/resume HTTP fixture. Version 11
   polls the observable run status every 25 ms for at most one second instead of
   assuming completion after exactly 100 ms.
+- Dispatch 31888163009 passed the complete acceptance matrix at implementation
+  SHA `0235724aa0da4782443ffcdca27176863365b960`: Windows 2022/22 job
+  95020370446, Ubuntu/22 job 95020370461, macOS/22 job 95020370483, and
+  Ubuntu/24 job 95020370514. Unix ran the full suite and real readiness smoke;
+  Windows passed frozen install, the checker, lint, and focused contracts;
+  Ubuntu 22 also built the production package.
+- Local checker, focused tests, provider-disabled suite, typecheck, zero-warning
+  lint, build, plan audit, current CodeGraph sync, and diff hygiene passed.
+  Plan 0327 closes accepted without active config, service, browser, provider,
+  credential, or installation effects.
 
 ## Turn 495 | 2026-08-15
 

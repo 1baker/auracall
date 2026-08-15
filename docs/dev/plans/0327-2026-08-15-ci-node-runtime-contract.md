@@ -1,8 +1,8 @@
 # CI Node Runtime Contract | 0327-2026-08-15
 
-State: OPEN
+State: CLOSED
 Lane: P01
-Plan version: 11
+Plan version: 12
 
 ## Goal
 
@@ -63,30 +63,30 @@ workflow/package drift.
 
 ## Acceptance Criteria
 
-- [ ] CI tests Node 22 on Ubuntu and macOS with the full suite and real smoke,
+- [x] CI tests Node 22 on Ubuntu and macOS with the full suite and real smoke,
       verifies Node 22 install/runtime/lint/focused-contract acceptance on
       Windows 2022, and tests Node 24 on Ubuntu.
-- [ ] Every configured CI Node major is at least the `engines.node` minimum,
+- [x] Every configured CI Node major is at least the `engines.node` minimum,
       and the minimum major remains explicitly exercised.
-- [ ] `engines.node` and the Node `devEngines.runtime` entry must declare the
+- [x] `engines.node` and the Node `devEngines.runtime` entry must declare the
       same canonical minimum.
-- [ ] A deterministic checker rejects a single-version matrix, a below-minimum
+- [x] A deterministic checker rejects a single-version matrix, a below-minimum
       matrix, a missing minimum, package declaration disagreement, and a
       `setup-node` step that bypasses `matrix.node`.
-- [ ] CI runs the checker immediately after dependency installation, and the
+- [x] CI runs the checker immediately after dependency installation, and the
       normal test suite covers both accepted and rejected fixtures.
-- [ ] The workflow can be dispatched manually and the checker rejects removal
+- [x] The workflow can be dispatched manually and the checker rejects removal
       of that reproducible acceptance path.
-- [ ] The checker rejects drift from the Windows 2022 native toolchain or the
+- [x] The checker rejects drift from the Windows 2022 native toolchain or the
       Node 24-compatible pnpm setup action.
-- [ ] WSL-only fixtures are explicitly Linux-scoped, and obsolete PTY guard
+- [x] WSL-only fixtures are explicitly Linux-scoped, and obsolete PTY guard
       fixtures cannot start provider work from the test suite.
-- [ ] The checker rejects removal of either the Ubuntu/macOS full-suite lane or
+- [x] The checker rejects removal of either the Ubuntu/macOS full-suite lane or
       the focused Windows runtime-contract lane.
-- [ ] The checker keeps the real cross-process readiness smoke on Ubuntu and
+- [x] The checker keeps the real cross-process readiness smoke on Ubuntu and
       macOS, while Windows runs its deterministic readiness contract fixture.
-- [ ] The checker accepts semantically identical LF and CRLF workflow text.
-- [ ] Focused tests, checker execution, provider-disabled tests, typecheck,
+- [x] The checker accepts semantically identical LF and CRLF workflow text.
+- [x] Focused tests, checker execution, provider-disabled tests, typecheck,
       zero-warning lint, build, plan audit, CodeGraph sync, and diff hygiene
       pass.
 
@@ -131,6 +131,16 @@ minimum while the supported matrix also exercises the current active LTS line.
   Ubuntu 22 alone hit an existing fixed-delay race in the background-drain
   resume fixture: the run remained `in_progress` after an assumed 100 ms.
   Plan version 11 replaces that assumption with a bounded 25 ms status poll.
+- Dispatch `31888163009` passed all four required jobs at implementation SHA
+  `0235724aa0da4782443ffcdca27176863365b960`: Windows 2022/Node 22 job
+  `95020370446`, Ubuntu/Node 22 job `95020370461`, macOS/Node 22 job
+  `95020370483`, and Ubuntu/Node 24 job `95020370514`. The Unix lanes passed the
+  full suite and real readiness smoke, Windows passed frozen install, runtime
+  checker, zero-warning lint, and focused contracts, and Ubuntu 22 passed the
+  production build. Local checker, focused tests, provider-disabled suite,
+  typecheck, lint, build, plan audit, current CodeGraph sync, and diff hygiene
+  also passed. Plan 0327 closes accepted without active configuration, service,
+  browser, provider, credential, or installation effects.
 
 ## Execution Boundary
 

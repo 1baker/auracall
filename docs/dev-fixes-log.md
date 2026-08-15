@@ -1,3 +1,9 @@
+- 2026-08-15: A CI portability contract should state its platform boundaries
+  as executable lanes, not imply parity that the product does not yet have.
+  Require the full suite and real cross-process smoke on supported Unix hosts,
+  retain native Windows frozen-install, checker, lint, and focused-contract
+  acceptance, and close only after one current-SHA dispatch proves every lane.
+
 - 2026-08-15: Setting `WSL_DISTRO_NAME` does not turn macOS or native Windows
   into a valid WSL fixture because production correctly joins that marker with
   a Linux host check. Scope WSL behavior cases to Linux and keep portable cases
