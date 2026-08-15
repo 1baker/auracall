@@ -1,23 +1,10 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import * as ptyRuntime from '@homebridge/node-pty-prebuilt-multiarch';
 
-// Minimal PTY helper shared across interactive tests (TUI + streaming).
-// Third-party modules ship without types; keep the surface tiny and typed as any.
-// biome-ignore lint/suspicious/noExplicitAny: PTY modules do not provide types
-let pty: any | null = null;
-try {
-  // Prefer the new package, fall back to the legacy one.
-  // biome-ignore lint/suspicious/noExplicitAny: PTY modules do not provide types
-  const mod: any = await import('@cdktf/node-pty-prebuilt-multiarch').catch(() =>
-    import('@homebridge/node-pty-prebuilt-multiarch'),
-  );
-  pty = mod.default ?? mod;
-} catch {
-  pty = null;
-}
-
-export const ptyAvailable = Boolean(pty) && process.platform !== 'linux';
+export { ptyRuntime };
+export const ptyAvailable = typeof ptyRuntime.spawn === 'function';
 
 export type PtyStep = {
   /** Substring or regex that must appear in the accumulated output to trigger this step. */
@@ -52,10 +39,6 @@ export async function runOracleTuiWithPty({
   homeDir?: string;
   killAfterMs?: number;
 }): Promise<RunPtyResult> {
-  if (!pty) {
-    throw new Error('PTY module not available');
-  }
-
   const home = homeDir ?? (await fs.mkdtemp(path.join(os.tmpdir(), 'oracle-tui-')));
   const entry = path.join(process.cwd(), 'dist/bin/auracall.js');
   const env = {
@@ -72,7 +55,7 @@ export async function runOracleTuiWithPty({
     ...envOverrides,
   } satisfies Record<string, string | undefined>;
 
-  const ps = pty.spawn(process.execPath, [entry], {
+  const ps = ptyRuntime.spawn(process.execPath, [entry], {
     name: 'xterm-color',
     cols,
     rows,
@@ -129,7 +112,10 @@ export async function runOracleTuiWithPty({
   });
 
   const exit = await new Promise<{ exitCode: number | null; signal: number | null }>((resolve) => {
-    ps.onExit((evt: { exitCode: number | null; signal: number | null }) => resolve(evt));
+    ps.onExit((event) => resolve({
+      exitCode: event.exitCode,
+      signal: event.signal ?? null,
+    }));
   });
 
   if (killTimer) {

@@ -1,3 +1,23 @@
+## 2026-08-15 | Plan 0330 maintained cross-platform PTY runtime
+
+- Opened the deferred native dependency successor after Plan 0329 established
+  complete Windows suite parity. The remaining toolchain exception is the
+  patched 2020-era CDKTF PTY package and its Windows 2022 runner pin.
+- Migrate to stable Homebridge PTY `0.14.1`, use its declarations through one
+  shared helper, remove the Linux blanket exclusion, and add a real
+  provider-free interactive CI contract. `windows-latest` is an acceptance
+  outcome, not an assumption; retain no partial runner claim if live CI
+  disproves it.
+- The maintained prebuild installed directly on local Node 22/Linux. One typed
+  helper now serves TUI and streaming tests; the legacy fallback, patch, ambient
+  declaration, Linux skip, and opt-in streaming gate are gone. A fixture-only
+  CJS/sink/timing repair made all 9 focused PTY behaviors deterministic without
+  changing product rendering or provider behavior.
+- Local acceptance is green: 330 files and 2,975 tests passed with 19 files and
+  55 intended skips; typecheck, zero-warning lint, build, plan audit, and diff
+  hygiene also passed. The workflow and checker require the PTY command on each
+  host and select `windows-latest`; exact-SHA CI is still required to close.
+
 ## 2026-08-15 | Plan 0329 native Windows complete-suite portability
 
 - Opened the next bounded portability slice after Plan 0328 proved native

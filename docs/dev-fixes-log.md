@@ -1,3 +1,8 @@
+- 2026-08-15: A PTY interrupt test should send Ctrl+C after observing a known
+  child-output milestone, not at a fixed delay from spawn. Native startup time
+  varies by host, and node-pty exit-code/signal fields differ by platform; prove
+  interruption through the completed data boundary that the operator sees.
+
 - 2026-08-15: Unique temporary filenames do not make Windows replacement atomic
   when concurrent writers share one destination. A remove-then-rename fallback
   still races with another writer recreating the file. Serialize the complete

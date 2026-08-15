@@ -1,5 +1,28 @@
 # RUNBOOK
 
+## Turn 499 | 2026-08-15
+
+- Opened Plan 0330 as the deferred PTY/toolchain successor. AuraCall still
+  depends on patched `@cdktf/node-pty-prebuilt-multiarch@0.10.2`, disables the
+  shared PTY helper on Linux, and has no required CI behavior test for the
+  native module.
+- The bounded target is stable
+  `@homebridge/node-pty-prebuilt-multiarch@0.14.1`, whose published manifest
+  declares Node 20-26 support, built-in types, and a prebuild-aware installer.
+  Remove fallback/patch debt, centralize the typed helper, and require real
+  provider-free PTY behavior on every configured host.
+- Move from `windows-2022` to `windows-latest` only if current-SHA CI proves
+  install and PTY behavior. Critical path remains root with no parallel
+  workers; TUI semantics, providers, browser/runtime state, and Node matrix
+  expansion are outside this slice.
+- The maintained package is now exactly pinned, its typed API is centralized,
+  and legacy patch/type/fallback debt is removed. Linux runs all 9 focused PTY
+  cases successfully; the complete 2,975-test provider-disabled suite,
+  typecheck, lint, build, plan audit, and diff hygiene are green.
+- CI and its executable checker now require the focused PTY behavior contract
+  on Ubuntu, macOS, and `windows-latest`. Publication and an exact-SHA matrix
+  dispatch are the remaining acceptance gates.
+
 ## Turn 498 | 2026-08-15
 
 - Opened Plan 0329 to replace the focused native-Windows CI substitute with

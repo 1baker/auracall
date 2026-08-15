@@ -76,6 +76,49 @@ function readPackageMinimumMajor(
   return enginesMajor;
 }
 
+function readPtyDependencyContract(
+  packageJson: Record<string, unknown>,
+  errors: string[],
+): void {
+  const devDependencies = isRecord(packageJson.devDependencies)
+    ? packageJson.devDependencies
+    : {};
+  const maintainedPackage = '@homebridge/node-pty-prebuilt-multiarch';
+  const legacyPackage = '@cdktf/node-pty-prebuilt-multiarch';
+  if (devDependencies[maintainedPackage] !== '0.14.1') {
+    errors.push(`package.json: devDependencies.${maintainedPackage} must be pinned to 0.14.1`);
+  }
+  for (const dependencyField of ['dependencies', 'devDependencies', 'optionalDependencies']) {
+    const dependencies = packageJson[dependencyField];
+    if (isRecord(dependencies) && legacyPackage in dependencies) {
+      errors.push(`package.json: ${dependencyField} must not contain ${legacyPackage}`);
+    }
+  }
+
+  const pnpm = isRecord(packageJson.pnpm) ? packageJson.pnpm : {};
+  const onlyBuiltDependencies = Array.isArray(pnpm.onlyBuiltDependencies)
+    ? pnpm.onlyBuiltDependencies
+    : [];
+  if (!onlyBuiltDependencies.includes(maintainedPackage)) {
+    errors.push(`package.json: pnpm.onlyBuiltDependencies must contain ${maintainedPackage}`);
+  }
+  if (onlyBuiltDependencies.includes(legacyPackage)) {
+    errors.push(`package.json: pnpm.onlyBuiltDependencies must not contain ${legacyPackage}`);
+  }
+  const patchedDependencies = pnpm.patchedDependencies;
+  if (
+    isRecord(patchedDependencies)
+    && Object.keys(patchedDependencies).some((key) => key.startsWith(`${legacyPackage}@`))
+  ) {
+    errors.push(`package.json: pnpm.patchedDependencies must not patch ${legacyPackage}`);
+  }
+
+  const scripts = isRecord(packageJson.scripts) ? packageJson.scripts : {};
+  if (scripts['test:pty'] !== 'vitest run tests/oracle/streaming.pty.test.ts tests/cli/tui/tty.test.ts') {
+    errors.push('package.json: scripts.test:pty must retain the focused PTY contract');
+  }
+}
+
 function readWorkflowNodeMajors(workflowText: string, errors: string[]): number[] {
   const match = /^\s*node:\s*\[([^\]]+)\]\s*$/mu.exec(workflowText);
   if (!match?.[1]) {
@@ -105,6 +148,9 @@ export function collectCiRuntimeContractErrors(
   const normalizedWorkflowText = workflowText.replace(/\r\n?/gu, '\n');
   const packageJson = parsePackage(packageText, errors);
   const minimumMajor = packageJson ? readPackageMinimumMajor(packageJson, errors) : null;
+  if (packageJson) {
+    readPtyDependencyContract(packageJson, errors);
+  }
   const workflowMajors = readWorkflowNodeMajors(normalizedWorkflowText, errors);
 
   if (workflowMajors.length < 2) {
@@ -128,11 +174,18 @@ export function collectCiRuntimeContractErrors(
   if (!normalizedWorkflowText.includes(`node-version: \${{ matrix.node }}`)) {
     errors.push('.github/workflows/ci.yml: setup-node must use matrix.node');
   }
-  if (!normalizedWorkflowText.includes('os: [ubuntu-latest, macos-latest, windows-2022]')) {
-    errors.push('.github/workflows/ci.yml: matrix.os must retain the supported Windows 2022 toolchain');
+  if (!normalizedWorkflowText.includes('os: [ubuntu-latest, macos-latest, windows-latest]')) {
+    errors.push('.github/workflows/ci.yml: matrix.os must retain the current Windows runner');
   }
   if (!normalizedWorkflowText.includes('uses: pnpm/action-setup@v6')) {
     errors.push('.github/workflows/ci.yml: pnpm/action-setup must use the Node 24-compatible v6 action');
+  }
+  if (
+    !normalizedWorkflowText.includes(
+      'name: Run maintained PTY contract on every supported OS\n        run: pnpm run test:pty',
+    )
+  ) {
+    errors.push('.github/workflows/ci.yml: maintained PTY contract must run on every supported OS');
   }
   if (
     !normalizedWorkflowText.includes(

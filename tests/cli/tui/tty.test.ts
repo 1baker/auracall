@@ -5,8 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { ptyAvailable, runOracleTuiWithPty } from '../../util/pty.js';
 import { setAuracallHomeDirOverrideForTest } from '../../../src/auracallHome.js';
 
-const ptyDescribe =
-  process.platform === 'linux' ? describe.skip : ptyAvailable ? describe : describe.skip;
+const ptyDescribe = ptyAvailable ? describe : describe.skip;
 
 ptyDescribe('TUI (interactive, PTY)', () => {
   it(

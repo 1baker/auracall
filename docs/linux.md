@@ -12,4 +12,7 @@
 - If Gemini still can’t read cookies, export them from a logged-in Chrome tab and pass them inline:
   - `DISPLAY=:0.0 pnpm tsx scripts/browser-tools.ts cookies --port <PORT> > ~/.auracall/cookies.json`
   - Run with `AURACALL_BROWSER_COOKIES_FILE=~/.auracall/cookies.json` (or set `browser.inlineCookiesFile` in `~/.auracall/config.json`).
-- If install scripts fail with `spawn node-gyp ENOENT` (often on newer Node versions without prebuilt binaries), install `node-gyp` and rebuild the native dependency: `pnpm add -D node-gyp --ignore-scripts && PATH=$(pwd)/node_modules/.bin:$PATH npm_config_node_gyp=$(pwd)/node_modules/.bin/node-gyp pnpm rebuild @cdktf/node-pty-prebuilt-multiarch`.
+- The maintained Homebridge PTY package publishes prebuilt binaries for the
+  supported Node range. If installation falls back to a source build, treat
+  that as a platform compatibility failure and capture the exact package,
+  Node, architecture, and compiler versions before changing the toolchain.

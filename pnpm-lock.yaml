@@ -7,11 +7,6 @@ settings:
 overrides:
   devtools-protocol: 0.0.1561482
 
-patchedDependencies:
-  '@cdktf/node-pty-prebuilt-multiarch@0.10.2':
-    hash: fae9b8b9f9134cd243cc9cefa1375a2b02a3dbc5caabb43f8ff417643bdc0e85
-    path: patches/@cdktf__node-pty-prebuilt-multiarch@0.10.2.patch
-
 importers:
 
   .:
@@ -95,9 +90,9 @@ importers:
       '@biomejs/biome':
         specifier: ^2.3.11
         version: 2.3.11
-      '@cdktf/node-pty-prebuilt-multiarch':
-        specifier: 0.10.2
-        version: 0.10.2(patch_hash=fae9b8b9f9134cd243cc9cefa1375a2b02a3dbc5caabb43f8ff417643bdc0e85)
+      '@homebridge/node-pty-prebuilt-multiarch':
+        specifier: 0.14.1
+        version: 0.14.1
       '@types/chrome-remote-interface':
         specifier: ^0.33.0
         version: 0.33.0
@@ -224,9 +219,6 @@ packages:
     engines: {node: '>=14.21.3'}
     cpu: [x64]
     os: [win32]
-
-  '@cdktf/node-pty-prebuilt-multiarch@0.10.2':
-    resolution: {integrity: sha512-Bpb0v9bzejJUAGmn8HfDFH6pYxFVHokiWV4mHvTao2XoYcEvETFVrniYIXlIg0e4yLlKB/U/z5WsC5PBsi3xEQ==}
 
   '@emnapi/core@1.10.0':
     resolution: {integrity: sha512-yq6OkJ4p82CAfPl0u9mQebQHKPJkY7WrIuk205cTYnYe+k2Z8YBh11FrbRG/H6ihirqcacOgl2BIO8oyMQLeXw==}
@@ -405,6 +397,10 @@ packages:
   '@google/generative-ai@0.24.1':
     resolution: {integrity: sha512-MqO+MLfM6kjxcKoy0p1wRzG3b4ZZXtPI+z2IE26UogS2Cm/XHO+7gGRBh6gcJsOiIVoH93UwKvW4HdgiOZCy9Q==}
     engines: {node: '>=18.0.0'}
+
+  '@homebridge/node-pty-prebuilt-multiarch@0.14.1':
+    resolution: {integrity: sha512-JaaTsATWPkOhm/cM2t+IjA2lztDFkoWQYU5VS8ThTsa9VbKhHwp83Cww4t8X/BH0k4Q8cWqvOKmYoGrlwLVhbA==}
+    engines: {node: '>=20.0.0 <27.0.0'}
 
   '@hono/node-server@1.19.7':
     resolution: {integrity: sha512-vUcD0uauS7EU2caukW8z5lJKtoGMokxNbJtBiwHgpqxEXokaHCBkQUmCHhjFB1VUTWdqj25QoMkMKzgjq+uhrw==}
@@ -1982,9 +1978,6 @@ packages:
     resolution: {integrity: sha512-dkEJPVvun4FryqBmZ5KhDo0K9iDXAwn08tMLDinNdRBNPcYEDiWYysLcc6k3mjTMlbP9KyylvRpd4wFtwrT9rw==}
     engines: {node: ^20.17.0 || >=22.9.0}
 
-  nan@2.24.0:
-    resolution: {integrity: sha512-Vpf9qnVW1RaDkoNKFUvfxqAbtI8ncb8OJlqZ9wwpXzWPEsvsB1nvdUi6oYrHIkQ1Y/tMDnr1h4nczS0VB9Xykg==}
-
   nanoid@3.3.11:
     resolution: {integrity: sha512-N8SpfPUnUp1bK+PMYW8qSWdl9U+wwNWI4QKxOYDy9JAro3WMX7p2OeVRF9v+347pnakNevPmiHhNmZ2HbFA76w==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
@@ -2001,9 +1994,13 @@ packages:
     resolution: {integrity: sha512-dBpDMdxv9Irdq66304OLfEmQ9tbNRFnFTuZiLo+bD+r332bBmMJ8GBLXklIXXgxd3+v9+KUnZaUR5PJMa75Gsg==}
     engines: {node: '>= 0.4.0'}
 
-  node-abi@3.85.0:
-    resolution: {integrity: sha512-zsFhmbkAzwhTft6nd3VxcG0cvJsT70rL+BIGHWVq5fi6MwGrHwzqKaxXE+Hl2GmnGItnDKPPkO5/LQqjVkIdFg==}
+  node-abi@3.94.0:
+    resolution: {integrity: sha512-W5ZNO5KRPB5TkYmGVD9F6YqhsglXJzE6etpbmT+f6EQElhiX/UTG551cnsRGvLG3fyZEg9HwaDmNmj5nwJ4z9g==}
     engines: {node: '>=10'}
+
+  node-addon-api@8.9.2:
+    resolution: {integrity: sha512-VijLXbi3UACN69I0JVXJsX4tjACjNoQDgv2gTF6sx2wWEi8tkSg2eX8p5gSIFi8z2+DL3oHmY6OyKce38SDolg==}
+    engines: {node: ^18 || ^20 || >= 21}
 
   node-domexception@1.0.0:
     resolution: {integrity: sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==}
@@ -2402,8 +2399,8 @@ packages:
     resolution: {integrity: sha512-ulAk51I9UVUyJgxlv9M6lFot2WP3e7t8Kz9+IS6D4rVba1tR9kON+Ey69f+1R4Q8cd45Lod6a4IcJIxnzGc/zA==}
     engines: {node: '>=18'}
 
-  tar-fs@2.1.4:
-    resolution: {integrity: sha512-mDAjwmZdh7LTT6pNleZ05Yt65HC3E+NiQzl672vQG38jIrehtJk/J3mNwIg+vShQPcLF/LV7CMnDW6vjj6sfYQ==}
+  tar-fs@2.1.5:
+    resolution: {integrity: sha512-OboTd8mmMhZDNPV+UjQcK9yKAatXu2aJ+r1w4im1Otd4M4fl2hwvdoXUxIYHFTHWK/3y3FarBP70v3vwmGlOxw==}
 
   tar-fs@3.1.1:
     resolution: {integrity: sha512-LZA0oaPOc2fVo82Txf3gw+AkEd38szODlptMYejQUhndHMLQ9M059uXR+AfS7DNo0NpINvSqDsvyaCrBVkptWg==}
@@ -2786,11 +2783,6 @@ snapshots:
   '@biomejs/cli-win32-x64@2.3.11':
     optional: true
 
-  '@cdktf/node-pty-prebuilt-multiarch@0.10.2(patch_hash=fae9b8b9f9134cd243cc9cefa1375a2b02a3dbc5caabb43f8ff417643bdc0e85)':
-    dependencies:
-      nan: 2.24.0
-      prebuild-install: 7.1.3
-
   '@emnapi/core@1.10.0':
     dependencies:
       '@emnapi/wasi-threads': 1.2.1
@@ -2897,6 +2889,11 @@ snapshots:
       - utf-8-validate
 
   '@google/generative-ai@0.24.1': {}
+
+  '@homebridge/node-pty-prebuilt-multiarch@0.14.1':
+    dependencies:
+      node-addon-api: 8.9.2
+      prebuild-install: 7.1.3
 
   '@hono/node-server@1.19.7(hono@4.11.1)':
     dependencies:
@@ -4609,8 +4606,6 @@ snapshots:
 
   mute-stream@3.0.0: {}
 
-  nan@2.24.0: {}
-
   nanoid@3.3.11: {}
 
   napi-build-utils@2.0.0: {}
@@ -4619,9 +4614,11 @@ snapshots:
 
   netmask@2.0.2: {}
 
-  node-abi@3.85.0:
+  node-abi@3.94.0:
     dependencies:
       semver: 7.7.3
+
+  node-addon-api@8.9.2: {}
 
   node-domexception@1.0.0: {}
 
@@ -4734,11 +4731,11 @@ snapshots:
       minimist: 1.2.8
       mkdirp-classic: 0.5.3
       napi-build-utils: 2.0.0
-      node-abi: 3.85.0
+      node-abi: 3.94.0
       pump: 3.0.3
       rc: 1.2.8
       simple-get: 4.0.1
-      tar-fs: 2.1.4
+      tar-fs: 2.1.5
       tunnel-agent: 0.6.0
 
   pretty-ms@9.3.0:
@@ -5105,7 +5102,7 @@ snapshots:
 
   system-architecture@0.1.0: {}
 
-  tar-fs@2.1.4:
+  tar-fs@2.1.5:
     dependencies:
       chownr: 1.1.4
       mkdirp-classic: 0.5.3

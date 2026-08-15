@@ -7,6 +7,11 @@
 Status: active
 Lane: P01
 
+- Open maintained cross-platform PTY runtime migration:
+  [docs/dev/plans/0330-2026-08-15-maintained-pty-runtime.md](docs/dev/plans/0330-2026-08-15-maintained-pty-runtime.md)
+  Replace the patched legacy native dependency, restore portable interactive
+  PTY tests, and prove the maintained runtime on current Windows CI.
+
 - Closed accepted native Windows complete-suite portability:
   [docs/dev/plans/0329-2026-08-15-native-windows-full-suite.md](docs/dev/plans/0329-2026-08-15-native-windows-full-suite.md)
   Persisted cache keys and fixtures are portable, and the complete provider-

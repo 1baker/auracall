@@ -59,10 +59,10 @@ describe('CI Node runtime contract', () => {
     expect(
       collectCiRuntimeContractErrors(
         currentPackage,
-        currentWorkflow.replaceAll('windows-2022', 'windows-latest'),
+        currentWorkflow.replaceAll('windows-latest', 'windows-2022'),
       ),
     ).toContain(
-      '.github/workflows/ci.yml: matrix.os must retain the supported Windows 2022 toolchain',
+      '.github/workflows/ci.yml: matrix.os must retain the current Windows runner',
     );
     expect(
       collectCiRuntimeContractErrors(
@@ -74,13 +74,38 @@ describe('CI Node runtime contract', () => {
     );
   });
 
+  it('rejects maintained PTY dependency and focused-contract drift', () => {
+    const packageJson = JSON.parse(currentPackage) as Record<string, unknown>;
+    packageJson.devDependencies = {
+      ...(packageJson.devDependencies as Record<string, unknown>),
+      '@homebridge/node-pty-prebuilt-multiarch': '^0.14.1',
+      '@cdktf/node-pty-prebuilt-multiarch': '0.10.2',
+    };
+
+    expect(
+      collectCiRuntimeContractErrors(JSON.stringify(packageJson), currentWorkflow),
+    ).toEqual(expect.arrayContaining([
+      'package.json: devDependencies.@homebridge/node-pty-prebuilt-multiarch must be pinned to 0.14.1',
+      'package.json: devDependencies must not contain @cdktf/node-pty-prebuilt-multiarch',
+    ]));
+    expect(
+      collectCiRuntimeContractErrors(
+        currentPackage,
+        currentWorkflow.replace(
+          'name: Run maintained PTY contract on every supported OS\n        run: pnpm run test:pty',
+          "name: Run maintained PTY contract on every supported OS\n        if: matrix.os != 'windows-latest'\n        run: pnpm run test:pty",
+        ),
+      ),
+    ).toContain('.github/workflows/ci.yml: maintained PTY contract must run on every supported OS');
+  });
+
   it('rejects cross-platform test-lane drift', () => {
     expect(
       collectCiRuntimeContractErrors(
         currentPackage,
         currentWorkflow.replace(
           'name: Run full test suite on every supported OS\n        run: pnpm run test',
-          "name: Run full test suite on every supported OS\n        if: matrix.os != 'windows-2022'\n        run: pnpm run test",
+          "name: Run full test suite on every supported OS\n        if: matrix.os != 'windows-latest'\n        run: pnpm run test",
         ),
       ),
     ).toContain('.github/workflows/ci.yml: full test suite must run on every supported OS');
@@ -89,7 +114,7 @@ describe('CI Node runtime contract', () => {
         currentPackage,
         currentWorkflow.replace(
           'name: Run real readiness smoke on every supported OS\n        run: pnpm run smoke:dashboard-session-readiness',
-          "name: Run real readiness smoke on every supported OS\n        if: matrix.os != 'windows-2022'\n        run: pnpm run smoke:dashboard-session-readiness",
+          "name: Run real readiness smoke on every supported OS\n        if: matrix.os != 'windows-latest'\n        run: pnpm run smoke:dashboard-session-readiness",
         ),
       ),
     ).toContain('.github/workflows/ci.yml: real readiness smoke must run on every supported OS');
