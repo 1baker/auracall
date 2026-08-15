@@ -1834,10 +1834,16 @@ Terminology note:
   `media_generation_status`. Status tools read durable local records and should
   not be replaced with a second create call just to check progress.
 ```bash
-npx -y auracall auracall-mcp
+# Installed user runtime
+pnpm run install:user-runtime
+auracall-mcp
+
+# Contributor checkout
+pnpm mcp
 ```
-- Cursor setup (MCP): drop a `.cursor/mcp.json` like below, then pick “oracle” in Cursor’s MCP sources. See https://cursor.com/docs/context/mcp for UI steps.
-[![Install MCP Server](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/en-US/install-mcp?name=oracle&config=eyJjb21tYW5kIjoibnB4IC15IEBzdGVpcGV0ZS9vcmFjbGUgb3JhY2xlLW1jcCJ9)
+- Cursor setup (MCP): drop a `.cursor/mcp.json` like below, then pick
+  `auracall` in Cursor’s MCP sources. See
+  https://cursor.com/docs/context/mcp for UI steps.
 
 ```json
 {

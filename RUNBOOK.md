@@ -1,5 +1,23 @@
 # RUNBOOK
 
+## Turn 484 | 2026-08-15
+
+- Opened Plan 0315 after direct package, installer, config, and documentation
+  inspection proved current MCP launch drift.
+- The installed authority is `auracall-mcp`; repository authority is `pnpm mcp`
+  or the built `auracall-local` mcporter entry. Public npm remains deferred.
+- Repair current Oracle/npx registration examples and the tracked mcporter
+  config while preserving internal `src/oracle`, compatibility variables, and
+  `vendor/oracle-notifier`. No provider, browser, Claude, publish, or release
+  effect is in scope.
+- Reconciled nine documentation surfaces, repaired the installed mcporter entry,
+  and removed the unrelated personal iTerm path. Package, README, reference,
+  smoke guide, Cursor, Claude, and mcporter ids now use AuraCall authority.
+- Local and installed mcporter schema lists plus the local `sessions` call
+  exited successfully. Five stdio protocol tests, twelve governance tests,
+  build, typecheck, zero-warning lint across 835 files, 316-plan audit, shell/
+  JSON syntax, and diff hygiene passed. Plan 0315 closes accepted.
+
 ## Turn 483 | 2026-08-15
 
 - Opened Plan 0314 after the current-doc portability audit found five current

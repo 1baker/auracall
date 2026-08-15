@@ -11,6 +11,11 @@ import {
   collectCurrentDocRetiredCheckoutErrors,
 } from './currentDocLinks.js';
 import { collectActiveRoadmapPlanStateErrors } from './roadmapPlanState.js';
+import {
+  collectDeprecatedMcpLaunchErrors,
+  collectMcporterMcpConfigErrors,
+  collectPackageMcpBinErrors,
+} from './mcpLaunchContract.js';
 
 type CandidateAction = 'keep' | 'merge' | 'retire';
 
@@ -68,6 +73,8 @@ const plansDir = join(docsDevDir, 'plans');
 const roadmapPath = join(repoRoot, 'ROADMAP.md');
 const runbookPath = join(repoRoot, 'RUNBOOK.md');
 const agentsPath = join(repoRoot, 'AGENTS.md');
+const packagePath = join(repoRoot, 'package.json');
+const mcporterConfigPath = join(repoRoot, 'config', 'mcporter.json');
 const policiesDir = join(docsDevDir, 'policies');
 const validPlanStates = new Set(['PLANNED', 'OPEN', 'CLOSED', 'CANCELLED']);
 const staleWorkspacePath = '/home/ecochran76/workspace.local/oracle';
@@ -168,6 +175,9 @@ function collectValidationErrors(
   errors.push(...collectCurrentDocAbsoluteLinkErrors(currentDocumentation));
   errors.push(...collectCurrentDocRetiredCheckoutErrors(currentDocumentation));
   errors.push(...collectCurrentDocConcreteUserPathErrors(currentDocumentation));
+  errors.push(...collectDeprecatedMcpLaunchErrors(currentDocumentation));
+  errors.push(...collectPackageMcpBinErrors(packageText));
+  errors.push(...collectMcporterMcpConfigErrors(mcporterConfigText));
 
   for (const candidate of rawCandidates) {
     if (!candidate.relPath.startsWith('docs/dev/plans/')) {
@@ -197,6 +207,8 @@ function collectValidationErrors(
 const roadmapText = readFileSync(roadmapPath, 'utf8');
 const runbookText = readFileSync(runbookPath, 'utf8');
 const agentsText = readFileSync(agentsPath, 'utf8');
+const packageText = readFileSync(packagePath, 'utf8');
+const mcporterConfigText = readFileSync(mcporterConfigPath, 'utf8');
 const existingPolicyPaths = new Set(
   readdirSync(policiesDir, { withFileTypes: true })
     .filter((entry) => entry.isFile() && entry.name.endsWith('.md'))
@@ -205,6 +217,7 @@ const existingPolicyPaths = new Set(
 const currentDocumentation = [
   { path: 'README.md', text: readFileSync(join(repoRoot, 'README.md'), 'utf8') },
   { path: 'AGENTS.md', text: agentsText },
+  { path: 'config/mcporter.json', text: mcporterConfigText },
   ...walkMarkdownFiles(join(repoRoot, 'docs'))
     .map((absPath) => ({
       path: relative(repoRoot, absPath).replaceAll('\\', '/'),

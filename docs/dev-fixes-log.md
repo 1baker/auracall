@@ -1,3 +1,10 @@
+- 2026-08-15: MCP launch docs must derive from the package bin and installed
+  wrapper, not inherited package branding. While public npm is deferred,
+  installed clients should execute `auracall-mcp`; contributors should use
+  `pnpm mcp` or the built `auracall-local` mcporter entry. Validate package and
+  mcporter authority deterministically, and reject deprecated package,
+  registration-id, config-path, and npx launch forms in current docs.
+
 - 2026-08-15: Current docs should not embed a real operator's Unix, macOS, or
   Windows user-home path. Normalize examples with explicit placeholders,
   home-relative paths, environment configuration, or repository-root

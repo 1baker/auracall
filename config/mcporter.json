@@ -28,16 +28,10 @@
       ],
       "lifecycle": "ephemeral"
     },
-    "iterm": {
-      "command": "/Users/steipete/Projects/iterm-mcp/build/index.js"
-    },
     "auracall": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "auracall",
-        "auracall-mcp"
-      ],
+      "description": "Installed AuraCall user-runtime MCP wrapper",
+      "command": "auracall-mcp",
+      "args": [],
       "root": ".."
     },
     "auracall-local": {

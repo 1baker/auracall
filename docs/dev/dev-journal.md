@@ -1,3 +1,16 @@
+## 2026-08-15 | Plan 0315 MCP launch contract reconciliation
+
+- Removed stale `@steipete/oracle`, Oracle client ids/config paths, encoded
+  Cursor installation, and invalid AuraCall npx MCP launches from current
+  onboarding. Public npm remains explicitly deferred.
+- Installed clients now launch `auracall-mcp`; contributors use `pnpm mcp` or
+  the built `auracall-local` mcporter entry. The tracked config also drops its
+  unrelated personal iTerm path.
+- Local and installed mcporter lists and a local sessions call passed. Five
+  stdio tests, twelve governance tests, build, typecheck, zero-warning lint
+  across 835 files, plan audit, shell/JSON syntax, and diff hygiene passed.
+  Plan 0315 is CLOSED.
+
 ## 2026-08-15 | Plan 0314 current user path portability
 
 - Replaced concrete operator home roots on fourteen lines across five current

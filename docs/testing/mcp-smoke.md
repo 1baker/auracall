@@ -1,6 +1,8 @@
 # MCP Smoke Tests (local auracall-mcp)
 
-Use these steps to validate CLI + MCP end-to-end before releasing. The npm package now ships `auracall-mcp`, but the local build remains the fastest path for development (see the `auracall-local` entry in `config/mcporter.json`).
+Use these steps to validate CLI + MCP end-to-end before releasing. Public npm
+distribution remains deferred; use the installed user-runtime wrapper or the
+repository-local `auracall-local` entry in `config/mcporter.json`.
 
 ## Checklist (run all four lanes)
 1) CLI (API engine)
@@ -11,7 +13,8 @@ Use these steps to validate CLI + MCP end-to-end before releasing. The npm packa
 Shared prereqs
 - `pnpm build` (ensures `dist/bin/auracall-mcp.js` exists)
 - `OPENAI_API_KEY` set in env
-- `config/mcporter.json` contains the `oracle` entry pointing to `npx -y @steipete/oracle auracall-mcp` (already committed).
+- `config/mcporter.json` contains `auracall` for the installed user-runtime
+  wrapper and `auracall-local` for the built checkout.
 - `mcporter` available on `PATH` (`command -v mcporter`)
 - For browser runs: Chrome installed; macOS host (headful).
 - macOS notifications: `vendor/oracle-notifier/OracleNotifier.app` ships with the package (preferred); falls back to toasted-notifier if missing/broken.
@@ -131,19 +134,21 @@ Prereqs
 - `pnpm build`
 - `OPENAI_API_KEY` exported (for the API engine default)
 - Aura-Call MCP registered with Claude (once per project):  
-  `claude mcp add --transport stdio oracle -- auracall-mcp`
+  `claude mcp add --transport stdio auracall -- auracall-mcp`
 
 Steps
 1) Start Claude in tmux:
    ```bash
-   tmux new -s claude-smoke 'cd "$(git rev-parse --show-toplevel)" && claude --permission-mode bypassPermissions --mcp-config ~/.mcp/oracle.json'
+   tmux new -s claude-smoke 'cd "$(git rev-parse --show-toplevel)" && claude --permission-mode bypassPermissions'
    ```
 2) From another shell, use the helper to drive it:
    ```bash
    bun scripts/agent-send.ts --session claude-smoke --wait-ms 800 --entry double -- \
      'Call the auracall sessions MCP tool with {"limit":1,"detail":true} and show the result'
    ```
-3) Validate the pane shows a successful `auracall sessions` tool call (or adjust `--mcp-config` if it reports no tools). When finished, `tmux kill-session -t claude-smoke`.
+3) Validate the pane shows a successful `auracall sessions` tool call. If the
+   tool is absent, inspect the project registration with `claude mcp get
+   auracall`. When finished, `tmux kill-session -t claude-smoke`.
 
 See `docs/mcp.md` for full tool/resource schemas and behavior.
 

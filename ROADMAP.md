@@ -7,6 +7,12 @@
 Status: active
 Lane: P01
 
+- Closed accepted MCP launch contract reconciliation:
+  [docs/dev/plans/0315-2026-08-15-mcp-launch-contract-reconciliation.md](docs/dev/plans/0315-2026-08-15-mcp-launch-contract-reconciliation.md)
+  Current onboarding, package metadata, and both tracked mcporter entries now
+  agree on installed and repository-local `auracall-mcp` launch paths; stale
+  Oracle/npx registration forms and the personal config path are removed.
+
 - Closed accepted current user path portability repair:
   [docs/dev/plans/0314-2026-08-15-current-user-path-portability.md](docs/dev/plans/0314-2026-08-15-current-user-path-portability.md)
   Five current documents now use portable user-root forms, and the governance
