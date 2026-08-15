@@ -1,3 +1,11 @@
+- 2026-08-15: Loopback peer evidence cannot distinguish a direct local browser
+  from a same-host reverse proxy. Make trusted-local dashboard authority
+  explicitly configurable, and force it off whenever a public dashboard URL,
+  external base URL, or external hostname is configured. An explicit `true`
+  must not override known external routing; out-of-band proxies set the switch
+  false. Expose the resolved non-secret reason and retain bearer/secure-session
+  authority as the fail-closed replacement.
+
 - 2026-08-15: Non-loopback operator dashboards need a browser-safe credential
   exchange, not restored bearer-key storage. Accept only an unscoped operator
   key from a same-origin HTTPS dashboard, clear the input immediately, and

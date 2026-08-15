@@ -7,6 +7,12 @@
 Status: active
 Lane: P01
 
+- Closed accepted configurable trusted-local dashboard authority:
+  [docs/dev/plans/0323-2026-08-15-trusted-local-dashboard-config.md](docs/dev/plans/0323-2026-08-15-trusted-local-dashboard-config.md)
+  Known external dashboard routing will force the trusted-local exception off,
+  while an explicit config switch covers loopback deployments whose proxy is
+  configured outside AuraCall.
+
 - Closed accepted authenticated dashboard session exchange:
   [docs/dev/plans/0322-2026-08-15-dashboard-session-auth.md](docs/dev/plans/0322-2026-08-15-dashboard-session-auth.md)
   Non-loopback HTTPS dashboards exchange an unscoped operator key for a

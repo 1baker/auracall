@@ -101,12 +101,16 @@ Current limits:
 - startup reports the running server's resolved non-secret auth posture and
   matches `/status.auth`; it reports only required/disabled state, loaded-key
   count, whether scoped keys are present, and whether trusted-local dashboard
-  authority is active, while preserving observable `/status` and
-  trusted-ingress warnings
+  authority is active plus its resolved reason, while preserving observable
+  `/status` and trusted-ingress warnings
 - same-origin dashboard headers are browser-context constraints, not
   authentication: no-key operator authority additionally requires a
-  loopback-bound server and loopback TCP peer; every non-loopback bind requires
-  a valid key, and forwarded client-address headers are ignored
+  loopback-bound server, loopback TCP peer, an enabled
+  `api.auth.trustedLocalOperatorDashboard` policy, and no configured public URL,
+  external base URL, or external hostname. Known external routing forces the
+  exception off even when the switch is true; out-of-band proxies must set it
+  false. Every non-loopback bind requires a valid key, and forwarded
+  client-address headers are ignored
 - non-loopback dashboards exchange an unscoped operator key only over a
   same-origin HTTPS browser request for a 15-minute in-memory session. The
   browser receives a host-only `HttpOnly; Secure; SameSite=Strict; Path=/`

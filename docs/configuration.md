@@ -104,8 +104,8 @@ The Agents / Teams dashboard exposes the same flow as download, dry-run import,
 and apply import controls. When API auth is enabled, direct or non-loopback
 access to these routes requires an unscoped operator key. The built-in dashboard
 uses trusted-local operator authority only when the API is loopback-bound, the
-TCP peer is loopback, and the browser context is same-origin; a local reverse
-proxy relying on that exception must protect its external ingress.
+TCP peer is loopback, the browser context is same-origin, the exception is not
+disabled in config, and AuraCall has no configured external dashboard route.
 
 The dashboard also exposes an API-key issue control for selected agent/team
 scopes. It calls `POST /v1/config/api-keys/issue`, writes the selected
@@ -123,6 +123,10 @@ dashboard URLs:
     port: 18095,
     dashboardUrl: "http://auracall.localhost/ops/browser",
     publicDashboardUrl: "https://auracall.ecochran.dyndns.org/ops/browser",
+    auth: {
+      required: true,
+      trustedLocalOperatorDashboard: false,
+    },
     accountMirrorScheduler: {
       intervalMs: 600000,
       execute: true,
@@ -153,9 +157,18 @@ operators can find the same service after restart.
 
 When API auth is enabled, `GET /status` stays observable while `/v1/*` and
 `POST /status` require authorization. A loopback-bound dashboard keeps the
-trusted-local no-key workflow only when the TCP peer is loopback and the
-browser context is same-origin. A non-loopback dashboard must be opened through
-HTTPS and accepts only an unscoped operator API key for login. AuraCall sends
+trusted-local no-key workflow only when the TCP peer is loopback, the browser
+context is same-origin, `api.auth.trustedLocalOperatorDashboard` is omitted or
+`true`, and no external dashboard routing is configured. Any non-empty
+`api.publicDashboardUrl`, `api.routing.externalBaseUrl`, or
+`api.routing.externalHostname` forces trusted-local authority off even if the
+switch is `true`. Set the switch to `false` when an out-of-band reverse proxy is
+not represented in AuraCall config. `/status.auth` and startup posture report
+the resolved reason as `enabled`, `auth_disabled`, `config_disabled`,
+`external_routing`, or `non_loopback_bind`.
+
+A non-loopback or externally routed dashboard must be opened through HTTPS and
+accepts only an unscoped operator API key for login. AuraCall sends
 that key once in the login request, then clears the input and returns a
 15-minute host-only `HttpOnly; Secure; SameSite=Strict` cookie. The API key and
 cookie token are never written to Web Storage, URLs, logs, or response bodies.

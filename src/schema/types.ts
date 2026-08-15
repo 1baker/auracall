@@ -44,6 +44,7 @@ export const ApiServerConfigSchema = z.object({
   auth: z.object({
     required: z.boolean().optional(),
     enabled: z.boolean().optional(),
+    trustedLocalOperatorDashboard: z.boolean().optional(),
     keys: z.array(z.object({
       id: z.string().optional(),
       secret: z.string().optional(),

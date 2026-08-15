@@ -96,6 +96,7 @@ describe('loadUserConfig', () => {
         api: {
           auth: {
             required: true,
+            trustedLocalOperatorDashboard: false,
             keys: [{
               id: "local-app",
               secret: "test-secret",
@@ -113,6 +114,7 @@ describe('loadUserConfig', () => {
     const result = await loadUserConfig(tempDir);
     expect(result.loaded).toBe(true);
     expect(result.config.api?.auth?.required).toBe(true);
+    expect(result.config.api?.auth?.trustedLocalOperatorDashboard).toBe(false);
     expect(result.config.api?.auth?.keys?.[0]).toMatchObject({
       id: 'local-app',
       secret: 'test-secret',
@@ -121,6 +123,14 @@ describe('loadUserConfig', () => {
       services: ['chatgpt'],
       runtimeProfiles: ['default'],
     });
+  });
+
+  it('rejects non-boolean trusted-local dashboard configuration', () => {
+    for (const value of ['false', 0, null]) {
+      expect(() => ComposedConfigSchema.parse({
+        api: { auth: { trustedLocalOperatorDashboard: value } },
+      })).toThrow();
+    }
   });
 
   it('parses optional team role metadata for future task-aware planning', async () => {

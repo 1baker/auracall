@@ -751,8 +751,16 @@ interface ApiAuthKeyPolicy {
 
 interface ApiAuthPolicy {
 	required: boolean;
+	trustedLocalOperatorDashboard: boolean;
 	keys: ApiAuthKeyPolicy[];
 }
+
+export type TrustedLocalOperatorDashboardReason =
+	| "enabled"
+	| "auth_disabled"
+	| "config_disabled"
+	| "external_routing"
+	| "non_loopback_bind";
 
 export interface ApiAuthRuntimeStatus {
 	readonly required: boolean;
@@ -760,6 +768,7 @@ export interface ApiAuthRuntimeStatus {
 	readonly keyCount: number;
 	readonly scoped: boolean;
 	readonly trustedLocalOperatorDashboard: boolean;
+	readonly trustedLocalOperatorDashboardReason: TrustedLocalOperatorDashboardReason;
 }
 
 interface ApiAuthContext {
@@ -850,6 +859,7 @@ interface HttpStatusResponse {
 		keyCount: number;
 		scoped: boolean;
 		trustedLocalOperatorDashboard: boolean;
+		trustedLocalOperatorDashboardReason: TrustedLocalOperatorDashboardReason;
 	};
 	serviceDiscovery: ApiServiceDiscovery;
 	routes: StaticHttpStatusRoutes & {
@@ -1068,7 +1078,21 @@ export async function createResponsesHttpServer(
 		return value;
 	};
 	const apiAuthPolicy = readApiAuthPolicy(configuredRuntimeConfig, runtimeEnv);
-	const apiAuthStatus = createApiAuthRuntimeStatus(apiAuthPolicy, boundHost);
+	const configuredApiServer = configuredRuntimeConfig
+		? readApiServerConfig(configuredRuntimeConfig)
+		: {};
+	const externalDashboardRoutingConfigured =
+		hasExternalOperatorDashboardRouting({
+			publicDashboardUrl: options.publicDashboardUrl,
+			serviceRouting: options.serviceRouting,
+		}) ||
+		hasExternalOperatorDashboardRouting({
+			publicDashboardUrl: configuredApiServer.publicDashboardUrl,
+			serviceRouting: configuredApiServer.routing,
+		});
+	const apiAuthStatus = createApiAuthRuntimeStatus(apiAuthPolicy, boundHost, {
+		externalDashboardRoutingConfigured,
+	});
 	const dashboardSessionStore = createDashboardSessionStore<ApiAuthKeyPolicy>({ now });
 	const agentTeamConfigService = createAgentTeamConfigService({
 		activeConfig: configuredRuntimeConfig ?? null,
@@ -4929,8 +4953,8 @@ export function formatApiStartupPosture(input: {
 	const localOnly = isLoopbackHost(input.host);
 	if (!input.auth.required) {
 		return localOnly
-			? "Posture: API authentication disabled; bound to loopback for local development."
-			: `Warning: ${input.host} is not loopback. API authentication is disabled; use trusted ingress before exposing this development server.`;
+			? "Posture: API authentication disabled; bound to loopback for local development; trusted-local dashboard authority is disabled (auth_disabled)."
+			: `Warning: ${input.host} is not loopback. API authentication is disabled; use trusted ingress before exposing this development server; trusted-local dashboard authority is disabled (auth_disabled).`;
 	}
 
 	const authSummary =
@@ -4942,7 +4966,7 @@ export function formatApiStartupPosture(input: {
 		: `${input.host} is not loopback; use trusted ingress for this development server`;
 	const operatorDashboardSummary = input.auth.trustedLocalOperatorDashboard
 		? "; trusted loopback dashboard requests use local operator authority"
-		: "";
+		: `; trusted-local dashboard authority is disabled (${input.auth.trustedLocalOperatorDashboardReason})`;
 	return `${localOnly ? "Posture" : "Warning"}: ${authSummary}; ${bindingSummary}${operatorDashboardSummary}; GET /status remains observable without authentication.`;
 }
 
@@ -7462,6 +7486,8 @@ function readApiAuthPolicy(
 			readBoolean(env.AURACALL_API_AUTH_REQUIRED) ??
 			readBoolean(env.AURACALL_API_AUTH_ENABLED) ??
 			keys.length > 0,
+		trustedLocalOperatorDashboard:
+			readBoolean(auth?.trustedLocalOperatorDashboard) ?? true,
 		keys,
 	};
 }
@@ -7469,7 +7495,14 @@ function readApiAuthPolicy(
 function createApiAuthRuntimeStatus(
 	policy: ApiAuthPolicy,
 	boundHost = "127.0.0.1",
+	input: { externalDashboardRoutingConfigured?: boolean } = {},
 ): ApiAuthRuntimeStatus {
+	const trustedLocalOperatorDashboardReason = resolveTrustedLocalOperatorDashboardReason({
+		authRequired: policy.required,
+		boundHost,
+		configEnabled: policy.trustedLocalOperatorDashboard,
+		externalRoutingConfigured: input.externalDashboardRoutingConfigured ?? false,
+	});
 	return {
 		required: policy.required,
 		scheme: policy.required ? "bearer" : "none",
@@ -7482,18 +7515,42 @@ function createApiAuthRuntimeStatus(
 					key.runtimeProfiles?.length,
 			),
 		),
-		trustedLocalOperatorDashboard: isTrustedLocalOperatorDashboardEnabled({
-			authRequired: policy.required,
-			boundHost,
-		}),
+		trustedLocalOperatorDashboard: trustedLocalOperatorDashboardReason === "enabled",
+		trustedLocalOperatorDashboardReason,
 	};
 }
 
 export function isTrustedLocalOperatorDashboardEnabled(input: {
 	authRequired: boolean;
 	boundHost: string;
+	configEnabled: boolean;
+	externalRoutingConfigured: boolean;
 }): boolean {
-	return input.authRequired && isLoopbackHost(input.boundHost);
+	return resolveTrustedLocalOperatorDashboardReason(input) === "enabled";
+}
+
+export function resolveTrustedLocalOperatorDashboardReason(input: {
+	authRequired: boolean;
+	boundHost: string;
+	configEnabled: boolean;
+	externalRoutingConfigured: boolean;
+}): TrustedLocalOperatorDashboardReason {
+	if (!input.authRequired) return "auth_disabled";
+	if (input.externalRoutingConfigured) return "external_routing";
+	if (!input.configEnabled) return "config_disabled";
+	if (!isLoopbackHost(input.boundHost)) return "non_loopback_bind";
+	return "enabled";
+}
+
+function hasExternalOperatorDashboardRouting(input: {
+	publicDashboardUrl?: string;
+	serviceRouting?: ApiServiceRoutingConfig;
+}): boolean {
+	return Boolean(
+		readNonEmptyString(input.publicDashboardUrl) ||
+			readNonEmptyString(input.serviceRouting?.externalBaseUrl) ||
+			readNonEmptyString(input.serviceRouting?.externalHostname),
+	);
 }
 
 function readApiAuthEnvKeys(env: ApiAuthEnv): ApiAuthKeyPolicy[] {

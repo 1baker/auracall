@@ -22506,6 +22506,7 @@ describe("http responses adapter", () => {
 				keyCount: 1,
 				scoped: false,
 				trustedLocalOperatorDashboard: true,
+				trustedLocalOperatorDashboardReason: "enabled",
 			});
 			const statusResponse = await fetch(`http://127.0.0.1:${server.port}/status`);
 			expect(statusResponse.status).toBe(200);
@@ -22563,6 +22564,112 @@ describe("http responses adapter", () => {
 			expect(allowedPayload.object).toBe("api_log_tail");
 		} finally {
 			await server.close();
+		}
+	}, 20_000);
+
+	it("disables trusted-local authority for explicit opt-out and external routing", async () => {
+		const cases: Array<{
+			name: string;
+			api: Record<string, unknown>;
+			options?: { publicDashboardUrl?: string };
+			reason: "config_disabled" | "external_routing";
+		}> = [
+			{
+				name: "explicit config opt-out",
+				api: { auth: { trustedLocalOperatorDashboard: false } },
+				reason: "config_disabled",
+			},
+			{
+				name: "configured public dashboard URL",
+				api: {
+					publicDashboardUrl: "https://auracall.example.test/dashboard",
+					auth: { trustedLocalOperatorDashboard: true },
+				},
+				reason: "external_routing",
+			},
+			{
+				name: "configured external base URL",
+				api: { routing: { externalBaseUrl: "https://auracall.example.test" } },
+				reason: "external_routing",
+			},
+			{
+				name: "configured external hostname",
+				api: { routing: { externalHostname: "auracall.example.test" } },
+				reason: "external_routing",
+			},
+			{
+				name: "direct server public dashboard option",
+				api: {},
+				options: { publicDashboardUrl: "https://auracall.example.test/dashboard" },
+				reason: "external_routing",
+			},
+		];
+
+		for (const testCase of cases) {
+			const server = await createResponsesHttpServer(
+				{ host: "127.0.0.1", port: 0, ...testCase.options },
+				{
+					config: {
+						api: {
+							...testCase.api,
+							auth: {
+								...(testCase.api.auth as Record<string, unknown> | undefined),
+								required: true,
+								keys: [{ id: "operator", secret: "operator-secret" }],
+							},
+						},
+					},
+				},
+			);
+			try {
+				expect(server.auth, testCase.name).toMatchObject({
+					trustedLocalOperatorDashboard: false,
+					trustedLocalOperatorDashboardReason: testCase.reason,
+				});
+				const baseUrl = `http://127.0.0.1:${server.port}`;
+				const browserHeaders = {
+					origin: baseUrl,
+					referer: `${baseUrl}/dashboard`,
+				};
+				expect(
+					(
+						await fetch(`${baseUrl}/v1/api/logs/tail?maxBytes=1`, {
+							headers: browserHeaders,
+						})
+					).status,
+					testCase.name,
+				).toBe(401);
+				expect(
+					(
+						await fetch(`${baseUrl}/v1/api/logs/tail?maxBytes=1`, {
+							headers: { authorization: "Bearer operator-secret" },
+						})
+					).status,
+					testCase.name,
+				).toBe(200);
+
+				const secureOrigin = `https://127.0.0.1:${server.port}`;
+				const login = await fetch(`${baseUrl}/v1/dashboard/session`, {
+					method: "POST",
+					headers: {
+						authorization: "Bearer operator-secret",
+						origin: secureOrigin,
+						referer: `${secureOrigin}/dashboard`,
+					},
+				});
+				expect(login.status, testCase.name).toBe(201);
+				const cookie = login.headers.get("set-cookie")?.split(";", 1)[0] ?? "";
+				expect(
+					(
+						await fetch(`${baseUrl}/v1/api/logs/tail?maxBytes=1`, {
+							headers: { cookie },
+						})
+					).status,
+					testCase.name,
+				).toBe(200);
+			} finally {
+				await server.close();
+			}
 		}
 	}, 20_000);
 
@@ -25192,9 +25299,12 @@ describe("http responses adapter", () => {
 					keyCount: 0,
 					scoped: false,
 					trustedLocalOperatorDashboard: false,
+					trustedLocalOperatorDashboardReason: "auth_disabled",
 				},
 			}),
-		).toBe("Posture: API authentication disabled; bound to loopback for local development.");
+		).toBe(
+			"Posture: API authentication disabled; bound to loopback for local development; trusted-local dashboard authority is disabled (auth_disabled).",
+		);
 
 		expect(
 			formatApiStartupPosture({
@@ -25205,10 +25315,11 @@ describe("http responses adapter", () => {
 					keyCount: 0,
 					scoped: false,
 					trustedLocalOperatorDashboard: false,
+					trustedLocalOperatorDashboardReason: "non_loopback_bind",
 				},
 			}),
 		).toBe(
-			"Warning: API authentication is required for /v1/* and POST /status, but no API keys are loaded; 0.0.0.0 is not loopback; use trusted ingress for this development server; GET /status remains observable without authentication.",
+			"Warning: API authentication is required for /v1/* and POST /status, but no API keys are loaded; 0.0.0.0 is not loopback; use trusted ingress for this development server; trusted-local dashboard authority is disabled (non_loopback_bind); GET /status remains observable without authentication.",
 		);
 
 		expect(
@@ -25220,11 +25331,26 @@ describe("http responses adapter", () => {
 					keyCount: 2,
 					scoped: true,
 					trustedLocalOperatorDashboard: false,
+					trustedLocalOperatorDashboardReason: "non_loopback_bind",
 				},
 			}),
 		).toBe(
-			"Warning: API authentication is enabled for /v1/* and POST /status (2 API keys loaded; scoped keys present); api.internal.example is not loopback; use trusted ingress for this development server; GET /status remains observable without authentication.",
+			"Warning: API authentication is enabled for /v1/* and POST /status (2 API keys loaded; scoped keys present); api.internal.example is not loopback; use trusted ingress for this development server; trusted-local dashboard authority is disabled (non_loopback_bind); GET /status remains observable without authentication.",
 		);
+
+		expect(
+			formatApiStartupPosture({
+				host: "127.0.0.1",
+				auth: {
+					required: true,
+					scheme: "bearer",
+					keyCount: 1,
+					scoped: false,
+					trustedLocalOperatorDashboard: false,
+					trustedLocalOperatorDashboardReason: "external_routing",
+				},
+			}),
+		).toContain("trusted-local dashboard authority is disabled (external_routing)");
 	});
 
 	it("roots dashboard operator authority in auth policy and loopback transport", () => {
@@ -25232,18 +25358,40 @@ describe("http responses adapter", () => {
 			isTrustedLocalOperatorDashboardEnabled({
 				authRequired: true,
 				boundHost: "127.0.0.1",
+				configEnabled: true,
+				externalRoutingConfigured: false,
 			}),
 		).toBe(true);
 		expect(
 			isTrustedLocalOperatorDashboardEnabled({
 				authRequired: true,
 				boundHost: "0.0.0.0",
+				configEnabled: true,
+				externalRoutingConfigured: false,
 			}),
 		).toBe(false);
 		expect(
 			isTrustedLocalOperatorDashboardEnabled({
 				authRequired: false,
 				boundHost: "127.0.0.1",
+				configEnabled: true,
+				externalRoutingConfigured: false,
+			}),
+		).toBe(false);
+		expect(
+			isTrustedLocalOperatorDashboardEnabled({
+				authRequired: true,
+				boundHost: "127.0.0.1",
+				configEnabled: false,
+				externalRoutingConfigured: false,
+			}),
+		).toBe(false);
+		expect(
+			isTrustedLocalOperatorDashboardEnabled({
+				authRequired: true,
+				boundHost: "127.0.0.1",
+				configEnabled: true,
+				externalRoutingConfigured: true,
 			}),
 		).toBe(false);
 

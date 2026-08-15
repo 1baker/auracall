@@ -1,5 +1,30 @@
 # RUNBOOK
 
+## Turn 492 | 2026-08-15
+
+- Opened Plan 0323 after the secure-session closeout identified one remaining
+  transport ambiguity: a same-host reverse proxy presents a loopback TCP peer,
+  so remote traffic can inherit trusted-local dashboard authority unless the
+  external route is known or the exception is explicitly disabled.
+- Add `api.auth.trustedLocalOperatorDashboard`, preserve direct local defaults,
+  and force the resolved exception off for configured public dashboard URLs,
+  external base URLs, or external hostnames. An explicit `true` cannot override
+  known external routing; status and startup posture will disclose the resolved
+  non-secret reason.
+- Critical path remains root with no parallel workers. This provider-free slice
+  may change schema, HTTP auth posture, focused tests, and current docs, but it
+  will not mutate active configuration, services, ingress, browsers, providers,
+  or keys.
+- Added strict boolean config, fail-closed external-routing precedence, and a
+  resolved status/startup reason. Real server requests prove disabled local
+  headers receive 401 while bearer and secure-session authorization remain
+  available.
+- Nine focused files passed 268 tests; the isolated provider-disabled suite
+  passed 2,948 with 65 expected skips across 348 test files. Typecheck,
+  zero-warning lint across 846 files, production build, 324-plan audit, current
+  CodeGraph sync, and diff hygiene passed. Plan 0323 closes accepted without
+  active config, service, ingress, browser, provider, or key mutation.
+
 ## Turn 491 | 2026-08-15
 
 - Opened Plan 0322 as the successor to the trusted-local authorization repair.

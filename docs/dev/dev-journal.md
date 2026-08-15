@@ -1,3 +1,17 @@
+## 2026-08-15 | Plan 0323 trusted-local dashboard configuration
+
+- Opened a bounded successor after identifying that an external reverse proxy
+  running on the AuraCall host still presents a loopback TCP peer and can
+  accidentally satisfy the trusted-local dashboard transport check.
+- Add an explicit config switch, force the exception off whenever AuraCall has
+  public/external dashboard routing evidence, and expose the resolved reason
+  without weakening bearer or secure-session authority.
+- Nine focused files passed 268 tests; the isolated provider-disabled suite
+  passed 2,948 with 65 expected skips across 348 test files. Typecheck,
+  zero-warning lint across 846 files, production build, 324-plan audit, current
+  CodeGraph sync, and diff hygiene passed. Plan 0323 is CLOSED without active
+  config, service, ingress, browser, provider, or key effects.
+
 ## 2026-08-15 | Plan 0322 dashboard session authorization
 
 - Opened a bounded successor to trusted-local auth so non-loopback HTTPS

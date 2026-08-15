@@ -1,5 +1,12 @@
 # Testing quickstart
 
+- Trusted-local dashboard configuration and external-routing fail-closed
+  regression:
+  `pnpm vitest run tests/config.test.ts tests/http.responsesServer.test.ts -t "trusted-local|configured API keys|startup posture|dashboard session"`.
+  This is provider-free and proves config validation, direct-loopback defaults,
+  explicit opt-out, public/external route precedence, bearer compatibility, and
+  secure-session compatibility.
+
 - Provider-free runtime work must bracket broad `pnpm test` runs with exact
   managed-browser process/port checks or set an isolated AuraCall home. A
   2026-08-09 broad run coincided with an unexpected launch of the configured

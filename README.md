@@ -175,7 +175,9 @@ curl -s http://auracall.localhost/v1/response-batches \
 # Override with services.chatgpt.tenantLimits or
 # profiles.<name>.services.chatgpt.tenantLimits when a tenant needs a narrower budget.
 
-# Open the local operator dashboard. Loopback uses trusted-local authority.
+# Open the local operator dashboard. Direct loopback uses trusted-local authority
+# only when api.auth.trustedLocalOperatorDashboard is not false and no external
+# dashboard route is configured.
 xdg-open http://auracall.localhost/dashboard
 
 # A non-loopback HTTPS dashboard prompts for an unscoped operator API key and
@@ -515,6 +517,7 @@ Terminology note:
     "api": {
       "auth": {
         "required": true,
+        "trustedLocalOperatorDashboard": false,
         "keys": [
           {
             "id": "local-app",
@@ -551,17 +554,20 @@ Terminology note:
   request to `/v1/*` require `Authorization: Bearer <secret>` or
   `X-AuraCall-API-Key: <secret>`. A built-in dashboard may instead receive
   trusted-local operator authority only when the API server is loopback-bound,
-  its TCP peer is loopback, and its `Origin` or dashboard `Referer` matches the
-  request host. Forwarded client-address headers are not trusted. A local
-  reverse proxy using this exception is part of the security boundary and must
-  protect any external ingress; otherwise it must send a valid API key.
+  its TCP peer is loopback, its `Origin` or dashboard `Referer` matches the
+  request host, `api.auth.trustedLocalOperatorDashboard` is not `false`, and no
+  `publicDashboardUrl`, routing `externalBaseUrl`, or routing
+  `externalHostname` is configured. Known external routing forces the exception
+  off even when the switch is `true`. Set the switch to `false` when a reverse
+  proxy is configured outside AuraCall. Forwarded client-address headers are
+  not trusted; use a bearer key or the HTTPS dashboard session flow instead.
   `/status` remains unauthenticated so local operators can discover the service
   posture. API startup prints the same
   resolved non-secret auth summary as `/status.auth`: whether auth is required,
-  how many keys loaded, whether scoped keys are present, and whether the
-  trusted-local dashboard exception is active. It never prints key ids,
-  secrets, or scope values, and warns explicitly when auth is required but no
-  keys loaded. Scoped keys are enforced on
+  how many keys loaded, whether scoped keys are present, whether the
+  trusted-local dashboard exception is active, and its resolved reason. It
+  never prints key ids, secrets, or scope values, and warns explicitly when
+  auth is required but no keys loaded. Scoped keys are enforced on
   `/v1/responses` and `/v1/team-runs` against the effective config plus
   registry catalog for agent, team, service, and runtime-profile selectors.
   Operators can inspect non-secret scope health with
