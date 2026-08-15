@@ -22,7 +22,7 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     env:
-      VITEST_MAX_WORKERS: ${{ matrix.os == 'windows-latest' && '4' || '' }}
+      VITEST_MAX_WORKERS: ${{ matrix.os == 'windows-latest' && '1' || '' }}
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
