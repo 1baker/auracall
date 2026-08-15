@@ -47501,3 +47501,16 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   the existing broker-backed response as `agent-browser`. The rebuilt console
   asset exposes the new discovery controls, seven source/install hashes match,
   and the API is active with zero restarts. Plan 0289 is closed.
+
+## 2026-08-15 | Plan 0331 opens Grok semantic selector execution
+
+- The next recommendation is bounded to one provider family. Current source
+  evidence shows Grok already owns exact `Auto`, `Fast`, and `Expert` picker
+  labels and receives `desiredModel` in configured execution; Gemini's native
+  adapter does not yet carry the equivalent input.
+- Plan 0331 will map `grok:auto`, `grok:instant`, and `grok:thinking` at the
+  provider boundary, reject unknown `grok:` selectors before browser launch,
+  and make a missing menu or option terminal instead of silently submitting on
+  an unverified model.
+- This slice is provider-free. It does not launch a browser, send a prompt,
+  install runtime code, or mutate provider/account state.

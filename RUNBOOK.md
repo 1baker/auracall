@@ -19729,3 +19729,16 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   `/console?view=runs` served hashed asset `index-B3T9BMm5.js`; seven source and
   installed backend/console hashes matched. The API is active with zero
   restarts, so Plan 0289 closes accepted.
+
+## Turn 426 | 2026-08-15
+
+- Plan 0331 opens the next bounded recommendation: make the existing Grok
+  semantic selector family executable through current provider picker labels.
+- CodeGraph and direct source evidence show configured execution already feeds
+  `desiredModel` into Grok's adapter-owned picker, while Gemini's current native
+  adapter does not yet carry model-selection inputs. Grok is therefore the
+  lower-risk one-provider slice.
+- The execution boundary maps `grok:auto`, `grok:instant`, and
+  `grok:thinking` to `Auto`, `Fast`, and `Expert`, rejects unsupported `grok:`
+  tokens before launch, and makes picker selection fail closed. No browser,
+  provider, installed-runtime, credential, or account mutation is authorized.
