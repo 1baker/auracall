@@ -22129,3 +22129,14 @@ browser-stage lifecycle observability, not transcript truncation.
 - Preserve terminal children and refuse foreign lease takeover. Report every
   child outcome and make partial settlement explicit instead of hiding it
   behind an overall success response.
+
+## 2026-08-15 | Put durable queue priority before admission gates
+
+- Metadata interpreted only inside an execution gate is too late to influence
+  a capped scheduler selection. Resolve priority while inspecting candidates,
+  then apply admission gates before lease acquisition.
+- Age priority from durable run creation time, not process uptime or last poll,
+  and preserve requested priority separately from the current effective tier.
+- Priority grants no authority: keep actionable-class policy, recovery
+  capacity, FIFO ties, leases, affinity, concurrency, rate, and tenant gates
+  independently enforceable.

@@ -47,12 +47,14 @@ scoped keys, response batches, attachments, and polling rules, see
 ### `response_batch_create` / `response_batch_status` / `response_batch_retry`
 - Inputs: `response_batch_create` accepts `requests` as an array of ordinary
   response-create request bodies, plus optional `metadata`, caller-supplied
-  `id`, and batch limits such as `maxConcurrentRuns` and
-  `maxBrowserInteractionsPerMinute`. `response_batch_status` accepts the batch
-  `id`.
+  `id`, batch limits such as `maxConcurrentRuns` and
+  `maxBrowserInteractionsPerMinute`, and `priority` as `low`, `normal`, `high`,
+  or `urgent`. Local MCP is an operator surface and accepts every tier;
+  `response_batch_status` accepts the batch `id`.
 - Behavior: creates one durable response run per request and returns
   `object = "response_batch_status"` with aggregate counts and child
-  `responseId` values. Each child remains a normal response run, so operators
+  `responseId` values plus requested/effective priority, age boost, and the
+  15-minute aging interval. Each child remains a normal response run, so operators
   can inspect it with `run_status`. Job rows also expose the child
   `runtimeState` and bounded runtime `diagnostics` when response readback has
   browser/runtime evidence; `runtimeState = "finalizing"` means the provider
@@ -64,6 +66,10 @@ scoped keys, response batches, attachments, and polling rules, see
 - Enforcement: the API server copies batch limits onto each child run and the
   shared service-host drain path checks them before acquiring an execution
   lease. Runs skipped for a batch gate remain queued for a later drain pass.
+  Priority orders only within one actionable class, uses FIFO for equal
+  effective priority, and never overrides these gates or active leases. Queued
+  work ages one tier per 15 minutes from durable creation time, capped at
+  `urgent`.
   The browser dispatcher and provider politeness controls still provide the
   lower-level CDP/account safety guardrails.
 - Retry contract: `response_batch_retry` requires the source batch `id` and an
@@ -71,6 +77,7 @@ scoped keys, response batches, attachments, and polling rules, see
   durable requests into fresh response ids only for failed or cancelled
   children and returns explicit source/retry lineage. Repeating the same key
   resumes the same retry batch; a changed selection is an idempotency conflict.
+  Retry inherits source priority and does not accept priority escalation.
 
 ### `project_ensure`
 - Inputs: `projectName`, optional `service`, `runtimeProfile`,

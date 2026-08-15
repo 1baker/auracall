@@ -100,11 +100,16 @@ export interface DrainStoredExecutionRunsOnceOptions {
   candidateStatuses?: ExecutionRunStatus[];
   maxRuns?: number;
   executionGate?: ExecutionServiceHostExecutionGate;
+  executionPriority?: ExecutionServiceHostExecutionPriority;
 }
 
 export type ExecutionServiceHostExecutionGate = (
   record: ExecutionRunStoredRecord,
 ) => Promise<{ allowed: true } | { allowed: false; reason: string }>;
+
+export type ExecutionServiceHostExecutionPriority = (
+  record: ExecutionRunStoredRecord,
+) => number | Promise<number>;
 
 export interface DrainedStoredExecutionRunResult {
   runId: string;
@@ -503,6 +508,7 @@ export interface ExecutionServiceHostDeps {
   localActionExecutionPolicy?: Partial<LocalActionExecutionPolicy>;
   executeStoredRunStep?: (context: ExecuteStoredRunStepContext) => Promise<ExecuteStoredRunStepResult | undefined>;
   executionGate?: ExecutionServiceHostExecutionGate;
+  executionPriority?: ExecutionServiceHostExecutionPriority;
   leaseHeartbeatIntervalMs?: number;
   leaseHeartbeatTtlMs?: number;
   executeLocalActionRequest?: (
@@ -525,6 +531,7 @@ interface HostDrainCandidateInspection {
   inspection: Awaited<ReturnType<ExecutionRuntimeControlContract['inspectRun']>>;
   kind: HostDrainCandidateKind;
   createdAt: string;
+  executionPriority: number;
 }
 
 export interface ExecutionServiceHost {
@@ -1860,8 +1867,16 @@ export function createExecutionServiceHost(deps: ExecutionServiceHostDeps = {}):
       let executedCount = 0;
       const executionOwnerId = runnerId ?? ownerId;
       const executionGate = options.executionGate ?? deps.executionGate ?? null;
+      const executionPriority = options.executionPriority ?? deps.executionPriority ?? null;
 
-      const candidates = await inspectHostDrainCandidates(control, runnersControl, options, now, expiredLeaseRunIds);
+      const candidates = await inspectHostDrainCandidates(
+        control,
+        runnersControl,
+        options,
+        now,
+        expiredLeaseRunIds,
+        executionPriority,
+      );
       const actionableExecutionPlan = createActionableExecutionPlan(candidates, maxRuns);
 
       for (const candidate of candidates) {
@@ -2220,6 +2235,7 @@ async function inspectHostDrainCandidates(
   options: DrainStoredExecutionRunsOnceOptions,
   now: () => string,
   expiredLeaseRunIds: string[],
+  executionPriority: ExecutionServiceHostExecutionPriority | null,
 ): Promise<HostDrainCandidateInspection[]> {
   const inspected: HostDrainCandidateInspection[] = [];
   const livenessSweepAt = now();
@@ -2243,6 +2259,7 @@ async function inspectHostDrainCandidates(
         inspection: null,
         kind: 'missing',
         createdAt: candidate.bundle.run.createdAt,
+        executionPriority: 0,
       });
       continue;
     }
@@ -2254,6 +2271,7 @@ async function inspectHostDrainCandidates(
         inspection: null,
         kind: 'missing',
         createdAt: currentRecord.bundle.run.createdAt,
+        executionPriority: 0,
       });
       continue;
     }
@@ -2263,13 +2281,24 @@ async function inspectHostDrainCandidates(
       inspection,
       kind: classifyHostDrainCandidate(inspection.record, inspection.dispatchPlan, now),
       createdAt: inspection.record.bundle.run.createdAt,
+      executionPriority: normalizeExecutionPriority(
+        executionPriority ? await executionPriority(inspection.record) : 0,
+      ),
     });
   }
 
   return inspected.sort((left, right) => {
     const byPriority = compareHostDrainCandidatePriority(left.kind, right.kind);
-    return byPriority !== 0 ? byPriority : left.createdAt.localeCompare(right.createdAt);
+    if (byPriority !== 0) return byPriority;
+    const byExecutionPriority = right.executionPriority - left.executionPriority;
+    return byExecutionPriority !== 0
+      ? byExecutionPriority
+      : left.createdAt.localeCompare(right.createdAt);
   });
+}
+
+function normalizeExecutionPriority(value: number): number {
+  return Number.isFinite(value) ? Math.trunc(value) : 0;
 }
 
 async function evaluateLocalOwnedActiveLeaseReadiness(input: {

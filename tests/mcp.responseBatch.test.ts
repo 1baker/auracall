@@ -19,6 +19,12 @@ const runningBatch = {
 	status: "running",
 	createdAt: "2026-05-12T14:00:00.000Z",
 	updatedAt: "2026-05-12T14:00:00.000Z",
+	priority: {
+		requested: "urgent",
+		effective: "urgent",
+		ageBoost: 0,
+		agingIntervalMinutes: 15,
+	},
 	metadata: { course: "ChE 4470" },
 	limits: { maxConcurrentRuns: 2, maxBrowserInteractionsPerMinute: 8 },
 	dispatch: null,
@@ -67,6 +73,7 @@ describe("mcp response batch tools", () => {
 		});
 
 		const result = await handler({
+			priority: "urgent",
 			metadata: { course: "ChE 4470" },
 			limits: { maxConcurrentRuns: 2, maxBrowserInteractionsPerMinute: 8 },
 			requests: [
@@ -92,6 +99,7 @@ describe("mcp response batch tools", () => {
 		});
 
 		expect(createBatch).toHaveBeenCalledWith({
+			priority: "urgent",
 			metadata: { course: "ChE 4470" },
 			limits: { maxConcurrentRuns: 2, maxBrowserInteractionsPerMinute: 8 },
 			requests: expect.any(Array),
@@ -102,6 +110,7 @@ describe("mcp response batch tools", () => {
 			structuredContent: {
 				id: "batch_mcp_1",
 				status: "running",
+				priority: { requested: "urgent", effective: "urgent" },
 				jobs: [{ responseId: "resp_student_1" }, { responseId: "resp_student_2" }],
 			},
 		});

@@ -13,6 +13,7 @@ import {
 	createResponseBatchService,
 	createResponseBatchStore,
 	listResponseBatchRecords,
+	resolveResponseBatchExecutionPriority,
 	type ResponseBatchRecord,
 } from "../src/runtime/responseBatchService.js";
 import {
@@ -55,11 +56,12 @@ describe("response batch service", () => {
 	});
 
 	it("creates normal response runs with batch metadata and summarizes status", async () => {
+		let observedAt = new Date("2026-05-12T14:00:00.000Z");
 		const createdRequests: ExecutionRequest[] = [];
 		const responses = new Map<string, ExecutionResponse>();
 		const stored = new Map<string, ResponseBatchRecord>();
 		const service = createResponseBatchService({
-			now: () => new Date("2026-05-12T14:00:00.000Z"),
+			now: () => observedAt,
 			generateBatchId: () => "batch_runtime_1",
 			store: {
 				readBatch: vi.fn(async (id) => stored.get(id) ?? null),
@@ -81,6 +83,7 @@ describe("response batch service", () => {
 		});
 
 		const status = await service.createBatch({
+			priority: "high",
 			metadata: { course: "ChE 4470" },
 			limits: { maxConcurrentRuns: 2, maxBrowserInteractionsPerMinute: 8 },
 			requests: [
@@ -113,6 +116,7 @@ describe("response batch service", () => {
 					maxConcurrentRuns: 2,
 					maxBrowserInteractionsPerMinute: 8,
 				},
+				batchPriority: "high",
 			},
 			{
 				batchId: "batch_runtime_1",
@@ -121,12 +125,19 @@ describe("response batch service", () => {
 					maxConcurrentRuns: 2,
 					maxBrowserInteractionsPerMinute: 8,
 				},
+				batchPriority: "high",
 			},
 		]);
 		expect(status).toMatchObject({
 			id: "batch_runtime_1",
 			object: "response_batch_status",
 			status: "running",
+			priority: {
+				requested: "high",
+				effective: "high",
+				ageBoost: 0,
+				agingIntervalMinutes: 15,
+			},
 			counts: {
 				total: 2,
 				in_progress: 2,
@@ -143,9 +154,11 @@ describe("response batch service", () => {
 
 		responses.set("resp_runtime_1", createResponse("resp_runtime_1", "completed"));
 		responses.set("resp_runtime_2", createResponse("resp_runtime_2", "failed"));
+		observedAt = new Date("2026-05-12T14:30:00.000Z");
 		await expect(service.readBatchStatus("batch_runtime_1")).resolves.toMatchObject({
 			id: "batch_runtime_1",
 			status: "failed",
+			priority: { requested: "high", effective: "urgent", ageBoost: 1 },
 			counts: {
 				total: 2,
 				completed: 1,
@@ -164,6 +177,24 @@ describe("response batch service", () => {
 				},
 			],
 		});
+	});
+
+	it("ages legacy and non-batch queued work from durable creation time", () => {
+		const record = {
+			bundle: {
+				run: {
+					createdAt: "2026-05-12T14:00:00.000Z",
+					initialInputs: { metadata: {} },
+				},
+			},
+		} as unknown as Parameters<typeof resolveResponseBatchExecutionPriority>[0];
+
+		expect(
+			resolveResponseBatchExecutionPriority(record, new Date("2026-05-12T14:00:00.000Z")),
+		).toBe(1);
+		expect(
+			resolveResponseBatchExecutionPriority(record, new Date("2026-05-12T14:30:00.000Z")),
+		).toBe(3);
 	});
 
 	it("cancels queued and locally owned children while preserving terminal and foreign-owned runs", async () => {
@@ -206,6 +237,7 @@ describe("response batch service", () => {
 			now: () => new Date("2026-08-15T22:30:00.000Z"),
 		});
 		await service.createBatch({
+			priority: "high",
 			requests: [
 				{
 					model: "agent:researcher",
@@ -277,6 +309,7 @@ describe("response batch service", () => {
 				{ responseId: "resp_batch_cancel_foreign", outcome: "not-owned", cancelled: false },
 			],
 			batch: {
+				priority: { requested: "high", effective: "high" },
 				status: "running",
 				counts: { total: 4, in_progress: 1, completed: 1, cancelled: 2 },
 			},
@@ -395,6 +428,7 @@ describe("response batch service", () => {
 			refreshArchiveIndex: false,
 		});
 		await service.createBatch({
+			priority: "high",
 			metadata: { campaign: "durable retry" },
 			limits: { maxConcurrentRuns: 2, maxBrowserInteractionsPerMinute: 7 },
 			requests: [
@@ -404,9 +438,7 @@ describe("response batch service", () => {
 					input: "fail once",
 					instructions: "clone every field",
 					tools: [{ type: "computer" }],
-					attachments: [
-						{ id: "att_retry_1", fileName: "evidence.txt", mimeType: "text/plain" },
-					],
+					attachments: [{ id: "att_retry_1", fileName: "evidence.txt", mimeType: "text/plain" }],
 					metadata: { sourceMarker: "preserved" },
 					auracall: {
 						agent: "researcher",
@@ -459,6 +491,7 @@ describe("response batch service", () => {
 			metadata: {
 				sourceMarker: "preserved",
 				batchId: first?.id,
+				batchPriority: "high",
 				auracallRetry: {
 					sourceBatchId: "batch_retry_source",
 					sourceResponseId: "resp_retry_failed",
@@ -553,9 +586,12 @@ describe("response batch service", () => {
 			},
 			responsesService: {
 				createResponse: vi.fn(),
-				readResponse: vi.fn(async (id) =>
-					targetResponses.get(id) ??
-					(id === "resp_partial_a" || id === "resp_partial_b" ? createResponse(id, "failed") : null),
+				readResponse: vi.fn(
+					async (id) =>
+						targetResponses.get(id) ??
+						(id === "resp_partial_a" || id === "resp_partial_b"
+							? createResponse(id, "failed")
+							: null),
 				),
 				retryResponse,
 			},
@@ -907,6 +943,7 @@ describe("response batch service", () => {
 					maxConcurrentRuns: null,
 					maxBrowserInteractionsPerMinute: null,
 				},
+				batchPriority: "normal",
 				batchDispatch: {
 					team: "chatgpt-pool",
 					mode: "next_available",
@@ -922,6 +959,7 @@ describe("response batch service", () => {
 					maxConcurrentRuns: null,
 					maxBrowserInteractionsPerMinute: null,
 				},
+				batchPriority: "normal",
 				batchDispatch: {
 					team: "chatgpt-pool",
 					mode: "next_available",

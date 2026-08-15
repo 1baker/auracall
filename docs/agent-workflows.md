@@ -171,7 +171,10 @@ limits.
 2. Prepare one ordinary response request per job.
 3. Include local attachments as local paths or `file://` URIs when provider
    upload is required.
-4. Submit one `POST /v1/response-batches` request.
+4. Choose `low`, `normal`, `high`, or `urgent` batch priority and submit one
+   `POST /v1/response-batches` request. Omission defaults to `normal`; scoped
+   HTTP keys may use only `low` or `normal`, while `high` and `urgent` require
+   an unscoped operator key. Local MCP may use every tier.
 5. Store the returned batch id and child response ids.
 6. Poll `GET /v1/response-batches/{batch_id}` or MCP
    `response_batch_status`.
@@ -189,6 +192,13 @@ limits.
 Batch limits are attached to the child runs and enforced by the shared service
 host drain path before a run lease is acquired. Skipped children remain queued
 for a later drain pass.
+
+Priority is durable selection order, not execution authority. Within the same
+actionable scheduler class, higher effective priority runs first and FIFO
+breaks ties. Each queued run ages upward one tier per 15 minutes from durable
+creation time, capped at `urgent`, so old low/normal and non-batch work cannot
+starve. Priority never bypasses leases, affinity, recovery capacity, or batch,
+rate, concurrency, and tenant gates. Retry batches inherit source priority.
 
 ChatGPT tenant limits are enforced across all ChatGPT response batches and
 one-shot responses on the same drain path. Defaults are 4 concurrent chats, 120
@@ -519,7 +529,8 @@ state belongs inside AuraCall provider adapters and browser services.
 - Remote HTTP(S) attachment download/materialization is deferred.
 - API key issuance is local/operator-scoped; remote privileged MCP/API
   exposure needs a first-class principal/role model.
-- Batch retry and per-child priority are not yet first-class batch controls.
+- Per-child priority and mutable reprioritization are not first-class batch
+  controls; priority is intentionally batch-wide and immutable.
 - Searchable archive promotion for AuraCall-created runs, uploads, generated
   artifacts, provider conversation ids, and caller-supplied validation evidence
   is now tracked in Plan 0066.

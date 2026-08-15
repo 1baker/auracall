@@ -1828,8 +1828,13 @@
       - runnable
       - recoverable stranded
       - then non-executable classes
-    - within each class, scheduling is intentionally oldest-first by
-      `createdAt`
+    - within each class, higher effective response-batch priority runs first;
+      equal priorities remain oldest-first by `createdAt`
+    - priority tiers are `low`, `normal`, `high`, and `urgent`; queued work
+      ages upward one tier per 15 minutes from durable creation time so legacy,
+      non-batch, low, and normal work cannot starve
+    - priority must remain subordinate to execution gates, leases, affinity,
+      tenant/batch limits, and the reserved recovery slot
     - when both actionable classes are present and `maxRuns > 1`, one slot is
       reserved for the oldest recoverable-stranded run and the remaining slots
       go to oldest runnable runs
@@ -1845,6 +1850,8 @@
       - runnable
       - recoverable stranded
       - then non-executable classes
+    - focused durable-priority coverage:
+      `pnpm vitest run tests/runtime.responseBatchService.test.ts tests/runtime.serviceHost.test.ts tests/http.responsesServer.test.ts tests/mcp.responseBatch.test.ts`
 - Service-volatility refactor rule: do not treat this as a pure config shuffle. Every extraction phase must keep a named regression set green and every service slice must declare its own acceptance bar before implementation starts. See [service-volatility-refactor-plan.md](dev/plans/0012-2026-04-14-service-volatility-refactor.md) and [service-volatility-service-plan-template.md](dev/service-volatility-service-plan-template.md).
 - Gemini unit/regression: `pnpm vitest run tests/gemini.test.ts tests/gemini-web`.
 - Gemini support matrix checkpoint:

@@ -2547,6 +2547,57 @@ describe('runtime service host', () => {
     ]);
   });
 
+  it('orders runnable work by execution priority and preserves FIFO ties', async () => {
+    const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), 'auracall-runtime-service-host-'));
+    cleanup.push(homeDir);
+    setAuracallHomeDirOverrideForTest(homeDir);
+
+    const control = createExecutionRuntimeControl();
+    await control.createRun(createDirectBundle('run_priority_old_normal', '2026-04-08T15:00:00.000Z'));
+    await control.createRun(createDirectBundle('run_priority_old_high', '2026-04-08T15:01:00.000Z'));
+    await control.createRun(createDirectBundle('run_priority_new_high', '2026-04-08T15:02:00.000Z'));
+    const host = createExecutionServiceHost({
+      control,
+      ownerId: 'host:test-priority',
+      now: () => '2026-04-08T15:05:00.000Z',
+      executionPriority: (record) => record.runId.includes('high') ? 2 : 1,
+    });
+
+    const result = await host.drainRunsOnce({ sourceKind: 'direct', maxRuns: 2 });
+
+    expect(result.executedRunIds).toEqual(['run_priority_old_high', 'run_priority_new_high']);
+    expect(result.drained).toContainEqual(expect.objectContaining({
+      runId: 'run_priority_old_normal',
+      result: 'skipped',
+      reason: 'limit-reached',
+    }));
+  });
+
+  it('keeps priority subordinate to execution gates without acquiring a lease', async () => {
+    const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), 'auracall-runtime-service-host-'));
+    cleanup.push(homeDir);
+    setAuracallHomeDirOverrideForTest(homeDir);
+
+    const control = createExecutionRuntimeControl();
+    await control.createRun(createDirectBundle('run_priority_gated', '2026-04-08T15:00:00.000Z'));
+    const host = createExecutionServiceHost({
+      control,
+      ownerId: 'host:test-priority-gate',
+      now: () => '2026-04-08T15:05:00.000Z',
+      executionPriority: () => 3,
+      executionGate: async () => ({ allowed: false, reason: 'capacity gate remains authoritative' }),
+    });
+
+    const result = await host.drainRunsOnce({ sourceKind: 'direct', maxRuns: 1 });
+
+    expect(result.executedRunIds).toEqual([]);
+    expect(result.drained).toContainEqual(expect.objectContaining({
+      runId: 'run_priority_gated',
+      reason: 'execution-gate',
+    }));
+    expect((await control.readRun('run_priority_gated'))?.bundle.leases).toEqual([]);
+  });
+
   it('keeps oldest-first ordering within the recoverable-stranded class', async () => {
     const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), 'auracall-runtime-service-host-'));
     cleanup.push(homeDir);

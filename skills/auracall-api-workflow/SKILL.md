@@ -18,6 +18,7 @@ service. Treat `agent:<agent_id>` as the model name and prefer scoped API keys.
 - optional batch limits:
   - `maxConcurrentRuns`
   - `maxBrowserInteractionsPerMinute`
+- optional batch `priority`: `low`, `normal` (default), `high`, or `urgent`
 
 ## Golden Path
 
@@ -33,6 +34,8 @@ service. Treat `agent:<agent_id>` as the model name and prefer scoped API keys.
      `POST /v1/chat/completions`.
    - with MCP, call `response_create` and retain its returned id
 4. For many independent prompts:
+   - choose a batch priority; use `low` or `normal` with scoped HTTP keys and
+     reserve `high` or `urgent` for local MCP or an unscoped operator key
    - call `POST /v1/response-batches` or MCP `response_batch_create` once
    - poll `GET /v1/response-batches/{batch_id}` or MCP
      `response_batch_status`
@@ -46,6 +49,12 @@ service. Treat `agent:<agent_id>` as the model name and prefer scoped API keys.
    - read child output through `GET /v1/responses/{response_id}` or MCP
      `run_status`
 5. Never resubmit a create request just to check status.
+
+Treat priority as queue ordering only. Higher effective priority wins within
+one actionable class, FIFO breaks ties, and queued work ages one tier every 15
+minutes up to `urgent`. Never use priority to bypass leases, affinity,
+recovery capacity, or batch/rate/concurrency/tenant gates. Retry inherits the
+source priority and cannot escalate it.
 
 Batch cancellation is durable and idempotent. It cancels queued children and
 active children owned by the local AuraCall runner, preserves completed and

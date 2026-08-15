@@ -276,7 +276,8 @@ Current limits:
   - accepts `{ "requests": [ ... ] }`, where each child request is an ordinary
     `/v1/responses` body, plus optional `metadata`, caller-supplied `id`, and
     persisted batch limits such as `maxConcurrentRuns` and
-    `maxBrowserInteractionsPerMinute`
+    `maxBrowserInteractionsPerMinute`, and `priority` as one of `low`,
+    `normal`, `high`, or `urgent` (`normal` by default)
   - accepts dispatch-pool team routing with either
     `{ "dispatch": { "team": "<team_id>" }, "requests": [...] }` or top-level
     `{ "team": "<team_id>", "requests": [...] }` when
@@ -285,10 +286,18 @@ Current limits:
     Children in a dispatch-pool batch must not pre-pin `auracall.agent` or an
     `agent:<id>` model.
   - returns `202` with `object = "response_batch_status"`, aggregate counts,
-    child `responseId` values, and optional `dispatch` metadata identifying
+    child `responseId` values, requested/effective priority plus its age boost,
+    and optional `dispatch` metadata identifying
     the pool team, projectSync mode, and pool warnings
   - when background drain is enabled, the route schedules the existing
     server-owned drain and returns without waiting for provider execution
+  - scoped API keys may request `low` or `normal`; `high` and `urgent` return
+    `403` before persistence unless the caller uses an unscoped operator key
+  - priority orders candidates only within the same actionable scheduler
+    class. Queued work gains one tier per 15 minutes from durable creation time,
+    capped at `urgent`; FIFO breaks ties. Priority never preempts a lease or
+    bypasses affinity, recovery capacity, concurrency, rate, tenant, or other
+    execution gates
   - `GET /v1/response-batches/{batch_id}` reads aggregate status without
     resubmitting prompts; child responses can also be inspected through
     `/v1/runs/{response_id}/status`
@@ -314,6 +323,9 @@ Current limits:
     the same key and selection reuses the durable retry batch and resumes only
     missing children; reusing a key with a different selection returns `409`
     before creating another child
+  - retry batches inherit the source batch's requested priority and restart
+    effective-priority aging from the retry batch creation time; retry input
+    cannot escalate priority
   - the shared service-host drain path enforces those batch limits before
     acquiring a run lease; skipped child runs remain queued for a later drain
     pass

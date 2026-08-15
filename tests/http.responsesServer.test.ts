@@ -1296,6 +1296,12 @@ describe("http responses adapter", () => {
 			status: "running" as const,
 			createdAt: "2026-05-12T14:00:00.000Z",
 			updatedAt: "2026-05-12T14:00:00.000Z",
+			priority: {
+				requested: "normal" as const,
+				effective: "normal" as const,
+				ageBoost: 0,
+				agingIntervalMinutes: 15 as const,
+			},
 			metadata: { course: "ChE 4470" },
 			limits: { maxConcurrentRuns: 2, maxBrowserInteractionsPerMinute: 8 },
 			dispatch: null,
@@ -1328,6 +1334,12 @@ describe("http responses adapter", () => {
 			status: "completed" as const,
 			createdAt: "2026-05-12T14:00:00.000Z",
 			updatedAt: "2026-05-12T14:10:00.000Z",
+			priority: {
+				requested: "normal" as const,
+				effective: "normal" as const,
+				ageBoost: 0,
+				agingIntervalMinutes: 15 as const,
+			},
 			metadata: { course: "ChE 4470" },
 			limits: { maxConcurrentRuns: 2, maxBrowserInteractionsPerMinute: 8 },
 			dispatch: null,
@@ -1369,6 +1381,10 @@ describe("http responses adapter", () => {
 									services: ["chatgpt"],
 									runtimeProfiles: ["wsl-chrome-3"],
 								},
+								{
+									id: "batch-operator",
+									secret: "batch-operator-secret",
+								},
 							],
 						},
 					},
@@ -1401,6 +1417,7 @@ describe("http responses adapter", () => {
 					"content-type": "application/json",
 				},
 				body: JSON.stringify({
+					priority: "low",
 					metadata: { course: "ChE 4470" },
 					limits: { maxConcurrentRuns: 2, maxBrowserInteractionsPerMinute: 8 },
 					requests: [
@@ -1418,6 +1435,7 @@ describe("http responses adapter", () => {
 				jobs: [{ responseId: "resp_http_1" }],
 			});
 			expect(createBatch).toHaveBeenCalledWith({
+				priority: "low",
 				metadata: { course: "ChE 4470" },
 				limits: { maxConcurrentRuns: 2, maxBrowserInteractionsPerMinute: 8 },
 				requests: [
@@ -1429,6 +1447,37 @@ describe("http responses adapter", () => {
 					}),
 				],
 			});
+
+			const deniedPriority = await fetch(`http://127.0.0.1:${server.port}/v1/response-batches`, {
+				method: "POST",
+				headers: {
+					authorization: "Bearer che447-agent-secret",
+					"content-type": "application/json",
+				},
+				body: JSON.stringify({
+					priority: "high",
+					requests: [{ model: "agent:pro-extended-chatgpt-soylei", input: "Grade now." }],
+				}),
+			});
+			expect(deniedPriority.status).toBe(403);
+			await expect(deniedPriority.json()).resolves.toMatchObject({
+				error: { type: "permission_error", message: expect.stringContaining("high-priority") },
+			});
+			expect(createBatch).toHaveBeenCalledTimes(1);
+
+			const operatorPriority = await fetch(`http://127.0.0.1:${server.port}/v1/response-batches`, {
+				method: "POST",
+				headers: {
+					authorization: "Bearer batch-operator-secret",
+					"content-type": "application/json",
+				},
+				body: JSON.stringify({
+					priority: "urgent",
+					requests: [{ model: "agent:pro-extended-chatgpt-soylei", input: "Grade now." }],
+				}),
+			});
+			expect(operatorPriority.status).toBe(202);
+			expect(createBatch).toHaveBeenLastCalledWith(expect.objectContaining({ priority: "urgent" }));
 
 			const status = await fetch(
 				`http://127.0.0.1:${server.port}/v1/response-batches/batch_http_1`,
@@ -1463,6 +1512,12 @@ describe("http responses adapter", () => {
 			status: "running" as const,
 			createdAt: "2026-08-15T22:30:00.000Z",
 			updatedAt: "2026-08-15T22:30:00.000Z",
+			priority: {
+				requested: "normal" as const,
+				effective: "normal" as const,
+				ageBoost: 0,
+				agingIntervalMinutes: 15 as const,
+			},
 			metadata: {},
 			limits: { maxConcurrentRuns: 1, maxBrowserInteractionsPerMinute: null },
 			dispatch: null,
@@ -1639,6 +1694,12 @@ describe("http responses adapter", () => {
 			status: "failed" as const,
 			createdAt: "2026-08-15T23:00:00.000Z",
 			updatedAt: "2026-08-15T23:00:00.000Z",
+			priority: {
+				requested: "normal" as const,
+				effective: "normal" as const,
+				ageBoost: 0,
+				agingIntervalMinutes: 15 as const,
+			},
 			metadata: {},
 			limits: { maxConcurrentRuns: 2, maxBrowserInteractionsPerMinute: null },
 			dispatch: null,
@@ -1783,6 +1844,12 @@ describe("http responses adapter", () => {
 			status: "running" as const,
 			createdAt: "2026-05-12T14:00:00.000Z",
 			updatedAt: "2026-05-12T14:00:00.000Z",
+			priority: {
+				requested: "normal" as const,
+				effective: "normal" as const,
+				ageBoost: 0,
+				agingIntervalMinutes: 15 as const,
+			},
 			metadata: {},
 			limits: { maxConcurrentRuns: null, maxBrowserInteractionsPerMinute: null },
 			dispatch: {

@@ -99,6 +99,12 @@ const responseBatchOutputShape = {
 	id: z.string(),
 	object: z.literal("response_batch_status"),
 	status: z.enum(["queued", "running", "completed", "failed", "cancelled", "mixed_terminal"]),
+	priority: z.object({
+		requested: z.enum(["low", "normal", "high", "urgent"]),
+		effective: z.enum(["low", "normal", "high", "urgent"]),
+		ageBoost: z.number().int().min(0).max(3),
+		agingIntervalMinutes: z.literal(15),
+	}),
 	dispatch: z.record(z.string(), z.unknown()).nullable().optional(),
 	counts: z.record(z.string(), z.number()),
 	jobs: z.array(responseBatchJobOutputSchema),
@@ -261,6 +267,12 @@ export function createResponseBatchStatusToolHandler(service: ResponseBatchServi
 					id: payload.id,
 					object: "response_batch_status",
 					status: "failed",
+					priority: {
+						requested: "normal",
+						effective: "normal",
+						ageBoost: 0,
+						agingIntervalMinutes: 15,
+					},
 					counts: {
 						total: 0,
 						in_progress: 0,
@@ -337,7 +349,7 @@ export function createResponseBatchRetryToolHandler(service: ResponseBatchServic
 					type: "text" as const,
 					text: result.accepted
 						? `Response batch retry ${result.id} materialized ${result.counts.created + result.counts.reused}/${result.counts.selected} children.`
-						: result.error?.message ?? `Response batch ${id} could not be retried.`,
+						: (result.error?.message ?? `Response batch ${id} could not be retried.`),
 				},
 			],
 			structuredContent: result as unknown as Record<string, unknown>,
@@ -387,6 +399,12 @@ function createMissingBatchCancellationResult(id: string, message: string) {
 			id,
 			object: "response_batch_status",
 			status: "failed",
+			priority: {
+				requested: "normal",
+				effective: "normal",
+				ageBoost: 0,
+				agingIntervalMinutes: 15,
+			},
 			createdAt: new Date(0).toISOString(),
 			updatedAt: new Date(0).toISOString(),
 			metadata: {},

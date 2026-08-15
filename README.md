@@ -152,7 +152,11 @@ curl -s http://auracall.localhost/v1/responses \
 curl -s http://auracall.localhost/v1/response-batches \
   -H "Authorization: Bearer <key>" \
   -H "Content-Type: application/json" \
-  -d '{"limits":{"maxConcurrentRuns":1,"maxBrowserInteractionsPerMinute":8},"requests":[{"model":"agent:instant-chatgpt-ecochran76","input":"Job 1"},{"model":"agent:instant-chatgpt-ecochran76","input":"Job 2"}]}'
+  -d '{"priority":"normal","limits":{"maxConcurrentRuns":1,"maxBrowserInteractionsPerMinute":8},"requests":[{"model":"agent:instant-chatgpt-ecochran76","input":"Job 1"},{"model":"agent:instant-chatgpt-ecochran76","input":"Job 2"}]}'
+
+# Priority is low, normal (default), high, or urgent. Scoped API keys may use
+# low/normal; high/urgent require an unscoped operator key. Queued work ages one
+# tier every 15 minutes, while leases and all batch/tenant gates remain authoritative.
 
 # Cancel unfinished children without replaying prompts or stealing foreign leases
 curl -s http://auracall.localhost/v1/response-batches/<batch_id>/cancel \

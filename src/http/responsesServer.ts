@@ -244,7 +244,9 @@ import {
 import {
 	createResponseBatchExecutionGate,
 	createResponseBatchService,
+	resolveResponseBatchExecutionPriority,
 	ResponseBatchCreateRequestSchema,
+	type ResponseBatchPriority,
 	ResponseBatchRetryRequestSchema,
 	type ResponseBatchService,
 	type ResponseBatchStatus,
@@ -3982,6 +3984,16 @@ export async function createResponsesHttpServer(
 				try {
 					const body = await readRequestBody(req);
 					const parsedPayload = ResponseBatchCreateRequestSchema.parse(JSON.parse(body || "{}"));
+					const priorityAuthorizationError = authorizeResponseBatchPriority(
+						apiAuthContext,
+						parsedPayload.priority ?? "normal",
+					);
+					if (priorityAuthorizationError) {
+						sendJson(res, 403, {
+							error: { message: priorityAuthorizationError, type: "permission_error" },
+						} satisfies HttpErrorPayload);
+						return;
+					}
 					const catalog = await agentTeamConfigService.effectiveCatalog();
 					const { dispatchResolution: _ignoredClientDispatchResolution, ...publicPayload } =
 						parsedPayload;
@@ -4502,6 +4514,7 @@ export async function createResponsesHttpServer(
 			localActionExecutionPolicy: deps.localActionExecutionPolicy,
 			createRunAffinity,
 			executionGate,
+			executionPriority: (record) => resolveResponseBatchExecutionPriority(record, now()),
 			executeStoredRunStep: deps.executeStoredRunStep
 				? async (context) => {
 						const request = createExecutionRequestFromRecord(context.record);
@@ -8103,6 +8116,16 @@ function authorizeResponseBatchControl(
 	return null;
 }
 
+function authorizeResponseBatchPriority(
+	context: ApiAuthContext,
+	priority: ResponseBatchPriority,
+): string | null {
+	if (priority === "low" || priority === "normal") return null;
+	if (!context.policy.required || !context.key || isUnscopedOperatorApiKey(context.key))
+		return null;
+	return `API key is not authorized to create ${priority}-priority response batches; use an unscoped operator key.`;
+}
+
 function authorizeResponseBatchRetry(
 	context: ApiAuthContext,
 	status: ResponseBatchStatus,
@@ -8111,7 +8134,9 @@ function authorizeResponseBatchRetry(
 ): string | null {
 	const selectedIds = responseIds ? new Set(responseIds) : null;
 	const selectedJobs = status.jobs.filter((job) =>
-		selectedIds ? selectedIds.has(job.responseId) : job.status === "failed" || job.status === "cancelled",
+		selectedIds
+			? selectedIds.has(job.responseId)
+			: job.status === "failed" || job.status === "cancelled",
 	);
 	for (const job of selectedJobs) {
 		const error = authorizeExecutionSelection(

@@ -19930,3 +19930,10 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
 - Scoped HTTP keys may request only `low` or `normal`; `high` and `urgent`
   require unscoped operator authority. Local MCP exposes the same service
   schema, and retry inherits rather than escalates source priority.
+- Implemented durable requested priority and computed effective priority on
+  batch status, copied requested priority onto every child, and added one
+  service-host resolver that orders higher tiers before FIFO ties within each
+  existing actionable class.
+- Fifteen-minute aging includes legacy and non-batch work via the `normal`
+  compatibility default. Focused host/batch/HTTP/MCP coverage passes 322 tests
+  without weakening gates, leases, affinity, or reserved recovery capacity.

@@ -47691,3 +47691,9 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   concurrency, rate, and tenant gates. It never interrupts active work.
 - HTTP high/urgent priority requires an unscoped operator key; retry inherits
   source priority. MCP and status readback share the service contract.
+- Implementation now persists priority on batches and child runs, computes
+  15-minute effective-tier aging from durable creation time, and injects one
+  general priority resolver into service-host candidate ordering.
+- Focused runtime, host, HTTP, and MCP coverage passes 322 tests. It proves
+  FIFO ties, gate subordination, scoped-key denial before persistence,
+  unscoped/local operator access, status observability, and retry inheritance.

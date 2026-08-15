@@ -27,6 +27,12 @@ import { getRuntimeDir } from "./store.js";
 
 const RESPONSE_BATCHES_DIRNAME = "response-batches";
 const RECORD_FILENAME = "record.json";
+const RESPONSE_BATCH_PRIORITY_ORDER = ["low", "normal", "high", "urgent"] as const;
+export const RESPONSE_BATCH_PRIORITY_AGING_INTERVAL_MS = 15 * 60 * 1000;
+
+// biome-ignore lint/style/useNamingConvention: exported schema names follow the runtime API schema convention.
+export const ResponseBatchPrioritySchema = z.enum(RESPONSE_BATCH_PRIORITY_ORDER);
+export type ResponseBatchPriority = z.infer<typeof ResponseBatchPrioritySchema>;
 
 // biome-ignore lint/style/useNamingConvention: exported schema names follow the runtime API schema convention.
 export const ResponseBatchCreateRequestSchema = z.object({
@@ -55,6 +61,7 @@ export const ResponseBatchCreateRequestSchema = z.object({
 		})
 		.optional(),
 	requests: z.array(ExecutionRequestSchema).min(1),
+	priority: ResponseBatchPrioritySchema.optional(),
 	metadata: z.record(z.string(), z.unknown()).optional(),
 	limits: z
 		.object({
@@ -118,6 +125,7 @@ export interface ResponseBatchRecord {
 	createdAt: string;
 	updatedAt: string;
 	metadata: Record<string, unknown>;
+	priority?: ResponseBatchPriority;
 	limits: {
 		maxConcurrentRuns: number | null;
 		maxBrowserInteractionsPerMinute: number | null;
@@ -142,6 +150,7 @@ export interface ResponseBatchStatus {
 	createdAt: string;
 	updatedAt: string;
 	metadata: Record<string, unknown>;
+	priority: ResponseBatchPriorityStatus;
 	limits: ResponseBatchRecord["limits"];
 	dispatch: ResponseBatchDispatchRecord | null;
 	retry?: ResponseBatchRetryLineage | null;
@@ -154,6 +163,13 @@ export interface ResponseBatchStatus {
 		missing: number;
 	};
 	jobs: ResponseBatchJobStatus[];
+}
+
+export interface ResponseBatchPriorityStatus {
+	requested: ResponseBatchPriority;
+	effective: ResponseBatchPriority;
+	ageBoost: number;
+	agingIntervalMinutes: 15;
 }
 
 export type ResponseBatchCancellationOutcome =
@@ -282,6 +298,7 @@ export function createResponseBatchService(deps: ResponseBatchServiceDeps): Resp
 				maxConcurrentRuns: payload.limits?.maxConcurrentRuns ?? null,
 				maxBrowserInteractionsPerMinute: payload.limits?.maxBrowserInteractionsPerMinute ?? null,
 			};
+			const priority = payload.priority ?? "normal";
 			const jobs: ResponseBatchJobRecord[] = [];
 			for (const [index, request] of requests.entries()) {
 				const assignment = dispatchResolution?.assignments[index] ?? null;
@@ -291,6 +308,7 @@ export function createResponseBatchService(deps: ResponseBatchServiceDeps): Resp
 						id,
 						index,
 						limits,
+						priority,
 						dispatchResolution?.dispatch ?? null,
 						assignment,
 					),
@@ -313,6 +331,7 @@ export function createResponseBatchService(deps: ResponseBatchServiceDeps): Resp
 				createdAt,
 				updatedAt: createdAt,
 				metadata: payload.metadata ?? {},
+				priority,
 				limits,
 				dispatch: dispatchResolution?.dispatch ?? null,
 				jobs,
@@ -321,13 +340,13 @@ export function createResponseBatchService(deps: ResponseBatchServiceDeps): Resp
 			if (refreshArchiveIndex) {
 				await refreshRunArchiveIndexBestEffort({ batchId: id });
 			}
-			return summarizeBatchStatus(record, deps.responsesService);
+			return summarizeBatchStatus(record, deps.responsesService, now());
 		},
 
 		async readBatchStatus(id) {
 			const record = await store.readBatch(id);
 			if (!record) return null;
-			return summarizeBatchStatus(record, deps.responsesService);
+			return summarizeBatchStatus(record, deps.responsesService, now());
 		},
 
 		async cancelBatch(id, note = null) {
@@ -360,7 +379,7 @@ export function createResponseBatchService(deps: ResponseBatchServiceDeps): Resp
 					});
 				}
 			}
-			const batch = await summarizeBatchStatus(record, deps.responsesService);
+			const batch = await summarizeBatchStatus(record, deps.responsesService, now());
 			const counts = summarizeCancellationOutcomes(jobs);
 			return {
 				id,
@@ -384,7 +403,7 @@ export function createResponseBatchService(deps: ResponseBatchServiceDeps): Resp
 			const payload = ResponseBatchRetryRequestSchema.parse(input);
 			const requestedAt = now().toISOString();
 			const idempotencyKeyHash = hashRetryValue(payload.idempotencyKey);
-			const sourceStatus = await summarizeBatchStatus(sourceRecord, deps.responsesService);
+			const sourceStatus = await summarizeBatchStatus(sourceRecord, deps.responsesService, now());
 			const selection = selectRetryableBatchJobs(sourceStatus, payload.responseIds);
 			if (selection.error) {
 				return createRejectedRetryResult(id, requestedAt, idempotencyKeyHash, selection.error);
@@ -414,6 +433,7 @@ export function createResponseBatchService(deps: ResponseBatchServiceDeps): Resp
 					...sourceRecord.metadata,
 					auracallRetry: lineage,
 				},
+				priority: sourceRecord.priority ?? "normal",
 				limits: sourceRecord.limits,
 				dispatch: sourceRecord.dispatch ?? null,
 				retry: lineage,
@@ -490,7 +510,7 @@ export function createResponseBatchService(deps: ResponseBatchServiceDeps): Resp
 			if (refreshArchiveIndex) {
 				await refreshRunArchiveIndexBestEffort({ batchId: created.record.id });
 			}
-			const batch = await summarizeBatchStatus(created.record, deps.responsesService);
+			const batch = await summarizeBatchStatus(created.record, deps.responsesService, now());
 			const counts = summarizeRetryOutcomes(jobs);
 			return {
 				id: created.record.id,
@@ -637,6 +657,7 @@ export async function listResponseBatchRecords(
 async function summarizeBatchStatus(
 	record: ResponseBatchRecord,
 	responsesService: Pick<ExecutionResponsesService, "readResponse">,
+	observedAt: Date,
 ): Promise<ResponseBatchStatus> {
 	const jobs: ResponseBatchJobStatus[] = [];
 	for (const job of record.jobs) {
@@ -667,6 +688,11 @@ async function summarizeBatchStatus(
 		createdAt: record.createdAt,
 		updatedAt: record.updatedAt,
 		metadata: record.metadata,
+		priority: summarizeResponseBatchPriority(
+			record.priority ?? "normal",
+			record.createdAt,
+			observedAt,
+		),
 		limits: record.limits,
 		dispatch: record.dispatch ?? null,
 		retry: record.retry ?? null,
@@ -845,6 +871,7 @@ function createRetryBatchMetadata(
 		batchId: record.id,
 		batchIndex: job.index,
 		batchLimits: record.limits,
+		batchPriority: record.priority ?? "normal",
 		...(record.dispatch && job.dispatch
 			? {
 					batchDispatch: {
@@ -874,11 +901,49 @@ function hashRetryValue(value: string): string {
 	return createHash("sha256").update(value).digest("hex");
 }
 
+export function resolveResponseBatchExecutionPriority(
+	record: ExecutionRunStoredRecord,
+	observedAt: Date,
+): number {
+	const metadata = readRecord(record.bundle.run.initialInputs.metadata);
+	const requested = readResponseBatchPriority(metadata?.batchPriority) ?? "normal";
+	const status = summarizeResponseBatchPriority(requested, record.bundle.run.createdAt, observedAt);
+	return RESPONSE_BATCH_PRIORITY_ORDER.indexOf(status.effective);
+}
+
+function summarizeResponseBatchPriority(
+	requested: ResponseBatchPriority,
+	createdAt: string,
+	observedAt: Date,
+): ResponseBatchPriorityStatus {
+	const createdAtMs = Date.parse(createdAt);
+	const waitedMs = Number.isFinite(createdAtMs)
+		? Math.max(0, observedAt.getTime() - createdAtMs)
+		: 0;
+	const requestedIndex = RESPONSE_BATCH_PRIORITY_ORDER.indexOf(requested);
+	const ageBoost = Math.min(
+		RESPONSE_BATCH_PRIORITY_ORDER.length - 1 - requestedIndex,
+		Math.floor(waitedMs / RESPONSE_BATCH_PRIORITY_AGING_INTERVAL_MS),
+	);
+	return {
+		requested,
+		effective: RESPONSE_BATCH_PRIORITY_ORDER[requestedIndex + ageBoost] ?? "normal",
+		ageBoost,
+		agingIntervalMinutes: 15,
+	};
+}
+
+function readResponseBatchPriority(value: unknown): ResponseBatchPriority | null {
+	const parsed = ResponseBatchPrioritySchema.safeParse(value);
+	return parsed.success ? parsed.data : null;
+}
+
 function withBatchMetadata(
 	request: ExecutionRequest,
 	batchId: string,
 	batchIndex: number,
 	limits: ResponseBatchRecord["limits"],
+	priority: ResponseBatchPriority,
 	dispatch: ResponseBatchDispatchRecord | null,
 	assignment: ResponseBatchDispatchJobAssignment | null,
 ): ExecutionRequest {
@@ -889,6 +954,7 @@ function withBatchMetadata(
 			batchId,
 			batchIndex,
 			batchLimits: limits,
+			batchPriority: priority,
 			...(dispatch && assignment
 				? {
 						batchDispatch: {
@@ -947,6 +1013,7 @@ function assertDispatchResolutionMatches(
 function readResponseBatchRunMetadata(record: ExecutionRunStoredRecord): {
 	batchId: string;
 	limits: ResponseBatchRecord["limits"];
+	priority: ResponseBatchPriority;
 } | null {
 	const metadata = readRecord(record.bundle.run.initialInputs.metadata);
 	if (!metadata) return null;
@@ -955,6 +1022,7 @@ function readResponseBatchRunMetadata(record: ExecutionRunStoredRecord): {
 	const rawLimits = readRecord(metadata.batchLimits);
 	return {
 		batchId,
+		priority: readResponseBatchPriority(metadata.batchPriority) ?? "normal",
 		limits: {
 			maxConcurrentRuns: readNullablePositiveInteger(rawLimits?.maxConcurrentRuns),
 			maxBrowserInteractionsPerMinute: readNullablePositiveInteger(
@@ -1050,6 +1118,7 @@ const RESPONSE_BATCH_RECORD_SCHEMA: z.ZodType<ResponseBatchRecord> = z.object({
 	createdAt: z.string(),
 	updatedAt: z.string(),
 	metadata: z.record(z.string(), z.unknown()),
+	priority: ResponseBatchPrioritySchema.optional(),
 	limits: z.object({
 		maxConcurrentRuns: z.number().int().positive().nullable(),
 		maxBrowserInteractionsPerMinute: z.number().int().positive().nullable(),
