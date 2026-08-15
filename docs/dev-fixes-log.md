@@ -1,3 +1,10 @@
+- 2026-08-15: Bundled agent skills are user-facing distribution contracts, not
+  compatibility internals. Rename retired skill directories and frontmatter
+  together, derive commands and setup guidance from current CLI help, install
+  the complete bundle from README, and validate directory/name/command parity
+  deterministically. Preserve internal compatibility module and vendor names
+  only where they remain implementation authority.
+
 - 2026-08-15: MCP launch docs must derive from the package bin and installed
   wrapper, not inherited package branding. While public npm is deferred,
   installed clients should execute `auracall-mcp`; contributors should use

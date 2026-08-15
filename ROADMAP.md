@@ -7,6 +7,12 @@
 Status: active
 Lane: P01
 
+- Closed accepted bundled skill authority reconciliation:
+  [docs/dev/plans/0316-2026-08-15-bundled-skill-authority-reconciliation.md](docs/dev/plans/0316-2026-08-15-bundled-skill-authority-reconciliation.md)
+  The complete five-skill bundle now uses AuraCall names and current runtime,
+  setup, model, and recovery guidance; deterministic validation protects the
+  install surface without touching internal compatibility names.
+
 - Closed accepted MCP launch contract reconciliation:
   [docs/dev/plans/0315-2026-08-15-mcp-launch-contract-reconciliation.md](docs/dev/plans/0315-2026-08-15-mcp-launch-contract-reconciliation.md)
   Current onboarding, package metadata, and both tracked mcporter entries now

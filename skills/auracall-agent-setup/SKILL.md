@@ -76,9 +76,9 @@ Prefer deterministic ids:
 Examples:
 
 ```text
-instant-chatgpt-ecochran76
-pro-extended-chatgpt-soylei
-pro-extended-chatgpt-soylei-che4470-seminar-grading
+instant-chatgpt-personal
+pro-extended-chatgpt-research
+pro-extended-chatgpt-research-seminar-grading
 ```
 
 ## Privilege Boundary

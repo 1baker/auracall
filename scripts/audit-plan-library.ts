@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
@@ -11,6 +11,7 @@ import {
   collectCurrentDocRetiredCheckoutErrors,
 } from './currentDocLinks.js';
 import { collectActiveRoadmapPlanStateErrors } from './roadmapPlanState.js';
+import { collectBundledSkillErrors } from './bundledSkillContract.js';
 import {
   collectDeprecatedMcpLaunchErrors,
   collectMcporterMcpConfigErrors,
@@ -76,6 +77,7 @@ const agentsPath = join(repoRoot, 'AGENTS.md');
 const packagePath = join(repoRoot, 'package.json');
 const mcporterConfigPath = join(repoRoot, 'config', 'mcporter.json');
 const policiesDir = join(docsDevDir, 'policies');
+const skillsDir = join(repoRoot, 'skills');
 const validPlanStates = new Set(['PLANNED', 'OPEN', 'CLOSED', 'CANCELLED']);
 const staleWorkspacePath = '/home/ecochran76/workspace.local/oracle';
 
@@ -178,6 +180,7 @@ function collectValidationErrors(
   errors.push(...collectDeprecatedMcpLaunchErrors(currentDocumentation));
   errors.push(...collectPackageMcpBinErrors(packageText));
   errors.push(...collectMcporterMcpConfigErrors(mcporterConfigText));
+  errors.push(...collectBundledSkillErrors(skillDirectoryNames, bundledSkills, readmeText));
 
   for (const candidate of rawCandidates) {
     if (!candidate.relPath.startsWith('docs/dev/plans/')) {
@@ -209,13 +212,24 @@ const runbookText = readFileSync(runbookPath, 'utf8');
 const agentsText = readFileSync(agentsPath, 'utf8');
 const packageText = readFileSync(packagePath, 'utf8');
 const mcporterConfigText = readFileSync(mcporterConfigPath, 'utf8');
+const readmeText = readFileSync(join(repoRoot, 'README.md'), 'utf8');
+const skillDirectoryNames = readdirSync(skillsDir, { withFileTypes: true })
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => entry.name)
+  .sort();
+const bundledSkills = skillDirectoryNames.flatMap((directory) => {
+  const skillPath = join(skillsDir, directory, 'SKILL.md');
+  return existsSync(skillPath)
+    ? [{ directory, text: readFileSync(skillPath, 'utf8') }]
+    : [];
+});
 const existingPolicyPaths = new Set(
   readdirSync(policiesDir, { withFileTypes: true })
     .filter((entry) => entry.isFile() && entry.name.endsWith('.md'))
     .map((entry) => `docs/dev/policies/${entry.name}`),
 );
 const currentDocumentation = [
-  { path: 'README.md', text: readFileSync(join(repoRoot, 'README.md'), 'utf8') },
+  { path: 'README.md', text: readmeText },
   { path: 'AGENTS.md', text: agentsText },
   { path: 'config/mcporter.json', text: mcporterConfigText },
   ...walkMarkdownFiles(join(repoRoot, 'docs'))

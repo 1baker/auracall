@@ -1,3 +1,15 @@
+## 2026-08-15 | Plan 0316 bundled skill authority reconciliation
+
+- Replaced `oracle`, `oracle-chatgpt`, and `oracle-gemini` with AuraCall-named
+  skill packages and current installed-runtime, managed-profile, model, session,
+  and safety guidance.
+- README now installs the complete five-skill bundle, including the existing
+  agent-setup and API-workflow skills. A deterministic audit rejects directory,
+  frontmatter, required-command, retired-branding, and installation drift.
+- All five skill validators, seven focused tests, typecheck, zero-warning lint
+  across 837 files, production build, 317-plan audit, and diff hygiene passed.
+  Plan 0316 is CLOSED without live provider or browser effects.
+
 ## 2026-08-15 | Plan 0315 MCP launch contract reconciliation
 
 - Removed stale `@steipete/oracle`, Oracle client ids/config paths, encoded

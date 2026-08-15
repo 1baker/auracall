@@ -1,5 +1,26 @@
 # RUNBOOK
 
+## Turn 485 | 2026-08-15
+
+- Opened Plan 0316 after direct skill, package, README, validator, and CLI-help
+  inspection proved that all three structurally valid bundled skills still use
+  retired Oracle user-facing names and the main skill invokes the retired npm
+  package.
+- Migrate the bundled packages to `auracall`, `auracall-chatgpt`, and
+  `auracall-gemini`; use the installed user runtime plus current managed-profile
+  setup flows, and add a steady-state contract. Preserve `src/oracle`,
+  compatibility variables, and `vendor/oracle-notifier`; do not run providers,
+  browsers, setup/login, publication, or release actions.
+- Replaced the three stale packages, retained and included the two existing
+  AuraCall workflow packages, and made README install the complete five-skill
+  bundle. The contract now rejects missing/unexpected directories, frontmatter
+  mismatch, required-command drift, retired branding, and README incompleteness.
+- All five canonical skill validations and seven focused governance tests
+  passed. Typecheck, zero-warning lint across 837 files, production build,
+  317-plan audit with zero validation errors, and diff hygiene passed. Plan 0316
+  closes accepted without browser, provider, login/setup, publish, or release
+  effects.
+
 ## Turn 484 | 2026-08-15
 
 - Opened Plan 0315 after direct package, installer, config, and documentation

@@ -1811,9 +1811,11 @@ Terminology note:
 - Tip: set `browser.chatgptUrl` in config (or `--chatgpt-url`) to a dedicated ChatGPT project folder so browser runs don’t clutter your main history.
 
 **Codex skill**
-- Copy the bundled skill from this repo to your Codex skills folder:
+- Install the AuraCall user runtime from this checkout, then copy the bundled
+  general and provider-focused skills to your Codex skills folder:
+  - `pnpm run install:user-runtime`
   - `mkdir -p ~/.codex/skills`
-  - `cp -R skills/oracle ~/.codex/skills/oracle`
+  - `cp -R skills/auracall skills/auracall-chatgpt skills/auracall-gemini skills/auracall-agent-setup skills/auracall-api-workflow ~/.codex/skills/`
 - Then reference it in your `AGENTS.md`/`CLAUDE.md` so Codex loads it.
 
 **MCP**
