@@ -299,6 +299,7 @@ export function createArchiveMaterializationJobService(
 export function createArchiveMaterializationJobStore(
   filePath = path.join(getRunArchiveDir(), 'materialization-jobs', 'index.json'),
 ): ArchiveMaterializationJobStore {
+  let writeQueue: Promise<void> = Promise.resolve();
   return {
     async listJobs() {
       return readJobStoreFile(filePath);
@@ -308,12 +309,16 @@ export function createArchiveMaterializationJobStore(
       return jobs.find((job) => job.id === id) ?? null;
     },
     async upsertJob(job) {
-      const jobs = await readJobStoreFile(filePath);
-      const nextJobs = [
-        job,
-        ...jobs.filter((candidate) => candidate.id !== job.id),
-      ].sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
-      await writeJobStoreFile(filePath, nextJobs);
+      const write = writeQueue.then(async () => {
+        const jobs = await readJobStoreFile(filePath);
+        const nextJobs = [
+          job,
+          ...jobs.filter((candidate) => candidate.id !== job.id),
+        ].sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
+        await writeJobStoreFile(filePath, nextJobs);
+      });
+      writeQueue = write.catch(() => undefined);
+      await write;
     },
   };
 }
@@ -391,8 +396,25 @@ async function readJobStoreFile(filePath: string): Promise<ArchiveMaterializatio
 async function writeJobStoreFile(filePath: string, jobs: ArchiveMaterializationJob[]): Promise<void> {
   await fs.mkdir(path.dirname(filePath), { recursive: true });
   const tmpPath = `${filePath}.${randomUUID()}.tmp`;
-  await fs.writeFile(tmpPath, `${JSON.stringify(jobs, null, 2)}\n`, 'utf8');
-  await fs.rename(tmpPath, filePath);
+  try {
+    await fs.writeFile(tmpPath, `${JSON.stringify(jobs, null, 2)}\n`, 'utf8');
+    await replaceJobStoreFile(tmpPath, filePath);
+  } finally {
+    await fs.rm(tmpPath, { force: true }).catch(() => undefined);
+  }
+}
+
+async function replaceJobStoreFile(tmpPath: string, filePath: string): Promise<void> {
+  try {
+    await fs.rename(tmpPath, filePath);
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code;
+    if (process.platform !== 'win32' || (code !== 'EEXIST' && code !== 'EPERM')) {
+      throw error;
+    }
+    await fs.rm(filePath, { force: true });
+    await fs.rename(tmpPath, filePath);
+  }
 }
 
 function isArchiveMaterializationJob(value: unknown): value is ArchiveMaterializationJob {

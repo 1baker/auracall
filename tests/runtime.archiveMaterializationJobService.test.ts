@@ -78,6 +78,32 @@ describe('archive materialization job service', () => {
     expect(materializeItem).toHaveBeenCalledWith({ archiveItemId: 'generated-artifact:resp_1:artifact_1', force: false });
   });
 
+  it('preserves concurrent job creates in the shared store', async () => {
+    const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), 'auracall-archive-materialize-concurrent-'));
+    setAuracallHomeDirOverrideForTest(homeDir);
+    const ids = ['ramj_concurrent_1', 'ramj_concurrent_2'];
+    const service = createArchiveMaterializationJobService({
+      materializationService: {
+        materializeItem: async () => {
+          throw new Error('scheduled work should not run in this store test');
+        },
+      },
+      generateId: () => ids.shift() ?? 'ramj_unexpected',
+      schedule: () => {},
+    });
+
+    await Promise.all([
+      service.createJob({ archiveItemId: 'generated-artifact:resp_1:artifact_1' }),
+      service.createJob({ archiveItemId: 'generated-artifact:resp_2:artifact_2' }),
+    ]);
+
+    const stored = await service.listJobs({ limit: null });
+    expect(stored.jobs.map((job) => job.id).sort()).toEqual([
+      'ramj_concurrent_1',
+      'ramj_concurrent_2',
+    ]);
+  });
+
   it('passes force refresh requests through durable materialization jobs', async () => {
     const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), 'auracall-archive-materialize-job-force-'));
     setAuracallHomeDirOverrideForTest(homeDir);

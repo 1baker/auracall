@@ -1970,7 +1970,7 @@ describe("http responses adapter", () => {
 			const [firstResponse, secondResponse] = await Promise.all([
 				fetch(`http://127.0.0.1:${server.port}/v1/responses`, {
 					method: "POST",
-					headers: { "Content-Type": "application/json" },
+					headers: { "Content-Type": "application/json", Connection: "close" },
 					body: JSON.stringify({
 						model: "gpt-5.2",
 						input: "First request.",
@@ -1978,7 +1978,7 @@ describe("http responses adapter", () => {
 				}),
 				fetch(`http://127.0.0.1:${server.port}/v1/responses`, {
 					method: "POST",
-					headers: { "Content-Type": "application/json" },
+					headers: { "Content-Type": "application/json", Connection: "close" },
 					body: JSON.stringify({
 						model: "gpt-5.2",
 						input: "Second request.",
@@ -1986,12 +1986,12 @@ describe("http responses adapter", () => {
 				}),
 			]);
 
-			expect(firstResponse.status).toBe(200);
-			expect(secondResponse.status).toBe(200);
-			expect([...drainRunIds].sort()).toEqual(["resp_serial_1", "resp_serial_2"]);
-
 			const firstPayload = (await firstResponse.json()) as Record<string, unknown>;
 			const secondPayload = (await secondResponse.json()) as Record<string, unknown>;
+			expect(firstResponse.status, JSON.stringify(firstPayload)).toBe(200);
+			expect(secondResponse.status, JSON.stringify(secondPayload)).toBe(200);
+			expect([...drainRunIds].sort()).toEqual(["resp_serial_1", "resp_serial_2"]);
+
 			expect([firstPayload.id, secondPayload.id].sort()).toEqual([
 				"resp_serial_1",
 				"resp_serial_2",

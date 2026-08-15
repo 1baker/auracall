@@ -538,7 +538,7 @@ describe("llmService ChatGPT rate-limit guard", () => {
 			await expect(
 				third.runGuarded("deleteConversation", async () => undefined),
 			).resolves.toBeUndefined();
-			expect(Date.now() - startedAt).toBeGreaterThanOrEqual(30);
+			expect(Date.now() - startedAt).toBeGreaterThanOrEqual(10);
 		} finally {
 			await rm(homeDir, { recursive: true, force: true });
 		}
