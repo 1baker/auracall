@@ -7,6 +7,14 @@
 Status: active
 Lane: P01
 
+- Active durable response-batch retry:
+  [docs/dev/plans/0335-2026-08-15-durable-response-batch-retry.md](docs/dev/plans/0335-2026-08-15-durable-response-batch-retry.md)
+  Current state: complete source requests remain authoritative in durable
+  response runs, while batch records retain child identity and routing. This
+  slice adds fresh deterministic retry ids, atomic idempotency, explicit
+  lineage, partial-resume behavior, and authorized HTTP/MCP parity for failed
+  or cancelled children only.
+
 - Closed accepted durable response-batch cancellation:
   [docs/dev/plans/0334-2026-08-15-response-batch-cancellation.md](docs/dev/plans/0334-2026-08-15-response-batch-cancellation.md)
   Current state: authorized HTTP and MCP batch controls now compose the durable

@@ -47648,3 +47648,17 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   passed at `a2eb9307dbbdbf00400e6e26f95d391666987571` on Ubuntu 22/Node 22,
   Ubuntu 24/Node 24, macOS/Node 22, and serialized Windows/Node 22. Plan
   0334 closes accepted.
+
+## 2026-08-15 | Plan 0335 opens durable response-batch retry
+
+- The stored source response is the only complete retry input authority; batch
+  summaries intentionally retain identity and routing rather than a second
+  prompt copy.
+- The design creates fresh deterministic child ids, persists an atomic retry
+  batch before child creation, hashes the required idempotency key, fingerprints
+  the selected source children, and records explicit source-to-target lineage.
+- Only failed and cancelled children are eligible. Repeated identical calls
+  reuse existing targets and resume only missing ones; conflicting key reuse,
+  ineligible selection, or authorization failure stops before mutation.
+- HTTP and MCP will project the same service receipt. Automatic policy,
+  provider Retry clicks, priority, and dispatch reassignment are excluded.

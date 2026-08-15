@@ -19884,3 +19884,19 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   passed at `a2eb9307dbbdbf00400e6e26f95d391666987571` across Ubuntu 22/Node
   22, Ubuntu 24/Node 24, macOS/Node 22, and serialized Windows/Node 22.
   Plan 0334 closes accepted.
+
+## Turn 431 | 2026-08-15
+
+- Plan 0335 opens the next response-batch control: durable retry of failed or
+  cancelled children. The source response run, not the batch summary, remains
+  the authority for reconstructing prompt input, instructions, tools,
+  attachments, and routing.
+- Every retry requires an idempotency key and creates fresh deterministic batch
+  and response ids with source-to-target lineage. An atomic first-writer retry
+  record is persisted before child creation so an interrupted request can
+  resume missing children without replaying existing targets.
+- Completed or nonterminal work is never retryable. A conflicting selection
+  under the same key, invalid selection, or unauthorized stored scope must stop
+  before mutation. HTTP and MCP will share one service receipt.
+- Automatic retry policy, provider Retry clicks, scheduler priority, and
+  dispatch reassignment remain outside this slice.
