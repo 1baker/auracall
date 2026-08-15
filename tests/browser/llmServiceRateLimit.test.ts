@@ -467,14 +467,18 @@ describe("llmService ChatGPT rate-limit guard", () => {
 			await expect(
 				first.runGuarded("renameConversation", async () => undefined),
 			).resolves.toBeUndefined();
-			const startedAt = Date.now();
-			await expect(
-				second.runGuardedSkippingPostCommitQuiet(
-					"materializeConversationArtifact",
-					async () => "ok",
-				),
-			).resolves.toBe("ok");
-			expect(Date.now() - startedAt).toBeLessThan(30);
+			const setTimeoutSpy = vi.spyOn(globalThis, "setTimeout");
+			try {
+				await expect(
+					second.runGuardedSkippingPostCommitQuiet(
+						"materializeConversationArtifact",
+						async () => "ok",
+					),
+				).resolves.toBe("ok");
+				expect(setTimeoutSpy).not.toHaveBeenCalled();
+			} finally {
+				setTimeoutSpy.mockRestore();
+			}
 		} finally {
 			await rm(homeDir, { recursive: true, force: true });
 		}
