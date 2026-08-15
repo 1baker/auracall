@@ -1,3 +1,18 @@
+## 2026-08-15 | Plan 0328 native Windows runner persistence
+
+- Opened the first native Windows portability successor after current CI logs
+  showed the real readiness smoke failed before behavior: semantic runner ids
+  were used verbatim as Windows directory names.
+- Add a tagged reversible directory encoding while keeping public runner ids
+  and record JSON unchanged, retain safe legacy compatibility, and restore the
+  real HTTP/CLI/MCP smoke to Windows CI. Broader fixture normalization and PTY
+  migration remain separately bounded follow-ons.
+- Implemented canonical base64url directory encoding plus safe legacy
+  read/list/delete and post-write migration. Four focused files passed 24 tests,
+  typecheck and touched-file lint passed, and the real local HTTP/CLI/MCP smoke
+  completed. CI now requires that real smoke and the persistence tests on
+  Windows; current-SHA native acceptance remains the open gate.
+
 ## 2026-08-15 | Plan 0327 CI Node runtime contract
 
 - Opened a bounded successor because CI explicitly installs Node 20 while the

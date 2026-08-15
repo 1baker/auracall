@@ -6,7 +6,11 @@ import { setAuracallHomeDirOverrideForTest } from '../src/auracallHome.js';
 import { createExecutionRunnerRecord } from '../src/runtime/model.js';
 import {
   createExecutionRunnerRecordStore,
+  decodeExecutionRunnerDirectoryName,
+  deleteExecutionRunnerRecord,
+  encodeExecutionRunnerDirectoryName,
   ensureExecutionRunnerStorage,
+  getExecutionRunnerDir,
   getExecutionRunnerPath,
   getExecutionRunnerRecordPath,
   getExecutionRunnersDir,
@@ -47,6 +51,8 @@ describe('runtime runner store', () => {
 
     const stored = await writeExecutionRunnerStoredRecord(runner);
     expect(stored.revision).toBe(1);
+    expect(path.basename(getExecutionRunnerDir(runner.id))).toMatch(/^v1_[A-Za-z0-9_-]+$/u);
+    expect(path.basename(getExecutionRunnerDir(runner.id))).not.toContain(':');
     expect(getExecutionRunnerPath(runner.id)).toContain('runner.json');
     expect(getExecutionRunnerRecordPath(runner.id)).toContain('record.json');
 
@@ -57,6 +63,88 @@ describe('runtime runner store', () => {
     const reloadedRecord = await readExecutionRunnerStoredRecord(runner.id);
     expect(reloadedRecord?.runnerId).toBe(runner.id);
     expect(reloadedRecord?.revision).toBe(1);
+  });
+
+  it('round-trips Unicode runner ids through one canonical filesystem-safe encoding', () => {
+    const runnerId = 'runner:http-responses:127.0.0.1:60379:é';
+    const encoded = encodeExecutionRunnerDirectoryName(runnerId);
+
+    expect(encoded).toMatch(/^v1_[A-Za-z0-9_-]+$/u);
+    expect(decodeExecutionRunnerDirectoryName(encoded)).toBe(runnerId);
+    expect(decodeExecutionRunnerDirectoryName('runner:legacy')).toBeNull();
+    expect(decodeExecutionRunnerDirectoryName('v1_')).toBeNull();
+    expect(decodeExecutionRunnerDirectoryName('v1_not%base64url')).toBeNull();
+    expect(decodeExecutionRunnerDirectoryName('v1_wA')).toBeNull();
+  });
+
+  it('reads and migrates a safe legacy raw-id directory after an encoded write succeeds', async () => {
+    const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), 'auracall-runtime-runners-legacy-'));
+    cleanup.push(homeDir);
+    setAuracallHomeDirOverrideForTest(homeDir);
+
+    const runner = createExecutionRunnerRecord({
+      id: 'runner-legacy',
+      hostId: 'host:legacy',
+      startedAt: '2026-04-11T10:00:00.000Z',
+      expiresAt: '2026-04-11T10:01:00.000Z',
+      serviceIds: ['chatgpt'],
+      runtimeProfileIds: ['default'],
+    });
+    const legacyDir = path.join(getExecutionRunnersDir(), runner.id);
+    await fs.mkdir(legacyDir, { recursive: true });
+    await fs.writeFile(path.join(legacyDir, 'runner.json'), `${JSON.stringify(runner)}\n`, 'utf8');
+
+    expect((await readExecutionRunnerStoredRecord(runner.id))?.revision).toBe(0);
+    expect((await listExecutionRunnerRecords()).map((entry) => entry.id)).toEqual([runner.id]);
+
+    const migrated = await writeExecutionRunnerStoredRecord(runner, { expectedRevision: 0 });
+    expect(migrated.revision).toBe(1);
+    await expect(fs.access(getExecutionRunnerRecordPath(runner.id))).resolves.toBeUndefined();
+    await expect(fs.access(legacyDir)).rejects.toMatchObject({ code: 'ENOENT' });
+
+    await fs.mkdir(legacyDir, { recursive: true });
+    await fs.writeFile(path.join(legacyDir, 'runner.json'), `${JSON.stringify(runner)}\n`, 'utf8');
+    await deleteExecutionRunnerRecord(runner.id);
+    await expect(fs.access(getExecutionRunnerDir(runner.id))).rejects.toMatchObject({ code: 'ENOENT' });
+    await expect(fs.access(legacyDir)).rejects.toMatchObject({ code: 'ENOENT' });
+  });
+
+  it('deduplicates encoded and legacy records using the newest runner heartbeat', async () => {
+    const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), 'auracall-runtime-runners-duplicate-'));
+    cleanup.push(homeDir);
+    setAuracallHomeDirOverrideForTest(homeDir);
+
+    const older = createExecutionRunnerRecord({
+      id: 'runner-duplicate',
+      hostId: 'host:encoded',
+      startedAt: '2026-04-11T10:00:00.000Z',
+      lastHeartbeatAt: '2026-04-11T10:00:00.000Z',
+      expiresAt: '2026-04-11T10:01:00.000Z',
+      serviceIds: ['chatgpt'],
+      runtimeProfileIds: ['default'],
+    });
+    await writeExecutionRunnerStoredRecord(older);
+
+    const newer = createExecutionRunnerRecord({
+      ...older,
+      hostId: 'host:legacy-newer',
+      startedAt: older.startedAt,
+      lastHeartbeatAt: '2026-04-11T10:00:30.000Z',
+      expiresAt: '2026-04-11T10:01:30.000Z',
+    });
+    const legacyDir = path.join(getExecutionRunnersDir(), newer.id);
+    await fs.mkdir(legacyDir, { recursive: true });
+    await fs.writeFile(path.join(legacyDir, 'record.json'), `${JSON.stringify({
+      runnerId: newer.id,
+      revision: 4,
+      persistedAt: newer.lastHeartbeatAt,
+      runner: newer,
+    })}\n`, 'utf8');
+
+    const listed = await listExecutionRunnerRecords();
+    expect(listed).toHaveLength(1);
+    expect(listed[0]?.hostId).toBe('host:legacy-newer');
+    expect((await readExecutionRunnerStoredRecord(newer.id))?.revision).toBe(4);
   });
 
   it('lists persisted runner records in reverse heartbeat order with filters', async () => {

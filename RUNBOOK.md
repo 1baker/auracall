@@ -1,5 +1,32 @@
 # RUNBOOK
 
+## Turn 497 | 2026-08-15
+
+- Opened Plan 0328 as the first native Windows portability successor. Dispatch
+  31887469597 proved the apparent readiness-smoke cleanup hang began with an
+  invalid directory such as
+  `runtime/runners/runner:http-responses:127.0.0.1:60379`; the already-started
+  MCP transport then remained during failure cleanup.
+- Keep public colon-delimited runner ids unchanged. Store them under a tagged,
+  reversible filesystem-safe directory name, retain safe legacy raw-id reads,
+  list/delete compatibility, and migrate only after a successful encoded write.
+- Restore the real provider-free dashboard-session readiness smoke to Windows
+  CI and guard that cross-platform contract. Full native Windows fixture
+  normalization and the legacy PTY/toolchain migration remain successor slices.
+- Critical path remains root with no parallel workers. This slice may change
+  runner persistence, its tests, CI/checker wiring, and current docs, but it
+  will not mutate active config, services, browsers, providers, credentials, or
+  installed runtime state.
+- Added tagged canonical base64url runner-directory encoding while preserving
+  public ids and record payloads. Reads compare encoded and safe legacy records,
+  list deduplicates by newest heartbeat/persistence/revision, writes remove a
+  legacy directory only after both encoded files land, and delete covers both.
+- Four focused files passed 24 tests, including Unicode round trips, invalid
+  encoded names, legacy migration, duplicate authority, control behavior, and
+  CI drift rejection. Typecheck, touched-file zero-warning lint, the runtime
+  checker, and the real local HTTP/CLI/MCP readiness smoke passed. CI now runs
+  focused runner persistence tests and the real smoke on Windows.
+
 ## Turn 496 | 2026-08-15
 
 - Opened Plan 0327 after the post-0326 audit found that GitHub Actions installs

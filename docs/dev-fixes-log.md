@@ -1,3 +1,10 @@
+- 2026-08-15: Public semantic identifiers are not automatically safe filesystem
+  segments. Keep the runner id unchanged in APIs and JSON, but persist it under
+  a tagged canonical base64url directory name. Read and deduplicate safe legacy
+  raw-id directories, migrate only after the encoded record is durably written,
+  and run the real cross-process smoke on Windows so path portability is proved
+  by behavior rather than string inspection.
+
 - 2026-08-15: A CI portability contract should state its platform boundaries
   as executable lanes, not imply parity that the product does not yet have.
   Require the full suite and real cross-process smoke on supported Unix hosts,

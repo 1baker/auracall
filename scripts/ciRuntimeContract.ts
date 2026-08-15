@@ -139,17 +139,17 @@ export function collectCiRuntimeContractErrors(
   }
   if (
     !normalizedWorkflowText.includes(
-      "if: matrix.os == 'windows-2022'\n        run: pnpm exec vitest run tests/scripts/ciRuntimeContract.test.ts tests/scripts/dashboardSessionReadinessSmoke.test.ts",
+      "if: matrix.os == 'windows-2022'\n        run: pnpm exec vitest run tests/scripts/ciRuntimeContract.test.ts tests/scripts/dashboardSessionReadinessSmoke.test.ts tests/runtime.runnersStore.test.ts tests/runtime.runnersControl.test.ts",
     )
   ) {
-    errors.push('.github/workflows/ci.yml: Windows must run the focused runtime-contract tests');
+    errors.push('.github/workflows/ci.yml: Windows must run the focused runtime and runner-persistence tests');
   }
   if (
     !normalizedWorkflowText.includes(
-      "if: matrix.os != 'windows-2022'\n        run: pnpm run smoke:dashboard-session-readiness",
+      'name: Run real readiness smoke on every supported OS\n        run: pnpm run smoke:dashboard-session-readiness',
     )
   ) {
-    errors.push('.github/workflows/ci.yml: real readiness smoke must run on the supported Unix hosts');
+    errors.push('.github/workflows/ci.yml: real readiness smoke must run on every supported OS');
   }
   if (!/^\s*workflow_dispatch:\s*$/mu.test(normalizedWorkflowText)) {
     errors.push('.github/workflows/ci.yml: workflow_dispatch must remain available');
