@@ -767,8 +767,11 @@ export interface ApiAuthRuntimeStatus {
 	readonly scheme: "none" | "bearer";
 	readonly keyCount: number;
 	readonly scoped: boolean;
+	readonly operatorKeyCount: number;
 	readonly trustedLocalOperatorDashboard: boolean;
 	readonly trustedLocalOperatorDashboardReason: TrustedLocalOperatorDashboardReason;
+	readonly dashboardSessionRequired: boolean;
+	readonly dashboardSessionReady: boolean;
 }
 
 interface ApiAuthContext {
@@ -858,8 +861,11 @@ interface HttpStatusResponse {
 		scheme: "none" | "bearer";
 		keyCount: number;
 		scoped: boolean;
+		operatorKeyCount: number;
 		trustedLocalOperatorDashboard: boolean;
 		trustedLocalOperatorDashboardReason: TrustedLocalOperatorDashboardReason;
+		dashboardSessionRequired: boolean;
+		dashboardSessionReady: boolean;
 	};
 	serviceDiscovery: ApiServiceDiscovery;
 	routes: StaticHttpStatusRoutes & {
@@ -4967,7 +4973,12 @@ export function formatApiStartupPosture(input: {
 	const operatorDashboardSummary = input.auth.trustedLocalOperatorDashboard
 		? "; trusted loopback dashboard requests use local operator authority"
 		: `; trusted-local dashboard authority is disabled (${input.auth.trustedLocalOperatorDashboardReason})`;
-	return `${localOnly ? "Posture" : "Warning"}: ${authSummary}; ${bindingSummary}${operatorDashboardSummary}; GET /status remains observable without authentication.`;
+	const dashboardSessionSummary = !input.auth.dashboardSessionRequired
+		? ""
+		: input.auth.dashboardSessionReady
+			? `; secure dashboard session login is ready (${input.auth.operatorKeyCount} unscoped operator API ${input.auth.operatorKeyCount === 1 ? "key" : "keys"} loaded)`
+			: "; secure dashboard session login is unavailable because no unscoped operator API key is loaded";
+	return `${localOnly ? "Posture" : "Warning"}: ${authSummary}; ${bindingSummary}${operatorDashboardSummary}${dashboardSessionSummary}; GET /status remains observable without authentication.`;
 }
 
 function createHttpModelListResponse(catalog: {
@@ -7503,6 +7514,8 @@ function createApiAuthRuntimeStatus(
 		configEnabled: policy.trustedLocalOperatorDashboard,
 		externalRoutingConfigured: input.externalDashboardRoutingConfigured ?? false,
 	});
+	const operatorKeyCount = policy.keys.filter(isUnscopedOperatorApiKey).length;
+	const trustedLocalOperatorDashboard = trustedLocalOperatorDashboardReason === "enabled";
 	return {
 		required: policy.required,
 		scheme: policy.required ? "bearer" : "none",
@@ -7515,8 +7528,11 @@ function createApiAuthRuntimeStatus(
 					key.runtimeProfiles?.length,
 			),
 		),
-		trustedLocalOperatorDashboard: trustedLocalOperatorDashboardReason === "enabled",
+		operatorKeyCount,
+		trustedLocalOperatorDashboard,
 		trustedLocalOperatorDashboardReason,
+		dashboardSessionRequired: policy.required && !trustedLocalOperatorDashboard,
+		dashboardSessionReady: policy.required && operatorKeyCount > 0,
 	};
 }
 
@@ -7684,6 +7700,8 @@ function handleDashboardSessionRequest(
 ): void {
 	const cookieToken = readDashboardSessionCookie(req.headers.cookie);
 	const session = input.sessions.read(cookieToken);
+	const loginReady =
+		input.policy.required && input.policy.keys.some(isUnscopedOperatorApiKey);
 	const trustedLocal = canAuthorizeTrustedLocalOperatorDashboard({
 		enabled: input.trustedLocal,
 		remoteAddress: req.socket.remoteAddress,
@@ -7705,6 +7723,7 @@ function handleDashboardSessionRequest(
 				object: "dashboard_session",
 				authenticated: mode !== "unauthenticated",
 				mode,
+				loginReady,
 				expiresAt: mode === "session" ? session?.expiresAt ?? null : null,
 				ttlSeconds: DASHBOARD_SESSION_TTL_MS / 1000,
 			},
@@ -7744,6 +7763,7 @@ function handleDashboardSessionRequest(
 				object: "dashboard_session",
 				authenticated: true,
 				mode: "session",
+				loginReady,
 				expiresAt: created.expiresAt,
 				ttlSeconds: DASHBOARD_SESSION_TTL_MS / 1000,
 			},
@@ -7772,6 +7792,7 @@ function handleDashboardSessionRequest(
 			object: "dashboard_session",
 			authenticated: false,
 			mode: "unauthenticated",
+			loginReady,
 			expiresAt: null,
 			ttlSeconds: DASHBOARD_SESSION_TTL_MS / 1000,
 		},
@@ -16528,17 +16549,20 @@ function createOperatorBrowserDashboardHtml(
 	      initializeDashboard();
 	    }
 
-	    function showDashboardLogin(message) {
+	    function showDashboardLogin(message, loginReady = true) {
 	      $('dashboardContent').hidden = true;
 	      $('dashboardSessionControl').hidden = true;
 	      $('dashboardAuthGate').hidden = false;
 	      $('dashboardAuthTitle').textContent = 'Sign in to AuraCall';
-	      $('dashboardAuthDescription').textContent = 'Enter an unscoped operator API key. AuraCall exchanges it for a 15-minute secure cookie and does not save the key in browser storage.';
+	      $('dashboardAuthDescription').textContent = loginReady
+	        ? 'Enter an unscoped operator API key. AuraCall exchanges it for a 15-minute secure cookie and does not save the key in browser storage.'
+	        : 'Secure dashboard login is unavailable because no unscoped operator API key is loaded. Configure one in the user-scoped API environment, then restart AuraCall.';
 	      $('dashboardAuthError').textContent = message || '';
 	      $('dashboardAuthForm').hidden = false;
 	      const secureContext = window.location.protocol === 'https:';
-	      $('dashboardOperatorApiKey').disabled = !secureContext;
-	      $('dashboardLoginButton').disabled = !secureContext;
+	      $('dashboardOperatorApiKey').disabled = !secureContext || !loginReady;
+	      $('dashboardLoginButton').disabled = !secureContext || !loginReady;
+	      $('dashboardAuthForm').hidden = !loginReady;
 	      if (!secureContext) {
 	        $('dashboardAuthError').textContent = 'Secure dashboard sessions require HTTPS. Use the loopback dashboard locally or open the configured HTTPS ingress.';
 	      }
@@ -16548,7 +16572,7 @@ function createOperatorBrowserDashboardHtml(
 	      try {
 	        const payload = await readDashboardSession();
 	        if (payload?.authenticated) showDashboardSession(payload);
-	        else showDashboardLogin('');
+	        else showDashboardLogin('', payload?.loginReady !== false);
 	      } catch (error) {
 	        showDashboardLogin(String(error.message || error));
 	      }
@@ -16583,11 +16607,11 @@ function createOperatorBrowserDashboardHtml(
 	          method: 'DELETE',
 	          credentials: 'same-origin',
 	        });
+	        const payload = await response.json().catch(() => null);
 	        if (!response.ok) {
-	          const payload = await response.json().catch(() => null);
 	          throw new Error(payload?.error?.message || 'Dashboard logout failed with HTTP ' + response.status + '.');
 	        }
-	        showDashboardLogin('Session ended.');
+	        showDashboardLogin('Session ended.', payload?.loginReady !== false);
 	      } catch (error) {
 	        $('dashboardAuthError').textContent = String(error.message || error);
 	      }

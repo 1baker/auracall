@@ -14,6 +14,9 @@ describe("operator dashboard session UX", () => {
 		expect(source).toContain('method: "DELETE"');
 		expect(source).toContain('window.location.protocol === "https:"');
 		expect(source).toContain('setApiKey("");');
+		expect(source).toContain("loginReady === false");
+		expect(source).toContain("no unscoped operator API key is loaded");
+		expect(source).toContain("disabled={loading || !secureContext || loginUnavailable}");
 		expect(source).not.toContain("sessionStorage");
 		expect(source).not.toMatch(/localStorage\.(?:getItem|setItem)\([^\n]*(?:api.?key|session)/iu);
 	});
@@ -21,6 +24,13 @@ describe("operator dashboard session UX", () => {
 	it("gates the built-in debug dashboard with the same no-storage exchange", async () => {
 		const server = await createResponsesHttpServer({ host: "127.0.0.1", port: 0 });
 		try {
+			const sessionResponse = await fetch(
+				`http://127.0.0.1:${server.port}/v1/dashboard/session`,
+			);
+			await expect(sessionResponse.json()).resolves.toMatchObject({
+				mode: "auth_disabled",
+				loginReady: false,
+			});
 			const response = await fetch(`http://127.0.0.1:${server.port}/ops/browser`);
 			expect(response.status).toBe(200);
 			const html = await response.text();
@@ -30,6 +40,9 @@ describe("operator dashboard session UX", () => {
 			expect(html).toContain("credentials: 'same-origin'");
 			expect(html).toContain("headers: { authorization: 'Bearer ' + apiKey }");
 			expect(html).toContain("window.location.protocol === 'https:'");
+			expect(html).toContain("payload?.loginReady !== false");
+			expect(html).toContain("no unscoped operator API key is loaded");
+			expect(html).toContain("$('dashboardAuthForm').hidden = !loginReady");
 			expect(html).not.toContain("sessionStorage");
 			const inlineScript = html.match(/<script>([\s\S]*)<\/script>/u)?.[1];
 			expect(inlineScript).toBeDefined();

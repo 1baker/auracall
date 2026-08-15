@@ -5122,9 +5122,10 @@ function OperatorWorkspace({ dashboardSession, onLogout }) {
   );
 }
 
-function DashboardLogin({ error, loading, onLogin, onRetry }) {
+function DashboardLogin({ error, loading, loginReady, onLogin, onRetry }) {
   const [apiKey, setApiKey] = useState("");
   const secureContext = window.location.protocol === "https:";
+  const loginUnavailable = loginReady === false;
 
   async function submit(event) {
     event.preventDefault();
@@ -5148,6 +5149,12 @@ function DashboardLogin({ error, loading, onLogin, onRetry }) {
             Secure dashboard sessions require HTTPS. Use the loopback dashboard locally or open the configured HTTPS ingress.
           </div>
         ) : null}
+        {loginUnavailable ? (
+          <div className="dashboard-login-error" role="alert">
+            Secure dashboard login is unavailable because no unscoped operator API key is loaded.
+            Configure one in the user-scoped API environment, then restart AuraCall.
+          </div>
+        ) : null}
         {error ? <div className="dashboard-login-error" role="alert">{error}</div> : null}
         <form onSubmit={submit}>
           <label htmlFor="dashboardOperatorApiKey">Operator API key</label>
@@ -5159,9 +5166,9 @@ function DashboardLogin({ error, loading, onLogin, onRetry }) {
             spellCheck="false"
             value={apiKey}
             onChange={(event) => setApiKey(event.target.value)}
-            disabled={loading || !secureContext}
+            disabled={loading || !secureContext || loginUnavailable}
           />
-          <button className="primary-action" type="submit" disabled={loading || !secureContext || !apiKey.trim()}>
+          <button className="primary-action" type="submit" disabled={loading || !secureContext || loginUnavailable || !apiKey.trim()}>
             {loading ? "Signing in…" : "Start secure session"}
           </button>
           <button type="button" onClick={onRetry} disabled={loading}>Retry session check</button>
@@ -5267,6 +5274,7 @@ export default function App() {
     return (
       <DashboardLogin
         error={sessionState.error}
+        loginReady={sessionState.payload?.loginReady}
         loading={sessionState.loading}
         onLogin={login}
         onRetry={() => setSessionState((current) => ({ ...current, loading: true, revision: current.revision + 1 }))}

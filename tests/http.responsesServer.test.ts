@@ -22505,8 +22505,11 @@ describe("http responses adapter", () => {
 				scheme: "bearer",
 				keyCount: 1,
 				scoped: false,
+				operatorKeyCount: 1,
 				trustedLocalOperatorDashboard: true,
 				trustedLocalOperatorDashboardReason: "enabled",
+				dashboardSessionRequired: false,
+				dashboardSessionReady: true,
 			});
 			const statusResponse = await fetch(`http://127.0.0.1:${server.port}/status`);
 			expect(statusResponse.status).toBe(200);
@@ -22555,6 +22558,15 @@ describe("http responses adapter", () => {
 				headers: { origin: `http://127.0.0.1:${server.port}` },
 			});
 			expect(operatorDashboardOriginResponse.status).toBe(200);
+			const trustedLocalSessionStatus = await fetch(
+				`http://127.0.0.1:${server.port}/v1/dashboard/session`,
+				{ headers: { referer: `http://127.0.0.1:${server.port}/dashboard` } },
+			);
+			await expect(trustedLocalSessionStatus.json()).resolves.toMatchObject({
+				authenticated: true,
+				mode: "trusted_local",
+				loginReady: true,
+			});
 
 			const allowedResponse = await fetch(protectedRoute, {
 				headers: { Authorization: "Bearer secret-key" },
@@ -22623,8 +22635,11 @@ describe("http responses adapter", () => {
 			);
 			try {
 				expect(server.auth, testCase.name).toMatchObject({
+					operatorKeyCount: 1,
 					trustedLocalOperatorDashboard: false,
 					trustedLocalOperatorDashboardReason: testCase.reason,
+					dashboardSessionRequired: true,
+					dashboardSessionReady: true,
 				});
 				const baseUrl = `http://127.0.0.1:${server.port}`;
 				const browserHeaders = {
@@ -22673,6 +22688,57 @@ describe("http responses adapter", () => {
 		}
 	}, 20_000);
 
+	it("reports secure dashboard login unavailable for externally routed scoped-only keys", async () => {
+		const server = await createResponsesHttpServer(
+			{ host: "127.0.0.1", port: 0 },
+			{
+				config: {
+					api: {
+						publicDashboardUrl: "https://auracall.example.test/dashboard",
+						auth: {
+							required: true,
+							keys: [{ id: "scoped", secret: "scoped-secret", agents: ["researcher"] }],
+						},
+					},
+				},
+			},
+		);
+		try {
+			expect(server.auth).toMatchObject({
+				keyCount: 1,
+				scoped: true,
+				operatorKeyCount: 0,
+				trustedLocalOperatorDashboard: false,
+				dashboardSessionRequired: true,
+				dashboardSessionReady: false,
+			});
+			const baseUrl = `http://127.0.0.1:${server.port}`;
+			const secureOrigin = `https://127.0.0.1:${server.port}`;
+			const sessionStatus = await fetch(`${baseUrl}/v1/dashboard/session`, {
+				headers: { origin: secureOrigin, referer: `${secureOrigin}/dashboard` },
+			});
+			await expect(sessionStatus.json()).resolves.toEqual({
+				object: "dashboard_session",
+				authenticated: false,
+				mode: "unauthenticated",
+				loginReady: false,
+				expiresAt: null,
+				ttlSeconds: 900,
+			});
+			const scopedLogin = await fetch(`${baseUrl}/v1/dashboard/session`, {
+				method: "POST",
+				headers: {
+					authorization: "Bearer scoped-secret",
+					origin: secureOrigin,
+					referer: `${secureOrigin}/dashboard`,
+				},
+			});
+			expect(scopedLogin.status).toBe(401);
+		} finally {
+			await server.close();
+		}
+	}, 20_000);
+
 	it("exchanges unscoped operator keys for short-lived secure dashboard sessions", async () => {
 		let now = new Date("2026-08-15T12:00:00.000Z");
 		const server = await createResponsesHttpServer(
@@ -22705,6 +22771,7 @@ describe("http responses adapter", () => {
 				object: "dashboard_session",
 				authenticated: false,
 				mode: "unauthenticated",
+				loginReady: true,
 				expiresAt: null,
 				ttlSeconds: 900,
 			});
@@ -22762,6 +22829,7 @@ describe("http responses adapter", () => {
 				object: "dashboard_session",
 				authenticated: true,
 				mode: "session",
+				loginReady: true,
 				expiresAt: "2026-08-15T12:15:00.000Z",
 				ttlSeconds: 900,
 			});
@@ -22863,6 +22931,11 @@ describe("http responses adapter", () => {
 				headers: { cookie: cookie ?? "", origin: secureOrigin },
 			});
 			expect(logout.status).toBe(200);
+			await expect(logout.clone().json()).resolves.toMatchObject({
+				authenticated: false,
+				mode: "unauthenticated",
+				loginReady: true,
+			});
 			expect(logout.headers.get("set-cookie")).toBe(
 				"__Host-auracall-dashboard=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Strict",
 			);
@@ -25298,8 +25371,11 @@ describe("http responses adapter", () => {
 					scheme: "none",
 					keyCount: 0,
 					scoped: false,
+					operatorKeyCount: 0,
 					trustedLocalOperatorDashboard: false,
 					trustedLocalOperatorDashboardReason: "auth_disabled",
+					dashboardSessionRequired: false,
+					dashboardSessionReady: false,
 				},
 			}),
 		).toBe(
@@ -25314,12 +25390,15 @@ describe("http responses adapter", () => {
 					scheme: "bearer",
 					keyCount: 0,
 					scoped: false,
+					operatorKeyCount: 0,
 					trustedLocalOperatorDashboard: false,
 					trustedLocalOperatorDashboardReason: "non_loopback_bind",
+					dashboardSessionRequired: true,
+					dashboardSessionReady: false,
 				},
 			}),
 		).toBe(
-			"Warning: API authentication is required for /v1/* and POST /status, but no API keys are loaded; 0.0.0.0 is not loopback; use trusted ingress for this development server; trusted-local dashboard authority is disabled (non_loopback_bind); GET /status remains observable without authentication.",
+			"Warning: API authentication is required for /v1/* and POST /status, but no API keys are loaded; 0.0.0.0 is not loopback; use trusted ingress for this development server; trusted-local dashboard authority is disabled (non_loopback_bind); secure dashboard session login is unavailable because no unscoped operator API key is loaded; GET /status remains observable without authentication.",
 		);
 
 		expect(
@@ -25330,12 +25409,15 @@ describe("http responses adapter", () => {
 					scheme: "bearer",
 					keyCount: 2,
 					scoped: true,
+					operatorKeyCount: 1,
 					trustedLocalOperatorDashboard: false,
 					trustedLocalOperatorDashboardReason: "non_loopback_bind",
+					dashboardSessionRequired: true,
+					dashboardSessionReady: true,
 				},
 			}),
 		).toBe(
-			"Warning: API authentication is enabled for /v1/* and POST /status (2 API keys loaded; scoped keys present); api.internal.example is not loopback; use trusted ingress for this development server; trusted-local dashboard authority is disabled (non_loopback_bind); GET /status remains observable without authentication.",
+			"Warning: API authentication is enabled for /v1/* and POST /status (2 API keys loaded; scoped keys present); api.internal.example is not loopback; use trusted ingress for this development server; trusted-local dashboard authority is disabled (non_loopback_bind); secure dashboard session login is ready (1 unscoped operator API key loaded); GET /status remains observable without authentication.",
 		);
 
 		expect(
@@ -25346,8 +25428,11 @@ describe("http responses adapter", () => {
 					scheme: "bearer",
 					keyCount: 1,
 					scoped: false,
+					operatorKeyCount: 1,
 					trustedLocalOperatorDashboard: false,
 					trustedLocalOperatorDashboardReason: "external_routing",
+					dashboardSessionRequired: true,
+					dashboardSessionReady: true,
 				},
 			}),
 		).toContain("trusted-local dashboard authority is disabled (external_routing)");

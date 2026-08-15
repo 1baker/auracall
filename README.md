@@ -183,6 +183,9 @@ xdg-open http://auracall.localhost/dashboard
 # A non-loopback HTTPS dashboard prompts for an unscoped operator API key and
 # exchanges it for a 15-minute HttpOnly secure cookie. The key is not stored in
 # the browser; session expiry, API restart, or Sign out requires a new exchange.
+# If no unscoped operator key is loaded, startup, /status.auth, and the login
+# gate report that secure dashboard login is unavailable instead of accepting a
+# credential submission. Add the key to ~/.auracall/api.env and restart the API.
 
 # Explicitly allow a non-loopback bind only when you mean it
 auracall api serve --host 0.0.0.0 --listen-public --port 8080
@@ -564,10 +567,12 @@ Terminology note:
   `/status` remains unauthenticated so local operators can discover the service
   posture. API startup prints the same
   resolved non-secret auth summary as `/status.auth`: whether auth is required,
-  how many keys loaded, whether scoped keys are present, whether the
-  trusted-local dashboard exception is active, and its resolved reason. It
-  never prints key ids, secrets, or scope values, and warns explicitly when
-  auth is required but no keys loaded. Scoped keys are enforced on
+  how many total and unscoped operator keys loaded, whether scoped keys are
+  present, whether the trusted-local dashboard exception is active and why,
+  and whether a secure dashboard session is required and ready. It never
+  prints key ids, secrets, or scope values, and warns explicitly when auth is
+  required but no keys loaded or when dashboard session login is required but
+  no unscoped operator key is available. Scoped keys are enforced on
   `/v1/responses` and `/v1/team-runs` against the effective config plus
   registry catalog for agent, team, service, and runtime-profile selectors.
   Operators can inspect non-secret scope health with

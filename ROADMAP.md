@@ -7,6 +7,11 @@
 Status: active
 Lane: P01
 
+- Closed accepted dashboard session readiness posture:
+  [docs/dev/plans/0324-2026-08-15-dashboard-session-readiness.md](docs/dev/plans/0324-2026-08-15-dashboard-session-readiness.md)
+  Status, startup, and both dashboard gates distinguish an available
+  unscoped operator-key login path from a scoped-only or empty key set.
+
 - Closed accepted configurable trusted-local dashboard authority:
   [docs/dev/plans/0323-2026-08-15-trusted-local-dashboard-config.md](docs/dev/plans/0323-2026-08-15-trusted-local-dashboard-config.md)
   Known external dashboard routing will force the trusted-local exception off,

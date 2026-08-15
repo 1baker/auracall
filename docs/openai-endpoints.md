@@ -100,9 +100,12 @@ Current limits:
 - loopback by default; non-loopback requires `--listen-public`
 - startup reports the running server's resolved non-secret auth posture and
   matches `/status.auth`; it reports only required/disabled state, loaded-key
-  count, whether scoped keys are present, and whether trusted-local dashboard
-  authority is active plus its resolved reason, while preserving observable
-  `/status` and trusted-ingress warnings
+  count, unscoped operator-key count, whether scoped keys are present, whether
+  trusted-local dashboard authority is active plus its resolved reason, and
+  whether secure dashboard sessions are required and ready, while preserving
+  observable `/status` and trusted-ingress warnings. Required-but-unready
+  session posture produces an explicit startup warning without exposing key
+  ids, secrets, or scope values
 - same-origin dashboard headers are browser-context constraints, not
   authentication: no-key operator authority additionally requires a
   loopback-bound server, loopback TCP peer, an enabled
@@ -632,10 +635,11 @@ Current limits:
   `api_key_diagnostics` against the env file to validate key scope metadata
   without exposing secret values.
 - `GET /v1/dashboard/session` reports only the current browser authorization
-  mode and bounded expiry. `POST /v1/dashboard/session` performs the HTTPS
-  unscoped-key exchange, and `DELETE /v1/dashboard/session` revokes the current
-  in-memory session and clears its cookie. These routes do not expose key ids,
-  scopes, API keys, or cookie tokens.
+  mode, bounded expiry, and non-secret `loginReady` state. Successful
+  `POST /v1/dashboard/session` performs the HTTPS unscoped-key exchange, and
+  `DELETE /v1/dashboard/session` revokes the current in-memory session and
+  clears its cookie; both also return `loginReady`. These routes do not expose
+  key ids, scopes, API keys, or cookie tokens.
 - Agent-facing skills:
   - `skills/auracall-api-workflow/SKILL.md` covers scoped execution clients,
     single responses, batches, attachments, and polling

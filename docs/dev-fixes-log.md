@@ -1,3 +1,11 @@
+- 2026-08-15: Total API-key count plus a scoped-key flag cannot prove that an
+  externally routed dashboard has any credential capable of opening an
+  operator session. Derive a non-secret unscoped operator-key count and
+  required/ready session posture from the exact resolved auth policy, reuse it
+  in `/status.auth`, startup, and session status, and disable browser login with
+  an actionable configuration explanation when the path is guaranteed to fail.
+  Do not expose key ids, secrets, or scope contents to diagnose readiness.
+
 - 2026-08-15: Loopback peer evidence cannot distinguish a direct local browser
   from a same-host reverse proxy. Make trusted-local dashboard authority
   explicitly configurable, and force it off whenever a public dashboard URL,

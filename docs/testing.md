@@ -503,8 +503,9 @@
         it covers absolute expiry, revocation, malformed/unknown cookies,
         unscoped-key exchange, secure cookie attributes, HTTPS/origin gates,
         protected `POST /status`, bearer compatibility, React/debug UI gating,
-        and the absence of browser secret storage without provider or browser
-        access
+        required/ready posture for empty, scoped-only, and operator key sets,
+        locked-out login explanations, and the absence of browser secret
+        storage without provider or browser access
       - local browser-backed smoke for provider bot-gate clear:
         `pnpm run smoke:ops-browser-provider-guard`; it seeds a synthetic
         Gemini `google.com/sorry` provider guard, opens `/ops/browser` with

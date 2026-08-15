@@ -165,7 +165,11 @@ context is same-origin, `api.auth.trustedLocalOperatorDashboard` is omitted or
 switch is `true`. Set the switch to `false` when an out-of-band reverse proxy is
 not represented in AuraCall config. `/status.auth` and startup posture report
 the resolved reason as `enabled`, `auth_disabled`, `config_disabled`,
-`external_routing`, or `non_loopback_bind`.
+`external_routing`, or `non_loopback_bind`. They also report the non-secret
+`operatorKeyCount`, `dashboardSessionRequired`, and `dashboardSessionReady`
+values. When a session is required but no unscoped operator key is loaded,
+startup warns and both dashboard login gates explain that the key must be added
+to the user-scoped API environment before AuraCall is restarted.
 
 A non-loopback or externally routed dashboard must be opened through HTTPS and
 accepts only an unscoped operator API key for login. AuraCall sends
@@ -174,8 +178,11 @@ that key once in the login request, then clears the input and returns a
 cookie token are never written to Web Storage, URLs, logs, or response bodies.
 Sessions are in-memory, use absolute expiry, end on API restart or Sign out,
 and do not replace trusted ingress controls. Scoped agent/team keys cannot open
-operator sessions. Reverse proxies must preserve the browser-visible host and
-HTTPS origin; forwarded client-address headers are not authentication inputs.
+operator sessions. `GET`, successful `POST`, and `DELETE`
+`/v1/dashboard/session` responses include `loginReady` without exposing any key
+identity or scope metadata. Reverse proxies must preserve the browser-visible
+host and HTTPS origin; forwarded client-address headers are not authentication
+inputs.
 
 Selector precedence is now explicit in those reports:
 - runtime selection uses `--profile` first

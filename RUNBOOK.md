@@ -1,5 +1,29 @@
 # RUNBOOK
 
+## Turn 493 | 2026-08-15
+
+- Opened Plan 0324 after external-routing hardening exposed a lockout-detection
+  gap: total key count plus scoped presence cannot prove that any loaded key is
+  an unscoped operator credential accepted by dashboard session login.
+- Project operator-key count plus required/ready session posture from the exact
+  resolved auth policy. Warn when session authority is required but impossible,
+  and make both dashboard gates explain the configuration issue instead of
+  prompting for a key the server cannot accept.
+- Critical path remains root with no parallel workers. This provider-free slice
+  may change auth/session status, dashboard gates, focused tests, and current
+  docs, but it will not create or expose keys, mutate active config, restart
+  services, change ingress, or run browsers/providers.
+- Added non-secret operator-key count and dashboard-session required/ready
+  posture, startup lockout warnings, session `loginReady`, and disabled React
+  and debug login gates with exact remediation for empty or scoped-only key
+  sets.
+- Eight focused files passed 257 tests; the isolated provider-disabled suite
+  passed 2,949 with 65 expected skips across 348 test files. Typecheck,
+  zero-warning lint across 846 files, production build, 325-plan audit, current
+  CodeGraph sync/affected analysis, and diff hygiene passed. Plan 0324 closes
+  accepted without active config, service, ingress, browser, provider, or key
+  mutation.
+
 ## Turn 492 | 2026-08-15
 
 - Opened Plan 0323 after the secure-session closeout identified one remaining

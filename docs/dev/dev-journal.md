@@ -1,3 +1,22 @@
+## 2026-08-15 | Plan 0324 dashboard session readiness
+
+- Opened a bounded successor because external-routing hardening can require a
+  secure session while `/status.auth` still cannot prove that an unscoped
+  operator key is loaded.
+- Add non-secret operator-key count and session required/ready posture, warn on
+  guaranteed lockout, and make both browser gates stop soliciting credentials
+  when login cannot succeed.
+- `/status.auth`, startup, the session endpoint, and both dashboards now share
+  the resolved readiness contract. Scoped-only or empty key sets report the
+  unavailable path without exposing key metadata, and the browser gates remain
+  disabled until an unscoped operator key is loaded.
+- Eight focused files passed 257 tests; the isolated provider-disabled suite
+  passed 2,949 with 65 expected skips across 348 test files. Typecheck,
+  zero-warning lint across 846 files, production build, 325-plan audit, current
+  CodeGraph sync/affected analysis, and diff hygiene passed. Plan 0324 is
+  CLOSED without active config, service, ingress, browser, provider, or key
+  effects.
+
 ## 2026-08-15 | Plan 0323 trusted-local dashboard configuration
 
 - Opened a bounded successor after identifying that an external reverse proxy
