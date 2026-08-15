@@ -156,7 +156,9 @@ describe('service registry manifest helpers', () => {
     expect(requireBundledServiceModelLabel('chatgpt', 'gpt-5.2')).toBe('GPT-5.6 Terra');
     expect(requireBundledServiceModelLabel('chatgpt', 'gpt-5.6-sol')).toBe('GPT-5.6 Sol');
     expect(requireBundledServiceModelLabel('chatgpt', 'gpt-5.1-pro')).toBe('GPT-5.6 Sol');
-    expect(requireBundledServiceModelLabel('gemini', 'gemini-3-pro')).toBe('Gemini 3 Pro');
+    expect(requireBundledServiceModelLabel('gemini', 'gemini-3-pro')).toBe('Gemini Pro');
+    expect(requireBundledServiceModelLabel('gemini', 'flash-lite')).toBe('Gemini Flash-Lite');
+    expect(requireBundledServiceModelLabel('gemini', 'flash')).toBe('Gemini Flash');
     expect(requireBundledServiceModelLabel('grok', 'grok-4.1')).toBe('Expert');
   });
 

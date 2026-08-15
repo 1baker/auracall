@@ -81,6 +81,13 @@ Implemented:
   - `grok:instant` -> `Fast`
   - `grok:thinking` -> `Expert`
   - missing menus or exact options fail before prompt submission
+- Gemini semantic selectors resolve through the maintained native adapter:
+  - `gemini:auto` -> `Gemini Flash`
+  - `gemini:instant` -> `Gemini Flash-Lite`
+  - `gemini:thinking` -> `Gemini Pro`
+  - attachments and desired model survive shared planned-prompt dispatch
+  - missing menus, exact options, or selected-state proof fail before prompt
+    insertion
 - local agent/team management writes are available at:
   - `GET|PUT|DELETE /v1/config/agents`
   - `GET|PUT|DELETE /v1/config/teams`
@@ -89,9 +96,8 @@ Implemented:
   - writes target the user-scoped registry by default; config-defined overlay
     ids remain pinned and return blocked mutation results
 - `/v1/models` includes configured agents and semantic selector entries for
-  client-side discovery. ChatGPT and Grok semantic selectors are marked
-  `executionReady=true`; Gemini selector entries remain visible with
-  `executionReady=false` until its provider adapter resolves them.
+  client-side discovery. ChatGPT, Grok, and Gemini semantic selectors are
+  marked `executionReady=true` after provider-free adapter coverage.
 - `api.auth.required=true` with `api.auth.keys[]` enables bearer-key
   authorization for `/v1/*`. `/status` remains open for operator discovery and
   reports the active auth posture. Keys may carry `agents`, `teams`,
@@ -119,8 +125,6 @@ Implemented:
 
 Remaining:
 
-- Gemini semantic `modelSelector` execution still needs provider-adapter
-  resolution
 - streaming `/v1/chat/completions` compatibility is still deferred
 
 ## Acceptance Criteria
@@ -134,7 +138,7 @@ Remaining:
   knowledge, and prompt intent without polluting output with unset fields.
 - Provider-specific adapters resolve semantic selectors against current
   workbench UI modes before AuraCall treats them as execution-ready defaults.
-  ChatGPT is the first implemented provider for this criterion.
+  ChatGPT, Grok, and Gemini now implement this criterion.
 - Agents and teams can be maintained by other local agents through the API/MCP
   control plane without hand-editing config files.
 - Client apps can discover configured agent model ids and semantic selector
@@ -156,9 +160,6 @@ Remaining:
 
 ## Next Work
 
-- Resolve Gemini `modelSelector` values through its provider-specific browser
-  adapter rather than feeding semantic tokens directly into raw model
-  selection.
 - Add streaming compatibility after non-streaming OpenAI client dogfooding proves
   the basic route and response shape.
 - Add first-class batch retry/cancel/priority controls once response-batch

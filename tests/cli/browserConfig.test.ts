@@ -161,7 +161,7 @@ describe('buildBrowserConfig', () => {
     const config = await buildBrowserConfig({
       model: 'gemini-3-pro',
     });
-    expect(config.desiredModel).toBe('Gemini 3 Pro');
+    expect(config.desiredModel).toBe('Gemini Pro');
   });
 
   test('resolves browser picker labels from the bundled services manifest', () => {
@@ -170,7 +170,7 @@ describe('buildBrowserConfig', () => {
     expect(mapModelToBrowserLabel('gpt-5.2-pro')).toBe('GPT-5.6 Sol');
     expect(mapModelToBrowserLabel('gpt-5.1')).toBe('GPT-5.6 Terra');
     expect(mapModelToBrowserLabel('gpt-5-pro')).toBe('GPT-5.6 Sol');
-    expect(mapModelToBrowserLabel('gemini-3-pro')).toBe('Gemini 3 Pro');
+    expect(mapModelToBrowserLabel('gemini-3-pro')).toBe('Gemini Pro');
     expect(mapModelToBrowserLabel('grok-4.1')).toBe('Expert');
   });
 

@@ -21943,7 +21943,7 @@ describe("http responses adapter", () => {
 				metadata: {
 					kind: "semantic_model_selector",
 					service: "gemini",
-					executionReady: false,
+					executionReady: true,
 				},
 			});
 		} finally {

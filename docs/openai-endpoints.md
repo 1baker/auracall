@@ -925,9 +925,14 @@ Current limits:
   - Grok browser-backed execution resolves `grok:auto`, `grok:instant`, and
     `grok:thinking` to the current `Auto`, `Fast`, and `Expert` picker rows;
     missing menus or exact options stop execution before prompt submission
-  - Gemini semantic selectors remain discoverable with
-    `executionReady=false`; use a raw model pin only when that compatibility
-    behavior is intentional
+  - Gemini browser-backed execution resolves `gemini:auto`,
+    `gemini:instant`, and `gemini:thinking` to current `Gemini Flash`,
+    `Gemini Flash-Lite`, and `Gemini Pro` picker rows through the native
+    provider adapter; missing menus, exact rows, or selected-state verification
+    stop execution before prompt insertion
+  - configured Gemini prompts preserve native-adapter attachments and no
+    longer default to legacy private web-RPC model headers; raw `model` remains
+    the explicit higher-priority compatibility escape hatch
 - MCP exposes the same trusted local agent/team config surface through
   `config_entities_list`, `config_agent_upsert`, `config_agent_delete`,
   `config_team_upsert`, and `config_team_delete`; list responses include

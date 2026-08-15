@@ -31,6 +31,10 @@ import {
 	waitForDownloadCapture,
 	waitForPredicate,
 } from "../service/ui.js";
+import {
+	selectGeminiModel,
+	stageGeminiPromptAttachments,
+} from "../actions/geminiModelSelection.js";
 import type { ChromeClient } from "../types.js";
 import type {
 	Conversation,
@@ -1526,8 +1530,10 @@ async function assertGeminiExpectedIdentity(
 		{
 			browserTargetId:
 				options.tabTargetId ?? options.providerSessionAuthorization.context.browserTargetId ?? null,
-			devtoolsHost: options.host ?? options.providerSessionAuthorization.context.devtoolsHost ?? null,
-			devtoolsPort: options.port ?? options.providerSessionAuthorization.context.devtoolsPort ?? null,
+			devtoolsHost:
+				options.host ?? options.providerSessionAuthorization.context.devtoolsHost ?? null,
+			devtoolsPort:
+				options.port ?? options.providerSessionAuthorization.context.devtoolsPort ?? null,
 		},
 	);
 }
@@ -7540,6 +7546,16 @@ export function createGeminiAdapter(): Pick<
 					},
 				});
 				await dismissGeminiPreciseLocationDialog(client.Runtime).catch(() => undefined);
+				if (input.desiredModel) {
+					await selectGeminiModel(client, input.desiredModel);
+					await emitProgress({
+						phase: "model_selected",
+						details: {
+							desiredModel: input.desiredModel,
+							targetId: targetId ?? null,
+						},
+					});
+				}
 				await selectGeminiWorkbenchCapability(client, input.capabilityId);
 				await emitProgress({
 					phase: "capability_selected",
@@ -7548,6 +7564,16 @@ export function createGeminiAdapter(): Pick<
 						targetId: targetId ?? null,
 					},
 				});
+				await stageGeminiPromptAttachments(client, input.attachments ?? []);
+				if ((input.attachments?.length ?? 0) > 0) {
+					await emitProgress({
+						phase: "attachments_staged",
+						details: {
+							attachmentCount: input.attachments?.length ?? 0,
+							targetId: targetId ?? null,
+						},
+					});
+				}
 				const baseline = await readGeminiPromptState(client.Runtime);
 				await emitProgress({
 					phase: "composer_ready",

@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 1
+Plan version: 2
 
 ## Goal
 
@@ -58,20 +58,20 @@ private web-RPC transport.
 
 ## Acceptance Criteria
 
-- [ ] Gemini semantic selectors resolve deterministically to current native
+- [x] Gemini semantic selectors resolve deterministically to current native
       adapter model intent, while unknown `gemini:` tokens fail before browser
       execution and raw agent `model` remains the higher-priority override.
-- [ ] Shared planned-prompt dispatch preserves requested model and attachments
+- [x] Shared planned-prompt dispatch preserves requested model and attachments
       through `GeminiService` into the provider adapter.
-- [ ] The Gemini adapter opens the current picker, selects one exact known row,
+- [x] The Gemini adapter opens the current picker, selects one exact known row,
       re-reads authoritative selected state, and fails before prompt insertion
       if the trigger, row, or verification is unavailable.
-- [ ] Configured Gemini agent execution uses the maintained native adapter and
+- [x] Configured Gemini agent execution uses the maintained native adapter and
       preserves response/runtime metadata without defaulting to private web-RPC
       model headers.
-- [ ] `/v1/models` and config-choice discovery mark the three Gemini selectors
+- [x] `/v1/models` and config-choice discovery mark the three Gemini selectors
       execution-ready only after the native path is covered provider-free.
-- [ ] Focused tests, typecheck, zero-warning lint, build, complete
+- [x] Focused tests, typecheck, zero-warning lint, build, complete
       provider-disabled suite, plan audit, CodeGraph sync, and diff hygiene
       pass without browser/provider effects.
 - [ ] Exact-SHA cross-platform CI passes Ubuntu, macOS, and Windows without
@@ -100,3 +100,26 @@ consistently, and passes exact-SHA cross-platform CI.
   current source evidence disproves attachment/model preservation and readiness
   remains false with the exact blocker recorded
 
+## Execution Notes
+
+- Stable Gemini intent resolves at the configured-agent boundary:
+  `instant` to `Gemini Flash-Lite`, `auto` to `Gemini Flash`, and `thinking`
+  to `Gemini Pro`. Raw agent `model` remains the higher-priority override and
+  unknown `gemini:` tokens fail before browser execution.
+- Configured Gemini prompts now use `GeminiService` and the maintained provider
+  adapter by default. The shared planned-prompt contract carries
+  `desiredModel` and attachments; the legacy private web-RPC executor remains
+  only as an explicit injected compatibility seam.
+- The provider-local action opens the registered picker, clicks one exact row
+  through trusted CDP input, re-reads selected state, stages exact local files,
+  verifies every filename preview, and refuses prompt insertion on any missing
+  proof.
+- Focused coverage passed 327 tests. The first complete suite passed 3,000
+  tests and exposed two stale CLI expectations for the legacy API id's current
+  picker label; both passed directly after correction. The bounded second
+  complete run passed 331 files / 3,002 tests with 19 files / 55 intended
+  skips.
+- Typecheck, strict zero-warning lint, production build, 333-plan audit, diff
+  hygiene, and CodeGraph sync/affected-test inspection passed. No live Gemini
+  prompt or managed AuraCall browser was launched. Exact-SHA CI remains the
+  closing gate.

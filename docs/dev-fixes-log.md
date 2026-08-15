@@ -22082,3 +22082,15 @@ browser-stage lifecycle observability, not transcript truncation.
   path, when those values select materially different execution adapters.
 - Assert the complete template in the focused HTTP contract test so future
   adapter additions cannot silently leave discovery behind.
+
+## 2026-08-15 | Prove browser model and attachment state before prompt insertion
+
+- A semantic selector is not execution-ready when only the configured executor
+  understands it. Shared prompt planning must preserve the resolved model and
+  attachments all the way into the provider adapter.
+- Keep volatile picker labels in the service registry and require exact
+  selected-state readback after a trusted click. A missing trigger, row, or
+  proof is terminal before prompt text enters the composer.
+- File chooser completion is not attachment readiness. Set the exact local
+  files through CDP, verify every filename in prompt previews, and always
+  release file-chooser interception on success or failure.

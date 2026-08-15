@@ -47550,3 +47550,18 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   proof.
 - This slice does not launch Gemini, submit a prompt, touch a managed browser
   profile, mutate installed runtime state, or retry any anti-bot surface.
+- Configured Gemini execution now defaults to the maintained native service and
+  adapter instead of the private web-RPC executor. Shared planned-prompt
+  dispatch preserves the requested model and attachments; the adapter proves
+  the exact registry-backed picker row and attachment previews before prompt
+  insertion.
+- `gemini:auto`, `gemini:instant`, and `gemini:thinking` resolve to Gemini
+  Flash, Flash-Lite, and Pro. Unknown tokens stop before browser work, and both
+  discovery surfaces now advertise the covered family as execution-ready.
+- Seven focused files pass 327 provider-free tests. The first complete run
+  exposed two stale CLI expectations for the legacy API id's current label
+  after 3,000 passes; both passed directly after correction, and the bounded
+  rerun passed 331 files / 3,002 tests with 19 files / 55 intended skips.
+- Typecheck, zero-warning lint, production build, 333-plan audit, diff hygiene,
+  and CodeGraph sync/affected-test inspection pass. No managed AuraCall browser
+  process appeared; publication and exact-SHA CI remain.

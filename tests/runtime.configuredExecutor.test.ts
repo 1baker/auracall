@@ -266,6 +266,123 @@ describe('configured stored-step executor', () => {
     expect(runBrowserModeImpl).not.toHaveBeenCalled();
   });
 
+  it('resolves Gemini semantic agent selectors through the native provider path', async () => {
+    const runGeminiNativePromptImpl = vi.fn(async () => ({
+      answerText: 'AURACALL_GEMINI_SELECTOR_OK',
+      answerMarkdown: 'AURACALL_GEMINI_SELECTOR_OK',
+      tookMs: 700,
+      answerTokens: 8,
+      answerChars: 28,
+      tabUrl: 'https://gemini.google.com/app/mock-selector',
+      conversationId: 'mock-gemini-selector',
+    }));
+    const executeStoredRunStep = createConfiguredStoredStepExecutor(
+      {
+        browserProfiles: { default: { managedProfileRoot: '/tmp/auracall/browser-profiles' } },
+        runtimeProfiles: {
+          'gemini-selector': {
+            engine: 'browser',
+            defaultService: 'gemini',
+            browserProfile: 'default',
+            services: { gemini: {} },
+          },
+        },
+        agents: {
+          'gemini-thinker': {
+            runtimeProfile: 'gemini-selector',
+            service: 'gemini',
+            modelSelector: 'gemini:thinking',
+          },
+        },
+      },
+      { runGeminiNativePromptImpl },
+    );
+
+    const result = await executeStoredRunStep?.({
+      record: {
+        runId: 'teamrun_gemini_selector_1',
+        revision: 1,
+        bundle: { run: { id: 'teamrun_gemini_selector_1' } },
+      } as never,
+      step: {
+        id: 'teamrun_gemini_selector_1:step:1',
+        agentId: 'gemini-thinker',
+        runtimeProfileId: 'gemini-selector',
+        browserProfileId: 'default',
+        service: 'gemini',
+        input: {
+          prompt: 'Reply exactly with AURACALL_GEMINI_SELECTOR_OK',
+          artifacts: [],
+          structuredData: {},
+          notes: [],
+        },
+      } as never,
+    });
+
+    expect(runGeminiNativePromptImpl).toHaveBeenCalledWith(
+      expect.objectContaining({
+        runtimeProfileId: 'gemini-selector',
+        browserRunOptions: expect.objectContaining({
+          config: expect.objectContaining({
+            target: 'gemini',
+            desiredModel: 'Gemini Pro',
+            modelStrategy: 'select',
+          }),
+        }),
+      }),
+    );
+    expect(result?.output?.structuredData?.browserRun).toMatchObject({
+      service: 'gemini',
+      desiredModel: 'Gemini Pro',
+      modelSelector: 'gemini:thinking',
+      conversationId: 'mock-gemini-selector',
+    });
+  });
+
+  it('rejects unsupported Gemini semantic selectors before native browser execution', async () => {
+    const runGeminiNativePromptImpl = vi.fn();
+    const executeStoredRunStep = createConfiguredStoredStepExecutor(
+      {
+        runtimeProfiles: {
+          default: {
+            engine: 'browser',
+            defaultService: 'gemini',
+            services: { gemini: {} },
+          },
+        },
+        agents: {
+          invalid: {
+            runtimeProfile: 'default',
+            service: 'gemini',
+            modelSelector: 'gemini:ultra',
+          },
+        },
+      },
+      { runGeminiNativePromptImpl },
+    );
+
+    await expect(
+      executeStoredRunStep?.({
+        record: {
+          runId: 'teamrun_gemini_selector_invalid',
+          revision: 1,
+          bundle: { run: { id: 'teamrun_gemini_selector_invalid' } },
+        } as never,
+        step: {
+          id: 'teamrun_gemini_selector_invalid:step:1',
+          agentId: 'invalid',
+          runtimeProfileId: 'default',
+          browserProfileId: null,
+          service: 'gemini',
+          input: { prompt: 'must not run', artifacts: [], structuredData: {}, notes: [] },
+        } as never,
+      }),
+    ).rejects.toThrow(
+      'Stored team step teamrun_gemini_selector_invalid:step:1 has unsupported Gemini modelSelector "gemini:ultra".',
+    );
+    expect(runGeminiNativePromptImpl).not.toHaveBeenCalled();
+  });
+
   it('spills large API prompts to a browser attachment without truncating caller input', async () => {
     const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), 'auracall-configured-executor-'));
     setAuracallHomeDirOverrideForTest(homeDir);

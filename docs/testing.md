@@ -62,6 +62,11 @@
   `pnpm exec vitest run tests/config/modelSelector.test.ts tests/browser/grokActions.test.ts tests/runtime.configuredExecutor.test.ts tests/config/agentConfigService.test.ts tests/http.responsesServer.test.ts -t "semantic model selectors|selectGrokMode|Grok semantic agent selectors|unsupported Grok semantic selectors|projects read-only agent choices|lists configured agents as OpenAI-compatible model entries"`.
   This proves semantic-to-current-label mapping, configured execution,
   fail-closed picker drift, and discovery readiness without launching Grok.
+- Gemini semantic selector execution is provider-free:
+  `pnpm exec vitest run tests/config/modelSelector.test.ts tests/browser/geminiModelSelection.test.ts tests/browser/llmServiceContext.test.ts tests/runtime.configuredExecutor.test.ts tests/config/agentConfigService.test.ts tests/http.responsesServer.test.ts tests/services/registry.test.ts`.
+  This proves semantic-to-current-label mapping, exact picker verification,
+  attachment staging, shared prompt transport, native configured execution,
+  typo rejection, and discovery readiness without launching Gemini.
 - Handoff browser-adapter selection is provider-free:
   `pnpm vitest run tests/browser/chatgptService.test.ts tests/browser/geminiHandoffAdapter.test.ts tests/cli/handoffCommand.test.ts tests/http.handoffOperator.test.ts`.
   The fixtures prove explicit ChatGPT/Gemini selection, attachments, compact

@@ -493,9 +493,10 @@ state belongs inside AuraCall provider adapters and browser services.
 
 ## Current Gaps
 
-- Gemini semantic selector execution is visible in discovery but not yet
-  execution-ready. Grok's `auto`, `instant`, and `thinking` family resolves to
-  current `Auto`, `Fast`, and `Expert` picker rows and fails closed on drift.
+- Gemini's `auto`, `instant`, and `thinking` family resolves through the native
+  provider adapter to current `Flash`, `Flash-Lite`, and `Pro` picker rows.
+  Grok resolves the same intent family to `Auto`, `Fast`, and `Expert`. Both
+  stop before prompt insertion when exact selected state cannot be proved.
 - Streaming chat completions are deferred.
 - Remote HTTP(S) attachment download/materialization is deferred.
 - API key issuance is local/operator-scoped; remote privileged MCP/API

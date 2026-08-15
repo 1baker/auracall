@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   isChatgptSemanticModelSelector,
+  isGeminiSemanticModelSelector,
   isGrokSemanticModelSelector,
   resolveChatgptSemanticModelSelector,
+  resolveGeminiSemanticModelSelector,
   resolveGrokSemanticModelSelector,
 } from '../../src/config/modelSelector.js';
 
@@ -48,5 +50,22 @@ describe('semantic model selectors', () => {
     expect(isGrokSemanticModelSelector('grok:heavy')).toBe(true);
     expect(resolveGrokSemanticModelSelector('grok:heavy')).toBeNull();
     expect(isGrokSemanticModelSelector('gemini:thinking')).toBe(false);
+  });
+
+  it.each([
+    ['gemini:auto', { desiredModel: 'Gemini Flash' }],
+    ['gemini:flash', { desiredModel: 'Gemini Flash' }],
+    ['gemini:instant', { desiredModel: 'Gemini Flash-Lite' }],
+    ['gemini:flash-lite', { desiredModel: 'Gemini Flash-Lite' }],
+    ['gemini:thinking', { desiredModel: 'Gemini Pro' }],
+    ['gemini:pro', { desiredModel: 'Gemini Pro' }],
+  ])('resolves %s to current Gemini picker controls', (selector, expected) => {
+    expect(resolveGeminiSemanticModelSelector(selector)).toEqual(expected);
+  });
+
+  it('detects Gemini selector typos separately from absent selectors', () => {
+    expect(isGeminiSemanticModelSelector('gemini:ultra')).toBe(true);
+    expect(resolveGeminiSemanticModelSelector('gemini:ultra')).toBeNull();
+    expect(isGeminiSemanticModelSelector('chatgpt:sol')).toBe(false);
   });
 });

@@ -8,8 +8,10 @@ import { getAgent, getRuntimeProfileBrowserProfileId, resolveRuntimeSelection } 
 import { resolveConfiguredServiceAccountId } from '../config/serviceAccountIdentity.js';
 import {
   isChatgptSemanticModelSelector,
+  isGeminiSemanticModelSelector,
   isGrokSemanticModelSelector,
   resolveChatgptSemanticModelSelector,
+  resolveGeminiSemanticModelSelector,
   resolveGrokSemanticModelSelector,
 } from '../config/modelSelector.js';
 import { runBrowserMode } from '../browser/index.js';
@@ -22,6 +24,7 @@ import {
 } from '../browser/service/agentBrowserBridge.js';
 import type {
   BrowserAttachment,
+  BrowserPassiveObservation,
   BrowserRunOptions,
   BrowserRunResult,
   BrowserRuntimeEvidence,
@@ -34,8 +37,9 @@ import {
   type ProviderSessionAuthorization,
 } from '../browser/providers/providerSessionAuthority.js';
 import { createLlmService } from '../browser/llmService/providers/index.js';
+import { resolveRuntimeProfileUserConfig } from '../browser/service/profileConfig.js';
+import type { ResolvedUserConfig } from '../config.js';
 import { getAuracallHomeDir } from '../auracallHome.js';
-import { createGeminiWebExecutor } from '../gemini-web/executor.js';
 import { resolveManagedProfileCookieExportPath } from '../browser/profileStore.js';
 import {
   clearLiveRuntimeRunServiceState,
@@ -55,12 +59,19 @@ const BROWSER_INLINE_PROMPT_CHAR_BUDGET = 60_000;
 export interface CreateConfiguredStoredStepExecutorDeps {
   runBrowserModeImpl?: (options: BrowserRunOptions) => Promise<Awaited<ReturnType<typeof runBrowserMode>>>;
   runGeminiBrowserModeImpl?: (options: BrowserRunOptions) => Promise<Awaited<ReturnType<typeof runBrowserMode>>>;
+  runGeminiNativePromptImpl?: (input: ConfiguredGeminiNativePromptInput) => Promise<BrowserRunResult>;
   resumeBrowserSessionImpl?: typeof resumeBrowserSession;
   reattachAgentBrowserBrokerTabImpl?: typeof reattachAgentBrowserBrokerTab;
   withAgentBrowserBrokerCleanupImpl?: typeof withAgentBrowserBrokerCleanup;
   effectiveConfigProvider?: () => Promise<Record<string, unknown>>;
   browserResponseArtifactMaterializer?: (input: BrowserResponseArtifactMaterializerInput) => Promise<BrowserResponseArtifactMaterializerResult>;
   logger?: (message: string) => void;
+}
+
+export interface ConfiguredGeminiNativePromptInput {
+  executionConfig: Record<string, unknown>;
+  runtimeProfileId: string | null;
+  browserRunOptions: BrowserRunOptions;
 }
 
 interface BrowserResponseArtifactMaterializerInput {
@@ -760,12 +771,112 @@ async function resolveConfiguredExecutorInlineCookies(
   return null;
 }
 
+async function runConfiguredGeminiNativePrompt(
+  input: ConfiguredGeminiNativePromptInput,
+): Promise<BrowserRunResult> {
+  const startedAt = Date.now();
+  const runOptions = input.browserRunOptions;
+  const config = runOptions.config ?? {};
+  const scopedConfig = resolveRuntimeProfileUserConfig(input.executionConfig, {
+    runtimeProfileId: input.runtimeProfileId,
+    provider: 'gemini',
+  }) as ResolvedUserConfig;
+  const service = createLlmService('gemini', scopedConfig);
+  const passiveObservations: BrowserPassiveObservation[] = [];
+  let runtime: BrowserRuntimeMetadata = {};
+
+  const recordObservation = async (
+    observation: BrowserPassiveObservation,
+  ): Promise<void> => {
+    if (!passiveObservations.some((entry) => entry.state === observation.state)) {
+      passiveObservations.push(observation);
+    }
+    await runOptions.runtimeEvidenceCb?.({ observation, runtime });
+  };
+
+  const result = await service.runPrompt(
+    {
+      prompt: runOptions.prompt,
+      attachments: runOptions.attachments,
+      completionMode: 'assistant_response',
+      configuredUrl: config.geminiUrl ?? config.url ?? null,
+      projectId: config.projectId ?? null,
+      conversationId: config.conversationId ?? null,
+      desiredModel: config.desiredModel ?? null,
+      timeoutMs: config.timeoutMs ?? null,
+      onProgress: async (event) => {
+        const details = isRecord(event.details) ? event.details : {};
+        const targetId = asNonEmptyString(details.targetId);
+        const targetUrl = asNonEmptyString(details.targetUrl) ?? asNonEmptyString(details.href);
+        const host = asNonEmptyString(details.host);
+        const port = asFiniteNumber(details.port);
+        const conversationId = asNonEmptyString(details.conversationId);
+        runtime = {
+          ...runtime,
+          ...(targetId ? { chromeTargetId: targetId } : {}),
+          ...(targetUrl ? { tabUrl: targetUrl } : {}),
+          ...(host ? { chromeHost: host } : {}),
+          ...(port !== null ? { chromePort: port } : {}),
+          ...(conversationId ? { conversationId } : {}),
+        };
+        if (event.phase === 'browser_target_attached') {
+          await runOptions.runtimeHintCb?.(runtime);
+        }
+        if (event.phase === 'submitted_state_observed') {
+          await recordObservation({
+            state: 'thinking',
+            source: 'provider-adapter',
+            observedAt: new Date().toISOString(),
+            evidenceRef: 'gemini-native-prompt-submitted',
+            confidence: 'high',
+          });
+        }
+      },
+    },
+    {
+      configuredUrl: config.geminiUrl ?? config.url ?? null,
+      projectId: config.projectId ?? null,
+      providerSessionAuthorization: config.providerSessionAuthorization,
+      abortSignal: runOptions.abortSignal,
+    },
+  );
+  runtime = {
+    ...runtime,
+    ...(result.tabTargetId ? { chromeTargetId: result.tabTargetId } : {}),
+    ...(result.url ? { tabUrl: result.url } : {}),
+    ...(result.devtoolsHost ? { chromeHost: result.devtoolsHost } : {}),
+    ...(result.devtoolsPort ? { chromePort: result.devtoolsPort } : {}),
+    ...(result.conversationId ? { conversationId: result.conversationId } : {}),
+  };
+  await runOptions.runtimeHintCb?.(runtime);
+  await recordObservation({
+    state: 'response-complete',
+    source: 'provider-adapter',
+    observedAt: new Date().toISOString(),
+    evidenceRef: 'gemini-native-response-finished',
+    confidence: 'high',
+  });
+  const answerText = result.text ?? '';
+  return {
+    answerText,
+    answerMarkdown: answerText,
+    tookMs: Date.now() - startedAt,
+    answerTokens: Math.ceil(answerText.length / 4),
+    answerChars: answerText.length,
+    chromeTargetId: result.tabTargetId ?? undefined,
+    tabUrl: result.url ?? undefined,
+    conversationId: result.conversationId ?? undefined,
+    chromeHost: result.devtoolsHost ?? undefined,
+    chromePort: result.devtoolsPort ?? undefined,
+    passiveObservations,
+  };
+}
+
 export function createConfiguredStoredStepExecutor(
   config: Record<string, unknown>,
   deps: CreateConfiguredStoredStepExecutorDeps = {},
 ): ExecutionServiceHostDeps['executeStoredRunStep'] {
   const runBrowserModeImpl = deps.runBrowserModeImpl ?? runBrowserMode;
-  const runGeminiBrowserModeImpl = deps.runGeminiBrowserModeImpl ?? createGeminiWebExecutor({});
   const resumeBrowserSessionImpl = deps.resumeBrowserSessionImpl ?? resumeBrowserSession;
   const configRecord = config as MutableRecord;
 
@@ -809,6 +920,10 @@ export function createConfiguredStoredStepExecutor(
       service === 'chatgpt' && !agentModel
         ? resolveChatgptSemanticModelSelector(agentModelSelector)
         : null;
+    const geminiSemanticSelection =
+      service === 'gemini' && !agentModel
+        ? resolveGeminiSemanticModelSelector(agentModelSelector)
+        : null;
     const grokSemanticSelection =
       service === 'grok' && !agentModel
         ? resolveGrokSemanticModelSelector(agentModelSelector)
@@ -823,10 +938,16 @@ export function createConfiguredStoredStepExecutor(
         `Stored team step ${context.step.id} has unsupported Grok modelSelector "${agentModelSelector}".`,
       );
     }
+    if (service === 'gemini' && !agentModel && agentModelSelector && !geminiSemanticSelection && isGeminiSemanticModelSelector(agentModelSelector)) {
+      throw new Error(
+        `Stored team step ${context.step.id} has unsupported Gemini modelSelector "${agentModelSelector}".`,
+      );
+    }
 
     const desiredModel =
       agentModel ??
       chatgptSemanticSelection?.desiredModel ??
+      geminiSemanticSelection?.desiredModel ??
       grokSemanticSelection?.desiredModel ??
       asNonEmptyString(runtimeServiceConfig?.model) ??
       asNonEmptyString(globalServiceConfig?.model) ??
@@ -896,7 +1017,7 @@ export function createConfiguredStoredStepExecutor(
         ? getRuntimeProfileBrowserProfileId(runtimeProfile)
         : null;
     const inlineCookies =
-      service === 'gemini'
+      service === 'gemini' && deps.runGeminiBrowserModeImpl
         ? await resolveConfiguredExecutorInlineCookies(manualLoginProfileDir)
         : null;
     const prompt = asNonEmptyString(context.step.input.prompt);
@@ -1179,9 +1300,18 @@ export function createConfiguredStoredStepExecutor(
 
     const runBrowserStep = async (options: BrowserRunOptions): Promise<Awaited<ReturnType<typeof runBrowserMode>>> => {
       try {
-        return service === 'gemini'
-          ? await runGeminiBrowserModeImpl(options)
-          : await runBrowserModeImpl(options);
+        if (service !== 'gemini') {
+          return await runBrowserModeImpl(options);
+        }
+        if (deps.runGeminiBrowserModeImpl) {
+          return await deps.runGeminiBrowserModeImpl(options);
+        }
+        const runGeminiNativePromptImpl = deps.runGeminiNativePromptImpl ?? runConfiguredGeminiNativePrompt;
+        return await runGeminiNativePromptImpl({
+          executionConfig,
+          runtimeProfileId: runtimeSelection.runtimeProfileId,
+          browserRunOptions: options,
+        });
       } finally {
         clearLiveRuntimeRunServiceState(liveBrowserServiceStateKey);
       }

@@ -6,6 +6,7 @@ import type {
 	ProviderSessionAuthorization,
 	ProviderSessionProof,
 } from "./providerSessionAuthority.js";
+import type { BrowserAttachment } from "../types.js";
 
 export type SelectorList = readonly string[];
 
@@ -97,11 +98,13 @@ export interface ProviderUserIdentity {
 
 export interface BrowserProviderPromptInput {
 	prompt: string;
+	attachments?: BrowserAttachment[];
 	capabilityId?: string | null;
 	completionMode?: "assistant_response" | "prompt_submitted";
 	projectId?: string | null;
 	conversationId?: string | null;
 	targetUrl?: string | null;
+	desiredModel?: string | null;
 	timeoutMs?: number | null;
 	onProgress?: (event: BrowserProviderPromptProgressEvent) => Promise<void> | void;
 }
@@ -127,6 +130,8 @@ export type BrowserProviderPromptProgressPhase =
 	| "browser_target_attached"
 	| "provider_auth_preflight"
 	| "gemini_surface_ready"
+	| "model_selected"
+	| "attachments_staged"
 	| "capability_selected"
 	| "composer_ready"
 	| "prompt_inserted"
@@ -155,7 +160,7 @@ export type BrowserProviderConversationFileDownloadResult =
 			error: string;
 			failureKind?: "provider_unavailable" | "retrieval_failed";
 			retryable?: boolean;
-		};
+	  };
 
 export interface BrowserProvider {
 	id: BrowserProviderConfig["id"];

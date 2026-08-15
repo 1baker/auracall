@@ -9,6 +9,10 @@ export interface GrokSemanticModelSelection {
   desiredModel: 'Auto' | 'Fast' | 'Expert';
 }
 
+export interface GeminiSemanticModelSelection {
+  desiredModel: 'Gemini Flash-Lite' | 'Gemini Flash' | 'Gemini Pro';
+}
+
 export interface SemanticModelSelectorDescriptor {
   id: string;
   service: 'chatgpt' | 'gemini' | 'grok';
@@ -17,6 +21,7 @@ export interface SemanticModelSelectorDescriptor {
 }
 
 const CHATGPT_SELECTOR_PREFIX = 'chatgpt:';
+const GEMINI_SELECTOR_PREFIX = 'gemini:';
 const GROK_SELECTOR_PREFIX = 'grok:';
 
 export const SEMANTIC_MODEL_SELECTORS: readonly SemanticModelSelectorDescriptor[] = [
@@ -79,9 +84,19 @@ export const SEMANTIC_MODEL_SELECTORS: readonly SemanticModelSelectorDescriptor[
     label: 'ChatGPT Legacy Sol Pro (Sol Extra High)',
     executionReady: true,
   },
-  { id: 'gemini:auto', service: 'gemini', label: 'Gemini Auto', executionReady: false },
-  { id: 'gemini:instant', service: 'gemini', label: 'Gemini Instant', executionReady: false },
-  { id: 'gemini:thinking', service: 'gemini', label: 'Gemini Thinking', executionReady: false },
+  { id: 'gemini:auto', service: 'gemini', label: 'Gemini Auto (Flash)', executionReady: true },
+  {
+    id: 'gemini:instant',
+    service: 'gemini',
+    label: 'Gemini Instant (Flash-Lite)',
+    executionReady: true,
+  },
+  {
+    id: 'gemini:thinking',
+    service: 'gemini',
+    label: 'Gemini Thinking (Pro)',
+    executionReady: true,
+  },
   { id: 'grok:auto', service: 'grok', label: 'Grok Auto', executionReady: true },
   { id: 'grok:instant', service: 'grok', label: 'Grok Instant (Fast)', executionReady: true },
   { id: 'grok:thinking', service: 'grok', label: 'Grok Thinking (Expert)', executionReady: true },
@@ -139,6 +154,37 @@ export function resolveChatgptSemanticModelSelector(
 export function isChatgptSemanticModelSelector(value: unknown): boolean {
   const selector = normalizeSelector(value);
   return selector ? selector.startsWith(CHATGPT_SELECTOR_PREFIX) : false;
+}
+
+export function resolveGeminiSemanticModelSelector(
+  value: unknown,
+): GeminiSemanticModelSelection | null {
+  const selector = normalizeSelector(value);
+  if (!selector) {
+    return null;
+  }
+  const token = selector.startsWith(GEMINI_SELECTOR_PREFIX)
+    ? selector.slice(GEMINI_SELECTOR_PREFIX.length)
+    : selector;
+
+  switch (token) {
+    case 'auto':
+    case 'flash':
+      return { desiredModel: 'Gemini Flash' };
+    case 'instant':
+    case 'flash-lite':
+      return { desiredModel: 'Gemini Flash-Lite' };
+    case 'thinking':
+    case 'pro':
+      return { desiredModel: 'Gemini Pro' };
+    default:
+      return null;
+  }
+}
+
+export function isGeminiSemanticModelSelector(value: unknown): boolean {
+  const selector = normalizeSelector(value);
+  return selector ? selector.startsWith(GEMINI_SELECTOR_PREFIX) : false;
 }
 
 export function resolveGrokSemanticModelSelector(

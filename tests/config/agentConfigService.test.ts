@@ -248,7 +248,7 @@ describe('agent and team config service', () => {
       expect.objectContaining({
         id: 'gemini:thinking',
         service: 'gemini',
-        executionReady: false,
+        executionReady: true,
       }),
     ]));
     expect(choices.projectBindings).toEqual(expect.arrayContaining([

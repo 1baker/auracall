@@ -2409,11 +2409,13 @@ export abstract class LlmService {
 				this.provider.runPrompt?.(
 					{
 						prompt: input.prompt,
+						attachments: input.attachments,
 						capabilityId: input.capabilityId,
 						completionMode: input.completionMode,
 						targetUrl: plan.targetUrl,
 						projectId: plan.projectId,
 						conversationId: plan.conversationId,
+						desiredModel: input.desiredModel,
 						timeoutMs: input.timeoutMs,
 						onProgress: input.onProgress,
 					},

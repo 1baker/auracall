@@ -12,6 +12,7 @@ import {
 import type {
 	LlmServiceAdapter,
 	PromptInput,
+	PromptPlan,
 	PromptResult,
 } from "../../src/browser/llmService/types.js";
 import type { ProviderCacheContext } from "../../src/browser/providers/cache.js";
@@ -77,6 +78,18 @@ class HangingListOptionsContextLlmService extends TestContextLlmService {
 		options.onPreflightStage?.("browserTargetDiscovery");
 		await new Promise(() => {});
 		return overrides;
+	}
+}
+
+class PlannedPromptTestService extends TestContextLlmService {
+	override async planPrompt(): Promise<PromptPlan> {
+		return {
+			targetUrl: "https://gemini.google.com/app",
+			projectId: null,
+			conversationId: null,
+			reusePolicy: "new",
+			promptMode: "new",
+		};
 	}
 }
 
@@ -151,6 +164,49 @@ class HangingAuthorizedCacheIdentityLlmService extends InventoryContextLlmServic
 describe("project-scoped conversation context normalization", () => {
 	afterEach(() => {
 		setAuracallHomeDirOverrideForTest(null);
+	});
+
+	test("runPlannedPrompt preserves desired model and prompt attachments for the provider", async () => {
+		const runPrompt = vi.fn(async () => ({
+			answerText: "ok",
+			answerMarkdown: "ok",
+			tookMs: 1,
+			answerTokens: 1,
+			answerChars: 2,
+		}));
+		const provider = {
+			id: "gemini",
+			config: { id: "gemini", selectors: {} as never },
+			runPrompt,
+		};
+		const cacheContext = {
+			provider: "gemini",
+			userConfig: {} as ProviderCacheContext["userConfig"],
+			listOptions: {},
+			identityKey: "planned@example.com",
+		} as ProviderCacheContext;
+		const service = new PlannedPromptTestService(
+			provider as never,
+			new JsonCacheStore(),
+			cacheContext,
+		);
+		const attachments = [{ path: "/tmp/context.txt", name: "context.txt" }] as never;
+
+		await service.runPlannedPrompt({
+			prompt: "Use the attached context.",
+			attachments,
+			desiredModel: "Gemini Pro",
+		});
+
+		expect(runPrompt).toHaveBeenCalledWith(
+			expect.objectContaining({
+				prompt: "Use the attached context.",
+				attachments,
+				desiredModel: "Gemini Pro",
+				targetUrl: "https://gemini.google.com/app",
+			}),
+			expect.any(Object),
+		);
 	});
 
 	test("strips a prefixed project instructions block from the first assistant message", () => {

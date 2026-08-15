@@ -496,11 +496,27 @@
     "gemini": {
       "models": [
         {
-          "id": "gemini-3-pro",
-          "label": "Gemini 3 Pro",
+          "id": "gemini-flash-lite",
+          "label": "Gemini Flash-Lite",
           "aliases": [
+            "flash-lite",
+            "flash lite"
+          ]
+        },
+        {
+          "id": "gemini-flash",
+          "label": "Gemini Flash",
+          "aliases": [
+            "flash"
+          ]
+        },
+        {
+          "id": "gemini-pro",
+          "label": "Gemini Pro",
+          "aliases": [
+            "pro",
             "gemini 3 pro",
-            "gemini"
+            "gemini-3-pro"
           ]
         }
       ],

@@ -19778,3 +19778,15 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   false until the provider-free path and exact-SHA CI pass.
 - No live prompt, managed-browser launch, installed-runtime mutation,
   credential access, or CAPTCHA/anti-bot retry is authorized in this slice.
+- Implemented native configured-agent routing through `GeminiService`, shared
+  desired-model and attachment transport, exact registry-backed picker
+  selection with selected-state verification, prompt-file staging with exact
+  preview proof, semantic typo rejection, and discovery readiness.
+- Focused provider-free coverage passes 327 tests across seven files. The first
+  complete suite exposed only two stale current-label assertions after 3,000
+  passes; both passed directly after correction, and the bounded complete
+  rerun passed 331 files / 3,002 tests with 19 files / 55 intended skips.
+- Typecheck, zero-warning lint, production build, 333-plan audit, diff hygiene,
+  and CodeGraph sync/affected-test inspection pass. Existing external browser
+  state remained outside this provider-free slice; no managed AuraCall browser
+  process appeared. Publication and exact-SHA CI remain before closure.

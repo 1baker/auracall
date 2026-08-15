@@ -18,6 +18,8 @@ export type MediaGenerationTimelineEventName =
   | 'browser_target_attached'
   | 'provider_auth_preflight'
   | 'gemini_surface_ready'
+  | 'model_selected'
+  | 'attachments_staged'
   | 'capability_selected'
   | 'composer_ready'
   | 'prompt_inserted'
