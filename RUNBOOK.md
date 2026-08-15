@@ -19790,3 +19790,16 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   and CodeGraph sync/affected-test inspection pass. Existing external browser
   state remained outside this provider-free slice; no managed AuraCall browser
   process appeared. Publication and exact-SHA CI remain before closure.
+- CI exposed Windows filesystem replacement, concurrent persistence,
+  background-drain, and wall-clock test assumptions. The persistence path now
+  serializes read-modify-write and uses safe replacement/cleanup behavior;
+  timing-sensitive proofs use deterministic state assertions and bounded
+  Windows filesystem latency. The final local suite passes 331 files / 3,003
+  tests with 19 files / 55 intended skips.
+- Acceptance dispatch
+  [31908539594](https://github.com/1baker/auracall/actions/runs/31908539594)
+  passed at exact implementation SHA
+  `a7448778a9754793351b779db6341e07b2281f77`. Ubuntu 22/Node 22,
+  Ubuntu 24/Node 24, macOS/Node 22, and `windows-latest`/Node 22 all passed the
+  complete provider-disabled matrix. Plan 0332 closes accepted; Plan 0064
+  remains open for streaming `/v1/chat/completions`.

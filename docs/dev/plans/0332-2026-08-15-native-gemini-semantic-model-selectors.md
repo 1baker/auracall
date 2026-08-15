@@ -1,8 +1,8 @@
 # Native Gemini Semantic Model Selector Execution | 0332-2026-08-15
 
-State: OPEN
+State: CLOSED
 Lane: P01
-Plan version: 2
+Plan version: 3
 
 ## Goal
 
@@ -74,7 +74,7 @@ private web-RPC transport.
 - [x] Focused tests, typecheck, zero-warning lint, build, complete
       provider-disabled suite, plan audit, CodeGraph sync, and diff hygiene
       pass without browser/provider effects.
-- [ ] Exact-SHA cross-platform CI passes Ubuntu, macOS, and Windows without
+- [x] Exact-SHA cross-platform CI passes Ubuntu, macOS, and Windows without
       provider traffic.
 
 ## Definition Of Done
@@ -120,6 +120,18 @@ consistently, and passes exact-SHA cross-platform CI.
   complete run passed 331 files / 3,002 tests with 19 files / 55 intended
   skips.
 - Typecheck, strict zero-warning lint, production build, 333-plan audit, diff
-  hygiene, and CodeGraph sync/affected-test inspection passed. No live Gemini
-  prompt or managed AuraCall browser was launched. Exact-SHA CI remains the
-  closing gate.
+  hygiene, and CodeGraph sync/affected-test inspection passed. The final local
+  suite passed 331 files / 3,003 tests with 19 files / 55 intended skips. No
+  live Gemini prompt or managed AuraCall browser was launched.
+- Exact-SHA acceptance dispatch
+  [31908539594](https://github.com/1baker/auracall/actions/runs/31908539594)
+  passed at `a7448778a9754793351b779db6341e07b2281f77`. Ubuntu 22/Node 22,
+  Ubuntu 24/Node 24, macOS/Node 22, and `windows-latest`/Node 22 all passed
+  frozen install, runtime checking, zero-warning lint, maintained PTY coverage,
+  the complete provider-disabled suite, and real readiness smoke; Ubuntu 22
+  also passed the production build.
+- CI surfaced cross-platform persistence replacement, concurrent job-store,
+  background-drain, and wall-clock assertion assumptions. Those contracts are
+  now serialized or asserted by state, with bounded Windows filesystem latency
+  where appropriate. Plan 0332 closes accepted; parent Plan 0064 remains open
+  for streaming `/v1/chat/completions`.

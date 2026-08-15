@@ -47565,3 +47565,15 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Typecheck, zero-warning lint, production build, 333-plan audit, diff hygiene,
   and CodeGraph sync/affected-test inspection pass. No managed AuraCall browser
   process appeared; publication and exact-SHA CI remain.
+- Cross-platform CI then exposed portability and nondeterminism in persistence
+  replacement, concurrent job-store writes, background-drain proofs, and
+  wall-clock assertions. The implementation now uses serialized persistence,
+  safe Windows replacement/cleanup, state-based async proofs, and a bounded
+  Windows filesystem timeout. The final local suite passes 331 files / 3,003
+  tests with 19 files / 55 intended skips.
+- Exact-SHA acceptance dispatch
+  [31908539594](https://github.com/1baker/auracall/actions/runs/31908539594)
+  passed at `a7448778a9754793351b779db6341e07b2281f77` across Ubuntu
+  22/Node 22, Ubuntu 24/Node 24, macOS/Node 22, and
+  `windows-latest`/Node 22. Plan 0332 closes accepted; parent Plan 0064 stays
+  open for streaming `/v1/chat/completions`.

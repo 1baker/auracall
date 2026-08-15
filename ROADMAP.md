@@ -7,12 +7,13 @@
 Status: active
 Lane: P01
 
-- Active native Gemini semantic model selector execution pending exact-SHA CI:
+- Closed accepted native Gemini semantic model selector execution:
   [docs/dev/plans/0332-2026-08-15-native-gemini-semantic-model-selectors.md](docs/dev/plans/0332-2026-08-15-native-gemini-semantic-model-selectors.md)
   Current state: configured Gemini agents now use the maintained native
   service/adapter path, preserve model and attachment inputs, and fail closed
   unless the requested current picker row is verified before prompt insertion.
-  Provider-free local gates are in progress; exact-SHA CI remains required.
+  Provider-free local gates and exact-SHA CI pass across Ubuntu, macOS, and
+  Windows. Parent Plan 0064 remains open for streaming API completion.
 
 - Closed accepted Grok semantic model selector execution:
   [docs/dev/plans/0331-2026-08-15-grok-semantic-model-selectors.md](docs/dev/plans/0331-2026-08-15-grok-semantic-model-selectors.md)
