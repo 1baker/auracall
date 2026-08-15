@@ -1,5 +1,30 @@
 # RUNBOOK
 
+## Turn 486 | 2026-08-15
+
+- Opened Plan 0317 after direct HTTP matcher, MCP registration, handoff schema,
+  package script, skill, and documentation inspection found an impossible
+  `mutationTarget` check on the redacted handoff and two stale denials of the
+  implemented non-streaming chat-completions adapter.
+- Reconcile the two specialized bundled skills and current endpoint reference,
+  then enforce exact route/tool/smoke authority deterministically. Keep runtime
+  handlers and schemas unchanged; do not run providers, browsers, project/key
+  mutations, service restarts, publication, or releases.
+- Revised Plan 0317 to version 2 after source inspection showed only
+  `smoke:scoped-client-handoff` is fixture-backed/provider-free;
+  `smoke:scoped-client-env` submits through the supplied real client contract
+  and must be treated as an effectful downstream smoke.
+- Reconciled redacted versus lower-level mutation verification, mapped exact
+  HTTP/MCP create and polling surfaces, made handoff URLs authoritative, and
+  repaired the endpoint reference's stale chat-completions/auth claims. The new
+  audit binds those claims to matchers, registrations, schemas, package scripts,
+  skills, and current docs.
+- Two skill validators, 34 focused contract/schema tests, four provider-free
+  chat-completions runtime tests, the fixture-backed scoped-client handoff
+  smoke, typecheck, zero-warning lint across 839 files, production build,
+  318-plan audit, and diff hygiene passed. Plan 0317 closes accepted; the
+  effectful real-client smoke was intentionally not run.
+
 ## Turn 485 | 2026-08-15
 
 - Opened Plan 0316 after direct skill, package, README, validator, and CLI-help

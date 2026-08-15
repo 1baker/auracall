@@ -44,14 +44,17 @@ Recommended agent binding fields:
 
 After success:
 
-1. Confirm the returned project id and agent id.
-2. Confirm `mutationTarget` is `registry` for a new/updated bound agent.
-3. Discover `agent:<agent_id>` from `/v1/models` or MCP config listing.
-4. Confirm the result includes the model id, scoped key id/scopes,
-   `clientEnvPath`, and restart hint.
-5. Restart the installed API service when the key was written to
-   `~/.auracall/api.env`.
-6. Give the execution client only the client env path or these values:
+1. Confirm `object` is `auracall_agent_setup_handoff`.
+2. Confirm the returned project status/id/name, agent id, model id, scoped key
+   id/scopes, `clientEnvPath`, and restart/source hints.
+3. Confirm the response contains no API-key secret; the secret belongs only in
+   the generated client env file.
+4. Discover `agent:<agent_id>` through `GET /v1/models`, or inspect the
+   effective MCP catalog with `config_entities_list`.
+5. When `restartRequired` is true, restart the service named by
+   `next.restartService` before downstream verification.
+6. Give the execution client only the client env path. If the client cannot
+   source that file, transfer these values through an approved secret channel:
    - `OPENAI_BASE_URL`
    - `OPENAI_API_KEY`
    - `AURACALL_MODEL=agent:<agent_id>`
@@ -61,6 +64,8 @@ After success:
 Use `POST /v1/projects/ensure` or MCP `project_ensure` plus
 `POST /v1/config/api-keys/issue` or MCP `api_key_issue` only when you need to
 inspect/customize project binding and key issuance as separate operator steps.
+On that lower-level path, confirm the project result's agent
+`mutationTarget` is `registry`; stop on `blocked` and report `blockedReason`.
 Use `POST /v1/agent-setup-packages` or MCP `agent_setup_package_create` only
 when a privileged operator explicitly needs the full one-time secret-bearing
 setup response.
@@ -96,6 +101,7 @@ Use:
 - `GET /v1/config/agent-diagnostics`
 - MCP `api_key_diagnostics`
 - `GET /v1/models`
+- MCP `config_entities_list`
 - `/status` or MCP `api_status`
 
 Diagnostics should prove the bound agent exists, key scopes resolve, and the

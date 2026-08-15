@@ -22,19 +22,28 @@ service. Treat `agent:<agent_id>` as the model name and prefer scoped API keys.
 ## Golden Path
 
 1. Check service posture:
-   - `curl -s "$OPENAI_BASE_URL/../status"` when using HTTP directly, or MCP
-     `api_status` when available.
+   - use `AURACALL_STATUS_URL` from the generated handoff env, or MCP
+     `api_status` when available
+   - only when no handoff URL exists, derive `/status` from the API origin
 2. Discover models:
    - `GET /v1/models`
    - confirm the intended `agent:<agent_id>` appears.
 3. For one prompt:
    - call `POST /v1/responses` or non-streaming
      `POST /v1/chat/completions`.
+   - with MCP, call `response_create` and retain its returned id
 4. For many independent prompts:
-   - call `POST /v1/response-batches` once.
-   - poll `GET /v1/response-batches/{batch_id}`.
-   - read child output through `GET /v1/responses/{response_id}`.
+   - call `POST /v1/response-batches` or MCP `response_batch_create` once
+   - poll `GET /v1/response-batches/{batch_id}` or MCP
+     `response_batch_status`
+   - read child output through `GET /v1/responses/{response_id}` or MCP
+     `run_status`
 5. Never resubmit a create request just to check status.
+
+Non-streaming chat completions wait for a bounded synchronous window. A
+retryable `503` with `error.type = "auracall_execution_pending"` includes the
+durable `response_id` and `response_poll_path`; poll that response instead of
+submitting the chat request again. Streaming chat completions are unsupported.
 
 ## Response Request Shape
 
@@ -99,19 +108,27 @@ service. Treat `agent:<agent_id>` as the model name and prefer scoped API keys.
 
 ## Verification
 
-Before a large batch, source or parse the client handoff env file, call
-`GET /v1/models`, and run one small `/v1/responses` request with the scoped key.
+Use the URLs written into the generated handoff env as authority. Do not
+reconstruct the status or batch URL when `AURACALL_STATUS_URL` or
+`AURACALL_BATCH_URL` is present.
 
-For repo-local development:
+For provider-free repository validation, run:
 
 ```bash
-pnpm run smoke:che447-grading-batch
-pnpm run smoke:scoped-client-env -- <client.env>
 pnpm run smoke:scoped-client-handoff
 ```
 
-Use `smoke:scoped-client-env` as the downstream app check: it only needs the
-generated client handoff env, validates `/v1/models`, submits one
-`/v1/responses` request, and polls readback. The scoped-client-handoff smoke
-proves the generated client env can do that and also enqueue a batch without
-live browser/provider quota use.
+This fixture-backed smoke proves redacted handoff creation, client-env writing,
+service reload simulation, model discovery, one response, one attachment-bearing
+batch, and polling without browser/provider access.
+
+Before a real large batch, and only after the configured browser/provider and
+cost effects are authorized, run the downstream client check:
+
+```bash
+pnpm run smoke:scoped-client-env -- <client.env>
+```
+
+It reads the generated env, validates `/v1/models`, submits one real
+`/v1/responses` request, and polls durable readback. Treat it as effectful: its
+target client environment may invoke a browser or billable provider.

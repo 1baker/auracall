@@ -1,3 +1,16 @@
+## 2026-08-15 | Plan 0317 specialized skill endpoint contract
+
+- Corrected the setup skill so redacted handoff verification uses only returned
+  non-secret fields and lower-level project ensure owns `mutationTarget` checks.
+- Corrected the API skill's exact HTTP/MCP mappings, generated-URL authority,
+  bounded chat-completions polling, and provider-free versus effectful smoke
+  boundary. Repaired matching endpoint-reference contradictions.
+- Deterministic validation now binds executable HTTP matchers, MCP registrations,
+  package scripts, both skills, and current workflow docs. Two skill validators,
+  38 focused tests, the provider-free handoff smoke, typecheck, zero-warning lint
+  across 839 files, build, 318-plan audit, and diff hygiene passed. Plan 0317 is
+  CLOSED without provider/browser or configuration mutation.
+
 ## 2026-08-15 | Plan 0316 bundled skill authority reconciliation
 
 - Replaced `oracle`, `oracle-chatgpt`, and `oracle-gemini` with AuraCall-named

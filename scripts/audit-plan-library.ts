@@ -17,6 +17,7 @@ import {
   collectMcporterMcpConfigErrors,
   collectPackageMcpBinErrors,
 } from './mcpLaunchContract.js';
+import { collectSpecializedSkillContractErrors } from './specializedSkillContract.js';
 
 type CandidateAction = 'keep' | 'merge' | 'retire';
 
@@ -78,6 +79,16 @@ const packagePath = join(repoRoot, 'package.json');
 const mcporterConfigPath = join(repoRoot, 'config', 'mcporter.json');
 const policiesDir = join(docsDevDir, 'policies');
 const skillsDir = join(repoRoot, 'skills');
+const specializedMcpToolPaths = [
+  'agentSetupPackage.ts',
+  'apiKeys.ts',
+  'apiStatus.ts',
+  'configEntities.ts',
+  'projectEnsure.ts',
+  'responseBatch.ts',
+  'responseCreate.ts',
+  'runStatus.ts',
+] as const;
 const validPlanStates = new Set(['PLANNED', 'OPEN', 'CLOSED', 'CANCELLED']);
 const staleWorkspacePath = '/home/ecochran76/workspace.local/oracle';
 
@@ -181,6 +192,17 @@ function collectValidationErrors(
   errors.push(...collectPackageMcpBinErrors(packageText));
   errors.push(...collectMcporterMcpConfigErrors(mcporterConfigText));
   errors.push(...collectBundledSkillErrors(skillDirectoryNames, bundledSkills, readmeText));
+  errors.push(
+    ...collectSpecializedSkillContractErrors({
+      httpServerText,
+      mcpToolText,
+      packageText,
+      agentSetupSkillText,
+      apiWorkflowSkillText,
+      endpointDocText,
+      workflowDocText,
+    }),
+  );
 
   for (const candidate of rawCandidates) {
     if (!candidate.relPath.startsWith('docs/dev/plans/')) {
@@ -213,6 +235,14 @@ const agentsText = readFileSync(agentsPath, 'utf8');
 const packageText = readFileSync(packagePath, 'utf8');
 const mcporterConfigText = readFileSync(mcporterConfigPath, 'utf8');
 const readmeText = readFileSync(join(repoRoot, 'README.md'), 'utf8');
+const httpServerText = readFileSync(join(repoRoot, 'src', 'http', 'responsesServer.ts'), 'utf8');
+const mcpToolText = specializedMcpToolPaths
+  .map((basename) => readFileSync(join(repoRoot, 'src', 'mcp', 'tools', basename), 'utf8'))
+  .join('\n');
+const agentSetupSkillText = readFileSync(join(skillsDir, 'auracall-agent-setup', 'SKILL.md'), 'utf8');
+const apiWorkflowSkillText = readFileSync(join(skillsDir, 'auracall-api-workflow', 'SKILL.md'), 'utf8');
+const endpointDocText = readFileSync(join(repoRoot, 'docs', 'openai-endpoints.md'), 'utf8');
+const workflowDocText = readFileSync(join(repoRoot, 'docs', 'agent-workflows.md'), 'utf8');
 const skillDirectoryNames = readdirSync(skillsDir, { withFileTypes: true })
   .filter((entry) => entry.isDirectory())
   .map((entry) => entry.name)

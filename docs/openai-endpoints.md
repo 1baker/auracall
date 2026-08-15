@@ -38,6 +38,7 @@ Current endpoints:
 - `GET /v1/team-runs/inspect`
 - `GET /v1/runtime-runs/inspect`
 - `GET /v1/models`
+- `POST /v1/chat/completions`
 - `GET /v1/config/agents`
 - `GET /v1/config/agent-diagnostics`
 - `POST /v1/config/api-keys/issue`
@@ -886,9 +887,10 @@ Current limits:
   `config_team_upsert`, and `config_team_delete`; list responses include
   effective registry/config source metadata, and mutation responses include
   `mutationTarget` plus `blockedReason` when a config overlay id is pinned
-- no auth
-- no streaming/SSE
-- no `POST /v1/chat/completions` adapter yet
+- optional API-key auth for `/v1/*`; privileged control-plane routes require an
+  unscoped operator key when auth is enabled
+- no streaming/SSE; `POST /v1/chat/completions` accepts non-streaming requests
+  and rejects `stream: true`
 - local `api serve` now self-registers one persisted runner record and
   heartbeats it while the server is alive; shutdown marks that runner stale
 - successful bounded direct-run execution now also updates that runner record
@@ -901,7 +903,8 @@ Current limits:
   during one delayed local execution pass
 - bounded local host claims now use that live runner id as the lease owner,
   and new claims are skipped when the configured runner owner is unavailable
-- non-loopback host binding is still unauthenticated and warned as unsafe
+- non-loopback host binding requires `--listen-public`, remains explicitly
+  warned, and should be protected with API-key auth plus trusted ingress
 
 This server is intended as the first local compatibility surface, not yet a
 full production API layer.
@@ -915,7 +918,9 @@ Current direct-run behavior:
   - `failed`
   - or still `in_progress` later if broader runner behavior is added in the
     future
-- there is still no streaming, auth, or `chat/completions` adapter
+- optional API-key auth applies to `/v1/*`; `/status` remains observable
+- non-streaming `POST /v1/chat/completions` adapts OpenAI-style messages to the
+  durable response service; streaming remains unsupported
 
 Current response readback note:
 

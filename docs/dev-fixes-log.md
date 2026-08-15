@@ -1,3 +1,12 @@
+- 2026-08-15: Specialized workflow skills must distinguish response projection
+  from lower-level mutation evidence and fixture proof from real-client effects.
+  A redacted setup handoff cannot prove fields it intentionally omits; verify
+  `mutationTarget` only on project ensure/package results. Treat generated
+  status/batch URLs as authority, name exact HTTP/MCP create/readback pairs, and
+  label a client-env smoke as effectful when it can reach a configured provider.
+  Bind these claims to executable matchers, registrations, and package scripts
+  rather than relying on duplicated prose.
+
 - 2026-08-15: Bundled agent skills are user-facing distribution contracts, not
   compatibility internals. Rename retired skill directories and frontmatter
   together, derive commands and setup guidance from current CLI help, install

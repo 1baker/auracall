@@ -7,6 +7,12 @@
 Status: active
 Lane: P01
 
+- Closed accepted specialized skill endpoint contract reconciliation:
+  [docs/dev/plans/0317-2026-08-15-specialized-skill-endpoint-contract.md](docs/dev/plans/0317-2026-08-15-specialized-skill-endpoint-contract.md)
+  The setup and API workflow skills now match current redacted handoff, HTTP,
+  MCP, generated-env, and smoke boundaries; executable-source governance
+  rejects future drift without changing runtime behavior.
+
 - Closed accepted bundled skill authority reconciliation:
   [docs/dev/plans/0316-2026-08-15-bundled-skill-authority-reconciliation.md](docs/dev/plans/0316-2026-08-15-bundled-skill-authority-reconciliation.md)
   The complete five-skill bundle now uses AuraCall names and current runtime,
