@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { describe, expect, test, vi } from 'vitest';
 import { resumeBrowserSession, describeReattachFailure, ReattachFailure, __test__ } from '../../src/browser/reattach.js';
 import { resumeBrowserSessionCore } from '../../src/browser/reattachCore.js';
@@ -439,7 +440,7 @@ describe('resumeBrowserSession', () => {
         {
           auracallProfileName: 'wsl-chrome-2',
           manualLogin: true,
-          manualLoginProfileDir: '/tmp/auracall/browser-profiles/wsl-chrome-2/chatgpt',
+          manualLoginProfileDir: path.resolve('/tmp/auracall/browser-profiles/wsl-chrome-2/chatgpt'),
           managedProfileRoot: '/tmp/auracall/browser-profiles',
           target: 'chatgpt',
           chromeProfile: 'Profile 1',
@@ -468,7 +469,7 @@ describe('resumeBrowserSession', () => {
             ...resolveReattachTestConfig(config),
             auracallProfileName: 'wsl-chrome-2',
             chromeProfile: 'Profile 1',
-            manualLoginProfileDir: '/tmp/auracall/browser-profiles/wsl-chrome-2/chatgpt',
+            manualLoginProfileDir: path.resolve('/tmp/auracall/browser-profiles/wsl-chrome-2/chatgpt'),
             managedProfileRoot: '/tmp/auracall/browser-profiles',
             headless: false,
             hideWindow: true,
@@ -496,7 +497,7 @@ describe('resumeBrowserSession', () => {
 
     expect(launchChrome).toHaveBeenCalledWith(
       expect.anything(),
-      '/tmp/auracall/browser-profiles/wsl-chrome-2/chatgpt',
+      path.resolve('/tmp/auracall/browser-profiles/wsl-chrome-2/chatgpt'),
       logger,
     );
   });

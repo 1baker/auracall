@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { describe, expect, test, vi } from 'vitest';
 import { DEFAULT_BROWSER_CONFIG } from '../../src/browser/config.js';
 import {
@@ -76,7 +77,7 @@ describe('agent-browser RDP launcher', () => {
   test('builds an exact external-profile remote-view plan without changing AuraCall ownership', () => {
     const plan = buildAgentBrowserRdpOpenPlan({
       config: chromeConfig(),
-      userDataDir: '/home/test/.auracall/browser-profiles/wsl-chrome-3/chatgpt',
+      userDataDir: path.resolve('/home/test/.auracall/browser-profiles/wsl-chrome-3/chatgpt'),
       url: 'https://chatgpt.com/',
       auracallRuntimeProfile: 'default',
       browserProfileId: 'wsl-chrome-3',
@@ -88,7 +89,7 @@ describe('agent-browser RDP launcher', () => {
       '--runtime-profile',
       'auracall-wsl-chrome-3',
       '--profile',
-      '/home/test/.auracall/browser-profiles/wsl-chrome-3/chatgpt',
+      path.resolve('/home/test/.auracall/browser-profiles/wsl-chrome-3/chatgpt'),
       '--browser-host',
       'remote_headed',
       '--view-stream-provider',
@@ -114,7 +115,7 @@ describe('agent-browser RDP launcher', () => {
           runtimeProfile: 'auracall-gemini-stealthcdp',
         },
       }),
-      userDataDir: '/home/test/.auracall/browser-profiles/gemini-stealthcdp/gemini',
+      userDataDir: path.resolve('/home/test/.auracall/browser-profiles/gemini-stealthcdp/gemini'),
       url: 'https://gemini.google.com/app',
       browserProfileId: 'gemini-stealthcdp',
       serviceTarget: 'gemini',
@@ -122,7 +123,7 @@ describe('agent-browser RDP launcher', () => {
     expect(chromiumPlan.browserFamily).toBe('chromium');
     expect(chromiumPlan.openArgs).toEqual(expect.arrayContaining([
       '--profile',
-      '/home/test/.auracall/browser-profiles/gemini-stealthcdp/gemini',
+      path.resolve('/home/test/.auracall/browser-profiles/gemini-stealthcdp/gemini'),
       '--browser-build',
       'stealthcdp_chromium',
     ]));

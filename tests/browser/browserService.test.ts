@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { describe, expect, test, vi } from 'vitest';
 import type { ResolvedUserConfig } from '../../src/config.js';
 import { BrowserService } from '../../src/browser/service/browserService.js';
@@ -305,7 +306,7 @@ describe('BrowserService resolveServiceTarget', () => {
       expect.objectContaining({
         chromePath: '/tmp/chromium-stealthcdp/chrome',
         display: ':10',
-        userDataDir: '/tmp/gemini-profile',
+        userDataDir: path.resolve('/tmp/gemini-profile'),
       }),
     );
   });
@@ -510,7 +511,7 @@ describe('BrowserService resolveServiceTarget', () => {
 
     expect(instanceScannerMocks.scanRegisteredInstance).toHaveBeenLastCalledWith(
       { registryPath: expect.stringContaining('browser-state.json') },
-      '/tmp/managed-root/mixed/grok',
+      path.resolve('/tmp/managed-root/mixed/grok'),
       'Default',
       undefined,
       {},
@@ -694,6 +695,6 @@ describe('BrowserService resolveServiceTarget', () => {
     );
 
     expect(service.getConfig().target).toBe('grok');
-    expect(service.getConfig().manualLoginProfileDir).toBe('/tmp/managed-root/mixed/grok');
+    expect(service.getConfig().manualLoginProfileDir).toBe(path.resolve('/tmp/managed-root/mixed/grok'));
   });
 });

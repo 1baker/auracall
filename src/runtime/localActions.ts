@@ -212,7 +212,7 @@ function normalizeExecError(error: unknown, maxCaptureChars: number): Record<str
 }
 
 function isAllowedShellCommand(command: string, allowedShellCommands: string[]): boolean {
-  const normalized = path.basename(command).toLowerCase();
+  const normalized = path.basename(command).toLowerCase().replace(/\.exe$/u, '');
   const exact = command.toLowerCase();
   return allowedShellCommands.some((candidate) => {
     const normalizedCandidate = candidate.toLowerCase();

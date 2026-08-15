@@ -325,7 +325,7 @@ describe('browser media generation executor queueing', () => {
       },
     });
 
-    expect(key).toBe('managed-profile:/tmp/auracall-browser-profiles/default/grok::service:grok');
+    expect(key).toBe(`managed-profile:${path.resolve('/tmp/auracall-browser-profiles/default/grok')}::service:grok`);
   });
 
   it('keys ChatGPT media browser operations by the ChatGPT managed browser profile', async () => {
@@ -349,6 +349,6 @@ describe('browser media generation executor queueing', () => {
       },
     });
 
-    expect(key).toBe('managed-profile:/tmp/auracall-browser-profiles/default/chatgpt::service:chatgpt');
+    expect(key).toBe(`managed-profile:${path.resolve('/tmp/auracall-browser-profiles/default/chatgpt')}::service:chatgpt`);
   });
 });

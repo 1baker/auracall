@@ -1,3 +1,12 @@
+- 2026-08-15: Public account, runner, and dispatcher identities may contain
+  separators such as `:` or `|`; never assume they are portable directory
+  names. Keep semantic ids in APIs and records, derive tagged reversible names
+  for unsafe or prefix-ambiguous values, read safe legacy state, and remove it
+  only after a successful canonical write. Use native path constructors for
+  filesystem assertions, retain `/` for serialized protocol paths, normalize
+  checkout line endings only when they are non-contractual, and gate a test
+  only when its underlying OS primitive truly does not exist.
+
 - 2026-08-15: Public semantic identifiers are not automatically safe filesystem
   segments. Keep the runner id unchanged in APIs and JSON, but persist it under
   a tagged canonical base64url directory name. Read and deduplicate safe legacy

@@ -9,6 +9,18 @@
   path assumptions, CRLF-exact text assertions, and host-specific browser or
   process fixtures. CI will require the complete suite on Windows once these
   causes are repaired; PTY dependency replacement remains separate.
+- Diagnostic dispatch `31897276458` at `d2a234b1` produced the current baseline:
+  Ubuntu and macOS passed, while Windows completed with 24 failed files, 303
+  passed files, and 22 skipped files. The implementation now encodes unsafe
+  cache directories reversibly, migrates safe legacy state after successful
+  writes, tolerates Windows replace-on-rename semantics, recognizes `node.exe`,
+  normalizes non-contractual CRLF and native path fixtures, and gates only
+  POSIX shebang-child and chmod-unreadability cases.
+- Local evidence passed the 25-file/548-test regression matrix and the complete
+  329-file/2,966-test provider-disabled suite, with 20 files and 63 intended
+  live or host-specific skips. Typecheck and zero-warning lint across 849 files
+  also pass. Build, governance audit, CodeGraph sync, and published current-SHA
+  CI remain before closure.
 
 ## 2026-08-15 | Plan 0328 native Windows runner persistence
 

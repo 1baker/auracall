@@ -65,7 +65,7 @@ describe("provider-session authority structure", () => {
 		for (const file of files) {
 			const source = await fs.readFile(file, "utf8");
 			if (source.includes("createProviderSessionAuthority(")) {
-				constructors.push(path.relative(repositoryRoot, file));
+				constructors.push(path.relative(repositoryRoot, file).split(path.sep).join("/"));
 			}
 		}
 		expect(constructors.sort()).toEqual([...allowed].sort());

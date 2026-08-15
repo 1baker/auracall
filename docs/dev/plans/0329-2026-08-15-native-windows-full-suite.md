@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 1
+Plan version: 2
 
 ## Goal
 
@@ -51,15 +51,15 @@ pretending POSIX-only behavior is portable.
 
 ## Acceptance Criteria
 
-- [ ] One current-SHA native-Windows complete-suite run provides the exact
+- [x] One current-SHA native-Windows complete-suite run provides the exact
       post-0328 failure inventory before broad repair.
-- [ ] Remaining persisted semantic directory keys work on Windows with public
+- [x] Remaining persisted semantic directory keys work on Windows with public
       identities and compatible legacy state preserved.
-- [ ] Portable tests assert native paths with platform-aware construction and
+- [x] Portable tests assert native paths with platform-aware construction and
       portable serialized paths with slash-stable expectations.
-- [ ] Host-specific fixtures are skipped only where their production contract
+- [x] Host-specific fixtures are skipped only where their production contract
       cannot exist on that host, with the reason visible beside the gate.
-- [ ] CI and its drift guard require `pnpm run test` on Ubuntu, macOS, and
+- [x] CI and its drift guard require `pnpm run test` on Ubuntu, macOS, and
       Windows, plus the real readiness smoke on every configured OS.
 - [ ] Focused regressions, the complete isolated provider-disabled suite,
       typecheck, zero-warning lint, build, plan audit, CodeGraph sync, and diff
@@ -86,3 +86,30 @@ host-specific contract rather than a convenience skip.
 - terminal_condition: complete current-SHA Windows suite passes or every
   remaining failure is reduced to a separately bounded production dependency
   migration with exact evidence
+
+## Execution Notes
+
+- Dispatch `31897276458` at diagnostic checkpoint `d2a234b1` passed Ubuntu 22,
+  macOS 22, and Ubuntu 24, then completed the native-Windows suite with 24
+  failed files, 303 passed files, and 22 skipped files. The failures reduced to
+  semantic cache directory names containing `:` or `|`, native path and CRLF
+  assumptions, Windows replacement-rename behavior, `node.exe` allowlisting,
+  and POSIX-only child-process or permission fixtures.
+- Provider cache directories now retain already-portable legacy keys and use a
+  tagged reversible base64url representation for unsafe or ambiguous keys.
+  Reads fall back to safe legacy paths and successful writes migrate legacy
+  state only after the canonical record lands. Public identities and JSON
+  payloads remain unchanged.
+- Media/cache record replacement handles Windows' refusal to rename over an
+  existing destination, and concurrent media writes use UUID-qualified
+  temporary paths. Shell-command allowlisting recognizes only the Windows
+  `.exe` suffix; script wrappers remain outside that normalization.
+- Native filesystem assertions now use platform-aware construction while
+  serialized cache paths remain slash-stable. Checkout text is normalized for
+  CRLF where line endings are not contractual. Only real POSIX shebang child
+  execution and chmod-based unreadability fixtures are gated off Windows.
+- Local pre-publication evidence is green: the 25-file regression set passed
+  548 tests; the complete suite passed 329 files and 2,966 tests with 20 files
+  and 63 live/host-specific tests skipped; typecheck and zero-warning lint
+  passed across 849 files. Build, plan audit, CodeGraph sync, and current-SHA CI
+  remain the final gates.

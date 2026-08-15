@@ -21,21 +21,23 @@ describe('profileStore', () => {
   });
 
   it('infers source profile information from a cookie path', () => {
+    const userDataDir = path.join(path.parse(process.cwd()).root, 'home', 'test', '.config', 'google-chrome');
     const inferred = inferSourceProfileFromCookiePath(
-      '/home/test/.config/google-chrome/Default/Network/Cookies',
+      path.join(userDataDir, 'Default', 'Network', 'Cookies'),
     );
     expect(inferred).toEqual({
-      userDataDir: '/home/test/.config/google-chrome',
+      userDataDir,
       profileName: 'Default',
     });
   });
 
   it('infers source profile information from a direct profile Cookies path', () => {
+    const userDataDir = path.join(path.parse(process.cwd()).root, 'home', 'test', '.config', 'google-chrome');
     const inferred = inferSourceProfileFromCookiePath(
-      '/home/test/.config/google-chrome/Default/Cookies',
+      path.join(userDataDir, 'Default', 'Cookies'),
     );
     expect(inferred).toEqual({
-      userDataDir: '/home/test/.config/google-chrome',
+      userDataDir,
       profileName: 'Default',
     });
   });
@@ -43,12 +45,12 @@ describe('profileStore', () => {
   it('ignores a stale inherited manualLoginProfileDir from a different Aura-Call profile', () => {
     expect(
       resolveManagedProfileDir({
-        configuredDir: '/mnt/c/Users/ecoch/AppData/Local/AuraCall/browser-profiles/default/grok',
-        managedProfileRoot: '/mnt/c/Users/ecoch/AppData/Local/AuraCall/browser-profiles',
+        configuredDir: path.resolve('/mnt/c/Users/ecoch/AppData/Local/AuraCall/browser-profiles/default/grok'),
+        managedProfileRoot: path.resolve('/mnt/c/Users/ecoch/AppData/Local/AuraCall/browser-profiles'),
         auracallProfileName: 'wizard-grok-test',
         target: 'grok',
       }),
-    ).toBe('/mnt/c/Users/ecoch/AppData/Local/AuraCall/browser-profiles/wizard-grok-test/grok');
+    ).toBe(path.resolve('/mnt/c/Users/ecoch/AppData/Local/AuraCall/browser-profiles/wizard-grok-test/grok'));
   });
 
   it('keeps an explicit external manualLoginProfileDir override', () => {
@@ -56,11 +58,11 @@ describe('profileStore', () => {
       resolveManagedProfileDirForUserConfig({
         auracallProfile: 'wizard-grok-test',
         browser: {
-          managedProfileRoot: '/mnt/c/Users/ecoch/AppData/Local/AuraCall/browser-profiles',
-          manualLoginProfileDir: '/tmp/custom-grok-profile',
+          managedProfileRoot: path.resolve('/mnt/c/Users/ecoch/AppData/Local/AuraCall/browser-profiles'),
+          manualLoginProfileDir: path.resolve('/tmp/custom-grok-profile'),
         },
       }),
-    ).toBe('/tmp/custom-grok-profile');
+    ).toBe(path.resolve('/tmp/custom-grok-profile'));
   });
 
   it('prefers the managed profile last_used subprofile when Default is unsigned', async () => {
@@ -274,7 +276,7 @@ describe('profileStore', () => {
     await expect(fs.stat(path.join(managedProfileDir, 'Default', 'stale-marker.txt'))).rejects.toThrow();
   });
 
-  it('skips unreadable auth-state files without aborting the bootstrap', async () => {
+  it.runIf(process.platform !== 'win32')('skips unreadable auth-state files without aborting the bootstrap', async () => {
     const sourceRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'auracall-profile-source-unreadable-'));
     const managedRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'auracall-profile-managed-unreadable-'));
     cleanup.push(sourceRoot, managedRoot);

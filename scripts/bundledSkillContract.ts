@@ -36,7 +36,7 @@ const RETIRED_SKILL_PATTERNS: ReadonlyArray<{ label: string; pattern: RegExp }> 
 ];
 
 function frontmatterName(text: string): string | null {
-	return text.match(/^---\n[\s\S]*?^name:\s*([^\n]+)\n[\s\S]*?^---$/m)?.[1]?.trim() ?? null;
+	return text.replace(/\r\n?/gu, "\n").match(/^---\n[\s\S]*?^name:\s*([^\n]+)\n[\s\S]*?^---$/m)?.[1]?.trim() ?? null;
 }
 
 function hasPattern(text: string, pattern: RegExp): boolean {
@@ -60,7 +60,7 @@ export function collectBundledSkillErrors(
 		if (!actualDirectories.has(directory)) {
 			errors.push(`skills/${directory}: missing bundled skill directory`);
 		}
-		const text = artifactsByDirectory.get(directory);
+		const text = artifactsByDirectory.get(directory)?.replace(/\r\n?/gu, "\n");
 		if (!text) {
 			errors.push(`skills/${directory}/SKILL.md: missing bundled skill instructions`);
 			continue;

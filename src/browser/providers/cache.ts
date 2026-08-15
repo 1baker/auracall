@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 import { getAuracallHomeDir } from '../../auracallHome.js';
 import type { BrowserProviderListOptions, ProviderUserIdentity } from './types.js';
@@ -6,6 +7,9 @@ import type { Conversation, Project, ProviderId, ConversationContext, FileRef } 
 import type { ResolvedUserConfig } from '../../config.js';
 
 export const PROVIDER_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
+const ENCODED_CACHE_DIRECTORY_PREFIX = 'v1_';
+const PORTABLE_CACHE_DIRECTORY_PATTERN = /^[A-Za-z0-9@._+-]+$/u;
+const WINDOWS_RESERVED_DIRECTORY_PATTERN = /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/iu;
 
 interface ProviderCache<T> {
   fetchedAt: string;
@@ -58,12 +62,39 @@ export interface ConversationContextReadReceipt {
 
 export function resolveProviderCacheKey(context: ProviderCacheContext): string {
   const identityKey = resolveIdentityKey(context);
-  const sanitized = identityKey.replace(/[\\/]/g, '_');
+  const sanitized = encodeProviderCacheDirectoryName(resolveLegacyProviderCacheKey(context));
   if (process.env.AURACALL_DEBUG_CACHE === '1') {
     const payload = JSON.stringify({ provider: context.provider, identityKey });
     console.error(`[cache] key=${sanitized} payload=${payload}`);
   }
   return sanitized;
+}
+
+export function encodeProviderCacheDirectoryName(identityKey: string): string {
+  if (
+    identityKey.length > 0
+    && !identityKey.startsWith(ENCODED_CACHE_DIRECTORY_PREFIX)
+    && PORTABLE_CACHE_DIRECTORY_PATTERN.test(identityKey)
+    && !WINDOWS_RESERVED_DIRECTORY_PATTERN.test(identityKey)
+    && identityKey !== '.'
+    && identityKey !== '..'
+    && !identityKey.endsWith('.')
+  ) {
+    return identityKey;
+  }
+  return `${ENCODED_CACHE_DIRECTORY_PREFIX}${Buffer.from(identityKey, 'utf8').toString('base64url')}`;
+}
+
+export function decodeProviderCacheDirectoryName(directoryName: string): string | null {
+  if (!directoryName.startsWith(ENCODED_CACHE_DIRECTORY_PREFIX)) return directoryName;
+  const payload = directoryName.slice(ENCODED_CACHE_DIRECTORY_PREFIX.length);
+  if (!payload || !/^[A-Za-z0-9_-]+$/u.test(payload)) return null;
+  try {
+    const decoded = Buffer.from(payload, 'base64url').toString('utf8');
+    return encodeProviderCacheDirectoryName(decoded) === directoryName ? decoded : null;
+  } catch {
+    return null;
+  }
 }
 
 export async function readProjectCache(
@@ -378,30 +409,45 @@ async function readProviderCache<T>(
   const { cacheFile, configuredUrl } = resolveProviderCachePath(context, fileName);
   try {
     const raw = await fs.readFile(cacheFile, 'utf8');
-    const parsed = JSON.parse(raw) as ProviderCache<T>;
-    const fetchedAt = parsed?.fetchedAt ? Date.parse(parsed.fetchedAt) : NaN;
-    const now = Date.now();
-    const ttlMs = resolveCacheTtl(context);
-    const tooOld = Number.isFinite(fetchedAt) ? now - fetchedAt > ttlMs : true;
-    const urlMismatch =
-      typeof configuredUrl === 'string' &&
-      configuredUrl.length > 0 &&
-      typeof parsed?.sourceUrl === 'string' &&
-      parsed.sourceUrl.length > 0 &&
-      configuredUrl !== parsed.sourceUrl;
-    const identityMismatch = hasIdentityMismatch(context, parsed);
-    return {
-      items: resolveCacheItems(parsed?.items, fallback),
-      fetchedAt: Number.isFinite(fetchedAt) ? fetchedAt : null,
-      stale: tooOld || urlMismatch || identityMismatch,
-    };
+    return parseProviderCache(context, raw, configuredUrl, fallback);
   } catch (error) {
     const code = (error as { code?: string }).code;
     if (code === 'ENOENT') {
+      const legacyPath = resolveLegacyProviderCachePath(context, fileName);
+      if (legacyPath !== cacheFile) {
+        try {
+          const raw = await fs.readFile(legacyPath, 'utf8');
+          return parseProviderCache(context, raw, configuredUrl, fallback);
+        } catch (legacyError) {
+          if ((legacyError as { code?: string }).code !== 'ENOENT') throw legacyError;
+        }
+      }
       return { items: fallback, fetchedAt: null, stale: true };
     }
     throw error;
   }
+}
+
+function parseProviderCache<T>(
+  context: ProviderCacheContext,
+  raw: string,
+  configuredUrl: string | null,
+  fallback: T,
+): CacheReadResult<T> {
+  const parsed = JSON.parse(raw) as ProviderCache<T>;
+  const fetchedAt = parsed?.fetchedAt ? Date.parse(parsed.fetchedAt) : NaN;
+  const tooOld = Number.isFinite(fetchedAt) ? Date.now() - fetchedAt > resolveCacheTtl(context) : true;
+  const urlMismatch =
+    typeof configuredUrl === 'string'
+    && configuredUrl.length > 0
+    && typeof parsed?.sourceUrl === 'string'
+    && parsed.sourceUrl.length > 0
+    && configuredUrl !== parsed.sourceUrl;
+  return {
+    items: resolveCacheItems(parsed?.items, fallback),
+    fetchedAt: Number.isFinite(fetchedAt) ? fetchedAt : null,
+    stale: tooOld || urlMismatch || hasIdentityMismatch(context, parsed),
+  };
 }
 
 function resolveCacheItems<T>(items: T | undefined, fallback: T): T {
@@ -419,7 +465,19 @@ async function writeProviderCache<T>(
   fileName: string,
   items: T,
 ): Promise<void> {
-  const { cacheFile, configuredUrl } = resolveProviderCachePath(context, fileName);
+  const { cacheDir: canonicalCacheDir, cacheFile, configuredUrl } = resolveProviderCachePath(context, fileName);
+  const legacyCacheDir = resolveLegacyProviderCacheDirectory(context);
+  if (legacyCacheDir !== canonicalCacheDir) {
+    try {
+      await fs.cp(legacyCacheDir, canonicalCacheDir, {
+        recursive: true,
+        force: false,
+        errorOnExist: false,
+      });
+    } catch (error) {
+      if ((error as { code?: string }).code !== 'ENOENT') throw error;
+    }
+  }
   await fs.mkdir(path.dirname(cacheFile), { recursive: true });
   const identity = sanitizeUserIdentity(context.userIdentity ?? null);
   const payload: ProviderCache<T> = {
@@ -430,13 +488,40 @@ async function writeProviderCache<T>(
     identityKey: resolveIdentityKey(context),
     featureSignature: normalizeFeatureSignature(context.featureSignature),
   };
-  const tempFile = `${cacheFile}.${process.pid}.${Date.now()}.tmp`;
+  const tempFile = `${cacheFile}.${process.pid}.${Date.now()}.${randomUUID()}.tmp`;
   try {
     await fs.writeFile(tempFile, JSON.stringify(payload, null, 2), 'utf8');
-    await fs.rename(tempFile, cacheFile);
+    await replaceFile(tempFile, cacheFile);
+    if (legacyCacheDir !== canonicalCacheDir) {
+      await fs.rm(legacyCacheDir, { recursive: true, force: true });
+    }
   } catch (error) {
     await fs.rm(tempFile, { force: true }).catch(() => {});
     throw error;
+  }
+}
+
+function resolveLegacyProviderCacheKey(context: ProviderCacheContext): string {
+  return resolveIdentityKey(context).replace(/[\\/]/gu, '_');
+}
+
+function resolveLegacyProviderCacheDirectory(context: ProviderCacheContext): string {
+  const cacheRoot = context.cacheRoot ?? path.join(getAuracallHomeDir(), 'cache', 'providers');
+  return path.join(cacheRoot, context.provider, resolveLegacyProviderCacheKey(context));
+}
+
+function resolveLegacyProviderCachePath(context: ProviderCacheContext, fileName: string): string {
+  return path.join(resolveLegacyProviderCacheDirectory(context), fileName);
+}
+
+async function replaceFile(tempFile: string, destination: string): Promise<void> {
+  try {
+    await fs.rename(tempFile, destination);
+  } catch (error) {
+    const code = (error as { code?: string }).code;
+    if (process.platform !== 'win32' || (code !== 'EEXIST' && code !== 'EPERM')) throw error;
+    await fs.rm(destination, { force: true });
+    await fs.rename(tempFile, destination);
   }
 }
 

@@ -12,6 +12,15 @@
   portable fixtures; narrowly gate only truly host-specific contracts.
 - Critical path remains root with no parallel workers. PTY dependency
   replacement and any provider/live behavior are outside this slice.
+- Diagnostic dispatch `31897276458` at `d2a234b1` passed all Unix jobs and
+  reduced native Windows to 24 failed files: unsafe semantic cache directory
+  keys, native path/CRLF assumptions, replace-on-rename behavior, `node.exe`
+  allowlisting, and POSIX-only executable/permission fixtures.
+- Implemented reversible tagged cache-directory encoding with safe legacy
+  read and post-write migration, Windows-safe atomic replacement, native-path
+  fixtures, and narrow host gates. The focused 548-test matrix, complete 2,966-
+  test provider-disabled suite, typecheck, and zero-warning lint are green.
+  Current-SHA four-job CI remains the closing gate.
 
 ## Turn 497 | 2026-08-15
 

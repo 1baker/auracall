@@ -178,15 +178,15 @@ describe('browserMode exports', () => {
       resolvedBrowserConfig({
         target: 'chatgpt',
         chromeProfile: 'Profile 1',
-        managedProfileRoot: '/home/test/.auracall/browser-profiles',
-        manualLoginProfileDir: '/home/test/.auracall/browser-profiles/wsl-chrome-2/chatgpt',
+        managedProfileRoot: path.resolve('/home/test/.auracall/browser-profiles'),
+        manualLoginProfileDir: path.resolve('/home/test/.auracall/browser-profiles/wsl-chrome-2/chatgpt'),
       }),
       'chatgpt',
       'wsl-chrome-2',
     );
 
-    expect(context.userDataDir).toBe('/home/test/.auracall/browser-profiles/wsl-chrome-2/chatgpt');
-    expect(context.defaultManagedProfileDir).toBe('/home/test/.auracall/browser-profiles/wsl-chrome-2/chatgpt');
+    expect(context.userDataDir).toBe(path.resolve('/home/test/.auracall/browser-profiles/wsl-chrome-2/chatgpt'));
+    expect(context.defaultManagedProfileDir).toBe(path.resolve('/home/test/.auracall/browser-profiles/wsl-chrome-2/chatgpt'));
     expect(context.chromeProfile).toBe('Profile 1');
   });
 

@@ -65,9 +65,24 @@ export async function writeMediaGenerationResponse(
   await fs.mkdir(generationDir, { recursive: true });
   const recordPath = getMediaGenerationRecordPath(response.id);
   const tempPath = `${recordPath}.${process.pid}.${Date.now()}.${randomUUID()}.tmp`;
-  await fs.writeFile(tempPath, `${JSON.stringify(parsedRecord, null, 2)}\n`, 'utf8');
-  await fs.rename(tempPath, recordPath);
+  try {
+    await fs.writeFile(tempPath, `${JSON.stringify(parsedRecord, null, 2)}\n`, 'utf8');
+    await replaceMediaGenerationRecord(tempPath, recordPath);
+  } finally {
+    await fs.rm(tempPath, { force: true }).catch(() => {});
+  }
   return parsedRecord;
+}
+
+async function replaceMediaGenerationRecord(tempPath: string, recordPath: string): Promise<void> {
+  try {
+    await fs.rename(tempPath, recordPath);
+  } catch (error) {
+    const code = (error as { code?: string }).code;
+    if (process.platform !== 'win32' || (code !== 'EEXIST' && code !== 'EPERM')) throw error;
+    await fs.rm(recordPath, { force: true });
+    await fs.rename(tempPath, recordPath);
+  }
 }
 
 export function createMediaGenerationRecordStore(): MediaGenerationRecordStore {

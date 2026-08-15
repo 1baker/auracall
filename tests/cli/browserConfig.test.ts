@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import {
   buildBrowserConfig,
@@ -50,7 +51,7 @@ describe('buildBrowserConfig', () => {
       browserTarget: 'chatgpt',
     });
     expect(config.auracallProfileName).toBe('wsl-chrome-2');
-    expect(config.manualLoginProfileDir).toMatch(/browser-profiles\/wsl-chrome-2\/chatgpt$/);
+    expect(config.manualLoginProfileDir).toMatch(/browser-profiles[\\/]wsl-chrome-2[\\/]chatgpt$/);
   });
 
   test('preserves selected agent provenance in browser session config', async () => {
@@ -298,7 +299,7 @@ describe('buildBrowserConfig', () => {
       '/mnt/c/Users/ecoch/AppData/Local/AuraCall/browser-profiles',
     );
     expect(config.manualLoginProfileDir).toBe(
-      '/mnt/c/Users/ecoch/AppData/Local/AuraCall/browser-profiles/default/grok',
+      path.resolve('/mnt/c/Users/ecoch/AppData/Local/AuraCall/browser-profiles/default/grok'),
     );
   });
 });

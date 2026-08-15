@@ -368,7 +368,7 @@ describe('gemini cache CLI parity', () => {
       expect(listPayload).toEqual([
         expect.objectContaining({
           conversationId: 'ab30a4a92e4b65a9',
-          path: expect.stringContaining(path.join('contexts', 'ab30a4a92e4b65a9.json')),
+          path: expect.stringContaining('contexts/ab30a4a92e4b65a9.json'),
         }),
       ]);
 

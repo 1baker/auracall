@@ -4,8 +4,11 @@ import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promis
 import { afterEach, describe, expect, test } from 'vitest';
 import { setAuracallHomeDirOverrideForTest } from '../../src/auracallHome.js';
 import {
+  decodeProviderCacheDirectoryName,
+  encodeProviderCacheDirectoryName,
   matchProjectByName,
   readConversationCache,
+  resolveProviderCachePath,
   writeConversationCache,
   writeConversationContextCache,
 } from '../../src/browser/providers/cache.js';
@@ -16,6 +19,53 @@ import { upsertCacheIndexEntry } from '../../src/browser/llmService/cache/index.
 describe('provider cache nested writes', () => {
   afterEach(() => {
     setAuracallHomeDirOverrideForTest(null);
+  });
+
+  test('encodes semantic cache identities as canonical filesystem-safe directories', () => {
+    const identityKey = 'service-account:chatgpt:person@example.com|structure=business';
+    const encoded = encodeProviderCacheDirectoryName(identityKey);
+    expect(encoded).toMatch(/^v1_[A-Za-z0-9_-]+$/u);
+    expect(encoded).not.toMatch(/[:|]/u);
+    expect(decodeProviderCacheDirectoryName(encoded)).toBe(identityKey);
+    expect(decodeProviderCacheDirectoryName(`${encoded}=`)).toBeNull();
+  });
+
+  test('reads safe legacy cache directories and migrates them after a successful write', async () => {
+    const homeDir = await mkdtemp(path.join(os.tmpdir(), 'oracle-cache-legacy-'));
+    setAuracallHomeDirOverrideForTest(homeDir);
+    const identityKey = 'v1_legacy-cache@example.com';
+    const context: ProviderCacheContext = {
+      provider: 'chatgpt',
+      userConfig: {} as ProviderCacheContext['userConfig'],
+      listOptions: {},
+      identityKey,
+    };
+    const legacyDir = path.join(homeDir, 'cache', 'providers', 'chatgpt', identityKey);
+    const legacyFile = path.join(legacyDir, 'conversations.json');
+    try {
+      await mkdir(legacyDir, { recursive: true });
+      await writeFile(legacyFile, JSON.stringify({
+        fetchedAt: new Date().toISOString(),
+        items: [{ id: 'legacy-conversation', title: 'Legacy conversation', provider: 'chatgpt' }],
+        identityKey,
+      }), 'utf8');
+
+      expect((await readConversationCache(context)).items).toEqual([
+        { id: 'legacy-conversation', title: 'Legacy conversation', provider: 'chatgpt' },
+      ]);
+
+      await writeConversationCache(context, [
+        { id: 'encoded-conversation', title: 'Encoded conversation', provider: 'chatgpt' },
+      ]);
+      const canonical = resolveProviderCachePath(context, 'conversations.json');
+      expect(canonical.cacheDir).not.toBe(legacyDir);
+      expect(JSON.parse(await readFile(canonical.cacheFile, 'utf8'))).toMatchObject({
+        items: [{ id: 'encoded-conversation', title: 'Encoded conversation', provider: 'chatgpt' }],
+      });
+      await expect(readFile(legacyFile, 'utf8')).rejects.toMatchObject({ code: 'ENOENT' });
+    } finally {
+      await rm(homeDir, { recursive: true, force: true });
+    }
   });
 
   test('creates nested directories for conversation context cache files', async () => {

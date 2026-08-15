@@ -451,7 +451,7 @@ describe("agent-browser network metadata reduction", () => {
 		expectNoSentinels([oversize, failed], sentinels);
 	});
 
-	test("captures and reduces a real secret-bearing child process without forwarding stderr", async () => {
+	test.runIf(process.platform !== "win32")("captures and reduces a real secret-bearing child process without forwarding stderr", async () => {
 		const sentinels = [
 			"SYNTHETIC_REAL_CHILD_HEADER_SENTINEL_0229",
 			"SYNTHETIC_REAL_CHILD_BODY_SENTINEL_0229",
@@ -496,7 +496,7 @@ describe("agent-browser network metadata reduction", () => {
 		expectNoSentinels(result, sentinels);
 	});
 
-	test("budgets delayed command acquisition separately from daemon-worker discovery", async () => {
+	test.runIf(process.platform !== "win32")("budgets delayed command acquisition separately from daemon-worker discovery", async () => {
 		const expectedUrl = "https://example.test/backend-api/conversation/layered-deadline";
 		const sentinels = [
 			"SYNTHETIC_LAYERED_HEADER_SENTINEL_0231",
@@ -559,7 +559,7 @@ if (action === "discovery") {
 		expectNoSentinels(result, sentinels);
 	});
 
-	test("distinguishes daemon-worker discovery and detail timeouts after nonzero child exit", async () => {
+	test.runIf(process.platform !== "win32")("distinguishes daemon-worker discovery and detail timeouts after nonzero child exit", async () => {
 		const timeoutSentinel = "SYNTHETIC_WORKER_TIMEOUT_SENTINEL_0231";
 		const workerTimeoutEnvelope = JSON.stringify({
 			success: false,
@@ -602,7 +602,7 @@ if (action === "discovery") {
 		});
 	});
 
-	test("enforces timeout and output caps through the real child process boundary", async () => {
+	test.runIf(process.platform !== "win32")("enforces timeout and output caps through the real child process boundary", async () => {
 		const timeout = await withFakeAgentBrowser(
 			"setInterval(() => undefined, 1000);",
 			(executable) =>

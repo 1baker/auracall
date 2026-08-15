@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { CHATGPT_URL, GEMINI_URL } from '../../src/browser/constants.js';
 
@@ -35,7 +36,7 @@ describe('resolveBrowserConfig', () => {
     expect(resolved.cookieSync).toBe(!isWindows);
     expect(resolved.headless).toBe(false);
     expect(resolved.manualLogin).toBe(true);
-    expect(resolved.manualLoginProfileDir).toMatch(/browser-profiles\/default\/chatgpt$/);
+    expect(resolved.manualLoginProfileDir).toMatch(/browser-profiles[\\/]default[\\/]chatgpt$/);
     expect(resolved.serviceTabLimit).toBe(3);
     expect(resolved.blankTabLimit).toBe(1);
     expect(resolved.collapseDisposableWindows).toBe(true);
@@ -248,7 +249,7 @@ describe('resolveBrowserConfig', () => {
       manualLoginProfileDir: '/mnt/c/Users/ecoch/AppData/Local/Google/Chrome/User Data/Default',
     });
 
-    expect(resolved.manualLoginProfileDir).toBe('/tmp/auracall-profile');
+    expect(resolved.manualLoginProfileDir).toBe(path.resolve('/tmp/auracall-profile'));
   });
 
   test.runIf(process.platform === 'linux')('normalizes WSL UNC manual-login profile dirs back to Linux paths', () => {
@@ -271,7 +272,7 @@ describe('resolveBrowserConfig', () => {
 
     expect(resolved.manualLogin).toBe(false);
     expect(resolved.manualLoginProfileDir).toBeNull();
-    expect(resolved.managedProfileRoot).toBe('/tmp/managed-root');
+    expect(resolved.managedProfileRoot).toBe(path.resolve('/tmp/managed-root'));
   });
 
   test('derives deterministic managed profile dirs from the browser target', () => {
@@ -279,7 +280,7 @@ describe('resolveBrowserConfig', () => {
       target: 'grok',
     });
 
-    expect(resolved.manualLoginProfileDir).toMatch(/browser-profiles\/default\/grok$/);
+    expect(resolved.manualLoginProfileDir).toMatch(/browser-profiles[\\/]default[\\/]grok$/);
   });
 
   test('uses browserProfileName option for managed profile derivation', () => {
@@ -291,7 +292,7 @@ describe('resolveBrowserConfig', () => {
       browserProfileName: 'default',
     });
 
-    expect(resolved.manualLoginProfileDir).toBe('/tmp/auracall/browser-profiles/default/grok');
+    expect(resolved.manualLoginProfileDir).toBe(path.resolve('/tmp/auracall/browser-profiles/default/grok'));
   });
 
   test('uses Gemini URLs for Gemini browser targets instead of inheriting ChatGPT defaults', () => {
@@ -304,7 +305,7 @@ describe('resolveBrowserConfig', () => {
     expect(resolved.url).toBe('https://gemini.google.com/gem/test-gem');
     expect(resolved.geminiUrl).toBe('https://gemini.google.com/gem/test-gem');
     expect(resolved.chatgptUrl).toBe('https://chatgpt.com/g/g-p-should-not-win/project');
-    expect(resolved.manualLoginProfileDir).toMatch(/browser-profiles\/default\/gemini$/);
+    expect(resolved.manualLoginProfileDir).toMatch(/browser-profiles[\\/]default[\\/]gemini$/);
   });
 
   test('defaults Gemini browser targets to the Gemini app URL', () => {
@@ -358,7 +359,7 @@ describe('resolveBrowserConfig', () => {
       auracallProfileName: 'wsl-chrome-2',
     });
 
-    expect(resolved.manualLoginProfileDir).toBe('/home/test/.auracall/browser-profiles/wsl-chrome-2/chatgpt');
+    expect(resolved.manualLoginProfileDir).toBe(path.resolve('/home/test/.auracall/browser-profiles/wsl-chrome-2/chatgpt'));
   });
 
   test('rejects temporary chat URLs when desiredModel is Pro', () => {

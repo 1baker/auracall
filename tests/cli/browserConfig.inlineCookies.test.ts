@@ -93,6 +93,6 @@ describe('buildBrowserConfig inline cookies', () => {
     const inline = Array.isArray(config.inlineCookies) ? config.inlineCookies : [];
     expect(inline[0]?.value).toBe('scoped');
     expect(config.inlineCookiesSource).toBe('scoped:cookies.json');
-    expect(config.manualLoginProfileDir).toMatch(/browser-profiles\/default\/gemini$/);
+    expect(config.manualLoginProfileDir).toMatch(/browser-profiles[\\/]default[\\/]gemini$/);
   });
 });

@@ -686,7 +686,7 @@ describe('resolveBrowserProfileResolution', () => {
       chromePath: '/usr/bin/google-chrome',
       chromeProfile: 'Default',
       manualLogin: true,
-      manualLoginProfileDir: '/home/test/.auracall/browser-profiles/wsl-chrome-2/chatgpt',
+      manualLoginProfileDir: path.resolve('/home/test/.auracall/browser-profiles/wsl-chrome-2/chatgpt'),
       wslChromePreference: 'wsl',
     });
     expect(result.resolution.launchProfile).toEqual(result.launchProfile);
@@ -701,7 +701,7 @@ describe('resolveBrowserProfileResolution', () => {
           chromePath: '/usr/bin/google-chrome',
           chromeProfile: 'Default',
           managedProfileRoot: '/home/test/.auracall/browser-profiles',
-          manualLoginProfileDir: '/home/test/.auracall/browser-profiles/default/grok',
+          manualLoginProfileDir: path.resolve('/home/test/.auracall/browser-profiles/default/grok'),
           wslChromePreference: 'wsl',
         },
         profiles: {
@@ -725,10 +725,10 @@ describe('resolveBrowserProfileResolution', () => {
       defaultService: 'grok',
     });
     expect(result.resolvedConfig.manualLoginProfileDir).toBe(
-      '/home/test/.auracall/browser-profiles/default/grok',
+      path.resolve('/home/test/.auracall/browser-profiles/default/grok'),
     );
     expect(result.launchProfile.manualLoginProfileDir).toBe(
-      '/home/test/.auracall/browser-profiles/default/grok',
+      path.resolve('/home/test/.auracall/browser-profiles/default/grok'),
     );
   });
 

@@ -33,7 +33,7 @@ describe('browser mutation control plane', () => {
     const violations: string[] = [];
     for (const file of files) {
       const text = await readFile(file, 'utf8');
-      const relative = path.relative(repoRoot, file);
+      const relative = path.relative(repoRoot, file).split(path.sep).join('/');
       if (browserServiceControlPointAllowlist.has(relative)) {
         continue;
       }
@@ -57,7 +57,7 @@ describe('browser mutation control plane', () => {
     const unguardedScripts: string[] = [];
     for (const file of files) {
       const text = await readFile(file, 'utf8');
-      const relative = path.relative(repoRoot, file);
+      const relative = path.relative(repoRoot, file).split(path.sep).join('/');
       const hasDirectMutation = forbiddenPatterns.some(({ pattern }) => pattern.test(text));
       if (!hasDirectMutation) {
         continue;

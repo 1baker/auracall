@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { describe, expect, test, vi } from 'vitest';
 import { resolveBrowserListTarget } from '../../src/browser/service/portResolution.js';
 import type { ResolvedUserConfig } from '../../src/config.js';
@@ -47,7 +48,7 @@ describe('resolveBrowserListTarget', () => {
 
     expect(portResolutionCoreMocks.resolveBrowserListTargetCore).toHaveBeenCalledWith(
       expect.objectContaining({
-        profilePath: '/tmp/auracall/browser-profiles/default/chatgpt',
+        profilePath: path.resolve('/tmp/auracall/browser-profiles/default/chatgpt'),
         configuredPort: null,
       }),
     );

@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { describe, expect, test, vi } from 'vitest';
 import { collectReattachRegistryDiagnostics } from '../../src/browser/service/registryDiagnostics.js';
 import type { ClassifiedBrowserInstance } from '../../packages/browser-service/src/service/stateRegistry.js';
@@ -26,7 +27,7 @@ describe('collectReattachRegistryDiagnostics', () => {
           pid: 9001,
           port: 9222,
           host: '127.0.0.1',
-          profilePath: '/tmp/auracall/browser-profiles/default/chatgpt',
+          profilePath: path.resolve('/tmp/auracall/browser-profiles/default/chatgpt'),
           profileName: 'Default',
           type: 'chrome',
           launchedAt: new Date().toISOString(),
@@ -41,7 +42,7 @@ describe('collectReattachRegistryDiagnostics', () => {
           pid: 9002,
           port: 4555,
           host: '127.0.0.1',
-          profilePath: '/tmp/auracall/browser-profiles/default/chatgpt',
+          profilePath: path.resolve('/tmp/auracall/browser-profiles/default/chatgpt'),
           profileName: 'Default',
           type: 'chrome',
           launchedAt: new Date().toISOString(),
@@ -58,7 +59,7 @@ describe('collectReattachRegistryDiagnostics', () => {
       config: {
         target: 'chatgpt',
         manualLogin: true,
-        manualLoginProfileDir: '/tmp/auracall/browser-profiles/default/chatgpt',
+        manualLoginProfileDir: path.resolve('/tmp/auracall/browser-profiles/default/chatgpt'),
         chromeProfile: 'Default',
       },
       registryPath: '/tmp/browser-state.json',
@@ -70,7 +71,7 @@ describe('collectReattachRegistryDiagnostics', () => {
     ]);
     expect(result?.selectedPortCandidates).toEqual([
       expect.objectContaining({
-        profilePath: '/tmp/auracall/browser-profiles/default/chatgpt',
+        profilePath: path.resolve('/tmp/auracall/browser-profiles/default/chatgpt'),
         profileName: 'Default',
         port: 9222,
         liveness: 'dead-port',
@@ -86,7 +87,7 @@ describe('collectReattachRegistryDiagnostics', () => {
           pid: 9010,
           port: 45013,
           host: '127.0.0.1',
-          profilePath: '/tmp/auracall/browser-profiles/wsl-chrome-2/chatgpt',
+          profilePath: path.resolve('/tmp/auracall/browser-profiles/wsl-chrome-2/chatgpt'),
           profileName: 'Profile 1',
           type: 'chrome',
           launchedAt: new Date().toISOString(),
@@ -103,7 +104,7 @@ describe('collectReattachRegistryDiagnostics', () => {
       config: {
         target: 'chatgpt',
         manualLogin: true,
-        manualLoginProfileDir: '/tmp/auracall/browser-profiles/default/chatgpt',
+        manualLoginProfileDir: path.resolve('/tmp/auracall/browser-profiles/default/chatgpt'),
         chromeProfile: 'Default',
       },
       registryPath: '/tmp/browser-state.json',
@@ -111,7 +112,7 @@ describe('collectReattachRegistryDiagnostics', () => {
 
     expect(result?.selectedPortCandidates).toEqual([
       expect.objectContaining({
-        profilePath: '/tmp/auracall/browser-profiles/wsl-chrome-2/chatgpt',
+        profilePath: path.resolve('/tmp/auracall/browser-profiles/wsl-chrome-2/chatgpt'),
         profileName: 'Profile 1',
         port: 45013,
         liveness: 'live',

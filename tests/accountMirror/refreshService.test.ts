@@ -1815,7 +1815,7 @@ describe("account mirror refresh service", () => {
 				conversations: 1,
 			},
 			dispatcher: {
-				key: expect.stringContaining("wsl-chrome-2/chatgpt::service:chatgpt"),
+				key: expect.stringContaining(`${path.join("wsl-chrome-2", "chatgpt")}::service:chatgpt`),
 			},
 		});
 		expect(persistence.writeSnapshot).toHaveBeenCalledWith(
