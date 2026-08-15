@@ -47577,3 +47577,16 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   22/Node 22, Ubuntu 24/Node 24, macOS/Node 22, and
   `windows-latest`/Node 22. Plan 0332 closes accepted; parent Plan 0064 stays
   open for streaming `/v1/chat/completions`.
+
+## 2026-08-15 | Plan 0333 opens chat completions streaming compatibility
+
+- Plan 0064 has one remaining compatibility gap: `stream: true` is rejected
+  even though non-streaming chat completions already authorize, persist, drain,
+  and read one configured-agent response through the durable runtime.
+- The first streaming adapter will preserve that execution authority and emit
+  valid `chat.completion.chunk` SSE. It will make no unsupported claim of
+  provider token deltas; authoritative assistant text arrives after stored-run
+  settlement.
+- Raw HTTP plus the installed OpenAI Node SDK must prove role/content/terminal
+  chunks, optional usage, `[DONE]`, structured pending/failure errors, and
+  disconnect-safe continued durable execution before cross-platform acceptance.

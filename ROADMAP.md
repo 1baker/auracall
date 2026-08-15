@@ -7,6 +7,13 @@
 Status: active
 Lane: P01
 
+- Active OpenAI-compatible chat completions streaming:
+  [docs/dev/plans/0333-2026-08-15-chat-completions-streaming.md](docs/dev/plans/0333-2026-08-15-chat-completions-streaming.md)
+  Current state: non-streaming calls already use one durable configured-agent
+  response path. This slice adds standards-compatible SSE projection, bounded
+  recovery errors, SDK proof, and disconnect-safe durable execution without
+  claiming unavailable provider token deltas.
+
 - Closed accepted native Gemini semantic model selector execution:
   [docs/dev/plans/0332-2026-08-15-native-gemini-semantic-model-selectors.md](docs/dev/plans/0332-2026-08-15-native-gemini-semantic-model-selectors.md)
   Current state: configured Gemini agents now use the maintained native

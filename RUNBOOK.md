@@ -19803,3 +19803,21 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   Ubuntu 24/Node 24, macOS/Node 22, and `windows-latest`/Node 22 all passed the
   complete provider-disabled matrix. Plan 0332 closes accepted; Plan 0064
   remains open for streaming `/v1/chat/completions`.
+
+## Turn 428 | 2026-08-15
+
+- Plan 0333 opens Plan 0064's remaining chat-completions compatibility gap.
+  The current non-streaming handler already owns catalog hydration, scoped
+  authorization, one durable response, bounded host drain, and stored readback;
+  `stream: true` is the only rejected request mode.
+- The bounded contract adds OpenAI-compatible SSE chunks over that same durable
+  response. AuraCall will emit an assistant-role chunk immediately and settled
+  authoritative text afterward; it will not misrepresent that projection as
+  provider token-level streaming.
+- Pending or failed execution must surface a structured SSE error with the
+  durable response id and poll path. Client disconnect stops transport writes
+  but does not cancel or duplicate the stored run.
+- Acceptance requires raw-wire framing, official installed OpenAI Node SDK
+  iteration, optional usage, auth/error/disconnect coverage, complete local
+  gates, and exact-SHA cross-platform CI. No browser/provider/runtime mutation
+  is authorized.
