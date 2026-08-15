@@ -11,7 +11,13 @@
   read/list/delete and post-write migration. Four focused files passed 24 tests,
   typecheck and touched-file lint passed, and the real local HTTP/CLI/MCP smoke
   completed. CI now requires that real smoke and the persistence tests on
-  Windows; current-SHA native acceptance remains the open gate.
+  Windows.
+- Current-SHA dispatch 31896808359 passed at
+  `e69c4e24ba5f0c16ad0d8f3604bac1893ca7eacb` on Ubuntu 22, macOS 22,
+  Ubuntu 24, and Windows 2022/Node 22. The Windows job passed frozen install,
+  checker, lint, the 24 focused tests, the real readiness smoke, and cleanup,
+  closing Plan 0328. Complete-suite Windows fixture normalization and PTY
+  modernization remain separate successor slices.
 
 ## 2026-08-15 | Plan 0327 CI Node runtime contract
 

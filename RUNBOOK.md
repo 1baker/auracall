@@ -26,6 +26,13 @@
   CI drift rejection. Typecheck, touched-file zero-warning lint, the runtime
   checker, and the real local HTTP/CLI/MCP readiness smoke passed. CI now runs
   focused runner persistence tests and the real smoke on Windows.
+- Dispatch 31896808359 passed at exact implementation SHA
+  `e69c4e24ba5f0c16ad0d8f3604bac1893ca7eacb` across Ubuntu 22 job
+  95041265046, macOS 22 job 95041265049, Ubuntu 24 job 95041265051, and
+  Windows 2022/Node 22 job 95041265055. Windows passed frozen install,
+  checker, lint, all 24 focused tests, the real readiness smoke, and cleanup.
+  Plan 0328 is closed; complete-suite Windows fixture normalization and PTY
+  modernization remain separately bounded successors.
 
 ## Turn 496 | 2026-08-15
 

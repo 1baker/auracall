@@ -7,10 +7,10 @@
 Status: active
 Lane: P01
 
-- Open native Windows runner persistence compatibility:
+- Closed accepted native Windows runner persistence compatibility:
   [docs/dev/plans/0328-2026-08-15-native-windows-runner-persistence.md](docs/dev/plans/0328-2026-08-15-native-windows-runner-persistence.md)
-  Encode semantic runner ids into reversible filesystem-safe directories while
-  retaining legacy reads, then restore the real readiness smoke on Windows.
+  Semantic runner ids now use reversible filesystem-safe directories with
+  legacy compatibility, and the real readiness smoke passes on Windows.
 
 - Closed accepted CI Node runtime contract alignment:
   [docs/dev/plans/0327-2026-08-15-ci-node-runtime-contract.md](docs/dev/plans/0327-2026-08-15-ci-node-runtime-contract.md)

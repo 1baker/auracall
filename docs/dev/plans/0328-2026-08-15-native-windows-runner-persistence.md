@@ -1,8 +1,8 @@
 # Native Windows Runner Persistence | 0328-2026-08-15
 
-State: OPEN
+State: CLOSED
 Lane: P01
-Plan version: 1
+Plan version: 2
 
 ## Goal
 
@@ -50,18 +50,18 @@ restore the real dashboard-session readiness smoke to the Windows CI lane.
 
 ## Acceptance Criteria
 
-- [ ] Encoded runner directory names contain only a tagged base64url-safe
+- [x] Encoded runner directory names contain only a tagged base64url-safe
       alphabet and decode exactly to the original Unicode runner id.
-- [ ] New writes, reads, lists, and deletes work for colon-delimited runner ids
+- [x] New writes, reads, lists, and deletes work for colon-delimited runner ids
       without using the raw id as the primary path.
-- [ ] Existing safe raw-id directories remain readable/listable/deletable and
+- [x] Existing safe raw-id directories remain readable/listable/deletable and
       migrate only after a successful encoded write.
-- [ ] Duplicate encoded and legacy records produce one logical runner ordered
+- [x] Duplicate encoded and legacy records produce one logical runner ordered
       by the authoritative heartbeat.
-- [ ] Focused runner-store/control/service tests, typecheck, zero-warning lint,
+- [x] Focused runner-store/control/service tests, typecheck, zero-warning lint,
       provider-disabled tests, build, plan audit, CodeGraph sync, and diff
       hygiene pass.
-- [ ] CI requires and passes the real dashboard-session readiness smoke on
+- [x] CI requires and passes the real dashboard-session readiness smoke on
       Ubuntu, macOS, and Windows at the current implementation SHA.
 
 ## Definition Of Done
@@ -79,7 +79,17 @@ system without weakening the public identity contract or POSIX compatibility.
   delete covers both.
 - Four focused files passed 24 tests. Typecheck, touched-file zero-warning lint,
   the CI runtime checker, and the real local HTTP/CLI/MCP readiness smoke also
-  passed. Native Windows current-SHA CI remains the acceptance gate.
+  passed. The isolated provider-disabled suite passed 329 files and 2,964 tests
+  with 20 files and 63 tests skipped; the production build, 849-file
+  zero-warning lint, plan audit, CodeGraph sync, and diff hygiene also passed.
+- Current-SHA dispatch
+  [31896808359](https://github.com/1baker/auracall/actions/runs/31896808359)
+  passed at `e69c4e24ba5f0c16ad0d8f3604bac1893ca7eacb`. Ubuntu 22 job
+  `95041265046`, macOS 22 job `95041265049`, Ubuntu 24 job `95041265051`,
+  and Windows 2022/Node 22 job `95041265055` all completed successfully.
+  Windows independently passed frozen install, the runtime checker,
+  zero-warning lint, all 24 focused tests, the real HTTP/CLI/MCP readiness
+  smoke, and cleanup. This closes the plan without broadening its scope.
 
 ## Execution Boundary
 
