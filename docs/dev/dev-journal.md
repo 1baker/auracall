@@ -47678,3 +47678,16 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   passed at `e8f6be8a6f10e3346d374b04bb516d3fc6f42d54` across Ubuntu 22/Node
   22, Ubuntu 24/Node 24, macOS/Node 22, and serialized Windows/Node 22.
   Plan 0335 closes accepted.
+
+## 2026-08-15 | Plan 0336 opens durable response-batch priority
+
+- The service host already owns one bounded queue order: actionable class,
+  then oldest-first. The batch execution gate is too late to implement honest
+  priority because it admits work after candidate selection.
+- The design adds a general host priority-resolver seam and durable batch tiers
+  `low`, `normal`, `high`, and `urgent`. It preserves execution-class ordering
+  and FIFO ties while aging every queued candidate one tier per 15 minutes.
+- Priority remains an ordering hint beneath all execution, lease, affinity,
+  concurrency, rate, and tenant gates. It never interrupts active work.
+- HTTP high/urgent priority requires an unscoped operator key; retry inherits
+  source priority. MCP and status readback share the service contract.

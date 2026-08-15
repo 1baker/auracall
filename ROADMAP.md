@@ -7,6 +7,13 @@
 Status: active
 Lane: P01
 
+- Active durable response-batch priority:
+  [docs/dev/plans/0336-2026-08-15-durable-response-batch-priority.md](docs/dev/plans/0336-2026-08-15-durable-response-batch-priority.md)
+  Current state: service-host drains preserve actionable-class ordering and
+  FIFO but cannot distinguish caller urgency. This slice adds durable
+  closed-world tiers, starvation-bounded aging, operator escalation authority,
+  and actual scheduler selection without preemption or gate bypass.
+
 - Closed accepted durable response-batch retry:
   [docs/dev/plans/0335-2026-08-15-durable-response-batch-retry.md](docs/dev/plans/0335-2026-08-15-durable-response-batch-retry.md)
   Current state: complete source requests remain authoritative in durable

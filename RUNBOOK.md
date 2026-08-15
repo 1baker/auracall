@@ -19915,3 +19915,18 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   passed at `e8f6be8a6f10e3346d374b04bb516d3fc6f42d54` across Ubuntu 22/Node
   22, Ubuntu 24/Node 24, macOS/Node 22, and serialized Windows/Node 22.
   Plan 0335 closes accepted.
+
+## Turn 432 | 2026-08-15
+
+- Plan 0336 opens the final first-class response-batch control named by Plan
+  0064: enforceable priority. Current service-host ordering is actionable class
+  first and FIFO second; batch metadata does not affect selection.
+- The bounded contract adds `low`, `normal`, `high`, and `urgent`, defaulting to
+  `normal`. One-tier aging every 15 minutes caps at `urgent`, preserving FIFO
+  ties and preventing recurring high-priority work from starving older work.
+- Priority applies only within one actionable execution class. It cannot
+  preempt leases, bypass runner affinity or execution gates, alter reserved
+  recovery capacity, or override batch/tenant safety limits.
+- Scoped HTTP keys may request only `low` or `normal`; `high` and `urgent`
+  require unscoped operator authority. Local MCP exposes the same service
+  schema, and retry inherits rather than escalates source priority.
