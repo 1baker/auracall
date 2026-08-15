@@ -542,21 +542,31 @@ Terminology note:
   touch the real user-scoped `api.env`; use
   `pnpm run smoke:api-key-openai-client` to verify the issued temp key through
   the standard OpenAI client interface.
-  When enabled, `/v1/*` routes require `Authorization: Bearer <secret>` or
-  `X-AuraCall-API-Key: <secret>`. `/status` remains unauthenticated so local
-  operators can discover the service posture. API startup prints the same
+  When enabled, direct API clients and every non-loopback-bound dashboard
+  request to `/v1/*` require `Authorization: Bearer <secret>` or
+  `X-AuraCall-API-Key: <secret>`. A built-in dashboard may instead receive
+  trusted-local operator authority only when the API server is loopback-bound,
+  its TCP peer is loopback, and its `Origin` or dashboard `Referer` matches the
+  request host. Forwarded client-address headers are not trusted. A local
+  reverse proxy using this exception is part of the security boundary and must
+  protect any external ingress; otherwise it must send a valid API key.
+  `/status` remains unauthenticated so local operators can discover the service
+  posture. API startup prints the same
   resolved non-secret auth summary as `/status.auth`: whether auth is required,
-  how many keys loaded, and whether scoped keys are present. It never prints
-  key ids, secrets, or scope values, and warns explicitly when auth is required
-  but no keys loaded. Scoped keys are enforced on
+  how many keys loaded, whether scoped keys are present, and whether the
+  trusted-local dashboard exception is active. It never prints key ids,
+  secrets, or scope values, and warns explicitly when auth is required but no
+  keys loaded. Scoped keys are enforced on
   `/v1/responses` and `/v1/team-runs` against the effective config plus
   registry catalog for agent, team, service, and runtime-profile selectors.
   Operators can inspect non-secret scope health with
   `GET /v1/config/agent-diagnostics`; the report includes effective
   agent/team counts, config-vs-registry conflicts, disabled registry records,
   and which loaded API-key ids can reach which effective agents. With auth
-  enabled, this route requires an unscoped operator key until role-based API
-  keys exist. Local MCP operators can run `api_key_diagnostics` against
+  enabled, direct and non-loopback access to this route requires an unscoped
+  operator key until role-based API keys exist; the trusted-local built-in
+  dashboard uses its local operator authority. Local MCP operators can run
+  `api_key_diagnostics` against
   `~/.auracall/api.env` before or after restart to catch missing agents, teams,
   runtime profiles, or listed key ids without exposing secret values. The same
   local, secret-free report is available with

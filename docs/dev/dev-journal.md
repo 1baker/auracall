@@ -1,3 +1,17 @@
+## 2026-08-15 | Plan 0321 trusted-local dashboard authorization
+
+- Replaced the built-in dashboard's header-only API-key bypass with an explicit
+  trusted-local join: API auth required on a loopback-bound server, loopback TCP
+  peer, and same-origin `Origin` or dashboard `Referer` browser context.
+- `/status.auth` and startup logging now disclose whether trusted-local
+  dashboard authority is active. Forwarded client-address headers are ignored,
+  and non-loopback binds require real credentials regardless of forged browser
+  headers; the local dashboard keeps its no-browser-secret workflow.
+- Two focused files passed 234 tests; the isolated provider-disabled suite
+  passed 2,937 with 65 expected skips across all 840 suites after one bounded
+  rerun of an unrelated timing test. Typecheck, zero-warning lint across 843
+  files, build, 322-plan audit, and diff hygiene passed. Plan 0321 is CLOSED.
+
 ## 2026-08-15 | Plan 0320 API startup authentication posture
 
 - Replaced unconditional unauthenticated startup claims with diagnostics from

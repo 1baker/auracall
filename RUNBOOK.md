@@ -1,5 +1,27 @@
 # RUNBOOK
 
+## Turn 490 | 2026-08-15
+
+- Opened Plan 0321 after authorization-flow inspection confirmed same-origin
+  `Host` plus `Origin`/`Referer` headers alone grant operator-superuser access to
+  protected `/v1/*` routes, including on non-loopback binds.
+- Preserve the intentional no-key local dashboard workflow but root its
+  authority in both loopback server binding and loopback TCP peer evidence.
+  Keep browser-context checks as constraints, reject header forgery on public
+  binds, advertise the exception, and avoid frontend secret storage or live
+  effects.
+- Added resolved `trustedLocalOperatorDashboard` posture and joined it with
+  parsed TCP peer loopback evidence plus existing same-origin dashboard context
+  before granting operator authority. IPv4, IPv6, mapped-loopback, malformed,
+  nonlocal, cross-origin, and non-dashboard cases are covered; forwarded
+  address headers are deliberately ignored.
+- Two focused files passed 234 tests; the complete isolated provider-disabled
+  suite passed 2,937 with 65 expected skips across all 840 suites after one
+  bounded rerun of an unrelated load-sensitive lease-heartbeat test. Typecheck,
+  zero-warning lint across 843 files, production build, 322-plan audit, and
+  diff hygiene passed. Plan 0321 closes accepted without provider, browser,
+  service, ingress, configuration, or key mutation.
+
 ## Turn 489 | 2026-08-15
 
 - Opened Plan 0320 after source inspection confirmed request authorization and

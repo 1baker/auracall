@@ -1,3 +1,11 @@
+- 2026-08-15: Browser headers are context evidence, not authentication.
+  Same-origin `Host`, `Origin`, and `Referer` values are client-controlled and
+  must never independently grant operator authority. Preserve a no-key local
+  dashboard only by joining resolved loopback-bind policy, parsed loopback TCP
+  peer evidence, and browser context; ignore forwarded address headers, expose
+  the exception in status/startup posture, and require real keys on every
+  non-loopback bind.
+
 - 2026-08-15: Startup security posture must come from the exact resolved policy
   enforced by the running server, not a parallel config read or hard-coded
   assumption. Project a minimal immutable summary (required, scheme, key count,

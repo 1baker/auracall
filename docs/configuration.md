@@ -101,8 +101,11 @@ behind pinned config entries.
 Operators can use the same snapshot contract over HTTP with
 `POST /v1/config/snapshots/export` and `POST /v1/config/snapshots/import`.
 The Agents / Teams dashboard exposes the same flow as download, dry-run import,
-and apply import controls. When API auth is enabled, these routes require an
-unscoped operator key.
+and apply import controls. When API auth is enabled, direct or non-loopback
+access to these routes requires an unscoped operator key. The built-in dashboard
+uses trusted-local operator authority only when the API is loopback-bound, the
+TCP peer is loopback, and the browser context is same-origin; a local reverse
+proxy relying on that exception must protect its external ingress.
 
 The dashboard also exposes an API-key issue control for selected agent/team
 scopes. It calls `POST /v1/config/api-keys/issue`, writes the selected

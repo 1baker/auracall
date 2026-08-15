@@ -7,6 +7,12 @@
 Status: active
 Lane: P01
 
+- Closed accepted trusted-local dashboard authorization correction:
+  [docs/dev/plans/0321-2026-08-15-trusted-local-dashboard-auth.md](docs/dev/plans/0321-2026-08-15-trusted-local-dashboard-auth.md)
+  Dashboard operator authority now requires resolved loopback binding, an
+  actual loopback TCP peer, and same-origin browser context; public binds
+  require real credentials regardless of forged browser headers.
+
 - Closed accepted API startup authentication posture correction:
   [docs/dev/plans/0320-2026-08-15-api-startup-auth-posture.md](docs/dev/plans/0320-2026-08-15-api-startup-auth-posture.md)
   Startup diagnostics and `/status.auth` now consume the running server's same

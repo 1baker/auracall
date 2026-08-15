@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { createReadStream } from "node:fs";
 import fs from "node:fs/promises";
 import http from "node:http";
+import { BlockList, isIP } from "node:net";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import CDP from "chrome-remote-interface";
@@ -333,6 +334,9 @@ export const DEFAULT_BACKGROUND_DRAIN_INTERVAL_MS = 60_000;
 const TENANT_EXECUTION_LIMIT_STATUS_CACHE_MS = 5_000;
 const DEFAULT_STALE_RUNNER_RETENTION = 100;
 const ACCOUNT_MIRROR_COMPLETION_RECENT_STATUS_LIMIT = 10;
+const LOOPBACK_NETWORKS = new BlockList();
+LOOPBACK_NETWORKS.addSubnet("127.0.0.0", 8, "ipv4");
+LOOPBACK_NETWORKS.addAddress("::1", "ipv6");
 
 function scheduleDefaultUserApiServiceRestart(input: ApiServiceRestartRequest): void {
 	setTimeout(() => {
@@ -747,6 +751,7 @@ export interface ApiAuthRuntimeStatus {
 	readonly scheme: "none" | "bearer";
 	readonly keyCount: number;
 	readonly scoped: boolean;
+	readonly trustedLocalOperatorDashboard: boolean;
 }
 
 interface ApiAuthContext {
@@ -834,6 +839,7 @@ interface HttpStatusResponse {
 		scheme: "none" | "bearer";
 		keyCount: number;
 		scoped: boolean;
+		trustedLocalOperatorDashboard: boolean;
 	};
 	serviceDiscovery: ApiServiceDiscovery;
 	routes: StaticHttpStatusRoutes & {
@@ -1052,7 +1058,7 @@ export async function createResponsesHttpServer(
 		return value;
 	};
 	const apiAuthPolicy = readApiAuthPolicy(configuredRuntimeConfig, runtimeEnv);
-	const apiAuthStatus = createApiAuthRuntimeStatus(apiAuthPolicy);
+	const apiAuthStatus = createApiAuthRuntimeStatus(apiAuthPolicy, boundHost);
 	const agentTeamConfigService = createAgentTeamConfigService({
 		activeConfig: configuredRuntimeConfig ?? null,
 		registryStore: deps.agentRegistryStore,
@@ -1678,7 +1684,10 @@ export async function createResponsesHttpServer(
 				req,
 				apiAuthPolicy,
 				url.pathname,
-				operatorDashboardRoutes,
+				{
+					routes: operatorDashboardRoutes,
+					trustedLocal: apiAuthStatus.trustedLocalOperatorDashboard,
+				},
 			);
 			if (!apiAuthContext) {
 				sendJson(res, 401, {
@@ -4909,7 +4918,10 @@ export function formatApiStartupPosture(input: {
 	const bindingSummary = localOnly
 		? "bound to loopback"
 		: `${input.host} is not loopback; use trusted ingress for this development server`;
-	return `${localOnly ? "Posture" : "Warning"}: ${authSummary}; ${bindingSummary}; /status remains observable without authentication.`;
+	const operatorDashboardSummary = input.auth.trustedLocalOperatorDashboard
+		? "; trusted loopback dashboard requests use local operator authority"
+		: "";
+	return `${localOnly ? "Posture" : "Warning"}: ${authSummary}; ${bindingSummary}${operatorDashboardSummary}; /status remains observable without authentication.`;
 }
 
 function createHttpModelListResponse(catalog: {
@@ -7432,7 +7444,10 @@ function readApiAuthPolicy(
 	};
 }
 
-function createApiAuthRuntimeStatus(policy: ApiAuthPolicy): ApiAuthRuntimeStatus {
+function createApiAuthRuntimeStatus(
+	policy: ApiAuthPolicy,
+	boundHost = "127.0.0.1",
+): ApiAuthRuntimeStatus {
 	return {
 		required: policy.required,
 		scheme: policy.required ? "bearer" : "none",
@@ -7445,7 +7460,18 @@ function createApiAuthRuntimeStatus(policy: ApiAuthPolicy): ApiAuthRuntimeStatus
 					key.runtimeProfiles?.length,
 			),
 		),
+		trustedLocalOperatorDashboard: isTrustedLocalOperatorDashboardEnabled({
+			authRequired: policy.required,
+			boundHost,
+		}),
 	};
+}
+
+export function isTrustedLocalOperatorDashboardEnabled(input: {
+	authRequired: boolean;
+	boundHost: string;
+}): boolean {
+	return input.authRequired && isLoopbackHost(input.boundHost);
 }
 
 function readApiAuthEnvKeys(env: ApiAuthEnv): ApiAuthKeyPolicy[] {
@@ -7525,12 +7551,21 @@ function authorizeApiRequest(
 	req: http.IncomingMessage,
 	policy: ApiAuthPolicy,
 	pathname: string,
-	operatorDashboardRoutes?: OperatorDashboardRoutes,
+	operatorDashboard: {
+		routes: OperatorDashboardRoutes;
+		trustedLocal: boolean;
+	},
 ): ApiAuthContext | null {
 	if (!policy.required || !pathname.startsWith("/v1/")) {
 		return { policy, key: null };
 	}
-	if (operatorDashboardRoutes && isOperatorDashboardApiRequest(req, operatorDashboardRoutes)) {
+	if (
+		canAuthorizeTrustedLocalOperatorDashboard({
+			enabled: operatorDashboard.trustedLocal,
+			remoteAddress: req.socket.remoteAddress,
+			browserContextMatches: isOperatorDashboardApiRequest(req, operatorDashboard.routes),
+		})
+	) {
 		return { policy, key: null };
 	}
 	const token =
@@ -7539,6 +7574,27 @@ function authorizeApiRequest(
 	if (!token) return null;
 	const key = policy.keys.find((candidate) => candidate.secret === token) ?? null;
 	return key ? { policy, key } : null;
+}
+
+export function isLoopbackNetworkAddress(address: string | undefined): boolean {
+	if (!address) return false;
+	const zoneIndex = address.indexOf("%");
+	const normalized = zoneIndex >= 0 ? address.slice(0, zoneIndex) : address;
+	const family = isIP(normalized);
+	if (family === 0) return false;
+	return LOOPBACK_NETWORKS.check(normalized, family === 4 ? "ipv4" : "ipv6");
+}
+
+export function canAuthorizeTrustedLocalOperatorDashboard(input: {
+	enabled: boolean;
+	remoteAddress: string | undefined;
+	browserContextMatches: boolean;
+}): boolean {
+	return (
+		input.enabled &&
+		input.browserContextMatches &&
+		isLoopbackNetworkAddress(input.remoteAddress)
+	);
 }
 
 function isOperatorDashboardApiRequest(

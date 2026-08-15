@@ -96,8 +96,13 @@ Current limits:
 - loopback by default; non-loopback requires `--listen-public`
 - startup reports the running server's resolved non-secret auth posture and
   matches `/status.auth`; it reports only required/disabled state, loaded-key
-  count, and whether scoped keys are present, while preserving observable
-  `/status` and trusted-ingress warnings
+  count, whether scoped keys are present, and whether trusted-local dashboard
+  authority is active, while preserving observable `/status` and
+  trusted-ingress warnings
+- same-origin dashboard headers are browser-context constraints, not
+  authentication: no-key operator authority additionally requires a
+  loopback-bound server and loopback TCP peer; every non-loopback bind requires
+  a valid key, and forwarded client-address headers are ignored
 - runtime-backed create/read with one bounded local execution pass for direct
   runs
   - direct browser-backed `/v1/responses` runs now execute through the same
@@ -158,8 +163,9 @@ Current limits:
     the effective registry/config catalog, including disabled registry records,
     config-vs-registry conflicts, loaded API-key ids, missing scoped agents or
     teams, and team-derived effective agent reachability. When API auth is
-    enabled, this route requires an unscoped operator key until AuraCall has a
-    first-class role/principal model.
+    enabled, direct or non-loopback access requires an unscoped operator key
+    until AuraCall has a first-class role/principal model; the trusted-local
+    built-in dashboard uses local operator authority.
   - `POST /v1/config/snapshots/export` accepts `{ "agents": ["id"], "teams":
     ["id"] }` or `{ "all": true }` and returns a versioned
     `auracall_agent_registry_snapshot` for review, backup, or promotion.
@@ -167,8 +173,9 @@ Current limits:
     "dryRun": true }`; imports write the user-scoped registry and report
     config-defined overlay ids as blocked.
   - snapshot routes are operator control-plane routes. When API auth is
-    enabled, they require an unscoped operator key until AuraCall has a
-    first-class role/principal model.
+    enabled, direct or non-loopback access requires an unscoped operator key
+    until AuraCall has a first-class role/principal model; the trusted-local
+    built-in dashboard uses local operator authority.
   - protect this local control-plane surface with API-key auth before exposing
     it to any non-loopback client
 - `POST /v1/projects/ensure` is the setup surface for project-bound agents:
@@ -898,7 +905,9 @@ Current limits:
   effective registry/config source metadata, and mutation responses include
   `mutationTarget` plus `blockedReason` when a config overlay id is pinned
 - optional API-key auth for `/v1/*`; privileged control-plane routes require an
-  unscoped operator key when auth is enabled
+  unscoped operator key for direct/non-loopback access when auth is enabled,
+  while the built-in dashboard exception requires verified loopback bind/peer
+  transport plus same-origin browser context
 - no streaming/SSE; `POST /v1/chat/completions` accepts non-streaming requests
   and rejects `stream: true`
 - local `api serve` now self-registers one persisted runner record and

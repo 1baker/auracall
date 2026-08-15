@@ -33,9 +33,11 @@ import { recordDomDriftObservation } from "../src/browser/domDriftObservations.j
 import { createAgentRegistryStore } from "../src/config/agentRegistryStore.js";
 import {
 	assertResponsesHostAllowed,
+	canAuthorizeTrustedLocalOperatorDashboard,
 	createDefaultRuntimeRunServiceStateProbe,
 	createResponsesHttpServer,
 	formatApiStartupPosture,
+	isTrustedLocalOperatorDashboardEnabled,
 	serveResponsesHttp,
 	summarizeAccountMirrorDiagnosticsBrowserMutationsForTest,
 	terminateSamePortApiServeProcesses,
@@ -892,7 +894,7 @@ describe("http responses adapter", () => {
 		});
 
 		expect(messages).toContain(
-			"Posture: API authentication is enabled for /v1/* (1 API key loaded; scoped keys present); bound to loopback; /status remains observable without authentication.",
+			"Posture: API authentication is enabled for /v1/* (1 API key loaded; scoped keys present); bound to loopback; trusted loopback dashboard requests use local operator authority; /status remains observable without authentication.",
 		);
 		const startupOutput = messages.join("\n");
 		expect(startupOutput).not.toContain("private-client-id");
@@ -22503,6 +22505,7 @@ describe("http responses adapter", () => {
 				scheme: "bearer",
 				keyCount: 1,
 				scoped: false,
+				trustedLocalOperatorDashboard: true,
 			});
 			const statusResponse = await fetch(`http://127.0.0.1:${server.port}/status`);
 			expect(statusResponse.status).toBe(200);
@@ -22533,6 +22536,11 @@ describe("http responses adapter", () => {
 			});
 			expect(crossOriginResponse.status).toBe(401);
 
+			const sameOriginNonDashboardResponse = await fetch(protectedRoute, {
+				headers: { referer: `http://127.0.0.1:${server.port}/not-a-dashboard` },
+			});
+			expect(sameOriginNonDashboardResponse.status).toBe(401);
+
 			const operatorDashboardResponse = await fetch(protectedRoute, {
 				headers: { referer: `http://127.0.0.1:${server.port}/dashboard` },
 			});
@@ -22541,6 +22549,11 @@ describe("http responses adapter", () => {
 				object: string;
 			};
 			expect(operatorDashboardPayload.object).toBe("api_log_tail");
+
+			const operatorDashboardOriginResponse = await fetch(protectedRoute, {
+				headers: { origin: `http://127.0.0.1:${server.port}` },
+			});
+			expect(operatorDashboardOriginResponse.status).toBe(200);
 
 			const allowedResponse = await fetch(protectedRoute, {
 				headers: { Authorization: "Bearer secret-key" },
@@ -24954,14 +24967,26 @@ describe("http responses adapter", () => {
 		expect(
 			formatApiStartupPosture({
 				host: "127.0.0.1",
-				auth: { required: false, scheme: "none", keyCount: 0, scoped: false },
+				auth: {
+					required: false,
+					scheme: "none",
+					keyCount: 0,
+					scoped: false,
+					trustedLocalOperatorDashboard: false,
+				},
 			}),
 		).toBe("Posture: API authentication disabled; bound to loopback for local development.");
 
 		expect(
 			formatApiStartupPosture({
 				host: "0.0.0.0",
-				auth: { required: true, scheme: "bearer", keyCount: 0, scoped: false },
+				auth: {
+					required: true,
+					scheme: "bearer",
+					keyCount: 0,
+					scoped: false,
+					trustedLocalOperatorDashboard: false,
+				},
 			}),
 		).toBe(
 			"Warning: API authentication is required for /v1/*, but no API keys are loaded; 0.0.0.0 is not loopback; use trusted ingress for this development server; /status remains observable without authentication.",
@@ -24970,11 +24995,91 @@ describe("http responses adapter", () => {
 		expect(
 			formatApiStartupPosture({
 				host: "api.internal.example",
-				auth: { required: true, scheme: "bearer", keyCount: 2, scoped: true },
+				auth: {
+					required: true,
+					scheme: "bearer",
+					keyCount: 2,
+					scoped: true,
+					trustedLocalOperatorDashboard: false,
+				},
 			}),
 		).toBe(
 			"Warning: API authentication is enabled for /v1/* (2 API keys loaded; scoped keys present); api.internal.example is not loopback; use trusted ingress for this development server; /status remains observable without authentication.",
 		);
+	});
+
+	it("roots dashboard operator authority in auth policy and loopback transport", () => {
+		expect(
+			isTrustedLocalOperatorDashboardEnabled({
+				authRequired: true,
+				boundHost: "127.0.0.1",
+			}),
+		).toBe(true);
+		expect(
+			isTrustedLocalOperatorDashboardEnabled({
+				authRequired: true,
+				boundHost: "0.0.0.0",
+			}),
+		).toBe(false);
+		expect(
+			isTrustedLocalOperatorDashboardEnabled({
+				authRequired: false,
+				boundHost: "127.0.0.1",
+			}),
+		).toBe(false);
+
+		for (const remoteAddress of [
+			"127.0.0.1",
+			"127.9.8.7",
+			"::1",
+			"0:0:0:0:0:0:0:1",
+			"::ffff:127.0.0.1",
+			"::ffff:7f00:1",
+		]) {
+			expect(
+				canAuthorizeTrustedLocalOperatorDashboard({
+					enabled: true,
+					remoteAddress,
+					browserContextMatches: true,
+				}),
+				remoteAddress,
+			).toBe(true);
+		}
+
+		for (const remoteAddress of [
+			undefined,
+			"",
+			"localhost",
+			"192.168.1.10",
+			"::",
+			"::ffff:192.168.1.10",
+			"::ffff:c0a8:10a",
+			"2001:db8::1",
+		]) {
+			expect(
+				canAuthorizeTrustedLocalOperatorDashboard({
+					enabled: true,
+					remoteAddress,
+					browserContextMatches: true,
+				}),
+				String(remoteAddress),
+			).toBe(false);
+		}
+
+		expect(
+			canAuthorizeTrustedLocalOperatorDashboard({
+				enabled: false,
+				remoteAddress: "127.0.0.1",
+				browserContextMatches: true,
+			}),
+		).toBe(false);
+		expect(
+			canAuthorizeTrustedLocalOperatorDashboard({
+				enabled: true,
+				remoteAddress: "127.0.0.1",
+				browserContextMatches: false,
+			}),
+		).toBe(false);
 	});
 
 	it("preserves ChatGPT Deep Research review evidence through generic HTTP run status", async () => {
