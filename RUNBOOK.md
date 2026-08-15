@@ -50,6 +50,10 @@
   suite. Windows passed install, the normalized checker, and lint; only its
   checker mutation fixtures failed because LF replacements did not alter CRLF
   input. Version 9 normalizes the shared fixture before mutation.
+- Dispatch 31887469597 passed every lane through the Windows focused tests, but
+  its real readiness smoke remained stuck for more than four minutes while
+  releasing the native process tree. Version 10 retains that real smoke on
+  Ubuntu/macOS and runs its deterministic projection contract on Windows.
 
 ## Turn 495 | 2026-08-15
 

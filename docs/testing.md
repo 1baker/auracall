@@ -11,9 +11,11 @@
   the exact matrix can be reproduced when a fork does not enqueue a push event.
   The full suite runs on Ubuntu and macOS; native Windows acceptance is bounded
   to frozen install, the runtime checker, zero-warning lint, focused contract
-  tests, and the real dashboard-session readiness smoke because historical
-  runtime keys contain POSIX-safe colons that are invalid in Windows directory
-  names. Fixture coverage lives in `tests/scripts/ciRuntimeContract.test.ts`.
+  tests, and the deterministic dashboard-session readiness contract because
+  historical runtime keys contain POSIX-safe colons that are invalid in Windows
+  directory names and the cross-process smoke does not release its native
+  Windows process tree. The real smoke remains required on Ubuntu and macOS.
+  Fixture coverage lives in `tests/scripts/ciRuntimeContract.test.ts`.
 
 - Trusted-local dashboard configuration and external-routing fail-closed
   regression:

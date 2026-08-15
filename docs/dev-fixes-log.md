@@ -33,6 +33,11 @@
   Normalize the shared fixture once before all accepted and rejected mutations,
   then separately synthesize CRLF to prove the production parser accepts it.
 
+- 2026-08-15: Do not call a cross-process smoke cross-platform when its native
+  Windows child tree cannot be released. Keep the real HTTP/CLI/MCP smoke on
+  Ubuntu and macOS, run its deterministic projection contract on Windows, and
+  treat native process-tree cleanup as a separate portability migration.
+
 - 2026-08-15: A floating `windows-latest` runner can change native compiler
   generations underneath an old patched test dependency. When node-gyp cannot
   identify Visual Studio 2026, use GitHub's supported `windows-2022`/VS2022

@@ -35,6 +35,10 @@
 - Dispatch 31887239152 made the remaining split explicit: production checker
   parsing passed on Windows, while LF-only mutation fixtures did not change the
   CRLF file. Version 9 normalizes the fixture before all mutation cases.
+- Dispatch 31887469597 passed Windows install, checker, lint, and focused tests,
+  but its cross-process readiness smoke never released the native child tree.
+  Version 10 retains real smoke acceptance on Ubuntu/macOS and uses the focused
+  readiness projection contract on Windows.
 
 ## 2026-08-15 | Plan 0326 dashboard-session readiness smoke
 

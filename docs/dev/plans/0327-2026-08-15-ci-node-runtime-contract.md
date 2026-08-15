@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 9
+Plan version: 10
 
 ## Goal
 
@@ -40,8 +40,9 @@ workflow/package drift.
   reach provider transport. Keep the browser compatibility guard covered at
   the deterministic run-options seam.
 - Keep native Windows as a bounded install, runtime-contract, lint, and real
-  readiness-smoke lane. Run the full suite on Ubuntu and macOS until native
-  Windows path/key portability has its own migration plan.
+  readiness-contract lane. Run the full suite and real cross-process readiness
+  smoke on Ubuntu and macOS until native Windows path/key and process-tree
+  portability have their own migration plan.
 - Retain a manual dispatch entrypoint so fork CI can be reproduced even when a
   push event is not enqueued.
 - Use the Node 24-compatible pnpm setup action rather than a deprecated Node 20
@@ -62,9 +63,9 @@ workflow/package drift.
 
 ## Acceptance Criteria
 
-- [ ] CI tests Node 22 on Ubuntu and macOS with the full suite, verifies Node 22
-      install/runtime/lint/smoke acceptance on Windows 2022, and tests Node 24
-      on Ubuntu.
+- [ ] CI tests Node 22 on Ubuntu and macOS with the full suite and real smoke,
+      verifies Node 22 install/runtime/lint/focused-contract acceptance on
+      Windows 2022, and tests Node 24 on Ubuntu.
 - [ ] Every configured CI Node major is at least the `engines.node` minimum,
       and the minimum major remains explicitly exercised.
 - [ ] `engines.node` and the Node `devEngines.runtime` entry must declare the
@@ -82,6 +83,8 @@ workflow/package drift.
       fixtures cannot start provider work from the test suite.
 - [ ] The checker rejects removal of either the Ubuntu/macOS full-suite lane or
       the focused Windows runtime-contract lane.
+- [ ] The checker keeps the real cross-process readiness smoke on Ubuntu and
+      macOS, while Windows runs its deterministic readiness contract fixture.
 - [ ] The checker accepts semantically identical LF and CRLF workflow text.
 - [ ] Focused tests, checker execution, provider-disabled tests, typecheck,
       zero-warning lint, build, plan audit, CodeGraph sync, and diff hygiene
@@ -119,6 +122,11 @@ minimum while the supported matrix also exercises the current active LTS line.
   Windows passed install, checker, and lint but its mutation fixtures still
   applied LF-only replacements to CRLF source text. Plan version 9 normalizes
   the shared test fixture before accepted/rejected mutations.
+- Dispatch `31887469597` passed all four lanes through Windows focused tests,
+  then the Windows real-process readiness smoke failed to release its process
+  tree and remained stuck for more than four minutes. Plan version 10 keeps the
+  real smoke authoritative on Ubuntu/macOS and exercises its deterministic
+  readiness projection contract on native Windows.
 
 ## Execution Boundary
 
