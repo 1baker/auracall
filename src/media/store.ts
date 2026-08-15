@@ -9,6 +9,7 @@ import type { MediaGenerationResponse, MediaGenerationStoredRecord } from './typ
 const MEDIA_GENERATIONS_DIRNAME = 'media-generations';
 const RECORD_FILENAME = 'record.json';
 const ARTIFACTS_DIRNAME = 'artifacts';
+const mediaGenerationRecordWriteQueues = new Map<string, Promise<unknown>>();
 
 export interface MediaGenerationRecordStore {
   ensureStorage(): Promise<void>;
@@ -53,25 +54,42 @@ export async function writeMediaGenerationResponse(
   response: MediaGenerationResponse,
   options: { persistedAt?: string } = {},
 ): Promise<MediaGenerationStoredRecord> {
-  const existing = await readMediaGenerationRecord(response.id);
-  const record: MediaGenerationStoredRecord = {
-    id: response.id,
-    revision: (existing?.revision ?? 0) + 1,
-    persistedAt: options.persistedAt ?? response.updatedAt,
-    response,
-  };
-  const parsedRecord = MediaGenerationStoredRecordSchema.parse(record);
-  const generationDir = getMediaGenerationDir(response.id);
-  await fs.mkdir(generationDir, { recursive: true });
   const recordPath = getMediaGenerationRecordPath(response.id);
-  const tempPath = `${recordPath}.${process.pid}.${Date.now()}.${randomUUID()}.tmp`;
+  return serializeMediaGenerationRecordWrite(recordPath, async () => {
+    const existing = await readMediaGenerationRecord(response.id);
+    const record: MediaGenerationStoredRecord = {
+      id: response.id,
+      revision: (existing?.revision ?? 0) + 1,
+      persistedAt: options.persistedAt ?? response.updatedAt,
+      response,
+    };
+    const parsedRecord = MediaGenerationStoredRecordSchema.parse(record);
+    await fs.mkdir(getMediaGenerationDir(response.id), { recursive: true });
+    const tempPath = `${recordPath}.${process.pid}.${Date.now()}.${randomUUID()}.tmp`;
+    try {
+      await fs.writeFile(tempPath, `${JSON.stringify(parsedRecord, null, 2)}\n`, 'utf8');
+      await replaceMediaGenerationRecord(tempPath, recordPath);
+    } finally {
+      await fs.rm(tempPath, { force: true }).catch(() => {});
+    }
+    return parsedRecord;
+  });
+}
+
+async function serializeMediaGenerationRecordWrite<T>(
+  recordPath: string,
+  operation: () => Promise<T>,
+): Promise<T> {
+  const previous = mediaGenerationRecordWriteQueues.get(recordPath) ?? Promise.resolve();
+  const current = previous.catch(() => undefined).then(operation);
+  mediaGenerationRecordWriteQueues.set(recordPath, current);
   try {
-    await fs.writeFile(tempPath, `${JSON.stringify(parsedRecord, null, 2)}\n`, 'utf8');
-    await replaceMediaGenerationRecord(tempPath, recordPath);
+    return await current;
   } finally {
-    await fs.rm(tempPath, { force: true }).catch(() => {});
+    if (mediaGenerationRecordWriteQueues.get(recordPath) === current) {
+      mediaGenerationRecordWriteQueues.delete(recordPath);
+    }
   }
-  return parsedRecord;
 }
 
 async function replaceMediaGenerationRecord(tempPath: string, recordPath: string): Promise<void> {

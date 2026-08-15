@@ -1,3 +1,9 @@
+- 2026-08-15: Unique temporary filenames do not make Windows replacement atomic
+  when concurrent writers share one destination. A remove-then-rename fallback
+  still races with another writer recreating the file. Serialize the complete
+  read-revision-write transaction per destination, while retaining concurrency
+  across different records.
+
 - 2026-08-15: Public account, runner, and dispatcher identities may contain
   separators such as `:` or `|`; never assume they are portable directory
   names. Keep semantic ids in APIs and records, derive tagged reversible names

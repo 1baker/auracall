@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 2
+Plan version: 3
 
 ## Goal
 
@@ -113,3 +113,11 @@ host-specific contract rather than a convenience skip.
   and 63 live/host-specific tests skipped; typecheck and zero-warning lint
   passed across 849 files. Build, plan audit, CodeGraph sync, and current-SHA CI
   remain the final gates.
+- First implementation dispatch `31898237221` at `7713a2cc` passed all three
+  Unix jobs and reduced Windows from 24 failed files to one failed assertion:
+  326 files and 2,927 tests passed, 22 files and 101 tests skipped, and only the
+  burst media-record writer failed. UUID temp names prevented collisions, but
+  concurrent Windows writers could still race between destination removal and
+  rename. Record writes are now serialized per destination, including the
+  revision read, while unrelated generation ids remain concurrent. The focused
+  media suite passed five consecutive runs; current-SHA CI is being repeated.

@@ -21,6 +21,10 @@
   fixtures, and narrow host gates. The focused 548-test matrix, complete 2,966-
   test provider-disabled suite, typecheck, and zero-warning lint are green.
   Current-SHA four-job CI remains the closing gate.
+- Dispatch `31898237221` reduced Windows to one burst-write race after 326
+  files and 2,927 tests passed. Windows cannot make remove-then-rename atomic
+  across competing writers, so media record writes now queue per destination
+  and compute revisions inside that queue; five focused repetitions pass.
 
 ## Turn 497 | 2026-08-15
 

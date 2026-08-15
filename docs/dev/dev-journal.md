@@ -21,6 +21,12 @@
   live or host-specific skips. Typecheck and zero-warning lint across 849 files
   also pass. Build, governance audit, CodeGraph sync, and published current-SHA
   CI remain before closure.
+- Dispatch `31898237221` passed every Unix job and reduced Windows to one
+  failure after 326 files and 2,927 tests passed: burst writes could race after
+  one writer removed the destination and another recreated it. Per-record
+  serialization now covers revision read and replacement without reducing
+  concurrency across distinct generation ids; the focused suite passed five
+  consecutive runs before the next dispatch.
 
 ## 2026-08-15 | Plan 0328 native Windows runner persistence
 
