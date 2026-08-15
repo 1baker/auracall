@@ -19759,3 +19759,22 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   passed frozen install, runtime checking, zero-warning lint, the maintained
   PTY contract, complete provider-disabled suite, and real readiness smoke;
   Ubuntu 22 also passed the production build. Plan 0331 closes accepted.
+
+## Turn 427 | 2026-08-15
+
+- Plan 0332 opens the remaining semantic-selector provider slice. Google
+  currently documents Gemini Flash-Lite, Flash, and Pro in the web prompt-bar
+  model dropdown; stable `instant`, `auto`, and `thinking` intent will map at
+  the provider boundary rather than exposing volatile version names.
+- CodeGraph and direct source evidence show configured Gemini agents still
+  default to `createGeminiWebExecutor` and stale private model headers. The
+  maintained `GeminiService`/provider path owns browser-session authority but
+  shared planned-prompt dispatch currently drops `desiredModel` and
+  attachments, and the provider does not select a model.
+- The execution boundary migrates configured Gemini agent prompts to the
+  maintained adapter, preserves attachments and runtime/result metadata, and
+  proves exact picker selection before prompt insertion. Unknown `gemini:`
+  selectors must fail before browser resolution; discovery readiness remains
+  false until the provider-free path and exact-SHA CI pass.
+- No live prompt, managed-browser launch, installed-runtime mutation,
+  credential access, or CAPTCHA/anti-bot retry is authorized in this slice.

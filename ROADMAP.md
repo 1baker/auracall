@@ -7,6 +7,13 @@
 Status: active
 Lane: P01
 
+- Active native Gemini semantic model selector execution:
+  [docs/dev/plans/0332-2026-08-15-native-gemini-semantic-model-selectors.md](docs/dev/plans/0332-2026-08-15-native-gemini-semantic-model-selectors.md)
+  Current state: configured Gemini agents still use the legacy private web-RPC
+  executor, while the maintained native adapter drops model and attachment
+  inputs. The bounded slice migrates configured execution, proves exact picker
+  selection, preserves attachments, and keeps readiness false until CI.
+
 - Closed accepted Grok semantic model selector execution:
   [docs/dev/plans/0331-2026-08-15-grok-semantic-model-selectors.md](docs/dev/plans/0331-2026-08-15-grok-semantic-model-selectors.md)
   Stable semantic intent now resolves to exact adapter-owned picker labels,

@@ -47533,3 +47533,20 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   zero-warning lint, maintained PTY coverage, the complete provider-disabled
   suite, and real readiness smoke; Ubuntu 22 also passed build. Plan 0331
   closes accepted.
+
+## 2026-08-15 | Plan 0332 opens native Gemini semantic selector execution
+
+- Current Google Gemini Apps guidance places model selection in the prompt bar
+  and lists Flash-Lite, Flash, and Pro. Plan 0332 maps the existing stable
+  `instant`, `auto`, and `thinking` selector intent at the provider boundary.
+- CodeGraph confirms the maintained native Gemini service/adapter currently
+  drops `desiredModel` and attachments in `runPlannedPrompt()`, while configured
+  agent execution defaults to the legacy private web-RPC executor and stale
+  model headers.
+- The bounded outcome is one native configured-agent prompt path that preserves
+  attachments and metadata, selects and verifies an exact picker row before
+  prompt insertion, rejects unknown semantic selectors before browser work,
+  and flips discovery readiness only after provider-free and cross-platform CI
+  proof.
+- This slice does not launch Gemini, submit a prompt, touch a managed browser
+  profile, mutate installed runtime state, or retry any anti-bot surface.
