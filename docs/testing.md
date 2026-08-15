@@ -1,5 +1,13 @@
 # Testing quickstart
 
+- CI Node runtime contract: `pnpm run check:ci-runtime` binds the canonical
+  Node 22+ minimum in `package.json` to the GitHub Actions matrix. CI exercises
+  Node 22 on Ubuntu, macOS, and Windows plus active LTS Node 24 on Ubuntu; the
+  checker rejects below-minimum versions, omission of the minimum or newer
+  line, disagreement between `engines` and `devEngines`, and setup-node matrix
+  bypass. Fixture coverage lives in
+  `tests/scripts/ciRuntimeContract.test.ts`.
+
 - Trusted-local dashboard configuration and external-routing fail-closed
   regression:
   `pnpm vitest run tests/config.test.ts tests/http.responsesServer.test.ts -t "trusted-local|configured API keys|startup posture|dashboard session"`.

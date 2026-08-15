@@ -24,6 +24,7 @@
     "start": "pnpm run build && node ./dist/scripts/run-cli.js",
     "auracall": "pnpm start",
     "check": "pnpm run typecheck",
+    "check:ci-runtime": "tsx scripts/ciRuntimeContract.ts",
     "typecheck": "tsc --noEmit",
     "lint": "pnpm run typecheck && pnpm run lint:src:strict && pnpm run lint:scripts:strict && pnpm run lint:tests:strict && biome lint .",
     "lint:scripts:strict": "biome lint scripts --error-on-warnings",

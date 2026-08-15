@@ -1,5 +1,17 @@
 # RUNBOOK
 
+## Turn 496 | 2026-08-15
+
+- Opened Plan 0327 after the post-0326 audit found that GitHub Actions installs
+  EOL Node 20 while `package.json` and README require Node 22+.
+- Keep `package.json` authoritative, test the minimum on Ubuntu/macOS/Windows,
+  add current active LTS Node 24 on Ubuntu, and add one executable checker that
+  rejects package/workflow minimum drift or matrix bypass.
+- Critical path remains root with no parallel workers. This provider-free slice
+  may change CI, one checker/test, package scripts, and current docs, but it
+  will not raise the supported minimum, change product runtime behavior, or
+  mutate installation/provider state.
+
 ## Turn 495 | 2026-08-15
 
 - Opened Plan 0326 because Plan 0325's manual real-CLI receipt is not a durable

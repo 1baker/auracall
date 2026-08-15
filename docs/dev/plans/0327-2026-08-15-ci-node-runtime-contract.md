@@ -1,0 +1,71 @@
+# CI Node Runtime Contract | 0327-2026-08-15
+
+State: OPEN
+Lane: P01
+Plan version: 1
+
+## Goal
+
+Make GitHub Actions validate AuraCall on its declared minimum Node runtime and
+the current active LTS line, with a deterministic guard against future
+workflow/package drift.
+
+## Current State
+
+- `package.json` declares Node `>=22` in both `engines` and `devEngines`.
+- README installation guidance also requires Node 22+.
+- GitHub Actions explicitly installs Node 20 on Ubuntu, macOS, and Windows,
+  even though Node 20 is now end-of-life and below the package contract.
+- No repository test checks that package runtime declarations and CI agree.
+
+## Scope
+
+- Keep `package.json` as the minimum-runtime authority.
+- Test Node 22 across Ubuntu, macOS, and Windows.
+- Add one Ubuntu lane for Node 24, the current active LTS line.
+- Add a reusable contract checker that rejects package declaration mismatch,
+  CI versions below the minimum, omission of the minimum, omission of a newer
+  supported line, or bypass of the workflow matrix.
+- Run the contract checker directly in CI and through the normal test suite.
+- Document the developer command and durable lesson.
+
+## Non-Goals
+
+- Do not raise the package minimum beyond Node 22.
+- Do not test EOL Node 20 or non-LTS Node 26 in routine CI.
+- Do not change package dependencies, runtime behavior, release automation, or
+  user installation state.
+- Do not add another version file whose values can drift from `package.json`.
+
+## Acceptance Criteria
+
+- [ ] CI tests Node 22 on Ubuntu, macOS, and Windows and Node 24 on Ubuntu.
+- [ ] Every configured CI Node major is at least the `engines.node` minimum,
+      and the minimum major remains explicitly exercised.
+- [ ] `engines.node` and the Node `devEngines.runtime` entry must declare the
+      same canonical minimum.
+- [ ] A deterministic checker rejects a single-version matrix, a below-minimum
+      matrix, a missing minimum, package declaration disagreement, and a
+      `setup-node` step that bypasses `matrix.node`.
+- [ ] CI runs the checker immediately after dependency installation, and the
+      normal test suite covers both accepted and rejected fixtures.
+- [ ] Focused tests, checker execution, provider-disabled tests, typecheck,
+      zero-warning lint, build, plan audit, CodeGraph sync, and diff hygiene
+      pass.
+
+## Definition Of Done
+
+The plan closes when CI and package metadata share one enforced Node 22+
+minimum while the supported matrix also exercises the current active LTS line.
+
+## Execution Boundary
+
+- critical_path_owner: root
+- parallel_tracks: none; workflow, package metadata, checker, and plan state
+  form one small serialized contract
+- expected_write_surface: CI workflow, one checker, one focused test, package
+  script, and current testing/planning documentation
+- max_work_unit_attempts: 2
+- max_review_rework_cycles: 1
+- terminal_condition: all acceptance criteria pass or the exact runtime/tooling
+  incompatibility is recorded without weakening the declared minimum

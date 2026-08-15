@@ -1,3 +1,10 @@
+## 2026-08-15 | Plan 0327 CI Node runtime contract
+
+- Opened a bounded successor because CI explicitly installs Node 20 while the
+  package and README require Node 22+.
+- Make Node 22 the cross-platform minimum lane, add Node 24 on Ubuntu, and bind
+  the package declarations and workflow matrix with an executable drift guard.
+
 ## 2026-08-15 | Plan 0326 dashboard-session readiness smoke
 
 - Opened a bounded successor because readiness is implemented across HTTP,

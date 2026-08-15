@@ -1,3 +1,10 @@
+- 2026-08-15: CI can silently validate an unsupported runtime when its workflow
+  pin drifts below `package.json` engines. Keep the package's canonical minimum
+  authoritative, exercise that minimum on every supported OS, add a bounded
+  current-LTS lane, and enforce both declarations plus `setup-node` matrix use
+  with a repository-owned checker. Do not add a second standalone version file
+  that can drift independently.
+
 - 2026-08-15: A one-off real-CLI receipt does not protect a cross-surface
   readiness contract. Keep unit/schema tests, but also own one source-runtime
   smoke that starts real ready and scoped-only servers, invokes actual CLI and

@@ -12,17 +12,24 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
+        node: [22, 24]
+        exclude:
+          - os: macos-latest
+            node: 24
+          - os: windows-latest
+            node: 24
 
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: ${{ matrix.node }}
       - uses: pnpm/action-setup@v4
       - run: pnpm install --frozen-lockfile
+      - run: pnpm run check:ci-runtime
       - run: pnpm run lint
       - run: pnpm run test
       - run: pnpm run smoke:dashboard-session-readiness
       - run: pnpm run build
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest' && matrix.node == 22
