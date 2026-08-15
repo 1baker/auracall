@@ -1,8 +1,8 @@
 # Durable Response-Batch Cancellation | 0334-2026-08-15
 
-State: OPEN
+State: CLOSED
 Lane: P01
-Plan version: 1
+Plan version: 2
 
 ## Goal
 
@@ -70,7 +70,7 @@ foreign leases, or hiding partial outcomes.
       cancellation semantics.
 - [x] Route manifest, specialized skill contracts, user docs, and focused
       service/HTTP/MCP tests agree on the new control.
-- [ ] Typecheck, zero-warning lint, build, plan audit, CodeGraph sync, diff
+- [x] Typecheck, zero-warning lint, build, plan audit, CodeGraph sync, diff
       hygiene, complete provider-disabled tests, and exact-SHA
       Ubuntu/macOS/Windows CI pass.
 
@@ -109,4 +109,11 @@ ambiguous partial success.
   pass 247 tests. Typecheck, zero-warning lint, production build, 335-plan
   audit, diff hygiene, and CodeGraph sync pass. The complete provider-disabled
   suite passes 331 files / 3,010 tests with 19 files / 55 intended live skips;
-  exact-SHA CI remains.
+  exact-SHA CI also passes.
+- Exact-SHA acceptance run
+  [31912516695](https://github.com/1baker/auracall/actions/runs/31912516695)
+  passed at `a2eb9307dbbdbf00400e6e26f95d391666987571`. Ubuntu 22/Node 22,
+  Ubuntu 24/Node 24, macOS/Node 22, and serialized Windows/Node 22 all
+  passed frozen install, runtime checking, zero-warning lint, maintained PTY
+  coverage, the complete provider-disabled suite, and readiness smoke; Ubuntu
+  22 also passed the production build. Plan 0334 closes accepted.

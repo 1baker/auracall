@@ -7,12 +7,12 @@
 Status: active
 Lane: P01
 
-- Active durable response-batch cancellation:
+- Closed accepted durable response-batch cancellation:
   [docs/dev/plans/0334-2026-08-15-response-batch-cancellation.md](docs/dev/plans/0334-2026-08-15-response-batch-cancellation.md)
-  Current state: batch children are durable response runs and already support
-  host-owned cancellation one at a time. This slice adds one authorized HTTP
-  and MCP batch control with per-child partial-outcome evidence while preserving
-  terminal results and refusing foreign lease takeover.
+  Current state: authorized HTTP and MCP batch controls now compose the durable
+  host-owned child cancellation boundary, preserve terminal results, refuse
+  foreign lease takeover, and report every partial outcome. Complete local
+  gates and exact-SHA Ubuntu/macOS/Windows CI pass.
 
 - Closed accepted OpenAI-compatible chat completions streaming:
   [docs/dev/plans/0333-2026-08-15-chat-completions-streaming.md](docs/dev/plans/0333-2026-08-15-chat-completions-streaming.md)
