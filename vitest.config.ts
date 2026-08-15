@@ -5,6 +5,7 @@ import path from 'node:path';
 export default defineConfig({
   test: {
     setupFiles: ['tests/setup-env.ts', 'tests/cli/runOracle/setup.ts'],
+    testTimeout: process.platform === 'win32' ? 30_000 : 5_000,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],
