@@ -20937,10 +20937,14 @@ describe("http responses adapter", () => {
 		);
 
 		try {
-			await delay(100);
-			const response = await fetch(`http://127.0.0.1:${server.port}/v1/responses/${runId}`);
-			expect(response.status).toBe(200);
-			const payload = (await response.json()) as Record<string, unknown>;
+			let payload: Record<string, unknown> = {};
+			for (let attempt = 0; attempt < 80; attempt += 1) {
+				const response = await fetch(`http://127.0.0.1:${server.port}/v1/responses/${runId}`);
+				expect(response.status).toBe(200);
+				payload = (await response.json()) as Record<string, unknown>;
+				if (payload.status === "completed") break;
+				await delay(25);
+			}
 			expect(payload).toMatchObject({
 				id: runId,
 				object: "response",
