@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 3
+Plan version: 4
 
 ## Goal
 
@@ -116,3 +116,14 @@ current-SHA CI dispatch proves the maintained runtime on every configured host.
   `timedOut` result. Tests reject watchdog exits, so this bounds native failures
   without weakening the clean-exit contract. The repaired three-case TUI suite
   passes locally; current-SHA CI must be repeated.
+- Dispatch `31900300650` at `73fe475c` passed the full contract on macOS,
+  Ubuntu 24, and current Windows; Ubuntu 22 failed an unrelated one-millisecond
+  rate-limit timing assertion after its PTY contract passed. A failed-job rerun
+  remained unallocated, so a fresh exact-SHA dispatch replaced it.
+- Fresh dispatch `31900808921` passed install, CI drift checks, lint, and all 9
+  PTY cases on every host. Both Ubuntu jobs completed successfully. Windows
+  then exposed two unrelated filesystem/SQLite-heavy tests exceeding Vitest's
+  five-second default under matrix load and one temp-tree cleanup without
+  Windows retry semantics. Those tests now retain their assertions with a
+  bounded 15-second allowance and retry only recursive cleanup; repaired
+  focused tests pass locally. A new current-SHA matrix remains the closing gate.

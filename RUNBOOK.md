@@ -27,6 +27,13 @@
   but hung in the TUI fixture after a burst write of repeated arrow escapes, so
   the run was cancelled. The driver now spaces complete key sequences and
   reports a bounded watchdog exit explicitly; local TUI cases pass again.
+- Dispatch `31900300650` passed macOS, Ubuntu 24, and current Windows at exact
+  SHA `73fe475c`; Ubuntu 22 missed an unrelated timing lower bound by one
+  millisecond after passing PTY. Fresh dispatch `31900808921` passed the PTY
+  contract on all four hosts and both Ubuntu jobs, then exposed two Windows
+  SQLite/filesystem tests whose five-second default was too tight under matrix
+  load plus cleanup without retry. Their assertions are unchanged; only a
+  15-second test bound and Windows-safe recursive cleanup retries were added.
 
 ## Turn 498 | 2026-08-15
 

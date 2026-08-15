@@ -121,9 +121,9 @@ describe('cache catalog projections', () => {
       ]);
       expect(filteredArtifacts).toEqual(artifacts);
     } finally {
-      await rm(homeDir, { recursive: true, force: true });
+      await rm(homeDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 });
     }
-  });
+  }, 15_000);
 
   test('artifact catalog falls back to canonical context JSON when sqlite is absent', async () => {
     const homeDir = await mkdtemp(path.join(os.tmpdir(), 'oracle-cache-catalog-json-'));
@@ -175,7 +175,7 @@ describe('cache catalog projections', () => {
         }),
       ]);
     } finally {
-      await rm(homeDir, { recursive: true, force: true });
+      await rm(homeDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 });
     }
-  });
+  }, 15_000);
 });

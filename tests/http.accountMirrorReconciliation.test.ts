@@ -84,7 +84,7 @@ describe('account mirror reconciliation HTTP routes', () => {
       object: 'list',
       count: 1,
     });
-  });
+  }, 15_000);
 
   test('starts selected targets through the injected completion service for execution campaigns', async () => {
     const cacheRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'auracall-http-reconciliation-execute-'));

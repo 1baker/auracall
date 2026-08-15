@@ -26,6 +26,16 @@
   native-child watchdog. The helper returns `timedOut` and every TUI assertion
   rejects it, preserving clean-exit proof while guaranteeing bounded failure.
   All three cases pass locally; repeat exact-SHA CI is pending.
+- Exact-SHA dispatch `31900300650` passed macOS, Ubuntu 24, and current Windows;
+  Ubuntu 22 failed only an unrelated one-millisecond rate-limit timing bound
+  after all 9 PTY cases passed. Its failed-job rerun did not allocate, so fresh
+  dispatch `31900808921` repeated the complete matrix.
+- The fresh run passed install, checker, lint, and all 9 PTY cases everywhere,
+  with both Ubuntu jobs fully green. Windows then identified two unrelated
+  filesystem/SQLite tests that exceeded the five-second default under load and
+  a recursive temp cleanup susceptible to transient `ENOTEMPTY`. The narrow
+  harness repair keeps every assertion, gives those tests 15 seconds, and uses
+  `maxRetries`/`retryDelay` only for cleanup. Focused regression tests pass.
 
 ## 2026-08-15 | Plan 0329 native Windows complete-suite portability
 

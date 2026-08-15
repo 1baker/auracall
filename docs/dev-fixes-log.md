@@ -1,3 +1,9 @@
+- 2026-08-15: SQLite and recursive temp-directory tests that are fast locally
+  can cross a five-second default on a loaded native Windows runner. Give only
+  those integration tests a bounded explicit timeout, and use `fs.rm` retry
+  semantics for transient Windows `ENOTEMPTY`; keep functional assertions and
+  production behavior unchanged.
+
 - 2026-08-15: Repeated terminal escape sequences sent in one PTY write can be
   coalesced differently across native backends. Send complete key sequences at
   bounded intervals, give every native child a kill watchdog, and surface
