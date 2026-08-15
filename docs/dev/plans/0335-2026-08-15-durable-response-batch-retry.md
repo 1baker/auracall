@@ -60,22 +60,22 @@ idempotency, and crash-safe partial recovery.
 
 ## Acceptance Criteria
 
-- [ ] A retry clones the complete stored source request into a fresh response
+- [x] A retry clones the complete stored source request into a fresh response
       id and preserves the terminal source run unchanged.
-- [ ] Only failed or cancelled children are eligible; every other source state
+- [x] Only failed or cancelled children are eligible; every other source state
       is rejected before any retry record or child is created.
-- [ ] The retry batch and child ids are deterministic for one source batch and
+- [x] The retry batch and child ids are deterministic for one source batch and
       idempotency key, with explicit durable source-to-target lineage.
-- [ ] Atomic first-writer persistence rejects conflicting selection reuse and
+- [x] Atomic first-writer persistence rejects conflicting selection reuse and
       lets the same request resume only missing children after partial failure.
-- [ ] Repeating a completed retry request returns/reuses the same durable batch
+- [x] Repeating a completed retry request returns/reuses the same durable batch
       and response ids without duplicate execution.
-- [ ] HTTP validates the strict request body, returns `404` for an unknown
+- [x] HTTP validates the strict request body, returns `404` for an unknown
       source batch, returns `409` for no eligible or conflicting requests, and
       authorizes all selected stored scopes before mutation.
-- [ ] MCP exposes the same retry receipt and error semantics without a second
+- [x] MCP exposes the same retry receipt and error semantics without a second
       retry implementation.
-- [ ] Route manifest, specialized skill contracts, user docs, and focused
+- [x] Route manifest, specialized skill contracts, user docs, and focused
       response-service/batch-service/HTTP/MCP tests agree on the control.
 - [ ] Typecheck, zero-warning lint, build, plan audit, CodeGraph sync, diff
       hygiene, complete provider-disabled tests, and exact-SHA
@@ -102,3 +102,24 @@ response back to its source.
 - terminal_condition: deterministic fresh-id retry and resumable idempotency
   pass all local and exact-SHA cross-platform gates, or a durable-store
   invariant disproves the design and the blocker is recorded
+
+## Execution Notes
+
+- The response service reconstructs the complete normalized request from the
+  authoritative failed or cancelled run and creates a deterministic fresh id.
+  Existing deterministic targets are reused only when their durable lineage
+  matches the requested source, retry batch, key hash, and fingerprint.
+- The batch service writes the complete retry plan with atomic first-writer
+  semantics before creating children. A simulated interruption between child
+  creations proves that repeating the same request reuses the completed child
+  and creates only the missing target; concurrent persistence proves both
+  callers observe one winning record.
+- HTTP and MCP share the same receipt. HTTP validates strict input, authorizes
+  only the selected stored scopes, returns `202` for accepted work and `409`
+  for contract rejection. Status exposes batch-level lineage and each job
+  carries its source mapping.
+- Four focused runtime/HTTP/MCP/route suites pass 252 tests. Typecheck,
+  zero-warning lint over 851 files, production build, 336-plan audit with zero
+  validation errors, CodeGraph sync, diff hygiene, and the complete
+  provider-disabled suite pass. The suite reports 331 files / 3,015 tests
+  passed with 19 files / 55 intentional live skips. Exact-SHA CI remains.

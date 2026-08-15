@@ -160,6 +160,12 @@ curl -s http://auracall.localhost/v1/response-batches/<batch_id>/cancel \
   -H "Content-Type: application/json" \
   -d '{"note":"operator stopped batch"}'
 
+# Retry failed/cancelled children with fresh response ids and durable lineage
+curl -s http://auracall.localhost/v1/response-batches/<batch_id>/retry \
+  -H "Authorization: Bearer <key>" \
+  -H "Content-Type: application/json" \
+  -d '{"idempotencyKey":"operator-attempt-1"}'
+
 # Privileged setup for a project-bound tenant-pool team. AuraCall ensures each
 # member project/agent and creates the dispatch-pool team only when missing.
 curl -s http://auracall.localhost/v1/tenant-pool-teams/ensure \

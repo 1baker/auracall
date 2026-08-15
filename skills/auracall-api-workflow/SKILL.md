@@ -39,6 +39,10 @@ service. Treat `agent:<agent_id>` as the model name and prefer scoped API keys.
    - to stop unfinished work, call
      `POST /v1/response-batches/{batch_id}/cancel` or MCP
      `response_batch_cancel` once, then inspect every returned child outcome
+   - to retry failed or cancelled children, call
+     `POST /v1/response-batches/{batch_id}/retry` or MCP
+     `response_batch_retry` with a stable `idempotencyKey`; reuse the same key
+     to resume a partial materialization without duplicating successful children
    - read child output through `GET /v1/responses/{response_id}` or MCP
      `run_status`
 5. Never resubmit a create request just to check status.

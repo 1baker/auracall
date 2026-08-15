@@ -65,6 +65,28 @@ export interface ExecutionResponsesService {
 		responseId: string,
 		note?: string | null,
 	): Promise<ExecutionServiceHostCancelActionResult>;
+	retryResponse?(input: ExecutionResponseRetryInput): Promise<ExecutionResponseRetryResult>;
+}
+
+export interface ExecutionResponseRetryLineage {
+	sourceBatchId: string;
+	sourceResponseId: string;
+	retryBatchId: string;
+	idempotencyKeyHash: string;
+	requestFingerprint: string;
+	requestedAt: string;
+}
+
+export interface ExecutionResponseRetryInput {
+	sourceResponseId: string;
+	responseId: string;
+	metadata: Record<string, unknown>;
+	lineage: ExecutionResponseRetryLineage;
+}
+
+export interface ExecutionResponseRetryResult {
+	response: ExecutionResponse;
+	reused: boolean;
 }
 
 export function createExecutionResponsesService(
@@ -89,37 +111,44 @@ export function createExecutionResponsesService(
 				const request = createExecutionRequestFromRecord(context.record);
 				return deps.executeStoredRunStep(request, context);
 			},
+			});
+
+	const createResponseWithId = async (
+		responseId: string,
+		request: ExecutionRequest,
+	): Promise<ExecutionResponse> => {
+		const createdAt = now().toISOString();
+		const bundle = createDirectExecutionBundle({
+			responseId,
+			request,
+			createdAt,
 		});
+		const createdRecord = await control.createRun(bundle);
+		if (refreshArchiveIndex) {
+			await refreshRunArchiveIndexBestEffort({ responseId });
+		}
+		if (!drainAfterCreate) {
+			return createExecutionResponseForStoredRecord(createdRecord.bundle, taskRunSpecStore);
+		}
+		const drained = await host.drainRunsOnce({
+			runId: responseId,
+			maxRuns: 1,
+		});
+		const executed = drained.drained[0]?.record;
+		if (!executed) {
+			throw new Error(`Execution response ${responseId} was not drained after creation`);
+		}
+		if (refreshArchiveIndex) {
+			await refreshRunArchiveIndexBestEffort({ responseId });
+		}
+		return createExecutionResponseForStoredRecord(executed.bundle, taskRunSpecStore);
+	};
 
 	return {
 		async createResponse(requestInput) {
 			const request = createExecutionRequest(requestInput);
-			const createdAt = now().toISOString();
 			const responseId = generateResponseId();
-			const bundle = createDirectExecutionBundle({
-				responseId,
-				request,
-				createdAt,
-			});
-			const createdRecord = await control.createRun(bundle);
-			if (refreshArchiveIndex) {
-				await refreshRunArchiveIndexBestEffort({ responseId });
-			}
-			if (!drainAfterCreate) {
-				return createExecutionResponseForStoredRecord(createdRecord.bundle, taskRunSpecStore);
-			}
-			const drained = await host.drainRunsOnce({
-				runId: responseId,
-				maxRuns: 1,
-			});
-			const executed = drained.drained[0]?.record;
-			if (!executed) {
-				throw new Error(`Execution response ${responseId} was not drained after creation`);
-			}
-			if (refreshArchiveIndex) {
-				await refreshRunArchiveIndexBestEffort({ responseId });
-			}
-			return createExecutionResponseForStoredRecord(executed.bundle, taskRunSpecStore);
+			return createResponseWithId(responseId, request);
 		},
 
 		async readResponse(responseId) {
@@ -135,7 +164,77 @@ export function createExecutionResponsesService(
 			}
 			return result;
 		},
+
+		async retryResponse(input) {
+			const existing = await control.readRun(input.responseId);
+			if (existing) {
+				assertRetryResponseLineage(existing, input.lineage);
+				return {
+					response: await createExecutionResponseForStoredRecord(existing.bundle, taskRunSpecStore),
+					reused: true,
+				};
+			}
+
+			const source = await control.readRun(input.sourceResponseId);
+			if (!source) {
+				throw new Error(`Source response ${input.sourceResponseId} was not found.`);
+			}
+			const sourceResponse = await createExecutionResponseForStoredRecord(
+				source.bundle,
+				taskRunSpecStore,
+			);
+			if (sourceResponse.status !== "failed" && sourceResponse.status !== "cancelled") {
+				throw new Error(
+					`Source response ${input.sourceResponseId} is ${sourceResponse.status} and cannot be retried.`,
+				);
+			}
+
+			const sourceRequest = createExecutionRequestFromRecord(source);
+			const retryRequest = createExecutionRequest({
+				...sourceRequest,
+				metadata: {
+					...(sourceRequest.metadata ?? {}),
+					...input.metadata,
+					auracallRetry: input.lineage,
+				},
+			});
+
+			try {
+				return {
+					response: await createResponseWithId(input.responseId, retryRequest),
+					reused: false,
+				};
+			} catch (error) {
+				const raced = await control.readRun(input.responseId);
+				if (!raced) throw error;
+				assertRetryResponseLineage(raced, input.lineage);
+				return {
+					response: await createExecutionResponseForStoredRecord(raced.bundle, taskRunSpecStore),
+					reused: true,
+				};
+			}
+		},
 	};
+}
+
+function assertRetryResponseLineage(
+	record: ExecutionRunStoredRecord,
+	expected: ExecutionResponseRetryLineage,
+): void {
+	const metadata = createExecutionRequestFromRecord(record).metadata;
+	const lineage = isObject(metadata?.auracallRetry) ? metadata.auracallRetry : null;
+	if (
+		!lineage ||
+		lineage.sourceBatchId !== expected.sourceBatchId ||
+		lineage.sourceResponseId !== expected.sourceResponseId ||
+		lineage.retryBatchId !== expected.retryBatchId ||
+		lineage.idempotencyKeyHash !== expected.idempotencyKeyHash ||
+		lineage.requestFingerprint !== expected.requestFingerprint
+	) {
+		throw new Error(
+			`Retry response ${record.runId} already exists with different durable lineage.`,
+		);
+	}
 }
 
 export async function createExecutionResponseForStoredRecord(

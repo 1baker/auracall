@@ -3,11 +3,13 @@ import { z } from "zod";
 import {
 	createResponseBatchCancelToolHandler,
 	createResponseBatchCreateToolHandler,
+	createResponseBatchRetryToolHandler,
 	createResponseBatchStatusToolHandler,
 	registerResponseBatchTools,
 } from "../src/mcp/tools/responseBatch.js";
 import type {
 	ResponseBatchCancellationResult,
+	ResponseBatchRetryResult,
 	ResponseBatchStatus,
 } from "../src/runtime/responseBatchService.js";
 
@@ -191,6 +193,67 @@ describe("mcp response batch tools", () => {
 		});
 	});
 
+	it("retries a response batch through the shared idempotent service result", async () => {
+		const retry = {
+			id: "batch_retry_mcp_1",
+			object: "response_batch_retry",
+			requestedAt: "2026-08-15T23:00:00.000Z",
+			accepted: true,
+			reused: false,
+			fullyMaterialized: true,
+			idempotencyKeyHash: "abc123",
+			requestFingerprint: "fingerprint123",
+			error: null,
+			counts: { selected: 1, created: 1, reused: 0, errors: 0 },
+			jobs: [
+				{
+					index: 0,
+					sourceResponseId: "resp_student_1",
+					responseId: "resp_retry_student_1",
+					outcome: "created",
+					reason: "fresh retry response created",
+				},
+			],
+			batch: {
+				...runningBatch,
+				id: "batch_retry_mcp_1",
+				retry: {
+					sourceBatchId: "batch_mcp_1",
+					idempotencyKeyHash: "abc123",
+					requestFingerprint: "fingerprint123",
+					requestedAt: "2026-08-15T23:00:00.000Z",
+					note: null,
+					sourceResponseIds: ["resp_student_1"],
+				},
+			},
+		} satisfies ResponseBatchRetryResult;
+		const retryBatch = vi.fn(async () => retry);
+		const handler = createResponseBatchRetryToolHandler({
+			createBatch: vi.fn(),
+			readBatchStatus: vi.fn(),
+			retryBatch,
+		});
+
+		const result = await handler({
+			id: "batch_mcp_1",
+			idempotencyKey: "operator-attempt-1",
+			responseIds: ["resp_student_1"],
+		});
+
+		expect(retryBatch).toHaveBeenCalledWith("batch_mcp_1", {
+			idempotencyKey: "operator-attempt-1",
+			responseIds: ["resp_student_1"],
+		});
+		expect(result).toMatchObject({
+			isError: false,
+			structuredContent: {
+				object: "response_batch_retry",
+				accepted: true,
+				counts: { selected: 1, created: 1 },
+			},
+		});
+	});
+
 	it("declares finalizing runtime state in MCP output schemas", () => {
 		const registeredTools = new Map<string, { outputSchema?: z.ZodRawShape }>();
 		const server = {
@@ -208,6 +271,27 @@ describe("mcp response batch tools", () => {
 			},
 		);
 		expect(registeredTools.has("response_batch_cancel")).toBe(true);
+		expect(registeredTools.has("response_batch_retry")).toBe(true);
+		const retryTool = registeredTools.get("response_batch_retry");
+		if (!retryTool?.outputSchema) {
+			throw new Error("expected response_batch_retry output schema");
+		}
+		expect(
+			z.object(retryTool.outputSchema).parse({
+				id: "batch_retry_mcp_1",
+				object: "response_batch_retry",
+				requestedAt: "2026-08-15T23:00:00.000Z",
+				accepted: false,
+				reused: false,
+				fullyMaterialized: false,
+				idempotencyKeyHash: "abc123",
+				requestFingerprint: null,
+				error: { code: "no_eligible_children", message: "nothing to retry" },
+				counts: { selected: 0, created: 0, reused: 0, errors: 0 },
+				jobs: [],
+				batch: null,
+			}),
+		).toMatchObject({ object: "response_batch_retry", accepted: false });
 		const cancelTool = registeredTools.get("response_batch_cancel");
 		if (!cancelTool?.outputSchema) {
 			throw new Error("expected response_batch_cancel output schema");

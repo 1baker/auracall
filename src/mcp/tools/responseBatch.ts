@@ -5,6 +5,8 @@ import {
 	createResponseBatchService,
 	type ResponseBatchCancellationResult,
 	ResponseBatchCreateRequestSchema,
+	ResponseBatchRetryRequestSchema,
+	type ResponseBatchRetryResult,
 	type ResponseBatchService,
 } from "../../runtime/responseBatchService.js";
 import { createExecutionResponsesService } from "../../runtime/responsesService.js";
@@ -20,6 +22,20 @@ const responseBatchCancelInputShape = {
 	id: z.string().min(1),
 	note: z.string().trim().min(1).nullable().optional(),
 } satisfies z.ZodRawShape;
+
+const responseBatchRetryInputShape = {
+	id: z.string().min(1),
+	...ResponseBatchRetryRequestSchema.shape,
+} satisfies z.ZodRawShape;
+
+const responseBatchRetryLineageSchema = z.object({
+	sourceBatchId: z.string(),
+	idempotencyKeyHash: z.string(),
+	requestFingerprint: z.string(),
+	requestedAt: z.string(),
+	note: z.string().nullable(),
+	sourceResponseIds: z.array(z.string()),
+});
 
 const responseBatchRuntimeStateSchema = z
 	.enum(["queued", "running", "recovering", "finalizing", "stranded", "terminal"])
@@ -70,6 +86,7 @@ const responseBatchJobOutputSchema = z.object({
 	service: z.string().nullable(),
 	runtimeProfile: z.string().nullable(),
 	dispatch: z.record(z.string(), z.unknown()).nullable().optional(),
+	retry: responseBatchRetryLineageSchema.nullable().optional(),
 	createdAt: z.string(),
 	status: z.union([ExecutionResponseStatusSchema, z.literal("missing")]),
 	completedAt: z.string().nullable(),
@@ -85,6 +102,39 @@ const responseBatchOutputShape = {
 	dispatch: z.record(z.string(), z.unknown()).nullable().optional(),
 	counts: z.record(z.string(), z.number()),
 	jobs: z.array(responseBatchJobOutputSchema),
+} satisfies z.ZodRawShape;
+
+const responseBatchRetryOutputShape = {
+	id: z.string(),
+	object: z.literal("response_batch_retry"),
+	requestedAt: z.string(),
+	accepted: z.boolean(),
+	reused: z.boolean(),
+	fullyMaterialized: z.boolean(),
+	idempotencyKeyHash: z.string(),
+	requestFingerprint: z.string().nullable(),
+	error: z
+		.object({
+			code: z.enum(["no_eligible_children", "invalid_selection", "idempotency_conflict"]),
+			message: z.string(),
+		})
+		.nullable(),
+	counts: z.object({
+		selected: z.number().int().nonnegative(),
+		created: z.number().int().nonnegative(),
+		reused: z.number().int().nonnegative(),
+		errors: z.number().int().nonnegative(),
+	}),
+	jobs: z.array(
+		z.object({
+			index: z.number().int().nonnegative(),
+			sourceResponseId: z.string(),
+			responseId: z.string(),
+			outcome: z.enum(["created", "reused", "error"]),
+			reason: z.string(),
+		}),
+	),
+	batch: z.object(responseBatchOutputShape).nullable(),
 } satisfies z.ZodRawShape;
 
 const responseBatchCancellationOutputShape = {
@@ -163,6 +213,17 @@ export function registerResponseBatchTools(
 			outputSchema: responseBatchCancellationOutputShape,
 		},
 		createResponseBatchCancelToolHandler(service),
+	);
+	server.registerTool(
+		"response_batch_retry",
+		{
+			title: "Retry AuraCall response batch",
+			description:
+				"Create an idempotent retry batch with fresh response ids for failed or cancelled children while preserving source lineage.",
+			inputSchema: responseBatchRetryInputShape,
+			outputSchema: responseBatchRetryOutputShape,
+		},
+		createResponseBatchRetryToolHandler(service),
 	);
 }
 
@@ -256,6 +317,56 @@ export function createResponseBatchCancelToolHandler(service: ResponseBatchServi
 	};
 }
 
+export function createResponseBatchRetryToolHandler(service: ResponseBatchService) {
+	return async (input: unknown) => {
+		const { id, ...payload } = z.object(responseBatchRetryInputShape).parse(input);
+		if (!service.retryBatch) {
+			return createMissingBatchRetryResult(
+				id,
+				"Response batch retry is not configured for this runtime.",
+			);
+		}
+		const result = await service.retryBatch(id, payload);
+		if (!result) {
+			return createMissingBatchRetryResult(id, `Response batch ${id} was not found.`);
+		}
+		return {
+			isError: !result.accepted || !result.fullyMaterialized,
+			content: [
+				{
+					type: "text" as const,
+					text: result.accepted
+						? `Response batch retry ${result.id} materialized ${result.counts.created + result.counts.reused}/${result.counts.selected} children.`
+						: result.error?.message ?? `Response batch ${id} could not be retried.`,
+				},
+			],
+			structuredContent: result as unknown as Record<string, unknown>,
+		};
+	};
+}
+
+function createMissingBatchRetryResult(id: string, message: string) {
+	const result = {
+		id,
+		object: "response_batch_retry",
+		requestedAt: new Date(0).toISOString(),
+		accepted: false,
+		reused: false,
+		fullyMaterialized: false,
+		idempotencyKeyHash: "",
+		requestFingerprint: null,
+		error: { code: "invalid_selection", message },
+		counts: { selected: 0, created: 0, reused: 0, errors: 1 },
+		jobs: [],
+		batch: null,
+	} satisfies ResponseBatchRetryResult;
+	return {
+		isError: true,
+		content: [{ type: "text" as const, text: message }],
+		structuredContent: result as unknown as Record<string, unknown>,
+	};
+}
+
 function createMissingBatchCancellationResult(id: string, message: string) {
 	const result = {
 		id,
@@ -281,6 +392,7 @@ function createMissingBatchCancellationResult(id: string, message: string) {
 			metadata: {},
 			limits: { maxConcurrentRuns: null, maxBrowserInteractionsPerMinute: null },
 			dispatch: null,
+			retry: null,
 			counts: {
 				total: 0,
 				in_progress: 0,

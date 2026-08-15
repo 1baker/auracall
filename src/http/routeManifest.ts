@@ -41,6 +41,7 @@ export const HTTP_ROUTE_MANIFEST = {
 	responseBatchesCreate: route(["POST"], "/v1/response-batches"),
 	responseBatchesGetTemplate: route(["GET"], "/v1/response-batches/{batch_id}"),
 	responseBatchesCancelTemplate: route(["POST"], "POST /v1/response-batches/{batch_id}/cancel"),
+	responseBatchesRetryTemplate: route(["POST"], "POST /v1/response-batches/{batch_id}/retry"),
 	mediaGenerationsCreate: route(["POST"], "/v1/media-generations"),
 	mediaGenerationsGetTemplate: route(["GET"], "/v1/media-generations/{media_generation_id}"),
 	mediaGenerationsMaterializeTemplate: route(

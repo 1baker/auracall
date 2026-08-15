@@ -73,6 +73,7 @@ out the compatibility and operator workflow surface in reference form.
 - `POST /v1/response-batches`
 - `GET /v1/response-batches/{batch_id}`
 - `POST /v1/response-batches/{batch_id}/cancel`
+- `POST /v1/response-batches/{batch_id}/retry`
 - `POST /v1/media-generations`
 - `GET /v1/media-generations/{media_generation_id}`
 - `POST /v1/media-generations/{media_generation_id}/materialize`
@@ -304,6 +305,15 @@ Current limits:
   - an unknown batch returns `404`; malformed input returns `400`; a scoped
     key that cannot control every stored team, agent, service, and runtime
     profile returns `403` before cancellation begins
+  - `POST /v1/response-batches/{batch_id}/retry` requires an
+    `idempotencyKey` and accepts optional `responseIds` plus `note`. Without an
+    explicit selection it retries every failed or cancelled child; completed
+    and nonterminal children are never eligible
+  - retry returns `202` with `object = "response_batch_retry"`, fresh child
+    response ids, source/retry lineage, and materialization counts. Repeating
+    the same key and selection reuses the durable retry batch and resumes only
+    missing children; reusing a key with a different selection returns `409`
+    before creating another child
   - the shared service-host drain path enforces those batch limits before
     acquiring a run lease; skipped child runs remain queued for a later drain
     pass

@@ -20,6 +20,9 @@ describe("HTTP route manifest", () => {
 		expect(routes.responseBatchesCancelTemplate).toBe(
 			"POST /v1/response-batches/{batch_id}/cancel",
 		);
+		expect(routes.responseBatchesRetryTemplate).toBe(
+			"POST /v1/response-batches/{batch_id}/retry",
+		);
 		expect(routes.projectEnsure).toBe("POST /v1/projects/ensure");
 		expect(routes.configAgentTemplate).toBe("PUT/DELETE /v1/config/agents/{agent_id}");
 		expect(routes.accountMirrorCatalogItemAssetTemplate).toContain("/{item_id}/asset");
@@ -30,6 +33,7 @@ describe("HTTP route manifest", () => {
 		expect(banner).toContain("POST /v1/response-batches");
 		expect(banner).toContain("GET /v1/response-batches/{batch_id}");
 		expect(banner).toContain("POST /v1/response-batches/{batch_id}/cancel");
+		expect(banner).toContain("POST /v1/response-batches/{batch_id}/retry");
 		expect(banner).toContain("GET/POST /status");
 		expect(banner).toContain(
 			"GET/PATCH/DELETE /v1/account-mirrors/preview-sessions/{preview_session_id}",

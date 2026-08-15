@@ -44,7 +44,7 @@ scoped keys, response batches, attachments, and polling rules, see
   `run_status` for subsequent state checks. Status readback is file-backed and
   must not resubmit the prompt, reopen a provider tool, or navigate the browser.
 
-### `response_batch_create` / `response_batch_status`
+### `response_batch_create` / `response_batch_status` / `response_batch_retry`
 - Inputs: `response_batch_create` accepts `requests` as an array of ordinary
   response-create request bodies, plus optional `metadata`, caller-supplied
   `id`, and batch limits such as `maxConcurrentRuns` and
@@ -66,6 +66,11 @@ scoped keys, response batches, attachments, and polling rules, see
   lease. Runs skipped for a batch gate remain queued for a later drain pass.
   The browser dispatcher and provider politeness controls still provide the
   lower-level CDP/account safety guardrails.
+- Retry contract: `response_batch_retry` requires the source batch `id` and an
+  `idempotencyKey`, with optional `responseIds` and `note`. It clones complete
+  durable requests into fresh response ids only for failed or cancelled
+  children and returns explicit source/retry lineage. Repeating the same key
+  resumes the same retry batch; a changed selection is an idempotency conflict.
 
 ### `project_ensure`
 - Inputs: `projectName`, optional `service`, `runtimeProfile`,

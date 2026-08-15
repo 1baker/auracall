@@ -245,6 +245,7 @@ import {
 	createResponseBatchExecutionGate,
 	createResponseBatchService,
 	ResponseBatchCreateRequestSchema,
+	ResponseBatchRetryRequestSchema,
 	type ResponseBatchService,
 	type ResponseBatchStatus,
 } from "../runtime/responseBatchService.js";
@@ -4294,6 +4295,64 @@ export async function createResponsesHttpServer(
 				}
 			}
 
+			const responseBatchRetryId = matchResponseBatchRetryRoute(url.pathname);
+			if (
+				responseBatchRetryId &&
+				matchesHttpRoute("responseBatchesRetryTemplate", req.method, url.pathname)
+			) {
+				const endForegroundWork = beginForegroundAuraCallWork();
+				try {
+					const body = await readRequestBody(req);
+					const payload = ResponseBatchRetryRequestSchema.parse(JSON.parse(body || "{}"));
+					const currentStatus = await responseBatchService.readBatchStatus(responseBatchRetryId);
+					if (!currentStatus) {
+						sendJson(res, 404, {
+							error: {
+								message: `Response batch ${responseBatchRetryId} was not found`,
+								type: "not_found_error",
+							},
+						} satisfies HttpErrorPayload);
+						return;
+					}
+					const catalog = await agentTeamConfigService.effectiveCatalog();
+					const authorizationError = authorizeResponseBatchRetry(
+						apiAuthContext,
+						currentStatus,
+						payload.responseIds,
+						catalog,
+					);
+					if (authorizationError) {
+						sendJson(res, 403, {
+							error: { message: authorizationError, type: "permission_error" },
+						} satisfies HttpErrorPayload);
+						return;
+					}
+					if (!responseBatchService.retryBatch) {
+						sendJson(res, 501, {
+							error: {
+								message: "Response batch retry is not configured for this runtime.",
+								type: "not_implemented_error",
+							},
+						} satisfies HttpErrorPayload);
+						return;
+					}
+					const result = await responseBatchService.retryBatch(responseBatchRetryId, payload);
+					if (!result) {
+						sendJson(res, 404, {
+							error: {
+								message: `Response batch ${responseBatchRetryId} was not found`,
+								type: "not_found_error",
+							},
+						} satisfies HttpErrorPayload);
+						return;
+					}
+					sendJson(res, result.accepted ? 202 : 409, result);
+					return;
+				} finally {
+					endForegroundWork();
+				}
+			}
+
 			const responseBatchId = matchResponseBatchRoute(url.pathname);
 			if (
 				responseBatchId &&
@@ -8044,6 +8103,32 @@ function authorizeResponseBatchControl(
 	return null;
 }
 
+function authorizeResponseBatchRetry(
+	context: ApiAuthContext,
+	status: ResponseBatchStatus,
+	responseIds: string[] | undefined,
+	catalog: EffectiveAgentCatalog,
+): string | null {
+	const selectedIds = responseIds ? new Set(responseIds) : null;
+	const selectedJobs = status.jobs.filter((job) =>
+		selectedIds ? selectedIds.has(job.responseId) : job.status === "failed" || job.status === "cancelled",
+	);
+	for (const job of selectedJobs) {
+		const error = authorizeExecutionSelection(
+			context,
+			{
+				agent: job.agent,
+				team: job.team ?? status.dispatch?.team ?? null,
+				service: job.service,
+				runtimeProfile: job.runtimeProfile,
+			},
+			catalog,
+		);
+		if (error) return error;
+	}
+	return null;
+}
+
 interface ExecutionAuthorizationSelection {
 	agent: string | null;
 	team: string | null;
@@ -10667,6 +10752,10 @@ function matchResponseBatchRoute(pathname: string): string | null {
 
 function matchResponseBatchCancelRoute(pathname: string): string | null {
 	return matchHttpRoutePath("responseBatchesCancelTemplate", pathname)?.batch_id ?? null;
+}
+
+function matchResponseBatchRetryRoute(pathname: string): string | null {
+	return matchHttpRoutePath("responseBatchesRetryTemplate", pathname)?.batch_id ?? null;
 }
 
 function matchHandoffOperatorRoute(pathname: string): {

@@ -1632,6 +1632,146 @@ describe("http responses adapter", () => {
 		}
 	});
 
+	it("authorizes selected children and retries response batches over HTTP", async () => {
+		const sourceStatus = {
+			id: "batch_retry_http_1",
+			object: "response_batch_status" as const,
+			status: "failed" as const,
+			createdAt: "2026-08-15T23:00:00.000Z",
+			updatedAt: "2026-08-15T23:00:00.000Z",
+			metadata: {},
+			limits: { maxConcurrentRuns: 2, maxBrowserInteractionsPerMinute: null },
+			dispatch: null,
+			counts: {
+				total: 2,
+				in_progress: 0,
+				completed: 0,
+				failed: 1,
+				cancelled: 1,
+				missing: 0,
+			},
+			jobs: [
+				{
+					index: 0,
+					responseId: "resp_retry_http_allowed",
+					model: "agent:researcher",
+					agent: "researcher",
+					team: null,
+					service: "chatgpt",
+					runtimeProfile: "default",
+					createdAt: "2026-08-15T23:00:00.000Z",
+					status: "failed" as const,
+					completedAt: "2026-08-15T23:00:00.000Z",
+					failure: { message: "failed" },
+				},
+				{
+					index: 1,
+					responseId: "resp_retry_http_denied",
+					model: "agent:other-agent",
+					agent: "other-agent",
+					team: null,
+					service: "chatgpt",
+					runtimeProfile: "default",
+					createdAt: "2026-08-15T23:00:00.000Z",
+					status: "cancelled" as const,
+					completedAt: "2026-08-15T23:00:00.000Z",
+					failure: null,
+				},
+			],
+		};
+		const readBatchStatus = vi.fn(async (id: string) => (id === "missing" ? null : sourceStatus));
+		const retryBatch = vi.fn(async (_id: string, input: { idempotencyKey: string }) => ({
+			id: "batch_retry_http_target",
+			object: "response_batch_retry" as const,
+			requestedAt: "2026-08-15T23:01:00.000Z",
+			accepted: input.idempotencyKey !== "conflict",
+			reused: false,
+			fullyMaterialized: input.idempotencyKey !== "conflict",
+			idempotencyKeyHash: "hash",
+			requestFingerprint: input.idempotencyKey === "conflict" ? "fingerprint" : "fingerprint",
+			error:
+				input.idempotencyKey === "conflict"
+					? { code: "idempotency_conflict" as const, message: "selection changed" }
+					: null,
+			counts: { selected: 1, created: 1, reused: 0, errors: 0 },
+			jobs: [],
+			batch: input.idempotencyKey === "conflict" ? null : sourceStatus,
+		}));
+		const server = await createResponsesHttpServer(
+			{ host: "127.0.0.1", port: 0, backgroundDrainIntervalMs: 0 },
+			{
+				config: {
+					api: {
+						auth: {
+							required: true,
+							keys: [
+								{
+									id: "batch-retry-key",
+									secret: "batch-retry-secret",
+									agents: ["researcher"],
+									services: ["chatgpt"],
+									runtimeProfiles: ["default"],
+								},
+							],
+						},
+					},
+					browserProfiles: { default: {} },
+					runtimeProfiles: { default: { browserProfile: "default", defaultService: "chatgpt" } },
+					agents: {
+						researcher: { runtimeProfile: "default", service: "chatgpt" },
+						"other-agent": { runtimeProfile: "default", service: "chatgpt" },
+					},
+					teams: {},
+				},
+				responseBatchService: { createBatch: vi.fn(), readBatchStatus, retryBatch },
+			},
+		);
+		const request = (batchId: string, body: unknown) =>
+			fetch(`http://127.0.0.1:${server.port}/v1/response-batches/${batchId}/retry`, {
+				method: "POST",
+				headers: {
+					authorization: "Bearer batch-retry-secret",
+					"content-type": "application/json",
+				},
+				body: JSON.stringify(body),
+			});
+
+		try {
+			const invalid = await request("batch_retry_http_1", { idempotencyKey: "" });
+			expect(invalid.status).toBe(400);
+			expect(readBatchStatus).not.toHaveBeenCalled();
+			const missing = await request("missing", { idempotencyKey: "attempt" });
+			expect(missing.status).toBe(404);
+			const denied = await request("batch_retry_http_1", { idempotencyKey: "attempt" });
+			expect(denied.status).toBe(403);
+			expect(retryBatch).not.toHaveBeenCalled();
+			const allowed = await request("batch_retry_http_1", {
+				idempotencyKey: "attempt",
+				responseIds: ["resp_retry_http_allowed"],
+			});
+			expect(allowed.status).toBe(202);
+			await expect(allowed.json()).resolves.toMatchObject({
+				object: "response_batch_retry",
+				accepted: true,
+			});
+			expect(retryBatch).toHaveBeenCalledWith("batch_retry_http_1", {
+				idempotencyKey: "attempt",
+				responseIds: ["resp_retry_http_allowed"],
+			});
+			const conflict = await request("batch_retry_http_1", {
+				idempotencyKey: "conflict",
+				responseIds: ["resp_retry_http_allowed"],
+			});
+			expect(conflict.status).toBe(409);
+			await expect(conflict.json()).resolves.toMatchObject({
+				accepted: false,
+				error: { code: "idempotency_conflict" },
+			});
+		} finally {
+			await server.close();
+		}
+	});
+
 	it("expands dispatch-pool teams into tenant-specific response batch jobs", async () => {
 		const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-http-response-batch-pools-"));
 		cleanup.push(homeDir);

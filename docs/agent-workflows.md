@@ -179,7 +179,11 @@ limits.
    `POST /v1/response-batches/{batch_id}/cancel` or MCP
    `response_batch_cancel` once. Inspect `fullySettled`, aggregate counts, and
    every child outcome; do not retry cancellation by resubmitting prompts.
-8. Read child output through `GET /v1/responses/{response_id}` or MCP
+8. To retry failed or cancelled children, call
+   `POST /v1/response-batches/{batch_id}/retry` or MCP
+   `response_batch_retry` with a stable `idempotencyKey`. Retain the fresh
+   response ids and reuse that key to resume a partially materialized retry.
+9. Read child output through `GET /v1/responses/{response_id}` or MCP
    `run_status`.
 
 Batch limits are attached to the child runs and enforced by the shared service

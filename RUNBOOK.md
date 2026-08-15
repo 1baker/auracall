@@ -19900,3 +19900,13 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   before mutation. HTTP and MCP will share one service receipt.
 - Automatic retry policy, provider Retry clicks, scheduler priority, and
   dispatch reassignment remain outside this slice.
+- Implemented complete stored-request cloning into fresh deterministic child
+  ids, atomic first-writer retry-plan persistence, explicit batch/child
+  lineage, conflicting-selection rejection, and partial-materialization resume.
+- HTTP authorizes only the selected stored child scopes before mutation and
+  returns `202` or `409`; MCP uses the same service receipt. Route discovery,
+  specialized skill contracts, and operator docs now advertise retry.
+- Four focused suites pass 252 tests. Typecheck, zero-warning lint, production
+  build, 336-plan audit, CodeGraph sync, and diff hygiene pass. The complete
+  provider-disabled suite passes 331 files / 3,015 tests with 19 files / 55
+  intentional live skips. Exact-SHA cross-platform CI remains.

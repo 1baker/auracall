@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import type { Dirent } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -66,6 +66,35 @@ export const ResponseBatchCreateRequestSchema = z.object({
 
 export type ResponseBatchCreateRequest = z.infer<typeof ResponseBatchCreateRequestSchema>;
 
+// biome-ignore lint/style/useNamingConvention: exported schema names follow the runtime API schema convention.
+export const ResponseBatchRetryRequestSchema = z
+	.object({
+		idempotencyKey: z.string().trim().min(1).max(200),
+		responseIds: z.array(z.string().trim().min(1)).min(1).optional(),
+		note: z.string().trim().min(1).nullable().optional(),
+	})
+	.strict()
+	.superRefine((value, context) => {
+		if (value.responseIds && new Set(value.responseIds).size !== value.responseIds.length) {
+			context.addIssue({
+				code: "custom",
+				path: ["responseIds"],
+				message: "responseIds must not contain duplicates",
+			});
+		}
+	});
+
+export type ResponseBatchRetryRequest = z.infer<typeof ResponseBatchRetryRequestSchema>;
+
+export interface ResponseBatchRetryLineage {
+	sourceBatchId: string;
+	idempotencyKeyHash: string;
+	requestFingerprint: string;
+	requestedAt: string;
+	note: string | null;
+	sourceResponseIds: string[];
+}
+
 export interface ResponseBatchJobRecord {
 	index: number;
 	responseId: string;
@@ -75,6 +104,11 @@ export interface ResponseBatchJobRecord {
 	service: string | null;
 	runtimeProfile: string | null;
 	dispatch?: ResponseBatchDispatchJobAssignment | null;
+	retryOf?: {
+		batchId: string;
+		responseId: string;
+		index: number;
+	} | null;
 	createdAt: string;
 }
 
@@ -89,6 +123,7 @@ export interface ResponseBatchRecord {
 		maxBrowserInteractionsPerMinute: number | null;
 	};
 	dispatch?: ResponseBatchDispatchRecord | null;
+	retry?: ResponseBatchRetryLineage | null;
 	jobs: ResponseBatchJobRecord[];
 }
 
@@ -109,6 +144,7 @@ export interface ResponseBatchStatus {
 	metadata: Record<string, unknown>;
 	limits: ResponseBatchRecord["limits"];
 	dispatch: ResponseBatchDispatchRecord | null;
+	retry?: ResponseBatchRetryLineage | null;
 	counts: {
 		total: number;
 		in_progress: number;
@@ -148,9 +184,48 @@ export interface ResponseBatchCancellationResult {
 	batch: ResponseBatchStatus;
 }
 
+export type ResponseBatchRetryOutcome = "created" | "reused" | "error";
+
+export interface ResponseBatchRetryJobResult {
+	index: number;
+	sourceResponseId: string;
+	responseId: string;
+	outcome: ResponseBatchRetryOutcome;
+	reason: string;
+}
+
+export interface ResponseBatchRetryResult {
+	id: string;
+	object: "response_batch_retry";
+	requestedAt: string;
+	accepted: boolean;
+	reused: boolean;
+	fullyMaterialized: boolean;
+	idempotencyKeyHash: string;
+	requestFingerprint: string | null;
+	error: {
+		code: "no_eligible_children" | "invalid_selection" | "idempotency_conflict";
+		message: string;
+	} | null;
+	counts: {
+		selected: number;
+		created: number;
+		reused: number;
+		errors: number;
+	};
+	jobs: ResponseBatchRetryJobResult[];
+	batch: ResponseBatchStatus | null;
+}
+
+export interface ResponseBatchStoreCreateResult {
+	record: ResponseBatchRecord;
+	created: boolean;
+}
+
 export interface ResponseBatchStore {
 	readBatch(id: string): Promise<ResponseBatchRecord | null>;
 	writeBatch(record: ResponseBatchRecord): Promise<ResponseBatchRecord>;
+	createBatch?(record: ResponseBatchRecord): Promise<ResponseBatchStoreCreateResult>;
 	listBatches?(options?: { limit?: number | null }): Promise<ResponseBatchRecord[]>;
 }
 
@@ -158,12 +233,16 @@ export interface ResponseBatchService {
 	createBatch(input: ResponseBatchCreateRequest): Promise<ResponseBatchStatus>;
 	readBatchStatus(id: string): Promise<ResponseBatchStatus | null>;
 	cancelBatch?(id: string, note?: string | null): Promise<ResponseBatchCancellationResult | null>;
+	retryBatch?(
+		id: string,
+		input: ResponseBatchRetryRequest,
+	): Promise<ResponseBatchRetryResult | null>;
 }
 
 export interface ResponseBatchServiceDeps {
 	responsesService: Pick<
 		ExecutionResponsesService,
-		"createResponse" | "readResponse" | "cancelResponse"
+		"createResponse" | "readResponse" | "cancelResponse" | "retryResponse"
 	>;
 	resolveDispatchPool?: (input: {
 		dispatch: ResponseBatchDispatchRequest;
@@ -298,6 +377,136 @@ export function createResponseBatchService(deps: ResponseBatchServiceDeps): Resp
 				batch,
 			};
 		},
+
+		async retryBatch(id, input) {
+			const sourceRecord = await store.readBatch(id);
+			if (!sourceRecord) return null;
+			const payload = ResponseBatchRetryRequestSchema.parse(input);
+			const requestedAt = now().toISOString();
+			const idempotencyKeyHash = hashRetryValue(payload.idempotencyKey);
+			const sourceStatus = await summarizeBatchStatus(sourceRecord, deps.responsesService);
+			const selection = selectRetryableBatchJobs(sourceStatus, payload.responseIds);
+			if (selection.error) {
+				return createRejectedRetryResult(id, requestedAt, idempotencyKeyHash, selection.error);
+			}
+			if (!deps.responsesService.retryResponse || !store.createBatch) {
+				throw new Error("Response batch retry is not configured for this runtime surface.");
+			}
+
+			const requestFingerprint = hashRetryValue(
+				JSON.stringify(selection.jobs.map((job) => job.responseId)),
+			);
+			const retryBatchId = `batch_retry_${hashRetryValue(`${id}\0${idempotencyKeyHash}`).slice(0, 24)}`;
+			const lineage: ResponseBatchRetryLineage = {
+				sourceBatchId: id,
+				idempotencyKeyHash,
+				requestFingerprint,
+				requestedAt,
+				note: payload.note ?? null,
+				sourceResponseIds: selection.jobs.map((job) => job.responseId),
+			};
+			const plannedRecord: ResponseBatchRecord = {
+				id: retryBatchId,
+				object: "response_batch",
+				createdAt: requestedAt,
+				updatedAt: requestedAt,
+				metadata: {
+					...sourceRecord.metadata,
+					auracallRetry: lineage,
+				},
+				limits: sourceRecord.limits,
+				dispatch: sourceRecord.dispatch ?? null,
+				retry: lineage,
+				jobs: selection.jobs.map((job, index) => ({
+					index,
+					responseId: createRetryResponseId(id, idempotencyKeyHash, job.responseId),
+					model: job.model,
+					agent: job.agent,
+					team: job.team ?? null,
+					service: job.service,
+					runtimeProfile: job.runtimeProfile,
+					dispatch: job.dispatch ?? null,
+					retryOf: { batchId: id, responseId: job.responseId, index: job.index },
+					createdAt: requestedAt,
+				})),
+			};
+			const created = await store.createBatch(plannedRecord);
+			if (!matchesRetryRequest(created.record, lineage)) {
+				return createRetryConflictResult(
+					id,
+					created.record.id,
+					requestedAt,
+					idempotencyKeyHash,
+					requestFingerprint,
+				);
+			}
+
+			const jobs: ResponseBatchRetryJobResult[] = [];
+			for (const plannedJob of created.record.jobs) {
+				const retryOf = plannedJob.retryOf;
+				if (!retryOf) {
+					jobs.push({
+						index: plannedJob.index,
+						sourceResponseId: "",
+						responseId: plannedJob.responseId,
+						outcome: "error",
+						reason: "retry batch job is missing source lineage",
+					});
+					continue;
+				}
+				try {
+					const result = await deps.responsesService.retryResponse({
+						sourceResponseId: retryOf.responseId,
+						responseId: plannedJob.responseId,
+						metadata: createRetryBatchMetadata(created.record, plannedJob),
+						lineage: {
+							sourceBatchId: id,
+							sourceResponseId: retryOf.responseId,
+							retryBatchId: created.record.id,
+							idempotencyKeyHash,
+							requestFingerprint,
+							requestedAt: created.record.createdAt,
+						},
+					});
+					jobs.push({
+						index: plannedJob.index,
+						sourceResponseId: retryOf.responseId,
+						responseId: result.response.id,
+						outcome: result.reused ? "reused" : "created",
+						reason: result.reused
+							? "existing retry response reused"
+							: "fresh retry response created",
+					});
+				} catch (error) {
+					jobs.push({
+						index: plannedJob.index,
+						sourceResponseId: retryOf.responseId,
+						responseId: plannedJob.responseId,
+						outcome: "error",
+						reason: error instanceof Error ? error.message : String(error),
+					});
+				}
+			}
+			if (refreshArchiveIndex) {
+				await refreshRunArchiveIndexBestEffort({ batchId: created.record.id });
+			}
+			const batch = await summarizeBatchStatus(created.record, deps.responsesService);
+			const counts = summarizeRetryOutcomes(jobs);
+			return {
+				id: created.record.id,
+				object: "response_batch_retry",
+				requestedAt: created.record.createdAt,
+				accepted: true,
+				reused: !created.created,
+				fullyMaterialized: counts.errors === 0 && batch.counts.missing === 0,
+				idempotencyKeyHash,
+				requestFingerprint,
+				error: null,
+				counts,
+				jobs,
+				batch,
+			};
+		},
 	};
 }
 
@@ -305,6 +514,7 @@ export function createResponseBatchStore(): ResponseBatchStore {
 	return {
 		readBatch: readResponseBatchRecord,
 		writeBatch: writeResponseBatchRecord,
+		createBatch: createResponseBatchRecord,
 		listBatches: listResponseBatchRecords,
 	};
 }
@@ -377,6 +587,29 @@ async function writeResponseBatchRecord(record: ResponseBatchRecord): Promise<Re
 	return parsed;
 }
 
+async function createResponseBatchRecord(
+	record: ResponseBatchRecord,
+): Promise<ResponseBatchStoreCreateResult> {
+	const parsed = RESPONSE_BATCH_RECORD_SCHEMA.parse(record);
+	const recordPath = getResponseBatchRecordPath(record.id);
+	await fs.mkdir(path.dirname(recordPath), { recursive: true });
+	const tempPath = `${recordPath}.${process.pid}.${Date.now()}.${randomUUID()}.tmp`;
+	await fs.writeFile(tempPath, `${JSON.stringify(parsed, null, 2)}\n`, "utf8");
+	try {
+		await fs.link(tempPath, recordPath);
+		return { record: parsed, created: true };
+	} catch (error) {
+		if (!isErrnoException(error) || error.code !== "EEXIST") throw error;
+		const existing = await readResponseBatchRecord(record.id);
+		if (!existing) {
+			throw new Error(`Response batch ${record.id} existed but could not be read.`);
+		}
+		return { record: existing, created: false };
+	} finally {
+		await fs.unlink(tempPath).catch(() => undefined);
+	}
+}
+
 export async function listResponseBatchRecords(
 	options: { limit?: number | null } = {},
 ): Promise<ResponseBatchRecord[]> {
@@ -436,6 +669,7 @@ async function summarizeBatchStatus(
 		metadata: record.metadata,
 		limits: record.limits,
 		dispatch: record.dispatch ?? null,
+		retry: record.retry ?? null,
 		counts,
 		jobs,
 	};
@@ -487,6 +721,157 @@ function summarizeCancellationOutcomes(
 		not_owned: jobs.filter((job) => job.outcome === "not-owned").length,
 		errors: jobs.filter((job) => job.outcome === "error").length,
 	};
+}
+
+function selectRetryableBatchJobs(
+	status: ResponseBatchStatus,
+	responseIds: string[] | undefined,
+): {
+	jobs: ResponseBatchJobStatus[];
+	error: ResponseBatchRetryResult["error"];
+} {
+	const requested = responseIds ? new Set(responseIds) : null;
+	if (requested) {
+		const known = new Set(status.jobs.map((job) => job.responseId));
+		const unknown = responseIds?.filter((responseId) => !known.has(responseId)) ?? [];
+		if (unknown.length > 0) {
+			return {
+				jobs: [],
+				error: {
+					code: "invalid_selection",
+					message: `Response batch ${status.id} does not contain selected response ids: ${unknown.join(", ")}.`,
+				},
+			};
+		}
+	}
+	const selected = requested
+		? status.jobs.filter((job) => requested.has(job.responseId))
+		: status.jobs.filter((job) => job.status === "failed" || job.status === "cancelled");
+	const ineligible = requested
+		? selected.filter((job) => job.status !== "failed" && job.status !== "cancelled")
+		: [];
+	if (requested && ineligible.length > 0) {
+		return {
+			jobs: [],
+			error: {
+				code: "invalid_selection",
+				message: `Response batch ${status.id} selected non-retryable children: ${ineligible
+					.map((job) => `${job.responseId} (${job.status})`)
+					.join(", ")}.`,
+			},
+		};
+	}
+	if (selected.length === 0) {
+		return {
+			jobs: [],
+			error: {
+				code: "no_eligible_children",
+				message: `Response batch ${status.id} has no failed or cancelled children to retry.`,
+			},
+		};
+	}
+	return { jobs: selected.sort((left, right) => left.index - right.index), error: null };
+}
+
+function createRejectedRetryResult(
+	sourceBatchId: string,
+	requestedAt: string,
+	idempotencyKeyHash: string,
+	error: NonNullable<ResponseBatchRetryResult["error"]>,
+): ResponseBatchRetryResult {
+	return {
+		id: sourceBatchId,
+		object: "response_batch_retry",
+		requestedAt,
+		accepted: false,
+		reused: false,
+		fullyMaterialized: false,
+		idempotencyKeyHash,
+		requestFingerprint: null,
+		error,
+		counts: { selected: 0, created: 0, reused: 0, errors: 0 },
+		jobs: [],
+		batch: null,
+	};
+}
+
+function createRetryConflictResult(
+	sourceBatchId: string,
+	retryBatchId: string,
+	requestedAt: string,
+	idempotencyKeyHash: string,
+	requestFingerprint: string,
+): ResponseBatchRetryResult {
+	return {
+		...createRejectedRetryResult(sourceBatchId, requestedAt, idempotencyKeyHash, {
+			code: "idempotency_conflict",
+			message: `Idempotency key already identifies retry batch ${retryBatchId} with a different selected-child request.`,
+		}),
+		requestFingerprint,
+	};
+}
+
+function matchesRetryRequest(
+	record: ResponseBatchRecord,
+	expected: ResponseBatchRetryLineage,
+): boolean {
+	return Boolean(
+		record.retry &&
+			record.retry.sourceBatchId === expected.sourceBatchId &&
+			record.retry.idempotencyKeyHash === expected.idempotencyKeyHash &&
+			record.retry.requestFingerprint === expected.requestFingerprint &&
+			record.retry.sourceResponseIds.length === expected.sourceResponseIds.length &&
+			record.retry.sourceResponseIds.every(
+				(responseId, index) => responseId === expected.sourceResponseIds[index],
+			),
+	);
+}
+
+function createRetryResponseId(
+	sourceBatchId: string,
+	idempotencyKeyHash: string,
+	sourceResponseId: string,
+): string {
+	return `resp_retry_${hashRetryValue(
+		`${sourceBatchId}\0${idempotencyKeyHash}\0${sourceResponseId}`,
+	).slice(0, 24)}`;
+}
+
+function createRetryBatchMetadata(
+	record: ResponseBatchRecord,
+	job: ResponseBatchJobRecord,
+): Record<string, unknown> {
+	return {
+		batchId: record.id,
+		batchIndex: job.index,
+		batchLimits: record.limits,
+		...(record.dispatch && job.dispatch
+			? {
+					batchDispatch: {
+						team: record.dispatch.team,
+						mode: record.dispatch.mode,
+						projectSync: record.dispatch.projectSync,
+						memberAgent: job.dispatch.memberAgent,
+						memberIndex: job.dispatch.memberIndex,
+					},
+				}
+			: {}),
+	};
+}
+
+function summarizeRetryOutcomes(
+	jobs: ResponseBatchRetryJobResult[],
+): ResponseBatchRetryResult["counts"] {
+	return {
+		selected: jobs.length,
+		created: jobs.filter((job) => job.outcome === "created").length,
+		reused: jobs.filter((job) => job.outcome === "reused").length,
+		errors: jobs.filter((job) => job.outcome === "error").length,
+	};
+}
+
+function hashRetryValue(value: string): string {
+	return createHash("sha256").update(value).digest("hex");
 }
 
 function withBatchMetadata(
@@ -648,6 +1033,14 @@ const RESPONSE_BATCH_JOB_RECORD_SCHEMA: z.ZodType<ResponseBatchJobRecord> = z.ob
 		})
 		.nullable()
 		.optional(),
+	retryOf: z
+		.object({
+			batchId: z.string(),
+			responseId: z.string(),
+			index: z.number().int().min(0),
+		})
+		.nullable()
+		.optional(),
 	createdAt: z.string(),
 });
 
@@ -669,6 +1062,17 @@ const RESPONSE_BATCH_RECORD_SCHEMA: z.ZodType<ResponseBatchRecord> = z.object({
 			memberCount: z.number().int().nonnegative(),
 			projectName: z.string().nullable().optional(),
 			warnings: z.array(z.string()),
+		})
+		.nullable()
+		.optional(),
+	retry: z
+		.object({
+			sourceBatchId: z.string(),
+			idempotencyKeyHash: z.string(),
+			requestFingerprint: z.string(),
+			requestedAt: z.string(),
+			note: z.string().nullable(),
+			sourceResponseIds: z.array(z.string()),
 		})
 		.nullable()
 		.optional(),

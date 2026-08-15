@@ -47662,3 +47662,14 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   ineligible selection, or authorization failure stops before mutation.
 - HTTP and MCP will project the same service receipt. Automatic policy,
   provider Retry clicks, priority, and dispatch reassignment are excluded.
+- The implementation now reconstructs complete source requests, creates fresh
+  deterministic response ids, and admits reuse only when durable lineage
+  matches. Batch-level lineage plus per-job source mappings remain inspectable.
+- Atomic first-writer persistence precedes child creation. Focused tests prove
+  concurrent callers observe one winning record and a simulated interrupted
+  materialization resumes without duplicating its successful child.
+- Strict HTTP validation and selected-scope authorization, MCP parity, route
+  discovery, specialized skill contracts, and operator docs now agree. Four
+  focused suites pass 252 tests; typecheck, zero-warning lint, production
+  build, 336-plan audit, CodeGraph sync, diff hygiene, and the complete 331-file
+  / 3,015-test provider-disabled suite pass. Exact-SHA CI remains.

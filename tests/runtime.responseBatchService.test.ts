@@ -11,9 +11,14 @@ import { resolveResponseBatchDispatchPool } from "../src/runtime/responseBatchDi
 import {
 	createResponseBatchExecutionGate,
 	createResponseBatchService,
+	createResponseBatchStore,
+	listResponseBatchRecords,
 	type ResponseBatchRecord,
 } from "../src/runtime/responseBatchService.js";
-import { createExecutionResponsesService } from "../src/runtime/responsesService.js";
+import {
+	createExecutionRequestFromRecord,
+	createExecutionResponsesService,
+} from "../src/runtime/responsesService.js";
 import { createExecutionServiceHost } from "../src/runtime/serviceHost.js";
 
 function createResponse(id: string, status: ExecutionResponse["status"]): ExecutionResponse {
@@ -352,6 +357,254 @@ describe("response batch service", () => {
 				},
 			],
 		});
+	});
+
+	it("retries only failed and cancelled children with fresh ids, durable lineage, and idempotent reuse", async () => {
+		const homeDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), "auracall-runtime-response-batch-retry-"),
+		);
+		cleanup.push(homeDir);
+		setAuracallHomeDirOverrideForTest(homeDir);
+
+		const control = createExecutionRuntimeControl();
+		const host = createExecutionServiceHost({
+			control,
+			ownerId: "host:batch-retry",
+			now: () => "2026-08-15T23:00:00.000Z",
+			executeStoredRunStep: async ({ record }) => {
+				const request = createExecutionRequestFromRecord(record);
+				if (request.input === "fail once") throw new Error("planned source failure");
+				return {
+					output: { summary: "completed", artifacts: [], structuredData: {}, notes: [] },
+				};
+			},
+		});
+		const sourceIds = ["resp_retry_completed", "resp_retry_failed", "resp_retry_cancelled"];
+		const responsesService = createExecutionResponsesService({
+			control,
+			executionHost: host,
+			drainAfterCreate: false,
+			generateResponseId: () => sourceIds.shift() ?? "resp_retry_unexpected",
+			now: () => new Date("2026-08-15T23:00:00.000Z"),
+			refreshArchiveIndex: false,
+		});
+		const service = createResponseBatchService({
+			responsesService,
+			generateBatchId: () => "batch_retry_source",
+			now: () => new Date("2026-08-15T23:01:00.000Z"),
+			refreshArchiveIndex: false,
+		});
+		await service.createBatch({
+			metadata: { campaign: "durable retry" },
+			limits: { maxConcurrentRuns: 2, maxBrowserInteractionsPerMinute: 7 },
+			requests: [
+				{ model: "agent:researcher", input: "complete", instructions: "keep this" },
+				{
+					model: "agent:researcher",
+					input: "fail once",
+					instructions: "clone every field",
+					tools: [{ type: "computer" }],
+					attachments: [
+						{ id: "att_retry_1", fileName: "evidence.txt", mimeType: "text/plain" },
+					],
+					metadata: { sourceMarker: "preserved" },
+					auracall: {
+						agent: "researcher",
+						team: "ops",
+						service: "chatgpt",
+						runtimeProfile: "default",
+					},
+				},
+				{ model: "agent:researcher", input: "cancel this" },
+			],
+		});
+		await host.drainRun("resp_retry_completed");
+		await host.drainRun("resp_retry_failed");
+		await responsesService.cancelResponse?.("resp_retry_cancelled", "retry test cancellation");
+
+		const retryBatch = service.retryBatch;
+		if (!retryBatch) throw new Error("expected response batch retry");
+		const first = await retryBatch("batch_retry_source", {
+			idempotencyKey: "operator-attempt-1",
+			note: "retry terminal failures",
+		});
+		expect(first).toMatchObject({
+			object: "response_batch_retry",
+			accepted: true,
+			reused: false,
+			fullyMaterialized: true,
+			counts: { selected: 2, created: 2, reused: 0, errors: 0 },
+			batch: {
+				retry: { sourceBatchId: "batch_retry_source", note: "retry terminal failures" },
+				limits: { maxConcurrentRuns: 2, maxBrowserInteractionsPerMinute: 7 },
+				jobs: [
+					{ retryOf: { responseId: "resp_retry_failed" } },
+					{ retryOf: { responseId: "resp_retry_cancelled" } },
+				],
+			},
+		});
+		const retriedFailedId = first?.jobs[0]?.responseId;
+		expect(retriedFailedId).toBeTruthy();
+		expect(retriedFailedId).not.toBe("resp_retry_failed");
+		const retriedRecord = await control.readRun(retriedFailedId ?? "");
+		if (!retriedRecord) throw new Error("expected retried response record");
+		const cloned = createExecutionRequestFromRecord(retriedRecord);
+		expect(cloned).toMatchObject({
+			model: "agent:researcher",
+			input: "fail once",
+			instructions: "clone every field",
+			tools: [{ type: "computer" }],
+			attachments: [{ id: "att_retry_1", fileName: "evidence.txt", mimeType: "text/plain" }],
+			auracall: { agent: "researcher", team: "ops", service: "chatgpt" },
+			metadata: {
+				sourceMarker: "preserved",
+				batchId: first?.id,
+				auracallRetry: {
+					sourceBatchId: "batch_retry_source",
+					sourceResponseId: "resp_retry_failed",
+					retryBatchId: first?.id,
+				},
+			},
+		});
+		await expect(responsesService.readResponse("resp_retry_failed")).resolves.toMatchObject({
+			status: "failed",
+		});
+		await expect(responsesService.readResponse("resp_retry_cancelled")).resolves.toMatchObject({
+			status: "cancelled",
+		});
+
+		await expect(
+			retryBatch("batch_retry_source", { idempotencyKey: "operator-attempt-1" }),
+		).resolves.toMatchObject({
+			id: first?.id,
+			accepted: true,
+			reused: true,
+			counts: { selected: 2, created: 0, reused: 2, errors: 0 },
+		});
+		await expect(
+			retryBatch("batch_retry_source", {
+				idempotencyKey: "operator-attempt-1",
+				responseIds: ["resp_retry_failed"],
+			}),
+		).resolves.toMatchObject({
+			accepted: false,
+			error: { code: "idempotency_conflict" },
+		});
+		await expect(
+			retryBatch("batch_retry_source", {
+				idempotencyKey: "operator-attempt-2",
+				responseIds: ["resp_retry_completed"],
+			}),
+		).resolves.toMatchObject({
+			accepted: false,
+			error: { code: "invalid_selection" },
+		});
+		expect((await listResponseBatchRecords()).map((record) => record.id)).toHaveLength(2);
+	});
+
+	it("resumes a partially materialized retry without duplicating successful children", async () => {
+		const source: ResponseBatchRecord = {
+			id: "batch_partial_source",
+			object: "response_batch",
+			createdAt: "2026-08-15T23:10:00.000Z",
+			updatedAt: "2026-08-15T23:10:00.000Z",
+			metadata: {},
+			limits: { maxConcurrentRuns: null, maxBrowserInteractionsPerMinute: null },
+			jobs: ["resp_partial_a", "resp_partial_b"].map((responseId, index) => ({
+				index,
+				responseId,
+				model: "agent:researcher",
+				agent: "researcher",
+				team: null,
+				service: "chatgpt",
+				runtimeProfile: "default",
+				createdAt: "2026-08-15T23:10:00.000Z",
+			})),
+		};
+		const records = new Map([[source.id, source]]);
+		const targetResponses = new Map<string, ExecutionResponse>();
+		let failSecondOnce = true;
+		const retryResponse = vi.fn(async (input: { sourceResponseId: string; responseId: string }) => {
+			const existing = targetResponses.get(input.responseId);
+			if (existing) return { response: existing, reused: true };
+			if (input.sourceResponseId === "resp_partial_b" && failSecondOnce) {
+				failSecondOnce = false;
+				throw new Error("simulated crash between child creations");
+			}
+			const response = createResponse(input.responseId, "in_progress");
+			targetResponses.set(input.responseId, response);
+			return { response, reused: false };
+		});
+		const service = createResponseBatchService({
+			refreshArchiveIndex: false,
+			now: () => new Date("2026-08-15T23:11:00.000Z"),
+			store: {
+				readBatch: vi.fn(async (id) => records.get(id) ?? null),
+				writeBatch: vi.fn(async (record) => {
+					records.set(record.id, record);
+					return record;
+				}),
+				createBatch: vi.fn(async (record) => {
+					const existing = records.get(record.id);
+					if (existing) return { record: existing, created: false };
+					records.set(record.id, record);
+					return { record, created: true };
+				}),
+			},
+			responsesService: {
+				createResponse: vi.fn(),
+				readResponse: vi.fn(async (id) =>
+					targetResponses.get(id) ??
+					(id === "resp_partial_a" || id === "resp_partial_b" ? createResponse(id, "failed") : null),
+				),
+				retryResponse,
+			},
+		});
+		const retryBatch = service.retryBatch;
+		if (!retryBatch) throw new Error("expected response batch retry");
+
+		await expect(
+			retryBatch(source.id, { idempotencyKey: "partial-attempt" }),
+		).resolves.toMatchObject({
+			accepted: true,
+			reused: false,
+			fullyMaterialized: false,
+			counts: { selected: 2, created: 1, reused: 0, errors: 1 },
+		});
+		await expect(
+			retryBatch(source.id, { idempotencyKey: "partial-attempt" }),
+		).resolves.toMatchObject({
+			accepted: true,
+			reused: true,
+			fullyMaterialized: true,
+			counts: { selected: 2, created: 1, reused: 1, errors: 0 },
+		});
+		expect(targetResponses).toHaveLength(2);
+		expect(retryResponse).toHaveBeenCalledTimes(4);
+	});
+
+	it("atomically preserves the first retry batch record under concurrent creation", async () => {
+		const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-response-batch-atomic-"));
+		cleanup.push(homeDir);
+		setAuracallHomeDirOverrideForTest(homeDir);
+		const store = createResponseBatchStore();
+		if (!store.createBatch) throw new Error("expected atomic response batch creation");
+		const base: ResponseBatchRecord = {
+			id: "batch_atomic_retry",
+			object: "response_batch",
+			createdAt: "2026-08-15T23:20:00.000Z",
+			updatedAt: "2026-08-15T23:20:00.000Z",
+			metadata: {},
+			limits: { maxConcurrentRuns: null, maxBrowserInteractionsPerMinute: null },
+			jobs: [],
+		};
+		const [left, right] = await Promise.all([
+			store.createBatch({ ...base, metadata: { writer: "left" } }),
+			store.createBatch({ ...base, metadata: { writer: "right" } }),
+		]);
+		expect([left.created, right.created].sort()).toEqual([false, true]);
+		expect(left.record.metadata).toEqual(right.record.metadata);
+		expect(await store.readBatch(base.id)).toMatchObject({ metadata: left.record.metadata });
 	});
 
 	it("surfaces child runtime diagnostics and keeps status readable after a child read failure", async () => {
