@@ -65,7 +65,7 @@ response runtime.
       response recovery metadata, and no successful terminal chunk is emitted.
 - [x] A disconnected client does not cancel, duplicate, or corrupt the durable
       response run; later `/v1/responses/{response_id}` readback remains valid.
-- [ ] Existing non-streaming, auth, route-manifest, readiness, and complete
+- [x] Existing non-streaming, auth, route-manifest, readiness, and complete
       provider-disabled tests remain green.
 - [ ] Typecheck, zero-warning lint, build, plan audit, CodeGraph sync, diff
       hygiene, and exact-SHA Ubuntu/macOS/Windows CI pass.
@@ -106,4 +106,9 @@ machine-readable, and cross-platform CI accepts the exact implementation SHA.
 - Raw-wire, SDK, auth, failure, timeout, and disconnect tests pass. The complete
   227-test HTTP adapter file, specialized/bundled skill contracts, typecheck,
   strict source/script/test lint, and scoped-key SDK smoke also pass without
-  browser or provider effects. Full suite, build, and exact-SHA CI remain.
+  browser or provider effects.
+- Production build, full zero-warning lint over 851 files, 334-plan audit, diff
+  hygiene, and the complete provider-disabled suite pass. The suite reports 331
+  files / 3,006 tests passed with 19 files / 55 intended live skips. Pre/post
+  listener and process inventory is unchanged and contains no AuraCall-managed
+  browser profile. Exact-SHA CI remains the closing gate.

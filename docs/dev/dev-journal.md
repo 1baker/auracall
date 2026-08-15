@@ -47597,4 +47597,9 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Raw framing, installed OpenAI SDK iteration, scoped auth rejection, timeout,
   terminal failure, and disconnected-client durable readback pass. The full
   227-test HTTP file, skill contracts, typecheck, strict lint, and isolated
-  scoped-key SDK smoke are green; broad validation remains.
+  scoped-key SDK smoke are green.
+- Production build, zero-warning lint over 851 files, 334-plan audit, diff
+  hygiene, and the complete provider-disabled suite pass. The suite reports 331
+  files / 3,006 tests passed with 19 files / 55 intended live skips. Pre/post
+  browser inventory is unchanged and contains no AuraCall-managed profile;
+  exact-SHA CI remains.

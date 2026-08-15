@@ -19828,4 +19828,9 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
 - The complete 227-test HTTP adapter file, raw SSE assertions, installed OpenAI
   SDK iteration, scoped authorization, specialized/bundled skill contracts,
   typecheck, strict source/script/test lint, and the scoped-key SDK smoke pass.
-  Full suite, build, and exact-SHA CI remain before acceptance.
+  Production build, full zero-warning lint over 851 files, and the 334-plan
+  audit also pass.
+- The complete provider-disabled suite passes 331 files / 3,006 tests with 19
+  files / 55 intended live skips. Browser process/listener inventory is
+  unchanged before and after the run, with no AuraCall-managed profile present.
+  Exact-SHA CI remains before acceptance.
