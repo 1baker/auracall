@@ -1,8 +1,8 @@
 # OpenAI-Compatible Chat Completions Streaming | 0333-2026-08-15
 
-State: OPEN
+State: CLOSED
 Lane: P01
-Plan version: 1
+Plan version: 2
 
 ## Goal
 
@@ -67,7 +67,7 @@ response runtime.
       response run; later `/v1/responses/{response_id}` readback remains valid.
 - [x] Existing non-streaming, auth, route-manifest, readiness, and complete
       provider-disabled tests remain green.
-- [ ] Typecheck, zero-warning lint, build, plan audit, CodeGraph sync, diff
+- [x] Typecheck, zero-warning lint, build, plan audit, CodeGraph sync, diff
       hygiene, and exact-SHA Ubuntu/macOS/Windows CI pass.
 
 ## Definition Of Done
@@ -111,4 +111,16 @@ machine-readable, and cross-platform CI accepts the exact implementation SHA.
   hygiene, and the complete provider-disabled suite pass. The suite reports 331
   files / 3,006 tests passed with 19 files / 55 intended live skips. Pre/post
   listener and process inventory is unchanged and contains no AuraCall-managed
-  browser profile. Exact-SHA CI remains the closing gate.
+  browser profile.
+- Two four-worker Windows acceptance runs exposed moving failures in unrelated
+  background-drain persistence and PTY rendering tests. Both dedicated
+  contracts passed; serializing the complete Windows Vitest suite removed the
+  cross-file contention while preserving its existing filesystem timeout.
+- Exact-SHA acceptance
+  [31911079470](https://github.com/1baker/auracall/actions/runs/31911079470)
+  passed at `9719bf8f65fb24fc4919ce09201aa29c77450c86` across Ubuntu 22/Node
+  22, Ubuntu 24/Node 24, macOS/Node 22, and `windows-latest`/Node 22. Every
+  host passed frozen install, runtime checking, zero-warning lint, maintained
+  PTY coverage, the complete provider-disabled suite, and real readiness smoke;
+  Ubuntu 22 also passed the production build. Plan 0333 and parent Plan 0064
+  close accepted.

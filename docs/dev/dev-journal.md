@@ -47603,3 +47603,18 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   files / 3,006 tests passed with 19 files / 55 intended live skips. Pre/post
   browser inventory is unchanged and contains no AuraCall-managed profile;
   exact-SHA CI remains.
+
+## 2026-08-15 | Plans 0333 and 0064 close on streaming acceptance
+
+- Two four-worker Windows exact-SHA attempts exposed different failures in
+  pre-existing background-drain persistence and PTY rendering tests while the
+  dedicated contracts and all other hosts passed. This identified suite-level
+  Windows contention rather than a streaming regression.
+- Windows full-suite execution is now serialized while retaining its bounded
+  filesystem timeout; Ubuntu and macOS keep their existing concurrency.
+- Exact-SHA dispatch
+  [31911079470](https://github.com/1baker/auracall/actions/runs/31911079470)
+  passed at `9719bf8f65fb24fc4919ce09201aa29c77450c86` across Ubuntu 22/Node
+  22, Ubuntu 24/Node 24, macOS/Node 22, and Windows/Node 22.
+- Plan 0333 closes with every streaming criterion proven. That satisfies Plan
+  0064's final remaining criterion, so the parent plan closes accepted too.

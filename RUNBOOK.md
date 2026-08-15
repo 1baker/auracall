@@ -19834,3 +19834,23 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   files / 55 intended live skips. Browser process/listener inventory is
   unchanged before and after the run, with no AuraCall-managed profile present.
   Exact-SHA CI remains before acceptance.
+
+## Turn 429 | 2026-08-15
+
+- Two exact-SHA runs with four Windows Vitest workers exposed moving failures
+  in unrelated background-drain persistence and PTY rendering tests. The
+  dedicated PTY stage and focused tests passed, identifying cross-file Windows
+  contention rather than a streaming contract defect.
+- CI now retains the bounded Windows filesystem timeout and runs the complete
+  Windows Vitest suite with one worker. Ubuntu and macOS concurrency is
+  unchanged.
+- Exact-SHA acceptance dispatch
+  [31911079470](https://github.com/1baker/auracall/actions/runs/31911079470)
+  passed at `9719bf8f65fb24fc4919ce09201aa29c77450c86`. Ubuntu 22/Node 22,
+  Ubuntu 24/Node 24, macOS/Node 22, and `windows-latest`/Node 22 all passed
+  frozen install, runtime checking, zero-warning lint, maintained PTY coverage,
+  the complete provider-disabled suite, and real readiness smoke; Ubuntu 22
+  also passed the production build.
+- Plan 0333 closes accepted. Its streaming proof satisfies Plan 0064's final
+  criterion, so the parent OpenAI agent API and semantic-selector plan also
+  closes accepted.

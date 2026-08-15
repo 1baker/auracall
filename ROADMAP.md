@@ -7,12 +7,13 @@
 Status: active
 Lane: P01
 
-- Active OpenAI-compatible chat completions streaming:
+- Closed accepted OpenAI-compatible chat completions streaming:
   [docs/dev/plans/0333-2026-08-15-chat-completions-streaming.md](docs/dev/plans/0333-2026-08-15-chat-completions-streaming.md)
-  Current state: non-streaming calls already use one durable configured-agent
-  response path. This slice adds standards-compatible SSE projection, bounded
-  recovery errors, SDK proof, and disconnect-safe durable execution without
-  claiming unavailable provider token deltas.
+  Current state: JSON and SSE calls share one authorized durable
+  configured-agent response path. Raw-wire and official SDK proofs cover
+  settled content, optional usage, recovery errors, and disconnect-safe
+  execution; exact-SHA CI passes across Ubuntu, macOS, and Windows. Parent Plan
+  0064 closes accepted.
 
 - Closed accepted native Gemini semantic model selector execution:
   [docs/dev/plans/0332-2026-08-15-native-gemini-semantic-model-selectors.md](docs/dev/plans/0332-2026-08-15-native-gemini-semantic-model-selectors.md)
@@ -20,7 +21,7 @@ Lane: P01
   service/adapter path, preserve model and attachment inputs, and fail closed
   unless the requested current picker row is verified before prompt insertion.
   Provider-free local gates and exact-SHA CI pass across Ubuntu, macOS, and
-  Windows. Parent Plan 0064 remains open for streaming API completion.
+  Windows. Parent Plan 0064 is now closed by Plan 0333 streaming acceptance.
 
 - Closed accepted Grok semantic model selector execution:
   [docs/dev/plans/0331-2026-08-15-grok-semantic-model-selectors.md](docs/dev/plans/0331-2026-08-15-grok-semantic-model-selectors.md)
@@ -2538,16 +2539,15 @@ Current State:
     fields
   - semantic selectors are the stable default posture; exact provider versions
     remain compatibility escape hatches
-  - ChatGPT semantic selectors now execute through current browser model and
-    thinking controls; Grok/Gemini semantic execution remains the next provider
-    follow-through
+  - ChatGPT, Grok, and Gemini semantic selectors execute through current
+    adapter-owned model controls with provider-free fail-closed coverage
   - local API and MCP tools can now configure agents and teams without
     hand-editing the user config file
   - optional scoped API-key policy now protects `/v1/*` routes when configured
-  - non-streaming `/v1/chat/completions` now adapts OpenAI-style chat requests
-    into the same configured-agent `/v1/responses` runtime path and drains
-    synchronously before returning; streaming remains deferred until basic
-    client dogfooding is proven
+  - JSON and SSE `/v1/chat/completions` calls adapt OpenAI-style chat requests
+    into the same configured-agent `/v1/responses` runtime path; streaming
+    retains durable recovery authority and passes official SDK plus exact-SHA
+    cross-platform acceptance
 - Agent tenant/binding semantics are now closed in
   [docs/dev/plans/0076-2026-05-28-agent-tenant-binding-semantics.md](docs/dev/plans/0076-2026-05-28-agent-tenant-binding-semantics.md):
   - agent identity should be service plus tenant plus role, while

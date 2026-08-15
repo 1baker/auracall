@@ -22108,3 +22108,13 @@ browser-stage lifecycle observability, not transcript truncation.
 - Client transport lifetime must not own execution lifetime. A broken or
   aborted stream stops writes only; the single host-owned drain continues and
   later `/v1/responses/{response_id}` readback remains authoritative.
+
+## 2026-08-15 | Serialize the complete Windows suite when failures move across subsystems
+
+- A larger per-test filesystem timeout does not remove cross-file contention.
+  Consecutive four-worker Windows runs failed in different background-drain,
+  persistence, and PTY assertions while their focused contracts passed.
+- Keep the bounded Windows filesystem timeout, but set the complete Windows
+  Vitest run to one worker. Preserve normal concurrency on Ubuntu and macOS.
+- Accept the change only on an exact SHA after every host passes the maintained
+  PTY contract, complete provider-disabled suite, and readiness smoke.

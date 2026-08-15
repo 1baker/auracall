@@ -1,6 +1,6 @@
 # OpenAI Agent API and Semantic Model Selectors
 
-State: OPEN
+State: CLOSED
 Date: 2026-05-10
 
 ## Context
@@ -125,9 +125,7 @@ Implemented:
   available for privileged operators that explicitly need the full one-time
   secret-bearing setup response.
 
-Remaining:
-
-- exact-SHA cross-platform acceptance for the streaming compatibility slice
+Remaining: none.
 
 ## Acceptance Criteria
 
@@ -165,8 +163,6 @@ Remaining:
 
 ## Next Work
 
-- Accept the streaming compatibility slice on the exact implementation SHA,
-  then close this parent plan if its complete criteria remain proven.
 - Add first-class batch retry/cancel/priority controls once response-batch
   dogfooding shows the minimal status contract is stable.
 - Ensure `/v1/responses`, `/v1/chat/completions`, `/v1/response-batches`, and
@@ -175,3 +171,15 @@ Remaining:
   conversation ids, and caller evidence.
 - Promote the generic AuraCall skills into the shared agent-skill source of
   truth after their repo-local versions prove useful.
+
+## Closure Evidence
+
+- Plan 0333 proves OpenAI SDK-compatible streaming chat completions over the
+  same authorized durable response authority as non-streaming calls, including
+  usage, structured recovery errors, and disconnect-safe execution.
+- Exact-SHA acceptance
+  [31911079470](https://github.com/1baker/auracall/actions/runs/31911079470)
+  passed at `9719bf8f65fb24fc4919ce09201aa29c77450c86` across Ubuntu 22/Node
+  22, Ubuntu 24/Node 24, macOS/Node 22, and `windows-latest`/Node 22.
+- All acceptance criteria above remain implemented and provider-free local
+  validation passes. Plan 0064 therefore closes accepted.
