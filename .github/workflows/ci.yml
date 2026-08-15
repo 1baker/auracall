@@ -23,5 +23,6 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm run lint
       - run: pnpm run test
+      - run: pnpm run smoke:dashboard-session-readiness
       - run: pnpm run build
         if: matrix.os == 'ubuntu-latest'

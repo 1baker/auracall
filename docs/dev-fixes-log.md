@@ -1,3 +1,10 @@
+- 2026-08-15: A one-off real-CLI receipt does not protect a cross-surface
+  readiness contract. Keep unit/schema tests, but also own one source-runtime
+  smoke that starts real ready and scoped-only servers, invokes actual CLI and
+  MCP stdio entrypoints, verifies strict failure semantics, and runs in the CI
+  OS matrix. Use ephemeral loopback ports, synthetic keys, sanitized provider
+  environment, and an isolated temporary AuraCall home removed in `finally`.
+
 - 2026-08-15: Browser-only readiness warnings are too late for deployment
   automation. Project the running server's existing non-secret `/status.auth`
   contract through the shared CLI/MCP status summary, retain nullable `unknown`

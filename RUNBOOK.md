@@ -1,5 +1,29 @@
 # RUNBOOK
 
+## Turn 495 | 2026-08-15
+
+- Opened Plan 0326 because Plan 0325's manual real-CLI receipt is not a durable
+  repository or CI regression, while the existing installed-runtime MCP smoke
+  targets a different scheduler contract.
+- Add one source-runtime smoke using an isolated temporary AuraCall home,
+  ephemeral loopback servers, actual CLI subprocesses, and actual MCP stdio for
+  externally routed ready and scoped-only key sets. Require cleanup in all
+  paths and run the command across the GitHub Actions OS matrix.
+- Critical path remains root with no parallel workers. This provider-free slice
+  may change one smoke, package/CI wiring, focused tests, and current docs, but
+  it will not touch active config, services, ingress, browsers, providers, or
+  keys.
+- Added the source-runtime smoke with synthetic ready/scoped-only auth state,
+  real ephemeral HTTP servers, actual CLI subprocesses, MCP stdio, exact strict
+  success/failure assertions, and cleanup in all paths. Package and CI wiring
+  run it across Ubuntu, macOS, and Windows.
+- Four focused files passed 24 tests; the isolated provider-disabled suite
+  passed 2,954 tests with 65 expected skips across 349 files. Typecheck,
+  zero-warning lint across 848 files, production build, 327-plan audit,
+  CodeGraph sync/affected analysis, real smoke, and diff hygiene passed. Plan
+  0326 closes accepted without active config, service, ingress, browser,
+  provider, or key mutation.
+
 ## Turn 494 | 2026-08-15
 
 - Opened Plan 0325 after Plan 0324 made the running server's dashboard-session

@@ -7,6 +7,11 @@
 Status: active
 Lane: P01
 
+- Closed accepted dashboard-session readiness end-to-end smoke:
+  [docs/dev/plans/0326-2026-08-15-dashboard-session-readiness-smoke.md](docs/dev/plans/0326-2026-08-15-dashboard-session-readiness-smoke.md)
+  A source-runtime CI command proves ready and scoped-only behavior across real
+  HTTP, CLI, and MCP surfaces with isolated state and cleanup.
+
 - Closed accepted API-status dashboard-session readiness automation parity:
   [docs/dev/plans/0325-2026-08-15-api-status-dashboard-session-readiness.md](docs/dev/plans/0325-2026-08-15-api-status-dashboard-session-readiness.md)
   CLI and MCP status project the running server's non-secret readiness and

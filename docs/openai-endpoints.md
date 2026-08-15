@@ -1095,6 +1095,9 @@ auracall api status --port 8080
 # session credential path. False or unknown readiness exits nonzero.
 auracall api status --port 8080 --expect-dashboard-session-ready
 
+# Provider-free source-runtime parity across real HTTP, CLI, and MCP processes
+pnpm run smoke:dashboard-session-readiness
+
 curl -s http://127.0.0.1:8080/v1/responses \
   -H 'Content-Type: application/json' \
   -d '{"model":"gpt-5.2","input":"Reply exactly with: local api smoke"}'

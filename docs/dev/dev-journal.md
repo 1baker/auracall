@@ -1,3 +1,20 @@
+## 2026-08-15 | Plan 0326 dashboard-session readiness smoke
+
+- Opened a bounded successor because readiness is implemented across HTTP,
+  CLI, and MCP but its real-process proof is still a one-off receipt.
+- Add a source-runtime, provider-free, isolated smoke for ready and scoped-only
+  deployments and run it in the cross-platform CI matrix.
+- The new command starts real ephemeral servers, invokes the actual source CLI
+  and MCP stdio entrypoints, proves strict success/failure for ready and
+  scoped-only synthetic key sets, and cleans up its temporary home in all
+  paths. GitHub Actions runs it on Ubuntu, macOS, and Windows.
+- Four focused files passed 24 tests; the isolated provider-disabled suite
+  passed 2,954 tests with 65 expected skips across 349 files. Typecheck,
+  zero-warning lint across 848 files, production build, 327-plan audit,
+  current CodeGraph sync/affected analysis, real smoke, and diff hygiene
+  passed. Plan 0326 is CLOSED without active config, service, ingress, browser,
+  provider, or key effects.
+
 ## 2026-08-15 | Plan 0325 API-status dashboard-session readiness
 
 - Opened a bounded successor because `/status.auth`, startup, and browser gates

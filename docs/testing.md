@@ -11,10 +11,13 @@
   `pnpm exec vitest run tests/cli/apiStatusCommand.test.ts tests/mcp.apiStatus.test.ts tests/mcp.schema.test.ts tests/mcp.apiOpsBrowserStatus.test.ts`.
   It proves nullable older-server projection, complete non-secret auth readback,
   CLI/MCP human and structured output, and strict expectation failures for
-  false or unknown readiness. Command registration can be checked with
-  `auracall api status --help`; a fixture `/status` server should return exit 0
-  for explicit true and exit 1 for false under
-  `--expect-dashboard-session-ready`.
+  false or unknown readiness. Run
+  `pnpm run smoke:dashboard-session-readiness` for the durable end-to-end proof:
+  it creates an isolated temporary AuraCall home, starts real ready and
+  scoped-only externally routed servers on ephemeral loopback ports, exercises
+  actual source CLI and MCP stdio processes, proves strict success/failure, and
+  removes the temporary home in `finally`. GitHub Actions runs this provider-free
+  smoke on Ubuntu, macOS, and Windows.
 
 - Provider-free runtime work must bracket broad `pnpm test` runs with exact
   managed-browser process/port checks or set an isolated AuraCall home. A

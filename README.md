@@ -188,6 +188,8 @@ xdg-open http://auracall.localhost/dashboard
 # credential submission. Add the key to ~/.auracall/api.env and restart the API.
 # Deployment automation can require the running service to prove readiness:
 auracall api status --expect-dashboard-session-ready
+# Repository/CI end-to-end proof uses isolated state and synthetic keys:
+pnpm run smoke:dashboard-session-readiness
 
 # Explicitly allow a non-loopback bind only when you mean it
 auracall api serve --host 0.0.0.0 --listen-public --port 8080
