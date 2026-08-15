@@ -7,6 +7,14 @@
 Status: active
 Lane: P01
 
+- Active OpenAI agent API plan reconciliation:
+  [docs/dev/plans/0337-2026-08-15-openai-agent-api-plan-reconciliation.md](docs/dev/plans/0337-2026-08-15-openai-agent-api-plan-reconciliation.md)
+  Current state: parent Plan 0064 is accepted, but its follow-on ledger still
+  describes delivered batch controls as future work and the informational plan
+  index still calls the closed parent active. This slice maps every criterion
+  to current evidence and reconciles those ownership records without changing
+  runtime behavior.
+
 - Closed accepted durable response-batch priority:
   [docs/dev/plans/0336-2026-08-15-durable-response-batch-priority.md](docs/dev/plans/0336-2026-08-15-durable-response-batch-priority.md)
   Current state: durable closed-world tiers, starvation-bounded aging,

@@ -47705,3 +47705,12 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   passed at `cb557d23a9a9aae02384d877c8bafe4e85061586` across Ubuntu 22/Node
   22, Ubuntu 24/Node 24, macOS/Node 22, and serialized Windows/Node 22.
   Plan 0336 closes accepted.
+
+## 2026-08-15 | Plan 0337 opens Plan 0064 completion reconciliation
+
+- A bounded authority audit found Plan 0064's terminal state is sound while
+  its `Next Work` and `docs/dev/plan-index.md` references lag accepted successor
+  work.
+- The slice will prove each parent criterion from current source/tests and
+  durable CI, then classify batch controls as delivered, archive work as Plan
+  0066-owned, and external skill promotion as a separate non-blocking decision.

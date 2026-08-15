@@ -19945,3 +19945,13 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   passed at `cb557d23a9a9aae02384d877c8bafe4e85061586` across Ubuntu 22/Node
   22, Ubuntu 24/Node 24, macOS/Node 22, and serialized Windows/Node 22.
   Plan 0336 closes accepted.
+
+## Turn 433 | 2026-08-15
+
+- Plan 0064 remains correctly closed, but its follow-on ledger still names
+  response-batch cancellation, retry, and priority as future work after Plans
+  0334-0336 delivered and accepted those controls.
+- Plan 0337 will map every parent acceptance criterion to current executable
+  evidence, preserve open searchable-archive work under Plan 0066, classify
+  shared-skill promotion as separately owned, and remove the closed parent from
+  the informational active-plan list without changing runtime behavior.
