@@ -36,6 +36,11 @@
   a recursive temp cleanup susceptible to transient `ENOTEMPTY`. The narrow
   harness repair keeps every assertion, gives those tests 15 seconds, and uses
   `maxRetries`/`retryDelay` only for cleanup. Focused regression tests pass.
+- Acceptance dispatch `31901348411` is green at exact implementation SHA
+  `a51735bfeb6937be52ece541d4fd24e1bbfe9df5`. Ubuntu 22/24, macOS 22, and
+  `windows-latest`/Node 22 all passed install, checker, zero-warning lint, all 9
+  PTY cases, the complete suite, and real readiness smoke. The maintained PTY
+  runtime and current Windows runner are now accepted; Plan 0330 closes.
 
 ## 2026-08-15 | Plan 0329 native Windows complete-suite portability
 

@@ -34,6 +34,11 @@
   SQLite/filesystem tests whose five-second default was too tight under matrix
   load plus cleanup without retry. Their assertions are unchanged; only a
   15-second test bound and Windows-safe recursive cleanup retries were added.
+- Acceptance dispatch `31901348411` passed at exact SHA `a51735bf` across
+  Ubuntu 22/24, macOS 22, and `windows-latest`/Node 22. Every job passed frozen
+  install, the executable checker, zero-warning lint, all 9 PTY cases, the
+  complete provider-disabled suite, and real readiness smoke; Ubuntu 22 also
+  passed the production build. Plan 0330 is closed accepted.
 
 ## Turn 498 | 2026-08-15
 

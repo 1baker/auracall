@@ -1,8 +1,8 @@
 # Maintained Cross-Platform PTY Runtime | 0330-2026-08-15
 
-State: OPEN
+State: CLOSED
 Lane: P01
-Plan version: 4
+Plan version: 5
 
 ## Goal
 
@@ -52,18 +52,18 @@ cross-platform CI contract on supported Node versions.
 
 ## Acceptance Criteria
 
-- [ ] `package.json` and the lockfile contain the maintained PTY package only;
+- [x] `package.json` and the lockfile contain the maintained PTY package only;
       the legacy package, local patch, fallback imports, and ambient module
       declarations are gone.
-- [ ] One typed shared helper owns PTY loading and portable availability, with
+- [x] One typed shared helper owns PTY loading and portable availability, with
       no unconditional Linux exclusion.
-- [ ] Focused PTY tests prove spawn/data, resize, interrupt, TUI interaction,
+- [x] Focused PTY tests prove spawn/data, resize, interrupt, TUI interaction,
       and exit behavior without provider traffic.
-- [ ] CI and its deterministic checker require the focused PTY contract on
+- [x] CI and its deterministic checker require the focused PTY contract on
       every configured operating system and use `windows-latest` successfully.
-- [ ] Typecheck, zero-warning lint, focused PTY tests, complete provider-
+- [x] Typecheck, zero-warning lint, focused PTY tests, complete provider-
       disabled suite, build, plan audit, CodeGraph sync, and diff hygiene pass.
-- [ ] Current-SHA CI passes Ubuntu 22, Ubuntu 24, macOS 22, and current Windows
+- [x] Current-SHA CI passes Ubuntu 22, Ubuntu 24, macOS 22, and current Windows
       with the maintained PTY contract and existing readiness smoke green.
 
 ## Definition Of Done
@@ -126,4 +126,11 @@ current-SHA CI dispatch proves the maintained runtime on every configured host.
   five-second default under matrix load and one temp-tree cleanup without
   Windows retry semantics. Those tests now retain their assertions with a
   bounded 15-second allowance and retry only recursive cleanup; repaired
-  focused tests pass locally. A new current-SHA matrix remains the closing gate.
+  focused tests passed locally before the final current-SHA matrix.
+- Acceptance dispatch `31901348411` passed at exact implementation SHA
+  `a51735bfeb6937be52ece541d4fd24e1bbfe9df5`. Ubuntu 22 job
+  `95052507237`, Ubuntu 24 job `95052507292`, macOS 22 job `95052507293`,
+  and `windows-latest`/Node 22 job `95052507291` all passed frozen install,
+  the executable checker, zero-warning lint, all 9 PTY cases, the complete
+  provider-disabled suite, and real readiness smoke. The Ubuntu 22 lane also
+  passed the production build. Plan 0330 closes accepted.
