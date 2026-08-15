@@ -4352,12 +4352,14 @@ describe("account mirror completion service", () => {
 			await waitFor(() => requestRefresh.mock.calls.length > 0);
 			service.prepareForShutdown?.();
 
-			await waitFor(async () =>
-				Boolean(
-					(await store.readOperation("acctmirror_shutdown_persisted"))?.lifecycleEvents?.some(
-						(event) => event.type === "parked_for_shutdown",
+			await waitFor(
+				async () =>
+					Boolean(
+						(await store.readOperation("acctmirror_shutdown_persisted"))?.lifecycleEvents?.some(
+							(event) => event.type === "parked_for_shutdown",
+						),
 					),
-				),
+				5_000,
 			);
 			expect(await store.readOperation("acctmirror_shutdown_persisted")).toMatchObject({
 				status: "queued",

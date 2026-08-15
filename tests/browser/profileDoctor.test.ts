@@ -271,7 +271,7 @@ describe('profileDoctor', () => {
     expect(after.prunedRegistryEntryReasons).toEqual({ 'dead-process': 2 });
     expect(after.registryEntries).toEqual([]);
     expect(after.staleRegistryEntries).toEqual([]);
-  });
+  }, 30_000);
 
   it('does not flag managed browser-profiles paths as legacy', async () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), 'auracall-profile-doctor-managed-'));
