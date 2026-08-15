@@ -9,14 +9,13 @@
   bypass. It also retains the Windows 2022 native-build substrate and the Node
   24-compatible pnpm setup action. The workflow retains `workflow_dispatch` so
   the exact matrix can be reproduced when a fork does not enqueue a push event.
-  The full suite runs on Ubuntu and macOS; native Windows acceptance is bounded
-  to frozen install, the runtime checker, zero-warning lint, focused contract
-  and runner-persistence tests, plus the real dashboard-session readiness smoke.
+  The full provider-disabled suite runs on Ubuntu, macOS, and native Windows.
   Semantic colon-delimited runner ids are stored under tagged reversible
   base64url-safe directory names while public ids and record JSON remain
   unchanged. Safe legacy raw-id directories remain readable and migrate after
   a successful encoded write. The real smoke is required on every configured
-  operating system; broader POSIX-only fixture normalization remains separate.
+  operating system. Platform-specific fixtures gate only the exact host
+  contract they require rather than substituting a focused Windows lane.
   Fixture coverage lives in `tests/scripts/ciRuntimeContract.test.ts`.
 
 - Trusted-local dashboard configuration and external-routing fail-closed

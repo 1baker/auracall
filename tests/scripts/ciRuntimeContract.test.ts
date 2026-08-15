@@ -78,18 +78,12 @@ describe('CI Node runtime contract', () => {
     expect(
       collectCiRuntimeContractErrors(
         currentPackage,
-        currentWorkflow.replace("if: matrix.os != 'windows-2022'", "if: matrix.os == 'ubuntu-latest'"),
-      ),
-    ).toContain('.github/workflows/ci.yml: full test suite must run on the supported Unix hosts');
-    expect(
-      collectCiRuntimeContractErrors(
-        currentPackage,
         currentWorkflow.replace(
-          'pnpm exec vitest run tests/scripts/ciRuntimeContract.test.ts tests/scripts/dashboardSessionReadinessSmoke.test.ts tests/runtime.runnersStore.test.ts tests/runtime.runnersControl.test.ts',
-          'pnpm run test',
+          'name: Run full test suite on every supported OS\n        run: pnpm run test',
+          "name: Run full test suite on every supported OS\n        if: matrix.os != 'windows-2022'\n        run: pnpm run test",
         ),
       ),
-    ).toContain('.github/workflows/ci.yml: Windows must run the focused runtime and runner-persistence tests');
+    ).toContain('.github/workflows/ci.yml: full test suite must run on every supported OS');
     expect(
       collectCiRuntimeContractErrors(
         currentPackage,

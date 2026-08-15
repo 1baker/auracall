@@ -30,12 +30,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm run check:ci-runtime
       - run: pnpm run lint
-      - name: Run full test suite on supported Unix hosts
-        if: matrix.os != 'windows-2022'
+      - name: Run full test suite on every supported OS
         run: pnpm run test
-      - name: Run Windows runtime-contract tests
-        if: matrix.os == 'windows-2022'
-        run: pnpm exec vitest run tests/scripts/ciRuntimeContract.test.ts tests/scripts/dashboardSessionReadinessSmoke.test.ts tests/runtime.runnersStore.test.ts tests/runtime.runnersControl.test.ts
       - name: Run real readiness smoke on every supported OS
         run: pnpm run smoke:dashboard-session-readiness
       - run: pnpm run build

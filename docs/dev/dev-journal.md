@@ -1,3 +1,15 @@
+## 2026-08-15 | Plan 0329 native Windows complete-suite portability
+
+- Opened the next bounded portability slice after Plan 0328 proved native
+  runner persistence and the real readiness smoke. The first gate is a
+  current-SHA complete Windows run because the prior inventory contains many
+  runner-path cascades that are now stale.
+- The prior run still identifies independent production and fixture classes:
+  semantic account/cache keys used as directories, native versus serialized
+  path assumptions, CRLF-exact text assertions, and host-specific browser or
+  process fixtures. CI will require the complete suite on Windows once these
+  causes are repaired; PTY dependency replacement remains separate.
+
 ## 2026-08-15 | Plan 0328 native Windows runner persistence
 
 - Opened the first native Windows portability successor after current CI logs

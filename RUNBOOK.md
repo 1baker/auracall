@@ -1,5 +1,18 @@
 # RUNBOOK
 
+## Turn 498 | 2026-08-15
+
+- Opened Plan 0329 to replace the focused native-Windows CI substitute with
+  the complete provider-disabled suite. Plan 0328 removed the runner-directory
+  blocker, so a current-SHA full run is the first required evidence.
+- The older full-suite log also proves independent remaining classes: unsafe
+  semantic account/cache directory keys, host-path and separator assumptions,
+  checkout-line-ending assertions, Linux/WSL and POSIX-process fixtures, and a
+  PTY case that detaches before its guard. Repair production portability and
+  portable fixtures; narrowly gate only truly host-specific contracts.
+- Critical path remains root with no parallel workers. PTY dependency
+  replacement and any provider/live behavior are outside this slice.
+
 ## Turn 497 | 2026-08-15
 
 - Opened Plan 0328 as the first native Windows portability successor. Dispatch
