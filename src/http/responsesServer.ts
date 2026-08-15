@@ -19,6 +19,14 @@ import {
 	type StaticHttpStatusRoutes,
 } from "./routeManifest.js";
 import {
+	clearDashboardSessionCookie,
+	createDashboardSessionCookie,
+	createDashboardSessionStore,
+	DASHBOARD_SESSION_TTL_MS,
+	readDashboardSessionCookie,
+	type DashboardSessionStore,
+} from "./dashboardSession.js";
+import {
 	findChromeProcessUsingUserDataDir,
 	isDevToolsResponsive,
 } from "../../packages/browser-service/src/processCheck.js";
@@ -757,6 +765,8 @@ export interface ApiAuthRuntimeStatus {
 interface ApiAuthContext {
 	policy: ApiAuthPolicy;
 	key: ApiAuthKeyPolicy | null;
+	authentication?: "dashboard_session";
+	sessionExpiresAt?: string;
 }
 
 type ApiAuthEnv = Record<string, string | undefined>;
@@ -1059,6 +1069,7 @@ export async function createResponsesHttpServer(
 	};
 	const apiAuthPolicy = readApiAuthPolicy(configuredRuntimeConfig, runtimeEnv);
 	const apiAuthStatus = createApiAuthRuntimeStatus(apiAuthPolicy, boundHost);
+	const dashboardSessionStore = createDashboardSessionStore<ApiAuthKeyPolicy>({ now });
 	const agentTeamConfigService = createAgentTeamConfigService({
 		activeConfig: configuredRuntimeConfig ?? null,
 		registryStore: deps.agentRegistryStore,
@@ -1680,6 +1691,15 @@ export async function createResponsesHttpServer(
 	server.on("request", async (req, res) => {
 		try {
 			const url = new URL(req.url ?? "/", "http://127.0.0.1");
+			if (matchesHttpRoute("dashboardSession", req.method, url.pathname)) {
+				handleDashboardSessionRequest(req, res, {
+					policy: apiAuthPolicy,
+					routes: operatorDashboardRoutes,
+					trustedLocal: apiAuthStatus.trustedLocalOperatorDashboard,
+					sessions: dashboardSessionStore,
+				});
+				return;
+			}
 			const apiAuthContext = authorizeApiRequest(
 				req,
 				apiAuthPolicy,
@@ -1687,6 +1707,7 @@ export async function createResponsesHttpServer(
 				{
 					routes: operatorDashboardRoutes,
 					trustedLocal: apiAuthStatus.trustedLocalOperatorDashboard,
+					sessions: dashboardSessionStore,
 				},
 			);
 			if (!apiAuthContext) {
@@ -4378,6 +4399,7 @@ export async function createResponsesHttpServer(
 		auth: apiAuthStatus,
 		async close() {
 			closed = true;
+			dashboardSessionStore.clear();
 			if (runnerHeartbeatTimer) {
 				clearTimeout(runnerHeartbeatTimer);
 				runnerHeartbeatTimer = null;
@@ -4913,15 +4935,15 @@ export function formatApiStartupPosture(input: {
 
 	const authSummary =
 		input.auth.keyCount === 0
-			? "API authentication is required for /v1/*, but no API keys are loaded"
-			: `API authentication is enabled for /v1/* (${input.auth.keyCount} API ${input.auth.keyCount === 1 ? "key" : "keys"} loaded${input.auth.scoped ? "; scoped keys present" : ""})`;
+			? "API authentication is required for /v1/* and POST /status, but no API keys are loaded"
+			: `API authentication is enabled for /v1/* and POST /status (${input.auth.keyCount} API ${input.auth.keyCount === 1 ? "key" : "keys"} loaded${input.auth.scoped ? "; scoped keys present" : ""})`;
 	const bindingSummary = localOnly
 		? "bound to loopback"
 		: `${input.host} is not loopback; use trusted ingress for this development server`;
 	const operatorDashboardSummary = input.auth.trustedLocalOperatorDashboard
 		? "; trusted loopback dashboard requests use local operator authority"
 		: "";
-	return `${localOnly ? "Posture" : "Warning"}: ${authSummary}; ${bindingSummary}${operatorDashboardSummary}; /status remains observable without authentication.`;
+	return `${localOnly ? "Posture" : "Warning"}: ${authSummary}; ${bindingSummary}${operatorDashboardSummary}; GET /status remains observable without authentication.`;
 }
 
 function createHttpModelListResponse(catalog: {
@@ -7554,9 +7576,12 @@ function authorizeApiRequest(
 	operatorDashboard: {
 		routes: OperatorDashboardRoutes;
 		trustedLocal: boolean;
+		sessions: DashboardSessionStore<ApiAuthKeyPolicy>;
 	},
 ): ApiAuthContext | null {
-	if (!policy.required || !pathname.startsWith("/v1/")) {
+	const protectedRoute =
+		pathname.startsWith("/v1/") || matchesHttpRoute("statusControl", req.method, pathname);
+	if (!policy.required || !protectedRoute) {
 		return { policy, key: null };
 	}
 	if (
@@ -7571,9 +7596,161 @@ function authorizeApiRequest(
 	const token =
 		readBearerToken(req.headers.authorization) ??
 		readSingleHeader(req.headers["x-auracall-api-key"]);
-	if (!token) return null;
-	const key = policy.keys.find((candidate) => candidate.secret === token) ?? null;
-	return key ? { policy, key } : null;
+	if (token) {
+		const key = policy.keys.find((candidate) => candidate.secret === token) ?? null;
+		if (key) return { policy, key };
+	}
+	const session = operatorDashboard.sessions.read(
+		readDashboardSessionCookie(req.headers.cookie),
+	);
+	if (!session) return null;
+	if (!isSafeDashboardSessionMethod(req.method) && !hasSameOriginBrowserOrigin(req)) {
+		return null;
+	}
+	return {
+		policy,
+		key: session.principal,
+		authentication: "dashboard_session",
+		sessionExpiresAt: session.expiresAt,
+	};
+}
+
+function handleDashboardSessionRequest(
+	req: http.IncomingMessage,
+	res: http.ServerResponse,
+	input: {
+		policy: ApiAuthPolicy;
+		routes: OperatorDashboardRoutes;
+		trustedLocal: boolean;
+		sessions: DashboardSessionStore<ApiAuthKeyPolicy>;
+	},
+): void {
+	const cookieToken = readDashboardSessionCookie(req.headers.cookie);
+	const session = input.sessions.read(cookieToken);
+	const trustedLocal = canAuthorizeTrustedLocalOperatorDashboard({
+		enabled: input.trustedLocal,
+		remoteAddress: req.socket.remoteAddress,
+		browserContextMatches: isOperatorDashboardApiRequest(req, input.routes),
+	});
+
+	if (req.method === "GET") {
+		const mode = !input.policy.required
+			? "auth_disabled"
+			: trustedLocal
+				? "trusted_local"
+				: session
+					? "session"
+					: "unauthenticated";
+		sendJson(
+			res,
+			200,
+			{
+				object: "dashboard_session",
+				authenticated: mode !== "unauthenticated",
+				mode,
+				expiresAt: mode === "session" ? session?.expiresAt ?? null : null,
+				ttlSeconds: DASHBOARD_SESSION_TTL_MS / 1000,
+			},
+			{ "Cache-Control": "no-store" },
+		);
+		return;
+	}
+
+	if (req.method === "POST") {
+		if (!isSecureSameOriginDashboardRequest(req, input.routes)) {
+			sendJson(res, 403, {
+				error: {
+					message: "Dashboard session login requires a same-origin HTTPS dashboard.",
+					type: "dashboard_session_transport_error",
+				},
+			} satisfies HttpErrorPayload);
+			return;
+		}
+		const bearerToken = readBearerToken(req.headers.authorization);
+		const key = bearerToken
+			? input.policy.keys.find((candidate) => candidate.secret === bearerToken) ?? null
+			: null;
+		if (!input.policy.required || !key || !isUnscopedOperatorApiKey(key)) {
+			sendJson(res, 401, {
+				error: {
+					message: "Missing or invalid AuraCall operator API key.",
+					type: "authentication_error",
+				},
+			} satisfies HttpErrorPayload);
+			return;
+		}
+		const created = input.sessions.create(key);
+		sendJson(
+			res,
+			201,
+			{
+				object: "dashboard_session",
+				authenticated: true,
+				mode: "session",
+				expiresAt: created.expiresAt,
+				ttlSeconds: DASHBOARD_SESSION_TTL_MS / 1000,
+			},
+			{
+				"Cache-Control": "no-store",
+				"Set-Cookie": createDashboardSessionCookie(created.token),
+			},
+		);
+		return;
+	}
+
+	if (!hasSecureSameOriginBrowserOrigin(req)) {
+		sendJson(res, 403, {
+			error: {
+				message: "Dashboard session logout requires a same-origin HTTPS dashboard.",
+				type: "dashboard_session_transport_error",
+			},
+		} satisfies HttpErrorPayload);
+		return;
+	}
+	input.sessions.revoke(cookieToken);
+	sendJson(
+		res,
+		200,
+		{
+			object: "dashboard_session",
+			authenticated: false,
+			mode: "unauthenticated",
+			expiresAt: null,
+			ttlSeconds: DASHBOARD_SESSION_TTL_MS / 1000,
+		},
+		{
+			"Cache-Control": "no-store",
+			"Set-Cookie": clearDashboardSessionCookie(),
+		},
+	);
+}
+
+function isUnscopedOperatorApiKey(key: ApiAuthKeyPolicy): boolean {
+	return [key.agents, key.teams, key.services, key.runtimeProfiles].every(
+		(scope) => !scope || scope.length === 0,
+	);
+}
+
+function isSafeDashboardSessionMethod(method: string | undefined): boolean {
+	return method === "GET" || method === "HEAD";
+}
+
+function hasSameOriginBrowserOrigin(req: http.IncomingMessage): boolean {
+	const host = readSingleHeader(req.headers.host);
+	const origin = parseRequestHeaderUrl(req.headers.origin);
+	return Boolean(host && origin && sameHost(origin.host, host));
+}
+
+function hasSecureSameOriginBrowserOrigin(req: http.IncomingMessage): boolean {
+	const origin = parseRequestHeaderUrl(req.headers.origin);
+	return origin?.protocol === "https:" && hasSameOriginBrowserOrigin(req);
+}
+
+function isSecureSameOriginDashboardRequest(
+	req: http.IncomingMessage,
+	routes: OperatorDashboardRoutes,
+): boolean {
+	return hasSecureSameOriginBrowserOrigin(req) && isOperatorDashboardApiRequest(req, routes);
 }
 
 export function isLoopbackNetworkAddress(address: string | undefined): boolean {
@@ -11018,13 +11195,61 @@ function createOperatorBrowserDashboardHtml(
       background: #0b0c0f;
       object-fit: contain;
     }
-    .severity-healthy { color: var(--accent); }
-    .severity-backpressured, .severity-paused { color: var(--warn); }
-    .severity-attention-needed { color: var(--bad); }
-  </style>
-</head>
-<body>
-  <main>
+	    .severity-healthy { color: var(--accent); }
+	    .severity-backpressured, .severity-paused { color: var(--warn); }
+	    .severity-attention-needed { color: var(--bad); }
+	    [hidden] { display: none !important; }
+	    .dashboard-auth-gate {
+	      min-height: 100vh;
+	      display: grid;
+	      place-items: center;
+	      padding: 24px;
+	    }
+	    .dashboard-auth-card {
+	      width: min(460px, 100%);
+	      display: grid;
+	      gap: 12px;
+	      padding: 24px;
+	      border: 1px solid var(--line);
+	      border-radius: 10px;
+	      background: var(--panel);
+	    }
+	    .dashboard-auth-card h1 { margin: 0; }
+	    .dashboard-auth-card form { display: grid; gap: 10px; }
+	    .dashboard-auth-error { color: var(--bad); }
+	    .dashboard-session-control {
+	      position: fixed;
+	      right: 12px;
+	      bottom: 12px;
+	      z-index: 20;
+	      display: flex;
+	      gap: 8px;
+	      align-items: center;
+	      padding: 7px 9px;
+	      border: 1px solid var(--accent);
+	      border-radius: 999px;
+	      background: #10211f;
+	    }
+	  </style>
+	</head>
+	<body>
+	  <div id="dashboardAuthGate" class="dashboard-auth-gate">
+	    <section class="dashboard-auth-card" aria-labelledby="dashboardAuthTitle">
+	      <h1 id="dashboardAuthTitle">Checking dashboard access...</h1>
+	      <p id="dashboardAuthDescription">AuraCall is checking for trusted-local or secure session authority.</p>
+	      <div id="dashboardAuthError" class="dashboard-auth-error" role="alert"></div>
+	      <form id="dashboardAuthForm" onsubmit="loginDashboard(event)" hidden>
+	        <label for="dashboardOperatorApiKey">Unscoped operator API key</label>
+	        <input id="dashboardOperatorApiKey" name="dashboardOperatorApiKey" type="password" autocomplete="off" spellcheck="false">
+	        <button id="dashboardLoginButton" class="primary" type="submit">Start 15-minute secure session</button>
+	      </form>
+	    </section>
+	  </div>
+	  <div id="dashboardSessionControl" class="dashboard-session-control" hidden>
+	    <span id="dashboardSessionExpiry"></span>
+	    <button type="button" onclick="logoutDashboard()">Sign out</button>
+	  </div>
+	  <main id="dashboardContent" hidden>
     <div class="top">
       <div>
         <h1>${pageTitle}</h1>
@@ -11488,8 +11713,11 @@ function createOperatorBrowserDashboardHtml(
   <script>
     const $ = (id) => document.getElementById(id);
     const asJson = (value) => JSON.stringify(value, null, 2);
-    const OPERATOR_DASHBOARD_ROUTES = ${JSON.stringify(routes)};
-    let OPERATOR_DASHBOARD_SERVICE_DISCOVERY = {};
+	    const OPERATOR_DASHBOARD_ROUTES = ${JSON.stringify(routes)};
+	    const DASHBOARD_SESSION_PATH = '/v1/dashboard/session';
+	    const DASHBOARD_SESSION_POLL_MS = 15000;
+	    let OPERATOR_DASHBOARD_SERVICE_DISCOVERY = {};
+	    let dashboardInitialized = false;
     const RECENT_SERVICE_EVENT_FILTER_STORAGE_KEY = 'auracall.opsBrowser.recentServiceEvents.filter';
     const RECENT_SERVICE_EVENT_SELECTED_STORAGE_KEY = 'auracall.opsBrowser.recentServiceEvents.selected';
     let recentServiceEventDetails = [];
@@ -16222,7 +16450,96 @@ function createOperatorBrowserDashboardHtml(
       }).join('<br>');
     }
 
-    $('refreshStatus').addEventListener('click', refreshStatus);
+	    async function readDashboardSession() {
+	      const response = await fetch(DASHBOARD_SESSION_PATH, {
+	        cache: 'no-store',
+	        credentials: 'same-origin',
+	      });
+	      const payload = await response.json().catch(() => null);
+	      if (!response.ok) throw new Error(payload?.error?.message || 'Dashboard session check failed with HTTP ' + response.status + '.');
+	      return payload;
+	    }
+
+	    function showDashboardSession(payload) {
+	      $('dashboardAuthGate').hidden = true;
+	      $('dashboardContent').hidden = false;
+	      const sessionMode = payload?.mode === 'session';
+	      $('dashboardSessionControl').hidden = !sessionMode;
+	      $('dashboardSessionExpiry').textContent = sessionMode && payload.expiresAt
+	        ? 'Secure session expires ' + new Date(payload.expiresAt).toLocaleString()
+	        : '';
+	      initializeDashboard();
+	    }
+
+	    function showDashboardLogin(message) {
+	      $('dashboardContent').hidden = true;
+	      $('dashboardSessionControl').hidden = true;
+	      $('dashboardAuthGate').hidden = false;
+	      $('dashboardAuthTitle').textContent = 'Sign in to AuraCall';
+	      $('dashboardAuthDescription').textContent = 'Enter an unscoped operator API key. AuraCall exchanges it for a 15-minute secure cookie and does not save the key in browser storage.';
+	      $('dashboardAuthError').textContent = message || '';
+	      $('dashboardAuthForm').hidden = false;
+	      const secureContext = window.location.protocol === 'https:';
+	      $('dashboardOperatorApiKey').disabled = !secureContext;
+	      $('dashboardLoginButton').disabled = !secureContext;
+	      if (!secureContext) {
+	        $('dashboardAuthError').textContent = 'Secure dashboard sessions require HTTPS. Use the loopback dashboard locally or open the configured HTTPS ingress.';
+	      }
+	    }
+
+	    async function checkDashboardSession() {
+	      try {
+	        const payload = await readDashboardSession();
+	        if (payload?.authenticated) showDashboardSession(payload);
+	        else showDashboardLogin('');
+	      } catch (error) {
+	        showDashboardLogin(String(error.message || error));
+	      }
+	    }
+
+	    async function loginDashboard(event) {
+	      event.preventDefault();
+	      const input = $('dashboardOperatorApiKey');
+	      const apiKey = input.value;
+	      input.value = '';
+	      $('dashboardLoginButton').disabled = true;
+	      $('dashboardAuthError').textContent = '';
+	      try {
+	        const response = await fetch(DASHBOARD_SESSION_PATH, {
+	          method: 'POST',
+	          credentials: 'same-origin',
+	          headers: { authorization: 'Bearer ' + apiKey },
+	        });
+	        const payload = await response.json().catch(() => null);
+	        if (!response.ok) throw new Error(payload?.error?.message || 'Dashboard login failed with HTTP ' + response.status + '.');
+	        showDashboardSession(payload);
+	      } catch (error) {
+	        showDashboardLogin(String(error.message || error));
+	      } finally {
+	        $('dashboardLoginButton').disabled = window.location.protocol !== 'https:';
+	      }
+	    }
+
+	    async function logoutDashboard() {
+	      try {
+	        const response = await fetch(DASHBOARD_SESSION_PATH, {
+	          method: 'DELETE',
+	          credentials: 'same-origin',
+	        });
+	        if (!response.ok) {
+	          const payload = await response.json().catch(() => null);
+	          throw new Error(payload?.error?.message || 'Dashboard logout failed with HTTP ' + response.status + '.');
+	        }
+	        showDashboardLogin('Session ended.');
+	      } catch (error) {
+	        $('dashboardAuthError').textContent = String(error.message || error);
+	      }
+	    }
+
+	    function initializeDashboard() {
+	      if (dashboardInitialized) return;
+	      dashboardInitialized = true;
+	    $('refreshStatus').addEventListener('click', refreshStatus);
     $('loadApiLogTail').addEventListener('click', loadApiLogTail);
     $('inspectMirrorCompletionById').addEventListener('click', inspectSelectedMirrorCompletion);
     $('pauseMirrorCompletion').addEventListener('click', () => controlMirrorCompletion('pause'));
@@ -16282,8 +16599,11 @@ function createOperatorBrowserDashboardHtml(
       void loadAgentChoices();
       void loadAgentConfigs();
     }
-    refreshStatus();
-  </script>
+	    refreshStatus();
+	    }
+	    void checkDashboardSession();
+	    window.setInterval(checkDashboardSession, DASHBOARD_SESSION_POLL_MS);
+	  </script>
 </body>
 </html>`;
 }

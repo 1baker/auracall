@@ -23,8 +23,8 @@ against a non-default AuraCall runtime profile:
 auracall --profile auracall-gemini-pro api serve --port 8080
 ```
 
-Non-loopback bind is blocked by default. To opt into an unauthenticated public
-bind intentionally:
+Non-loopback bind is blocked by default. To opt into a public bind
+intentionally:
 
 ```bash
 auracall api serve --host 0.0.0.0 --listen-public --port 8080
@@ -39,7 +39,11 @@ dashboard and base URLs remain service-discovery values. The list below calls
 out the compatibility and operator workflow surface in reference form.
 
 - `GET /status`
+- `POST /status`
 - `GET /status/recovery/{run_id}`
+- `GET /v1/dashboard/session`
+- `POST /v1/dashboard/session`
+- `DELETE /v1/dashboard/session`
 - `POST /v1/team-runs`
 - `GET /v1/team-runs/inspect`
 - `GET /v1/runtime-runs/inspect`
@@ -103,6 +107,13 @@ Current limits:
   authentication: no-key operator authority additionally requires a
   loopback-bound server and loopback TCP peer; every non-loopback bind requires
   a valid key, and forwarded client-address headers are ignored
+- non-loopback dashboards exchange an unscoped operator key only over a
+  same-origin HTTPS browser request for a 15-minute in-memory session. The
+  browser receives a host-only `HttpOnly; Secure; SameSite=Strict; Path=/`
+  cookie; neither the key nor session token appears in Web Storage, URLs, logs,
+  or response bodies. Expiry, logout, and API restart invalidate the session.
+  Scoped execution keys are rejected, and every unsafe cookie-authorized
+  request requires a matching browser `Origin`.
 - runtime-backed create/read with one bounded local execution pass for direct
   runs
   - direct browser-backed `/v1/responses` runs now execute through the same
@@ -616,6 +627,11 @@ Current limits:
   `GET /v1/config/agent-diagnostics` against the running service or MCP
   `api_key_diagnostics` against the env file to validate key scope metadata
   without exposing secret values.
+- `GET /v1/dashboard/session` reports only the current browser authorization
+  mode and bounded expiry. `POST /v1/dashboard/session` performs the HTTPS
+  unscoped-key exchange, and `DELETE /v1/dashboard/session` revokes the current
+  in-memory session and clears its cookie. These routes do not expose key ids,
+  scopes, API keys, or cookie tokens.
 - Agent-facing skills:
   - `skills/auracall-api-workflow/SKILL.md` covers scoped execution clients,
     single responses, batches, attachments, and polling
@@ -904,7 +920,7 @@ Current limits:
   `config_team_upsert`, and `config_team_delete`; list responses include
   effective registry/config source metadata, and mutation responses include
   `mutationTarget` plus `blockedReason` when a config overlay id is pinned
-- optional API-key auth for `/v1/*`; privileged control-plane routes require an
+- optional API-key auth for `/v1/*` and `POST /status`; privileged control-plane routes require an
   unscoped operator key for direct/non-loopback access when auth is enabled,
   while the built-in dashboard exception requires verified loopback bind/peer
   transport plus same-origin browser context
@@ -937,7 +953,8 @@ Current direct-run behavior:
   - `failed`
   - or still `in_progress` later if broader runner behavior is added in the
     future
-- optional API-key auth applies to `/v1/*`; `/status` remains observable
+- optional API-key auth applies to `/v1/*` and `POST /status`; `GET /status`
+  remains observable
 - non-streaming `POST /v1/chat/completions` adapts OpenAI-style messages to the
   durable response service; streaming remains unsupported
 

@@ -129,7 +129,8 @@ auracall features diff --target gemini --json
 auracall api serve
 
 # Optional local API key gate from ~/.auracall/config.json
-# api.auth.required=true protects /v1/* routes; /status remains observable.
+# api.auth.required=true protects /v1/* routes and POST /status;
+# GET /status remains observable.
 curl -H "Authorization: Bearer <key>" http://auracall.localhost/v1/models
 
 # Serve against a non-default AuraCall runtime profile
@@ -174,8 +175,12 @@ curl -s http://auracall.localhost/v1/response-batches \
 # Override with services.chatgpt.tenantLimits or
 # profiles.<name>.services.chatgpt.tenantLimits when a tenant needs a narrower budget.
 
-# Open the local read-only browser operator dashboard
-xdg-open http://auracall.localhost/ops/browser
+# Open the local operator dashboard. Loopback uses trusted-local authority.
+xdg-open http://auracall.localhost/dashboard
+
+# A non-loopback HTTPS dashboard prompts for an unscoped operator API key and
+# exchanges it for a 15-minute HttpOnly secure cookie. The key is not stored in
+# the browser; session expiry, API restart, or Sign out requires a new exchange.
 
 # Explicitly allow a non-loopback bind only when you mean it
 auracall api serve --host 0.0.0.0 --listen-public --port 8080

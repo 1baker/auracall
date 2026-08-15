@@ -491,6 +491,13 @@
         a fixture live-follow completion through that path and asserts the same
         contract through `auracall api ops-browser-status` and MCP
         `api_ops_browser_status`
+      - provider-free dashboard session authorization regression:
+        `pnpm exec vitest run tests/http.dashboardSession.test.ts tests/http.responsesServer.test.ts tests/http.routeManifest.test.ts tests/httpRouteManifestContract.test.ts tests/ux.operator.dashboardSession.test.ts -t "dashboard session|configured API keys|dashboard operator authority|route manifest|operator dashboard session UX"`;
+        it covers absolute expiry, revocation, malformed/unknown cookies,
+        unscoped-key exchange, secure cookie attributes, HTTPS/origin gates,
+        protected `POST /status`, bearer compatibility, React/debug UI gating,
+        and the absence of browser secret storage without provider or browser
+        access
       - local browser-backed smoke for provider bot-gate clear:
         `pnpm run smoke:ops-browser-provider-guard`; it seeds a synthetic
         Gemini `google.com/sorry` provider guard, opens `/ops/browser` with

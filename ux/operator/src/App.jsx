@@ -18,6 +18,8 @@ import {
   HeartPulse,
   KeyRound,
   ListFilter,
+  LockKeyhole,
+  LogOut,
   Menu,
   MessageSquareText,
   PackagePlus,
@@ -40,6 +42,8 @@ const STORAGE_KEY = "auracall.operatorUx.v1";
 const SEARCH_TABLE_STORAGE_KEY = "auracall.operatorUx.searchTable.v2";
 const SEARCH_VIEWS_STORAGE_KEY = "auracall.operatorUx.searchViews.v1";
 const STATUS_POLL_MS = 30000;
+const DASHBOARD_SESSION_POLL_MS = 15000;
+const DASHBOARD_SESSION_PATH = "/v1/dashboard/session";
 const SEARCH_REFRESH_MS = 45000;
 const SEARCH_PAGE_SIZE = 80;
 const SEARCH_ROW_HEIGHT = 34;
@@ -4765,7 +4769,7 @@ function RightPane({
   );
 }
 
-export default function App() {
+function OperatorWorkspace({ dashboardSession, onLogout }) {
   const [layout, setLayout] = useState(readLayout);
   const [menuOpen, setMenuOpen] = useState(false);
   const [selectedLiveFollowAccount, setSelectedLiveFollowAccount] = useState(readLiveFollowAccountFromUrl);
@@ -4933,6 +4937,16 @@ export default function App() {
 
   return (
     <div className="app-shell">
+	  {dashboardSession?.mode === "session" ? (
+	    <div className="dashboard-session-chip" role="status">
+	      <LockKeyhole size={14} aria-hidden="true" />
+	      <span>Secure session · expires {formatDateTime(dashboardSession.expiresAt)}</span>
+	      <button type="button" onClick={onLogout} title="End secure dashboard session">
+	        <LogOut size={13} aria-hidden="true" />
+	        <span>Sign out</span>
+	      </button>
+	    </div>
+	  ) : null}
       <header className="topbar">
         <div className="brand">
           <button
@@ -5106,4 +5120,173 @@ export default function App() {
       </div>
     </div>
   );
+}
+
+function DashboardLogin({ error, loading, onLogin, onRetry }) {
+  const [apiKey, setApiKey] = useState("");
+  const secureContext = window.location.protocol === "https:";
+
+  async function submit(event) {
+    event.preventDefault();
+    const submittedKey = apiKey;
+    setApiKey("");
+    await onLogin(submittedKey);
+  }
+
+  return (
+    <main className="dashboard-login-shell">
+      <section className="dashboard-login-card" aria-labelledby="dashboardLoginTitle">
+        <div className="dashboard-login-icon"><LockKeyhole size={22} aria-hidden="true" /></div>
+        <span className="card-kicker">Operator authentication</span>
+        <h1 id="dashboardLoginTitle">Sign in to AuraCall</h1>
+        <p>
+          Enter an unscoped operator API key. AuraCall exchanges it for a 15-minute secure cookie;
+          the key is not saved in browser storage.
+        </p>
+        {!secureContext ? (
+          <div className="dashboard-login-error" role="alert">
+            Secure dashboard sessions require HTTPS. Use the loopback dashboard locally or open the configured HTTPS ingress.
+          </div>
+        ) : null}
+        {error ? <div className="dashboard-login-error" role="alert">{error}</div> : null}
+        <form onSubmit={submit}>
+          <label htmlFor="dashboardOperatorApiKey">Operator API key</label>
+          <input
+            id="dashboardOperatorApiKey"
+            name="dashboardOperatorApiKey"
+            type="password"
+            autoComplete="off"
+            spellCheck="false"
+            value={apiKey}
+            onChange={(event) => setApiKey(event.target.value)}
+            disabled={loading || !secureContext}
+          />
+          <button className="primary-action" type="submit" disabled={loading || !secureContext || !apiKey.trim()}>
+            {loading ? "Signing in…" : "Start secure session"}
+          </button>
+          <button type="button" onClick={onRetry} disabled={loading}>Retry session check</button>
+        </form>
+      </section>
+    </main>
+  );
+}
+
+export default function App() {
+  const [sessionState, setSessionState] = useState({
+    loading: true,
+    payload: null,
+    error: "",
+    revision: 0,
+  });
+
+  useEffect(() => {
+    let alive = true;
+    let timer = null;
+
+    async function load() {
+      try {
+        const response = await fetch(DASHBOARD_SESSION_PATH, {
+          cache: "no-store",
+          credentials: "same-origin",
+        });
+        const payload = await readJsonResponse(response);
+        if (!response.ok) throw new Error(readPayloadError(payload, response.status));
+        if (!alive) return;
+        setSessionState((current) => ({ ...current, loading: false, payload, error: "" }));
+      } catch (error) {
+        if (!alive) return;
+        setSessionState((current) => ({
+          ...current,
+          loading: false,
+          payload: current.payload,
+          error: error.message || "Unable to check the dashboard session.",
+        }));
+      }
+    }
+
+    void load();
+    timer = window.setInterval(load, DASHBOARD_SESSION_POLL_MS);
+    return () => {
+      alive = false;
+      window.clearInterval(timer);
+    };
+  }, [sessionState.revision]);
+
+  async function login(apiKey) {
+    setSessionState((current) => ({ ...current, loading: true, error: "" }));
+    try {
+      const response = await fetch(DASHBOARD_SESSION_PATH, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { authorization: `Bearer ${apiKey}` },
+      });
+      const payload = await readJsonResponse(response);
+      if (!response.ok) throw new Error(readPayloadError(payload, response.status));
+      setSessionState((current) => ({ ...current, loading: false, payload, error: "" }));
+    } catch (error) {
+      setSessionState((current) => ({
+        ...current,
+        loading: false,
+        payload: null,
+        error: error.message || "Unable to start the dashboard session.",
+      }));
+    }
+  }
+
+  async function logout() {
+    setSessionState((current) => ({ ...current, loading: true, error: "" }));
+    try {
+      const response = await fetch(DASHBOARD_SESSION_PATH, {
+        method: "DELETE",
+        credentials: "same-origin",
+      });
+      const payload = await readJsonResponse(response);
+      if (!response.ok) throw new Error(readPayloadError(payload, response.status));
+      setSessionState((current) => ({ ...current, loading: false, payload, error: "" }));
+    } catch (error) {
+      setSessionState((current) => ({
+        ...current,
+        loading: false,
+        error: error.message || "Unable to end the dashboard session.",
+      }));
+    }
+  }
+
+  if (sessionState.loading && !sessionState.payload) {
+    return (
+      <main className="dashboard-login-shell">
+        <section className="dashboard-login-card" aria-live="polite">
+          <div className="dashboard-login-icon"><LockKeyhole size={22} aria-hidden="true" /></div>
+          <h1>Checking dashboard access…</h1>
+        </section>
+      </main>
+    );
+  }
+
+  if (!sessionState.payload?.authenticated) {
+    return (
+      <DashboardLogin
+        error={sessionState.error}
+        loading={sessionState.loading}
+        onLogin={login}
+        onRetry={() => setSessionState((current) => ({ ...current, loading: true, revision: current.revision + 1 }))}
+      />
+    );
+  }
+
+  return <OperatorWorkspace dashboardSession={sessionState.payload} onLogout={logout} />;
+}
+
+async function readJsonResponse(response) {
+  const text = await response.text();
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { error: { message: text } };
+  }
+}
+
+function readPayloadError(payload, status) {
+  return payload?.error?.message || `Dashboard session request failed with HTTP ${status}.`;
 }

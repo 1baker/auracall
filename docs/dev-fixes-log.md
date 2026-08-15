@@ -1,3 +1,14 @@
+- 2026-08-15: Non-loopback operator dashboards need a browser-safe credential
+  exchange, not restored bearer-key storage. Accept only an unscoped operator
+  key from a same-origin HTTPS dashboard, clear the input immediately, and
+  exchange it for a random 15-minute server-memory token carried only by a
+  host-only `HttpOnly; Secure; SameSite=Strict; Path=/` cookie. Store only a
+  token digest server-side, apply absolute expiry and revocation, require
+  same-origin `Origin` on every unsafe cookie-authenticated request, and keep
+  keys/tokens out of Web Storage, URLs, logs, and response bodies. Protect
+  `POST /status` alongside `/v1/*`; leaving dashboard mutation controls outside
+  the auth boundary defeats the session even if data routes are protected.
+
 - 2026-08-15: Browser headers are context evidence, not authentication.
   Same-origin `Host`, `Origin`, and `Referer` values are client-controlled and
   must never independently grant operator authority. Preserve a no-key local

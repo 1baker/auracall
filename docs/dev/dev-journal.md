@@ -1,3 +1,24 @@
+## 2026-08-15 | Plan 0322 dashboard session authorization
+
+- Opened a bounded successor to trusted-local auth so non-loopback HTTPS
+  dashboards can exchange an unscoped operator API key for a 15-minute
+  server-memory session without restoring historical `sessionStorage` secrets.
+- Added digest-keyed absolute-expiry storage, a host-only
+  `HttpOnly; Secure; SameSite=Strict; Path=/` cookie, manifest-backed
+  status/login/logout, scoped-key rejection, and origin checks for unsafe
+  cookie-authorized requests.
+- React and debug dashboards now gate API work on trusted-local, auth-disabled,
+  or secure-session status, clear submitted key inputs immediately, never use
+  Web Storage for credentials, poll expiry, and expose explicit Sign out.
+- Inspection found `POST /status` dashboard mutation controls outside the
+  former `/v1/*` auth gate; it now shares bearer, trusted-local, and session
+  authorization while `GET /status` remains observable.
+- Seven focused files passed 243 tests; the complete provider-disabled suite
+  passed 2,946 with 65 expected skips across 348 test files. Typecheck,
+  zero-warning lint across 846 files, production build, 323-plan audit, current
+  CodeGraph sync, and diff hygiene passed. Plan 0322 is CLOSED without live
+  provider, browser, service, ingress, configuration, or key effects.
+
 ## 2026-08-15 | Plan 0321 trusted-local dashboard authorization
 
 - Replaced the built-in dashboard's header-only API-key bypass with an explicit

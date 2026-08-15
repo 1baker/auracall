@@ -894,7 +894,7 @@ describe("http responses adapter", () => {
 		});
 
 		expect(messages).toContain(
-			"Posture: API authentication is enabled for /v1/* (1 API key loaded; scoped keys present); bound to loopback; trusted loopback dashboard requests use local operator authority; /status remains observable without authentication.",
+			"Posture: API authentication is enabled for /v1/* and POST /status (1 API key loaded; scoped keys present); bound to loopback; trusted loopback dashboard requests use local operator authority; GET /status remains observable without authentication.",
 		);
 		const startupOutput = messages.join("\n");
 		expect(startupOutput).not.toContain("private-client-id");
@@ -22566,6 +22566,225 @@ describe("http responses adapter", () => {
 		}
 	}, 20_000);
 
+	it("exchanges unscoped operator keys for short-lived secure dashboard sessions", async () => {
+		let now = new Date("2026-08-15T12:00:00.000Z");
+		const server = await createResponsesHttpServer(
+			{ host: "0.0.0.0", port: 0 },
+			{
+				now: () => now,
+				config: {
+					api: {
+						auth: {
+							required: true,
+							keys: [
+								{ id: "operator", secret: "operator-secret" },
+								{ id: "scoped", secret: "scoped-secret", agents: ["researcher"] },
+							],
+						},
+					},
+				},
+			},
+		);
+
+		try {
+			const baseUrl = `http://127.0.0.1:${server.port}`;
+			const secureOrigin = `https://127.0.0.1:${server.port}`;
+			const dashboardReferer = `${secureOrigin}/dashboard`;
+			const initialStatus = await fetch(`${baseUrl}/v1/dashboard/session`, {
+				headers: { origin: secureOrigin, referer: dashboardReferer },
+			});
+			expect(initialStatus.status).toBe(200);
+			await expect(initialStatus.json()).resolves.toEqual({
+				object: "dashboard_session",
+				authenticated: false,
+				mode: "unauthenticated",
+				expiresAt: null,
+				ttlSeconds: 900,
+			});
+			expect(
+				(
+					await fetch(`${baseUrl}/status`, {
+						method: "POST",
+						headers: { "content-type": "application/json" },
+						body: "{}",
+					})
+				).status,
+			).toBe(401);
+
+			const insecureLogin = await fetch(`${baseUrl}/v1/dashboard/session`, {
+				method: "POST",
+				headers: {
+					authorization: "Bearer operator-secret",
+					origin: baseUrl,
+					referer: `${baseUrl}/dashboard`,
+				},
+			});
+			expect(insecureLogin.status).toBe(403);
+
+			const missingOriginLogin = await fetch(`${baseUrl}/v1/dashboard/session`, {
+				method: "POST",
+				headers: {
+					authorization: "Bearer operator-secret",
+					referer: dashboardReferer,
+				},
+			});
+			expect(missingOriginLogin.status).toBe(403);
+
+			const scopedLogin = await fetch(`${baseUrl}/v1/dashboard/session`, {
+				method: "POST",
+				headers: {
+					authorization: "Bearer scoped-secret",
+					origin: secureOrigin,
+					referer: dashboardReferer,
+				},
+			});
+			expect(scopedLogin.status).toBe(401);
+			expect(scopedLogin.headers.get("set-cookie")).toBeNull();
+
+			const login = await fetch(`${baseUrl}/v1/dashboard/session`, {
+				method: "POST",
+				headers: {
+					authorization: "Bearer operator-secret",
+					origin: secureOrigin,
+					referer: dashboardReferer,
+				},
+			});
+			expect(login.status).toBe(201);
+			const loginPayload = (await login.json()) as JsonObject;
+			expect(loginPayload).toEqual({
+				object: "dashboard_session",
+				authenticated: true,
+				mode: "session",
+				expiresAt: "2026-08-15T12:15:00.000Z",
+				ttlSeconds: 900,
+			});
+			expect(JSON.stringify(loginPayload)).not.toContain("operator-secret");
+			expect(JSON.stringify(loginPayload)).not.toContain("operator");
+			const setCookie = login.headers.get("set-cookie");
+			expect(setCookie).toMatch(
+				/^__Host-auracall-dashboard=[A-Za-z0-9_-]{43}; Path=\/; Max-Age=900; HttpOnly; Secure; SameSite=Strict$/u,
+			);
+			const cookie = setCookie?.split(";", 1)[0];
+			expect(cookie).toBeTruthy();
+
+			const protectedRead = await fetch(`${baseUrl}/v1/api/logs/tail?maxBytes=1`, {
+				headers: { cookie: cookie ?? "" },
+			});
+			expect(protectedRead.status).toBe(200);
+
+			const mutationWithoutOrigin = await fetch(`${baseUrl}/v1/config/snapshots/export`, {
+				method: "POST",
+				headers: { cookie: cookie ?? "", "content-type": "application/json" },
+				body: JSON.stringify({ all: true }),
+			});
+			expect(mutationWithoutOrigin.status).toBe(401);
+
+			const mutationWithCrossOrigin = await fetch(`${baseUrl}/v1/config/snapshots/export`, {
+				method: "POST",
+				headers: {
+					cookie: cookie ?? "",
+					"content-type": "application/json",
+					origin: "https://example.test",
+				},
+				body: JSON.stringify({ all: true }),
+			});
+			expect(mutationWithCrossOrigin.status).toBe(401);
+
+			const mutationWithOrigin = await fetch(`${baseUrl}/v1/config/snapshots/export`, {
+				method: "POST",
+				headers: {
+					cookie: cookie ?? "",
+					"content-type": "application/json",
+					origin: secureOrigin,
+				},
+				body: JSON.stringify({ all: true }),
+			});
+			expect(mutationWithOrigin.status).toBe(200);
+
+			const statusControlWithoutOrigin = await fetch(`${baseUrl}/status`, {
+				method: "POST",
+				headers: { cookie: cookie ?? "", "content-type": "application/json" },
+				body: "{}",
+			});
+			expect(statusControlWithoutOrigin.status).toBe(401);
+
+			const statusControlCrossOrigin = await fetch(`${baseUrl}/status`, {
+				method: "POST",
+				headers: {
+					cookie: cookie ?? "",
+					"content-type": "application/json",
+					origin: "https://example.test",
+				},
+				body: "{}",
+			});
+			expect(statusControlCrossOrigin.status).toBe(401);
+
+			const statusControlWithOrigin = await fetch(`${baseUrl}/status`, {
+				method: "POST",
+				headers: {
+					cookie: cookie ?? "",
+					"content-type": "application/json",
+					origin: secureOrigin,
+				},
+				body: "{}",
+			});
+			expect(statusControlWithOrigin.status).toBe(400);
+
+			const statusControlWithBearer = await fetch(`${baseUrl}/status`, {
+				method: "POST",
+				headers: {
+					authorization: "Bearer operator-secret",
+					"content-type": "application/json",
+				},
+				body: "{}",
+			});
+			expect(statusControlWithBearer.status).toBe(400);
+
+			const crossOriginLogout = await fetch(`${baseUrl}/v1/dashboard/session`, {
+				method: "DELETE",
+				headers: { cookie: cookie ?? "", origin: "https://example.test" },
+			});
+			expect(crossOriginLogout.status).toBe(403);
+			expect(
+				(await fetch(`${baseUrl}/v1/api/logs/tail?maxBytes=1`, {
+					headers: { cookie: cookie ?? "" },
+				})).status,
+			).toBe(200);
+
+			const logout = await fetch(`${baseUrl}/v1/dashboard/session`, {
+				method: "DELETE",
+				headers: { cookie: cookie ?? "", origin: secureOrigin },
+			});
+			expect(logout.status).toBe(200);
+			expect(logout.headers.get("set-cookie")).toBe(
+				"__Host-auracall-dashboard=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Strict",
+			);
+			expect(
+				(await fetch(`${baseUrl}/v1/api/logs/tail?maxBytes=1`, {
+					headers: { cookie: cookie ?? "" },
+				})).status,
+			).toBe(401);
+
+			const secondLogin = await fetch(`${baseUrl}/v1/dashboard/session`, {
+				method: "POST",
+				headers: {
+					authorization: "Bearer operator-secret",
+					origin: secureOrigin,
+					referer: dashboardReferer,
+				},
+			});
+			const secondCookie = secondLogin.headers.get("set-cookie")?.split(";", 1)[0];
+			now = new Date("2026-08-15T12:15:00.000Z");
+			expect(
+				(await fetch(`${baseUrl}/v1/api/logs/tail?maxBytes=1`, {
+					headers: { cookie: secondCookie ?? "" },
+				})).status,
+			).toBe(401);
+		} finally {
+			await server.close();
+		}
+	}, 20_000);
+
 	it("loads local API keys from the user-scoped service environment", async () => {
 		const savedEnv = {
 			AURACALL_API_AUTH_REQUIRED: process.env.AURACALL_API_AUTH_REQUIRED,
@@ -24989,7 +25208,7 @@ describe("http responses adapter", () => {
 				},
 			}),
 		).toBe(
-			"Warning: API authentication is required for /v1/*, but no API keys are loaded; 0.0.0.0 is not loopback; use trusted ingress for this development server; /status remains observable without authentication.",
+			"Warning: API authentication is required for /v1/* and POST /status, but no API keys are loaded; 0.0.0.0 is not loopback; use trusted ingress for this development server; GET /status remains observable without authentication.",
 		);
 
 		expect(
@@ -25004,7 +25223,7 @@ describe("http responses adapter", () => {
 				},
 			}),
 		).toBe(
-			"Warning: API authentication is enabled for /v1/* (2 API keys loaded; scoped keys present); api.internal.example is not loopback; use trusted ingress for this development server; /status remains observable without authentication.",
+			"Warning: API authentication is enabled for /v1/* and POST /status (2 API keys loaded; scoped keys present); api.internal.example is not loopback; use trusted ingress for this development server; GET /status remains observable without authentication.",
 		);
 	});
 

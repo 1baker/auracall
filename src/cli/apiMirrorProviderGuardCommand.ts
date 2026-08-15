@@ -1,3 +1,5 @@
+import { fetchWithLocalApiAuth } from './localApiClient.js';
+
 export interface ApiMirrorProviderGuardClearCliOptions {
   host?: string | null;
   port?: number | null;
@@ -31,7 +33,7 @@ export async function clearApiMirrorProviderGuardForCli(
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const response = await fetchImpl(new URL(`http://${host}:${port}/status`), {
+    const response = await fetchWithLocalApiAuth(new URL(`http://${host}:${port}/status`), {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
@@ -43,7 +45,7 @@ export async function clearApiMirrorProviderGuardForCli(
         },
       }),
       signal: controller.signal,
-    });
+    }, fetchImpl);
     const raw = await response.json();
     if (!response.ok) {
       throw new Error(`AuraCall API mirror provider guard clear returned HTTP ${response.status}.`);

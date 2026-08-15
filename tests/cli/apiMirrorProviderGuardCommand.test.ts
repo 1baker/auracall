@@ -82,6 +82,33 @@ describe('api mirror-provider-guard-clear CLI helpers', () => {
     });
   });
 
+  it('retries protected status control with the configured local API key', async () => {
+    const previousApiKey = process.env.AURACALL_API_KEY;
+    process.env.AURACALL_API_KEY = 'operator-secret';
+    let callCount = 0;
+    try {
+      const fetchImpl = async (_url: string | URL | Request, init?: RequestInit) => {
+        callCount += 1;
+        const authorization = new Headers(init?.headers).get('authorization');
+        if (callCount === 1) {
+          expect(authorization).toBeNull();
+          return Response.json({ error: { type: 'authentication_error' } }, { status: 401 });
+        }
+        expect(authorization).toBe('Bearer operator-secret');
+        return Response.json(guardClearPayload);
+      };
+
+      await expect(clearApiMirrorProviderGuardForCli({
+        port: 18080,
+        provider: 'gemini',
+      }, fetchImpl)).resolves.toMatchObject({ status: 'delayed' });
+      expect(callCount).toBe(2);
+    } finally {
+      if (previousApiKey === undefined) delete process.env.AURACALL_API_KEY;
+      else process.env.AURACALL_API_KEY = previousApiKey;
+    }
+  });
+
   it('formats a compact provider guard clear summary', () => {
     const output = formatApiMirrorProviderGuardClearCliSummary({
       host: '127.0.0.1',

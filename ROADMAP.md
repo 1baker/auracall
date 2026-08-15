@@ -7,6 +7,12 @@
 Status: active
 Lane: P01
 
+- Closed accepted authenticated dashboard session exchange:
+  [docs/dev/plans/0322-2026-08-15-dashboard-session-auth.md](docs/dev/plans/0322-2026-08-15-dashboard-session-auth.md)
+  Non-loopback HTTPS dashboards exchange an unscoped operator key for a
+  15-minute server-memory session carried only by a secure HttpOnly cookie;
+  bearer clients and the trusted-loopback workflow remain unchanged.
+
 - Closed accepted trusted-local dashboard authorization correction:
   [docs/dev/plans/0321-2026-08-15-trusted-local-dashboard-auth.md](docs/dev/plans/0321-2026-08-15-trusted-local-dashboard-auth.md)
   Dashboard operator authority now requires resolved loopback binding, an

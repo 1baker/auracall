@@ -33,6 +33,7 @@ export const HTTP_ROUTE_MANIFEST = {
 		["GET"],
 		"/v1/runtime-runs/inspect?runId={run_id}|teamRunId={team_run_id}|taskRunSpecId={task_run_spec_id}|runtimeRunId={runtime_run_id}[&runnerId={runner_id}][&probe=service-state][&diagnostics=browser-state][&authority=scheduler]",
 	),
+	dashboardSession: route(["GET", "POST", "DELETE"], "GET/POST/DELETE /v1/dashboard/session"),
 	models: route(["GET"], "/v1/models"),
 	chatCompletionsCreate: route(["POST"], "/v1/chat/completions"),
 	responsesCreate: route(["POST"], "/v1/responses"),

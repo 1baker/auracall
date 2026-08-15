@@ -1,5 +1,34 @@
 # RUNBOOK
 
+## Turn 491 | 2026-08-15
+
+- Opened Plan 0322 as the successor to the trusted-local authorization repair.
+  Non-loopback dashboards currently require bearer credentials but have no
+  safe browser flow; the removed historical prompt persisted a long-lived key
+  in `sessionStorage` and will not be restored.
+- Add one manifest-backed session exchange using an unscoped operator key,
+  random 15-minute server-memory state, and a host-only `HttpOnly; Secure;
+  SameSite=Strict; Path=/` cookie. Login and unsafe cookie use require
+  same-origin browser evidence; scoped keys, insecure external login, expired
+  tokens, and cross-origin mutation fail closed.
+- Critical path remains root with no parallel workers. This provider-free slice
+  may change source, tests, current docs, and planning records, but it will not
+  mutate keys, services, ingress, providers, or browsers.
+- Focused endpoint inspection found `POST /status` mutation controls outside
+  the `/v1/*` authentication gate. Plan 0322 now protects that exact manifest
+  route with bearer, trusted-local, or session authority while preserving
+  observable `GET /status`.
+- Added digest-only in-memory session state, exact secure-cookie attributes,
+  absolute expiry and revocation, same-origin mutation enforcement, scoped-key
+  rejection, and no-storage login/logout gates in both operator dashboards.
+  The local provider-guard CLI now retries protected status control with its
+  configured API key.
+- Seven focused files passed 243 tests; the complete provider-disabled suite
+  passed 2,946 with 65 expected skips across 348 test files. Typecheck,
+  zero-warning lint across 846 files, production build, 323-plan audit, current
+  CodeGraph sync, and diff hygiene passed. Plan 0322 closes accepted without
+  provider, browser, service, ingress, configuration, or key mutation.
+
 ## Turn 490 | 2026-08-15
 
 - Opened Plan 0321 after authorization-flow inspection confirmed same-origin

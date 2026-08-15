@@ -151,6 +151,19 @@ configured bind URL, local hostname/base URL, external hostname/base URL,
 dashboard/account-mirror paths, proxy target, ingress, and auth guard so
 operators can find the same service after restart.
 
+When API auth is enabled, `GET /status` stays observable while `/v1/*` and
+`POST /status` require authorization. A loopback-bound dashboard keeps the
+trusted-local no-key workflow only when the TCP peer is loopback and the
+browser context is same-origin. A non-loopback dashboard must be opened through
+HTTPS and accepts only an unscoped operator API key for login. AuraCall sends
+that key once in the login request, then clears the input and returns a
+15-minute host-only `HttpOnly; Secure; SameSite=Strict` cookie. The API key and
+cookie token are never written to Web Storage, URLs, logs, or response bodies.
+Sessions are in-memory, use absolute expiry, end on API restart or Sign out,
+and do not replace trusted ingress controls. Scoped agent/team keys cannot open
+operator sessions. Reverse proxies must preserve the browser-visible host and
+HTTPS origin; forwarded client-address headers are not authentication inputs.
+
 Selector precedence is now explicit in those reports:
 - runtime selection uses `--profile` first
 - then `--agent`
