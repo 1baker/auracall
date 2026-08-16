@@ -7,6 +7,13 @@
 Status: active
 Lane: P01
 
+- Closed accepted TaskRunSpec completion reconciliation:
+  [docs/dev/plans/0340-2026-08-15-task-run-spec-completion-reconciliation.md](docs/dev/plans/0340-2026-08-15-task-run-spec-completion-reconciliation.md)
+  Current state: 76 focused assertions prove the flattened schema, validated
+  revisioned persistence, planner/runtime enforcement, and compact/prebuilt
+  HTTP/MCP contract. The sectioned sketch is explicitly historical, portable
+  links replace retired paths, and Plan 0002 closes accepted.
+
 - Closed accepted Team Config Boundary reconciliation:
   [docs/dev/plans/0339-2026-08-15-team-config-boundary-reconciliation.md](docs/dev/plans/0339-2026-08-15-team-config-boundary-reconciliation.md)
   Current state: current source and 113 focused assertions prove Plan 0006's
@@ -3493,9 +3500,9 @@ Next recommendation:
 - Plan 0006 closes accepted; its original
   architectural boundary is implemented without team config absorbing browser,
   assignment, durable-run, or runner ownership.
-- Audit adjacent Plans 0002, 0003, and 0004 independently. Their current
-  `OPEN` state must be judged against their own larger acceptance contracts,
-  not inferred from Plan 0006 closure.
+- Plan 0002 closes accepted after its independent flattened-contract audit.
+  Audit adjacent Plans 0003 and 0004 independently; their current `OPEN` state
+  must be judged against their own larger acceptance contracts.
 
 Browser reliability maintenance note:
 - default-tenant account-health validation reproduced a generic browser-service

@@ -20011,3 +20011,21 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   eleven governance/link tests, the 340-plan audit, diff hygiene, and CodeGraph
   status pass. Plan 0006 and Plan 0339 close accepted without runtime behavior
   changes.
+
+## Turn 436 | 2026-08-15
+
+- Plan 0340 opens an independent completion audit of Plan 0002. The original
+  team/assignment/run ownership split remains sound, but the plan still
+  presents a sectioned sketch after Plans 0024/0025 established and shipped the
+  flattened public/storage contract.
+- The slice is documentation-only unless source or focused tests expose a real
+  schema, persistence, planning, or runtime-policy gap. Adjacent Plans 0003 and
+  0004 retain their own state pending separate audits.
+- CodeGraph plus direct source reads prove one flattened schema, conservative
+  compact construction, validated revisioned persistence, task-aware planning,
+  runtime-policy enforcement, and compact/prebuilt public inputs. No contract
+  gap was found.
+- Seven core files pass 72 tests; four filtered HTTP assertions cover compact,
+  invalid, prebuilt, and mixed-input behavior. Typecheck, eleven governance/
+  link tests, the 341-plan audit, diff hygiene, and CodeGraph status pass. Plan
+  0002 and Plan 0340 close accepted without runtime behavior changes.

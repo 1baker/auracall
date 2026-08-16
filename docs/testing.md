@@ -97,6 +97,12 @@
   It proves reusable team ownership, inherited agent/runtime/browser context,
   separate task and durable-run state, deterministic role planning, and
   execution through the service-host boundary.
+- TaskRunSpec completion reconciliation reuses the provider-free team core
+  with `tests/teams.model.test.ts`, `tests/teams.schema.test.ts`,
+  `tests/teams.store.test.ts`, `tests/teams.service.test.ts`,
+  `tests/teams.runtimeBridge.test.ts`, `tests/cli/teamRunCommand.test.ts`, and
+  `tests/mcp/teamRun.test.ts`. Public compact/prebuilt validation uses
+  `pnpm exec vitest run tests/http.responsesServer.test.ts -t "creates a bounded team run over HTTP|rejects invalid team-run create request bodies over HTTP|creates a team run from a prebuilt flattened taskRunSpec over HTTP|rejects compact assignment fields mixed with a prebuilt taskRunSpec over HTTP"`.
 - Recent-run browser-authority projection and console filtering are
   provider-free:
   `pnpm vitest run tests/runtime.responsesService.test.ts tests/runtime.control.test.ts tests/mcp.runtimeRunsRecent.test.ts tests/http.responsesServer.test.ts tests/ux.console.runAuthority.test.ts -t "detached|browser authority|runtime_runs_recent|projects bounded browser authority|operator console browser authority"`.

@@ -47755,3 +47755,18 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   assertions, typecheck, eleven governance/link tests, 340-plan audit, diff
   hygiene, and CodeGraph status pass. Plan 0006 and Plan 0339 close accepted
   without runtime behavior changes.
+
+## 2026-08-15 | Plan 0340 opens TaskRunSpec completion reconciliation
+
+- Plan 0002's team/assignment/run ownership split matches current source, while
+  its prominent sectioned sketch and retired absolute paths lag the flattened
+  contract selected and shipped by closed Plans 0024/0025.
+- Plan 0340 will bind assignment fields, validation, persistence, planning, and
+  runtime enforcement to provider-free evidence before deciding terminal state.
+- Current source and tests prove the flattened type/schema, conservative
+  builder, revisioned store, task-aware planner, runtime-policy enforcement,
+  and compact/prebuilt HTTP/MCP contract without exposing an assignment gap.
+- Seven core files pass 72 tests plus four filtered HTTP assertions. Typecheck,
+  eleven governance/link tests, the 341-plan audit, portable-path scan, diff
+  hygiene, and CodeGraph status pass. Plan 0002 and Plan 0340 close accepted
+  without runtime behavior changes.
