@@ -20029,3 +20029,19 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   invalid, prebuilt, and mixed-input behavior. Typecheck, eleven governance/
   link tests, the 341-plan audit, diff hygiene, and CodeGraph status pass. Plan
   0002 and Plan 0340 close accepted without runtime behavior changes.
+
+## Turn 437 | 2026-08-15
+
+- Plan 0341 opens an independent reconciliation of Plan 0003. Current source
+  ships the logical TeamRun entity bundle plus explicit local-action requests,
+  projects it into the runtime model, persists revisioned execution bundles,
+  and reconstructs bounded review evidence.
+- The parent plan's early TypeScript sketches, retired absolute links, duplicate
+  completion sections, and pre-implementation non-goals require current-state
+  labeling. Plan 0004 remains separately owned.
+- CodeGraph plus source reads prove every logical entity, relationship, task/
+  team identity, runtime projection, durable store, and review-reconstruction
+  boundary. No data-model gap was found.
+- Six focused files pass 34 tests. Typecheck, eleven governance/link tests, the
+  342-plan audit, portable-path scan, diff hygiene, and CodeGraph status pass.
+  Plan 0003 and Plan 0341 close accepted without runtime behavior changes.

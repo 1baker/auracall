@@ -47770,3 +47770,17 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   eleven governance/link tests, the 341-plan audit, portable-path scan, diff
   hygiene, and CodeGraph status pass. Plan 0002 and Plan 0340 close accepted
   without runtime behavior changes.
+
+## 2026-08-15 | Plan 0341 opens TeamRun data-model reconciliation
+
+- The shipped TeamRun bundle implements the original run, step, handoff, and
+  shared-state vocabulary and adds explicit local-action requests; runtime
+  projection, revisioned persistence, and review reconstruction now exist.
+- Plan 0341 will reconcile the old field sketches and non-goals against those
+  current layers before deciding Plan 0003's terminal state.
+- Source and executable evidence cover the complete logical entity bundle,
+  task/team identity, runtime projection, revisioned persistence, and bounded
+  review reconstruction without exposing a data-model gap.
+- Six files pass 34 tests. Typecheck, eleven governance/link tests, the 342-plan
+  audit, portable-path scan, diff hygiene, and CodeGraph status pass. Plan 0003
+  and Plan 0341 close accepted without runtime behavior changes.

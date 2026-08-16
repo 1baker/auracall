@@ -7,6 +7,13 @@
 Status: active
 Lane: P01
 
+- Closed accepted TeamRun data-model reconciliation:
+  [docs/dev/plans/0341-2026-08-15-team-run-data-model-reconciliation.md](docs/dev/plans/0341-2026-08-15-team-run-data-model-reconciliation.md)
+  Current state: 34 focused tests prove the typed/schema-validated logical
+  bundle, runtime projection, revisioned persistence, and durable review
+  reconstruction. Historical sketches disclose current deviations, portable
+  links replace retired paths, and Plan 0003 closes accepted.
+
 - Closed accepted TaskRunSpec completion reconciliation:
   [docs/dev/plans/0340-2026-08-15-task-run-spec-completion-reconciliation.md](docs/dev/plans/0340-2026-08-15-task-run-spec-completion-reconciliation.md)
   Current state: 76 focused assertions prove the flattened schema, validated
@@ -3500,9 +3507,9 @@ Next recommendation:
 - Plan 0006 closes accepted; its original
   architectural boundary is implemented without team config absorbing browser,
   assignment, durable-run, or runner ownership.
-- Plan 0002 closes accepted after its independent flattened-contract audit.
-  Audit adjacent Plans 0003 and 0004 independently; their current `OPEN` state
-  must be judged against their own larger acceptance contracts.
+- Plans 0002 and 0003 close accepted after independent contract audits. Audit
+  adjacent Plan 0004 independently; its current `OPEN` state must be judged
+  against its larger service-execution acceptance contract.
 
 Browser reliability maintenance note:
 - default-tenant account-health validation reproduced a generic browser-service

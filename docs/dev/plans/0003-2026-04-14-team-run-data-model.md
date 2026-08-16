@@ -1,26 +1,34 @@
 # Team Run Data Model Plan | 0003-2026-04-14
 
-State: OPEN
+State: CLOSED
 Lane: P01
+Plan version: 2
 
 ## Current State
 
-- roadmap classification: active supporting authority for the primary
-  service/runner orchestration lane
-- the repo already has a bounded team-run data-model direction recorded in the
-  loose planning docs and referenced from the roadmap
-- the adjacent assignment-layer plan is now canonical under:
-  - `docs/dev/plans/0002-2026-04-14-task-run-spec.md`
-- the adjacent task/run-spec contract is now concrete enough to drive a real v1 execution contract
-- this slice defines the first conservative `teamRun` / `step` / `handoff` / `sharedState` boundary around one `taskRunSpecId`
-- the goal is to make execution identity explicit without leaking assignment intent or runner topology into the logical model
+- `src/teams/types.ts` and `src/teams/schema.ts` define and validate the logical
+  `TeamRun`, step, handoff, shared-state, local-action, artifact, failure, and
+  history vocabulary.
+- `TeamRunBundle` groups one logical run, ordered steps, explicit handoffs,
+  local-action requests, and shared state. Task-aware runs retain one
+  `taskRunSpecId` and selected `teamId`.
+- `createExecutionRunBundleFromTeamRun` projects the logical bundle into the
+  runtime model without making queue, lease, runner, retry, or recovery state a
+  reusable team concern.
+- The runtime store persists complete execution bundles with revision checks;
+  inspection and the review ledger reconstruct bounded durable evidence.
+- The TypeScript blocks below are historical v1 sketches. Current source is
+  authoritative where fields evolved, including `requestedBy`, step input/
+  output envelopes, shared-state status/outputs/history, and local actions.
+- Plan 0341 proved this implemented boundary and closes the parent design seam
+  without changing runtime behavior.
 
 # Team Run Data Model Plan
 
 ## Purpose
 
-Define the first code-facing data model for future team execution without
-starting implementation.
+Define the stable logical data model for team execution independently from
+assignment intent and runner/service operations.
 
 This plan exists so later service/runners work can share one stable vocabulary
 for:
@@ -32,9 +40,9 @@ for:
 
 It should be read together with:
 
-- [0006-2026-04-14-team-config-boundary.md](/home/ecochran76/workspace.local/auracall/docs/dev/plans/0006-2026-04-14-team-config-boundary.md)
-- [0004-2026-04-14-team-service-execution.md](/home/ecochran76/workspace.local/auracall/docs/dev/plans/0004-2026-04-14-team-service-execution.md)
-- [0002-2026-04-14-task-run-spec.md](/home/ecochran76/workspace.local/auracall/docs/dev/plans/0002-2026-04-14-task-run-spec.md)
+- [0006-2026-04-14-team-config-boundary.md](0006-2026-04-14-team-config-boundary.md)
+- [0004-2026-04-14-team-service-execution.md](0004-2026-04-14-team-service-execution.md)
+- [0002-2026-04-14-task-run-spec.md](0002-2026-04-14-task-run-spec.md)
 
 ## Design goals
 
@@ -54,17 +62,20 @@ It should not optimize first for:
 
 ## Core entities
 
-The first concrete vocabulary should include four top-level entities:
+The original concrete vocabulary named four top-level entities:
 
 1. `teamRun`
 2. `step`
 3. `handoff`
 4. `sharedState`
 
+The shipped bundle preserves those four and adds `localActionRequests` as an
+explicit fifth execution entity rather than hiding host work in step prose.
+
 Important dependency:
 
 - this execution vocabulary assumes a separate assignment layer now captured in
-  [0002-2026-04-14-task-run-spec.md](/home/ecochran76/workspace.local/auracall/docs/dev/plans/0002-2026-04-14-task-run-spec.md)
+  [0002-2026-04-14-task-run-spec.md](0002-2026-04-14-task-run-spec.md)
 - `teamRun` should remain the durable execution record, not the reusable team
   definition and not the concrete assignment object
 
@@ -92,7 +103,11 @@ Current concrete dependency:
 `teamRun` is the durable execution record for one attempt to execute exactly one
 `taskRunSpec` against exactly one selected `team`.
 
-### Concrete v1 contract
+### Historical v1 sketch
+
+The current `TeamRun` type adds `entryPrompt` and `initialInputs`, projects
+`requestedBy` to `string | null`, and permits a nullable compatibility
+`taskRunSpecId`; task-aware constructors always populate that identity.
 
 ```ts
 type TeamRun = {
@@ -139,7 +154,12 @@ type TeamRun = {
 `step` is one planned or executed unit of work inside one `teamRun`. Each step
 resolves to exactly one agent execution identity.
 
-### Concrete v1 contract
+### Historical v1 sketch
+
+The current step type uses typed `TeamRunStepInput` and `TeamRunStepOutput`
+envelopes with artifact refs, structured data, notes, and handoff ids; it also
+permits nullable unresolved runtime/browser/service identities for blocked
+planning evidence.
 
 ```ts
 type TeamRunStep = {
@@ -184,7 +204,10 @@ type TeamRunStep = {
 `handoff` is the durable transfer payload from one step to another inside one
 `teamRun`.
 
-### Concrete v1 contract
+### Historical v1 sketch
+
+The current handoff type retains this relationship while normalizing artifacts,
+structured data, and notes into required serializable collections.
 
 ```ts
 type TeamRunHandoff = {
@@ -265,7 +288,11 @@ Default transport rules:
 `sharedState` is the append-only run-scoped coordination record for one
 `teamRun`.
 
-### Concrete v1 contract
+### Historical v1 sketch
+
+The current shared-state type uses `active | succeeded | failed | cancelled`,
+stores structured outputs as ordered key/value entries, and gives every history
+event its own id, team-run identity, timestamp, and bounded payload.
 
 ```ts
 type TeamRunSharedState = {
@@ -325,20 +352,22 @@ Recommended foreign-key shape:
 - `handoff.toStepId -> step.id`
 - `sharedState.teamRunId -> teamRun.id`
 
-## Explicit v1 non-goals
+## Original v1 non-goals and current ownership
 
-This plan still does not define:
+This logical model still does not make the following team-owned fields:
 
 - queue tables
 - runner lease tables
-- persistence backend
-- service API endpoints
 - multi-runner topology
 - implicit parallel planning from team membership alone
 
-## Definition of done for this planning seam
+Persistence backends and service API endpoints now exist in separately owned
+runtime/service layers. Their implementation does not move queue or runner
+topology into the logical TeamRun contract.
 
-This seam is complete enough when:
+## Historical definition of done
+
+The original design seam considered itself complete when:
 
 - the four core runtime entities are named, scoped, and concrete
 - `teamRun` clearly references exactly one `taskRunSpecId`
@@ -389,7 +418,7 @@ Execution-envelope rule:
 
 ## Serialization guidance
 
-The first implementation should choose shapes that can serialize cleanly to:
+The implementation uses shapes that serialize cleanly to:
 
 - JSON
 - NDJSON event streams
@@ -419,23 +448,38 @@ Recommended foreign-key shape:
 - `handoff.toStepId -> step.id`
 - `sharedState.teamRunId -> teamRun.id`
 
-## Not in scope
+## Logical-model non-goals
 
-This plan does not define:
+This logical model does not own:
 
 - queue tables
 - runner lease tables
-- persistence backend
-- service API endpoints
-- exact TypeScript file/module placement
+- persistence backend selection
+- service API endpoint policy
+- runner/lease/queue/retry ownership
 
-## Definition of done for this planning seam
+## Acceptance Criteria
 
-This seam is complete enough when:
+- [x] logical run, step, handoff, shared-state, local-action, artifact, failure,
+      and history entities are typed and schema-validated
+- [x] task-aware runs preserve exactly one task-spec/team binding while
+      assignment intent remains in `TaskRunSpec`
+- [x] ordered dependencies, explicit handoffs, artifact refs, structured
+      outputs, and append-only history remain serializable
+- [x] runtime projection preserves logical identity while runner/lease/queue/
+      retry metadata stays operational
+- [x] complete runtime bundles persist with revision checks and support bounded
+      inspection/review reconstruction
+- [x] current docs distinguish historical sketches from live source and use
+      portable links
+- [x] focused provider-free tests and governance gates pass
 
-- the four core entities are named and scoped
-- minimum fields are explicit
-- ownership boundaries are explicit
-- serialization guidance is explicit
-- roadmap/execution docs point to this plan before service implementation
-  begins
+## Evidence Matrix
+
+| Contract | Current authority | Executable evidence |
+| --- | --- | --- |
+| Logical entity vocabulary and defaults | team types and model constructors | `tests/teams.types.test.ts`, `tests/teams.model.test.ts` |
+| Schema validation and bundle integrity | team schemas | `tests/teams.schema.test.ts` |
+| Logical-to-runtime projection | runtime model | `tests/runtime.model.test.ts` |
+| Durable complete-bundle persistence | runtime execution store | `tests/runtime.store.test.ts` |
+| Bounded durable reconstruction | team review ledger | `tests/teams.reviewLedger.test.ts` |

@@ -103,6 +103,10 @@
   `tests/teams.runtimeBridge.test.ts`, `tests/cli/teamRunCommand.test.ts`, and
   `tests/mcp/teamRun.test.ts`. Public compact/prebuilt validation uses
   `pnpm exec vitest run tests/http.responsesServer.test.ts -t "creates a bounded team run over HTTP|rejects invalid team-run create request bodies over HTTP|creates a team run from a prebuilt flattened taskRunSpec over HTTP|rejects compact assignment fields mixed with a prebuilt taskRunSpec over HTTP"`.
+- TeamRun logical data-model reconciliation is provider-free:
+  `pnpm exec vitest run tests/teams.types.test.ts tests/teams.schema.test.ts tests/teams.model.test.ts tests/runtime.model.test.ts tests/runtime.store.test.ts tests/teams.reviewLedger.test.ts --maxWorkers 1`.
+  It proves the typed/schema-validated logical bundle, runtime projection,
+  revisioned durable persistence, and bounded review reconstruction.
 - Recent-run browser-authority projection and console filtering are
   provider-free:
   `pnpm vitest run tests/runtime.responsesService.test.ts tests/runtime.control.test.ts tests/mcp.runtimeRunsRecent.test.ts tests/http.responsesServer.test.ts tests/ux.console.runAuthority.test.ts -t "detached|browser authority|runtime_runs_recent|projects bounded browser authority|operator console browser authority"`.
