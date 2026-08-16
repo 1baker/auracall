@@ -19983,3 +19983,13 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   frozen mismatches.
 - Completeness remains out of scope: the informational index need not enumerate
   every active plan, but every plan it does call active must be active.
+- The red test failed on the absent validator module. Four new unit tests now
+  cover bounded parsing plus every accepted and rejected state/input class, and
+  the audit reuses one canonical plan-state map for roadmap and plan-index
+  checks.
+- A controlled negative integration probe temporarily reintroduced closed Plan
+  0005. The real audit exited 1 with one exact terminal-plan error; after the
+  row was removed again, 339 candidates validate with zero errors.
+- Six focused tests, typecheck, zero-warning lint over four TypeScript files,
+  diff hygiene, and current CodeGraph sync/status pass. Plan 0338 closes
+  accepted without runtime behavior changes.

@@ -7,12 +7,12 @@
 Status: active
 Lane: P01
 
-- Active plan-index state integrity:
+- Closed accepted plan-index state integrity:
   [docs/dev/plans/0338-2026-08-15-plan-index-state-integrity.md](docs/dev/plans/0338-2026-08-15-plan-index-state-integrity.md)
-  Current state: the canonical plan audit protects roadmap Active labels but
-  not the informational active-plan index, whose curated section still lists
-  five terminal plans. This slice adds deterministic one-way state validation
-  and reconciles the frozen mismatches without requiring index completeness.
+  Current state: the canonical audit now rejects missing, malformed, duplicate,
+  state-less, unknown-state, or terminal entries in the curated active-plan
+  index. All five frozen terminal rows are removed while completeness remains
+  explicitly outside the informational index contract.
 
 - Closed accepted OpenAI agent API plan reconciliation:
   [docs/dev/plans/0337-2026-08-15-openai-agent-api-plan-reconciliation.md](docs/dev/plans/0337-2026-08-15-openai-agent-api-plan-reconciliation.md)

@@ -1,8 +1,8 @@
 # Plan Index State Integrity | 0338-2026-08-15
 
-State: OPEN
+State: CLOSED
 Lane: P01
-Plan version: 1
+Plan version: 2
 
 ## Goal
 
@@ -43,17 +43,17 @@ mismatch.
 
 ## Acceptance Criteria
 
-- [ ] The parser returns only canonical paths from the bounded active-plan
+- [x] The parser returns only canonical paths from the bounded active-plan
       section and ignores later audit/legacy sections.
-- [ ] Validation accepts `OPEN` and `PLANNED` entries and rejects terminal,
+- [x] Validation accepts `OPEN` and `PLANNED` entries and rejects terminal,
       missing, malformed, duplicate, or state-less entries deterministically.
-- [ ] `scripts/audit-plan-library.ts` applies the validator to the real plan
+- [x] `scripts/audit-plan-library.ts` applies the validator to the real plan
       index and shared canonical state map.
-- [ ] The five frozen terminal entries are absent while every retained indexed
+- [x] The five frozen terminal entries are absent while every retained indexed
       entry resolves to `OPEN` or `PLANNED`.
-- [ ] Testing and governance docs explain the enforced one-way contract without
+- [x] Testing and governance docs explain the enforced one-way contract without
       implying completeness.
-- [ ] Focused red/green tests, typecheck, zero-warning lint, plan audit, diff
+- [x] Focused red/green tests, typecheck, zero-warning lint, plan audit, diff
       hygiene, and CodeGraph sync pass.
 
 ## Definition Of Done
@@ -77,3 +77,20 @@ entry, and executable tests preserve the curated-not-complete boundary.
   and the real index is clean, or the parser cannot isolate the documented
   active section and the blocker is recorded
 
+## Execution Notes
+
+- The red test failed because `scripts/planIndexState.ts` did not exist. Four
+  tests now cover bounded collection, `OPEN`/`PLANNED` acceptance, terminal/
+  missing/state-less/unknown rejection, duplicate and malformed entries, and a
+  missing section.
+- `scripts/audit-plan-library.ts` reads the real plan index and passes the same
+  canonical state map to both roadmap and plan-index validators.
+- Plans 0005, 0014, 0017, 0018, and 0063 were removed from the curated active
+  section. Every retained entry currently resolves to `OPEN`; completeness is
+  deliberately not enforced.
+- A controlled negative integration probe temporarily reintroduced closed Plan
+  0005. The real audit exited 1 with exactly one terminal-plan error; restoring
+  the row absent returned the audit to zero validation errors.
+- Six focused tests, typecheck, zero-warning lint over four touched TypeScript
+  files, the 339-plan audit, diff hygiene, and CodeGraph sync/status pass. Plan
+  0338 closes accepted without runtime behavior changes.

@@ -47732,3 +47732,9 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - The bounded repair will reuse the roadmap-state validation pattern, preserve
   the index's curated/non-complete role, and make any listed missing, malformed,
   duplicate, state-less, or terminal plan fail the canonical plan audit.
+- Red failed on the absent module; green passes four new validator tests plus
+  the two roadmap-state tests. The audit now shares one state map across both
+  authority checks and all five terminal rows are gone.
+- A negative real-audit probe rejected temporarily restored closed Plan 0005
+  with exit 1. Typecheck, zero-warning touched lint, the clean 339-plan audit,
+  diff hygiene, and CodeGraph sync/status pass. Plan 0338 closes accepted.

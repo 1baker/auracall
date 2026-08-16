@@ -17,6 +17,7 @@ import {
   collectMcporterMcpConfigErrors,
   collectPackageMcpBinErrors,
 } from './mcpLaunchContract.js';
+import { collectActivePlanIndexStateErrors } from './planIndexState.js';
 import { collectSpecializedSkillContractErrors } from './specializedSkillContract.js';
 
 type CandidateAction = 'keep' | 'merge' | 'retire';
@@ -74,6 +75,7 @@ const docsDevDir = join(repoRoot, 'docs', 'dev');
 const plansDir = join(docsDevDir, 'plans');
 const roadmapPath = join(repoRoot, 'ROADMAP.md');
 const runbookPath = join(repoRoot, 'RUNBOOK.md');
+const planIndexPath = join(docsDevDir, 'plan-index.md');
 const agentsPath = join(repoRoot, 'AGENTS.md');
 const packagePath = join(repoRoot, 'package.json');
 const mcporterConfigPath = join(repoRoot, 'config', 'mcporter.json');
@@ -173,17 +175,18 @@ function collectValidationErrors(
   rawCandidates: Array<{ relPath: string; text: string; contentSignals: Candidate['contentSignals'] }>
 ): string[] {
   const errors: string[] = [];
+  const planStates = new Map(
+    rawCandidates.map((candidate) => [candidate.relPath, candidate.contentSignals.planState]),
+  );
 
   if (roadmapText.includes(staleWorkspacePath)) {
     errors.push(`ROADMAP.md: contains stale absolute workspace path ${staleWorkspacePath}`);
   }
 
   errors.push(
-    ...collectActiveRoadmapPlanStateErrors(
-      roadmapText,
-      new Map(rawCandidates.map((candidate) => [candidate.relPath, candidate.contentSignals.planState])),
-    ),
+    ...collectActiveRoadmapPlanStateErrors(roadmapText, planStates),
   );
+  errors.push(...collectActivePlanIndexStateErrors(planIndexText, planStates));
   errors.push(...collectMissingAgentsPolicyReferenceErrors(agentsText, existingPolicyPaths));
   errors.push(...collectCurrentDocAbsoluteLinkErrors(currentDocumentation));
   errors.push(...collectCurrentDocRetiredCheckoutErrors(currentDocumentation));
@@ -231,6 +234,7 @@ function collectValidationErrors(
 
 const roadmapText = readFileSync(roadmapPath, 'utf8');
 const runbookText = readFileSync(runbookPath, 'utf8');
+const planIndexText = readFileSync(planIndexPath, 'utf8');
 const agentsText = readFileSync(agentsPath, 'utf8');
 const packageText = readFileSync(packagePath, 'utf8');
 const mcporterConfigText = readFileSync(mcporterConfigPath, 'utf8');

@@ -24,7 +24,6 @@ should either be:
 
 Current canonical active execution plan:
 - `docs/dev/plans/0001-2026-04-14-execution.md`
-- `docs/dev/plans/0005-2026-04-14-durable-state-account-mirroring.md`
 - `docs/dev/plans/0006-2026-04-14-team-config-boundary.md`
 - `docs/dev/plans/0007-2026-04-14-config-model-refactor.md`
 - `docs/dev/plans/0008-2026-04-14-browser-profile-family-refactor.md`
@@ -33,10 +32,6 @@ Current canonical active execution plan:
 - `docs/dev/plans/0011-2026-04-14-browser-service-refactor-roadmap.md`
 - `docs/dev/plans/0012-2026-04-14-service-volatility-refactor.md`
 - `docs/dev/plans/0013-2026-04-14-gemini-completion.md`
-- `docs/dev/plans/0014-2026-04-14-browser-service-reattach-reliability.md`
-- `docs/dev/plans/0017-2026-04-16-runtime-inspection-service-state-probe.md`
-- `docs/dev/plans/0018-2026-04-17-service-state-quality-follow-up.md`
-- `docs/dev/plans/0063-2026-04-29-agent-roles-and-lazy-account-mirroring.md`
 - `docs/dev/plans/0065-2026-05-10-db-backed-agent-registry.md`
 - `docs/dev/plans/0066-2026-05-16-searchable-run-cache-and-artifact-archive.md`
 - `docs/dev/plans/0067-2026-05-16-react-operator-ux-redesign.md`
@@ -44,6 +39,8 @@ Current canonical active execution plan:
 Audit helper:
 - `pnpm run plans:audit`
 - `pnpm run plans:audit -- --json`
+- every entry above must resolve to a canonical plan with `State: OPEN` or
+  `State: PLANNED`; the list is curated and does not imply completeness
 
 Legacy archive:
 - use serial + ctime datestamp filenames

@@ -22152,3 +22152,14 @@ browser-stage lifecycle observability, not transcript truncation.
 - Classify unfinished neighboring work by explicit owner. A separate open plan
   or external distribution decision does not reopen a satisfied parent
   acceptance contract.
+
+## 2026-08-15 | Validate curated active indexes one way
+
+- An informational active-plan list may intentionally omit active plans, but
+  every entry it does include must exist and carry an active canonical state.
+  Enforce soundness without silently converting curation into completeness.
+- Parse only the named bounded section. Later audit commands and legacy notes
+  can contain plan-like paths without becoming active-index authority.
+- Reuse the canonical plan-state map across roadmap and index checks, and prove
+  the integration fail-closed with one controlled terminal-row mutation rather
+  than trusting a clean audit alone.

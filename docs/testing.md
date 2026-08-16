@@ -83,11 +83,13 @@
   `pnpm vitest run tests/ux.console.handoffAdapters.test.ts`. It proves the
   three-value selector contract and that only Recover Live sends the selected
   adapter.
-- Roadmap active-state audit regression:
-  `pnpm vitest run tests/roadmapPlanState.test.ts` followed by
-  `pnpm run plans:audit`. An `Active` roadmap bullet linked to a canonical
-  `CLOSED` or `CANCELLED` plan must fail the audit; unlinked active prose is
-  outside this narrow check.
+- Roadmap and plan-index active-state audit regression:
+  `pnpm vitest run tests/roadmapPlanState.test.ts tests/planIndexState.test.ts`
+  followed by `pnpm run plans:audit`. An `Active` roadmap bullet or a curated
+  plan-index active entry linked to a canonical `CLOSED` or `CANCELLED` plan
+  must fail the audit. The plan index also rejects missing, malformed,
+  duplicate, state-less, or unknown-state entries; it remains informational
+  and does not have to enumerate every `OPEN` or `PLANNED` plan.
 - Recent-run browser-authority projection and console filtering are
   provider-free:
   `pnpm vitest run tests/runtime.responsesService.test.ts tests/runtime.control.test.ts tests/mcp.runtimeRunsRecent.test.ts tests/http.responsesServer.test.ts tests/ux.console.runAuthority.test.ts -t "detached|browser authority|runtime_runs_recent|projects bounded browser authority|operator console browser authority"`.
