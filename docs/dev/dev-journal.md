@@ -47723,3 +47723,12 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   the other seven focused files, and the provider-free scoped-handoff smoke.
   Plan-state/current-doc checks pass 7 tests; the 338-plan audit, diff hygiene,
   and current CodeGraph status pass. Plan 0337 closes without runtime changes.
+
+## 2026-08-15 | Plan 0338 opens plan-index state integrity
+
+- Plan 0337 removed closed Plan 0064 from the informational active-plan list,
+  exposing the repeatable defect: five other terminal entries remain and no
+  executable validator covers that section.
+- The bounded repair will reuse the roadmap-state validation pattern, preserve
+  the index's curated/non-complete role, and make any listed missing, malformed,
+  duplicate, state-less, or terminal plan fail the canonical plan audit.

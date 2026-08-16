@@ -19971,3 +19971,15 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   no Markdown and is not claimed as a documentation gate.
 - Plan 0064 remains closed with reconciled follow-on ownership. Plan 0337 closes
   accepted without runtime changes.
+
+## Turn 434 | 2026-08-15
+
+- Plan 0338 opens the deterministic follow-up to Plan 0337's index finding.
+  The curated active-plan section currently contains twelve `OPEN` entries and
+  five terminal entries: Plans 0005, 0014, 0017, 0018, and 0063.
+- The existing plan audit protects roadmap Active labels only. This slice adds
+  an analogous bounded plan-index parser and validation seam, rejects missing,
+  malformed, duplicate, state-less, and terminal entries, and removes the five
+  frozen mismatches.
+- Completeness remains out of scope: the informational index need not enumerate
+  every active plan, but every plan it does call active must be active.

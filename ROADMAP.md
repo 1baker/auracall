@@ -7,6 +7,13 @@
 Status: active
 Lane: P01
 
+- Active plan-index state integrity:
+  [docs/dev/plans/0338-2026-08-15-plan-index-state-integrity.md](docs/dev/plans/0338-2026-08-15-plan-index-state-integrity.md)
+  Current state: the canonical plan audit protects roadmap Active labels but
+  not the informational active-plan index, whose curated section still lists
+  five terminal plans. This slice adds deterministic one-way state validation
+  and reconciles the frozen mismatches without requiring index completeness.
+
 - Closed accepted OpenAI agent API plan reconciliation:
   [docs/dev/plans/0337-2026-08-15-openai-agent-api-plan-reconciliation.md](docs/dev/plans/0337-2026-08-15-openai-agent-api-plan-reconciliation.md)
   Current state: every parent Plan 0064 criterion now maps to current executable
