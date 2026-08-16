@@ -90,6 +90,13 @@
   must fail the audit. The plan index also rejects missing, malformed,
   duplicate, state-less, or unknown-state entries; it remains informational
   and does not have to enumerate every `OPEN` or `PLANNED` plan.
+- Team config boundary reconciliation is provider-free:
+  `pnpm exec vitest run tests/configModel.test.ts tests/teams.model.test.ts tests/teams.schema.test.ts tests/teams.service.test.ts tests/teams.runtimeBridge.test.ts tests/teams.store.test.ts tests/cli/teamRunCommand.test.ts tests/mcp/teamRun.test.ts --maxWorkers 1`.
+  HTTP creation parity is covered by
+  `pnpm exec vitest run tests/http.responsesServer.test.ts -t "creates a bounded team run over HTTP|creates a team run from a prebuilt flattened taskRunSpec over HTTP"`.
+  It proves reusable team ownership, inherited agent/runtime/browser context,
+  separate task and durable-run state, deterministic role planning, and
+  execution through the service-host boundary.
 - Recent-run browser-authority projection and console filtering are
   provider-free:
   `pnpm vitest run tests/runtime.responsesService.test.ts tests/runtime.control.test.ts tests/mcp.runtimeRunsRecent.test.ts tests/http.responsesServer.test.ts tests/ux.console.runAuthority.test.ts -t "detached|browser authority|runtime_runs_recent|projects bounded browser authority|operator console browser authority"`.

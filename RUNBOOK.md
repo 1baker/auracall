@@ -19993,3 +19993,21 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
 - Six focused tests, typecheck, zero-warning lint over four TypeScript files,
   diff hygiene, and current CodeGraph sync/status pass. Plan 0338 closes
   accepted without runtime behavior changes.
+
+## Turn 435 | 2026-08-15
+
+- Plan 0339 opens a bounded semantic reconciliation of Plan 0006. The original
+  ownership and inheritance boundary remains sound, but its CLI-era and
+  future-service wording predates shipped `TaskRunSpec`, durable team-run,
+  runtime-bridge, service-host, HTTP, and MCP behavior.
+- The audit is documentation-only unless current executable evidence exposes a
+  real boundary gap. Adjacent Plans 0002, 0003, and 0004 retain their own state
+  pending separate criterion audits.
+- CodeGraph plus direct source reads map every original ownership and layer
+  criterion to current schema, resolution, task-spec, durable-run, runtime-
+  bridge, and service-host authority. No runtime boundary gap was found.
+- Eight focused provider-free core files pass 111 tests, and two filtered HTTP
+  assertions prove compact and prebuilt-spec team-run creation. Typecheck,
+  eleven governance/link tests, the 340-plan audit, diff hygiene, and CodeGraph
+  status pass. Plan 0006 and Plan 0339 close accepted without runtime behavior
+  changes.

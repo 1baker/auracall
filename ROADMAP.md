@@ -7,6 +7,13 @@
 Status: active
 Lane: P01
 
+- Closed accepted Team Config Boundary reconciliation:
+  [docs/dev/plans/0339-2026-08-15-team-config-boundary-reconciliation.md](docs/dev/plans/0339-2026-08-15-team-config-boundary-reconciliation.md)
+  Current state: current source and 113 focused assertions prove Plan 0006's
+  reusable-team, inherited-runtime, separate assignment/run-state, and
+  service-host execution boundaries. Historical CLI/future-runner wording is
+  reconciled, and terminal Plan 0006 is absent from the active-plan index.
+
 - Closed accepted plan-index state integrity:
   [docs/dev/plans/0338-2026-08-15-plan-index-state-integrity.md](docs/dev/plans/0338-2026-08-15-plan-index-state-integrity.md)
   Current state: the canonical audit now rejects missing, malformed, duplicate,
@@ -3402,9 +3409,15 @@ Current note:
     - resolved team inspection is now visible in:
       - `config show`
       - `profile list`
+    - explicit team-run entrypoints now accept or construct a concrete
+      `TaskRunSpec`, persist distinct team/run state, and execute through the
+      runtime bridge and service host
   - current semantic checkpoint:
-    - the next design question is still broader execution/orchestration
-      boundary, not more selection plumbing
+    - Plan 0006's team ownership and inheritance boundary is implemented:
+      - team config owns reusable coordination intent
+      - `TaskRunSpec` owns the concrete assignment and run-specific policy
+      - durable team/run records own attempt state and execution linkage
+      - the service host owns scheduling, runners, leases, retry, and recovery
     - current reassessment decision:
       - the config-boundary hardening sub-lane is now maintenance-mode unless
         a new concrete resolver or migrate mismatch is found
@@ -3443,9 +3456,9 @@ Current note:
         - explicit role `order` still drives sequencing
         - `handoffToRole` remains advisory metadata, not dependency rewrite
           policy
-    - future service-mode runners and parallelism should remain a higher layer,
-      not be implied by current team config alone
-    - future teams are expected to become the orchestration layer for:
+    - service-mode runners and parallelism remain a higher layer and are not
+      implied by team config alone
+    - teams are the reusable orchestration layer for:
       - divide-and-conquer task decomposition
       - multi-turn automation across agents
       - explicit inter-agent data handoff
@@ -3477,30 +3490,12 @@ Execution docs:
 - Team run review ledger: [docs/dev/plans/0015-2026-04-15-team-run-review-ledger.md](docs/dev/plans/0015-2026-04-15-team-run-review-ledger.md)
 
 Next recommendation:
-- keep broader public team execution writes paused on HTTP/MCP surfaces
-- the first concrete task / run-spec shape is now defined in the canonical plan
-- the concrete `teamRun` execution contract is now defined in the canonical team-run plan
-- the first internal implementation slice is now live for durable `taskRunSpec` persistence plus `taskRunSpec -> teamRun -> runtime` projection
-- the bounded CLI write surface is now live as `auracall teams run` on top of
-  that same sequential bounded single-host local-runner bridge
-- the bounded internal inspection/readback seam for that persisted linkage is now live on existing response/recovery surfaces
-- the narrow internal debug/inspection command is now live as `auracall teams inspect`
-- the first bounded public read-only team inspection surface is now live as `GET /v1/team-runs/inspect`
-  - current lookup keys:
-    - `taskRunSpecId`
-    - `teamRunId`
-    - `runtimeRunId`
-- the first bounded public read-only runtime queue surface is now live as `GET /v1/runtime-runs/inspect`
-  - current lookup keys:
-    - `runId`
-    - `runtimeRunId`
-    - `teamRunId`
-    - `taskRunSpecId`
-  - optional runner evaluation:
-    - `runnerId`
-- next, keep broader public team execution writes paused on HTTP/MCP surfaces
-  while tightening runner/service-mode ownership and preserving the current
-  bounded CLI local-runner bridge
+- Plan 0006 closes accepted; its original
+  architectural boundary is implemented without team config absorbing browser,
+  assignment, durable-run, or runner ownership.
+- Audit adjacent Plans 0002, 0003, and 0004 independently. Their current
+  `OPEN` state must be judged against their own larger acceptance contracts,
+  not inferred from Plan 0006 closure.
 
 Browser reliability maintenance note:
 - default-tenant account-health validation reproduced a generic browser-service

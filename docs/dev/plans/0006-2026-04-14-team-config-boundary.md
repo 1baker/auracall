@@ -1,27 +1,36 @@
 # Team Config Boundary Plan | 0006-2026-04-14
 
-State: OPEN
+State: CLOSED
 Lane: P01
+Plan version: 2
 
 ## Current State
 
-- roadmap classification: active supporting authority for the primary
-  service/runner orchestration lane
-- the repo still uses the team boundary as a governing architecture document
-  from both the roadmap and the adjacent canonical team/task plans
-- the planning-compliance framework is green, so this slice is promoting the
-  team boundary into canonical authority without changing its semantics
-- the live need is stable authority placement and cross-link wiring, not a
-  deeper rewrite of team semantics
-- the old loose path will remain searchable in the legacy archive once the
-  canonical plan is wired
+- `TeamConfigSchema` now models reusable workflow or dispatch-pool team
+  definitions with members, roles, coordination instructions, dispatch intent,
+  project intent, and metadata.
+- Team resolution remains compositional through
+  `team -> agent -> runtimeProfile -> browserProfile`; team selection does not
+  become an implicit top-level runtime selector.
+- `TaskRunSpec` carries a concrete assignment and run-specific policy, while
+  persisted team-run records carry the durable attempt, steps, handoffs, shared
+  state, events, and execution linkage.
+- The runtime bridge and `ExecutionServiceHost` now execute that intent through
+  explicit CLI, HTTP, and MCP team-run entrypoints. Scheduling, leases, retries,
+  runner ownership, and parallelism remain execution-layer concerns.
+- Explicit role `order` drives deterministic planned sequencing;
+  `handoffToRole` remains validated advisory metadata and does not rewrite
+  dependency edges.
+- Plan 0339 audited this boundary against current executable evidence. The
+  historical design seam closes without implying adjacent Plans 0002, 0003, or
+  0004 are also reconciled.
 
 # Team Config Boundary Plan
 
 ## Purpose
 
-Define the first explicit contract for future Aura-Call teams without
-implementing team execution yet.
+Define the stable ownership and layering contract for Aura-Call teams without
+letting team config absorb assignment, browser/account, or runner concerns.
 
 This document answers four questions:
 
@@ -39,11 +48,11 @@ The intended layering remains:
 3. agent
 4. team
 5. task / run spec
-6. future service/runners orchestration
+6. service/runners orchestration
 
-A team should coordinate multiple agents. It should not become another place
-that redefines browser/account identity, and it should not prematurely absorb
-runner/service concerns that belong to a later always-on execution layer.
+A team coordinates multiple agents. It does not redefine browser/account
+identity, and it does not absorb runner/service concerns owned by the execution
+layer.
 
 ## Canonical role of a team
 
@@ -120,7 +129,7 @@ This keeps team membership compositional:
 
 ## Team-owned concerns
 
-A future team may own concerns like:
+A team may own concerns like:
 
 - member roles
 - ordered or named membership
@@ -136,7 +145,7 @@ A future team may own concerns like:
 - allowed host/local-action request policy
 - response-shape contracts for member outputs
 - default stop/escalation rules
-- future execution policy hints that describe desired coordination behavior
+- execution policy hints that describe desired coordination behavior
 
 These are orchestration concerns, not browser/account concerns.
 
@@ -160,9 +169,9 @@ Those remain owned below the team layer by:
 - AuraCall runtime profiles
 - agents
 
-## Current CLI-era rule
+## Current selection and execution rule
 
-During the current CLI era, teams should remain read-only and selection-oriented.
+Generic runtime selection remains read-only and selection-oriented for teams:
 
 That means:
 
@@ -171,14 +180,18 @@ That means:
 - teams may be validated
 - teams may be resolved to their member runtime/browser contexts
 
-That does not mean:
+That generic selection seam does not itself:
 
-- team execution exists
-- team invocation semantics are final
-- parallel execution is implied
+- execute a team
+- imply parallel execution
 - current internal step-builder defaults are the final product meaning of `team`
 
-Current role-planning policy in this CLI-era checkpoint:
+Team execution now exists through explicit bounded entrypoints that construct
+or accept a `TaskRunSpec`, persist a distinct team run, and invoke the runtime
+bridge/service host. Current public write paths include CLI, HTTP, and MCP; they
+do not turn `--team` into an implicit runtime-profile selector.
+
+Current role-planning policy:
 
 - explicit role `order` currently drives planned step sequencing
 - when explicit role order ties, current planning stays deterministic through a
@@ -188,33 +201,30 @@ Current role-planning policy in this CLI-era checkpoint:
 - `handoffToRole` does not currently rewrite planned dependency edges or step
   order by itself
 
-That policy should remain explicit until a later slice deliberately chooses
-behavior-facing team orchestration semantics.
+Changing that policy requires a deliberate behavior-facing orchestration slice.
 
-## Future service/runners boundary
+## Current service/runners boundary
 
-Aura-Call is expected to gain a service mode with runners and parallelism after
-the CLI feature set is stable.
+AuraCall now has a service host, durable runners, leases, queueing, recovery,
+and bounded team execution. The original separation remains intact:
 
-When that happens:
-
-- teams may become an input to the service/runners layer
+- teams are an input to the service/runners layer
 - teams should describe orchestration intent:
   - which agents collaborate
   - how work may be divided
   - how intermediate results may pass between agents
   - what kind of multi-turn coordination is desired
-- runner assignment and parallelism policy should be modeled there, not hidden
+- runner assignment and parallelism policy are modeled there, not hidden
   inside team membership alone
-- team config may later describe desired coordination policy, but actual
+- team config describes desired coordination policy, while actual
   scheduling/execution belongs to the service/runners layer
 
 Important rule:
 
-- do not make today's team config imply tomorrow's runner topology by accident
+- do not make team config imply runner topology by accident
 
-Examples of concerns that belong to the future service/runners layer, not the
-current team layer:
+Examples of concerns that belong to the service/runners layer, not the team
+layer:
 
 - worker pool sizing
 - parallel fan-out limits
@@ -223,8 +233,8 @@ current team layer:
 - background service lifecycle
 - long-lived runner ownership
 
-Examples of concerns that belong to the team layer, but only once the
-service/runners layer exists to execute them safely:
+Examples of concerns that belong to the team layer and are executed through
+the service/runners layer:
 
 - divide-and-conquer task plans across multiple agents
 - staged multi-turn workflows where one agent's output becomes another's input
@@ -236,21 +246,19 @@ Important separation:
 - team config should express coordination intent
 - task / run-spec input should express the concrete assignment and run-specific
   constraints
-- the future service/runners layer should decide how to schedule and execute
+- the service/runners layer should decide how to schedule and execute
   that intent
 
-## Near-term selection policy
+## Current public-surface policy
 
-The next safe incremental step is read-only selection semantics only.
-
-A future `--team <name>` selection seam should mean:
+A generic `--team <name>` selection seam means:
 
 - resolve the named team
 - resolve its member agents
 - resolve each member's runtime profile and browser profile
 - surface that result in inspection/doctor/runtime planning paths
 
-It should not yet mean:
+It does not by itself mean:
 
 - execute each member
 - choose a member automatically for work
@@ -259,13 +267,30 @@ It should not yet mean:
 - treat declared member order as the permanent meaning of team workflow
 - assume one member always maps to one prompt-shaped step in the public model
 
+Explicit team-run surfaces are separate. They require a concrete assignment,
+produce inspectable durable linkage, and execute only through the service-host
+boundary.
+
 ## Definition of done for this design seam
 
-This seam is complete enough when:
+This seam is complete when:
 
-- docs state clearly what teams own
-- docs state clearly what teams inherit
-- docs state clearly what teams must not own
-- docs explicitly separate team config from future service/runners orchestration
-- roadmap/execution docs link to this boundary before any team execution
-  semantics land
+- [x] docs state clearly what teams own
+- [x] docs state clearly what teams inherit
+- [x] docs state clearly what teams must not own
+- [x] docs explicitly separate team config from service/runners orchestration
+- [x] current source and provider-free tests prove the team/task/run/service
+      separation and deterministic role-planning policy
+- [x] roadmap and active-plan authority match the reconciled terminal state
+
+## Evidence Matrix
+
+| Boundary | Current authority | Executable evidence |
+| --- | --- | --- |
+| Team-owned reusable coordination | `TeamConfigSchema`, `parseTeamRolePlanningConfigs` | `tests/configModel.test.ts`, `tests/teams.model.test.ts` |
+| Inherited member execution context | `resolveTeamSelection`, `resolveTeamRuntimeSelections` | `tests/configModel.test.ts` |
+| Concrete assignment outside team config | `TaskRunSpec`, `buildBoundedTeamTaskRunSpec` | `tests/teams.schema.test.ts`, `tests/cli/teamRunCommand.test.ts` |
+| Durable attempt outside assignment config | team-run bundle/store and runtime linkage | `tests/teams.model.test.ts`, `tests/teams.store.test.ts` |
+| Scheduling/execution outside team membership | `createTeamRuntimeBridge`, `ExecutionServiceHost` | `tests/teams.service.test.ts`, `tests/teams.runtimeBridge.test.ts` |
+| Explicit public execution boundary | CLI team-run command, HTTP team-run route, and MCP `team_run` | `tests/cli/teamRunCommand.test.ts`, `tests/http.responsesServer.test.ts`, `tests/mcp/teamRun.test.ts` |
+| Deterministic role order; advisory handoff | role-aware step planner | `tests/teams.model.test.ts` |

@@ -47738,3 +47738,20 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - A negative real-audit probe rejected temporarily restored closed Plan 0005
   with exit 1. Typecheck, zero-warning touched lint, the clean 339-plan audit,
   diff hygiene, and CodeGraph sync/status pass. Plan 0338 closes accepted.
+
+## 2026-08-15 | Plan 0339 opens Team Config Boundary reconciliation
+
+- Plan 0006's reusable-team, inherited-runtime, and browser/account non-
+  ownership boundaries still match current source.
+- Its CLI-era and future-service narrative is stale because task specs, durable
+  team runs, a runtime bridge, service-host scheduling, and public HTTP/MCP
+  team-run entrypoints now exist.
+- Plan 0339 will map every original criterion to provider-free executable
+  evidence and close Plan 0006 only if the full boundary remains proved.
+- Current source preserves the distinction between planning-only generic team
+  selection and explicit team-run execution through a concrete task spec and
+  service host. No ownership or layering gap was found.
+- The focused 8-file / 111-test core suite plus two filtered HTTP creation
+  assertions, typecheck, eleven governance/link tests, 340-plan audit, diff
+  hygiene, and CodeGraph status pass. Plan 0006 and Plan 0339 close accepted
+  without runtime behavior changes.
