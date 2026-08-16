@@ -1,7 +1,8 @@
 # Team Service Execution Plan | 0004-2026-04-14
 
-State: OPEN
+State: CLOSED
 Lane: P01
+Plan version: 2
 
 ## Current State
 
@@ -13,6 +14,7 @@ Lane: P01
 - the adjacent canonical planning cluster now exists under `docs/dev/plans/`:
   - `0002-2026-04-14-task-run-spec.md`
   - `0003-2026-04-14-team-run-data-model.md`
+- Plans 0002 and 0003 now close accepted after independent completion audits
 - the adjacent task/run-spec and team-run contracts are now concrete enough to
   support bounded execution work, not just planning
 - the first internal implementation slice is now live for projecting one
@@ -132,18 +134,19 @@ Lane: P01
   - keep sectioned public task-run-spec envelopes deferred
   - keep multi-runner execution, background worker pools, reassignment loops,
     and parallel execution out until explicitly selected
+- Plan 0342 proved the complete bounded service-execution contract and closes
+  this parent plan without changing runtime behavior
 
 # Team Service Execution Plan
 
 ## Purpose
 
-Define the first execution contract for future team runs once Aura-Call grows
-service mode, runners, and parallelism.
+Define the bounded execution contract for team runs across service mode,
+runners, controls, recovery, and public write surfaces.
 
-This plan is intentionally one layer above the current CLI-only `--team`
-planning surface. It does not authorize implementation by itself. It defines
-the default assumptions the later service/runners work should follow unless a
-better reason emerges.
+This plan began one layer above the historical CLI-only `--team` planning
+surface. It now records the assumptions implemented by later bounded
+service/runner slices and the product work that remains explicitly deferred.
 
 ## Position in the stack
 
@@ -182,9 +185,10 @@ Safer model:
 This avoids baking one-off task detail into long-lived team definitions while
 still allowing highly opinionated team behaviors.
 
-## North-star use cases
+## Team orchestration direction
 
-Future teams are expected to support:
+The bounded implementation supports sequential multi-agent work and explicit
+handoffs. The longer-range direction still includes:
 
 - divide-and-conquer work across multiple agents
 - multi-turn automation that moves through multiple agents in sequence
@@ -207,10 +211,10 @@ should be conservative:
 These defaults optimize for operator clarity and debuggability before
 throughput.
 
-## Execution model
+## Current execution model
 
-The future execution model should treat a team run as an orchestration graph
-with a conservative MVP shape:
+The execution model treats a team run as an orchestration graph with a
+conservative bounded shape:
 
 - one concrete task / run spec is bound to one selected team
 - a team run resolves to a list of member execution steps
@@ -486,8 +490,7 @@ Next implementation work in this lane should start only from one of:
 
 ## Shared run state
 
-One future team run should own one shared state object with append-only
-history.
+One team run owns one shared state object with append-only history.
 
 Minimum responsibilities:
 
@@ -676,9 +679,9 @@ Current bounded implication:
   - aggregate `/status?recovery=1`
   - `/v1/runtime-runs/inspect`
 
-## MVP recommendation
+## Shipped bounded execution posture
 
-The first real team execution MVP should be:
+The shipped bounded team execution posture is:
 
 - sequential only
 - one team run at a time
@@ -726,7 +729,7 @@ The completed first implementation slice is:
 - explicit `taskRunSpecId -> teamRun.id` binding
 - deterministic initial statuses for planned vs runnable steps
 
-### Out of scope
+### Original-slice out of scope
 
 - multi-runner execution
 - queue topology
@@ -734,12 +737,13 @@ The completed first implementation slice is:
 - implicit parallelism
 - best-effort or compensating execution policies
 - broad runner-affinity work beyond what current runtime identity already needs
-- broader public team-execution write surfaces beyond the current bounded CLI
-  entrypoint
+- broader public team-execution write surfaces beyond the then-current bounded
+  CLI entrypoint; later Plans 0019 and 0023 delivered HTTP/MCP writes as
+  separate reviewed slices
 
-### Proposed implementation target
+### Shipped implementation target
 
-The first implementation slice should produce this durable chain:
+The first implementation slice produced this durable chain:
 
 - persisted `taskRunSpec`
 - one persisted `teamRun` with:
@@ -755,9 +759,9 @@ The first implementation slice should produce this durable chain:
   - `browserProfileId` when present
   - `service`
 
-### Suggested code seam
+### Implementation seams
 
-Keep the first implementation slice bounded to current runtime/team layers:
+The first implementation slice stayed bounded to runtime/team layers:
 
 - `src/teams/model.ts`
 - `src/teams/runtimeBridge.ts`
@@ -767,13 +771,13 @@ Keep the first implementation slice bounded to current runtime/team layers:
 - `src/runtime/projection.ts`
 - adjacent tests for teams/runtime projection
 
-Important rule:
+Important evolution rule:
 
-- keep broader external-control-surface widening paused beyond the current
-  bounded CLI entrypoint
-- prove the internal projection path and single-host bridge first
+- the internal projection path and single-host bridge landed first
+- later CLI, HTTP, MCP, inspection, scheduler-control, and recovery surfaces
+  widened only through separately bounded successor plans
 
-### Acceptance criteria for the first implementation slice
+### Historical acceptance criteria for the first implementation slice
 
 - one `taskRunSpec` can be persisted and validated
 - one internal projection creates exactly one `teamRun`
@@ -783,7 +787,8 @@ Important rule:
 - no assignment-intent fields are duplicated onto `teamRun`
 - the bounded CLI write surface stays on the same sequential bounded
   single-host local-runner bridge
-- no broader public HTTP/MCP team-execution write surface is introduced
+- no broader public HTTP/MCP team-execution write surface was introduced in
+  that original slice; later Plans 0019 and 0023 own those additions
 
 ### Verification target
 
@@ -794,32 +799,54 @@ Minimum proof for the first code slice should include:
 - focused teams/runtime bridge tests for step projection
 - `pnpm exec tsc -p tsconfig.json --noEmit`
 
-### Follow-on checkpoint after this slice
+### Completed follow-on checkpoints
 
-Only after the internal projection path is stable should the repo decide whether to:
+After the internal projection path stabilized, bounded successor plans decided
+to:
 
-- expose a bounded internal command for debugging
-- widen beyond the current bounded CLI entrypoint
-- widen toward runner/service orchestration details
+- expose bounded inspection/debug commands
+- add HTTP and MCP team-run writes
+- add route-neutral service-host ownership, runner topology, scheduler
+  authority/control, background drain, recovery, and operator controls
 
-## Not in scope for this plan
+## Original planning non-goals and current ownership
 
-- concrete CLI flags for team execution
-- runner implementation details
-- queue schema
-- persistence backend choice
-- service deployment layout
-- final schema naming for `task` vs `run spec`
+The initial design did not select concrete CLI flags, runner details, queue
+schema, persistence backend, deployment layout, or final task naming. Later
+bounded plans implemented the first five where needed without moving them into
+team config; Plan 0024 selected the flattened `TaskRunSpec` contract.
 
-## Definition of done for this planning seam
+Fleet scheduling, background worker pools, non-local assignment, implicit
+parallelism, and service deployment redesign remain outside this bounded
+execution contract.
 
-This seam is complete enough when:
+## Acceptance Criteria
 
-- team orchestration intent is clearly separated from runner execution concerns
-- the default execution assumptions are explicit
-- the handoff payload contract is explicit
-- the shared run-state requirement is explicit
-- the failure/retry ownership split is explicit
-- the first internal implementation slice is explicitly bounded
-- the first internal implementation slice is recorded as shipped
-- roadmap/execution docs point to this plan before any team execution work begins
+- [x] one task/team binding projects into a sequential fail-fast logical run
+      and durable runtime execution
+- [x] steps, dependencies, handoffs, shared state, local actions, failures, and
+      artifacts remain explicit and inspectable
+- [x] route-neutral runner lifecycle, serialized drain, recovery, claim,
+      scheduler/operator control, lease repair, and local-action mutations are
+      owned by `ExecutionServiceHost`
+- [x] HTTP retains listener, timer scheduling, parsing, status, and transport
+      projection rather than duplicating host mutations
+- [x] CLI, HTTP, and MCP team-run writes share the bounded task/team/runtime
+      chain and compact/prebuilt validation
+- [x] inspection, recovery, and response readback preserve team-only identity,
+      current claimant authority, handoffs, artifacts, outputs, and controls
+- [x] fleet scheduling, worker pools, non-local assignment, and implicit
+      parallelism remain explicitly deferred
+- [x] focused provider-free tests and governance gates pass
+
+## Evidence Matrix
+
+| Contract | Current authority | Executable evidence |
+| --- | --- | --- |
+| Task/team planning and service plan | team model/service | `tests/teams.service.test.ts` |
+| Logical-to-runtime execution | team runtime bridge | `tests/teams.runtimeBridge.test.ts` |
+| Runner/claim/control/recovery ownership | execution service host and runner/control modules | `tests/runtime.serviceHost.test.ts`, `tests/runtime.runner.test.ts`, `tests/runtime.control.test.ts` |
+| Runner persistence/topology | runner control/store | `tests/runtime.runnersControl.test.ts`, `tests/runtime.runnersStore.test.ts` |
+| Inspection authority | runtime inspection | `tests/runtime.inspection.test.ts` |
+| CLI and MCP execution | team-run command and MCP tool | `tests/cli/teamRunCommand.test.ts`, `tests/mcp/teamRun.test.ts` |
+| HTTP execution/status/control/recovery | responses server | `tests/http.responsesServer.test.ts` |

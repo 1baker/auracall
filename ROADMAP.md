@@ -7,6 +7,13 @@
 Status: active
 Lane: P01
 
+- Closed accepted team service-execution reconciliation:
+  [docs/dev/plans/0342-2026-08-15-team-service-execution-reconciliation.md](docs/dev/plans/0342-2026-08-15-team-service-execution-reconciliation.md)
+  Current state: 192 focused assertions prove the bounded team/runtime chain,
+  service-host ownership, runner/control/recovery, inspection, and CLI/HTTP/MCP
+  execution surfaces. Historical future/CLI-only text is reconciled, every
+  named successor is closed, and Plan 0004 closes accepted.
+
 - Closed accepted TeamRun data-model reconciliation:
   [docs/dev/plans/0341-2026-08-15-team-run-data-model-reconciliation.md](docs/dev/plans/0341-2026-08-15-team-run-data-model-reconciliation.md)
   Current state: 34 focused tests prove the typed/schema-validated logical
@@ -3507,9 +3514,10 @@ Next recommendation:
 - Plan 0006 closes accepted; its original
   architectural boundary is implemented without team config absorbing browser,
   assignment, durable-run, or runner ownership.
-- Plans 0002 and 0003 close accepted after independent contract audits. Audit
-  adjacent Plan 0004 independently; its current `OPEN` state must be judged
-  against its larger service-execution acceptance contract.
+- Plans 0002, 0003, and 0004 close accepted after independent assignment,
+  logical-model, and bounded service-execution audits. Keep fleet scheduling,
+  worker pools, non-local assignment, and implicit parallelism separately
+  scoped until a concrete product requirement selects them.
 
 Browser reliability maintenance note:
 - default-tenant account-health validation reproduced a generic browser-service

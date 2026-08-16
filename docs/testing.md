@@ -107,6 +107,12 @@
   `pnpm exec vitest run tests/teams.types.test.ts tests/teams.schema.test.ts tests/teams.model.test.ts tests/runtime.model.test.ts tests/runtime.store.test.ts tests/teams.reviewLedger.test.ts --maxWorkers 1`.
   It proves the typed/schema-validated logical bundle, runtime projection,
   revisioned durable persistence, and bounded review reconstruction.
+- Bounded team service-execution reconciliation is provider-free:
+  `pnpm exec vitest run tests/teams.service.test.ts tests/teams.runtimeBridge.test.ts tests/runtime.serviceHost.test.ts tests/runtime.control.test.ts tests/runtime.runner.test.ts tests/runtime.inspection.test.ts tests/runtime.runnersControl.test.ts tests/runtime.runnersStore.test.ts tests/cli/teamRunCommand.test.ts tests/mcp/teamRun.test.ts --maxWorkers 1`.
+  Focused HTTP host/status/control coverage uses the matching test-title filter
+  recorded in Plan 0342. Together these prove the route-neutral host boundary,
+  runner lifecycle and claims, explicit controls, recovery, inspection, and
+  public team-run execution without provider or browser activity.
 - Recent-run browser-authority projection and console filtering are
   provider-free:
   `pnpm vitest run tests/runtime.responsesService.test.ts tests/runtime.control.test.ts tests/mcp.runtimeRunsRecent.test.ts tests/http.responsesServer.test.ts tests/ux.console.runAuthority.test.ts -t "detached|browser authority|runtime_runs_recent|projects bounded browser authority|operator console browser authority"`.
