@@ -19955,3 +19955,19 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   evidence, preserve open searchable-archive work under Plan 0066, classify
   shared-skill promotion as separately owned, and remove the closed parent from
   the informational active-plan list without changing runtime behavior.
+- The audit found one additional current-state drift: ChatGPT semantic examples
+  still named the older Auto/Instant/Thinking controls. Current source and
+  tests map stable intent onto GPT-5.6 Terra/Luna/Sol effort tiers and GPT-5.5,
+  so Plan 0064 now records that executable contract.
+- Current HTTP, configured-executor, config-model, selector, MCP, setup-service,
+  and specialized-skill coverage passed 331 of 332 assertions. The unrelated
+  account-mirror backlog assertion passed in isolation; all Plan 0064 contract
+  assertions were green. The provider-free scoped-handoff smoke also passed
+  model discovery, direct response readback, and a two-child batch.
+- A clean 14-test filtered HTTP receipt and the other seven focused files' 103
+  passing tests bind every parent criterion to current behavior. Plan-state and
+  current-doc portability pass 7 tests; the 338-plan audit has zero validation
+  errors; diff hygiene and CodeGraph status pass. Biome intentionally processes
+  no Markdown and is not claimed as a documentation gate.
+- Plan 0064 remains closed with reconciled follow-on ownership. Plan 0337 closes
+  accepted without runtime changes.

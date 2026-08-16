@@ -2,6 +2,7 @@
 
 State: CLOSED
 Date: 2026-05-10
+Plan version: 2
 
 ## Context
 
@@ -71,12 +72,14 @@ Implemented:
 - raw agent `model` and `projectId` are honored by browser-backed configured
   execution
 - ChatGPT semantic selectors resolve into current browser controls:
-  - `chatgpt:auto` -> `Auto`
-  - `chatgpt:instant` -> `Instant`
-  - `chatgpt:thinking-standard` -> `Thinking` + `standard`
-  - `chatgpt:thinking-extended` -> `Thinking` + `extended`
-  - `chatgpt:pro-standard` -> `Pro` + `standard`
-  - `chatgpt:pro-extended` -> `Pro` + `extended`
+  - `chatgpt:auto` / `chatgpt:terra` -> `GPT-5.6 Terra`
+  - `chatgpt:instant` / `chatgpt:luna` -> `GPT-5.6 Luna`
+  - `chatgpt:thinking-standard`, `chatgpt:sol`, `chatgpt:sol-medium`, and
+    legacy `chatgpt:pro-standard` -> `GPT-5.6 Sol` + `standard`
+  - `chatgpt:thinking-extended`, `chatgpt:sol-high`, and legacy
+    `chatgpt:pro-extended` -> `GPT-5.6 Sol` + `extended`
+  - `chatgpt:sol-extra-high` / `chatgpt:sol-pro` -> `GPT-5.6 Sol` + `heavy`
+  - `chatgpt:gpt-5.5` -> `GPT-5.5`
 - Grok semantic selectors resolve into current browser controls:
   - `grok:auto` -> `Auto`
   - `grok:instant` -> `Fast`
@@ -161,16 +164,57 @@ Remaining: none.
   generated scoped env, validates `/v1/models`, submits one `/v1/responses`
   request, and polls readback without operator privileges.
 
-## Next Work
+## Completion Evidence Audit | 2026-08-15
 
-- Add first-class batch retry/cancel/priority controls once response-batch
-  dogfooding shows the minimal status contract is stable.
-- Ensure `/v1/responses`, `/v1/chat/completions`, `/v1/response-batches`, and
+- Configured-agent `/v1/responses` routing: current
+  `tests/http.responsesServer.test.ts` proves configured agent discovery and
+  catalog hydration before execution.
+- Non-streaming and streaming chat completions: the same HTTP contract proves
+  configured-agent `chat.completion` projection, valid chunks through the
+  installed OpenAI Node SDK, durable response-id recovery, structured pending
+  and terminal errors, and disconnect-safe execution.
+- Agent configuration projection: `tests/configModel.test.ts` proves service,
+  raw model, semantic selector, project, knowledge, and prompt fields while
+  exact object assertions reject unset-field noise.
+- Semantic selector execution: `tests/config/modelSelector.test.ts` proves the
+  closed-world current mappings; `tests/runtime.configuredExecutor.test.ts`
+  proves ChatGPT, Grok, and Gemini resolution before browser execution and
+  rejects unsupported selectors before launch.
+- Local configuration control plane: `tests/http.responsesServer.test.ts` and
+  `tests/mcp.configEntities.test.ts` prove agent/team writes and reads through
+  HTTP and MCP without hand-editing config files.
+- Model discovery and authorization: the HTTP contract proves configured-agent
+  and semantic-selector `/v1/models` entries, required bearer keys, execution
+  allow-lists, registry-backed agent scopes, and user service-environment key
+  loading.
+- Setup/execution skill split: `tests/specializedSkillContract.test.ts` checks
+  endpoint, MCP, package, repo-local skill, and documentation authority against
+  `docs/agent-workflows.md` and the bundled setup/execution skills.
+- Redacted setup handoff: HTTP, MCP, and
+  `tests/projects.agentSetupPackageService.test.ts` prove one project-bound
+  setup operation writes the scoped env while returning only non-secret path,
+  model, project, key-id, and restart metadata.
+- Env-only downstream execution: `pnpm run smoke:scoped-client-handoff` passed
+  against an isolated provider-free server. It consumed only the generated
+  client env, discovered the agent model, created and polled one direct
+  response, then completed a two-child response batch with the scoped key.
+- The focused current-state audit passed 331 of 332 assertions across eight
+  files. The sole unrelated account-mirror backlog assertion passed on an
+  immediate isolated rerun, classifying it as order-sensitive fixture
+  interference rather than a Plan 0064 contract failure.
+
+## Follow-On Status
+
+- Delivered: response-batch cancellation, retry, and priority closed accepted
+  in Plans 0334, 0335, and 0336 respectively.
+- Separately owned: ensuring `/v1/responses`, `/v1/chat/completions`,
+  `/v1/response-batches`, and
   `/v1/team-runs` write enough stable metadata for the searchable run
-  cache/archive lane to index uploads, generated artifacts, provider
-  conversation ids, and caller evidence.
-- Promote the generic AuraCall skills into the shared agent-skill source of
-  truth after their repo-local versions prove useful.
+  cache/archive lane remains open under Plan 0066.
+- Separately owned and non-blocking: promotion of the generic repo-local
+  AuraCall skills into an external shared skill source remains a distribution
+  decision. The bundled skills and their executable contract stay authoritative
+  for this repository until such a destination is selected.
 
 ## Closure Evidence
 
@@ -183,3 +227,12 @@ Remaining: none.
   22, Ubuntu 24/Node 24, macOS/Node 22, and `windows-latest`/Node 22.
 - All acceptance criteria above remain implemented and provider-free local
   validation passes. Plan 0064 therefore closes accepted.
+- Response-batch cancellation exact-SHA acceptance
+  [31912516695](https://github.com/1baker/auracall/actions/runs/31912516695)
+  passed at `a2eb9307dbbdbf00400e6e26f95d391666987571` under Plan 0334.
+- Response-batch retry exact-SHA acceptance
+  [31913863421](https://github.com/1baker/auracall/actions/runs/31913863421)
+  passed at `e8f6be8a6f10e3346d374b04bb516d3fc6f42d54` under Plan 0335.
+- Response-batch priority exact-SHA acceptance
+  [31915204142](https://github.com/1baker/auracall/actions/runs/31915204142)
+  passed at `cb557d23a9a9aae02384d877c8bafe4e85061586` under Plan 0336.

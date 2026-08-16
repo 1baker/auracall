@@ -1,8 +1,8 @@
 # OpenAI Agent API Plan Reconciliation | 0337-2026-08-15
 
-State: OPEN
+State: CLOSED
 Lane: P01
-Plan version: 1
+Plan version: 2
 
 ## Goal
 
@@ -46,18 +46,19 @@ OpenAI-compatible agent API behavior.
 
 ## Acceptance Criteria
 
-- [ ] Every Plan 0064 acceptance criterion has a current authoritative evidence
+- [x] Every Plan 0064 acceptance criterion has a current authoritative evidence
       mapping, and no mapping relies only on the plan's own closure claim.
-- [ ] Plans 0334, 0335, and 0336 are recorded as the delivered cancellation,
+- [x] Plans 0334, 0335, and 0336 are recorded as the delivered cancellation,
       retry, and priority follow-ons with their exact accepted SHAs/CI runs.
-- [ ] Searchable archive work points to open Plan 0066, and shared-skill
+- [x] Searchable archive work points to open Plan 0066, and shared-skill
       promotion is labeled separately owned and non-blocking for Plan 0064.
-- [ ] The informational active-plan index no longer classifies closed Plan 0064
+- [x] The informational active-plan index no longer classifies closed Plan 0064
       as active.
-- [ ] Plan 0064, roadmap, runbook, journal, and fixes guidance agree on the
+- [x] Plan 0064, roadmap, runbook, journal, and fixes guidance agree on the
       reconciled ownership and terminal state.
-- [ ] Focused contract tests, plan audit, lint for touched documentation, diff
-      hygiene, and CodeGraph status pass.
+- [x] Focused contract tests, plan audit, plan-state and current-doc portability
+      tests, diff hygiene, and CodeGraph status pass. Biome intentionally
+      ignores Markdown and is not a documentation gate.
 
 ## Definition Of Done
 
@@ -75,7 +76,30 @@ plan list.
 - required_inputs: current source/test/docs, Plans 0064/0066/0333-0336,
   exact-SHA acceptance receipts, plan-audit rules
 - validation: focused OpenAI agent API/selector/config/auth/SDK/batch contracts,
-  documentation lint, plan audit, plan-state tests, diff hygiene, CodeGraph
+  plan audit, plan-state/current-doc tests, diff hygiene, CodeGraph
 - terminal_condition: all criteria are evidenced and authorities reconcile, or
   a missing Plan 0064 contract reopens implementation work with the exact gap
 
+## Execution Notes
+
+- Current source and tests revealed that Plan 0064's ChatGPT examples lagged
+  the accepted GPT-5.6 selector migration. The parent now records stable
+  auto/instant/thinking/pro aliases against Terra, Luna, and Sol effort tiers,
+  plus the GPT-5.5 escape hatch.
+- All twelve parent criteria map to current HTTP, configured-executor,
+  config-model, selector, MCP, setup-service, specialized-skill, and scoped
+  handoff-smoke evidence. A clean filtered HTTP receipt passed 14 contracts;
+  the other seven focused files passed 103 tests.
+- The initial broad eight-file run passed 331 tests and exposed one unrelated
+  order-sensitive account-mirror fixture assertion. That exact assertion
+  passed immediately in isolation and no Plan 0064 assertion failed.
+- `pnpm run smoke:scoped-client-handoff` passed isolated project setup,
+  redacted handoff, generated-env loading, model discovery, direct response
+  polling, and a two-child scoped batch.
+- The plan audit reports 338 candidates and zero validation errors; plan-state
+  plus current-doc portability pass 7 tests; diff hygiene and current CodeGraph
+  status pass. Biome processed zero Markdown files by repository configuration,
+  so it is recorded as unavailable rather than misreported as a passing gate.
+- Plan 0064 remains closed. Plans 0334-0336 are delivered follow-ons, open Plan
+  0066 owns archive completion, and external shared-skill promotion remains a
+  separate non-blocking distribution choice. Plan 0337 closes accepted.

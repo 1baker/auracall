@@ -7,13 +7,12 @@
 Status: active
 Lane: P01
 
-- Active OpenAI agent API plan reconciliation:
+- Closed accepted OpenAI agent API plan reconciliation:
   [docs/dev/plans/0337-2026-08-15-openai-agent-api-plan-reconciliation.md](docs/dev/plans/0337-2026-08-15-openai-agent-api-plan-reconciliation.md)
-  Current state: parent Plan 0064 is accepted, but its follow-on ledger still
-  describes delivered batch controls as future work and the informational plan
-  index still calls the closed parent active. This slice maps every criterion
-  to current evidence and reconciles those ownership records without changing
-  runtime behavior.
+  Current state: every parent Plan 0064 criterion now maps to current executable
+  evidence, current ChatGPT selector examples match GPT-5.6 controls, delivered
+  batch controls point to Plans 0334-0336, open archive work points to Plan
+  0066, and the closed parent is absent from the informational active index.
 
 - Closed accepted durable response-batch priority:
   [docs/dev/plans/0336-2026-08-15-durable-response-batch-priority.md](docs/dev/plans/0336-2026-08-15-durable-response-batch-priority.md)

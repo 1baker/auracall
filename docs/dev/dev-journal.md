@@ -47714,3 +47714,12 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - The slice will prove each parent criterion from current source/tests and
   durable CI, then classify batch controls as delivered, archive work as Plan
   0066-owned, and external skill promotion as a separate non-blocking decision.
+- The evidence matrix maps all twelve parent criteria to current HTTP, runtime,
+  config, MCP, setup-service, skill-contract, and provider-free smoke authority.
+- Plan 0064's ChatGPT mapping now matches current GPT-5.6 Terra/Luna/Sol effort
+  controls and GPT-5.5. Plans 0334-0336 own delivered batch controls, Plan 0066
+  keeps archive work, and shared-skill promotion remains separately owned.
+- Clean criterion-specific evidence includes 14 HTTP tests, 103 tests across
+  the other seven focused files, and the provider-free scoped-handoff smoke.
+  Plan-state/current-doc checks pass 7 tests; the 338-plan audit, diff hygiene,
+  and current CodeGraph status pass. Plan 0337 closes without runtime changes.

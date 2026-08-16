@@ -22140,3 +22140,15 @@ browser-stage lifecycle observability, not transcript truncation.
 - Priority grants no authority: keep actionable-class policy, recovery
   capacity, FIFO ties, leases, affinity, concurrency, rate, and tenant gates
   independently enforceable.
+
+## 2026-08-15 | Reconcile closed parent plans after follow-ons land
+
+- A closed parent can remain semantically correct while its current-state
+  examples, future-work list, or informational indexes drift behind accepted
+  successor plans. Audit those references after the last named follow-on lands.
+- Map each parent acceptance criterion to current executable source/tests, not
+  only to the parent's historical closure statement. Preserve exact-SHA
+  successor receipts for features that landed after parent closure.
+- Classify unfinished neighboring work by explicit owner. A separate open plan
+  or external distribution decision does not reopen a satisfied parent
+  acceptance contract.
