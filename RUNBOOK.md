@@ -20079,3 +20079,20 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   diff hygiene, and CodeGraph sync/status pass. Plan 0007 and Plan 0343 close
   accepted without runtime behavior changes; Plans 0008 and 0009 stay open for
   their separately scoped browser-family and typed-agent work.
+
+## Turn 440 | 2026-08-20
+
+- Plan 0344 opens an independent completion audit of Plan 0001's planning-
+  migration contract. The canonical planning system and audits are established,
+  but Plan 0001 still names its original 18-plan inventory and closed team/task
+  plans as active future work.
+- The roadmap P02 Now section also still calls closed Plan 0084 the immediate
+  next action, while the P01 execution board correctly identifies open Plan
+  0114 as the active gated product lane.
+- Direct authority reads map every Plan 0001 criterion to current roadmap,
+  runbook, plan/index, policy, audit, and focused-test evidence. No planning
+  enforcement gap or runtime change is required.
+- Four governance/link files pass 13 tests. Typecheck, the 345-plan audit,
+  portable-path scan, diff hygiene, and CodeGraph status pass. Plan 0001 and
+  Plan 0344 close accepted; Plan 0114 remains gated on separate authorization
+  for one live cross-service upload/submit proof.

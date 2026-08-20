@@ -47809,3 +47809,13 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   roadmap agree that bridge keys remain supported maintenance inputs.
 - Plan 0007 leaves the curated active index and closes with Plan 0343. Plans
   0008 and 0009 retain independent open scope; no runtime behavior changed.
+
+## 2026-08-20 | Plan 0344 closes the planning-migration umbrella
+
+- Plan 0001's original canonical-authority, board-alignment, next-lane, audit,
+  and durable-note criteria are all enforced by current repository surfaces.
+- Its original 18-plan inventory and team/service next-slice ledger are
+  historical, and the roadmap's old Plan 0084 immediate action is terminal
+  drift. Current authority names open Plan 0114 and its exact live-provider gate.
+- Plan 0001 leaves the curated active index and closes with Plan 0344. No
+  runtime behavior or product priority changed.

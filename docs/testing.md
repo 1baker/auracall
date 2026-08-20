@@ -90,6 +90,11 @@
   must fail the audit. The plan index also rejects missing, malformed,
   duplicate, state-less, or unknown-state entries; it remains informational
   and does not have to enumerate every `OPEN` or `PLANNED` plan.
+- Planning-authority migration reconciliation is provider-free:
+  `pnpm exec vitest run tests/roadmapPlanState.test.ts tests/planIndexState.test.ts tests/currentDocLinks.test.ts tests/agentsPolicyEntry.test.ts --maxWorkers 1`
+  followed by `pnpm run plans:audit`. It proves active roadmap/index state,
+  current-link portability, canonical policy entry wiring, and the complete
+  canonical-plan validation contract without changing runtime behavior.
 - Config-model refactor reconciliation is provider-free:
   `pnpm exec vitest run tests/configModel.test.ts tests/configMigrate.test.ts tests/schema/resolver.test.ts tests/browser/profileConfig.test.ts --maxWorkers 1`.
   It proves target-first browser/runtime selection, deterministic bridge and

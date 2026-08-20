@@ -22174,3 +22174,15 @@ browser-stage lifecycle observability, not transcript truncation.
   stale future-tense or placeholder-only sections.
 - Leave narrower open plans open only when they name independent criteria; link
   them as separate owners rather than hiding their scope inside the umbrella.
+
+## 2026-08-20 | Close migration umbrellas after enforcement replaces inventory
+
+- A one-time migration inventory should not remain an evergreen active plan
+  after canonical directories, authority roles, and deterministic enforcement
+  are established. Close it and let the roadmap plus bounded plans own priority.
+- Replace copied active-plan lists with audited projections. A historical list
+  drifts as soon as successor plans close, even when every underlying artifact
+  is sound.
+- Keep gated product work explicit: naming an active live-provider plan does not
+  authorize its remaining upload or submit action, and cleanup must not hide
+  that gate behind a stale “next action.”

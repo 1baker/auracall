@@ -7,6 +7,18 @@
 Status: active
 Lane: P01
 
+- Active gated cross-service handoff:
+  [docs/dev/plans/0114-2026-06-05-end-to-end-cross-service-handoff.md](docs/dev/plans/0114-2026-06-05-end-to-end-cross-service-handoff.md)
+  Current state: the supervised workflow and same-provider cross-tenant proof
+  are complete. One separately authorized live cross-service handoff remains;
+  planning cleanup does not authorize target upload or submit.
+
+- Closed accepted execution-plan reconciliation:
+  [docs/dev/plans/0344-2026-08-20-execution-plan-reconciliation.md](docs/dev/plans/0344-2026-08-20-execution-plan-reconciliation.md)
+  Current state: canonical planning migration and deterministic enforcement are
+  complete. The obsolete 18-plan inventory, closed team/service next lane, and
+  stale Plan 0084 immediate action are reconciled, and Plan 0001 closes.
+
 - Closed accepted config-model refactor reconciliation:
   [docs/dev/plans/0343-2026-08-20-config-model-refactor-reconciliation.md](docs/dev/plans/0343-2026-08-20-config-model-refactor-reconciliation.md)
   Current state: 98 provider-free assertions prove target-first browser/runtime
@@ -3862,21 +3874,14 @@ Safety note:
 
 ### Now
 
-- Primary active lane checkpoint: Plan 0083 is closed for state-gated safe Runs
-  controls in the greenfield `/console?view=runs` workbench.
-- Immediate next action: execute Plan 0084 for API memory/readback and
-  stale-runner compaction before adding Search/archive, API Access, launch,
-  broad retry, materialization recovery, or more control families.
-- Candidate next plan families, still to be split into detailed plans:
-  - API memory/readback and stale-runner compaction for the installed service:
-    open as Plan 0084
-  - live-follow health semantics that expose retry churn, failure history, and
-    replacement-loop state without regressing current target rollups
-  - explicit artifact recovery for known remote assets missing local
-    materialization evidence
-  - Gemini conversation-detail and asset-inventory confidence
-  - materialization/reconciliation readback parity across API, CLI, MCP, and
-    console operator surfaces
+- Primary active product lane: Plan 0114 end-to-end cross-service handoff.
+  Its implementation is complete; the sole remaining exit criterion is one
+  separately authorized live cross-service proof through the installed adapter.
+- No ungated product implementation plan is selected by this cleanup. Other
+  `OPEN` and `PLANNED` plans keep their own scope until the roadmap explicitly
+  selects one.
+- Plans 0083 and 0084 are closed historical console/reliability checkpoints;
+  neither is an immediate next action.
 - Launch and broad retry remain deferred until a future plan explicitly chooses
   that control family.
 - Service mode and runner orchestration remains paused after the current
