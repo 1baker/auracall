@@ -24,7 +24,6 @@ should either be:
 
 Current canonical active execution plan:
 - `docs/dev/plans/0001-2026-04-14-execution.md`
-- `docs/dev/plans/0007-2026-04-14-config-model-refactor.md`
 - `docs/dev/plans/0008-2026-04-14-browser-profile-family-refactor.md`
 - `docs/dev/plans/0009-2026-04-14-agent-config-boundary.md`
 - `docs/dev/plans/0010-2026-04-14-service-volatility-chatgpt.md`

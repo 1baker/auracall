@@ -9,11 +9,13 @@ Lane: P01
   service/runner orchestration lane when agent selection semantics affect
   runner-owned execution
 - the agent boundary is still referenced directly from the roadmap and from the
-  canonical config umbrella plan
-- the broader config architecture is now canonical under:
+  closed config umbrella plan
+- the broader config architecture closed accepted under:
   - `docs/dev/plans/0007-2026-04-14-config-model-refactor.md`
-- the current need is stable canonical placement for the agent boundary inside
-  that config cluster, not a semantic rewrite of the boundary itself
+- this plan remains the independent authority for future typed agent-owned
+  workflow defaults; the umbrella closure does not close this plan
+- canonical placement is complete; this plan remains open only for its explicit
+  typed agent-boundary scope
 - `config doctor` now enforces the first bounded ownership seam on
   `agents.<name>.defaults`:
   - runtime-selection bypass inside agent defaults should surface explicitly
@@ -39,8 +41,6 @@ Lane: P01
     phase
   - any future live agent-owned workflow defaults must come from a later
     execution-facing design slice, not from extending `0007` by momentum
-- the old loose path will remain searchable in the legacy archive once the
-  canonical plan is wired
 
 # Agent Config Boundary Plan
 

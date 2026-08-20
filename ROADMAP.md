@@ -7,6 +7,13 @@
 Status: active
 Lane: P01
 
+- Closed accepted config-model refactor reconciliation:
+  [docs/dev/plans/0343-2026-08-20-config-model-refactor-reconciliation.md](docs/dev/plans/0343-2026-08-20-config-model-refactor-reconciliation.md)
+  Current state: 98 provider-free assertions prove target-first browser/runtime
+  authority, deterministic bridge/legacy compatibility, conservative migration,
+  ownership diagnostics, and agent/team composition. Stale future-refactor
+  framing is reconciled, while Plans 0008 and 0009 retain their own open scope.
+
 - Closed accepted team service-execution reconciliation:
   [docs/dev/plans/0342-2026-08-15-team-service-execution-reconciliation.md](docs/dev/plans/0342-2026-08-15-team-service-execution-reconciliation.md)
   Current state: 192 focused assertions prove the bounded team/runtime chain,
@@ -3200,17 +3207,17 @@ Execution docs:
 
 Current note:
 - Phase 1 is complete enough through commit `196aad27`
-- named secondary browser profiles, dual-profile live smokes, and reattach/doctor boundary fixes are now green enough that this track can remain in maintenance mode while the larger config-model refactor becomes the active architecture track
+- named secondary browser profiles, dual-profile live smokes, and reattach/doctor
+  boundary fixes are green; this track remains maintenance-only under Plan 0008
 
 ### Config Model Refactor
 Status: maintenance
 
-Aura-Call now has clearer semantics in docs, but the config shape is still
-transitional. Browser concerns, AuraCall runtime concerns, and future higher
-layers like agents and teams should not continue to share overloaded profile
-concepts.
+AuraCall's four-layer config authority is implemented. Target keys are the
+primary public model, while bridge and legacy keys remain deterministic
+compatibility inputs rather than competing ownership models.
 
-This refactor should establish the long-term layering:
+The implemented layering is:
 
 - browser profiles
 - AuraCall runtime profiles
@@ -3235,14 +3242,14 @@ Current config-model checkpoint:
   - projected target model
 
 Current note:
-- the public config transition is now complete enough for a checkpoint
-- the next architecture question is no longer config-shape mechanics
-- the next active design/implementation track should be the agent/team-ready
-  layering that composes on top of:
+- Plan 0007 and its reconciliation Plan 0343 are closed accepted
+- the base config transition is complete and remains maintenance-only unless a
+  concrete resolver, migration, writeback, or diagnostics mismatch is reproduced
+- separately owned browser-family and typed-agent work composes on top of:
   - browser profiles
   - AuraCall runtime profiles
 - current checkpoint:
-  - reserved `agents` / `teams` are now:
+  - `agents` / `teams` are:
     - parsed
     - projected
     - inspected
@@ -3397,8 +3404,8 @@ Current note:
             `runtimeProfiles.<name>.keepBrowser`
           - runtime-profile `keepBrowser` remains fallback residue only when
             no browser-profile-level value exists
-        - the broader browser-owned runtime override block still remains
-          partially transitional:
+        - the browser-owned runtime override block remains accepted
+          compatibility input:
           - active resolution now prefers the referenced browser profile for:
             - `blockingProfileAction`
             - `chromePath`
@@ -3413,10 +3420,9 @@ Current note:
             - `wslChromePreference`
           - no browser-owned launch/browser-family field in that block now
             outranks the referenced browser profile during active resolution
-          - next contract-tightening checkpoint:
-            - doctor should now distinguish shadowed compatibility residue
-              from still-active runtime ownership when a runtime profile lacks
-              any browser profile reference
+          - doctor distinguishes shadowed compatibility residue from
+            still-active runtime ownership when a runtime profile lacks a
+            browser-profile reference
         - reassessment decision:
           - the first bounded root-browser compatibility-alias pass is now
           complete enough
@@ -3493,13 +3499,15 @@ Current note:
       - temporary overrides
 
 Sequencing rule:
-- do the config-model refactor before implementing agents
-- do not burn time on broad code symbol renames before that refactor
-- keep browser reliability in maintenance mode while this refactor becomes the
-  main planning/implementation track
+- treat the base config model as closed maintenance authority
+- route narrower browser-family work through Plan 0008 and typed agent-default
+  work through Plan 0009 or a new bounded successor
+- do not reopen broad symbol renames or compatibility deprecation without an
+  explicit product need
 
 Execution docs:
-- Repo-wide plan: [docs/dev/plans/0007-2026-04-14-config-model-refactor.md](docs/dev/plans/0007-2026-04-14-config-model-refactor.md)
+- Closed repo-wide plan: [docs/dev/plans/0007-2026-04-14-config-model-refactor.md](docs/dev/plans/0007-2026-04-14-config-model-refactor.md)
+- Completion audit: [docs/dev/plans/0343-2026-08-20-config-model-refactor-reconciliation.md](docs/dev/plans/0343-2026-08-20-config-model-refactor-reconciliation.md)
 - Target public shape: [docs/dev/config-model-target-shape.md](docs/dev/config-model-target-shape.md)
 - Input alias policy: [docs/dev/plans/legacy-archive/0031-2026-04-08-config-model-input-alias-plan.md](docs/dev/plans/legacy-archive/0031-2026-04-08-config-model-input-alias-plan.md)
 - Troubleshooting: [docs/dev/config-shape-troubleshooting.md](docs/dev/config-shape-troubleshooting.md)
@@ -3511,6 +3519,11 @@ Execution docs:
 - Team run review ledger: [docs/dev/plans/0015-2026-04-15-team-run-review-ledger.md](docs/dev/plans/0015-2026-04-15-team-run-review-ledger.md)
 
 Next recommendation:
+- Plan 0007 closes accepted after target authority, compatibility fallback,
+  migration/writeback, diagnostics, browser precedence, and agent/team
+  composition pass 98 focused assertions.
+- Keep Plan 0008 and Plan 0009 independently scoped; their open status does not
+  imply an unfinished base config-model transition.
 - Plan 0006 closes accepted; its original
   architectural boundary is implemented without team config absorbing browser,
   assignment, durable-run, or runner ownership.

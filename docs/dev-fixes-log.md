@@ -22163,3 +22163,14 @@ browser-stage lifecycle observability, not transcript truncation.
 - Reuse the canonical plan-state map across roadmap and index checks, and prove
   the integration fail-closed with one controlled terminal-row mutation rather
   than trusting a clean audit alone.
+
+## 2026-08-20 | Close architecture umbrellas when compatibility becomes maintenance
+
+- A supported compatibility surface does not make its parent refactor
+  perpetually active. Close the umbrella once target authority, fallback order,
+  migration/writeback, diagnostics, and higher-layer composition are proved.
+- Preserve bridge keys as an explicit maintenance contract and move any new
+  mismatch into a bounded repair. Do not keep already-shipped behavior under
+  stale future-tense or placeholder-only sections.
+- Leave narrower open plans open only when they name independent criteria; link
+  them as separate owners rather than hiding their scope inside the umbrella.

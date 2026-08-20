@@ -90,6 +90,11 @@
   must fail the audit. The plan index also rejects missing, malformed,
   duplicate, state-less, or unknown-state entries; it remains informational
   and does not have to enumerate every `OPEN` or `PLANNED` plan.
+- Config-model refactor reconciliation is provider-free:
+  `pnpm exec vitest run tests/configModel.test.ts tests/configMigrate.test.ts tests/schema/resolver.test.ts tests/browser/profileConfig.test.ts --maxWorkers 1`.
+  It proves target-first browser/runtime selection, deterministic bridge and
+  legacy compatibility, conservative migration/writeback, browser/service
+  ownership precedence, diagnostics, and agent/team composition.
 - Team config boundary reconciliation is provider-free:
   `pnpm exec vitest run tests/configModel.test.ts tests/teams.model.test.ts tests/teams.schema.test.ts tests/teams.service.test.ts tests/teams.runtimeBridge.test.ts tests/teams.store.test.ts tests/cli/teamRunCommand.test.ts tests/mcp/teamRun.test.ts --maxWorkers 1`.
   HTTP creation parity is covered by

@@ -1,625 +1,149 @@
 # Config Model Refactor Plan | 0007-2026-04-14
 
-State: OPEN
+State: CLOSED
 Lane: P01
+Plan version: 2
 
-## Current State
+## Goal
 
-- roadmap classification: maintenance-only unless a concrete config resolver,
-  migration, or diagnostics mismatch is reproduced
-- the repo-wide config architecture plan is still directly referenced from the
-  roadmap and continues to govern the remaining browser/runtime/agent/team
-  boundary work
-- the team boundary is now canonical under:
-  - `docs/dev/plans/0006-2026-04-14-team-config-boundary.md`
-- the planning-compliance framework is green, so this slice is promoting the
-  config-model umbrella into canonical authority without changing its
-  semantics
-- the live need is one stable authority path for the remaining config cluster,
-  not another semantic rewrite of the transition plan
+Separate browser, AuraCall runtime, agent, and team configuration into explicit
+composable layers while preserving compatibility with older config shapes.
 
-# Config Model Refactor Plan
+## Closed State
 
-## Purpose
+- The target public stack is implemented and schema-accepted as:
+  `browserProfiles -> runtimeProfiles -> agents -> teams`.
+- `runtimeProfiles.<name>.browserProfile` is the explicit runtime-to-browser
+  reference. Agent and team selection reuse the same runtime/browser resolver
+  rather than reopening browser ownership above that layer.
+- Target keys win deterministic dual-read precedence over bridge keys;
+  `auracallProfiles` remains a last-resort legacy fallback only.
+- Compatibility output remains available through bridge keys
+  `browserFamilies`, `profiles`, and `profiles.<name>.browserFamily`.
+- Browser-owned launch, source-profile, managed-profile, debug-port, and
+  lifecycle settings resolve from the referenced browser profile ahead of
+  runtime-profile residue.
+- Service-owned settings resolve from service bindings ahead of transitional
+  root-browser aliases. Managed-login fields remain explicit escape hatches.
+- `config doctor` reports mixed/conflicting shapes, legacy residue, misplaced
+  ownership, invalid agent/team references, and inert generic agent defaults.
+- `config migrate` performs only conservative, non-conflicting ownership moves,
+  prunes empty residue, and supports explicit target or compatibility output.
+- Plan 0343 independently mapped the original acceptance bar to current source
+  and 98 provider-free assertions. No unresolved base-layer behavior gap was
+  found, so this umbrella closes and future work requires its own bounded plan.
 
-Refactor Aura-Call's configuration model so browser concerns, runtime concerns,
-and future higher-level orchestration concepts compose cleanly instead of
-sharing overloaded terminology and partially overlapping config blocks.
+## Layer Contract
 
-## Why this exists
+### Browser profile
 
-The repo now has clearer terminology in docs:
+Owns browser/account-bearing state:
 
-- browser profile
-- source browser profile
-- managed browser profile
-- AuraCall runtime profile
-
-But the config shape is still transitional. It works, but it does not yet match
-the conceptual layering we want for future work such as agents and teams.
-
-## Target layering
-
-### 1. Browser profile
-
-Owns browser-service level runtime/account-family concerns:
-
-- executable and platform/runtime selection
-- WSL-vs-Windows behavior
-- source browser profile selection
-- source cookie/bootstrap paths
-- managed browser profile root/dir policy
+- executable, platform, display, and WSL behavior
+- source profile and cookie/bootstrap paths
+- managed profile root and derived managed-profile identity
 - debug-port policy
-- tab/window cleanup defaults
+- tab/window cleanup and browser lifecycle defaults
 
-Examples:
-- `default`
-- `wsl-chrome-2`
-- `windows-chrome-test`
+### AuraCall runtime profile
 
-### 2. AuraCall runtime profile
+References one browser profile and owns workflow/service defaults:
 
-Owns Aura-Call workflow defaults and references one browser profile.
-
-Typical concerns:
-- preferred service/provider
-- preferred model / model strategy
-- project defaults
+- preferred service/provider and model behavior
+- project/conversation defaults
 - cache defaults
-- service-specific identities/settings
+- service-specific identities, settings, and live-follow policy
 
-Important rule:
-- browser/account-bearing state should come from the selected browser profile,
-  not be redefined ad hoc inside the AuraCall runtime profile
+A runtime profile must not redefine browser/account-bearing state except through
+documented compatibility or advanced escape-hatch fields.
 
-### 3. Agent
+### Agent
 
-Future higher-level object that references an AuraCall runtime profile and adds:
+References one runtime profile and may add typed workflow specialization. Its
+generic `defaults` bag remains execution-inert; browser/runtime selection stays
+anchored on `agents.<name>.runtimeProfile`.
 
-- task-specific settings
-- custom instructions
-- persona/role behavior
-- narrower policy or tooling defaults
+The current live agent contract and any future typed agent-owned defaults remain
+governed by [Plan 0009](0009-2026-04-14-agent-config-boundary.md).
 
-Boundary reference:
-- [0009-2026-04-14-agent-config-boundary.md](/home/ecochran76/workspace.local/auracall/docs/dev/plans/0009-2026-04-14-agent-config-boundary.md)
+### Team
 
-### 4. Team
+Coordinates agents without absorbing browser, runtime, assignment, durable-run,
+or runner ownership. The reusable team boundary is closed under
+[Plan 0006](0006-2026-04-14-team-config-boundary.md); concrete assignments and
+execution are governed by the closed TaskRunSpec, TeamRun, and service-execution
+plans.
 
-Future grouping/orchestration object that coordinates multiple agents.
+## Compatibility Contract
 
-Boundary reference:
-- [0006-2026-04-14-team-config-boundary.md](/home/ecochran76/workspace.local/auracall/docs/dev/plans/0006-2026-04-14-team-config-boundary.md)
+| Concern | Target authority | Compatibility surface |
+| --- | --- | --- |
+| Browser profiles | `browserProfiles` | `browserFamilies` |
+| Runtime profiles | `runtimeProfiles` | `profiles`, then legacy `auracallProfiles` fallback |
+| Runtime/browser reference | `browserProfile` | `browserFamily` |
+| Default runtime selector | `defaultRuntimeProfile` | `auracallProfile` |
+| Root service/project defaults | service bindings | transitional root `browser` aliases |
+| Model/project defaults | root/service bindings | `llmDefaults` bridge |
 
-## Current state
+Compatibility surfaces are supported maintenance inputs, not preferred new
+authoring locations. A reproduced resolver, migration, or diagnostics mismatch
+should open a focused repair; compatibility presence alone does not reopen this
+completed architecture umbrella.
 
-What is already true:
+## Acceptance Criteria
 
-- docs now define the correct semantic split
-- target-shape is now the primary documented public model:
-  - `browserProfiles`
-  - `runtimeProfiles`
-- `browserFamilies` and `profiles.<name>.browserFamily` exist as a useful
-  bridge toward browser-profile-first config
-- reserved top-level `agents` and `teams` blocks now exist in the schema as
-  inert placeholders for the future refactor
-- reserved `agents` / `teams` are now also:
-  - projected
-  - inspected
-  - validated for missing references
-- one shared read-only resolver now exists for:
-  - `agent -> runtimeProfile -> browserProfile`
-- live WSL smokes are green for `default` and `wsl-chrome-2`
+- [x] Browser-profile selection is explicit and independent.
+- [x] AuraCall runtime profiles reference browser profiles instead of
+      duplicating browser ownership.
+- [x] Existing bridge and legacy configs continue to load and migrate through
+      deterministic compatibility rules.
+- [x] Managed-browser profile and cache behavior follow the selected
+      runtime/browser resolution deterministically.
+- [x] Agents and teams reference runtime profiles cleanly without inheriting
+      ambiguous browser semantics.
+- [x] Target/bridge conflicts and ownership residue are inspectable and
+      actionable through diagnostics.
+- [x] Focused config-model, migration, resolver, and browser-profile tests,
+      typecheck, governance/link checks, plan audit, diff hygiene, and
+      CodeGraph status pass.
 
-What is still transitional:
+## Evidence
 
-- `profiles` still mixes the final AuraCall runtime-profile concept with some
-  browser-oriented details
-- `browserFamilies` is a transitional implementation name, not necessarily
-  the final public shape
-- `manualLoginProfileDir` remains an escape hatch with too much conceptual
-  weight
+- `src/schema/types.ts` accepts target and bridge shapes.
+- `src/config/model.ts` owns target-first reads, legacy fallback, shared
+  runtime/agent/team resolution, projection, inspection, and doctor findings.
+- `src/config/migrate.ts` owns target/bridge output and conservative cleanup.
+- `src/schema/resolver.ts` applies target-first runtime selection and mirrors
+  transitional CLI aliases only where service ownership is unambiguous.
+- `src/browser/service/profileResolution.ts` resolves the selected runtime and
+  browser profile through the shared config-model seam.
+- `tests/configModel.test.ts`, `tests/configMigrate.test.ts`,
+  `tests/schema/resolver.test.ts`, and `tests/browser/profileConfig.test.ts`
+  pass 98 provider-free assertions.
+- [Plan 0343](0343-2026-08-20-config-model-refactor-reconciliation.md) records
+  the independent completion audit and terminal verification.
 
-Recent execution-adjacent checkpoint:
+## Historical Decisions Retained
 
-- the first non-reporting agent seam is now live enough to prove layering:
-  - `--agent <name>` resolves through:
-    - `agent -> runtimeProfile -> browserProfile`
-  - explicit AuraCall runtime profile selection still wins when both
-    `--profile` and `--agent` are present
-  - selected-agent provenance is now preserved in session metadata and surfaced
-    through the main inspection/session/status commands
-  - shared runtime/browser execution seams now also exist:
-    - `resolveRuntimeSelection(...)`
-    - `resolveSelectedBrowserProfileResolution(...)`
-  - selected-agent provenance is now preserved locally through:
-    - browser config
-    - browser runtime metadata
-    - session/status postmortem surfaces
+- Broad internal symbol renames were intentionally deferred; semantic ownership
+  and public authority were established first.
+- Bridge-key loading and compatibility output were retained deliberately rather
+  than removed during the refactor.
+- Root-browser service aliases and `llmDefaults` remain supported transitional
+  inputs, but service bindings are the preferred authoring surface.
+- `manualLogin` and `manualLoginProfileDir` remain bounded managed-profile
+  escape hatches; inert/default-equivalent residue is diagnosed or removed
+  conservatively.
+- Generic agent defaults were not made implicitly executable. Typed agent
+  behavior must be introduced through Plan 0009 or a successor, not through
+  accidental record merging.
+- Browser-family implementation refinements remain separately governed by
+  [Plan 0008](0008-2026-04-14-browser-profile-family-refactor.md).
 
-This means the next architectural question is not whether agent selection can
-compose cleanly. It is how the first team-side readiness seam should consume
-that established lower-layer selection path.
+## Definition Of Done
 
-Current team-ready checkpoint:
-
-- one shared read-only resolver now exists for:
-  - `team -> agent -> runtimeProfile -> browserProfile`
-- one shared read-only helper now exists for:
-  - team member runtime/browser activation contexts
-- team inspection is now visible in:
-  - `config show`
-  - `profile list`
-
-This means the next team-layer question is no longer basic composition. It is
-how to define future team selection/execution semantics without collapsing them
-into the later service/runners layer too early.
-
-Current diagnostic checkpoint:
-
-- `config doctor` now also warns when an AuraCall runtime profile still
-  carries browser-owned override state such as:
-  - broad launch/browser-family fields under `runtimeProfiles.<name>.browser`,
-    for example:
-    - `chromePath`
-    - `display`
-    - `wslChromePreference`
-  - top-level runtime-profile `keepBrowser`
-- this is a diagnostics-only checkpoint:
-  - compatibility loading remains intact
-  - operator guidance now pushes broad browser-owned overrides back toward the
-    referenced browser profile layer unless they are intentional advanced
-    escape hatches
-  - active `keepBrowser` precedence is now narrowed:
-    - when a runtime profile references a browser profile, the referenced
-      browser profile's `keepBrowser` now wins over legacy
-      `runtimeProfiles.<name>.keepBrowser`
-    - legacy runtime-profile `keepBrowser` remains only as fallback residue
-      when no browser-profile-level value exists
-  - active broad browser-owned precedence is now partially narrowed:
-    - the referenced browser profile now wins over conflicting
-      `runtimeProfiles.<name>.browser` values for:
-      - `blockingProfileAction`
-      - `chromePath`
-      - `display`
-      - debug-port controls
-      - `headless`
-      - `hideWindow`
-      - `remoteChrome`
-      - tab/window cleanup controls
-      - `managedProfileRoot`
-      - source-profile and cookie-source wiring
-      - `wslChromePreference`
-    - the remaining broad runtime browser override block is still live
-      advanced residue for now, including fields such as:
-      - none in the browser-owned launch/browser-family class
-    - doctor should now distinguish two cases for any remaining
-      runtime-profile browser-owned fields:
-      - when a browser profile is already referenced, treat the runtime value
-        as compatibility residue because the browser profile is authoritative
-      - when no browser profile is referenced yet, say directly that the
-        runtime value is still active only because the runtime profile has not
-        been moved onto an explicit browser profile
-- `config doctor` now splits service-scoped runtime browser fields into two
-  advisory classes when they are still defined under
-  `runtimeProfiles.<name>.browser`:
-  - relocatable service fields:
-    - `modelStrategy`
-    - `thinkingTime`
-    - `composerTool`
-  - managed-profile escape hatches:
-    - `manualLogin`
-    - `manualLoginProfileDir`
-  - current policy:
-  - keep top-level root browser config out of service ownership:
-    - `browser.modelStrategy`, `browser.thinkingTime`, and
-      `browser.composerTool` are legacy global service defaults, not
-      browser-family state
-    - `browser.projectName` and `browser.projectId` are also legacy global
-      service/project defaults, not browser-family state
-    - `browser.conversationName` and `browser.conversationId` are also legacy
-      global service/conversation defaults, not browser-family state
-    - doctor should flag those keys under the top-level `browser` block as
-      misplaced service/project-scoped defaults
-    - `llmDefaults` remains a compatibility bridge for model/project defaults
-      until that ownership seam is narrowed further
-  - prefer moving relocatable service fields into
-    `runtimeProfiles.<name>.services.<service>`
-  - keep those service fields off browser profiles entirely:
-    - browser profiles do not own service-layer defaults for
-      `modelStrategy`, `thinkingTime`, or `composerTool`
-    - doctor should treat those keys under a browser profile as misplaced
-      service-scoped overrides, not as another redundancy-cleanup target
-  - keep `manualLogin` and `manualLoginProfileDir` only as intentional escape
-    hatches until their ownership boundary is narrowed further
-  - current escape-hatch contract:
-    - browser mode still defaults to managed-profile interactive-login posture
-      unless `manualLogin: false` is set explicitly
-    - browser execution overrides still win over service fallback
-    - `manualLoginProfileDir` is only meaningful when `manualLogin` is true
-    - resolved service-binding / launch-profile layers should suppress
-      `manualLoginProfileDir` entirely when `manualLogin` is not active for
-      that same scope
-    - doctor should also warn when `manualLoginProfileDir` is set without
-      active `manualLogin`, because that path is otherwise inert config noise
-    - doctor should treat default-equivalent derived managed-profile paths as
-      redundant config noise, not as meaningful overrides
-  - `config migrate` may now move those fields automatically only when:
-    - the AuraCall runtime profile declares one concrete `defaultService`
-    - the destination `runtimeProfiles.<name>.services.<service>` slot is
-      unambiguous
-    - no conflicting service-level value already exists
-    - current bounded cleanup now covers:
-      - `manualLogin`
-      - `manualLoginProfileDir`
-      - `modelStrategy`
-      - `thinkingTime`
-      - `composerTool`
-
-Current migration checkpoint:
-
-- `config migrate` now performs one bounded cleanup for obvious browser-owned
-  runtime overrides:
-  - if a runtime profile already references a real browser profile, migrate can
-    hoist:
-    - broad launch/browser-family fields from
-      `runtimeProfiles.<name>.browser`
-    - runtime-profile `keepBrowser`
-    into that browser profile
-- the cleanup remains conservative:
-  - existing browser-profile values win
-  - conflicting runtime-profile values are preserved in place rather than
-    rewritten silently
-  - active resolution now matches that ownership tightening for
-    `keepBrowser`:
-    - `browserProfiles.<name>.keepBrowser` wins over legacy
-      `runtimeProfiles.<name>.keepBrowser` when both exist
-  - active resolution now also makes a bounded browser-profile-first rewrite
-    for:
-    - `blockingProfileAction`
-    - `chromePath`
-    - `display`
-    - debug-port controls
-    - `headless`
-    - `hideWindow`
-    - `remoteChrome`
-    - tab/window cleanup controls
-    - `managedProfileRoot`
-    - source-profile and cookie-source wiring
-    - `wslChromePreference`
-  - active resolution does not yet make the same rewrite for the remaining
-    broad browser-owned fields such as:
-    - none in the current browser-owned launch/browser-family field class
-  - relocatable service fields such as:
-    - `modelStrategy`
-    - `thinkingTime`
-    - `composerTool`
-    are now moved into `runtimeProfiles.<name>.services.<defaultService>`
-    only when the destination is explicit and non-conflicting
-  - managed-profile escape hatches:
-    - `manualLogin`
-    - `manualLoginProfileDir`
-    remain intentional runtime-browser residue by default, but now also move
-    into `runtimeProfiles.<name>.services.<defaultService>` when one concrete
-    `defaultService` makes the destination explicit and no conflicting
-    service-level value already exists
-  - `config migrate` may now also remove default-equivalent
-    `manualLoginProfileDir` values when they exactly match the managed profile
-    path Aura-Call would derive for the same AuraCall runtime profile +
-    service target
-  - `config doctor` and `config migrate` may now also treat
-    `runtimeProfiles.<name>.services.<service>.modelStrategy`,
-    `thinkingTime`, and `composerTool` as redundant when they exactly mirror
-    the already-inherited top-level `services.<service>` defaults
-  - browser-profile placement for those same fields remains diagnostics-only:
-    - there is no safe automatic relocation target at the browser-profile
-      layer because the current resolver treats them as runtime/service
-      concerns, not browser/account-family state
-  - top-level root-browser placement for those same fields also remains
-    diagnostics-only:
-    - root browser config is still a compatibility/defaults surface
-    - there is no safe automatic rewrite until the remaining `browser` versus
-      `llmDefaults` ownership contract is narrowed further
-    - policy decision:
-      - the current active root-browser service-default inventory remains a
-        supported transitional layer for now
-      - it is not compatibility-only, because the live resolver still uses it
-        directly
-      - it is also not the preferred authoring surface; prefer
-        `services.<service>` or `runtimeProfiles.<name>.services.<service>`
-        for new or cleaned-up config
-      - current usage audit result:
-        - this layer is still exposed by real operator-facing authoring paths,
-          not just by the live resolver
-        - current evidence includes:
-          - CLI flag mapping for:
-            - `--project-id`
-            - `--project-name`
-            - `--conversation-id`
-            - `--conversation-name`
-            - `--browser-model-strategy`
-            - `--browser-thinking-time`
-            - `--browser-composer-tool`
-          - browser-mode docs that still document legacy root-browser keys such
-            as:
-            - `browser.thinkingTime`
-            - `browser.manualLoginProfileDir`
-        - current classification:
-          - the following CLI flags remain supported transitional input on the
-            root `browser` block for now:
-            - `--project-id`
-            - `--project-name`
-            - `--conversation-id`
-            - `--conversation-name`
-            - `--browser-model-strategy`
-            - `--browser-thinking-time`
-            - `--browser-composer-tool`
-        - current narrowing checkpoint:
-          - `--project-id` and `--project-name` now also mirror into the
-            selected `runtimeProfiles.<name>.services.<defaultService>` block
-            when one concrete default service exists
-          - `--conversation-id` and `--conversation-name` now also mirror into
-            the selected `runtimeProfiles.<name>.services.<defaultService>`
-            block when one concrete default service exists
-          - `--browser-model-strategy`, `--browser-thinking-time`, and
-            `--browser-composer-tool` now also mirror into the selected
-            `runtimeProfiles.<name>.services.<defaultService>` block when one
-            concrete default service exists
-          - their root-browser mapping remains in place only as transitional
-            compatibility-alias input for now
-        - precedence checkpoint:
-          - those authoring paths are now explicitly preserved as supported
-            transitional input
-          - active service binding should prefer
-            `services.<service>` / `runtimeProfiles.<name>.services.<service>`
-            over the legacy root-browser copies when both exist
-          - keep `manualLogin` / `manualLoginProfileDir` outside that rewrite;
-            they remain browser-execution escape hatches
-        - reassessment decision:
-          - the first bounded root-browser alias reconciliation pass is now
-            complete enough
-          - keep this alias surface in maintenance mode for now
-          - do not open deprecation/reporting churn on it unless a later slice
-            explicitly chooses that scope
-    - current active root-browser service-default inventory is:
-      - `browser.modelStrategy`
-      - `browser.thinkingTime`
-      - `browser.composerTool`
-      - `browser.projectName`
-      - `browser.projectId`
-      - `browser.conversationName`
-      - `browser.conversationId`
-    - separate managed-profile escape hatches still remain:
-      - `browser.manualLogin`
-      - `browser.manualLoginProfileDir`
-    - current active service-binding precedence should now give:
-      - `services.<service>.projectName`
-      - `services.<service>.projectId`
-      - `services.<service>.conversationName`
-      - `services.<service>.conversationId`
-      - `services.<service>.modelStrategy`
-      - `services.<service>.thinkingTime`
-      - `services.<service>.composerTool`
-      priority over legacy root-browser copies when both exist
-  - `llmDefaults` model/project defaults also remain diagnostics-only:
-    - `llmDefaults.model`
-    - `llmDefaults.modelStrategy`
-    - `llmDefaults.defaultProjectName`
-    - `llmDefaults.defaultProjectId`
-    - they are still the compatibility bridge seam for legacy model/project
-      defaults
-    - doctor should flag them as compatibility-only service default state, not
-      as the preferred place to encode active service/project behavior
-    - there is no safe automatic rewrite until the remaining
-      `llmDefaults` versus `services.<service>` ownership contract is narrowed
-      further
-    - current compatibility-write contract also stays explicit:
-      - bridge output may still backfill `llmDefaults` from root
-        `model` / `browser.modelStrategy` / `browser.projectName` /
-        `browser.projectId` when no explicit `llmDefaults` block exists
-      - explicit `llmDefaults` values still win over that backfill path
-  - compatibility bridge writes now also honor the same target-first
-    authority as read-time dual-read:
-    - when bridge output is requested from mixed-shape input,
-      `browserProfiles` must overwrite stale `browserFamilies`
-    - `runtimeProfiles` must overwrite stale `profiles`
-    - `runtimeProfiles.<name>.browserProfile` must overwrite stale
-      `profiles.<name>.browserFamily`
-    - browser-owned `keepBrowser` should stay on bridge `browserFamilies`,
-      not drift back onto bridge `profiles`, when target-shaped config already
-      carries it under `browserProfiles.<name>`
-    - explicit bridge output should emit bridge-only keys, not preserve mixed
-      target + bridge residue
-  - legacy `auracallProfiles` now stays a last-resort compatibility fallback
-    only:
-    - keep it visible to inspection/doctor as legacy residue
-    - but do not let it outrank current `profiles` / `runtimeProfiles` when
-      choosing the active runtime-profile bridge
-  - empty `runtimeProfiles.<name>.services.<service>` stubs left behind by
-    conservative cleanup are now pruned as residue
-  - if `defaultService` is missing or the service-level value already
-    conflicts, those fields remain in `runtimeProfiles.<name>.browser`
-  - external managed-profile overrides still remain untouched
-
-## Current active checkpoint
-
-This is now the active architecture track.
-
-The public config transition is now complete enough for a checkpoint. The
-near-term goal is no longer more key-shape migration. It is to:
-
-1. lock the target public shape
-2. keep bridge-key compatibility loading available without centering it
-3. land small runtime/schema seams that move code toward the next compositional
-   layer
-4. defer broad renames until that target is explicit enough to rename once
-
-Current bounded follow-through at this layer:
-
-- keep root-browser compatibility-alias work in maintenance mode unless a
-  later slice explicitly chooses deprecation/reporting scope
-- keep the config-boundary hardening sub-lane in maintenance mode unless a
-  new concrete resolver or migrate mismatch is found:
-  - the browser/runtime/bridge ownership seams at this layer are now aligned
-    closely enough across resolver, migrate, doctor/reporting, governing
-    docs, and focused regression coverage
-  - follow-up work in this lane should now default to:
-    - bounded contract locks when a live rule is still implicit
-    - or a new bounded behavior slice only when a concrete code-vs-plan gap is
-      demonstrated
-- continue doctor/report hardening for the next compositional layers above
-  runtime profiles:
-  - agent boundary:
-    - non-empty `agents.<name>.defaults` should surface as an explicit
-      placeholder seam:
-      - the bag is still execution-inert for now
-      - operators should not infer live behavior from placeholder keys alone
-    - `agents.<name>.defaults` should not silently attempt runtime-selection
-      bypass through:
-      - `defaults.runtimeProfile`
-      - `defaults.browserProfile`
-      - `defaults.browserFamily`
-    - `agents.<name>.defaults` should not silently carry browser/account-owned
-      override state such as:
-      - `defaults.browser`
-      - source/bootstrap/cookie path overrides
-      - managed-profile overrides
-      - debug-port and browser lifecycle policy overrides
-    - `agents.<name>.defaults` should not silently rewire service identity
-      through:
-      - `defaults.services.<service>.identity`
-    - this remains diagnostics-only:
-      - agent workflow defaults are still allowed when they do not mutate
-        browser/account ownership
-      - runtime/browser selection remains anchored on
-        `agents.<name>.runtimeProfile` plus the referenced AuraCall runtime
-        profile
-      - current positive live agent contract remains narrow:
-        - `agents.<name>.runtimeProfile` is the only live agent-owned
-          execution selector today
-        - `agents.<name>.description`, `instructions`, and `metadata` remain
-          organizational / future-workflow fields for now
-        - `0007` does not currently open a typed live agent-defaults surface;
-          keep the agent layer selection-only plus descriptive metadata for
-          this phase
-      - the generic agent defaults bag is still execution-inert for runtime
-        selection, browser profile resolution, and default service resolution
-  - team boundary:
-    - invalid `teams.<name>.roles.<role>.agent` references should surface
-      explicitly
-    - invalid `teams.<name>.roles.<role>.handoffToRole` references should
-      surface explicitly
-    - ambiguous explicit role ordering and self-handoff should also surface
-      explicitly instead of relying on silent planning tiebreaks
-    - current team-role planning semantics should stay explicit:
-      - explicit role `order` drives sequencing
-      - duplicate order still falls back to a deterministic role-id tiebreak
-      - `handoffToRole` is advisory metadata only for now
-    - role-driven team planning is already real, so those references should
-      not remain silent config drift
-
-See:
-
-- [config-model-target-shape.md](/home/ecochran76/workspace.local/auracall/docs/dev/config-model-target-shape.md)
-- [0009-2026-04-14-agent-config-boundary.md](/home/ecochran76/workspace.local/auracall/docs/dev/plans/0009-2026-04-14-agent-config-boundary.md)
-- [0031-2026-04-08-config-model-input-alias-plan.md](/home/ecochran76/workspace.local/auracall/docs/dev/plans/legacy-archive/0031-2026-04-08-config-model-input-alias-plan.md)
-
-## Recommended sequencing
-
-### Near term
-
-- keep the dual-read config shape stable enough for troubleshooting and
-  compatibility use
-- continue small reliability and browser hardening work in maintenance mode
-- keep config-model bridge/boundary work in maintenance mode unless a new
-  concrete resolver or migrate mismatch appears
-- avoid broad symbol renames in code
-- move the active design pressure up to:
-  - `agents`
-  - `teams`
-  as the next layers on top of browser profiles and AuraCall runtime profiles
-
-### Next architecture track
-
-Design and implement the config-model refactor before introducing agents.
-
-That means:
-
-1. make browser profiles first-class config objects
-2. make AuraCall runtime profiles explicitly reference a browser profile
-3. move browser-owned defaults/state fully under browser profiles
-4. leave AuraCall runtime profiles with AuraCall-owned concerns only
-5. keep compatibility shims for older/bridge config working
-6. design agent and team config on top of the cleaner base
-7. only then consider behavior-facing agent execution work
-
-### Deferred until that refactor
-
-- broad code symbol renames to match the new semantics
-- final public naming decision on whether `browserFamilies` remains the
-  external config key or becomes `browserProfiles`
-- input acceptance of target-shape aliases until precedence/write-back policy
-  is implemented deliberately
-- agent/team implementation work beyond today's reserved config placeholders
-
-## Input alias policy (2026-04-02)
-
-The next config-model transition should not begin by accepting target-shape
-input keys ad hoc.
-
-The policy is now:
-
-1. keep the target model read-only in inspection output first
-2. document precedence and write-back rules before dual-read begins
-3. when dual-read eventually begins, target-shape keys must be authoritative if
-   both target and bridge keys are present
-4. keep bridge-key writes as a compatibility mode, not the primary documented
-   path
-
-Source of truth:
-
-- [0031-2026-04-08-config-model-input-alias-plan.md](/home/ecochran76/workspace.local/auracall/docs/dev/plans/legacy-archive/0031-2026-04-08-config-model-input-alias-plan.md)
-
-## Acceptance bar for the future refactor
-
-- browser profile selection is explicit and independent
-- AuraCall runtime profiles reference browser profiles rather than duplicating
-  browser state
-- existing configs continue to load through compatibility migration
-- managed browser profile and cache identity behavior follow the selected
-  browser profile deterministically
-- future agent/team config can reference runtime profiles cleanly without
-  inheriting ambiguous browser semantics
-
-## Reserved schema seam (2026-04-01)
-
-A narrow preparatory step is now acceptable before the full refactor:
-- parse reserved top-level `agents` and `teams` blocks
-- document that they are placeholders only
-- keep them behaviorally inert
-
-That gives the future config model an explicit landing zone without pretending
-that agent/team execution exists yet.
-
-## Agent boundary note (2026-04-01)
-
-The first agent contract is now documented separately in:
-
-- [0009-2026-04-14-agent-config-boundary.md](/home/ecochran76/workspace.local/auracall/docs/dev/plans/0009-2026-04-14-agent-config-boundary.md)
-
-That document is the source of truth for:
-- what agents inherit from AuraCall runtime profiles
-- what agents may override
-- what remains owned by browser profiles or future teams
-
-## Team boundary note (2026-04-03)
-
-The first team contract is now documented separately in:
-
-- [0006-2026-04-14-team-config-boundary.md](/home/ecochran76/workspace.local/auracall/docs/dev/plans/0006-2026-04-14-team-config-boundary.md)
-
-That document is the source of truth for:
-- what teams own
-- what teams inherit through agents/runtime profiles
-- what remains owned below the team layer
-- what should remain deferred to the future service/runners layer
+Plan 0007 is complete when the four-layer target model is executable,
+compatibility precedence and migration are deterministic, ownership drift is
+diagnosable, agent/team composition uses the lower-layer resolver, and no
+unowned base-layer gap remains. Plan 0343 proved that boundary and closes this
+plan without runtime behavior changes.

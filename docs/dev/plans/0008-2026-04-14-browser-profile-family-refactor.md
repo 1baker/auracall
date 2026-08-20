@@ -9,12 +9,12 @@ Lane: P01
   family mismatch blocks the primary service/runner lane
 - this browser-profile refactor plan is still a live authority document from
   both the roadmap and `AGENTS.md`
-- the config architecture umbrella is now canonical under:
+- the config architecture umbrella closed accepted under:
   - `docs/dev/plans/0007-2026-04-14-config-model-refactor.md`
-- the current need is stable canonical placement for the active browser-profile
-  subtrack, not a semantic rewrite of the staged refactor plan
-- the old loose path will remain searchable in the legacy archive once the
-  canonical plan is wired
+- this plan remains the independent authority for narrower browser-family and
+  immutable launch-plan work; the umbrella closure does not close this plan
+- canonical placement is complete; remaining work is maintenance-only unless a
+  concrete browser-family or immutable launch-plan mismatch is reproduced
 
 # Browser Profile Family Refactor Plan
 
@@ -402,10 +402,11 @@ Scope to keep here:
 - launch-plan consumption
 - cleanup needed to make browser-profile behavior deterministic
 
-Scope to defer to the broader config-model refactor:
+Scope kept outside this browser-family plan:
 - final public config shape for browser profiles vs AuraCall runtime profiles
 - broad code symbol renames
-- any agent/team-facing config design
+- typed agent-owned config design under Plan 0009
+- team-facing config design under the closed team boundary or a new successor
 
 See:
-- [0007-2026-04-14-config-model-refactor.md](/home/ecochran76/workspace.local/auracall/docs/dev/plans/0007-2026-04-14-config-model-refactor.md)
+- [0007-2026-04-14-config-model-refactor.md](0007-2026-04-14-config-model-refactor.md)

@@ -20062,3 +20062,20 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   route/status/control boundary. Typecheck, eleven governance/link tests, the
   343-plan audit, diff hygiene, and CodeGraph status pass. Plan 0004 and Plan
   0342 close accepted without runtime behavior changes.
+
+## Turn 439 | 2026-08-20
+
+- Plan 0343 opens an independent completion audit of the maintenance-only
+  config-model umbrella. Plan 0007's detailed ledger says the transition is
+  complete enough, but its later sections still describe target aliases and
+  agent/team composition as future placeholder work.
+- CodeGraph plus source reads map target-first schema/resolution, bridge and
+  legacy fallback, conservative migration/writeback, doctor findings, and
+  selected runtime/browser composition through agents and teams.
+- Four provider-free files pass 98 tests: 39 config-model, 27 migration, 25
+  resolver, and 7 browser-profile assertions. No base-layer config gap is
+  exposed.
+- Typecheck, governance/link tests, the 344-plan audit, portable-path scan,
+  diff hygiene, and CodeGraph sync/status pass. Plan 0007 and Plan 0343 close
+  accepted without runtime behavior changes; Plans 0008 and 0009 stay open for
+  their separately scoped browser-family and typed-agent work.

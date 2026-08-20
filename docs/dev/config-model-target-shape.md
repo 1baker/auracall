@@ -2,10 +2,11 @@
 
 ## Purpose
 
-Give Aura-Call one explicit target public config shape before more runtime work
-lands on top of the current transitional bridge keys.
+Document Aura-Call's implemented public config authority and the supported
+compatibility bridge that remains available for older consumers.
 
-This is a design target, not a claim that the full shape is implemented today.
+The four-layer shape below is live. Bridge keys are compatibility surfaces,
+not the primary design or authoring model.
 
 ## Target stack
 
@@ -64,7 +65,7 @@ Important rule:
 
 ### `agents.<name>`
 
-Own future specialized workflow/persona behavior on top of one runtime profile.
+Own specialized workflow/persona behavior on top of one runtime profile.
 
 Typical concerns:
 
@@ -82,7 +83,7 @@ Not browser ownership:
 
 ### `teams.<name>`
 
-Own future coordination across multiple agents.
+Own coordination across multiple agents.
 
 Typical concerns:
 
@@ -162,7 +163,7 @@ Typical concerns:
       service: "chatgpt",
       modelSelector: "chatgpt:pro-extended",
       projectId: "proj_123",
-      instructions: "Reserved future agent config",
+      instructions: "Agent-local organizational guidance",
       prePrompt: "Optional agent-local prompt prefix",
       postPrompt: "Optional agent-local prompt suffix",
       knowledge: {
@@ -181,21 +182,20 @@ Typical concerns:
 }
 ```
 
-## Transitional bridge to today
+## Compatibility bridge
 
-Today the repo still uses bridge names and bridge seams:
+AuraCall still accepts and can emit bridge names for compatibility:
 
 - `profiles`
-  - transitional external/public key for what will likely become
-    `runtimeProfiles`
+  - compatibility key for `runtimeProfiles`
 - `browserFamilies`
-  - transitional external/public key for what will likely become
-    `browserProfiles`
+  - compatibility key for `browserProfiles`
 - `profiles.<name>.browserFamily`
-  - transitional runtime-profile-to-browser-profile reference
+  - compatibility runtime-profile-to-browser-profile reference
 
-Those bridge names are acceptable for now, but the target model above should be
-the design authority for future refactor work.
+Target keys are authoritative when both shapes are present. `config doctor`
+reports mixed/conflicting definitions, and `config migrate` can produce either
+target or explicit compatibility output conservatively.
 
 Version note:
 
@@ -205,21 +205,20 @@ Version note:
 
 ## Migration stance
 
-Current recommendation:
+Current contract:
 
-- keep current config behavior stable
-- keep bridge keys loading cleanly
-- design and implement toward the target shape in narrow steps
-- defer broad code and schema renames until the target shape is explicit enough
-  to rename once
-- do not accept target-shape input aliases until the documented precedence and
-  write-back policy is implemented deliberately
+- author new config with target keys
+- keep bridge keys loading and compatibility output stable
+- prefer target keys whenever both shapes are present
+- use `config doctor` before cleanup and `config migrate` for conservative
+  target/bridge materialization
+- keep broad internal symbol renames separate from the public ownership model
 
 Alias-transition policy:
 
 - [0031-2026-04-08-config-model-input-alias-plan.md](plans/legacy-archive/0031-2026-04-08-config-model-input-alias-plan.md)
 
-## Practical guidance for current implementation slices
+## Practical guidance
 
 When deciding where a new setting belongs:
 
@@ -229,7 +228,7 @@ When deciding where a new setting belongs:
   profile layer
 - if it changes whether a configured provider account is mirrored or watched,
   it belongs under `runtimeProfiles.<name>.services.<service>.liveFollow`
-- if it changes future persona/task behavior, it belongs under the agent layer
+- if it changes persona/task behavior, it belongs under the agent layer
 - if it coordinates multiple agents, it belongs under the team layer
 
 Do not use the current transitional structure as justification to place new

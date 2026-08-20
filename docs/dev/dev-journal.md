@@ -47798,3 +47798,14 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Ten core files pass 183 tests plus nine HTTP assertions. Typecheck, eleven
   governance/link tests, the 343-plan audit, diff hygiene, and CodeGraph status
   pass. Plan 0004 and Plan 0342 close accepted without runtime behavior changes.
+
+## 2026-08-20 | Plan 0343 closes the config-model umbrella
+
+- Plan 0007's original four-layer target, compatibility, managed-profile/cache,
+  and agent/team composition criteria map to current schema, resolver,
+  migration, diagnostics, browser-profile resolution, and 98 focused tests.
+- The umbrella now states the implemented contract rather than retaining stale
+  future-alias and placeholder-only language. Target-shape guidance and the
+  roadmap agree that bridge keys remain supported maintenance inputs.
+- Plan 0007 leaves the curated active index and closes with Plan 0343. Plans
+  0008 and 0009 retain independent open scope; no runtime behavior changed.
