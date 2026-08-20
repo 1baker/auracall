@@ -22186,3 +22186,15 @@ browser-stage lifecycle observability, not transcript truncation.
 - Keep gated product work explicit: naming an active live-provider plan does not
   authorize its remaining upload or submit action, and cleanup must not hide
   that gate behind a stale “next action.”
+
+## 2026-08-20 | Reconcile checklist wording against the shipped operator contract
+
+- Do not keep a parent plan open because an early checklist names one command
+  after the requirement moved to a dedicated, broader diagnostics surface.
+  Prove the underlying criterion across code, tests, and public operator paths.
+- Schema validation at registry read/write boundaries and secret-free health
+  diagnostics are separate controls: the former rejects corrupt payloads; the
+  latter explains valid but conflicting, disabled, or unreachable records.
+- Treat export/import as complete only when selected records are reviewable and
+  the artifact is explicitly not the hot mutable store. Keep revision browsing,
+  rollback, migration advice, and full UI editing in bounded successor scope.

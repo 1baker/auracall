@@ -47819,3 +47819,15 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   drift. Current authority names open Plan 0114 and its exact live-provider gate.
 - Plan 0001 leaves the curated active index and closes with Plan 0344. No
   runtime behavior or product priority changed.
+
+## 2026-08-20 | Plan 0345 closes the DB-backed agent registry umbrella
+
+- Plan 0065's original storage, merged discovery/execution, revision,
+  authorization, conflict-visibility, and snapshot criteria map to current
+  source and 72 focused provider-free assertions.
+- Its remaining export/import line was stale: CLI, MCP, HTTP, and dashboard
+  snapshot support already exists. Dedicated agent diagnostics supersede the
+  old config-doctor wording for registry/key health.
+- Plan 0065 leaves the curated active index and closes with Plan 0345. Revision
+  browsing/rollback, migration advice, and full dashboard editing remain
+  separately scoped enhancements; no runtime or live user-registry state changed.

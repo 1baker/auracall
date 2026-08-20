@@ -1,221 +1,90 @@
 # DB-Backed Agent Registry
 
-State: OPEN
+State: CLOSED
 Date: 2026-05-10
+Lane: P01
+Plan version: 2
 
-## Context
+## Goal
 
-AuraCall now exposes configured agents as OpenAI-compatible `agent:<agent_id>`
-model ids and lets local agents create/update agents and teams through API/MCP.
-The current write path still treats `~/.auracall/config.json` as the mutable
-store for `/v1/config/agents` and `/v1/config/teams`.
+Make a user-scoped database the normal mutable store for operational agents
+and teams while retaining config-defined bootstrap entries, deterministic
+merged discovery, scoped execution, and reviewable export/import.
 
-That is acceptable for bootstrap config and a small number of hand-authored
-core agents. It is not the right long-term owner for lots of operational
-agents. Agents need queryability, revision history, enablement state, ownership,
-API-key grants, validation status, team membership, last-use metadata, and
-eventual dashboard editing without making one large JSON file the hot write
-target.
+## Closed State
 
-## Current State
+- `createAgentRegistryStore(...)` owns enabled, revisioned agent/team records
+  under `~/.auracall/registry/agents.sqlite`, with a schema-validating JSON
+  fallback when `node:sqlite` is unavailable.
+- `createEffectiveAgentCatalog(...)` merges config and registry records,
+  filters disabled records, attaches source/revision metadata, and reports
+  deterministic config-wins duplicate conflicts.
+- API/MCP config mutations write registry records by default; config-defined
+  overlay ids remain pinned and return explicit blocked results.
+- `/v1/config/agents`, `/v1/config/teams`, `/v1/models`, CLI, MCP, stored-step
+  execution, and team-run surfaces consume the effective merged projection.
+- HTTP execution authorization resolves registry-backed agents and teams,
+  including team-derived member access and service/runtime-profile scopes.
+- Dedicated HTTP, MCP, CLI, and dashboard agent diagnostics expose duplicate,
+  disabled-record, config-model, and scoped-key health without secrets.
+- Versioned selected/all snapshot export and import are available through CLI,
+  MCP, HTTP, and the dashboard; imports retain config-overlay blocking.
+- Agent setup and API workflow clients use deterministic agent ids and scoped
+  keys without rewriting large collections into `~/.auracall/config.json`.
+- [Plan 0345](0345-2026-08-20-db-backed-agent-registry-reconciliation.md)
+  independently proves the completed contract and closes this umbrella.
 
-Implemented:
+## Architecture Contract
 
-- `AgentConfigSchema` and `TeamConfigSchema` define the current agent/team
-  payload shape.
-- `createAgentTeamConfigService(...)` reads the effective config plus registry
-  projection and writes API/MCP mutations to the registry by default when a
-  registry store is available.
-- `createAgentRegistryStore(...)` initializes a user-scoped registry store at
-  `~/.auracall/registry/agents.sqlite`, persists agent/team records with
-  enablement and revision metadata, and has a JSON fallback for test/runtime
-  environments where `node:sqlite` is unavailable.
-- `createEffectiveAgentCatalog(...)` merges config-defined and registry-defined
-  agents/teams into one deterministic read projection with source metadata,
-  disabled-record filtering, and config-wins duplicate conflict reporting.
-- `/v1/config/agents`, `/v1/config/teams`, MCP config listing, and
-  `/v1/models` now read that effective merged catalog. Registry-backed enabled
-  agents appear as `agent:<agent_id>` model ids with source/revision metadata.
-- `/v1/config/agents`, `/v1/config/teams`, and MCP config mutation tools write
-  registry records by default. Config-defined overlay ids are treated as pinned
-  and return a blocked mutation result rather than creating hidden registry
-  changes.
-- Stored-step execution, HTTP team-runs, CLI team-runs, and MCP response/team
-  services can resolve agents and teams through the effective config plus
-  registry catalog instead of config-only lookups.
-- API-key execution authorization reads the effective catalog, can infer an
-  agent's service/runtime profile from registry metadata, applies scoped auth to
-  `/v1/team-runs`, and lets team-scoped keys call member agents.
-- MCP exposes a local privileged `api_key_issue` tool that writes additional
-  agent/team-scoped keys into the user-scoped `~/.auracall/api.env` file for
-  OpenAI-compatible clients.
-- `docs/agent-workflows.md` defines the registry-backed agent as the stable
-  integration unit for both deterministic setup agents and scoped execution
-  agents.
-- Repo-local `auracall-agent-setup` and `auracall-api-workflow` skills define
-  the first agent-facing procedures over the registry/key/batch surfaces.
-- `/v1/config/agent-diagnostics` and MCP `api_key_diagnostics` expose
-  non-secret effective catalog/API-key health, including disabled registry
-  records, config-vs-registry conflicts, missing scoped targets, and
-  team-derived effective agent reachability. The HTTP route requires an
-  unscoped operator key when API auth is enabled.
-- `auracall config agent-diagnostics` exposes the same local secret-free
-  registry/env-file health report without requiring the API service to be
-  running.
-- The Agents / Teams dashboard renders a secret-free Agent Diagnostics panel
-  from `/v1/config/agent-diagnostics` so operators can see registry/key health
-  before inspecting individual runs.
-- `auracall config agent-export`, `auracall config agent-import`, MCP
-  `config_snapshot_export`, MCP `config_snapshot_import`, and
-  `/v1/config/snapshots/*` provide versioned reviewable JSON snapshots for
-  selected effective agents/teams.
-- `projectConfigModel(...)` projects config-defined agents and teams for
-  `/v1/models`, `/v1/config/agents`, `/v1/config/teams`, CLI config inspection,
-  and runtime selection.
-- Runtime execution can route a prompt through `model: "agent:<agent_id>"`.
-- API-key scopes can allow-list agents, teams, services, and runtime profiles.
-
-Remaining:
-
-- provide export/import so selected agents can still become reviewable files
-
-## Architecture Decision
-
-Use a user-scoped SQLite registry as the normal mutable store for agents and
-teams. Keep `~/.auracall/config.json` as bootstrap/source config for runtime
-profiles, browser profile bindings, API service settings, and a small optional
-set of pinned/core agents.
-
-The registry is user runtime state. It should live under `~/.auracall` and be
-owned by the installed service/runtime, not committed to the repo. Config-defined
-agents become `source=config` records in the projected catalog; registry-defined
-agents become `source=registry` records. A config-defined id should override a
-registry id only when explicitly marked as pinned/bootstrap; otherwise duplicate
-ids should be reported as a config doctor issue before mutation.
-
-## Proposed Store
-
-Initial database target:
-
-```text
-~/.auracall/registry/agents.sqlite
-```
-
-Minimum tables:
-
-- `agent_records`
-  - `id TEXT PRIMARY KEY`
-  - `config_json TEXT NOT NULL`
-  - `source TEXT NOT NULL` (`registry`, `config_seed`, `import`)
-  - `enabled INTEGER NOT NULL DEFAULT 1`
-  - `created_at TEXT NOT NULL`
-  - `updated_at TEXT NOT NULL`
-  - `created_by TEXT`
-  - `updated_by TEXT`
-  - `revision INTEGER NOT NULL`
-  - `tags_json TEXT`
-  - `metadata_json TEXT`
-- `team_records`
-  - same owner/revision/enabled columns, with `config_json`
-- `agent_revisions`
-  - append-only prior revisions for audit and rollback
-- `agent_usage`
-  - optional last-used and aggregate execution counters, populated by runtime
-    execution rather than CRUD
-- `agent_grants`
-  - optional normalized API-key-to-agent/team grant rows after scoped key usage
-    grows beyond dotenv/config simplicity
-
-## Public Contract
-
-Maintain current compatibility first:
-
-- `GET /v1/config/agents` lists config and registry agents with source metadata.
-- `PUT /v1/config/agents/{id}` writes the registry by default.
-- `DELETE /v1/config/agents/{id}` disables or deletes the registry record. It
-  must not silently remove pinned config entries.
-- `GET /v1/models` continues to list `agent:<agent_id>` for all effective
-  enabled agents.
-- MCP config tools keep their names, but their result object should report
-  whether a mutation hit `registry`, `config`, or was blocked by a pinned config
-  entry.
-- CLI config inspection should show source, enabled state, and duplicate-id
-  conflicts.
-
-Add explicit registry routes only after compatibility is working:
-
-- `GET /v1/agents`
-- `GET /v1/agents/{agent_id}`
-- `PUT /v1/agents/{agent_id}`
-- `DELETE /v1/agents/{agent_id}`
-- `GET /v1/agents/{agent_id}/revisions`
-- `POST /v1/agents/{agent_id}/export`
-
-## Migration Plan
-
-1. Read-model foundation
-   - [x] add a registry store module with SQLite schema init and JSON fallback
-     only if `node:sqlite` is unavailable during tests
-   - [x] add projection merger: config agents + registry agents -> effective
-     agent catalog
-   - [x] add tests for registry entries, duplicate ids, disabled records, and
-     source metadata
-   - [x] wire merged read projection into `/v1/config/agents` and `/v1/models`
-     after the read model stays stable
-
-2. API/MCP write-path migration
-   - [x] change `createAgentTeamConfigService(...)` or replace it with
-     `createAgentTeamRegistryService(...)`
-   - [x] make current `/v1/config/agents` and MCP config tools write registry
-     records by default
-   - [x] keep an explicit escape hatch for config-file writes only for bootstrap
-     maintenance
-   - [x] include revision and source metadata in mutation responses
-
-3. Execution/catalog integration
-   - [x] make runtime agent resolution use the effective merged catalog
-   - [x] make `/v1/models` include registry agents with useful metadata
-   - [x] make API-key scope checks use effective agent/team ids
-   - update config doctor for duplicate ids, invalid registry payloads, and
-     config entries that should be migrated
-
-4. Export/import and operator ergonomics
-   - [x] add export/import snapshots for selected agents and teams
-   - [x] add CLI/MCP helpers for backup, promotion, and rollback
-   - [x] add operator HTTP snapshot export/import routes
-   - defer dashboard editing until the registry API is stable
-
-## Non-Goals
-
-- Do not move browser profile, runtime profile, or service identity bindings out
-  of config in this slice.
-- Do not make the registry portable repo state by default.
-- Do not remove config-defined agents until registry dogfooding proves the
-  migration.
-- Do not build a full dashboard editor before the API/MCP registry contract is
-  stable.
+- User runtime state belongs under `~/.auracall`; it is not portable repo state
+  or a committed hot mutable store.
+- `~/.auracall/config.json` remains bootstrap/source config for runtime and
+  browser profiles, API service settings, and optional pinned/core agents.
+- Config entries win duplicate ids. The conflict is visible, and registry
+  mutation of that id is blocked rather than hidden behind the config overlay.
+- Registry payloads are schema-validated at write and read boundaries.
+- Reviewable snapshots are transfer/backup artifacts, not alternate live
+  registry authority.
 
 ## Acceptance Criteria
 
-- A large number of agents can be created through API/MCP without rewriting
-  `~/.auracall/config.json`.
-- Existing config-defined agents still resolve and execute.
-- `/v1/models` and `/v1/config/agents` expose the effective merged agent set.
-- Mutations are revisioned and auditable.
-- Duplicate config/registry ids are deterministic and visible.
-- API-key scoping works against registry-backed agents.
-- Operators can export selected agents/teams to a reviewable file without
-  treating the export as the hot mutable store.
-- Workflow clients can use deterministic agent ids and scoped keys without
-  writing large mutable agent collections back into `~/.auracall/config.json`.
+- [x] Large agent/team collections can be created through API/MCP without
+      rewriting `~/.auracall/config.json`.
+- [x] Existing config-defined agents still resolve and execute.
+- [x] `/v1/models` and `/v1/config/agents` expose the effective merged set.
+- [x] Mutations retain revision and audit metadata.
+- [x] Duplicate config/registry ids resolve deterministically and stay visible.
+- [x] API-key scoping works against registry-backed agents and teams.
+- [x] Operators can export selected agents/teams to reviewable snapshots
+      without treating exports as the hot mutable store.
+- [x] Workflow clients use deterministic agent ids and scoped keys without
+      config-file collection rewrites.
+- [x] Focused core/interface and HTTP tests, typecheck, governance/link tests,
+      plan audit, portable-path scan, diff hygiene, and CodeGraph status pass.
 
-## First Implementation Slice
+## Deferred Enhancements
 
-Build the read-model foundation:
+- Explicit `/v1/agents/{id}/revisions` browsing and rollback can build on the
+  stored revision ledger in a separately selected plan.
+- Advice for moving suitable pinned config entries into the registry is an
+  operator migration enhancement, not a prerequisite for deterministic
+  conflict visibility or safe registry mutations.
+- Full dashboard record editing remains separate from the shipped diagnostics
+  and snapshot controls.
 
-- create the registry store module and schema init - complete
-- add effective catalog merge helpers - complete
-- keep current config write behavior untouched until the merged read model is
-  tested - complete
-- update `/v1/config/agents` listing and `/v1/models` only after the merge
-  helpers are stable
+## Historical Decisions Retained
+
+- The migration landed read model first, then compatibility writes, execution
+  and authorization integration, diagnostics, and export/import.
+- The old checklist phrase “update config doctor” was superseded by the
+  dedicated secret-free agent-diagnostics contract across CLI, MCP, HTTP, and
+  dashboard surfaces.
+- Config-defined agents were not removed during registry dogfooding.
+
+## Definition Of Done
+
+Plan 0065 is complete when the registry is the default mutable agent/team
+store, config overlays remain compatible and visible, discovery/execution/auth
+use one effective catalog, and selected records can be exported and imported
+as reviewable snapshots. Plan 0345 proves those conditions without changing
+runtime behavior.

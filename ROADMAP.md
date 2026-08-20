@@ -7,6 +7,13 @@
 Status: active
 Lane: P01
 
+- Closed accepted DB-backed agent registry reconciliation:
+  [docs/dev/plans/0345-2026-08-20-db-backed-agent-registry-reconciliation.md](docs/dev/plans/0345-2026-08-20-db-backed-agent-registry-reconciliation.md)
+  Current state: 68 core/interface assertions plus four filtered HTTP contracts
+  prove registry-default writes, merged discovery/execution, revision metadata,
+  scoped authorization, secret-free diagnostics, and reviewable snapshots.
+  Stale remaining-work text is reconciled, and Plan 0065 closes accepted.
+
 - Active gated cross-service handoff:
   [docs/dev/plans/0114-2026-06-05-end-to-end-cross-service-handoff.md](docs/dev/plans/0114-2026-06-05-end-to-end-cross-service-handoff.md)
   Current state: the supervised workflow and same-provider cross-tenant proof
@@ -2715,16 +2722,16 @@ Current State:
   - dispatch selection uses active runtime evidence from leases/running steps
     plus current-batch assignments; projectSync is explicitly `none` until a
     later project-sync lane exists
-- DB-backed agent registry migration is now scoped in
+- DB-backed agent registry migration is closed in
   [docs/dev/plans/0065-2026-05-10-db-backed-agent-registry.md](docs/dev/plans/0065-2026-05-10-db-backed-agent-registry.md):
   - `~/.auracall/config.json` remains bootstrap/source config for runtime
     profiles, browser bindings, API service settings, and optional pinned/core
     agents
   - a user-scoped registry under `~/.auracall` becomes the normal mutable store
     for large numbers of agents and teams
-  - current `/v1/config/agents`, `/v1/config/teams`, and MCP config tools stay
-    compatibility surfaces while their backing store migrates toward registry
-    records with source, enabled state, revisions, and export/import support
+  - current `/v1/config/agents`, `/v1/config/teams`, and MCP config tools remain
+    compatibility surfaces over registry-default mutations and deterministic
+    config overlays with source, enabled state, revisions, and snapshots
 - searchable run cache and artifact archive work is now scoped in
   [docs/dev/plans/0066-2026-05-16-searchable-run-cache-and-artifact-archive.md](docs/dev/plans/0066-2026-05-16-searchable-run-cache-and-artifact-archive.md):
   - this is the right lane for promoting AuraCall-created CLI/API/MCP work into

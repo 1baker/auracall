@@ -100,6 +100,12 @@
   It proves target-first browser/runtime selection, deterministic bridge and
   legacy compatibility, conservative migration/writeback, browser/service
   ownership precedence, diagnostics, and agent/team composition.
+- DB-backed agent registry reconciliation is provider-free:
+  `pnpm exec vitest run tests/config/agentRegistryStore.test.ts tests/config/agentConfigService.test.ts tests/cli/agentDiagnosticsCommand.test.ts tests/cli/agentSnapshotCommand.test.ts tests/mcp.configEntities.test.ts tests/mcp.apiKeys.test.ts tests/runtime.configuredExecutor.test.ts tests/cli/teamRunCommand.test.ts tests/mcp/teamRun.test.ts --maxWorkers 1`, followed by the four matching registry HTTP assertions in
+  `tests/http.responsesServer.test.ts`. It proves registry-default writes,
+  revisioned effective-catalog discovery/execution, scoped authorization,
+  secret-free diagnostics, and selected/all snapshot portability without live
+  provider or user-registry effects.
 - Team config boundary reconciliation is provider-free:
   `pnpm exec vitest run tests/configModel.test.ts tests/teams.model.test.ts tests/teams.schema.test.ts tests/teams.service.test.ts tests/teams.runtimeBridge.test.ts tests/teams.store.test.ts tests/cli/teamRunCommand.test.ts tests/mcp/teamRun.test.ts --maxWorkers 1`.
   HTTP creation parity is covered by

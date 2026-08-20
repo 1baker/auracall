@@ -29,7 +29,6 @@ Current canonical active execution plan:
 - `docs/dev/plans/0011-2026-04-14-browser-service-refactor-roadmap.md`
 - `docs/dev/plans/0012-2026-04-14-service-volatility-refactor.md`
 - `docs/dev/plans/0013-2026-04-14-gemini-completion.md`
-- `docs/dev/plans/0065-2026-05-10-db-backed-agent-registry.md`
 - `docs/dev/plans/0066-2026-05-16-searchable-run-cache-and-artifact-archive.md`
 - `docs/dev/plans/0067-2026-05-16-react-operator-ux-redesign.md`
 

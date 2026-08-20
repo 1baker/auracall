@@ -20096,3 +20096,21 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   portable-path scan, diff hygiene, and CodeGraph status pass. Plan 0001 and
   Plan 0344 close accepted; Plan 0114 remains gated on separate authorization
   for one live cross-service upload/submit proof.
+
+## Turn 441 | 2026-08-20
+
+- Plan 0345 opens an independent completion audit of Plan 0065. The plan's
+  implemented ledger records registry-default writes, execution/auth,
+  diagnostics, and snapshots, but its remaining-work line still asks for the
+  already-shipped export/import contract.
+- CodeGraph plus direct source reads map the schema-validating SQLite/JSON
+  store, deterministic effective catalog, config service, runtime resolution,
+  scoped authorization, diagnostics, and snapshot surfaces. The dedicated
+  agent-diagnostics contract supersedes the old config-doctor checklist wording;
+  migration advice remains an independent enhancement.
+- Nine core/interface files pass 68 tests, and four filtered HTTP assertions
+  prove merged discovery, registry scopes, diagnostics, and snapshots. No
+  product acceptance gap is exposed.
+- Typecheck, governance/link tests, the 346-plan audit, portable-path scan,
+  diff hygiene, and CodeGraph sync/status pass. Plans 0065 and 0345 close
+  accepted without runtime behavior or live user-registry changes.
