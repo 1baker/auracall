@@ -22198,3 +22198,15 @@ browser-stage lifecycle observability, not transcript truncation.
 - Treat export/import as complete only when selected records are reviewable and
   the artifact is explicitly not the hot mutable store. Keep revision browsing,
   rollback, migration advice, and full UI editing in bounded successor scope.
+
+## 2026-08-20 | Cancel a superseded frontend plan instead of extending both apps
+
+- When product authority moves to a greenfield app, freeze the predecessor as
+  supported compatibility and move every unfinished product criterion to one
+  current successor. Do not let an `OPEN` umbrella authorize both frontends.
+- Preserve stable backend contracts and usability evidence without copying the
+  predecessor's components or layout as the new product baseline.
+- A successful build and route tests do not replace a visual acceptance gate.
+  If no compatible browser executable can launch, record the exact limitation
+  and require fresh desktop/mobile proof in the successor rather than claiming
+  the superseded plan completed.

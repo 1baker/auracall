@@ -7,6 +7,19 @@
 Status: active
 Lane: P01
 
+- Active greenfield console Search/archive workbench:
+  [docs/dev/plans/0347-2026-08-20-greenfield-console-search-workbench.md](docs/dev/plans/0347-2026-08-20-greenfield-console-search-workbench.md)
+  Current state: `/v1/search` and the frozen legacy Search UI provide backend
+  and usability evidence, but `/console` has no Search workflow. The first
+  product slice is bounded read-only discovery, facets, selection, and
+  human-first inspection with fresh desktop/mobile render acceptance.
+
+- Closed operator UX authority reconciliation:
+  [docs/dev/plans/0346-2026-08-20-operator-ux-authority-reconciliation.md](docs/dev/plans/0346-2026-08-20-operator-ux-authority-reconciliation.md)
+  Current state: Plan 0067 is cancelled as a superseded legacy-product plan;
+  `/dashboard` remains supported compatibility, while `/console` is the only
+  product authority and Plan 0347 owns the missing Search/archive workflow.
+
 - Closed accepted DB-backed agent registry reconciliation:
   [docs/dev/plans/0345-2026-08-20-db-backed-agent-registry-reconciliation.md](docs/dev/plans/0345-2026-08-20-db-backed-agent-registry-reconciliation.md)
   Current state: 68 core/interface assertions plus four filtered HTTP contracts
@@ -2690,11 +2703,12 @@ Current State:
        timelines inspectable from a dense table/detail surface. Launch, retry,
        cancel, resume, pause, drain, and other mutation controls remain
        deferred to a later safe-controls plan with state gates and tests.
-    6. Search and archive workbench:
-       finish the unified all-tenant search table with cursor loading,
-       virtualized rows, normalized facets, saved views, asset previews,
-       transcript inspection, run/evidence panels, and queue-backed
-       materialization controls where the API contract is already explicit.
+    6. Search and archive workbench: active as
+       [Plan 0347](docs/dev/plans/0347-2026-08-20-greenfield-console-search-workbench.md).
+       Build the unified all-tenant table in `/console`, not the frozen legacy
+       dashboard, with cursor loading, bounded virtualization, normalized
+       facets, restorable selection, human-first inspection, and fresh desktop/
+       mobile acceptance before adding separately gated queue controls.
     7. API Access workflow:
        expose API keys, scopes, reachable agents/teams, secret rotation,
        audit/readback, and copy-on-create behavior as an operator workflow
@@ -2898,89 +2912,19 @@ Current State:
     `hmj_112116b41db94ec5b9c3bb7c867e35e9`, which succeeded at
     `2026-05-26T14:47:12.730Z` with seven materialized assets from ten
     conversations, zero failures, and seven checksums
-- React operator UX redesign is now scoped in
+- React operator UX redesign is cancelled as superseded in
   [docs/dev/plans/0067-2026-05-16-react-operator-ux-redesign.md](docs/dev/plans/0067-2026-05-16-react-operator-ux-redesign.md):
-  - the current `/ops/browser` dashboard is a debug/proof-of-concept surface,
-    not the durable product UX
-  - the new operator console lives under `ux/operator` as a React/Vite app with
-    top navigation, account/context menu, collapsible and resizable panes,
-    central workspace, and right-side inspector
-  - `/dashboard` now serves the packaged React app from the stable AuraCall API
-    service port; `/ops/browser` remains the low-level Browser Ops debug
-    surface
-  - the Search page target is now a dense all-tenant workbench: a live-updating
-    virtualized table of chats, artifacts, uploads, runs, and evidence sorted
-    newest-first by default, with adjustable/sortable columns, facet-backed
-    filters, URL-addressable selected rows, and right-pane inspection
-  - first Search implementation slices are live: the React table has compact
-    controls, known-value facets, persisted column widths/sort, and
-    `?nav=search&row=...` selected row handoff URLs; `/v1/search` now merges
-    account-mirror catalog rows with archive rows and returns normalized rows,
-    cursor pages, facets, metrics, and source links; the UX now consumes those
-    cursor pages incrementally as the operator scrolls; the table uses a
-    fixed-height virtual row window so loaded result sets do not create one DOM
-    node per row; Time, Provider, and Tenant are pinned during horizontal
-    scroll; keyboard row navigation updates selected-row handoff URLs; each
-    visible row has compact icon actions for inspect, copy handoff link, open
-    provider URL when available, and download cached asset when available;
-    operators can hide and reorder non-pinned columns from a compact Columns
-    popover with preferences persisted locally; operators can save, apply, and
-    delete local Search views that capture query, facets, sort, and column
-    preferences; the right inspector now has a compact archive-aware summary
-    card, reuses the asset preview path for Search-selected archive items, and
-    adds run/evidence-specific panels for response id, batch id, agent/team,
-    runtime, step/output counts, evidence schema, producer, and linked routes;
-    missing generated artifacts now expose archive backfill, asset lookup,
-    materialize, and provider/response handoff routes from the Asset panel;
-    `POST /v1/archive/items/{archive_item_id}/materialize` can recover missing
-    generated artifacts through the provider materializer and write local asset
-    facts back to the archive index; `POST /v1/archive/materializations` and
-    `GET /v1/archive/materializations[/{job_id}]` wrap the same recovery path
-    in persisted, de-duplicated async jobs with status/archive-item filtered
-    list polling, queued-job cancellation, CLI/MCP parity, and
-    interrupted-job recovery on API/MCP startup
-  - remaining Search work: semantic/vector ranking, shared/server-backed view
-    presets, live evidence-row dogfooding when evidence rows exist in cache,
-    and broader operator dashboard controls for non-archive async jobs
-  - first slice is read-only shell work; API-backed health, run, archive,
-    search, chat, config, agent, and team pages should land incrementally after
-    the shell is stable
-  - product pages should follow
-    [docs/dev/aura-call-ux-specification-guide.md](docs/dev/aura-call-ux-specification-guide.md):
-    task-oriented navigation, structured forms, list/detail work surfaces,
-    inspectors for technical detail, clear validation, compact status, and
-    diagnostics separated from normal workflows
-  - greenfield config UX Plan 0077 is now closed in
-    [docs/dev/plans/0077-2026-05-28-agents-configuration-ux.md](docs/dev/plans/0077-2026-05-28-agents-configuration-ux.md):
-    - the existing frontend is frozen for product work and should be retired
-      through explicit cutover slices instead of extended
-    - the first replacement workflow is Agents configuration on the separate
-      `/console` product surface, backed by the existing agent choices/config
-      APIs and Plan 0076 tenant/binding/project readback
-  - greenfield Providers/Projects UX Plan 0078 is closed in
-    [docs/dev/plans/0078-2026-05-28-provider-project-console-ux.md](docs/dev/plans/0078-2026-05-28-provider-project-console-ux.md):
-    - `/console?view=providers` and `/console?view=projects` now make
-      provider-account readiness, browser binding health, project/default
-      bindings, and linked agent setup issues visible in operator language
-    - the legacy frontend pages remain frozen; provider/project UX work belongs
-      in `ux/console` and should keep raw tenant, binding, runtime-profile,
-      profile-path, and provider ids behind inspectors or Diagnostics links
-  - greenfield Overview/Health UX Plan 0079 is closed in
-    [docs/dev/plans/0079-2026-05-29-overview-health-console.md](docs/dev/plans/0079-2026-05-29-overview-health-console.md):
-    - `/console` and `/console?view=overview` now default to an operator
-      command center backed by `/status`, agent choices, and agent readback
-    - the first viewport summarizes service reachability, agent readiness,
-      provider readiness, live-follow posture, background drain, runner
-      topology, and a prioritized attention queue while keeping raw status and
-      route details behind disclosure or Diagnostics links
-  - greenfield Runs workbench UX Plan 0080 is closed in
-    [docs/dev/plans/0080-2026-05-29-runs-workbench-console.md](docs/dev/plans/0080-2026-05-29-runs-workbench-console.md):
-    - `/console?view=runs` now makes response runs, team runs, runtime runs,
-      live-follow operations, queue posture, recovery hints, and timelines
-      inspectable from one dense table/detail workflow
-    - the implemented workbench is read-only; launch, retry, cancel, resume,
-      pause, and drain controls remain deferred until a later bounded plan
-      proves state gates and safety contracts
+  - `ux/operator` and `/dashboard` retain shipped shell, Health, Runs, Chats,
+    Search, archive, and compatibility behavior but are frozen for new product
+    workflows; `/ops/browser` remains low-level diagnostics
+  - Plans 0077-0080 established `ux/console` and closed the first product
+    Agents, Providers/Projects, Overview/Health, and Runs milestones
+  - Plan 0346 records the authority reconciliation and the unavailable current
+    visual-smoke prerequisite without representing it as a pass
+  - active [Plan 0347](docs/dev/plans/0347-2026-08-20-greenfield-console-search-workbench.md)
+    owns the missing Search/archive product workflow at `/console?view=search`
+  - `/v1/search`, archive/asset routes, and legacy Search behavior remain
+    reusable backend and usability evidence, not legacy component authority
 - open provider-capability follow-through:
   - [docs/dev/plans/0049-2026-04-22-media-generation-surfaces.md](docs/dev/plans/0049-2026-04-22-media-generation-surfaces.md)
     is closed for the first-class media-generation resource across CLI, local

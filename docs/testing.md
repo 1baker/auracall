@@ -106,6 +106,14 @@
   revisioned effective-catalog discovery/execution, scoped authorization,
   secret-free diagnostics, and selected/all snapshot portability without live
   provider or user-registry effects.
+- Operator UX authority reconciliation is provider-free:
+  `pnpm run ux:build`, then
+  `pnpm exec vitest run tests/runtime.searchProjectionService.test.ts tests/mcp.searchProjection.test.ts tests/ux.operator.dashboardSession.test.ts tests/http.responsesServer.test.ts -t "serves the React operator UX from the dashboard alias|serves the greenfield console from a separate route|serves greenfield console overview, provider, project, and runs route states|reports unified search rows through the API surface|search projection|operator dashboard session UX" --maxWorkers 1`.
+  It proves the supported legacy build/routes, unified Search backend, session
+  boundary, and separate greenfield console without treating the legacy app as
+  current product authority. `pnpm run smoke:operator-search-ux` remains the
+  current desktop/mobile render gate and requires a Puppeteer-compatible local
+  Chromium executable.
 - Team config boundary reconciliation is provider-free:
   `pnpm exec vitest run tests/configModel.test.ts tests/teams.model.test.ts tests/teams.schema.test.ts tests/teams.service.test.ts tests/teams.runtimeBridge.test.ts tests/teams.store.test.ts tests/cli/teamRunCommand.test.ts tests/mcp/teamRun.test.ts --maxWorkers 1`.
   HTTP creation parity is covered by

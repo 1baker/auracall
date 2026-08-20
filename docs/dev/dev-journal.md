@@ -47831,3 +47831,16 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Plan 0065 leaves the curated active index and closes with Plan 0345. Revision
   browsing/rollback, migration advice, and full dashboard editing remain
   separately scoped enhancements; no runtime or live user-registry state changed.
+
+## 2026-08-20 | Reconcile operator UX product authority
+
+- Plan 0067 mixed shipped `/dashboard` compatibility with unfinished product
+  Search work after explicitly freezing that app and selecting `/console` as
+  the greenfield product surface.
+- Current build and 14 focused assertions prove the legacy build/routes,
+  Search projection, MCP parity, dashboard sessions, and the separate console.
+  Current render verification remains unavailable because Puppeteer cannot
+  launch a compatible Chromium executable in this WSL process.
+- Plan 0067 is cancelled as superseded and leaves the active index. Plan 0346
+  closes the authority audit; open Plan 0347 now owns a read-only-first
+  `/console?view=search` workbench with mandatory fresh desktop/mobile proof.

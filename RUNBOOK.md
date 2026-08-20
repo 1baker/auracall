@@ -20114,3 +20114,21 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
 - Typecheck, governance/link tests, the 346-plan audit, portable-path scan,
   diff hygiene, and CodeGraph sync/status pass. Plans 0065 and 0345 close
   accepted without runtime behavior or live user-registry changes.
+
+## Turn 442 | 2026-08-20
+
+- Plan 0346 opens an authority audit of Plan 0067. The plan says the legacy
+  `/dashboard` frontend is frozen and `/console` is the product replacement,
+  but remains open while assigning new Search work to `ux/operator`.
+- CodeGraph and direct source reads prove two distinct apps: `ux/operator`
+  retains the legacy shell/Search precedent, while `ux/console` owns Agents,
+  Providers/Projects, Overview/Health, Runs, and Handoffs. `/console` currently
+  has no Search workflow despite the roadmap naming it as the next milestone.
+- `pnpm run ux:build` passes, and four focused files pass 14 Search, session,
+  and route assertions. The current Search smoke rebuilt successfully but had
+  no Linux Chromium executable; a bounded attempt with detected Windows Chrome
+  failed before Puppeteer launch with code 21. No current render pass is claimed.
+- Plan 0067 is cancelled as superseded, not closed accepted. Plan 0347 opens as
+  the bounded greenfield `/console?view=search` owner with fresh desktop/mobile
+  render acceptance. Typecheck, governance/link tests, the 348-plan audit,
+  portable-path scan, diff hygiene, and CodeGraph sync/status pass.
