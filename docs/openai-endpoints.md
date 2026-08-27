@@ -1018,6 +1018,11 @@ Current direct-run behavior:
 
 Current response readback note:
 
+- AuraCall echoes caller-supplied request metadata under
+  `metadata.requestMetadata` on both create and later readback. Keeping it
+  nested preserves AuraCall's operational metadata keys and makes durable
+  workflow contracts inspectable without copying request input into the
+  response metadata.
 - AuraCall now adds a bounded `metadata.executionSummary` object on the same
   response body as the canonical machine-handling summary
 - AuraCall keeps the user-visible result timeline and machine summary split

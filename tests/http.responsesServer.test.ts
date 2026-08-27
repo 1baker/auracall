@@ -931,6 +931,13 @@ describe("http responses adapter", () => {
 		);
 
 		try {
+			const requestMetadata = {
+				workflowSchema: "codex.dual_hemisphere_auracall.v1",
+				promptBinding: {
+					immutable: true,
+					originalPromptDigest: "8e34e0ffd1b0d5b978d2076485933f18b6d4681728649dcb46c8aebc9a86bb72",
+				},
+			};
 			const createResponse = await fetch(`http://127.0.0.1:${server.port}/v1/responses`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
@@ -938,6 +945,7 @@ describe("http responses adapter", () => {
 					model: "gemini-3-pro",
 					input: "Create a bounded runtime-backed response.",
 					instructions: "Be concise.",
+					metadata: requestMetadata,
 					auracall: {
 						runtimeProfile: "default",
 						service: "gemini",
@@ -954,6 +962,7 @@ describe("http responses adapter", () => {
 				model: "gemini-3-pro",
 				output: [],
 				metadata: {
+					requestMetadata,
 					runId: "resp_create_1",
 					runtimeProfile: "default",
 					service: "gemini",
@@ -995,7 +1004,11 @@ describe("http responses adapter", () => {
 				object: "response",
 				status: "completed",
 				model: "gemini-3-pro",
+				metadata: {
+					requestMetadata,
+				},
 			});
+			expect(reread).not.toHaveProperty("metadata.requestMetadata.input");
 
 			const runStatusResponse = await fetch(
 				`http://127.0.0.1:${server.port}/v1/runs/resp_create_1/status`,

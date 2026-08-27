@@ -5,8 +5,6 @@ import {
   ExecutionResponseMessageOutputItemSchema,
   ExecutionResponseSchema,
 } from './apiSchema.js';
-import { normalizeTaskTransfer } from './taskTransfer.js';
-import { readExecutionRunBrowserAuthoritySummary } from './browserAuthoritySummary.js';
 import type {
   ExecutionRequest,
   ExecutionResponse,
@@ -15,6 +13,8 @@ import type {
   ExecutionResponseMessageOutputItem,
   ExecutionRuntimeDiagnosticsSummary,
 } from './apiTypes.js';
+import { readExecutionRunBrowserAuthoritySummary } from './browserAuthoritySummary.js';
+import { normalizeTaskTransfer } from './taskTransfer.js';
 
 export function createExecutionRequest(input: ExecutionRequest): ExecutionRequest {
   return ExecutionRequestSchema.parse(normalizeAgentModelRequest(input));
@@ -132,6 +132,7 @@ export function createExecutionResponseFromRunRecord(
     model: parsed.model ?? null,
     output: parsed.output,
     metadata: {
+      requestMetadata: readExecutionRunRequestMetadata(parsed.runRecord),
       runId: parsed.runRecord.run.id,
       taskRunSpecId,
       taskRunSpecSummary,
@@ -170,6 +171,13 @@ export function createExecutionResponseFromRunRecord(
       },
     },
   });
+}
+
+function readExecutionRunRequestMetadata(
+  runRecord: ExecutionResponseFromRunRecordInput['runRecord'],
+): Record<string, unknown> {
+  const metadata = runRecord.run.initialInputs.metadata;
+  return isRecord(metadata) ? metadata : {};
 }
 
 function readExecutionRunBrowserRunSummary(

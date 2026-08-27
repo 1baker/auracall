@@ -48006,3 +48006,26 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   installed runtime matches the built source and the Agent Browser PID and CDP
   target remained intact. A same-text terminal live canary remains pending, so
   this entry does not claim that final browser-level proof.
+
+## 2026-08-27 | Bind bilateral workflow parameters to AuraCall requests
+
+- The external dual-hemisphere controller now sends a versioned,
+  content-minimized request metadata contract with each AuraCall Pro pass.
+- The contract binds prompt and intake-graph digests, parallel collection,
+  material-unknowns-only LitScout use, exact Codex packet approval, ordered Pro
+  phase, and the zero-or-one bridge transit state without copying prompt text.
+- The API workflow skill documents how clients must preserve those fields.
+  Provider-free controller coverage passes; a fresh live Pro run was not part
+  of this documentation-and-contract slice.
+
+## 2026-08-27 | Project persisted request metadata without key collisions
+
+- A live bilateral canary showed that its versioned request contract reached
+  durable `initialInputs` but was absent from public response readback.
+- Response mapping now returns caller metadata under the explicit nested
+  `metadata.requestMetadata` key on create and subsequent reads. AuraCall's
+  existing `runId`, runtime, service, and execution summaries remain unchanged.
+- The canary itself failed before provider submission because an independent
+  dashboard session held the exclusive `chatgpt-pro` lease. The bridge stayed
+  at zero and no reviewing pass was created, so the failure is recorded as
+  lifecycle evidence rather than retried automatically.
