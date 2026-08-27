@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P01
-Plan version: 1
+Plan version: 2
 
 ## Goal
 
@@ -12,7 +12,7 @@ returning to the frozen `/dashboard` product surface.
 
 ## Current State
 
-Implemented foundation:
+Implemented foundation and Slice 1:
 
 - `/v1/search` returns normalized, cursor-paged account-mirror and run-archive
   rows with facets, metrics, materialization state, and stable links.
@@ -23,15 +23,32 @@ Implemented foundation:
   URL-selected rows, asset previews, and run/evidence inspectors.
 - `ux/console` is the product authority and already owns Agents,
   Providers/Projects, Overview/Health, Runs, and Handoffs workflows.
+- `/console?view=search` now owns a read-only product Search workbench with
+  debounced newest-first requests, cursor append/deduplication, fixed-height
+  virtualization, keyboard row selection, URL-restored filters/opaque row ids,
+  and human-first inspection before raw evidence.
+- `/v1/search` now exposes an additive project filter/facet across the shared
+  service, HTTP parser, and MCP schema so the console does not fake a
+  first-page-only project filter.
+- Provider, tenant, kind, status, project, and asset selectors are populated
+  from returned facet values; unknown direct-URL facet values are cleared after
+  server readback instead of becoming silent arbitrary requests.
+- The initial actions remain read-only: copy stable link, open an HTTPS
+  provider route, download a cache-owned asset, and open the stable API record.
+- Fresh provider-free renders passed at 1440x980 and 390x860 through a disposable
+  agent-browser profile: two rows/six facets rendered, ArrowDown changed the
+  selected row and opaque URL id, the mobile compact column set had no
+  page-level overflow, and browser errors were empty.
 
 Remaining:
 
-- `/console` has no Search route or workbench.
-- Search behavior must be implemented in the console's product language and
-  component structure without inheriting the legacy app as its code baseline.
-- Fresh desktop and narrow-width visual acceptance is required for the new
-  route; the current environment needs an executable Chromium path or another
-  repo-approved browser-render route.
+- Slice 2 still needs persisted column preferences/local named views and
+  focus/scroll-preserving refresh with queued-new-result disclosure.
+- Slice 3 mutation controls remain intentionally absent until selected and
+  proven through independently validated queued APIs.
+- The standalone Puppeteer smoke remains fail-closed when no Linux Chromium is
+  installed; `AURACALL_CONSOLE_UX_SMOKE_SERVER_ONLY=1` exposes its fixture for
+  the repo-approved disposable agent-browser visual route.
 
 ## Scope
 
@@ -78,20 +95,20 @@ Remaining:
 
 ## Acceptance Criteria
 
-- [ ] `/console?view=search` loads newest-first unified results without a form
+- [x] `/console?view=search` loads newest-first unified results without a form
       submission or browser-entered bearer secret.
-- [ ] Cursor paging and virtualization keep DOM and request sizes bounded.
-- [ ] Known-value facets cannot silently submit unsupported strings.
-- [ ] Selecting a row updates the URL and product inspector without leaving or
+- [x] Cursor paging and virtualization keep DOM and request sizes bounded.
+- [x] Known-value facets cannot silently submit unsupported strings.
+- [x] Selecting a row updates the URL and product inspector without leaving or
       resetting the table.
-- [ ] Direct URLs restore query/facets/sort/selection state where applicable.
-- [ ] Keyboard navigation, accessible labels/focus, reduced motion, stable row
+- [x] Direct URLs restore query/facets/sort/selection state where applicable.
+- [x] Keyboard navigation, accessible labels/focus, reduced motion, stable row
       layout, empty/loading/error states, and raw-detail disclosure pass.
-- [ ] Fresh desktop and 375-390px render checks show no page-level overflow or
+- [x] Fresh desktop and 375-390px render checks show no page-level overflow or
       hidden primary actions and no browser-console errors.
-- [ ] The initial workbench performs no provider-browser work and no job
+- [x] The initial workbench performs no provider-browser work and no job
       mutation.
-- [ ] `pnpm run console:build`, focused source/API/route tests, typecheck, lint,
+- [x] `pnpm run console:build`, focused source/API/route tests, typecheck, lint,
       build integration, plan audit, diff hygiene, and CodeGraph pass.
 
 ## Definition Of Done

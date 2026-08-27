@@ -22210,3 +22210,125 @@ browser-stage lifecycle observability, not transcript truncation.
   If no compatible browser executable can launch, record the exact limitation
   and require fresh desktop/mobile proof in the successor rather than claiming
   the superseded plan completed.
+
+## 2026-08-20 | Validate product inspectors with a fresh render
+
+- Shared inspector primitives can encode layout assumptions that do not fit a
+  new product inspector. The first Search render placed its eyebrow, heading,
+  and summary side-by-side and left actions with native browser styling even
+  though source tests and builds passed.
+- Keep the shared semantic structure, add the narrow product-specific layout
+  and action styles, then rerender desktop and mobile before acceptance.
+- A deterministic server-only fixture plus a disposable agent-browser session
+  is a valid provider-free visual lane when the standalone Puppeteer gate has no
+  local Linux Chromium; preserve the standalone failure instead of masking it.
+
+## 2026-08-25 | Do not race a retained CDP runtime against its own observer
+
+- A long-lived `Runtime.evaluate` with `awaitPromise: true` can monopolize or
+  serialize a retained CDP connection. Starting snapshot evaluations beside it
+  does not create an independent watchdog; the fallback may never execute even
+  after the assistant response is visibly complete.
+- Use one bounded sequence of short snapshot, stop-state, and completion-state
+  evaluations for retained browser response detection. Keep agent-browser as
+  lifecycle and target authority, and use passive probes to fail closed if that
+  exact authority drifts.
+- Do not use `Runtime.terminateExecution` to cancel a losing detector. It is a
+  global execution action on the page, not a scoped promise cancellation, and
+  can interfere with the service-owned browser surface.
+- Reproduce this class with a serialized Runtime mock and assert that no
+  `awaitPromise: true` observer or termination call occurs. Source/configuration
+  checks are insufficient; require a bounded live run that reaches a terminal
+  AuraCall response after ChatGPT Pro completes.
+
+## 2026-08-25 | Persist exact provider conversation hints end to end
+
+- A client-side `chatgptConversationUrl` option is ineffective if the runtime
+  request schema silently strips it before the run record is created. The
+  configured executor then falls back to project or service defaults and asks
+  the broker for the wrong exact target.
+- Treat the pinned ChatGPT conversation URL as a typed AuraCall request hint,
+  persist it in `initialInputs.auracall`, and give it precedence over configured
+  project/service URLs. Agent-browser still validates and owns the resulting
+  exact target; this does not transfer lifecycle authority to AuraCall.
+- Assert both schema round-trip and executor URL selection. A broker launch
+  failure for a wrong URL is a useful fail-closed result, not evidence that the
+  retained browser is unavailable.
+
+## 2026-08-25 | Keep pre-submit DOM state authoritative for response freshness
+
+- Prompt commit and assistant generation can overlap. A conversation-turn count
+  read after commit is not necessarily a user-turn-only boundary; it may already
+  include one or more wrappers for the assistant response being awaited.
+- Preserve a valid pre-submit count as the minimum response turn index. Derive a
+  boundary from the committed count only when the pre-submit count could not be
+  observed.
+- Test the fast-response race explicitly: a pre-submit count of 8 must remain 8
+  even when commit verification observes 12 nodes. This keeps old turns excluded
+  without filtering out the newly completed response.
+
+## 2026-08-25 | Serialize all retained-Runtime DOM polling during settlement
+
+- Removing one long-lived observer is insufficient when a thinking-status timer
+  and background conversation-hint loop still evaluate the same retained CDP
+  Runtime alongside response capture.
+- Before assistant settlement begins, stop future status polling, await any
+  in-flight status evaluation, cancel and join the background URL hint, and only
+  then start the bounded response poller. Resume final URL/runtime evidence after
+  the response is captured.
+- Make monitor shutdown awaitable and test its drain behavior with an unresolved
+  Runtime evaluation. Clearing an interval alone does not cancel the callback
+  that is already running.
+
+## 2026-08-25 | Treat ChatGPT turn indexes as virtualized hints, not identities
+
+- Project-view DOM wrapper counts can stay fixed while old turns are recycled.
+  A new assistant can consequently appear at an index lower than the pre-submit
+  wrapper count; an index-only freshness gate can reject it forever.
+- Keep the turn boundary as the preferred fast path, then fall back to the exact
+  pre-submit assistant identity. Accept the latest virtualized turn only when
+  its message ID, turn ID, or normalized text proves it differs from baseline.
+- Do not fall back to an unbounded latest-turn read when no baseline identity is
+  available. That would trade a hang for a stale-response acceptance bug.
+- Live acceptance requires more than visible provider output: prove the same
+  durable response reaches terminal, its step succeeds and lease releases, its
+  exact requested conversation persists, response readback contains the fresh
+  output, and agent-browser authority remains unchanged.
+
+## 2026-08-25 | Do not put exact foreground runs behind full-history drains
+
+- When response creation already has the durable run ID, schedule a targeted
+  queued drain for that ID instead of waking an untargeted background scan and
+  making the foreground run wait behind every historical record.
+- Bound periodic recovery work by file recency before parsing large run bundles.
+  Keep startup recovery unbounded so older interrupted runs are still examined
+  after service start; the periodic path is for new and actively heartbeating
+  work.
+- Verify the performance repair behaviorally: a newly created browser response
+  must acquire a lease immediately, reach a terminal step, and release its lease
+  while agent-browser process and target authority remain unchanged.
+
+## 2026-08-26 | Release temporary browser work through current broker authority
+
+- Treat an agent-browser access plan and its exact service-tab handle as the
+  browser authority contract. AuraCall may attach to that handle, but must not
+  launch, replace, or independently rediscover the browser lifecycle.
+- A long provider response can outlive the route used at acquisition. Before
+  detach or release, refresh service routes and select only a route whose
+  authoritative browser inventory contains the exact acquired handle.
+- Preserve successful provider output when cleanup fails; report cleanup
+  failure separately. Prove cleanup with a live run that closes the temporary
+  target while the retained target and browser PID remain unchanged.
+
+## 2026-08-26 | Repeated artifact replies retain stable turn identity
+
+- **Symptom:** a newer ChatGPT response containing the same filenames as an
+  earlier response could remain `stale` even after the new turn completed.
+- **Cause:** the assistant message root can be nested below the DOM node that
+  carries `data-message-id` or `data-turn-id`; text then became the effective
+  identity and identical artifact-only replies collided.
+- **Fix:** resolve message and turn IDs from enclosing and descendant turn nodes
+  before using the text fallback.
+- **Verification:** 27 focused tests, TypeScript typecheck, focused Biome lint,
+  build, installed/source digest parity, and retained Agent Browser authority
+  passed. Exact same-text live-terminal validation is still pending.

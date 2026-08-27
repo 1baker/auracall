@@ -1171,6 +1171,7 @@ describe('configured stored-step executor', () => {
                 workModel: 'Research',
                 composerTool: 'deep-research',
                 deepResearchPlanAction: 'edit',
+                chatgptConversationUrl: 'https://chatgpt.com/c/pinned-observation-review',
               },
             },
           },
@@ -1200,6 +1201,8 @@ describe('configured stored-step executor', () => {
           workModel: 'Research',
           composerTool: 'deep-research',
           deepResearchPlanAction: 'edit',
+          url: 'https://chatgpt.com/c/pinned-observation-review',
+          chatgptUrl: 'https://chatgpt.com/c/pinned-observation-review',
           providerSessionAuthorization: expect.objectContaining({
             expectation: expect.objectContaining({
               configuredIdentity: expect.objectContaining({
@@ -1222,7 +1225,7 @@ describe('configured stored-step executor', () => {
       browserProfileId: 'default',
       agentId: 'auracall-chatgpt-observer',
       projectId: 'g-p-observations',
-      configuredUrl: 'https://chatgpt.com/g/g-p-observations/project',
+      configuredUrl: 'https://chatgpt.com/c/pinned-observation-review',
       desiredModel: 'GPT-5.2',
       chatgptDeepResearchStage: 'plan-edit-opened',
       chatgptDeepResearchPlanAction: 'edit',
@@ -1885,7 +1888,36 @@ describe('configured stored-step executor', () => {
   });
 
   it('materializes declared browser response artifacts into step and shared state', async () => {
-    const runBrowserModeImpl = vi.fn(async () => ({
+    const providerSessionProof = {
+      verdict: 'match',
+      providerId: 'chatgpt',
+      expectation: {
+        providerId: 'chatgpt',
+        configuredIdentity: { email: 'researcher@example.com', accountLevel: 'Pro' },
+        configuredServiceAccountId: 'service-account:chatgpt:researcher@example.com',
+        source: 'runtime-profile',
+      },
+      observation: { email: 'researcher@example.com', accountLevel: 'Pro' },
+      sessionFingerprint: 'fixture-session-fingerprint',
+      dimensions: [],
+      observedAt: '2026-08-26T22:00:00.000Z',
+      failureReason: null,
+      provenance: {
+        providerId: 'chatgpt',
+        auracallRuntimeProfile: 'registry-chatgpt-profile',
+        browserProfile: 'default',
+        managedBrowserProfile: '/tmp/auracall/browser-profiles/default/chatgpt',
+        browserProcessId: 43210,
+        browserTargetId: 'target-artifact',
+        devtoolsHost: '127.0.0.1',
+        devtoolsPort: 45011,
+      },
+    } as const;
+    const runBrowserModeImpl = vi.fn(async (options: BrowserRunOptions) => {
+      if (options.config?.providerSessionAuthorization) {
+        options.config.providerSessionAuthorization.proof = providerSessionProof as never;
+      }
+      return {
       answerText: 'legacy_readout.json ready',
       answerMarkdown: 'legacy_readout.json ready',
       tookMs: 700,
@@ -1896,7 +1928,8 @@ describe('configured stored-step executor', () => {
       chromeTargetId: 'target-artifact',
       chromeHost: '127.0.0.1',
       chromePort: 45011,
-    }));
+      };
+    });
     const browserResponseArtifactMaterializer = vi.fn(async () => ({
       artifacts: [
         {
@@ -1993,6 +2026,7 @@ describe('configured stored-step executor', () => {
         tabTargetId: 'target-artifact',
         chromeHost: '127.0.0.1',
         chromePort: 45011,
+        providerSessionProof,
       }),
     );
     expect(runBrowserModeImpl).toHaveBeenCalledWith(

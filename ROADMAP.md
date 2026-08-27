@@ -9,10 +9,11 @@ Lane: P01
 
 - Active greenfield console Search/archive workbench:
   [docs/dev/plans/0347-2026-08-20-greenfield-console-search-workbench.md](docs/dev/plans/0347-2026-08-20-greenfield-console-search-workbench.md)
-  Current state: `/v1/search` and the frozen legacy Search UI provide backend
-  and usability evidence, but `/console` has no Search workflow. The first
-  product slice is bounded read-only discovery, facets, selection, and
-  human-first inspection with fresh desktop/mobile render acceptance.
+  Current state: Slice 1 is shipped locally at `/console?view=search` with
+  bounded cursor paging/virtualization, six server-known facets, opaque
+  URL-restored selection, read-only human-first inspection, and fresh
+  desktop/mobile proof. Slice 2 remains active for persisted table/local-view
+  preferences and focus-safe queued freshness; mutation controls remain absent.
 
 - Closed operator UX authority reconciliation:
   [docs/dev/plans/0346-2026-08-20-operator-ux-authority-reconciliation.md](docs/dev/plans/0346-2026-08-20-operator-ux-authority-reconciliation.md)
@@ -3856,6 +3857,10 @@ Safety note:
   they are required to preserve the primary lane's existing semantics
 - Supporting maintenance: roadmap, runbook, and validation hygiene that keeps
   the execution board deterministic
+- Closed reliability repair: Plan 0348 bounded status and archive scans,
+  removed redundant local-claim reads, isolated foreground dispatch, and
+  proved the strict agent-browser retained-tab authority boundary under the
+  installed poller and a live ChatGPT Pro cleanup smoke.
 - Current transition: user-scoped installed-runtime dogfood is no longer
   considered broadly green; `/status` is usable, but API OOM restarts,
   stale-runner accumulation, live-follow retry churn, and missing local

@@ -301,11 +301,14 @@ describe('waitForAssistantResponse', () => {
         if (expression.startsWith('Boolean(document.querySelector')) {
           return { result: { value: false } };
         }
+        if (expression.includes('lastAssistantTurn')) {
+          return { result: { value: true } };
+        }
         return { result: { value: null } };
       }),
     } as unknown as ChromeClient['Runtime'];
 
-    const result = await waitForAssistantResponse(runtime, 1000, logger, undefined, {
+    const result = await waitForAssistantResponse(runtime, 1600, logger, undefined, {
       onPassiveDomProbe: passiveProbe,
       onResponseIncoming: responseIncoming,
     });
@@ -338,45 +341,71 @@ describe('waitForAssistantResponse', () => {
     ).rejects.toThrow('target mismatch');
   });
 
-  test('response observer watches character data mutations', async () => {
-    let capturedExpression = '';
+  test('does not launch a long-lived Runtime observer alongside snapshot polling', async () => {
+    const terminateExecution = vi.fn();
+    const evaluate = vi.fn().mockResolvedValue({ result: { value: null } });
     const runtime = {
-      evaluate: vi.fn().mockImplementation((params) => {
-        if (params?.awaitPromise) {
-          capturedExpression = String(params?.expression ?? '');
-          throw new Error('stop');
-        }
-        return { result: { value: null } };
-      }),
+      evaluate,
+      terminateExecution,
     } as unknown as ChromeClient['Runtime'];
-    await expect(waitForAssistantResponse(runtime, 100, logger)).rejects.toThrow('stop');
-    expect(capturedExpression).toContain('characterData: true');
-    expect(capturedExpression).toContain('copy-turn-action-button');
-    expect(capturedExpression).toContain('isLastAssistantTurnFinished');
-    expect(capturedExpression).toContain('lastAssistantTurn.querySelector(FINISHED_SELECTOR)');
-    expect(capturedExpression).not.toContain('document.querySelector(FINISHED_SELECTOR)');
-    expect(capturedExpression).toContain("lastAssistantTurn.querySelectorAll('.markdown')");
-    expect(capturedExpression).not.toContain("document.querySelectorAll('.markdown')");
-    expect(capturedExpression).toContain('data-message-author-role');
-    expect(capturedExpression).toContain("role === 'assistant'");
+    await expect(waitForAssistantResponse(runtime, 100, logger)).rejects.toThrow(
+      'assistant-response-watchdog-timeout',
+    );
+    expect(evaluate).toHaveBeenCalled();
+    expect(evaluate.mock.calls.some(([params]) => params?.awaitPromise === true)).toBe(false);
+    expect(terminateExecution).not.toHaveBeenCalled();
   });
 
-  test('falls back to snapshot when observer fails', async () => {
+  test('captures a completed response through serialized snapshot evaluations', async () => {
     const evaluate = vi.fn().mockImplementation(async (params: { expression?: string; awaitPromise?: boolean }) => {
-      if (params?.awaitPromise) {
-        throw new Error('observer failed');
-      }
       if (typeof params?.expression === 'string' && params.expression.includes('extractAssistantTurn')) {
         return {
           result: { value: { text: 'Recovered', html: '<p>Recovered</p>', messageId: 'mid', turnId: 'tid' } },
         };
       }
+      if (typeof params?.expression === 'string' && params.expression.includes('lastAssistantTurn')) {
+        return { result: { value: true } };
+      }
       return { result: { value: null } };
     });
     const runtime = { evaluate } as unknown as ChromeClient['Runtime'];
-    const result = await waitForAssistantResponse(runtime, 200, logger);
+    const result = await waitForAssistantResponse(runtime, 1200, logger);
     expect(result.text).toBe('Recovered');
     expect(evaluate).toHaveBeenCalled();
+    expect(evaluate.mock.calls.some(([params]) => params?.awaitPromise === true)).toBe(false);
+  });
+
+  test('uses assistant identity when project-view virtualization recycles turn indexes', async () => {
+    let latestReads = 0;
+    const evaluate = vi.fn().mockImplementation(async (params: { expression?: string }) => {
+      const expression = String(params?.expression ?? '');
+      if (expression.includes('extractAssistantTurn')) {
+        if (expression.includes('MIN_TURN_INDEX = 12')) {
+          return { result: { value: null } };
+        }
+        latestReads += 1;
+        return {
+          result: {
+            value:
+              latestReads === 1
+                ? { text: 'Old answer', messageId: 'old-message', turnIndex: 11 }
+                : { text: 'New answer', messageId: 'new-message', turnIndex: 11 },
+          },
+        };
+      }
+      if (expression.includes('lastAssistantTurn')) {
+        return { result: { value: true } };
+      }
+      return { result: { value: false } };
+    });
+    const runtime = { evaluate } as unknown as ChromeClient['Runtime'];
+
+    const result = await waitForAssistantResponse(runtime, 2000, logger, 12, {
+      baselineAssistant: { text: 'Old answer', messageId: 'old-message' },
+    });
+
+    expect(result.text).toBe('New answer');
+    expect(result.meta.messageId).toBe('new-message');
   });
 });
 

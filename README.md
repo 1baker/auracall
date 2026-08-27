@@ -836,6 +836,13 @@ Terminology note:
   `no-materializable-file` for a genuinely empty refreshed file inventory.
   Example:
   `auracall api history-materialization-create --provider chatgpt --runtime-profile wsl-chrome-3 --bound-identity-key <email> --conversation-id <id> --asset-kind files --max-items 1 --provider-work-timeout-ms 300000 --force --json`.
+  The product console now exposes a read-only unified workbench at
+  `/console?view=search`. It searches mirrored conversations, runs, artifacts,
+  files, projects, and evidence through `/v1/search`; preserves query, facet,
+  and opaque selected-row state in the URL; bounds cursor pages and rendered
+  rows; and limits actions to stable-link copy, provider open, cached-asset
+  download, and API-record inspection. Provider, tenant, kind, status, project,
+  and asset filters only retain values confirmed by server facets.
   React Search conversation rows and the cache-only Account Mirror catalog page
   expose the same reconciliation request as explicit row actions; opening rows
   still reads only cached catalog/search data. Lazy mirror

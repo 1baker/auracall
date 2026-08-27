@@ -12,6 +12,7 @@ import { getAuracallHomeDir } from "../auracallHome.js";
 import { BrowserAutomationError } from "../oracle/errors.js";
 import { formatElapsed } from "../oracle/format.js";
 import type { ThinkingTimeLevel } from "../oracle/types.js";
+import { resolveAssistantMinTurnIndex } from "./actions/assistantTurnBoundary.js";
 import {
 	ensureChatgptComposerMode,
 	resolveChatgptModelSelectionPlan,
@@ -1603,26 +1604,34 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 				{ browserAuthority: "agent-browser", bridgeMode },
 				logger,
 			);
-			return withAgentBrowserBrokerCleanup(bridge, () =>
-				withBrowserExecutionOperation(brokerConfig, target, logger, () =>
-					target === "grok"
-						? runRemoteGrokBrowserMode(
-								promptText,
-								attachments,
-								brokerConfig,
-								logger,
-								bridgedOptions,
-								bridge,
-							)
-						: runRemoteBrowserMode(
-								promptText,
-								attachments,
-								brokerConfig,
-								logger,
-								bridgedOptions,
-								bridge,
-							),
-				),
+			return withAgentBrowserBrokerCleanup(
+				bridge,
+				() =>
+					withBrowserExecutionOperation(brokerConfig, target, logger, () =>
+						target === "grok"
+							? runRemoteGrokBrowserMode(
+									promptText,
+									attachments,
+									brokerConfig,
+									logger,
+									bridgedOptions,
+									bridge,
+								)
+							: runRemoteBrowserMode(
+									promptText,
+									attachments,
+									brokerConfig,
+									logger,
+									bridgedOptions,
+									bridge,
+								),
+					),
+				{
+					onCleanupError: (error) =>
+						logger(
+							`agent-browser detach cleanup failed after a completed provider operation; preserving the provider result: ${error instanceof Error ? error.message : String(error)}`,
+						),
+				},
 			);
 		}
 		await emitBrowserAuthorityRuntimeHint(
@@ -1929,7 +1938,7 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 	let selectedComposerTool: string | null = null;
 	let runStatus: "attempted" | "complete" = "attempted";
 	let connectionClosedUnexpectedly = false;
-	let stopThinkingMonitor: (() => void) | null = null;
+	let stopThinkingMonitor: (() => Promise<void>) | null = null;
 	let removeDialogHandler: (() => void) | null = null;
 	let appliedCookies = 0;
 	let removeTerminationHooks: (() => void) | null = null;
@@ -2486,11 +2495,7 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 				prompt,
 				logger,
 			);
-			if (typeof committedTurns === "number" && Number.isFinite(committedTurns)) {
-				if (baselineTurns === null || committedTurns > baselineTurns) {
-					baselineTurns = Math.max(0, committedTurns - 1);
-				}
-			}
+			baselineTurns = resolveAssistantMinTurnIndex(baselineTurns, committedTurns);
 			if (config.projectId) {
 				await assertChatgptProjectDispatchContext(
 					Runtime,
@@ -2741,6 +2746,18 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 			}
 			return null;
 		};
+		// Response capture must be the only Runtime DOM poller. The status monitor
+		// and background URL hint use the same retained CDP connection and can
+		// otherwise strand a completed response behind their evaluations.
+		await stopThinkingMonitor?.();
+		stopThinkingMonitor = null;
+		cancelConversationHint = true;
+		const preResponseConversationHint = conversationHintInFlight as unknown as Promise<boolean> | null;
+		if (preResponseConversationHint) {
+			await preResponseConversationHint.catch(() => false);
+		}
+		conversationHintInFlight = null;
+		cancelConversationHint = false;
 		let answer = await raceWithDisconnect(
 			waitForAssistantResponseWithReload(
 				Runtime,
@@ -2749,6 +2766,11 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 				logger,
 				baselineTurns ?? undefined,
 				{
+					baselineAssistant: {
+						text: baselineAssistantText,
+						messageId: baselineAssistantMessageId,
+						turnId: baselineAssistantTurnId,
+					},
 					onPassiveDomProbe: () =>
 						recordTargetBoundPassiveObservation({
 							state: "thinking",
@@ -2964,7 +2986,6 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 			// Bail out on mid-run disconnects so the session stays reattachable.
 			throw new Error("Chrome disconnected before completion");
 		}
-		stopThinkingMonitor?.();
 		runStatus = "complete";
 		recordPassiveObservation({
 			state: "response-complete",
@@ -3016,7 +3037,7 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 			Runtime: runtimeForGuard,
 			managedProfileDir: userDataDir,
 		});
-		stopThinkingMonitor?.();
+		await stopThinkingMonitor?.();
 		const socketClosed = connectionClosedUnexpectedly || isWebSocketClosureError(guardedError);
 		connectionClosedUnexpectedly = connectionClosedUnexpectedly || socketClosed;
 		if (shouldPreserveBrowserOnError(normalizedError, config.headless)) {
@@ -3349,7 +3370,7 @@ async function runRemoteBrowserMode(
 	let answerHtml = "";
 	let selectedComposerTool: string | null = null;
 	let connectionClosedUnexpectedly = false;
-	let stopThinkingMonitor: (() => void) | null = null;
+	let stopThinkingMonitor: (() => Promise<void>) | null = null;
 	let removeDialogHandler: (() => void) | null = null;
 	let runtimeForGuard: ChromeClient["Runtime"] | null = null;
 	const passiveObservations: BrowserPassiveObservation[] = [];
@@ -3619,11 +3640,7 @@ async function runRemoteBrowserMode(
 				prompt,
 				logger,
 			);
-			if (typeof committedTurns === "number" && Number.isFinite(committedTurns)) {
-				if (baselineTurns === null || committedTurns > baselineTurns) {
-					baselineTurns = Math.max(0, committedTurns - 1);
-				}
-			}
+			baselineTurns = resolveAssistantMinTurnIndex(baselineTurns, committedTurns);
 			if (config.projectId) {
 				await assertChatgptProjectDispatchContext(
 					Runtime,
@@ -3836,6 +3853,9 @@ async function runRemoteBrowserMode(
 			}
 			return null;
 		};
+		// Keep response settlement serialized on the retained Runtime connection.
+		await stopThinkingMonitor?.();
+		stopThinkingMonitor = null;
 		let answer = await waitForAssistantResponseWithReload(
 			Runtime,
 			Page,
@@ -3843,6 +3863,11 @@ async function runRemoteBrowserMode(
 			logger,
 			baselineTurns ?? undefined,
 			{
+				baselineAssistant: {
+					text: baselineAssistantText,
+					messageId: baselineAssistantMessageId,
+					turnId: baselineAssistantTurnId,
+				},
 				onPassiveDomProbe: () => {
 					recordBrowserPassiveObservation(passiveObservations, {
 						state: "thinking",
@@ -4003,7 +4028,6 @@ async function runRemoteBrowserMode(
 				answerMarkdown = bestText;
 			}
 		}
-		stopThinkingMonitor?.();
 		recordBrowserPassiveObservation(passiveObservations, {
 			state: "response-complete",
 			source: "browser-service",
@@ -4058,7 +4082,7 @@ async function runRemoteBrowserMode(
 			Runtime: runtimeForGuard,
 			managedProfileDir: config.manualLoginProfileDir ?? null,
 		});
-		stopThinkingMonitor?.();
+		await stopThinkingMonitor?.();
 		const socketClosed = connectionClosedUnexpectedly || isWebSocketClosureError(guardedError);
 		connectionClosedUnexpectedly = connectionClosedUnexpectedly || socketClosed;
 
@@ -4369,6 +4393,7 @@ export {
 	waitForAttachmentCompletion,
 } from "./pageActions.js";
 export { estimateTokenCount } from "./utils.js";
+export { startThinkingStatusMonitor as startThinkingStatusMonitorForTest };
 
 const GROK_RATE_LIMIT_COOLDOWN_MS = 5 * 60_000;
 const GROK_RATE_LIMIT_AUTO_WAIT_MAX_MS = 30_000;
@@ -4415,6 +4440,11 @@ async function waitForAssistantResponseWithReload(
 	options: {
 		onResponseIncoming?: () => void | Promise<void>;
 		onPassiveDomProbe?: () => void | Promise<void>;
+		baselineAssistant?: {
+			text?: string | null;
+			messageId?: string | null;
+			turnId?: string | null;
+		};
 	} = {},
 ) {
 	try {
@@ -4596,49 +4626,53 @@ function startThinkingStatusMonitor(
 	logger: BrowserLogger,
 	includeDiagnostics = false,
 	onThinkingStatus?: (message: string) => void,
-): () => void {
+): () => Promise<void> {
 	let stopped = false;
 	let pending = false;
+	let inFlight: Promise<void> = Promise.resolve();
 	let lastMessage: string | null = null;
 	const startedAt = Date.now();
-	const interval = setInterval(async () => {
+	const interval = setInterval(() => {
 		// stop flag flips asynchronously
 		if (stopped || pending) {
 			return;
 		}
 		pending = true;
-		try {
-			const nextMessage = await readThinkingStatus(Runtime);
-			if (nextMessage) {
-				onThinkingStatus?.(nextMessage);
-			}
-			if (nextMessage && nextMessage !== lastMessage) {
-				lastMessage = nextMessage;
-				let locatorSuffix = "";
-				if (includeDiagnostics) {
-					try {
-						const snapshot = await readAssistantSnapshot(Runtime);
-						locatorSuffix = ` | assistant-turn=${snapshot ? "present" : "missing"}`;
-					} catch {
-						locatorSuffix = " | assistant-turn=error";
-					}
+		inFlight = (async () => {
+			try {
+				const nextMessage = await readThinkingStatus(Runtime);
+				if (nextMessage) {
+					onThinkingStatus?.(nextMessage);
 				}
-				logger(formatThinkingLog(startedAt, Date.now(), nextMessage, locatorSuffix));
+				if (nextMessage && nextMessage !== lastMessage) {
+					lastMessage = nextMessage;
+					let locatorSuffix = "";
+					if (includeDiagnostics) {
+						try {
+							const snapshot = await readAssistantSnapshot(Runtime);
+							locatorSuffix = ` | assistant-turn=${snapshot ? "present" : "missing"}`;
+						} catch {
+							locatorSuffix = " | assistant-turn=error";
+						}
+					}
+					logger(formatThinkingLog(startedAt, Date.now(), nextMessage, locatorSuffix));
+				}
+			} catch {
+				// ignore DOM polling errors
+			} finally {
+				pending = false;
 			}
-		} catch {
-			// ignore DOM polling errors
-		} finally {
-			pending = false;
-		}
+		})();
 	}, 1500);
 	interval.unref?.();
-	return () => {
+	return async () => {
 		// multiple callers may race to stop
 		if (stopped) {
 			return;
 		}
 		stopped = true;
 		clearInterval(interval);
+		await inFlight.catch(() => undefined);
 	};
 }
 
