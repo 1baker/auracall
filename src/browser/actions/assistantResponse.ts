@@ -1,14 +1,13 @@
-import type { ChromeClient, BrowserLogger } from '../types.js';
 import {
-  ANSWER_SELECTORS,
   ASSISTANT_ROLE_SELECTOR,
   CONVERSATION_TURN_SELECTOR,
   COPY_BUTTON_SELECTORS,
   FINISHED_ACTIONS_SELECTOR,
   STOP_BUTTON_SELECTOR,
 } from '../constants.js';
+import { buildConversationDebugExpression, logDomFailure } from '../domDebug.js';
+import type { BrowserLogger, ChromeClient } from '../types.js';
 import { delay } from '../utils.js';
-import { logDomFailure, logConversationSnapshot, buildConversationDebugExpression } from '../domDebug.js';
 import { buildClickDispatcher } from './domEvents.js';
 
 const ASSISTANT_POLL_TIMEOUT_ERROR = 'assistant-response-watchdog-timeout';
@@ -17,6 +16,11 @@ const PASSIVE_DOM_PROBE_INTERVAL_MS = 5_000;
 export interface WaitForAssistantResponseOptions {
   onResponseIncoming?: () => void | Promise<void>;
   onPassiveDomProbe?: () => void | Promise<void>;
+  baselineAssistant?: {
+    text?: string | null;
+    messageId?: string | null;
+    turnId?: string | null;
+  };
 }
 
 function isAnswerNowPlaceholderText(normalized: string): boolean {
@@ -38,7 +42,6 @@ export async function waitForAssistantResponse(
   minTurnIndex?: number,
   options: WaitForAssistantResponseOptions = {},
 ): Promise<{ text: string; html?: string; meta: { turnId?: string | null; messageId?: string | null } }> {
-  const start = Date.now();
   let responseIncomingEmitted = false;
   const waitOptions: WaitForAssistantResponseOptions = {
     ...options,
@@ -51,133 +54,22 @@ export async function waitForAssistantResponse(
     },
   };
   logger('Waiting for ChatGPT response');
-  // Learned: two paths are needed:
-  // 1) DOM observer (fast when mutations fire),
-  // 2) snapshot poller (fallback when observers miss or JS stalls).
-  const expression = buildResponseObserverExpression(timeoutMs, minTurnIndex);
-  const evaluationPromise = Runtime.evaluate({ expression, awaitPromise: true, returnByValue: true });
-  const raceReadyEvaluation = evaluationPromise.then(
-    (value) => ({ kind: 'evaluation' as const, value }),
-    (error) => {
-      throw { source: 'evaluation' as const, error };
-    },
-  );
-  // Stop the watchdog loop once the observer path wins so we do not keep polling until timeout.
-  const pollerAbort = new AbortController();
-  const pollerPromise = pollAssistantCompletion(
+  // Keep one bounded stream of Runtime.evaluate calls. A long-lived
+  // awaitPromise observer can monopolize retained CDP connections and prevent
+  // the snapshot watchdog from ever observing a response that is already done.
+  const completed = await pollAssistantCompletion(
     Runtime,
     timeoutMs,
     minTurnIndex,
-    pollerAbort.signal,
+    undefined,
     waitOptions,
-  ).then(
-    (value) => {
-      if (!value) {
-        throw { source: 'poll' as const, error: new Error(ASSISTANT_POLL_TIMEOUT_ERROR) };
-      }
-      return { kind: 'poll' as const, value };
-    },
-    (error) => {
-      throw { source: 'poll' as const, error };
-    },
   );
-
-  let evaluation: Awaited<ReturnType<ChromeClient['Runtime']['evaluate']>> | null = null;
-  try {
-    const winner = await Promise.race([raceReadyEvaluation, pollerPromise]);
-    if (winner.kind === 'poll') {
-      logger('Captured assistant response via snapshot watchdog');
-      evaluationPromise.catch(() => undefined);
-      await terminateRuntimeExecution(Runtime);
-      await waitOptions.onResponseIncoming?.();
-      return winner.value;
-    }
-    pollerAbort.abort();
-    evaluation = winner.value;
-  } catch (wrappedError) {
-    if (wrappedError && typeof wrappedError === 'object' && 'source' in wrappedError && 'error' in wrappedError) {
-      const { source, error } = wrappedError as { source: string; error: unknown };
-      if (source === 'poll' && error instanceof Error && error.message === ASSISTANT_POLL_TIMEOUT_ERROR) {
-        evaluation = await evaluationPromise;
-      } else if (source === 'poll') {
-        throw error;
-      } else if (source === 'evaluation') {
-        const recovered = await recoverAssistantResponse(
-          Runtime,
-          timeoutMs,
-          logger,
-          minTurnIndex,
-          waitOptions,
-        );
-        if (recovered) {
-          await waitOptions.onResponseIncoming?.();
-          return recovered;
-        }
-        await logDomFailure(Runtime, logger, 'assistant-response');
-        throw error ?? new Error('Failed to capture assistant response');
-      }
-    } else {
-      throw wrappedError;
-    }
+  if (completed) {
+    logger('Captured assistant response via snapshot watchdog');
+    return completed;
   }
-
-  if (!evaluation) {
-    await logDomFailure(Runtime, logger, 'assistant-response');
-    throw new Error('Failed to capture assistant response');
-  }
-
-  const parsed = await parseAssistantEvaluationResult(Runtime, evaluation, logger);
-  if (!parsed) {
-    let remainingMs = Math.max(0, timeoutMs - (Date.now() - start));
-    if (remainingMs > 0) {
-      const recovered = await recoverAssistantResponse(
-        Runtime,
-        remainingMs,
-        logger,
-        minTurnIndex,
-        waitOptions,
-      );
-      if (recovered) {
-        return recovered;
-      }
-      remainingMs = Math.max(0, timeoutMs - (Date.now() - start));
-      if (remainingMs > 0) {
-        const polled = await Promise.race([
-          pollerPromise.catch(() => null),
-          delay(remainingMs).then(() => null),
-        ]);
-        if (polled && polled.kind === 'poll') {
-          return polled.value;
-        }
-      }
-    }
-    await logDomFailure(Runtime, logger, 'assistant-response');
-    throw new Error('Unable to capture assistant response');
-  }
-
-  const refreshed = await refreshAssistantSnapshot(Runtime, parsed, logger, minTurnIndex);
-  const candidate = refreshed ?? parsed;
-  // The evaluation path can race ahead of completion. If ChatGPT is still streaming, wait for the watchdog poller.
-  const elapsedMs = Date.now() - start;
-  const remainingMs = Math.max(0, timeoutMs - elapsedMs);
-  if (remainingMs > 0) {
-    const [stopVisible, completionVisible] = await Promise.all([
-      isStopButtonVisible(Runtime),
-      isCompletionVisible(Runtime),
-    ]);
-    if (stopVisible) {
-      logger('Assistant still generating; waiting for completion');
-      const completed = await pollAssistantCompletion(Runtime, remainingMs, minTurnIndex, undefined, waitOptions);
-      if (completed) {
-        await waitOptions.onResponseIncoming?.();
-        return completed;
-      }
-    } else if (completionVisible) {
-      // No-op: completion UI surfaced and stop button is gone.
-    }
-  }
-
-  return candidate;
+  await logDomFailure(Runtime, logger, 'assistant-response');
+  throw new Error(ASSISTANT_POLL_TIMEOUT_ERROR);
 }
 
 export async function readAssistantSnapshot(
@@ -255,132 +147,6 @@ export function buildCopyExpressionForTest(
   return buildCopyExpression(meta);
 }
 
-async function recoverAssistantResponse(
-  Runtime: ChromeClient['Runtime'],
-  timeoutMs: number,
-  logger: BrowserLogger,
-  minTurnIndex?: number,
-  options: WaitForAssistantResponseOptions = {},
-): Promise<{ text: string; html?: string; meta: { turnId?: string | null; messageId?: string | null } } | null> {
-  const recoveryTimeoutMs = Math.max(0, timeoutMs);
-  if (recoveryTimeoutMs === 0) {
-    return null;
-  }
-  const quickSnapshot = normalizeAssistantSnapshot(await readAssistantSnapshot(Runtime, minTurnIndex).catch(() => null));
-  if (quickSnapshot) {
-    await options.onPassiveDomProbe?.();
-    await options.onResponseIncoming?.();
-    logger('Recovered assistant response via immediate snapshot fallback');
-    return quickSnapshot;
-  }
-  const recovered = await pollAssistantCompletion(
-    Runtime,
-    recoveryTimeoutMs,
-    minTurnIndex,
-    undefined,
-    options,
-  );
-  if (recovered) {
-    logger('Recovered assistant response via polling fallback');
-    return recovered;
-  }
-  await logConversationSnapshot(Runtime, logger).catch(() => undefined);
-  return null;
-}
-
-async function parseAssistantEvaluationResult(
-  _Runtime: ChromeClient['Runtime'],
-  evaluation: Awaited<ReturnType<ChromeClient['Runtime']['evaluate']>>,
-  _logger: BrowserLogger,
-): Promise<{ text: string; html?: string; meta: { turnId?: string | null; messageId?: string | null } } | null> {
-  const { result } = evaluation;
-  if (result.type === 'object' && result.value && typeof result.value === 'object' && 'text' in result.value) {
-    const html =
-      typeof (result.value as { html?: unknown }).html === 'string'
-        ? ((result.value as { html?: string }).html ?? undefined)
-        : undefined;
-    const turnId =
-      typeof (result.value as { turnId?: unknown }).turnId === 'string'
-        ? ((result.value as { turnId?: string }).turnId ?? undefined)
-        : undefined;
-    const messageId =
-      typeof (result.value as { messageId?: unknown }).messageId === 'string'
-        ? ((result.value as { messageId?: string }).messageId ?? undefined)
-        : undefined;
-    const text = cleanAssistantText(String((result.value as { text: unknown }).text ?? ''));
-    const normalized = text.toLowerCase();
-    if (isAnswerNowPlaceholderText(normalized)) {
-      return null;
-    }
-    return { text, html, meta: { turnId, messageId } };
-  }
-  const fallbackText = typeof result.value === 'string' ? cleanAssistantText(result.value as string) : '';
-  if (!fallbackText) {
-    return null;
-  }
-  if (isAnswerNowPlaceholderText(fallbackText.toLowerCase())) {
-    return null;
-  }
-  return { text: fallbackText, html: undefined, meta: {} };
-}
-
-async function refreshAssistantSnapshot(
-  Runtime: ChromeClient['Runtime'],
-  current: { text: string; html?: string; meta: { turnId?: string | null; messageId?: string | null } },
-  logger: BrowserLogger,
-  minTurnIndex?: number,
-): Promise<{ text: string; html?: string; meta: { turnId?: string | null; messageId?: string | null } } | null> {
-  const deadline = Date.now() + 5_000;
-  let best: { text: string; html?: string; meta: { turnId?: string | null; messageId?: string | null } } | null = null;
-  let stableCycles = 0;
-  const stableTarget = 3;
-  while (Date.now() < deadline) {
-    // Learned: short/fast answers can race; poll a few extra cycles to pick up messageId + full text.
-    const latestSnapshot = await readAssistantSnapshot(Runtime, minTurnIndex).catch(() => null);
-    const latest = normalizeAssistantSnapshot(latestSnapshot);
-    if (latest) {
-      if (
-        !best ||
-        latest.text.length > best.text.length ||
-        (!best.meta.messageId && latest.meta.messageId)
-      ) {
-        best = latest;
-        stableCycles = 0;
-      } else if (latest.text.trim() === best.text.trim()) {
-        stableCycles += 1;
-      }
-    }
-    if (best && stableCycles >= stableTarget) {
-      break;
-    }
-    await delay(300);
-  }
-  if (!best) {
-    return null;
-  }
-  const currentLength = cleanAssistantText(current.text).trim().length;
-  const latestLength = best.text.length;
-  const hasBetterId = !current.meta?.messageId && Boolean(best.meta.messageId);
-  const isLonger = latestLength > currentLength;
-  const hasDifferentText = best.text.trim() !== current.text.trim();
-  if (isLonger || hasBetterId || hasDifferentText) {
-    logger('Refreshed assistant response via latest snapshot');
-    return best;
-  }
-  return null;
-}
-
-async function terminateRuntimeExecution(Runtime: ChromeClient['Runtime']): Promise<void> {
-  if (typeof Runtime.terminateExecution !== 'function') {
-    return;
-  }
-  try {
-    await Runtime.terminateExecution();
-  } catch {
-    // ignore termination failures
-  }
-}
-
 async function pollAssistantCompletion(
   Runtime: ChromeClient['Runtime'],
   timeoutMs: number,
@@ -398,7 +164,11 @@ async function pollAssistantCompletion(
     if (abortSignal?.aborted) {
       return null;
     }
-    const snapshot = await readAssistantSnapshot(Runtime, minTurnIndex);
+    const snapshot = await readFreshAssistantSnapshot(
+      Runtime,
+      minTurnIndex,
+      options.baselineAssistant,
+    );
     const observedAt = Date.now();
     if (observedAt - lastPassiveProbeAt >= PASSIVE_DOM_PROBE_INTERVAL_MS) {
       lastPassiveProbeAt = observedAt;
@@ -429,7 +199,7 @@ async function pollAssistantCompletion(
       if (!stopVisible) {
         const stableEnough = stableCycles >= requiredStableCycles && stableMs >= minStableMs;
         const completionEnough =
-          completionVisible && stableCycles >= completionStableTarget && stableMs >= minStableMs;
+          completionVisible && stableCycles >= Math.min(2, completionStableTarget) && stableMs >= 600;
         if (completionEnough || stableEnough) {
           return normalized;
         }
@@ -441,6 +211,50 @@ async function pollAssistantCompletion(
     await delay(400);
   }
   return null;
+}
+
+async function readFreshAssistantSnapshot(
+  Runtime: ChromeClient['Runtime'],
+  minTurnIndex: number | undefined,
+  baseline: WaitForAssistantResponseOptions['baselineAssistant'],
+): Promise<AssistantSnapshot | null> {
+  const bounded = await readAssistantSnapshot(Runtime, minTurnIndex);
+  if (bounded || typeof minTurnIndex !== 'number' || !hasAssistantBaseline(baseline)) {
+    return bounded;
+  }
+  // ChatGPT project views can virtualize/recycle turn wrappers. In that state
+  // the newest response may have an index lower than the pre-submit node count.
+  // Fall back to identity/text freshness rather than accepting any latest turn.
+  const latest = await readAssistantSnapshot(Runtime);
+  return latest && !matchesAssistantBaseline(latest, baseline) ? latest : null;
+}
+
+function hasAssistantBaseline(
+  baseline: WaitForAssistantResponseOptions['baselineAssistant'],
+): baseline is NonNullable<WaitForAssistantResponseOptions['baselineAssistant']> {
+  return Boolean(
+    baseline &&
+      (baseline.text?.trim() || baseline.messageId?.trim() || baseline.turnId?.trim()),
+  );
+}
+
+function matchesAssistantBaseline(
+  snapshot: AssistantSnapshot,
+  baseline: NonNullable<WaitForAssistantResponseOptions['baselineAssistant']>,
+): boolean {
+  const baselineMessageId = baseline.messageId?.trim();
+  const snapshotMessageId = snapshot.messageId?.trim();
+  if (baselineMessageId && snapshotMessageId) {
+    return baselineMessageId === snapshotMessageId;
+  }
+  const baselineTurnId = baseline.turnId?.trim();
+  const snapshotTurnId = snapshot.turnId?.trim();
+  if (baselineTurnId && snapshotTurnId) {
+    return baselineTurnId === snapshotTurnId;
+  }
+  const normalize = (value: string | null | undefined): string =>
+    String(value ?? '').replace(/\s+/g, ' ').trim();
+  return Boolean(normalize(baseline.text)) && normalize(baseline.text) === normalize(snapshot.text);
 }
 
 async function isStopButtonVisible(Runtime: ChromeClient['Runtime']): Promise<boolean> {
@@ -568,187 +382,6 @@ function buildAssistantSnapshotExpression(minTurnIndex?: number): string {
   })()`;
 }
 
-function buildResponseObserverExpression(timeoutMs: number, minTurnIndex?: number): string {
-  const selectorsLiteral = JSON.stringify(ANSWER_SELECTORS);
-  const conversationLiteral = JSON.stringify(CONVERSATION_TURN_SELECTOR);
-  const assistantLiteral = JSON.stringify(ASSISTANT_ROLE_SELECTOR);
-  const minTurnLiteral =
-    typeof minTurnIndex === 'number' && Number.isFinite(minTurnIndex) && minTurnIndex >= 0
-      ? Math.floor(minTurnIndex)
-      : -1;
-  return `(() => {
-    ${buildClickDispatcher()}
-    const SELECTORS = ${selectorsLiteral};
-    const STOP_SELECTOR = '${STOP_BUTTON_SELECTOR}';
-    const FINISHED_SELECTOR = '${FINISHED_ACTIONS_SELECTOR}';
-    const CONVERSATION_SELECTOR = ${conversationLiteral};
-    const ASSISTANT_SELECTOR = ${assistantLiteral};
-    // Learned: settling avoids capturing mid-stream HTML; keep short.
-    const settleDelayMs = 800;
-    const isAnswerNowPlaceholder = (snapshot) => {
-      const normalized = String(snapshot?.text ?? '').toLowerCase().trim();
-      if (normalized === 'chatgpt said:' || normalized === 'chatgpt said') return true;
-      if (normalized.includes('file upload request') && (normalized.includes('pro thinking') || normalized.includes('chatgpt said'))) {
-        return true;
-      }
-      return normalized.includes('answer now') && (normalized.includes('pro thinking') || normalized.includes('chatgpt said'));
-    };
-
-    // Helper to detect assistant turns - must match buildAssistantExtractor logic for consistency.
-    const isAssistantTurn = (node) => {
-      if (!(node instanceof HTMLElement)) return false;
-      const turnAttr = (node.getAttribute('data-turn') || node.dataset?.turn || '').toLowerCase();
-      if (turnAttr === 'assistant') return true;
-      const role = (node.getAttribute('data-message-author-role') || node.dataset?.messageAuthorRole || '').toLowerCase();
-      if (role === 'assistant') return true;
-      const testId = (node.getAttribute('data-testid') || '').toLowerCase();
-      if (testId.includes('assistant')) return true;
-      return Boolean(node.querySelector(ASSISTANT_SELECTOR) || node.querySelector('[data-testid*="assistant"]'));
-    };
-
-    const MIN_TURN_INDEX = ${minTurnLiteral};
-    ${buildAssistantExtractor('extractFromTurns')}
-    // Learned: some layouts (project view) render markdown without assistant turn wrappers.
-    const extractFromMarkdownFallback = ${buildMarkdownFallbackExtractor('MIN_TURN_INDEX')};
-
-    const acceptSnapshot = (snapshot) => {
-      if (!snapshot) return null;
-      const index = typeof snapshot.turnIndex === 'number' ? snapshot.turnIndex : -1;
-      if (MIN_TURN_INDEX >= 0) {
-        if (index < 0 || index < MIN_TURN_INDEX) {
-          return null;
-        }
-      }
-      return snapshot;
-    };
-
-    const captureViaObserver = () =>
-      new Promise((resolve, reject) => {
-        const deadline = Date.now() + ${timeoutMs};
-        let stopInterval = null;
-        const observer = new MutationObserver(() => {
-          const extractedRaw = extractFromTurns();
-          const extractedCandidate =
-            extractedRaw && !isAnswerNowPlaceholder(extractedRaw) ? extractedRaw : null;
-          let extracted = acceptSnapshot(extractedCandidate);
-          if (!extracted) {
-            const fallbackRaw = extractFromMarkdownFallback();
-            const fallbackCandidate =
-              fallbackRaw && !isAnswerNowPlaceholder(fallbackRaw) ? fallbackRaw : null;
-            extracted = acceptSnapshot(fallbackCandidate);
-          }
-          if (extracted) {
-            observer.disconnect();
-            if (stopInterval) {
-              clearInterval(stopInterval);
-            }
-            resolve(extracted);
-          } else if (Date.now() > deadline) {
-            observer.disconnect();
-            if (stopInterval) {
-              clearInterval(stopInterval);
-            }
-            reject(new Error('Response timeout'));
-          }
-        });
-        observer.observe(document.body, { childList: true, subtree: true, characterData: true });
-        stopInterval = setInterval(() => {
-          const stop = document.querySelector(STOP_SELECTOR);
-          if (!stop) {
-            return;
-          }
-          const isStopButton =
-            stop.getAttribute('data-testid') === 'stop-button' || stop.getAttribute('aria-label')?.toLowerCase()?.includes('stop');
-          if (isStopButton) {
-            return;
-          }
-          dispatchClickSequence(stop);
-        }, 500);
-        setTimeout(() => {
-          if (stopInterval) {
-            clearInterval(stopInterval);
-          }
-          observer.disconnect();
-          reject(new Error('Response timeout'));
-        }, ${timeoutMs});
-      });
-
-    // Check if the last assistant turn has finished (scoped to avoid detecting old turns).
-    const isLastAssistantTurnFinished = () => {
-      const turns = Array.from(document.querySelectorAll(CONVERSATION_SELECTOR));
-      let lastAssistantTurn = null;
-      for (let i = turns.length - 1; i >= 0; i--) {
-        if (isAssistantTurn(turns[i])) {
-          lastAssistantTurn = turns[i];
-          break;
-        }
-      }
-      if (!lastAssistantTurn) return false;
-      // Check for action buttons in this specific turn
-      if (lastAssistantTurn.querySelector(FINISHED_SELECTOR)) return true;
-      // Check for "Done" text in this turn's markdown
-      const markdowns = lastAssistantTurn.querySelectorAll('.markdown');
-      return Array.from(markdowns).some((n) => (n.textContent || '').trim() === 'Done');
-    };
-
-    const waitForSettle = async (snapshot) => {
-      // Learned: short answers can be 1-2 tokens; enforce longer settle windows to avoid truncation.
-      const initialLength = snapshot?.text?.length ?? 0;
-      const shortAnswer = initialLength > 0 && initialLength < 16;
-      const settleWindowMs = shortAnswer ? 12_000 : 5_000;
-      const settleIntervalMs = 400;
-      const deadline = Date.now() + settleWindowMs;
-      let latest = snapshot;
-      let lastLength = snapshot?.text?.length ?? 0;
-      let stableCycles = 0;
-      const stableTarget = shortAnswer ? 6 : 3;
-      while (Date.now() < deadline) {
-        await new Promise((resolve) => setTimeout(resolve, settleIntervalMs));
-        const refreshedRaw = extractFromTurns();
-        const refreshedCandidate =
-          refreshedRaw && !isAnswerNowPlaceholder(refreshedRaw) ? refreshedRaw : null;
-        let refreshed = acceptSnapshot(refreshedCandidate);
-        if (!refreshed) {
-          const fallbackRaw = extractFromMarkdownFallback();
-          const fallbackCandidate =
-            fallbackRaw && !isAnswerNowPlaceholder(fallbackRaw) ? fallbackRaw : null;
-          refreshed = acceptSnapshot(fallbackCandidate);
-        }
-        const nextLength = refreshed?.text?.length ?? lastLength;
-        if (refreshed && nextLength >= lastLength) {
-          latest = refreshed;
-        }
-        if (nextLength > lastLength) {
-          lastLength = nextLength;
-          stableCycles = 0;
-        } else {
-          stableCycles += 1;
-        }
-        const stopVisible = Boolean(document.querySelector(STOP_SELECTOR));
-        const finishedVisible = isLastAssistantTurnFinished();
-
-        if (finishedVisible || (!stopVisible && stableCycles >= stableTarget)) {
-          break;
-        }
-      }
-      return latest ?? snapshot;
-    };
-
-    const extractedRaw = extractFromTurns();
-    const extractedCandidate = extractedRaw && !isAnswerNowPlaceholder(extractedRaw) ? extractedRaw : null;
-    let extracted = acceptSnapshot(extractedCandidate);
-    if (!extracted) {
-      const fallbackRaw = extractFromMarkdownFallback();
-      const fallbackCandidate = fallbackRaw && !isAnswerNowPlaceholder(fallbackRaw) ? fallbackRaw : null;
-      extracted = acceptSnapshot(fallbackCandidate);
-    }
-    if (extracted) {
-      return waitForSettle(extracted);
-    }
-    return captureViaObserver().then((payload) => waitForSettle(payload));
-  })()`;
-}
-
 function buildAssistantExtractor(functionName: string): string {
   const conversationLiteral = JSON.stringify(CONVERSATION_TURN_SELECTOR);
   const assistantLiteral = JSON.stringify(ASSISTANT_ROLE_SELECTOR);
@@ -814,8 +447,29 @@ function buildAssistantExtractor(functionName: string): string {
       const textContent = contentRoot?.textContent ?? '';
       const text = innerText.trim().length > 0 ? innerText : textContent;
       const html = contentRoot?.innerHTML ?? '';
-      const messageId = messageRoot.getAttribute('data-message-id');
-      const turnId = messageRoot.getAttribute('data-testid');
+      // ChatGPT commonly nests the rendered Markdown below the nodes that own
+      // stable message/turn identity. Artifact-only answers can have identical
+      // visible text (for example the same three output filenames), so falling
+      // back to text equality here can strand a genuinely new response as
+      // "stale" forever. Resolve identity across the message and enclosing turn.
+      const messageIdentityNode =
+        messageRoot.closest?.('[data-message-id]') ||
+        turn.closest?.('[data-message-id]') ||
+        turn.querySelector?.('[data-message-id]');
+      const turnIdentityNode =
+        messageRoot.closest?.('[data-turn-id], [data-testid^="conversation-turn"]') ||
+        turn.closest?.('[data-turn-id], [data-testid^="conversation-turn"]') ||
+        turn;
+      const messageId =
+        messageRoot.getAttribute('data-message-id') ||
+        messageIdentityNode?.getAttribute('data-message-id') ||
+        null;
+      const turnId =
+        turnIdentityNode?.getAttribute('data-turn-id') ||
+        turnIdentityNode?.getAttribute('data-testid') ||
+        turn.getAttribute('data-turn-id') ||
+        turn.getAttribute('data-testid') ||
+        null;
       if (text.trim()) {
         return { text, html, messageId, turnId, turnIndex: index };
       }

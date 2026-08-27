@@ -47844,3 +47844,149 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Plan 0067 is cancelled as superseded and leaves the active index. Plan 0346
   closes the authority audit; open Plan 0347 now owns a read-only-first
   `/console?view=search` workbench with mandatory fresh desktop/mobile proof.
+
+## 2026-08-25 | Serialize retained-browser assistant response detection
+
+- Two live ChatGPT Pro responses finished visibly in the exact agent-browser
+  retained tab, while AuraCall kept their steps running until operator
+  cancellation. The second run retained a healthy lease for more than ten
+  minutes, isolating the fault to response settlement rather than browser
+  lifecycle, target ownership, or Pro generation.
+- `waitForAssistantResponse` no longer races a long-lived
+  `Runtime.evaluate({ awaitPromise: true })` mutation observer against snapshot
+  evaluations on the same retained CDP runtime. One bounded snapshot poller now
+  owns detection, completion-action checks, passive target probes, and the
+  response-incoming signal; it never calls global `Runtime.terminateExecution`.
+- The regression suite proves the wait path launches no long-lived evaluation
+  and captures a completed response through serialized evaluations. Typecheck,
+  focused Biome lint, and 52 affected browser assertions pass with one existing
+  intentional skip. A bounded live proof remains required after installing the
+  validated build into the user runtime.
+- The first post-install proof failed before prompt submission because the
+  Responses request schema discarded `auracall.chatgptConversationUrl`. The
+  configured executor therefore fell back to an older environment URL, and the
+  broker correctly refused to reuse the retained tab for a different exact URL.
+- The extension hint now survives request parsing/persistence and takes
+  precedence over project/service defaults for ChatGPT browser execution.
+  Typecheck, focused lint, and 89 source/browser/runtime assertions pass with
+  one existing intentional skip before the replacement live proof.
+
+## 2026-08-25 | Preserve the pre-submit assistant boundary
+
+- The installed settlement reader captured the completed retained-tab response
+  in isolation, while the durable API run remained `in_progress`. This narrowed
+  the remaining defect to the orchestration boundary passed into that reader.
+- Both local and remote ChatGPT paths read a correct pre-submit turn count, then
+  replaced it with the later prompt-commit count. A fast assistant can mount
+  response wrappers before commit verification finishes, causing that later
+  boundary to hide the current answer.
+- `resolveAssistantMinTurnIndex` now keeps a valid pre-submit boundary and uses
+  the committed count only when pre-submit observation was unavailable. The
+  focused suite passes 72 assertions with one intentional skip; typecheck and
+  focused Biome lint pass.
+- The exact stale live run was cancelled after its valid nonce-matched browser
+  verdict was preserved. Its lease was released without closing or replacing
+  the agent-browser-owned Chromium process, profile, session, or tab.
+
+## 2026-08-25 | Quiesce competing retained-Runtime DOM monitors
+
+- A replacement live run produced one valid 98/100 nonce-matched Pro verdict in
+  the exact retained tab, but its durable response still did not settle. This
+  disproved the turn boundary as the complete cause.
+- The response wait was still sharing one retained CDP Runtime with the
+  1.5-second thinking-status monitor and the post-submit conversation URL poll.
+  The earlier “one bounded poller” repair therefore did not yet serialize all
+  DOM evaluation on that connection.
+- The thinking monitor now exposes an asynchronous stop that drains any active
+  Runtime evaluation. Local execution stops and drains it, cancels and joins the
+  background URL hint, then starts response capture as the sole DOM poller.
+  Remote execution applies the same thinking-monitor drain.
+- Typecheck, focused Biome lint, and 73 focused assertions pass with one
+  intentional skip. A new regression proves monitor shutdown waits for its
+  in-flight Runtime evaluation before returning.
+
+## 2026-08-25 | Replace index-only freshness under project-view virtualization
+
+- A third bounded live response again completed visibly but stayed active. A
+  direct installed-reader probe showed the decisive evidence: the project view
+  retained only 12 conversation wrapper nodes and returned the newest assistant
+  at index 11, below the valid pre-submit count of 12.
+- Turn indexes are therefore not monotonic in virtualized ChatGPT project views.
+  The response poller still prefers the minimum turn boundary, but when that
+  yields no candidate it now reads the latest assistant and accepts it only when
+  message ID, turn ID, or normalized text differs from the pre-submit assistant
+  snapshot.
+- The orchestration paths already capture that baseline identity before submit;
+  they now pass it into response settlement. Typecheck, focused lint, and 74
+  focused assertions pass with one intentional skip, including an index-recycle
+  regression where a new message remains at turn index 11 below boundary 12.
+- Installed live response `resp_c942c4a3a70b4c679ede76001401f077`
+  completed on the first execution after this repair. Its exact request-pinned
+  Workshop URL persisted, the step succeeded, the lease released as completed,
+  and response readback returned the nonce-matched 99/100 Pro verdict.
+- Independent agent-browser readback found exactly one matching user turn and
+  one matching assistant turn. Chromium PID 3246087, CDP port 43545, browser
+  profile `chatgpt-pro`, target, and conversation remained unchanged and ready.
+
+## 2026-08-25 | Prioritize newly created responses over historical drain scans
+
+- A clean dual-hemisphere live run remained runnable with no lease while the
+  background drain repeatedly parsed large historical run records. The API used
+  about one CPU-half and roughly 1 GiB RSS, and a foreground response could wait
+  behind an untargeted history scan despite its exact run identity being known.
+- Response creation now queues a targeted drain for that exact response ID.
+  Periodic untargeted drains additionally prefilter candidate files to a
+  15-minute modification window before parsing run bundles. Startup recovery
+  remains unbounded and retains its older-run recovery responsibility.
+- Typecheck, 76 service-host assertions, and focused HTTP background-drain tests
+  pass. After installing and restarting the user service, the previously
+  starved initiating run acquired a lease, completed, and released it. The next
+  reviewing run acquired its lease immediately and also completed.
+- The live bilateral proof finished with both Pro passes sufficient, one bridge
+  transit, and the same agent-browser-owned PID, CDP port, target, profile, and
+  canonical ChatGPT conversation intact.
+
+## 2026-08-25 | Open installed control-plane reliability repair
+
+- A 15-second idle sample of the installed API measured 50.3% of one CPU core,
+  959,460 KiB RSS, 1,158,866,362 read characters, and 16,495 read syscalls.
+- Node inspector sampling and bounded breakpoints identify repeated JSON run
+  reads from default `/status` local-claim projection, not agent-browser or
+  ChatGPT response settlement.
+- The 98 stored run records total about 50 MB, but the current projection reads
+  candidates repeatedly through list, inspect, and stored-claim paths. The real
+  Algorithm Observatory process keeps an established status connection, making
+  the amplification continuous.
+- Plan 0348 owns the bounded redesign: single-pass/preloaded claim evaluation,
+  cheap status projection with explicit freshness, foreground dispatch
+  isolation, strict agent-browser handle authority, installed performance proof,
+  bilateral reasoning, and Pro guard.
+
+## 2026-08-26 | Close installed control-plane reliability repair
+
+- Single-pass status projection, explicit fresh/cached/coalesced provenance,
+  store and archive caches, and mutation invalidation reduced installed CPU by
+  88.5 percent under the real observer while materially reducing RSS and reads.
+- AuraCall now treats agent-browser's access plan and exact service-tab handle
+  as immutable browser authority. It neither launches nor independently
+  discovers Chrome, and cleanup releases only the temporary acquired tab.
+- Live cleanup response `resp_e3a082437ae24a30a2439164759ccf89`
+  returned exactly `CLEANUP_SMOKE_OK`; temporary target `777B7685...` closed
+  while original target `B19B0776...` and PID 3246087 remained ready.
+- The left-first bilateral workflow released thought `022de6d0ef88`. The new
+  executable Pro guard passed with score 96, zero blockers, and zero required
+  checks. Plan 0348 is closed with the qualified repository-wide Clippy caveat
+  preserved for unrelated untouched tests.
+
+## 2026-08-26 | Preserve identity for repeated artifact-only answers
+
+- Two distinct ChatGPT artifact turns exposed the same visible filename-only
+  response text. The assistant extractor searched only the nested message root,
+  missed the enclosing turn identity, and could therefore classify the newest
+  completed answer as stale indefinitely.
+- The extractor now resolves stable `data-message-id` and `data-turn-id` values
+  across the enclosing or descendant turn before falling back to response text.
+- Focused tests (27 assertions), typecheck, focused lint, and build passed. The
+  installed runtime matches the built source and the Agent Browser PID and CDP
+  target remained intact. A same-text terminal live canary remains pending, so
+  this entry does not claim that final browser-level proof.

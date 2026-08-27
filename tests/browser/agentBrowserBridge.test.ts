@@ -43,9 +43,7 @@ describe("agent-browser bridge", () => {
 		]);
 		expect(
 			resolveAgentBrowserStreamDirectories({
-				env: Object.fromEntries([
-					["AGENT_BROWSER_SOCKET_DIR", "/home/operator/.agent-browser"],
-				]),
+				env: Object.fromEntries([["AGENT_BROWSER_SOCKET_DIR", "/home/operator/.agent-browser"]]),
 				homeDir: "/home/operator",
 				uid: 1234,
 			}),
@@ -354,8 +352,10 @@ describe("agent-browser bridge", () => {
 							serviceRequest: {
 								available: true,
 								request: {
+									action: "tab_new",
 									browserId: handle.browserId,
 									sessionName: handle.sessionName,
+									url: handle.url,
 								},
 							},
 						},
@@ -364,6 +364,9 @@ describe("agent-browser bridge", () => {
 			}
 			const request = JSON.parse(String(init?.body)) as Record<string, unknown>;
 			requests.push(request);
+			if (request.action === "tab_new") {
+				return jsonResponse({ success: true, data: { serviceTabHandle: handle } });
+			}
 			if (request.action === "cdp_attach") {
 				return jsonResponse({
 					success: true,
@@ -372,6 +375,9 @@ describe("agent-browser bridge", () => {
 						detachRequired: true,
 					},
 				});
+			}
+			if (request.action === "tab_handle_release") {
+				return jsonResponse({ success: true, data: { released: true } });
 			}
 			return jsonResponse({ success: true, data: { detached: true } });
 		});
@@ -384,7 +390,6 @@ describe("agent-browser bridge", () => {
 				url: "https://chatgpt.com/c/existing",
 			},
 			{
-				execFile: vi.fn() as never,
 				fetch: fetch as never,
 				listStreamFiles: async () => ["/runtime/dashboard-service-backend.stream"],
 				readStreamFile: async () => "46515\n",
@@ -400,18 +405,22 @@ describe("agent-browser bridge", () => {
 			sessionName: "auracall-chatgpt",
 			serviceTabHandle: { targetId: "target-1", valid: true },
 		});
-		expect(requests.map((request) => request.action)).toEqual(["cdp_attach"]);
+		expect(requests.map((request) => request.action)).toEqual(["tab_new", "cdp_attach"]);
 
 		expect(result).not.toBeNull();
 		if (!result) throw new Error("expected broker result");
 		await detachAgentBrowserBrokerTab(result, { fetch: fetch as never });
-		expect(requests.at(-1)).toMatchObject({
+		expect(requests.at(-2)).toMatchObject({
 			action: "cdp_detach",
+			serviceTabHandle: { targetId: "target-1" },
+		});
+		expect(requests.at(-1)).toMatchObject({
+			action: "tab_handle_release",
 			serviceTabHandle: { targetId: "target-1" },
 		});
 	});
 
-	test("reuses an exact broker tab without submitting a duplicate tab request", async () => {
+	test("lets agent-browser reuse an exact broker tab through its planned tab request", async () => {
 		const requests: Array<Record<string, unknown>> = [];
 		const handle = {
 			browserId: "session:auracall-chatgpt",
@@ -449,8 +458,10 @@ describe("agent-browser bridge", () => {
 							serviceRequest: {
 								available: true,
 								request: {
+									action: "tab_new",
 									browserId: handle.browserId,
 									sessionName: handle.sessionName,
+									url: handle.url,
 								},
 							},
 						},
@@ -459,6 +470,9 @@ describe("agent-browser bridge", () => {
 			}
 			const request = JSON.parse(String(init?.body)) as Record<string, unknown>;
 			requests.push(request);
+			if (request.action === "tab_new") {
+				return jsonResponse({ success: true, data: { serviceTabHandle: handle } });
+			}
 			return jsonResponse({
 				success: true,
 				data: {
@@ -483,7 +497,7 @@ describe("agent-browser bridge", () => {
 		);
 
 		expect(result?.serviceTabHandle).toEqual(handle);
-		expect(requests.map((request) => request.action)).toEqual(["cdp_attach"]);
+		expect(requests.map((request) => request.action)).toEqual(["tab_new", "cdp_attach"]);
 	});
 
 	test("reuses the exact retained tab when access-plan reports its own active profile lease", async () => {
@@ -524,13 +538,23 @@ describe("agent-browser bridge", () => {
 								recommendedAction: "wait_for_profile_lease",
 								activeLeaseSessionIds: ["auracall-chatgpt-broker-v7"],
 							},
-							serviceRequest: { available: true, request: { profileLeasePolicy: "wait" } },
+							serviceRequest: {
+								available: true,
+								request: {
+									action: "tab_new",
+									profileLeasePolicy: "wait",
+									url: handle.url,
+								},
+							},
 						},
 					},
 				});
 			}
 			const request = JSON.parse(String(init?.body)) as Record<string, unknown>;
 			requests.push(request);
+			if (request.action === "tab_new") {
+				return jsonResponse({ success: true, data: { serviceTabHandle: handle } });
+			}
 			return jsonResponse({
 				success: true,
 				data: {
@@ -555,7 +579,7 @@ describe("agent-browser bridge", () => {
 		);
 
 		expect(result?.serviceTabHandle).toEqual(handle);
-		expect(requests.map((request) => request.action)).toEqual(["cdp_attach"]);
+		expect(requests.map((request) => request.action)).toEqual(["tab_new", "cdp_attach"]);
 	});
 
 	test("prefers the service route that owns the exact retained target over a stale daemon", async () => {
@@ -599,8 +623,10 @@ describe("agent-browser bridge", () => {
 							serviceRequest: {
 								available: true,
 								request: {
+									action: "tab_new",
 									browserId: handle.browserId,
 									sessionName: handle.sessionName,
+									url,
 								},
 							},
 						},
@@ -612,6 +638,9 @@ describe("agent-browser bridge", () => {
 			}
 			const request = JSON.parse(String(init?.body)) as Record<string, unknown>;
 			expect(value).toBe("http://127.0.0.1:47777/api/service/request");
+			if (request.action === "tab_new") {
+				return jsonResponse({ success: true, data: { serviceTabHandle: handle } });
+			}
 			expect(request.action).toBe("cdp_attach");
 			return jsonResponse({
 				success: true,
@@ -630,7 +659,6 @@ describe("agent-browser bridge", () => {
 				url,
 			},
 			{
-				execFile: vi.fn() as never,
 				fetch: fetch as never,
 				listStreamFiles: async () => [
 					"/runtime/dashboard-service-backend-v5.stream",
@@ -653,28 +681,40 @@ describe("agent-browser bridge", () => {
 			url: "https://chatgpt.com/c/existing",
 			valid: true,
 		};
+		let acquired = false;
+		const requests: Array<Record<string, unknown>> = [];
 		const fetch = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
 			const value = String(url);
 			if (value === "http://127.0.0.1:46515/api/service/browsers") {
 				return jsonResponse({
 					success: true,
 					data: {
-						browsers: [
-							{
-								health: "ready",
-								pid: 41234,
-								id: "session:stale-existing",
-								profileId: "chatgpt-pro",
-								tabHandles: [
+						browsers: acquired
+							? [
 									{
-										...handle,
-										browserId: "session:stale-existing",
-										sessionName: "stale-existing",
-										targetId: "stale-target",
+										health: "ready",
+										pid: 41234,
+										id: handle.browserId,
+										profileId: "chatgpt-pro",
+										tabHandles: [handle],
+									},
+								]
+							: [
+									{
+										health: "ready",
+										pid: 41234,
+										id: "session:stale-existing",
+										profileId: "chatgpt-pro",
+										tabHandles: [
+											{
+												...handle,
+												browserId: "session:stale-existing",
+												sessionName: "stale-existing",
+												targetId: "stale-target",
+											},
+										],
 									},
 								],
-							},
-						],
 					},
 				});
 			}
@@ -691,29 +731,19 @@ describe("agent-browser bridge", () => {
 									action: "tab_new",
 									browserBuild: "stealthcdp_chromium",
 									profile: "/mnt/c/profile",
+									url: handle.url,
 								},
 							},
 						},
 					},
 				});
 			}
-			if (value === "http://127.0.0.1:47777/api/service/browsers") {
-				return jsonResponse({
-					success: true,
-					data: {
-						browsers: [
-							{
-								health: "ready",
-								pid: 41234,
-								id: handle.browserId,
-								profileId: "chatgpt-pro",
-								tabHandles: [handle],
-							},
-						],
-					},
-				});
-			}
 			const request = JSON.parse(String(init?.body)) as Record<string, unknown>;
+			requests.push(request);
+			if (request.action === "tab_new") {
+				acquired = true;
+				return jsonResponse({ success: true, data: { serviceTabHandle: handle } });
+			}
 			expect(request.action).toBe("cdp_attach");
 			return jsonResponse({
 				success: true,
@@ -723,77 +753,32 @@ describe("agent-browser bridge", () => {
 				},
 			});
 		});
-		const execFile = vi.fn(async (_file: string, args: string[]) => {
-			if (args.slice(-2).join(" ") === "stream enable")
-				throw new Error("Streaming is already enabled");
-			return {
-				stdout: args.includes("stream") ? JSON.stringify({ data: { port: 47777 } }) : "{}",
-				stderr: "",
-			};
-		});
-
-		const previousExecutable = process.env.AURACALL_AGENT_BROWSER_EXECUTABLE_CHATGPT;
-		const previousArgs = process.env.AURACALL_AGENT_BROWSER_ARGS_CHATGPT;
-		process.env.AURACALL_AGENT_BROWSER_EXECUTABLE_CHATGPT = "/opt/chromium/chrome";
-		process.env.AURACALL_AGENT_BROWSER_ARGS_CHATGPT = "--no-sandbox";
-		let result: Awaited<ReturnType<typeof acquireAgentBrowserBrokerTab>>;
-		try {
-			result = await acquireAgentBrowserBrokerTab(
-				{
-					mode: "required",
-					profileId: "chatgpt-pro",
-					targetServiceId: "chatgpt",
-					url: handle.url,
-				},
-				{
-					execFile: execFile as never,
-					fetch: fetch as never,
-					listStreamFiles: async () => ["/runtime/dashboard-service-backend.stream"],
-					readStreamFile: async () => "46515\n",
-				},
-			);
-		} finally {
-			if (previousExecutable === undefined)
-				delete process.env.AURACALL_AGENT_BROWSER_EXECUTABLE_CHATGPT;
-			else process.env.AURACALL_AGENT_BROWSER_EXECUTABLE_CHATGPT = previousExecutable;
-			if (previousArgs === undefined) delete process.env.AURACALL_AGENT_BROWSER_ARGS_CHATGPT;
-			else process.env.AURACALL_AGENT_BROWSER_ARGS_CHATGPT = previousArgs;
-		}
+		const result = await acquireAgentBrowserBrokerTab(
+			{
+				mode: "required",
+				profileId: "chatgpt-pro",
+				targetServiceId: "chatgpt",
+				url: handle.url,
+			},
+			{
+				fetch: fetch as never,
+				listStreamFiles: async () => ["/runtime/dashboard-service-backend.stream"],
+				readStreamFile: async () => "46515\n",
+			},
+		);
 
 		expect(result?.serviceTabHandle).toEqual(handle);
-		expect(execFile).toHaveBeenNthCalledWith(
-			1,
-			"agent-browser",
-			expect.arrayContaining([
-				"--session",
-				"auracall-chatgpt-broker",
-				"--profile",
-				"/mnt/c/profile",
-				"--executable-path",
-				"/opt/chromium/chrome",
-				"--args",
-				"--no-sandbox",
-				"open",
-				handle.url,
-			]),
-			expect.objectContaining({ timeout: 120_000 }),
-		);
-		expect(execFile).toHaveBeenNthCalledWith(
-			3,
-			"agent-browser",
-			expect.arrayContaining(["stream", "status"]),
-			expect.objectContaining({ timeout: 15_000 }),
-		);
-		expect(execFile).toHaveBeenLastCalledWith(
-			"agent-browser",
-			expect.arrayContaining(["service", "reconcile"]),
-			expect.objectContaining({ timeout: 15_000 }),
-		);
+		expect(requests.map((request) => request.action)).toEqual(["tab_new", "cdp_attach"]);
+		expect(requests[0]).toMatchObject({
+			browserBuild: "stealthcdp_chromium",
+			profile: "/mnt/c/profile",
+			url: handle.url,
+		});
 	});
 
 	test("fails closed when launch_new_browser returns a wrong-profile exact URL", async () => {
 		const url = "https://chatgpt.com/c/existing";
-		const fetch = vi.fn(async (requestUrl: string | URL | Request) => {
+		const fetch = vi.fn(async (requestUrl: string | URL | Request, init?: RequestInit) => {
 			const value = String(requestUrl);
 			if (value === "http://127.0.0.1:46515/api/service/browsers") {
 				return jsonResponse({ success: true, data: { browsers: [] } });
@@ -805,7 +790,26 @@ describe("agent-browser bridge", () => {
 						selectedProfile: { id: "chatgpt-pro" },
 						decision: {
 							profileReuse: { recommendedAction: "launch_new_browser" },
-							serviceRequest: { available: true, request: { action: "tab_new" } },
+							serviceRequest: {
+								available: true,
+								request: { action: "tab_new", url },
+							},
+						},
+					},
+				});
+			}
+			const request = JSON.parse(String(init?.body)) as Record<string, unknown>;
+			if (request.action === "tab_new") {
+				return jsonResponse({
+					success: true,
+					data: {
+						serviceTabHandle: {
+							browserId: "session:auracall-chatgpt-broker",
+							profileId: "wrong-profile",
+							sessionName: "auracall-chatgpt-broker",
+							targetId: "wrong-target",
+							url,
+							valid: true,
 						},
 					},
 				});
@@ -834,11 +838,6 @@ describe("agent-browser bridge", () => {
 				},
 			});
 		});
-		const execFile = vi.fn(async (_file: string, args: string[]) => ({
-			stdout: args.includes("stream") ? JSON.stringify({ data: { port: 47777 } }) : "{}",
-			stderr: "",
-		}));
-
 		await expect(
 			acquireAgentBrowserBrokerTab(
 				{
@@ -848,7 +847,6 @@ describe("agent-browser bridge", () => {
 					url,
 				},
 				{
-					execFile: execFile as never,
 					fetch: fetch as never,
 					listStreamFiles: async () => ["/runtime/dashboard-service-backend.stream"],
 					readStreamFile: async () => "46515\n",
@@ -875,21 +873,34 @@ describe("agent-browser bridge", () => {
 				},
 			],
 		});
-		const fetch = vi.fn(async (requestUrl: string | URL | Request) => {
+		const fetch = vi.fn(async (requestUrl: string | URL | Request, init?: RequestInit) => {
 			const value = String(requestUrl);
 			if (value.endsWith("/api/service/browsers")) {
-				return jsonResponse({ success: true, data: { browsers: [browser("a"), browser("b")] } });
+				return jsonResponse({ success: true, data: { browsers: [browser("a"), browser("a")] } });
 			}
-			return jsonResponse({
-				success: true,
-				data: {
-					selectedProfile: { id: "chatgpt-pro" },
-					decision: {
-						profileReuse: { recommendedAction: "reuse_existing_browser" },
-						serviceRequest: { available: true, request: {} },
+			if (value.includes("/api/service/access-plan?")) {
+				return jsonResponse({
+					success: true,
+					data: {
+						selectedProfile: { id: "chatgpt-pro" },
+						decision: {
+							profileReuse: { recommendedAction: "reuse_existing_browser" },
+							serviceRequest: {
+								available: true,
+								request: { action: "tab_new", url },
+							},
+						},
 					},
-				},
-			});
+				});
+			}
+			const request = JSON.parse(String(init?.body)) as Record<string, unknown>;
+			if (request.action === "tab_new") {
+				return jsonResponse({
+					success: true,
+					data: { serviceTabHandle: browser("a").tabHandles[0] },
+				});
+			}
+			throw new Error("attach must not run after ambiguous handle verification");
 		});
 
 		await expect(
@@ -942,7 +953,7 @@ describe("agent-browser bridge", () => {
 		expect(requests[0]).toMatchObject({ action: "cdp_detach" });
 	});
 
-	test("propagates an unverified detach failure and allows one later reconciliation", async () => {
+	test("preserves a completed provider result after detach failure and allows reconciliation", async () => {
 		const fetch = vi
 			.fn()
 			.mockResolvedValueOnce(jsonResponse({ success: true, data: { detached: false } }))
@@ -956,11 +967,15 @@ describe("agent-browser bridge", () => {
 			detachState: "attached" as const,
 			serviceTabHandle: { targetId: "target-1", valid: true },
 		};
+		const onCleanupError = vi.fn();
 		await expect(
 			withAgentBrowserBrokerCleanup(bridge, async () => "done", {
 				fetch: fetch as never,
+				onCleanupError,
 			}),
-		).rejects.toThrow("detach was not verified");
+		).resolves.toBe("done");
+		expect(onCleanupError).toHaveBeenCalledTimes(1);
+		expect(String(onCleanupError.mock.calls[0]?.[0])).toContain("detach was not verified");
 		await expect(
 			detachAgentBrowserBrokerTab(bridge, { fetch: fetch as never }),
 		).resolves.toBeUndefined();

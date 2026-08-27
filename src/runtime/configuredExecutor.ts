@@ -35,6 +35,7 @@ import { resolveChatgptProjectUrl } from '../browser/providers/chatgptAdapter.js
 import {
   createProviderSessionAuthority,
   type ProviderSessionAuthorization,
+  type ProviderSessionProof,
 } from '../browser/providers/providerSessionAuthority.js';
 import { createLlmService } from '../browser/llmService/providers/index.js';
 import { resolveRuntimeProfileUserConfig } from '../browser/service/profileConfig.js';
@@ -84,6 +85,7 @@ interface BrowserResponseArtifactMaterializerInput {
   tabTargetId: string | null;
   chromeHost: string | null;
   chromePort: number | null;
+  providerSessionProof: ProviderSessionProof | null;
 }
 
 interface BrowserResponseArtifactMaterializerResult {
@@ -453,10 +455,47 @@ async function materializeBrowserResponseArtifacts(
     return { artifacts: [], notes: ['browser response artifact materialization skipped: missing conversation id'] };
   }
   const llmService = createLlmService(input.service, input.executionConfig as never);
+  const resolvedListOptions = await llmService.buildListOptions(
+    {
+      configuredUrl: input.configuredUrl,
+      projectId: input.projectId,
+      tabUrl: input.tabUrl ?? undefined,
+      tabTargetId: input.tabTargetId ?? undefined,
+      host: input.chromeHost ?? undefined,
+      port: input.chromePort ?? undefined,
+    },
+    { ensurePort: true },
+  );
+  const proof = input.providerSessionProof;
+  const authorization = resolvedListOptions.providerSessionAuthorization;
+  if (
+    !proof ||
+    proof.verdict !== 'match' ||
+    proof.providerId !== input.service ||
+    !proof.provenance.browserProcessId ||
+    !authorization
+  ) {
+    throw new Error(
+      'browser response artifact materialization requires the successful provider-session proof from the exact browser-backed response',
+    );
+  }
+  const providerSessionContext = {
+    ...authorization.context,
+    ...proof.provenance,
+    browserTargetId: input.tabTargetId ?? proof.provenance.browserTargetId ?? null,
+    devtoolsHost: input.chromeHost ?? proof.provenance.devtoolsHost ?? null,
+    devtoolsPort: input.chromePort ?? proof.provenance.devtoolsPort ?? null,
+  };
+  resolvedListOptions.providerSessionAuthorization = {
+    authority: authorization.authority,
+    context: providerSessionContext,
+    expectation: authorization.authority.resolveExpectation(providerSessionContext),
+  };
   const result = await llmService.materializeConversationArtifacts(input.conversationId, {
     projectId: input.projectId ?? undefined,
     refresh: true,
     listOptions: {
+      ...resolvedListOptions,
       configuredUrl: input.configuredUrl,
       projectId: input.projectId,
       tabUrl: input.tabUrl,
@@ -1002,10 +1041,15 @@ export function createConfiguredStoredStepExecutor(
       asNonEmptyString(runtimeServiceConfig?.url) ??
       asNonEmptyString(globalServiceConfig?.url) ??
       null;
+    const requestedChatgptConversationUrl =
+      service === 'chatgpt'
+        ? asNonEmptyString(requestAuracall?.chatgptConversationUrl)
+        : null;
     const targetUrl =
-      service === 'chatgpt' && projectId
+      requestedChatgptConversationUrl ??
+      (service === 'chatgpt' && projectId
         ? resolveChatgptProjectUrl(projectId)
-        : configuredServiceUrl;
+        : configuredServiceUrl);
     const manualLoginProfileDir =
       asNonEmptyString(runtimeServiceConfig?.manualLoginProfileDir) ??
       asNonEmptyString(runtimeBrowserConfig?.manualLoginProfileDir) ??
@@ -1470,6 +1514,7 @@ export function createConfiguredStoredStepExecutor(
             tabTargetId: result.chromeTargetId ?? null,
             chromeHost: result.chromeHost ?? null,
             chromePort: result.chromePort ?? null,
+            providerSessionProof: providerSessionAuthorization.proof ?? null,
           })
         : await materializeBrowserResponseArtifacts({
             service,
@@ -1481,6 +1526,7 @@ export function createConfiguredStoredStepExecutor(
             tabTargetId: result.chromeTargetId ?? null,
             chromeHost: result.chromeHost ?? null,
             chromePort: result.chromePort ?? null,
+            providerSessionProof: providerSessionAuthorization.proof ?? null,
           });
     };
     if (shouldMaterializeBrowserResponseArtifacts(structuredMetadata)) {

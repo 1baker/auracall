@@ -46,7 +46,7 @@ export type ChatgptWorkbenchAttachmentSurface =
       status: 'ready';
       inputSelector: '#upload-files';
       localFileLabel: string;
-      libraryLabel: string;
+      libraryLabel: string | null;
     }
   | {
       status:
@@ -262,7 +262,7 @@ function resolveChatgptWorkbenchAttachmentSurface(
       normalizeComposerToolLabel(row.label) === CHATGPT_LIBRARY_ACTION_LABEL &&
       normalizeComposerToolLabel(row.description) === 'browse and search your files',
   );
-  if (libraryRows.length !== 1) {
+  if (libraryRows.length > 1) {
     return { status: 'library-action-not-found' };
   }
   const uploadInputs = inventory.inputs.filter((input) => input.id === 'upload-files');
@@ -280,7 +280,7 @@ function resolveChatgptWorkbenchAttachmentSurface(
     status: 'ready',
     inputSelector: '#upload-files',
     localFileLabel: localRows[0].label,
-    libraryLabel: libraryRows[0].label,
+    libraryLabel: libraryRows[0]?.label ?? null,
   };
 }
 

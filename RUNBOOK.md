@@ -20132,3 +20132,45 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   the bounded greenfield `/console?view=search` owner with fresh desktop/mobile
   render acceptance. Typecheck, governance/link tests, the 348-plan audit,
   portable-path scan, diff hygiene, and CodeGraph sync/status pass.
+
+## Turn 444 | 2026-08-25
+
+- Plan 0348 opens the installed AuraCall reliability repair. Live `/proc` and
+  Node inspector evidence shows the idle API reading about 1.1 GB in 15 seconds
+  from 98 JSON run records and using about half a CPU core with roughly 1 GiB
+  resident memory.
+- The hot stack is default `/status` local-claim projection:
+  `summarizeLocalClaimState` lists all candidates, reinspects every run, and the
+  stored claim selector inspects each run again. A real local observer polls
+  this route continuously, converting readback into full-history work.
+- The browser remains healthy under agent-browser runtime profile
+  `chatgpt-pro`, PID 3246087, CDP port 43545, and the exact Workshop target.
+  AuraCall must consume broker-issued service-tab authority and may not create a
+  competing browser lane.
+- The critical path is a bounded status/store/claim redesign, installed
+  before/after measurement, then one bilateral packet and Pro-guard live proof.
+
+## Turn 445 | 2026-08-26
+
+- Plan 0348 closes. Status and archive projections now use single-pass cached
+  and coalesced reads; installed CPU fell from 50.3% to 5.78%, RSS fell from
+  959,460 KiB to roughly 415,496 KiB, and read amplification materially fell.
+- AuraCall consumes agent-browser's exact access plan and service-tab handle.
+  Its final cleanup smoke returned `CLEANUP_SMOKE_OK`, closed temporary target
+  `777B76856201F5D9A14EF0C2E38E5CE1`, and preserved ready target
+  `B19B0776124C411964507FAA316ACD46` under PID 3246087.
+- The left-first bilateral software-engineering packet completed all eight
+  lobe inputs, both Pro sufficiency reviews, one bridge transit, and release.
+  The executable Pro guard passed at 96 with no blockers or required checks.
+
+## Turn 446 | 2026-08-26
+
+- Hardened assistant-response identity for ChatGPT turns whose visible content
+  repeats the same artifact filenames. AuraCall now searches the enclosing and
+  descendant turn nodes for stable message and turn IDs before falling back to
+  text identity.
+- Validation passed: 27 focused tests, typecheck, focused lint, build, and exact
+  installed/source digest parity. Agent Browser remained the browser owner with
+  PID 3246087 and CDP port 43545 throughout installation and service restart.
+- Do not describe the browser fix as fully live-proven until a terminal run with
+  intentionally identical response text completes through AuraCall.

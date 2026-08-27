@@ -1896,6 +1896,48 @@ describe('runtime runner', () => {
     expect(executed.bundle.events.some((event) => event.note?.includes('lease heartbeat from runner:local-test'))).toBe(true);
   });
 
+  it('keeps a configured browser-backed lease alive between provider evidence callbacks', async () => {
+    const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), 'auracall-runtime-runner-'));
+    cleanup.push(homeDir);
+    setAuracallHomeDirOverrideForTest(homeDir);
+
+    const bundle = createDirectBundle('run_configured_lease_heartbeat');
+    bundle.run.initialInputs = {
+      ...bundle.run.initialInputs,
+      auracall: {
+        runtimeProfile: 'default',
+        service: 'chatgpt',
+        agent: 'instant-chatgpt-test',
+      },
+    };
+    const control = createExecutionRuntimeControl();
+    await control.createRun(bundle);
+
+    const executed = await executeStoredExecutionRunOnce({
+      runId: 'run_configured_lease_heartbeat',
+      ownerId: 'runner:local-test',
+      control,
+      leaseHeartbeatIntervalMs: 5,
+      leaseHeartbeatTtlMs: 30_000,
+      executeStep: async () => {
+        await new Promise((resolve) => setTimeout(resolve, 20));
+        return {
+          output: {
+            summary: 'configured browser completion',
+            artifacts: [],
+            structuredData: {},
+            notes: [],
+          },
+        };
+      },
+    });
+
+    expect(executed.bundle.run.status).toBe('succeeded');
+    expect(executed.bundle.leases[0]?.status).toBe('released');
+    expect(executed.bundle.leases[0]?.heartbeatAt).not.toBe(executed.bundle.leases[0]?.acquiredAt);
+    expect(executed.bundle.events.some((event) => event.note?.includes('lease heartbeat from runner:local-test'))).toBe(true);
+  });
+
   it('refreshes a browser-backed lease from runtime evidence when timer heartbeats are disabled', async () => {
     const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), 'auracall-runtime-runner-'));
     cleanup.push(homeDir);

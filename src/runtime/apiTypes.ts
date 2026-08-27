@@ -26,6 +26,7 @@ export interface ExecutionRequestExtensionHints {
   outputContract?: string | null;
   composerTool?: string | null;
   deepResearchPlanAction?: 'start' | 'edit' | null;
+  chatgptConversationUrl?: string | null;
 }
 
 export interface ExecutionRequestInputMessage {

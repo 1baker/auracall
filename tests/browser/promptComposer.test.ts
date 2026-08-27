@@ -12,6 +12,43 @@ describe('promptComposer', () => {
     ).toBe(true);
   });
 
+  test('waits for a delayed ProseMirror readback before rejecting a large prompt', async () => {
+    const prompt = '{"schema":"digest-bound","markdown":"line one\\nline two"}'.repeat(300);
+    const runtime = {
+      evaluate: vi
+        .fn()
+        .mockResolvedValueOnce({
+          result: {
+            value: {
+              editorText: 'stale prior prompt',
+              fallbackValue: '',
+              editorUserText: 'stale prior prompt',
+            },
+          },
+        })
+        .mockResolvedValueOnce({
+          result: {
+            value: {
+              editorText: `stale prior prompt ${prompt}`,
+              fallbackValue: '',
+              editorUserText: `stale prior prompt ${prompt}`,
+            },
+          },
+        }),
+    } as unknown as { evaluate: (args: { expression: string; returnByValue?: boolean }) => Promise<unknown> };
+
+    await expect(
+      promptComposer.waitForPromptInComposer(
+        runtime as never,
+        prompt,
+        JSON.stringify('#prompt-textarea'),
+        JSON.stringify('textarea'),
+        1_200,
+      ),
+    ).resolves.toMatchObject({ editorUserText: expect.stringContaining(prompt) });
+    expect((runtime.evaluate as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(2);
+  });
+
   test('does not treat cleared composer + stop button as committed without a new turn', async () => {
     vi.useFakeTimers();
     try {

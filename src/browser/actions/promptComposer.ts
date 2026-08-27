@@ -30,6 +30,65 @@ function composerContainsPrompt(value: string, prompt: string): boolean {
   return Boolean(normalizedPrompt) && normalizedComposerText(value).includes(normalizedPrompt);
 }
 
+type ComposerSnapshot = {
+  editorText: string;
+  fallbackValue: string;
+  editorUserText: string;
+};
+
+function snapshotContainsPrompt(snapshot: ComposerSnapshot, prompt: string): boolean {
+  return (
+    composerContainsPrompt(snapshot.editorUserText, prompt) ||
+    composerContainsPrompt(snapshot.fallbackValue, prompt)
+  );
+}
+
+async function waitForPromptInComposer(
+  runtime: ChromeClient['Runtime'],
+  prompt: string,
+  primarySelectorLiteral: string,
+  fallbackSelectorLiteral: string,
+  timeoutMs = 30_000,
+): Promise<ComposerSnapshot> {
+  const deadline = Date.now() + timeoutMs;
+  let latest: ComposerSnapshot = { editorText: '', fallbackValue: '', editorUserText: '' };
+  // Yield to the renderer before cloning a potentially large ProseMirror tree.
+  await delay(500);
+  do {
+    const result = await runtime.evaluate({
+      expression: `(() => {
+        const editor = document.querySelector(${primarySelectorLiteral});
+        const fallback = document.querySelector(${fallbackSelectorLiteral});
+        return {
+          editorText: editor?.innerText ?? '',
+          fallbackValue: fallback?.value ?? '',
+          editorUserText: (() => {
+            if (!editor) return '';
+            const clone = editor.cloneNode(true);
+            clone
+              .querySelectorAll(
+                '[data-inline-selection-pill], [data-system-hint-type^="plugin:"], [data-id^="plugin:"]',
+              )
+              .forEach((node) => node.remove());
+            return clone.innerText ?? clone.textContent ?? '';
+          })(),
+        };
+      })()`,
+      returnByValue: true,
+    });
+    latest = {
+      editorText: result.result?.value?.editorText ?? '',
+      fallbackValue: result.result?.value?.fallbackValue ?? '',
+      editorUserText: result.result?.value?.editorUserText ?? '',
+    };
+    if (snapshotContainsPrompt(latest, prompt)) {
+      return latest;
+    }
+    if (Date.now() < deadline) await delay(500);
+  } while (Date.now() < deadline);
+  return latest;
+}
+
 export async function submitPrompt(
   deps: {
     runtime: ChromeClient['Runtime'];
@@ -123,9 +182,10 @@ export async function submitPrompt(
   const editorUserTextRaw = verification.result?.value?.editorUserText ?? '';
   const editorTextTrimmed = editorTextRaw?.trim?.() ?? '';
   const fallbackValueTrimmed = fallbackValueRaw?.trim?.() ?? '';
+  let synchronousInsertionVerification: ComposerSnapshot | null = null;
   if (!editorTextTrimmed && !fallbackValueTrimmed) {
     // Learned: occasionally Input.insertText doesn't land in the editor; force textContent/value + input events.
-    await runtime.evaluate({
+    const forcedInsertion = await runtime.evaluate({
       expression: `(() => {
         const fallback = document.querySelector(${fallbackSelectorLiteral});
         if (fallback) {
@@ -139,8 +199,19 @@ export async function submitPrompt(
           // Nudge ProseMirror to register the textContent write so its state/send-button updates
           editor.dispatchEvent(new InputEvent('input', { bubbles: true, data: ${encodedPrompt}, inputType: 'insertFromPaste' }));
         }
+        return {
+          editorText: editor?.innerText ?? '',
+          fallbackValue: fallback?.value ?? '',
+          editorUserText: editor?.textContent ?? '',
+        };
       })()`,
+      returnByValue: true,
     });
+    synchronousInsertionVerification = {
+      editorText: forcedInsertion.result?.value?.editorText ?? '',
+      fallbackValue: forcedInsertion.result?.value?.fallbackValue ?? '',
+      editorUserText: forcedInsertion.result?.value?.editorUserText ?? '',
+    };
   } else if (
     !composerContainsPrompt(editorUserTextRaw, prompt) &&
     !composerContainsPrompt(fallbackValueRaw, prompt)
@@ -148,7 +219,7 @@ export async function submitPrompt(
     // A selected ChatGPT app is rendered as an inline pill inside #prompt-textarea.
     // That pill makes the composer look non-empty even when Input.insertText did
     // not land, so append at the editable tail without replacing the app pill.
-    await runtime.evaluate({
+    const appendedInsertion = await runtime.evaluate({
       expression: `(() => {
         const editor = document.querySelector(${primarySelectorLiteral});
         if (!editor) return { inserted: false };
@@ -161,50 +232,53 @@ export async function submitPrompt(
           selection.removeAllRanges();
           selection.addRange(range);
         }
-        const inserted =
-          typeof document.execCommand === 'function' &&
-          document.execCommand('insertText', false, ${encodedPrompt});
-        if (!inserted) {
+        const pill = editor.querySelector(
+          '[data-inline-selection-pill], [data-system-hint-type^="plugin:"], [data-id^="plugin:"]',
+        );
+        if (pill) {
           const target = editor.querySelector('p:last-child') || editor;
           target.appendChild(editor.ownerDocument.createTextNode(${encodedPrompt}));
-          editor.dispatchEvent(
-            new InputEvent('input', {
-              bubbles: true,
-              data: ${encodedPrompt},
-              inputType: 'insertText',
-            }),
-          );
+        } else {
+          editor.textContent = ${encodedPrompt};
         }
-        return { inserted: true };
+        editor.dispatchEvent(
+          new InputEvent('input', {
+            bubbles: true,
+            data: ${encodedPrompt},
+            inputType: 'insertFromPaste',
+          }),
+        );
+        return {
+          editorText: editor.innerText ?? '',
+          fallbackValue: '',
+          editorUserText: editor.textContent ?? '',
+        };
       })()`,
+      returnByValue: true,
     });
+    synchronousInsertionVerification = {
+      editorText: appendedInsertion.result?.value?.editorText ?? '',
+      fallbackValue: appendedInsertion.result?.value?.fallbackValue ?? '',
+      editorUserText: appendedInsertion.result?.value?.editorUserText ?? '',
+    };
   }
 
   const promptLength = prompt.length;
-  const postVerification = await runtime.evaluate({
-    expression: `(() => {
-      const editor = document.querySelector(${primarySelectorLiteral});
-      const fallback = document.querySelector(${fallbackSelectorLiteral});
-      return {
-        editorText: editor?.innerText ?? '',
-        fallbackValue: fallback?.value ?? '',
-        editorUserText: (() => {
-          if (!editor) return '';
-          const clone = editor.cloneNode(true);
-          clone
-            .querySelectorAll(
-              '[data-inline-selection-pill], [data-system-hint-type^="plugin:"], [data-id^="plugin:"]',
-            )
-            .forEach((node) => node.remove());
-          return clone.innerText ?? clone.textContent ?? '';
-        })(),
-      };
-    })()`,
-    returnByValue: true,
-  });
-  const observedEditor = postVerification.result?.value?.editorText ?? '';
-  const observedFallback = postVerification.result?.value?.fallbackValue ?? '';
-  const observedEditorUserText = postVerification.result?.value?.editorUserText ?? '';
+  // ProseMirror can acknowledge an insert before React's next render exposes
+  // it through innerText. Poll the same composer briefly so a successful large
+  // insert is not mistaken for absence and duplicated by a retry.
+  const postVerification =
+    synchronousInsertionVerification && snapshotContainsPrompt(synchronousInsertionVerification, prompt)
+      ? synchronousInsertionVerification
+      : await waitForPromptInComposer(
+          runtime,
+          prompt,
+          primarySelectorLiteral,
+          fallbackSelectorLiteral,
+        );
+  const observedEditor = postVerification.editorText;
+  const observedFallback = postVerification.fallbackValue;
+  const observedEditorUserText = postVerification.editorUserText;
   if (
     !composerContainsPrompt(observedEditorUserText, prompt) &&
     !composerContainsPrompt(observedFallback, prompt)
@@ -592,6 +666,7 @@ async function verifyPromptCommitted(
 
 export const promptComposerTestHooks = {
   composerContainsPrompt,
+  waitForPromptInComposer,
   verifyPromptCommitted,
   waitForComposerReadyToSubmit,
 };
