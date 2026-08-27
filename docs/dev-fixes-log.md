@@ -22332,3 +22332,25 @@ browser-stage lifecycle observability, not transcript truncation.
 - **Verification:** 27 focused tests, TypeScript typecheck, focused Biome lint,
   build, installed/source digest parity, and retained Agent Browser authority
   passed. Exact same-text live-terminal validation is still pending.
+
+## 2026-08-27 | Keep bilateral control evidence content-minimized and versioned
+
+- A generic `metadata` object is the correct boundary for workflow audit
+  parameters that do not change AuraCall execution semantics.
+- Bind the original prompt and intake graph by digest, record Codex approval by
+  packet and assessment digest, and expose Pro ordering plus bridge transit
+  count without duplicating private prompt or packet bodies.
+- Treat the metadata as audit evidence only. It does not bypass the controller's
+  sequencing gates or AuraCall's runtime, browser, provider, privacy, and
+  release controls.
+
+## 2026-08-27 | Preserve durable request metadata on response readback
+
+- **Symptom:** `POST /v1/responses` durably stored caller metadata, but create
+  and `GET /v1/responses/{id}` projected only AuraCall execution metadata.
+- **Cause:** the response mapper did not copy the persisted
+  `run.initialInputs.metadata` field into its public response projection.
+- **Fix:** expose that persisted object as `metadata.requestMetadata`, keeping
+  it separate from AuraCall-owned execution keys.
+- **Verification:** the focused HTTP regression proves identical nested
+  metadata on create and reread while request input remains outside metadata.

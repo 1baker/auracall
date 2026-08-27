@@ -118,6 +118,7 @@ export interface ExecutionResponse {
   model?: string | null;
   output: ExecutionResponseOutputItem[];
   metadata?: {
+    requestMetadata?: Record<string, unknown> | null;
     runId?: string | null;
     taskRunSpecId?: string | null;
     taskRunSpecSummary?: {

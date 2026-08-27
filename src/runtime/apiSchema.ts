@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { ExecutionRunRecordBundleSchema } from './schema.js';
 import type {
   ExecutionRequest,
   ExecutionRequestArtifactInput,
@@ -12,6 +11,7 @@ import type {
   ExecutionResponseOutputItem,
   ExecutionResponseOutputTextPart,
 } from './apiTypes.js';
+import { ExecutionRunRecordBundleSchema } from './schema.js';
 
 export const ExecutionTransportSchema = z.enum(['api', 'browser', 'auto']);
 
@@ -100,6 +100,7 @@ export const ExecutionResponseSchema: z.ZodType<ExecutionResponse> = z.object({
   output: z.array(ExecutionResponseOutputItemSchema),
   metadata: z
     .object({
+      requestMetadata: z.record(z.string(), z.unknown()).nullable().optional(),
       runId: z.string().nullable().optional(),
       taskRunSpecId: z.string().nullable().optional(),
       taskRunSpecSummary: z

@@ -125,6 +125,22 @@ cancellation stops delivery but does not cancel the AuraCall run.
 - If browser/provider health looks wrong, use AuraCall status and diagnostics
   surfaces instead of probing provider pages yourself.
 
+## Bilateral Workflow Metadata
+
+When a caller invokes the selective bilateral engineering workflow, preserve
+its versioned `metadata.workflowSchema = codex.dual_hemisphere_auracall.v1`
+object unchanged. The contract should bind the request to:
+
+- the immutable original-prompt and intake-task-graph digests
+- concurrent collection and the material-unknowns-only LitScout policy
+- the exact Codex-approved side packet and assessment digests
+- the ordered initiating or reviewing Pro phase
+- a bridge capacity of one and the current zero-or-one synthesis transit count
+
+These fields are audit metadata, not permission to skip runtime, browser,
+provider, privacy, or release gates. Keep prompt and packet bodies in the
+normal request input; do not duplicate private text into metadata.
+
 ## Attachments
 
 - Use local absolute paths or `file://` URIs for uploadable files.
