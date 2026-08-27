@@ -22354,3 +22354,28 @@ browser-stage lifecycle observability, not transcript truncation.
   it separate from AuraCall-owned execution keys.
 - **Verification:** the focused HTTP regression proves identical nested
   metadata on create and reread while request input remains outside metadata.
+
+## 2026-08-27 | Separate canonical tab selection from historical tab deletion
+
+- **Symptom:** a retained Agent Browser lane can contain several exact-URL
+  ChatGPT targets plus root tabs and other conversations. URL uniqueness would
+  reject a valid exact returned handle, while same-origin duplicate replacement
+  could close unrelated operator or agent state.
+- **Cause:** AuraCall verified target identity but did not expose selection
+  cardinality, did not require the returned handle URL during every retained
+  lookup, and inferred release eligibility from the planned `tab_new` request.
+- **Fix:** pin the exact returned or restart-retained target, verify its exact
+  requested URL, record distinct exact-URL target count as diagnostic evidence,
+  label reconciliation `preserved_selection_only`, and require Agent Browser's
+  actual `opened_new_tab` evidence before release. Missing legacy evidence is
+  detach-and-preserve; contradictory evidence fails before attach.
+- **Verification:** 23 focused bridge tests and 24 configured-executor tests,
+  TypeScript checking, focused Biome checking, the production build, plan
+  audit, and CodeGraph synchronization pass. A retained-browser live proof kept
+  PID 3246087 and all 13 pre-existing valid targets while releasing both Pro
+  pass targets. Both bilateral passes were sufficient with exactly one bridge
+  transit.
+- **Route correction:** once the dashboard access plan selects a retained
+  session, execute `tab_new`, fresh inventory verification, and `cdp_attach`
+  through that exact session stream. A dashboard route is discovery authority,
+  not necessarily the execution route for the selected browser.

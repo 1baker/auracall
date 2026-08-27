@@ -61,13 +61,19 @@ type LlmBrowserFields = {
 
 export type BrowserRuntimeMetadata = BaseTypes.BrowserRuntimeMetadata & {
   browserAuthority?: 'agent-browser' | 'compatibility-fallback' | 'explicit-off';
+  agentBrowserAcquisitionDecision?: string;
+  agentBrowserAcquisitionEvidence?: 'broker_inventory' | 'planned_request_legacy' | 'service_response';
   agentBrowserBridgeMode?: 'auto' | 'required' | 'off';
   agentBrowserBaseUrl?: string;
   agentBrowserBrowserId?: string;
+  agentBrowserCanonicalTargetId?: string;
+  agentBrowserExactUrlTargetCount?: number;
   agentBrowserProcessId?: number;
   agentBrowserProfileId?: string;
+  agentBrowserRequestedUrl?: string;
   agentBrowserServiceTabHandle?: Record<string, unknown>;
   agentBrowserSessionName?: string;
+  agentBrowserTabReconciliation?: 'preserved_selection_only';
   selectedAgentId?: string | null;
   conversationId?: string;
   composerTool?: string | null;

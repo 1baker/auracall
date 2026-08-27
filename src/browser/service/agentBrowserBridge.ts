@@ -7,18 +7,24 @@ const DEFAULT_TIMEOUT_MS = 5_000;
 export type AgentBrowserBridgeMode = "auto" | "required" | "off";
 
 export type AgentBrowserBridgeResult = {
+	acquisitionDecision?: string;
+	acquisitionEvidence?: "broker_inventory" | "planned_request_legacy" | "service_response";
 	baseUrl: string;
 	browserId: string;
 	browserProcessId?: number;
+	canonicalTargetId?: string;
 	chromeHost?: string;
 	chromePort?: number;
+	exactUrlTargetCount?: number;
 	detachRequired?: boolean;
 	releaseRequired?: boolean;
 	profileId: string;
+	requestedUrl?: string;
 	serviceTabHandle: Record<string, unknown>;
 	sessionName: string;
+	tabReconciliation?: "preserved_selection_only";
 	detachState?: "attached" | "detaching" | "detached";
-	releaseState?: "retained" | "releasing" | "released";
+	releaseState?: "preserved" | "retained" | "releasing" | "released";
 	detachPromise?: Promise<void>;
 };
 
@@ -119,14 +125,14 @@ async function discoverServiceRoutes(
 		Pick<AgentBrowserBridgeDependencies, "fetch" | "listStreamFiles" | "readStreamFile">
 	>,
 	abortSignal?: AbortSignal,
-): Promise<Array<{ baseUrl: string; browsers: BrowserRecord[] }>> {
+): Promise<Array<{ baseUrl: string; browsers: BrowserRecord[]; streamPath?: string }>> {
 	const files = (await deps.listStreamFiles().catch(() => []))
 		.filter((file) => file.endsWith(".stream"))
 		.sort(
 			(left, right) =>
 				serviceStreamPriority(left) - serviceStreamPriority(right) || left.localeCompare(right),
 		);
-	const routes: Array<{ baseUrl: string; browsers: BrowserRecord[] }> = [];
+	const routes: Array<{ baseUrl: string; browsers: BrowserRecord[]; streamPath?: string }> = [];
 	for (const filePath of files) {
 		const streamPort = Number((await deps.readStreamFile(filePath).catch(() => "")).trim());
 		if (!Number.isInteger(streamPort) || streamPort < 1) continue;
@@ -139,7 +145,11 @@ async function discoverServiceRoutes(
 				{ method: "GET" },
 				abortSignal,
 			);
-			routes.push({ baseUrl, browsers: (response.data?.browsers ?? []) as BrowserRecord[] });
+			routes.push({
+				baseUrl,
+				browsers: (response.data?.browsers ?? []) as BrowserRecord[],
+				streamPath: filePath,
+			});
 		} catch {
 			// Stale service stream files are expected and ignored.
 		}
@@ -261,6 +271,31 @@ function serviceTabHandleFromResponse(response: JsonResponse): Record<string, un
 	return null;
 }
 
+function tabAcquisitionFromResponse(response: JsonResponse): {
+	decision: string;
+	evidence: "planned_request_legacy" | "service_response";
+} {
+	const sharedAcquisition = response.data?.sharedAcquisition;
+	if (
+		!sharedAcquisition ||
+		typeof sharedAcquisition !== "object" ||
+		Array.isArray(sharedAcquisition)
+	) {
+		return { decision: "planned_tab_new_legacy", evidence: "planned_request_legacy" };
+	}
+	const record = sharedAcquisition as Record<string, unknown>;
+	if (
+		record.mode !== "tab_new" ||
+		record.action !== "opened_new_tab" ||
+		record.tabOpened !== true
+	) {
+		throw new Error(
+			`agent-browser tab request returned contradictory acquisition evidence: ${JSON.stringify(record)}`,
+		);
+	}
+	return { decision: "opened_new_tab", evidence: "service_response" };
+}
+
 function validatePlannedTabRequest(
 	request: Record<string, unknown> | undefined,
 	url: string,
@@ -279,6 +314,7 @@ function retainedBrokerCandidates(input: {
 	profileId: string;
 	serviceTabHandle: Record<string, unknown>;
 	sessionName: string;
+	url?: string | null;
 }): BrokerCandidate[] {
 	const expectedTargetId = String(input.serviceTabHandle.targetId ?? "").trim();
 	if (!expectedTargetId) return [];
@@ -294,12 +330,19 @@ function retainedBrokerCandidates(input: {
 			const matches =
 				handle.valid === true &&
 				handle.targetId === expectedTargetId &&
+				(!input.url || handle.url === input.url) &&
 				handle.browserId === input.browserId &&
 				handle.profileId === input.profileId &&
 				handle.sessionName === input.sessionName;
 			return matches ? [{ browser, handle }] : [];
 		});
 	});
+}
+
+function distinctTargetCount(candidates: BrokerCandidate[]): number {
+	return new Set(
+		candidates.map(({ handle }) => String(handle.targetId ?? "").trim()).filter(Boolean),
+	).size;
 }
 
 export async function reattachAgentBrowserBrokerTab(
@@ -352,6 +395,7 @@ export async function reattachAgentBrowserBrokerTab(
 			profileId: input.profileId,
 			serviceTabHandle: input.serviceTabHandle,
 			sessionName: input.sessionName,
+			url: input.url,
 		});
 		if (candidates.length > 1) {
 			throw new Error(
@@ -366,6 +410,18 @@ export async function reattachAgentBrowserBrokerTab(
 		);
 	}
 	const { route, candidate } = matchedRoutes[0];
+	const canonicalTargetId = String(candidate.handle.targetId ?? "").trim();
+	const exactUrlTargetCount = input.url
+		? distinctTargetCount(
+				exactBrokerCandidates({
+					browsers: route.browsers,
+					browserId: input.browserId,
+					profileId: input.profileId,
+					sessionName: input.sessionName,
+					url: input.url,
+				}),
+			)
+		: 1;
 	const attached = await requestJson(
 		fetchImpl,
 		route.baseUrl,
@@ -393,16 +449,22 @@ export async function reattachAgentBrowserBrokerTab(
 		`[agent-browser] Reattached retained target ${String(candidate.handle.targetId)} through ${input.browserId}; AuraCall will not rediscover or launch Chrome.`,
 	);
 	return {
+		acquisitionDecision: "retained_restart_reattach",
+		acquisitionEvidence: "broker_inventory",
 		baseUrl: route.baseUrl,
 		browserId: input.browserId,
 		browserProcessId,
+		canonicalTargetId,
 		chromeHost: endpoint.host,
 		chromePort: endpoint.port,
+		exactUrlTargetCount,
 		detachRequired: attached.data?.detachRequired !== false,
 		detachState: attached.data?.detachRequired === false ? "detached" : "attached",
 		profileId: input.profileId,
+		requestedUrl: input.url ?? undefined,
 		serviceTabHandle: candidate.handle,
 		sessionName: input.sessionName,
+		tabReconciliation: "preserved_selection_only",
 	};
 }
 
@@ -492,9 +554,17 @@ export async function acquireAgentBrowserBrokerTab(
 					);
 				}
 				const plannedRequest = validatePlannedTabRequest(request, input.url);
+				const plannedSessionName =
+					typeof plannedRequest.sessionName === "string" ? plannedRequest.sessionName.trim() : "";
+				const requestRoute =
+					routes.find(
+						(candidateRoute) =>
+							plannedSessionName &&
+							path.basename(candidateRoute.streamPath ?? "") === `${plannedSessionName}.stream`,
+					) ?? route;
 				const acquired = await requestJson(
 					fetchImpl,
-					route.baseUrl,
+					requestRoute.baseUrl,
 					"/api/service/request",
 					{
 						method: "POST",
@@ -508,6 +578,12 @@ export async function acquireAgentBrowserBrokerTab(
 				if (!returnedHandle) {
 					throw new Error("agent-browser tab request returned no serviceTabHandle");
 				}
+				if (returnedHandle.url !== input.url) {
+					throw new Error(
+						`agent-browser tab request returned a non-canonical URL: expected ${input.url}, got ${String(returnedHandle.url ?? "missing")}`,
+					);
+				}
+				const acquisition = tabAcquisitionFromResponse(acquired);
 				const browserId = String(returnedHandle.browserId ?? acquired.data?.browserId ?? "");
 				const sessionName = String(
 					returnedHandle.sessionName ??
@@ -520,23 +596,35 @@ export async function acquireAgentBrowserBrokerTab(
 				}
 				const browsersResponse = await requestJson(
 					fetchImpl,
-					route.baseUrl,
+					requestRoute.baseUrl,
 					"/api/service/browsers",
 					{ method: "GET" },
 					input.abortSignal,
 					15_000,
 				);
+				const browsers = (browsersResponse.data?.browsers ?? []) as BrowserRecord[];
 				const candidate = requireUniqueBrokerCandidate(
 					retainedBrokerCandidates({
-						browsers: (browsersResponse.data?.browsers ?? []) as BrowserRecord[],
+						browsers,
 						browserId,
 						profileId: selectedProfileId,
 						serviceTabHandle: returnedHandle,
 						sessionName,
+						url: input.url,
 					}),
 					`${String(recommendedAction)} returned-handle verification`,
 				);
 				const serviceTabHandle = candidate.handle;
+				const canonicalTargetId = String(serviceTabHandle.targetId ?? "").trim();
+				const exactUrlTargetCount = distinctTargetCount(
+					exactBrokerCandidates({
+						browsers,
+						browserId,
+						profileId: selectedProfileId,
+						sessionName,
+						url: input.url,
+					}),
+				);
 
 				const effectiveProfileId = String(serviceTabHandle.profileId ?? selectedProfileId);
 				if (effectiveProfileId !== selectedProfileId) {
@@ -546,7 +634,7 @@ export async function acquireAgentBrowserBrokerTab(
 				}
 				const attached = await requestJson(
 					fetchImpl,
-					route.baseUrl,
+					requestRoute.baseUrl,
 					"/api/service/request",
 					{
 						method: "POST",
@@ -571,18 +659,24 @@ export async function acquireAgentBrowserBrokerTab(
 					`[agent-browser] Broker attached ${effectiveProfileId} through ${browserId}; AuraCall will not launch Chrome.`,
 				);
 				return {
-					baseUrl: route.baseUrl,
+					acquisitionDecision: acquisition.decision,
+					acquisitionEvidence: acquisition.evidence,
+					baseUrl: requestRoute.baseUrl,
 					browserId,
 					browserProcessId,
+					canonicalTargetId,
 					chromeHost: endpoint.host,
 					chromePort: endpoint.port,
+					exactUrlTargetCount,
 					detachRequired: attached.data?.detachRequired !== false,
 					detachState: attached.data?.detachRequired === false ? "detached" : "attached",
-					releaseRequired: plannedRequest.action === "tab_new",
-					releaseState: plannedRequest.action === "tab_new" ? "retained" : "released",
+					releaseRequired: acquisition.decision === "opened_new_tab",
+					releaseState: acquisition.decision === "opened_new_tab" ? "retained" : "preserved",
 					profileId: effectiveProfileId,
+					requestedUrl: input.url,
 					serviceTabHandle,
 					sessionName,
+					tabReconciliation: "preserved_selection_only",
 				};
 			} catch (error) {
 				if (accessPlanResolved) {

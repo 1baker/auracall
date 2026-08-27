@@ -271,6 +271,16 @@ Current browser-mode default posture:
   API service restart re-authorizes the same retained target and resumes
   response polling without replaying the prompt or rediscovering Chrome.
   Broker-tagged recovery fails closed if the exact handle is unavailable.
+  Acquisition also requires the returned handle URL to equal the requested
+  conversation URL and records the canonical target, exact-URL target count,
+  and Agent Browser acquisition evidence in runtime diagnostics. The count is
+  observational only: AuraCall selects the exact returned handle and preserves
+  every pre-existing sibling, root tab, and other conversation. It releases a
+  tab only when Agent Browser explicitly reports that the current request
+  opened that new tab; missing legacy evidence is detach-and-preserve.
+  After the dashboard chooses a retained broker session, AuraCall sends tab
+  creation, inventory verification, and CDP attachment through that session's
+  exact service stream rather than continuing through the dashboard route.
   Broker discovery checks `AGENT_BROWSER_SOCKET_DIR`, `AGENT_BROWSER_HOME` (or
   `~/.agent-browser`), and the XDG runtime `agent-browser` directory in that
   order, deduplicating equivalent locations and ignoring missing roots. This

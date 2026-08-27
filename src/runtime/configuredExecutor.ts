@@ -234,14 +234,31 @@ function buildBrowserRuntimeMetadataFromEvidence(input: {
     userDataDir: input.manualLoginProfileDir ?? undefined,
     runtimeProfileId: input.runtimeProfileId,
     browserProfileId: input.browserProfileId,
+    agentBrowserAcquisitionDecision:
+      asNonEmptyString(details.agentBrowserAcquisitionDecision) ?? undefined,
+    agentBrowserAcquisitionEvidence:
+      details.agentBrowserAcquisitionEvidence === 'broker_inventory' ||
+      details.agentBrowserAcquisitionEvidence === 'planned_request_legacy' ||
+      details.agentBrowserAcquisitionEvidence === 'service_response'
+        ? details.agentBrowserAcquisitionEvidence
+        : undefined,
     agentBrowserBaseUrl: asNonEmptyString(details.agentBrowserBaseUrl) ?? undefined,
     agentBrowserBrowserId: asNonEmptyString(details.agentBrowserBrowserId) ?? undefined,
+    agentBrowserCanonicalTargetId:
+      asNonEmptyString(details.agentBrowserCanonicalTargetId) ?? undefined,
+    agentBrowserExactUrlTargetCount:
+      asFiniteNumber(details.agentBrowserExactUrlTargetCount) ?? undefined,
     agentBrowserProcessId: asFiniteNumber(details.agentBrowserProcessId) ?? undefined,
     agentBrowserProfileId: asNonEmptyString(details.agentBrowserProfileId) ?? undefined,
+    agentBrowserRequestedUrl: asNonEmptyString(details.agentBrowserRequestedUrl) ?? undefined,
     agentBrowserServiceTabHandle: isRecord(details.agentBrowserServiceTabHandle)
       ? details.agentBrowserServiceTabHandle
       : undefined,
     agentBrowserSessionName: asNonEmptyString(details.agentBrowserSessionName) ?? undefined,
+    agentBrowserTabReconciliation:
+      details.agentBrowserTabReconciliation === 'preserved_selection_only'
+        ? details.agentBrowserTabReconciliation
+        : undefined,
   };
 }
 
@@ -1115,13 +1132,19 @@ export function createConfiguredStoredStepExecutor(
         | 'tabUrl'
         | 'conversationId'
         | 'browserAuthority'
+        | 'agentBrowserAcquisitionDecision'
+        | 'agentBrowserAcquisitionEvidence'
         | 'agentBrowserBridgeMode'
         | 'agentBrowserBaseUrl'
         | 'agentBrowserBrowserId'
+        | 'agentBrowserCanonicalTargetId'
+        | 'agentBrowserExactUrlTargetCount'
         | 'agentBrowserProcessId'
         | 'agentBrowserProfileId'
+        | 'agentBrowserRequestedUrl'
         | 'agentBrowserServiceTabHandle'
         | 'agentBrowserSessionName'
+        | 'agentBrowserTabReconciliation'
       > | null,
     ): Record<string, unknown> => ({
       service,
@@ -1135,13 +1158,19 @@ export function createConfiguredStoredStepExecutor(
       tabUrl: runtime?.tabUrl ?? null,
       conversationId: runtime?.conversationId ?? null,
       browserAuthority: runtime?.browserAuthority ?? null,
+      agentBrowserAcquisitionDecision: runtime?.agentBrowserAcquisitionDecision ?? null,
+      agentBrowserAcquisitionEvidence: runtime?.agentBrowserAcquisitionEvidence ?? null,
       agentBrowserBridgeMode: runtime?.agentBrowserBridgeMode ?? null,
       agentBrowserBaseUrl: runtime?.agentBrowserBaseUrl ?? null,
       agentBrowserBrowserId: runtime?.agentBrowserBrowserId ?? null,
+      agentBrowserCanonicalTargetId: runtime?.agentBrowserCanonicalTargetId ?? null,
+      agentBrowserExactUrlTargetCount: runtime?.agentBrowserExactUrlTargetCount ?? null,
       agentBrowserProcessId: runtime?.agentBrowserProcessId ?? null,
       agentBrowserProfileId: runtime?.agentBrowserProfileId ?? null,
+      agentBrowserRequestedUrl: runtime?.agentBrowserRequestedUrl ?? null,
       agentBrowserServiceTabHandle: runtime?.agentBrowserServiceTabHandle ?? null,
       agentBrowserSessionName: runtime?.agentBrowserSessionName ?? null,
+      agentBrowserTabReconciliation: runtime?.agentBrowserTabReconciliation ?? null,
     });
     const recordBrowserRuntimeEvidence = async (evidence: BrowserRuntimeEvidence): Promise<void> => {
       const observation = evidence.observation;
@@ -1309,13 +1338,19 @@ export function createConfiguredStoredStepExecutor(
             tabUrl: hint.tabUrl ?? null,
             conversationId: hint.conversationId ?? null,
             browserAuthority: hint.browserAuthority ?? null,
+            agentBrowserAcquisitionDecision: hint.agentBrowserAcquisitionDecision ?? null,
+            agentBrowserAcquisitionEvidence: hint.agentBrowserAcquisitionEvidence ?? null,
             agentBrowserBridgeMode: hint.agentBrowserBridgeMode ?? null,
             agentBrowserBaseUrl: hint.agentBrowserBaseUrl ?? null,
             agentBrowserBrowserId: hint.agentBrowserBrowserId ?? null,
+            agentBrowserCanonicalTargetId: hint.agentBrowserCanonicalTargetId ?? null,
+            agentBrowserExactUrlTargetCount: hint.agentBrowserExactUrlTargetCount ?? null,
             agentBrowserProcessId: hint.agentBrowserProcessId ?? null,
             agentBrowserProfileId: hint.agentBrowserProfileId ?? null,
+            agentBrowserRequestedUrl: hint.agentBrowserRequestedUrl ?? null,
             agentBrowserServiceTabHandle: hint.agentBrowserServiceTabHandle ?? null,
             agentBrowserSessionName: hint.agentBrowserSessionName ?? null,
+            agentBrowserTabReconciliation: hint.agentBrowserTabReconciliation ?? null,
           },
         });
       },
@@ -1415,10 +1450,16 @@ export function createConfiguredStoredStepExecutor(
               recoveredRuntime.chromeTargetId,
             agentBrowserBaseUrl: recoveredBridge.baseUrl,
             agentBrowserBrowserId: recoveredBridge.browserId,
+            agentBrowserCanonicalTargetId: recoveredBridge.canonicalTargetId,
+            agentBrowserExactUrlTargetCount: recoveredBridge.exactUrlTargetCount,
             agentBrowserProcessId: recoveredBridge.browserProcessId,
             agentBrowserProfileId: recoveredBridge.profileId,
+            agentBrowserRequestedUrl: recoveredBridge.requestedUrl,
             agentBrowserServiceTabHandle: recoveredBridge.serviceTabHandle,
             agentBrowserSessionName: recoveredBridge.sessionName,
+            agentBrowserAcquisitionDecision: recoveredBridge.acquisitionDecision,
+            agentBrowserAcquisitionEvidence: recoveredBridge.acquisitionEvidence,
+            agentBrowserTabReconciliation: recoveredBridge.tabReconciliation,
           };
         }
         deps.logger?.(

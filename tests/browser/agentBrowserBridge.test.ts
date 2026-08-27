@@ -128,6 +128,7 @@ describe("agent-browser bridge", () => {
 			valid: true,
 		};
 		const requests: Array<Record<string, unknown>> = [];
+		const siblingHandle = { ...handle, targetId: "target-restart-sibling" };
 		const fetch = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
 			const value = String(url);
 			if (value.endsWith("/api/service/browsers")) {
@@ -140,7 +141,7 @@ describe("agent-browser bridge", () => {
 								pid: 41234,
 								id: handle.browserId,
 								profileId: handle.profileId,
-								tabHandles: [handle],
+								tabHandles: [siblingHandle, handle],
 							},
 						],
 					},
@@ -174,12 +175,17 @@ describe("agent-browser bridge", () => {
 		);
 
 		expect(result).toMatchObject({
+			acquisitionDecision: "retained_restart_reattach",
+			acquisitionEvidence: "broker_inventory",
 			baseUrl: "http://127.0.0.1:47777",
 			browserId: handle.browserId,
 			browserProcessId: 41234,
+			canonicalTargetId: handle.targetId,
 			chromeHost: "127.0.0.1",
 			chromePort: 49505,
+			exactUrlTargetCount: 2,
 			serviceTabHandle: handle,
+			tabReconciliation: "preserved_selection_only",
 		});
 		expect(requests).toHaveLength(1);
 		expect(requests[0]).toMatchObject({
@@ -224,7 +230,7 @@ describe("agent-browser bridge", () => {
 		}
 	});
 
-	test("opens the exact conversation in a retained browser when only a wrong-conversation tab exists", async () => {
+	test("selects the returned exact target and preserves other exact-URL and wrong-conversation tabs", async () => {
 		const requestedUrl = "https://chatgpt.com/c/litscout-chat";
 		const wrongHandle = {
 			browserId: "session:auracall-chatgpt",
@@ -243,6 +249,10 @@ describe("agent-browser bridge", () => {
 			url: requestedUrl,
 			valid: true,
 		};
+		const siblingExactHandle = {
+			...exactHandle,
+			targetId: "litscout-sibling-target",
+		};
 		let exactTabOpened = false;
 		const fetch = vi.fn(async (requestUrl: string | URL | Request, init?: RequestInit) => {
 			const value = String(requestUrl);
@@ -256,7 +266,9 @@ describe("agent-browser bridge", () => {
 								pid: 41234,
 								id: wrongHandle.browserId,
 								profileId: wrongHandle.profileId,
-								tabHandles: exactTabOpened ? [wrongHandle, exactHandle] : [wrongHandle],
+								tabHandles: exactTabOpened
+									? [wrongHandle, siblingExactHandle, exactHandle]
+									: [wrongHandle, siblingExactHandle],
 							},
 						],
 					},
@@ -286,7 +298,17 @@ describe("agent-browser bridge", () => {
 			requests.push(request);
 			if (request.action === "tab_new") {
 				exactTabOpened = true;
-				return jsonResponse({ success: true, data: { serviceTabHandle: exactHandle } });
+				return jsonResponse({
+					success: true,
+					data: {
+						serviceTabHandle: exactHandle,
+						sharedAcquisition: {
+							action: "opened_new_tab",
+							mode: "tab_new",
+							tabOpened: true,
+						},
+					},
+				});
 			}
 			return jsonResponse({
 				success: true,
@@ -310,8 +332,134 @@ describe("agent-browser bridge", () => {
 				readStreamFile: async () => "46515\n",
 			},
 		);
-		expect(result?.serviceTabHandle).toEqual(exactHandle);
+		expect(result).toMatchObject({
+			acquisitionDecision: "opened_new_tab",
+			acquisitionEvidence: "service_response",
+			canonicalTargetId: exactHandle.targetId,
+			exactUrlTargetCount: 2,
+			requestedUrl,
+			serviceTabHandle: exactHandle,
+			tabReconciliation: "preserved_selection_only",
+		});
 		expect(requests.map((request) => request.action)).toEqual(["tab_new", "cdp_attach"]);
+	});
+
+	test("fails closed before attach when the returned handle URL differs from the requested URL", async () => {
+		const requestedUrl = "https://chatgpt.com/c/requested";
+		const returnedHandle = {
+			browserId: "session:auracall-chatgpt",
+			profileId: "chatgpt-pro",
+			sessionName: "auracall-chatgpt",
+			targetId: "wrong-conversation-target",
+			url: "https://chatgpt.com/c/wrong-conversation",
+			valid: true,
+		};
+		const requests: Array<Record<string, unknown>> = [];
+		const fetch = vi.fn(async (requestUrl: string | URL | Request, init?: RequestInit) => {
+			const value = String(requestUrl);
+			if (value.endsWith("/api/service/browsers")) {
+				return jsonResponse({ success: true, data: { browsers: [] } });
+			}
+			if (value.includes("/api/service/access-plan?")) {
+				return jsonResponse({
+					success: true,
+					data: {
+						selectedProfile: { id: "chatgpt-pro" },
+						decision: {
+							profileReuse: { recommendedAction: "reuse_existing_browser" },
+							serviceRequest: {
+								available: true,
+								request: { action: "tab_new", url: requestedUrl },
+							},
+						},
+					},
+				});
+			}
+			const request = JSON.parse(String(init?.body)) as Record<string, unknown>;
+			requests.push(request);
+			return jsonResponse({ success: true, data: { serviceTabHandle: returnedHandle } });
+		});
+
+		await expect(
+			acquireAgentBrowserBrokerTab(
+				{
+					mode: "required",
+					profileId: "chatgpt-pro",
+					targetServiceId: "chatgpt",
+					url: requestedUrl,
+				},
+				{
+					fetch: fetch as never,
+					listStreamFiles: async () => ["/runtime/dashboard-service-backend.stream"],
+					readStreamFile: async () => "46515\n",
+				},
+			),
+		).rejects.toThrow("returned a non-canonical URL");
+		expect(requests.map((request) => request.action)).toEqual(["tab_new"]);
+	});
+
+	test("fails closed before attach when service acquisition evidence contradicts tab creation", async () => {
+		const url = "https://chatgpt.com/c/requested";
+		const handle = {
+			browserId: "session:auracall-chatgpt",
+			profileId: "chatgpt-pro",
+			sessionName: "auracall-chatgpt",
+			targetId: "requested-target",
+			url,
+			valid: true,
+		};
+		const requests: Array<Record<string, unknown>> = [];
+		const fetch = vi.fn(async (requestUrl: string | URL | Request, init?: RequestInit) => {
+			const value = String(requestUrl);
+			if (value.endsWith("/api/service/browsers")) {
+				return jsonResponse({ success: true, data: { browsers: [] } });
+			}
+			if (value.includes("/api/service/access-plan?")) {
+				return jsonResponse({
+					success: true,
+					data: {
+						selectedProfile: { id: handle.profileId },
+						decision: {
+							profileReuse: { recommendedAction: "reuse_existing_browser" },
+							serviceRequest: {
+								available: true,
+								request: { action: "tab_new", url },
+							},
+						},
+					},
+				});
+			}
+			const request = JSON.parse(String(init?.body)) as Record<string, unknown>;
+			requests.push(request);
+			return jsonResponse({
+				success: true,
+				data: {
+					serviceTabHandle: handle,
+					sharedAcquisition: {
+						action: "reused_existing_tab",
+						mode: "tab_new",
+						tabOpened: false,
+					},
+				},
+			});
+		});
+
+		await expect(
+			acquireAgentBrowserBrokerTab(
+				{
+					mode: "required",
+					profileId: handle.profileId,
+					targetServiceId: "chatgpt",
+					url,
+				},
+				{
+					fetch: fetch as never,
+					listStreamFiles: async () => ["/runtime/dashboard-service-backend.stream"],
+					readStreamFile: async () => "46515\n",
+				},
+			),
+		).rejects.toThrow("contradictory acquisition evidence");
+		expect(requests.map((request) => request.action)).toEqual(["tab_new"]);
 	});
 
 	test("auto acquires and policy-attaches a broker-owned tab before AuraCall browser launch", async () => {
@@ -365,7 +513,17 @@ describe("agent-browser bridge", () => {
 			const request = JSON.parse(String(init?.body)) as Record<string, unknown>;
 			requests.push(request);
 			if (request.action === "tab_new") {
-				return jsonResponse({ success: true, data: { serviceTabHandle: handle } });
+				return jsonResponse({
+					success: true,
+					data: {
+						serviceTabHandle: handle,
+						sharedAcquisition: {
+							action: "opened_new_tab",
+							mode: "tab_new",
+							tabOpened: true,
+						},
+					},
+				});
 			}
 			if (request.action === "cdp_attach") {
 				return jsonResponse({
@@ -420,7 +578,7 @@ describe("agent-browser bridge", () => {
 		});
 	});
 
-	test("lets agent-browser reuse an exact broker tab through its planned tab request", async () => {
+	test("preserves the exact broker tab when legacy acquisition evidence is absent", async () => {
 		const requests: Array<Record<string, unknown>> = [];
 		const handle = {
 			browserId: "session:auracall-chatgpt",
@@ -496,7 +654,13 @@ describe("agent-browser bridge", () => {
 			},
 		);
 
-		expect(result?.serviceTabHandle).toEqual(handle);
+		expect(result).toMatchObject({
+			acquisitionDecision: "planned_tab_new_legacy",
+			acquisitionEvidence: "planned_request_legacy",
+			releaseRequired: false,
+			releaseState: "preserved",
+			serviceTabHandle: handle,
+		});
 		expect(requests.map((request) => request.action)).toEqual(["tab_new", "cdp_attach"]);
 	});
 
@@ -670,6 +834,104 @@ describe("agent-browser bridge", () => {
 
 		expect(result?.baseUrl).toBe("http://127.0.0.1:47777");
 		expect(result?.serviceTabHandle).toEqual(handle);
+	});
+
+	test("executes a dashboard-planned request through the exact session stream", async () => {
+		const url = "https://chatgpt.com/c/existing";
+		const handle = {
+			browserId: "session:auracall-chatgpt-bridge-v3",
+			profileId: "chatgpt-pro",
+			sessionName: "auracall-chatgpt-bridge-v3",
+			targetId: "target-v3",
+			url,
+			valid: true,
+		};
+		const requests: Array<{ baseUrl: string; action: unknown }> = [];
+		const browserInventory = {
+			success: true,
+			data: {
+				browsers: [
+					{
+						health: "ready",
+						pid: 41234,
+						id: handle.browserId,
+						profileId: handle.profileId,
+						tabHandles: [handle],
+					},
+				],
+			},
+		};
+		const fetch = vi.fn(async (requestUrl: string | URL | Request, init?: RequestInit) => {
+			const value = String(requestUrl);
+			if (value.endsWith("/api/service/browsers")) return jsonResponse(browserInventory);
+			if (value.startsWith("http://127.0.0.1:45555/api/service/access-plan?")) {
+				return jsonResponse({
+					success: true,
+					data: {
+						selectedProfile: { id: handle.profileId },
+						decision: {
+							profileReuse: { recommendedAction: "reuse_existing_browser" },
+							serviceRequest: {
+								available: true,
+								request: {
+									action: "tab_new",
+									browserId: handle.browserId,
+									sessionName: handle.sessionName,
+									url,
+								},
+							},
+						},
+					},
+				});
+			}
+			const request = JSON.parse(String(init?.body)) as Record<string, unknown>;
+			requests.push({ baseUrl: new URL(value).origin, action: request.action });
+			expect(value).toBe("http://127.0.0.1:47777/api/service/request");
+			if (request.action === "tab_new") {
+				return jsonResponse({
+					success: true,
+					data: {
+						serviceTabHandle: handle,
+						sharedAcquisition: {
+							action: "opened_new_tab",
+							mode: "tab_new",
+							tabOpened: true,
+						},
+					},
+				});
+			}
+			return jsonResponse({
+				success: true,
+				data: {
+					browserWebSocketUrl: "ws://127.0.0.1:49505/devtools/browser/example",
+					detachRequired: true,
+				},
+			});
+		});
+
+		const result = await acquireAgentBrowserBrokerTab(
+			{
+				mode: "required",
+				profileId: handle.profileId,
+				targetServiceId: "chatgpt",
+				url,
+			},
+			{
+				fetch: fetch as never,
+				listStreamFiles: async () => [
+					"/runtime/dashboard-service-backend.stream",
+					`/runtime/${handle.sessionName}.stream`,
+				],
+				readStreamFile: async (filePath) =>
+					filePath.includes("dashboard") ? "45555\n" : "47777\n",
+			},
+		);
+
+		expect(result?.baseUrl).toBe("http://127.0.0.1:47777");
+		expect(requests).toEqual([
+			{ action: "tab_new", baseUrl: "http://127.0.0.1:47777" },
+			{ action: "cdp_attach", baseUrl: "http://127.0.0.1:47777" },
+		]);
 	});
 
 	test("asks agent-browser to launch a dedicated profile session when the access plan requires it", async () => {

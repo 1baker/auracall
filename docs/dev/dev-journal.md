@@ -48029,3 +48029,30 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   dashboard session held the exclusive `chatgpt-pro` lease. The bridge stayed
   at zero and no reviewing pass was created, so the failure is recorded as
   lifecycle evidence rather than retried automatically.
+
+## 2026-08-27 | Preserve pre-existing tabs during canonical broker selection
+
+- AuraCall now treats the exact Agent Browser-returned target as canonical only
+  after matching browser, profile, session, target, and requested URL against a
+  fresh broker inventory. Exact-URL sibling count is diagnostic and never
+  authorizes historical cleanup.
+- Structured `sharedAcquisition` evidence must report `tab_new`,
+  `opened_new_tab`, and `tabOpened=true` before current-run cleanup can release
+  the acquired tab. Contradictory evidence fails before attach; legacy responses
+  without evidence are detached and preserved.
+- Runtime hints expose acquisition decision/evidence, canonical target,
+  requested URL, exact-URL target count, and
+  `preserved_selection_only`. Dashboard planning is followed through the exact
+  selected session stream for tab creation, inventory verification, and CDP
+  attachment. The focused broker suite passes 23 assertions, including sibling
+  preservation, route pinning, restart pinning, URL mismatch, contradictory
+  evidence, and legacy preservation.
+- The right initiating and left reviewing Pro passes both accepted the design
+  with exactly one synthesis transit. Their temporary targets were released;
+  the same Agent Browser PID 3246087 and all 13 pre-existing valid targets
+  remained. Two earlier attempts failed before provider output while exposing
+  the stale-route defect and did not consume a synthesis transit.
+- The configured executor now persists the reconciliation evidence in runtime
+  hints and recovery records. Its 24 focused assertions and the 23 bridge
+  assertions pass together with typecheck, focused lint, build, plan audit, and
+  CodeGraph synchronization.

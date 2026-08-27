@@ -3154,13 +3154,19 @@ function withAgentBrowserRuntimeHints(
 	const withBridgeProvenance = (hint: BrowserRuntimeMetadata): BrowserRuntimeMetadata => ({
 		...hint,
 		browserAuthority: "agent-browser",
+		agentBrowserAcquisitionDecision: bridge.acquisitionDecision,
+		agentBrowserAcquisitionEvidence: bridge.acquisitionEvidence,
 		agentBrowserBridgeMode: bridgeMode,
 		agentBrowserBaseUrl: bridge.baseUrl,
 		agentBrowserBrowserId: bridge.browserId,
+		agentBrowserCanonicalTargetId: bridge.canonicalTargetId,
+		agentBrowserExactUrlTargetCount: bridge.exactUrlTargetCount,
 		agentBrowserProcessId: bridge.browserProcessId,
 		agentBrowserProfileId: bridge.profileId,
+		agentBrowserRequestedUrl: bridge.requestedUrl,
 		agentBrowserServiceTabHandle: bridge.serviceTabHandle,
 		agentBrowserSessionName: bridge.sessionName,
+		agentBrowserTabReconciliation: bridge.tabReconciliation,
 	});
 	return {
 		...options,
