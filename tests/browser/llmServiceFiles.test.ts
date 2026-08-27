@@ -2080,6 +2080,49 @@ describe("llmService project file cache writes", () => {
 		expect(result.configuredUrl).toBe("https://grok.com/c/conversation-123");
 	});
 
+	test("buildListOptions preserves same-service provider-session provenance with an explicit endpoint", async () => {
+		const browserService = {
+			resolveServiceTarget: vi.fn(async () => ({
+				host: "127.0.0.1",
+				port: 45011,
+				browserProfile: "agent-browser-chatgpt",
+				sourceBrowserProfile: "Default",
+				managedBrowserProfile: "/tmp/managed/chatgpt",
+				browserProcessId: 1234,
+				tab: { targetId: "retained-chatgpt-target", url: CHATGPT_URL },
+			})),
+		};
+		const provider = {
+			id: "chatgpt",
+			config: { id: "chatgpt", selectors: {} as never },
+		};
+		const service = new BuildListOptionsLlmService(
+			{ browser: { cache: {} } } as ResolvedUserConfig,
+			provider as never,
+			browserService,
+		);
+
+		const resolved = await service.buildListOptions();
+		const explicit = await service.buildListOptions({
+			...resolved,
+			host: "127.0.0.1",
+			port: 45011,
+			tabTargetId: "submitted-chatgpt-target",
+		});
+
+		expect(browserService.resolveServiceTarget).toHaveBeenCalledTimes(1);
+		expect(explicit.providerSessionAuthorization).toBe(
+			resolved.providerSessionAuthorization,
+		);
+		expect(explicit.providerSessionAuthorization?.context).toMatchObject({
+			browserProfile: "agent-browser-chatgpt",
+			managedBrowserProfile: "/tmp/managed/chatgpt",
+			browserProcessId: 1234,
+			browserTargetId: "retained-chatgpt-target",
+		});
+		expect(explicit.tabTargetId).toBe("submitted-chatgpt-target");
+	});
+
 	test("getConversationContext preserves same-service resolved provider-session provenance", async () => {
 		const homeDir = await mkdtemp(path.join(os.tmpdir(), "auracall-context-provenance-"));
 		setAuracallHomeDirOverrideForTest(homeDir);

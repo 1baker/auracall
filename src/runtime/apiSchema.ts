@@ -40,6 +40,7 @@ export const ExecutionRequestExtensionHintsSchema: z.ZodType<ExecutionRequestExt
   outputContract: z.string().nullable().optional(),
   composerTool: z.string().nullable().optional(),
   deepResearchPlanAction: z.enum(['start', 'edit']).nullable().optional(),
+  chatgptConversationUrl: z.string().nullable().optional(),
 });
 
 export const ExecutionRequestInputMessageSchema: z.ZodType<ExecutionRequestInputMessage> = z.object({

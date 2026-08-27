@@ -244,12 +244,12 @@ import {
 import {
 	createResponseBatchExecutionGate,
 	createResponseBatchService,
-	resolveResponseBatchExecutionPriority,
 	ResponseBatchCreateRequestSchema,
 	type ResponseBatchPriority,
 	ResponseBatchRetryRequestSchema,
 	type ResponseBatchService,
 	type ResponseBatchStatus,
+	resolveResponseBatchExecutionPriority,
 } from "../runtime/responseBatchService.js";
 import {
 	createExecutionRequestFromRecord,
@@ -343,6 +343,7 @@ import {
 } from "./routeManifest.js";
 
 export const DEFAULT_BACKGROUND_DRAIN_INTERVAL_MS = 60_000;
+const BACKGROUND_DRAIN_RECENT_WINDOW_MS = 15 * 60_000;
 const TENANT_EXECUTION_LIMIT_STATUS_CACHE_MS = 5_000;
 const DEFAULT_STALE_RUNNER_RETENTION = 100;
 const ACCOUNT_MIRROR_COMPLETION_RECENT_STATUS_LIMIT = 10;
@@ -451,6 +452,7 @@ interface ServerOwnedDrainOptions {
 	runId?: string;
 	sourceKind?: ExecutionRunSourceKind;
 	candidateStatuses?: ExecutionRunStatus[];
+	updatedSince?: string;
 	maxRuns?: number;
 }
 
@@ -917,6 +919,7 @@ interface HttpStatusResponse {
 	preflight: PreflightStatusSummary;
 	recoverySummary?: ExecutionServiceHostRecoverySummary;
 	localClaimSummary?: ExecutionServiceHostLocalClaimSummary;
+	localClaimProjection?: HttpLocalClaimProjection;
 	runnerTopology: ExecutionServiceHostRunnerTopologySummary;
 	runner: {
 		id: string | null;
@@ -1003,6 +1006,27 @@ interface HttpStatusResponse {
 				delayMs: number;
 		  }
 		| ExecutionServiceHostOperatorControlResult;
+}
+
+interface HttpLocalClaimProjection {
+	state: "fresh" | "cached" | "coalesced";
+	generatedAt: string;
+	ageMs: number;
+	ttlMs: number;
+}
+
+function createLocalClaimProjection(
+	state: HttpLocalClaimProjection["state"],
+	generatedAtMs: number,
+	observedAtMs: number,
+	ttlMs: number,
+): HttpLocalClaimProjection {
+	return {
+		state,
+		generatedAt: new Date(generatedAtMs).toISOString(),
+		ageMs: Math.max(0, observedAtMs - generatedAtMs),
+		ttlMs,
+	};
 }
 
 interface AccountMirrorProofScopeStatus {
@@ -1459,6 +1483,57 @@ export async function createResponsesHttpServer(
 	let foregroundAuraCallDrainReservations = 0;
 	let runnerHeartbeatTimer: NodeJS.Timeout | null = null;
 	let closed = false;
+	const localClaimSummaryCacheTtlMs = 30_000;
+	let localClaimSummaryCache: {
+		summary: ExecutionServiceHostLocalClaimSummary | null;
+		generatedAtMs: number;
+	} | null = null;
+	let localClaimSummaryInFlight: Promise<{
+		summary: ExecutionServiceHostLocalClaimSummary | null;
+		generatedAtMs: number;
+	}> | null = null;
+	const invalidateLocalClaimSummaryCache = () => {
+		localClaimSummaryCache = null;
+	};
+	const readLocalClaimSummary = async (input: { forceFresh?: boolean } = {}) => {
+		const observedAtMs = now().getTime();
+		if (
+			!input.forceFresh &&
+			localClaimSummaryCache &&
+			observedAtMs - localClaimSummaryCache.generatedAtMs < localClaimSummaryCacheTtlMs
+		) {
+			return {
+				summary: localClaimSummaryCache.summary,
+				projection: createLocalClaimProjection(
+					"cached",
+					localClaimSummaryCache.generatedAtMs,
+					observedAtMs,
+					localClaimSummaryCacheTtlMs,
+				),
+			};
+		}
+
+		const coalesced = localClaimSummaryInFlight !== null;
+		localClaimSummaryInFlight ??= (async () => ({
+			summary: await host.summarizeLocalClaimState({ sourceKind: "direct" }),
+			generatedAtMs: now().getTime(),
+		}))();
+		try {
+			localClaimSummaryCache = await localClaimSummaryInFlight;
+			const completedAtMs = now().getTime();
+			return {
+				summary: localClaimSummaryCache.summary,
+				projection: createLocalClaimProjection(
+					coalesced ? "coalesced" : "fresh",
+					localClaimSummaryCache.generatedAtMs,
+					completedAtMs,
+					localClaimSummaryCacheTtlMs,
+				),
+			};
+		} finally {
+			localClaimSummaryInFlight = null;
+		}
+	};
 	const beginForegroundAuraCallWork = () => {
 		foregroundAuraCallWorkCount += 1;
 		return () => {
@@ -1600,6 +1675,7 @@ export async function createResponsesHttpServer(
 							? "paused"
 							: "idle";
 					backgroundDrainState.lastCompletedAt = now().toISOString();
+					invalidateLocalClaimSummaryCache();
 				}
 				completeForegroundAuraCallDrainReservation();
 				if (accountMirrorFollowUpAfterNextDrain && foregroundAuraCallDrainReservations === 0) {
@@ -1637,6 +1713,7 @@ export async function createResponsesHttpServer(
 			}
 			await drainThroughServerHost({
 				candidateStatuses: ["planned", "running"],
+				updatedSince: new Date(now().getTime() - BACKGROUND_DRAIN_RECENT_WINDOW_MS).toISOString(),
 				maxRuns: 1,
 				trigger: "background-timer",
 			}).catch((error) => {
@@ -1894,8 +1971,8 @@ export async function createResponsesHttpServer(
 							sourceKind: statusSourceKind,
 						})
 					: undefined;
-				const statusResponseLocalClaimSummary = await host.summarizeLocalClaimState({
-					sourceKind: "direct",
+				const statusResponseLocalClaim = await readLocalClaimSummary({
+					forceFresh: statusQuery.localClaimsMode === "fresh",
 				});
 				const runnerTopology = compactRunnerTopologyForStatus(
 					await host.summarizeRunnerTopology(),
@@ -1935,7 +2012,8 @@ export async function createResponsesHttpServer(
 					publicDashboardUrl: options.publicDashboardUrl,
 					serviceRouting: options.serviceRouting,
 					recoverySummary: statusResponseRecoverySummary,
-					localClaimSummary: statusResponseLocalClaimSummary,
+					localClaimSummary: statusResponseLocalClaim.summary ?? undefined,
+					localClaimProjection: statusResponseLocalClaim.projection,
 					runnerTopology,
 					runner: runnerState,
 					backgroundDrain: backgroundDrainState,
@@ -3360,6 +3438,7 @@ export async function createResponsesHttpServer(
 								now,
 							})
 						: deps.accountMirrorBrowserProcessStatus;
+				const statusResponseLocalClaim = await readLocalClaimSummary({ forceFresh: true });
 				const statusResponse = await createHttpStatusResponse({
 					now,
 					host: boundHost,
@@ -3367,7 +3446,8 @@ export async function createResponsesHttpServer(
 					dashboardUrl: options.dashboardUrl,
 					publicDashboardUrl: options.publicDashboardUrl,
 					serviceRouting: options.serviceRouting,
-					localClaimSummary: await host.summarizeLocalClaimState({ sourceKind: "direct" }),
+					localClaimSummary: statusResponseLocalClaim.summary ?? undefined,
+					localClaimProjection: statusResponseLocalClaim.projection,
 					runnerTopology: await host.summarizeRunnerTopology(),
 					runner: runnerState,
 					backgroundDrain: backgroundDrainState,
@@ -3961,7 +4041,19 @@ export async function createResponsesHttpServer(
 					const createdResponse = await responsesService.createResponse(request);
 					if (backgroundDrainIntervalMs > 0) {
 						reserveForegroundAuraCallDrain();
-						scheduleBackgroundDrain(0);
+						drainThroughServerHost({
+							runId: createdResponse.id,
+							maxRuns: 1,
+							trigger: "request-create",
+						})
+							.then(() => scheduleAccountMirrorSchedulerFollowUp(0, "response-drain-completed"))
+							.catch((error) => {
+								logger(
+									`targeted response drain failed: ${
+										error instanceof Error ? error.message : String(error)
+									}`,
+								);
+							});
 						sendJson(res, 200, createdResponse);
 					} else {
 						await drainThroughServerHost({
@@ -5205,6 +5297,7 @@ function createHttpStatusResponse(input: {
 	serviceRouting?: ApiServiceRoutingConfig;
 	recoverySummary?: ExecutionServiceHostRecoverySummary;
 	localClaimSummary?: ExecutionServiceHostLocalClaimSummary;
+	localClaimProjection?: HttpLocalClaimProjection;
 	runnerTopology: ExecutionServiceHostRunnerTopologySummary;
 	runner: HttpStatusResponse["runner"];
 	backgroundDrain: HttpStatusResponse["backgroundDrain"];
@@ -5292,6 +5385,7 @@ function createHttpStatusResponse(input: {
 		},
 		recoverySummary: input.recoverySummary,
 		localClaimSummary: input.localClaimSummary,
+		localClaimProjection: input.localClaimProjection,
 		runnerTopology: input.runnerTopology,
 		runner: input.runner,
 		backgroundDrain: input.backgroundDrain,
@@ -9351,6 +9445,7 @@ interface ParsedStatusQuery {
 	tenantExecutionLimitsMode: "configured" | "usage";
 	accountMirrorProvider?: AccountMirrorProvider;
 	accountMirrorRuntimeProfileId?: string;
+	localClaimsMode: "cached" | "fresh";
 }
 
 interface ParsedBrowserProcessStatusQuery {
@@ -9445,6 +9540,7 @@ function parseStatusQuery(searchParams: URLSearchParams): ParsedStatusQuery {
 			tenantExecutionLimits: z.enum(["configured", "usage"]).optional(),
 			provider: z.enum(["chatgpt", "gemini", "grok"]).optional(),
 			runtimeProfile: z.string().trim().min(1).optional(),
+			localClaims: z.enum(["cached", "fresh"]).optional(),
 		})
 		.superRefine((value, ctx) => {
 			if (!value.recovery && value.sourceKind !== undefined) {
@@ -9464,6 +9560,7 @@ function parseStatusQuery(searchParams: URLSearchParams): ParsedStatusQuery {
 		tenantExecutionLimitsMode: parsed.tenantExecutionLimits ?? "configured",
 		accountMirrorProvider: parsed.provider,
 		accountMirrorRuntimeProfileId: parsed.runtimeProfile,
+		localClaimsMode: parsed.localClaims ?? "cached",
 	};
 }
 

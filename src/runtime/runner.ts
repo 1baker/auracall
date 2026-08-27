@@ -237,7 +237,10 @@ export async function executeStoredExecutionRunOnce(
   let finalRecord: ExecutionRunStoredRecord | null = null;
   const requiresConfiguredExecutor = requiresConfiguredStoredStepExecutor(inspection.record.bundle);
   const leaseHeartbeat = startExecutionLeaseHeartbeatLoop({
-    enabled: leaseHeartbeatIntervalMs > 0 && !requiresConfiguredExecutor,
+    // Browser/provider callbacks add evidence, but they are not guaranteed to
+    // fire frequently while a legitimate long response is thinking. Keep the
+    // owner lease alive independently for every executing step.
+    enabled: leaseHeartbeatIntervalMs > 0,
     intervalMs: leaseHeartbeatIntervalMs,
     ttlMs: leaseHeartbeatTtlMs,
     runId: options.runId,

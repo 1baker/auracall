@@ -2895,6 +2895,35 @@ describe("http responses adapter", () => {
 		}
 	});
 
+	it("caches default local-claim status projection and supports explicit fresh readback", async () => {
+		const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-http-status-cache-"));
+		cleanup.push(homeDir);
+		setAuracallHomeDirOverrideForTest(homeDir);
+		const server = await createResponsesHttpServer({
+			host: "127.0.0.1",
+			port: 0,
+			backgroundDrainIntervalMs: 0,
+		});
+
+		try {
+			const first = (await (await fetch(`http://127.0.0.1:${server.port}/status`)).json()) as {
+				localClaimProjection: { state: string; ttlMs: number };
+			};
+			const second = (await (await fetch(`http://127.0.0.1:${server.port}/status`)).json()) as {
+				localClaimProjection: { state: string; ttlMs: number };
+			};
+			const explicitFresh = (await (
+				await fetch(`http://127.0.0.1:${server.port}/status?localClaims=fresh`)
+			).json()) as { localClaimProjection: { state: string; ttlMs: number } };
+
+			expect(first.localClaimProjection).toMatchObject({ state: "fresh", ttlMs: 30_000 });
+			expect(second.localClaimProjection).toMatchObject({ state: "cached", ttlMs: 30_000 });
+			expect(explicitFresh.localClaimProjection).toMatchObject({ state: "fresh", ttlMs: 30_000 });
+		} finally {
+			await server.close();
+		}
+	});
+
 	it("reports read-only account mirror status from configured runtime profile identities", async () => {
 		const homeDir = await fs.mkdtemp(
 			path.join(os.tmpdir(), "auracall-http-account-mirror-status-"),

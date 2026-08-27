@@ -846,6 +846,10 @@ export abstract class LlmService {
 		};
 		const providerSessionExpectation =
 			this.providerSessionAuthority.resolveExpectation(providerSessionContext);
+		const providedProviderSessionAuthorization =
+			overrides.providerSessionAuthorization?.authority === this.providerSessionAuthority
+				? overrides.providerSessionAuthorization
+				: null;
 		return {
 			...overrides,
 			port,
@@ -859,16 +863,17 @@ export abstract class LlmService {
 			mutationSourcePrefix: overrides.mutationSourcePrefix ?? `provider:${this.providerId}`,
 			interactionGovernor:
 				overrides.interactionGovernor ?? this.resolveBrowserInteractionGovernor(overrides),
-			providerSessionAuthorization: {
-				authority: this.providerSessionAuthority,
-				context: providerSessionContext,
-				expectation: providerSessionExpectation,
-				onProof: (proof) => {
-					this.latestProviderSessionProof = proof;
-					overrides.onProviderSessionProof?.(proof);
-					overrides.providerSessionAuthorization?.onProof?.(proof);
+			providerSessionAuthorization:
+				providedProviderSessionAuthorization ?? {
+					authority: this.providerSessionAuthority,
+					context: providerSessionContext,
+					expectation: providerSessionExpectation,
+					onProof: (proof) => {
+						this.latestProviderSessionProof = proof;
+						overrides.onProviderSessionProof?.(proof);
+						overrides.providerSessionAuthorization?.onProof?.(proof);
+					},
 				},
-			},
 		};
 	}
 

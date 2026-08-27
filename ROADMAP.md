@@ -3856,6 +3856,10 @@ Safety note:
   they are required to preserve the primary lane's existing semantics
 - Supporting maintenance: roadmap, runbook, and validation hygiene that keeps
   the execution board deterministic
+- Closed reliability repair: Plan 0348 bounded status and archive scans,
+  removed redundant local-claim reads, isolated foreground dispatch, and
+  proved the strict agent-browser retained-tab authority boundary under the
+  installed poller and a live ChatGPT Pro cleanup smoke.
 - Current transition: user-scoped installed-runtime dogfood is no longer
   considered broadly green; `/status` is usable, but API OOM restarts,
   stale-runner accumulation, live-follow retry churn, and missing local

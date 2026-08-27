@@ -209,13 +209,18 @@ describe('chatgpt composer tool selection', () => {
     expect(input.dispatchMouseEvent).toHaveBeenCalledTimes(3);
   });
 
-  test('fails closed when the current drawer row or generic input contract drifts', () => {
+  test('accepts an optional provider library row but fails closed on generic input drift', () => {
     expect(
       resolveChatgptWorkbenchAttachmentSurfaceForTest({
         rows: [{ label: 'Add photos & files', description: 'Upload from computer' }],
         inputs: [{ id: 'upload-files', accept: null, multiple: true }],
       }),
-    ).toEqual({ status: 'library-action-not-found' });
+    ).toEqual({
+      status: 'ready',
+      inputSelector: '#upload-files',
+      localFileLabel: 'Add photos & files',
+      libraryLabel: null,
+    });
     expect(
       resolveChatgptWorkbenchAttachmentSurfaceForTest({
         rows: [
