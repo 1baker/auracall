@@ -209,6 +209,7 @@ describe('search projection service', () => {
       tenant: 'eric.cochran@soylei.com',
     });
     expect(result.facets.providers).toEqual([{ value: 'chatgpt', count: 2 }]);
+    expect(result.facets.projects).toEqual([{ value: 'Transcripts', count: 1 }]);
     expect(result.facets.kinds).toEqual([
       { value: 'artifact', count: 1 },
       { value: 'conversation', count: 1 },
@@ -255,6 +256,10 @@ describe('search projection service', () => {
       kind: 'generated_artifact',
       assetAvailability: 'available',
     }));
+
+    const projectArtifacts = await service.search({ project: 'Transcripts', limit: 10 });
+    expect(projectArtifacts.rows).toHaveLength(1);
+    expect(projectArtifacts.rows[0]?.projectId).toBe('Transcripts');
 
     const materializedArtifacts = await service.search({ kind: 'artifact', materialization: 'succeeded', limit: 10 });
     expect(materializedArtifacts.rows.map((row) => row.itemId)).toEqual(['generated_artifact:resp_1:legacy_readout.json']);

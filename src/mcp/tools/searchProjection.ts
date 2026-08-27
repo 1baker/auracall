@@ -9,6 +9,7 @@ const searchProjectionInputShape = {
   provider: z.string().min(1).optional(),
   runtimeProfile: z.string().min(1).optional(),
   tenant: z.string().min(1).optional(),
+  project: z.string().min(1).optional(),
   kind: z.string().min(1).optional(),
   status: z.string().min(1).optional(),
   fileAvailable: z.boolean().optional(),
@@ -58,6 +59,7 @@ const searchProjectionOutputShape = {
     provider: z.string().nullable(),
     runtimeProfile: z.string().nullable(),
     tenant: z.string().nullable(),
+    project: z.string().nullable(),
     kind: z.string().nullable(),
     status: z.string().nullable(),
     fileAvailable: z.boolean().nullable(),
@@ -75,6 +77,7 @@ const searchProjectionOutputShape = {
   facets: z.object({
     providers: z.array(searchFacetValueShape),
     tenants: z.array(searchFacetValueShape),
+    projects: z.array(searchFacetValueShape),
     runtimeProfiles: z.array(searchFacetValueShape),
     kinds: z.array(searchFacetValueShape),
     statuses: z.array(searchFacetValueShape),

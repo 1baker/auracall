@@ -15,6 +15,7 @@ describe('mcp search projection tool', () => {
         provider: 'chatgpt',
         runtimeProfile: 'wsl-chrome-3',
         tenant: null,
+        project: null,
         kind: 'artifact',
         status: null,
         fileAvailable: true,
@@ -64,6 +65,7 @@ describe('mcp search projection tool', () => {
       facets: {
         providers: [{ value: 'chatgpt', count: 1 }],
         tenants: [{ value: 'ecochran76@gmail.com', count: 1 }],
+        projects: [{ value: 'Transcripts', count: 1 }],
         runtimeProfiles: [{ value: 'wsl-chrome-3', count: 1 }],
         kinds: [{ value: 'artifact', count: 1 }],
         statuses: [{ value: 'succeeded', count: 1 }],

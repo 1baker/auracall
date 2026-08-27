@@ -20133,6 +20133,25 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   render acceptance. Typecheck, governance/link tests, the 348-plan audit,
   portable-path scan, diff hygiene, and CodeGraph sync/status pass.
 
+## Turn 443 | 2026-08-20
+
+- Plan 0347 Slice 1 adds the product-owned `/console?view=search` workbench
+  without importing or extending `ux/operator`: debounced unified readback,
+  cursor append/deduplication, fixed-row virtualization, keyboard selection,
+  six known-value facets, opaque URL row ids, and a read-only inspector.
+- The existing `/v1/search` contract gains an additive project filter/facet in
+  the shared service, HTTP parser, and MCP schema. Unknown URL facet strings are
+  cleared after server readback; no provider work or job mutation is exposed.
+- Focused Search/service/MCP/HTTP coverage passes 240 assertions, and typecheck
+  plus the console production build pass. The standalone smoke correctly fails
+  closed without Linux Chromium.
+- A disposable agent-browser fixture render passes at 1440x980 and 390x860:
+  two rows/six facets, stable ArrowDown URL selection, compact mobile columns,
+  no page-level overflow, and no browser errors. Visual review caught and fixed
+  the initial side-by-side inspector-title/action styling before acceptance.
+- Plan 0347 remains open for Slice 2 persisted table/local-view preferences and
+  focus-safe queued freshness; mutation controls remain intentionally absent.
+
 ## Turn 444 | 2026-08-25
 
 - Plan 0348 opens the installed AuraCall reliability repair. Live `/proc` and
