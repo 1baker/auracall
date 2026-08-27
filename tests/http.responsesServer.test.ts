@@ -4763,6 +4763,7 @@ describe("http responses adapter", () => {
 					provider: "chatgpt",
 					runtimeProfile: "wsl-chrome-3",
 					tenant: null,
+					project: "Transcripts",
 					kind: "artifact",
 					status: null,
 					fileAvailable: null,
@@ -4803,6 +4804,7 @@ describe("http responses adapter", () => {
 				facets: {
 					providers: [{ value: "chatgpt", count: 1 }],
 					tenants: [{ value: "eric.cochran@soylei.com", count: 1 }],
+					projects: [{ value: "Transcripts", count: 1 }],
 					runtimeProfiles: [{ value: "wsl-chrome-3", count: 1 }],
 					kinds: [{ value: "artifact", count: 1 }],
 					statuses: [{ value: "succeeded", count: 1 }],
@@ -4820,7 +4822,7 @@ describe("http responses adapter", () => {
 
 		try {
 			const response = await fetch(
-				`http://127.0.0.1:${server.port}/v1/search?q=readout&provider=chatgpt&runtimeProfile=wsl-chrome-3&kind=artifact&materialization=failed&limit=2`,
+				`http://127.0.0.1:${server.port}/v1/search?q=readout&provider=chatgpt&runtimeProfile=wsl-chrome-3&project=Transcripts&kind=artifact&materialization=failed&limit=2`,
 			);
 			expect(response.status).toBe(200);
 			expect(await response.json()).toMatchObject({
@@ -4841,6 +4843,7 @@ describe("http responses adapter", () => {
 				provider: "chatgpt",
 				runtimeProfile: "wsl-chrome-3",
 				tenant: undefined,
+				project: "Transcripts",
 				kind: "artifact",
 				status: undefined,
 				fileAvailable: undefined,
@@ -25936,11 +25939,11 @@ describe("http responses adapter", () => {
 		}
 	});
 
-	it("serves greenfield console overview, provider, project, and runs route states", async () => {
+	it("serves greenfield console overview, provider, project, runs, and search route states", async () => {
 		const server = await createResponsesHttpServer({ host: "127.0.0.1", port: 0 });
 
 		try {
-			for (const view of ["overview", "providers", "projects", "runs"]) {
+			for (const view of ["overview", "providers", "projects", "runs", "search"]) {
 				const response = await fetch(`http://127.0.0.1:${server.port}/console?view=${view}`);
 				expect(response.status).toBe(200);
 				const html = await response.text();

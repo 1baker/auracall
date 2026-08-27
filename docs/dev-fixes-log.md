@@ -22211,6 +22211,18 @@ browser-stage lifecycle observability, not transcript truncation.
   and require fresh desktop/mobile proof in the successor rather than claiming
   the superseded plan completed.
 
+## 2026-08-20 | Validate product inspectors with a fresh render
+
+- Shared inspector primitives can encode layout assumptions that do not fit a
+  new product inspector. The first Search render placed its eyebrow, heading,
+  and summary side-by-side and left actions with native browser styling even
+  though source tests and builds passed.
+- Keep the shared semantic structure, add the narrow product-specific layout
+  and action styles, then rerender desktop and mobile before acceptance.
+- A deterministic server-only fixture plus a disposable agent-browser session
+  is a valid provider-free visual lane when the standalone Puppeteer gate has no
+  local Linux Chromium; preserve the standalone failure instead of masking it.
+
 ## 2026-08-25 | Do not race a retained CDP runtime against its own observer
 
 - A long-lived `Runtime.evaluate` with `awaitPromise: true` can monopolize or

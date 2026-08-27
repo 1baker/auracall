@@ -29,6 +29,7 @@ import {
   readBrowserAuthorityPresentation,
   readBrowserAuthoritySummaryPresentation,
 } from "./runAuthority.ts";
+import SearchPage from "./SearchPage.jsx";
 
 const EMPTY_FORM = {
   id: "",
@@ -426,6 +427,16 @@ function App() {
     if (view !== "projects") next.project = null;
     if (view !== "runs") next.run = null;
     if (view !== "handoffs") next.handoff = null;
+    if (view !== "search") {
+      next.q = null;
+      next.searchProvider = null;
+      next.tenant = null;
+      next.kind = null;
+      next.status = null;
+      next.project = null;
+      next.assets = null;
+      next.row = null;
+    }
     updateUrl(next);
   };
   const selectProvider = (providerKey) => {
@@ -587,6 +598,8 @@ function App() {
             onTargetAdapterChange={setHandoffTargetAdapter}
             onAction={performHandoffAction}
           />
+        ) : activeView === "search" ? (
+          <SearchPage />
         ) : (
           <AgentsPage
             loading={loading}
@@ -2159,7 +2172,8 @@ function readViewFromUrl() {
     view === "projects" ||
     view === "agents" ||
     view === "runs" ||
-    view === "handoffs"
+    view === "handoffs" ||
+    view === "search"
     ? view
     : "overview";
 }
@@ -2182,6 +2196,7 @@ function navItemToView(item) {
   if (item === "Projects") return "projects";
   if (item === "Runs") return "runs";
   if (item === "Handoffs") return "handoffs";
+  if (item === "Search") return "search";
   return "";
 }
 

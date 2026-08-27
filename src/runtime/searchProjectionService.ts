@@ -24,6 +24,7 @@ export interface SearchProjectionRequest {
   provider?: string | null;
   runtimeProfile?: string | null;
   tenant?: string | null;
+  project?: string | null;
   kind?: string | null;
   status?: string | null;
   fileAvailable?: boolean | null;
@@ -73,6 +74,7 @@ export interface SearchProjectionResult {
     provider: string | null;
     runtimeProfile: string | null;
     tenant: string | null;
+    project: string | null;
     kind: string | null;
     status: string | null;
     fileAvailable: boolean | null;
@@ -90,6 +92,7 @@ export interface SearchProjectionResult {
   facets: {
     providers: SearchProjectionFacetValue[];
     tenants: SearchProjectionFacetValue[];
+    projects: SearchProjectionFacetValue[];
     runtimeProfiles: SearchProjectionFacetValue[];
     kinds: SearchProjectionFacetValue[];
     statuses: SearchProjectionFacetValue[];
@@ -107,6 +110,7 @@ interface NormalizedSearchProjectionRequest {
   provider: string | null;
   runtimeProfile: string | null;
   tenant: string | null;
+  project: string | null;
   kind: string | null;
   status: string | null;
   fileAvailable: boolean | null;
@@ -175,6 +179,7 @@ export function createSearchProjectionService(input: {
           provider: normalized.provider,
           runtimeProfile: normalized.runtimeProfile,
           tenant: normalized.tenant,
+          project: normalized.project,
           kind: normalized.kind,
           status: normalized.status,
           fileAvailable: normalized.fileAvailable,
@@ -192,6 +197,7 @@ export function createSearchProjectionService(input: {
         facets: {
           providers: facet(rows, (row) => row.provider),
           tenants: facet(rows, (row) => row.tenant),
+          projects: facet(rows, (row) => row.projectId),
           runtimeProfiles: facet(rows, (row) => row.runtimeProfileId),
           kinds: facet(rows, (row) => row.kind),
           statuses: facet(rows, (row) => row.status),
@@ -443,6 +449,7 @@ function matchesSearchRequest(row: SearchProjectionRow, request: NormalizedSearc
   if (request.provider && row.provider !== request.provider) return false;
   if (request.runtimeProfile && row.runtimeProfileId !== request.runtimeProfile) return false;
   if (request.tenant && row.tenant !== request.tenant) return false;
+  if (request.project && row.projectId !== request.project) return false;
   if (request.status && row.status !== request.status && row.runtimeState !== request.status) return false;
   if (typeof request.fileAvailable === 'boolean' && fileAvailableForRow(row) !== request.fileAvailable) return false;
   if (request.assetAvailability && assetAvailabilityForRow(row) !== request.assetAvailability) return false;
@@ -494,6 +501,7 @@ function normalizeRequest(request: SearchProjectionRequest): NormalizedSearchPro
     provider: normalizeString(request.provider),
     runtimeProfile: normalizeString(request.runtimeProfile),
     tenant: normalizeString(request.tenant),
+    project: normalizeString(request.project),
     kind: normalizeString(request.kind),
     status: normalizeString(request.status),
     fileAvailable: typeof request.fileAvailable === 'boolean' ? request.fileAvailable : null,

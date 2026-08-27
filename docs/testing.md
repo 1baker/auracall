@@ -2077,6 +2077,15 @@
   toggle, copy-current-search-url action, and mobile no-overflow behavior
   without provider work. Set `AURACALL_OPERATOR_UX_SMOKE_CHROME_PATH` if the
   local Chromium executable is not on one of the default Linux paths.
+- Greenfield console Search smoke: `pnpm run smoke:console-search-ux` rebuilds
+  `/console`, serves a deterministic unified-search fixture, and verifies the
+  dense table, six known-value facets, opaque URL row selection, keyboard
+  movement, read-only inspector actions, compact mobile columns, and no
+  page-level mobile overflow. Set `AURACALL_CONSOLE_UX_SMOKE_CHROME_PATH` for a
+  local Chromium. When WSL has no compatible local executable, run
+  `AURACALL_CONSOLE_UX_SMOKE_SERVER_ONLY=1 pnpm tsx scripts/smoke-console-search-ux.ts`
+  and inspect the printed URL through a disposable agent-browser session; this
+  is provider-free and must not reuse an authenticated profile.
 - Archive materialization job filter smoke:
   `pnpm run smoke:archive-materialization-jobs` seeds fixture queued,
   succeeded, skipped, and failed async materialization jobs in an isolated

@@ -47845,6 +47845,22 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   closes the authority audit; open Plan 0347 now owns a read-only-first
   `/console?view=search` workbench with mandatory fresh desktop/mobile proof.
 
+## 2026-08-20 | Ship greenfield console Search Slice 1
+
+- `/console?view=search` now owns unified read-only discovery in the product
+  app. It uses a focused helper/component seam rather than copying the frozen
+  legacy dashboard, and keeps requests, cursor pages, and rendered rows bounded.
+- Search selection and filters round-trip through stable URL state; all six
+  facet selectors are server-known, project filtering is an additive shared
+  `/v1/search` contract, and arbitrary direct-URL facets clear on readback.
+- Desktop and 390px disposable-browser renders prove the dense table,
+  human-first inspector, stable keyboard selection, responsive compact columns,
+  no page overflow, and empty browser-error set. The first visual inspection
+  exposed a Search-specific inspector flex/style defect, which was fixed before
+  the accepted rerender.
+- Plan 0347 remains open for persisted preferences/local views and focus-safe
+  queued freshness. The first slice adds no provider or job mutation controls.
+
 ## 2026-08-25 | Serialize retained-browser assistant response detection
 
 - Two live ChatGPT Pro responses finished visibly in the exact agent-browser
