@@ -91,7 +91,18 @@ function buildChatgptComposerModeExpression(desiredMode: ChatgptComposerMode): s
     const isSelected = (node) =>
       node.getAttribute('aria-checked') === 'true' ||
       node.getAttribute('data-state') === 'on';
-    const radios = Array.from(document.querySelectorAll('[role="radio"]'))
+    const prompt = Array.from(document.querySelectorAll('textarea, [contenteditable="true"], [role="textbox"]'))
+      .filter(visible)
+      .find((node) => {
+        const label = normalize(
+          node.getAttribute('aria-label') ||
+          node.getAttribute('placeholder') ||
+          node.textContent,
+        );
+        return label === 'chat with chatgpt';
+      });
+    const composerRoot = prompt?.closest('form[data-type="unified-composer"], form') || document;
+    const radios = Array.from(composerRoot.querySelectorAll('[role="radio"]'))
       .filter(visible)
       .map((node) => ({ node, label: normalize(node.textContent) }))
       .filter(({ label }) => label === 'chat' || label === 'work');
@@ -106,7 +117,7 @@ function buildChatgptComposerModeExpression(desiredMode: ChatgptComposerMode): s
       }
       return { status: 'selection-not-confirmed', mode: DESIRED_MODE };
     }
-    const modeTriggers = Array.from(document.querySelectorAll('button[aria-haspopup="menu"]'))
+    const modeTriggers = Array.from(composerRoot.querySelectorAll('button[aria-haspopup="menu"]'))
       .filter(visible)
       .map((node) => ({ node, label: normalize(node.textContent) }))
       .filter(({ label }) => label === 'chat' || label === 'work');
@@ -116,17 +127,7 @@ function buildChatgptComposerModeExpression(desiredMode: ChatgptComposerMode): s
       return { status: 'already-selected', mode: DESIRED_MODE };
     }
     if (!trigger && DESIRED_MODE === 'chat') {
-      const defaultChatComposer = Array.from(document.querySelectorAll('textarea, [contenteditable="true"], [role="textbox"]'))
-        .filter(visible)
-        .find((node) => {
-          const label = normalize(
-            node.getAttribute('aria-label') ||
-            node.getAttribute('placeholder') ||
-            node.textContent,
-          );
-          return label === 'chat with chatgpt';
-        });
-      if (defaultChatComposer) return { status: 'default-chat', mode: DESIRED_MODE };
+      if (prompt) return { status: 'default-chat', mode: DESIRED_MODE };
     }
     if (!trigger || !dispatchClickSequence(trigger.node)) {
       return {

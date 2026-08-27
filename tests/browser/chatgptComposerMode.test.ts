@@ -133,6 +133,28 @@ describe("ChatGPT composer mode", () => {
 		expect(result).toEqual({ status: "default-chat", mode: "chat" });
 	});
 
+	it("ignores unrelated Work menu buttons outside the unified composer", async () => {
+		const composer = new FixtureElement("", { "aria-label": "Chat with ChatGPT" });
+		const unrelatedWork = new FixtureElement("Work", {
+			"aria-haspopup": "menu",
+			"aria-expanded": "false",
+		});
+		const composerForm = new FixtureElement("");
+		composer.closestResult = composerForm;
+		(composerForm as FixtureElement & { querySelectorAll: typeof installFixtureDocument }).querySelectorAll =
+			(() => []) as never;
+		installFixtureDocument((selector) => {
+			if (selector === 'textarea, [contenteditable="true"], [role="textbox"]') return [composer];
+			if (selector === 'button[aria-haspopup="menu"]') return [unrelatedWork];
+			return [];
+		});
+
+		const expression = buildChatgptComposerModeExpressionForTest("chat");
+		const result = await new Function(`return ${expression}`)();
+
+		expect(result).toEqual({ status: "default-chat", mode: "chat" });
+	});
+
 	it("fails clearly when explicit Work is unavailable", async () => {
 		const evaluate = vi.fn().mockResolvedValue({
 			result: { value: { status: "mode-not-found", availableModes: ["Chat"] } },
