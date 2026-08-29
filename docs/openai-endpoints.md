@@ -383,6 +383,10 @@ Current limits:
   - `cancel-run` can cancel mutable browser-backed runs that have already lost
     their active lease. If completion already won the race, AuraCall reports the
     terminal state instead of returning an ambiguous no-active-lease conflict.
+    For locally executing configured browser runs, durable cancellation is also
+    projected into the active provider wait within a bounded observation
+    interval. This stops AuraCall's in-flight work but cannot retract a prompt
+    already submitted to the provider.
   - the browser dispatcher and provider politeness controls still enforce the
     lower-level CDP/account safety guardrails
   - dispatch-pool project binding uses `projectSync = "none"` for now. AuraCall
@@ -908,6 +912,8 @@ Current limits:
         runner/host
       - successful cancellation releases the active lease with release reason
         `cancelled`
+      - the local configured executor observes that durable state and aborts
+        its in-flight browser wait without closing the retained browser lane
     - human-escalation resume:
       - `{"runControl":{"action":"resume-human-escalation","runId":"...","note":"...","guidance":{...},"override":{"promptAppend":"...","structuredContext":{...}}}}`
       - only succeeds for direct or team runs currently paused for human

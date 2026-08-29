@@ -66,6 +66,11 @@
   outlive the caller's outer polling budget even without a separate inner bound.
 
 - Unit/type tests: `pnpm test` (Vitest) and `pnpm run check` (typecheck).
+- Durable configured-browser cancellation is provider-free:
+  `pnpm exec vitest run tests/runtime.runner.test.ts tests/runtime.configuredExecutor.test.ts tests/browser/pageActions.test.ts --maxWorkers 1`.
+  It proves durable cancellation aborts active step work, the configured
+  executor forwards the same signal, ChatGPT response polling exits promptly,
+  and late completion cannot overwrite terminal cancelled state.
 - Grok semantic selector execution is provider-free:
   `pnpm exec vitest run tests/config/modelSelector.test.ts tests/browser/grokActions.test.ts tests/runtime.configuredExecutor.test.ts tests/config/agentConfigService.test.ts tests/http.responsesServer.test.ts -t "semantic model selectors|selectGrokMode|Grok semantic agent selectors|unsupported Grok semantic selectors|projects read-only agent choices|lists configured agents as OpenAI-compatible model entries"`.
   This proves semantic-to-current-label mapping, configured execution,

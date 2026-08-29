@@ -1467,6 +1467,62 @@ describe('runtime runner', () => {
     expect(executed.bundle.leases[0]?.releaseReason).toBe('cancelled');
   });
 
+  it('aborts active step work after durable run cancellation', async () => {
+    const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), 'auracall-runtime-runner-'));
+    cleanup.push(homeDir);
+    setAuracallHomeDirOverrideForTest(homeDir);
+
+    const control = createExecutionRuntimeControl();
+    await control.createRun(createDirectBundle('run_cancel_signal'));
+    let observedSignal: AbortSignal | undefined;
+    const executionPromise = executeStoredExecutionRunOnce({
+      runId: 'run_cancel_signal',
+      ownerId: 'runner:local-test',
+      cancellationPollIntervalMs: 10,
+      control,
+      executeStep: async (context) => {
+        observedSignal = context.abortSignal;
+        await new Promise<void>((_resolve, reject) => {
+          context.abortSignal?.addEventListener(
+            'abort',
+            () => reject(context.abortSignal?.reason),
+            { once: true },
+          );
+        });
+        return undefined;
+      },
+    });
+
+    let runningRecord = await control.readRun('run_cancel_signal');
+    while (!runningRecord?.bundle.steps[0] || runningRecord.bundle.steps[0].status !== 'running') {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      runningRecord = await control.readRun('run_cancel_signal');
+    }
+    const cancelledBundle = cancelExecutionRun({
+      bundle: runningRecord.bundle,
+      cancelledAt: '2026-04-08T13:04:00.000Z',
+      note: 'cancelled by host control',
+      source: 'operator',
+    });
+    const cancelledRecord = await control.persistRun({
+      runId: 'run_cancel_signal',
+      bundle: cancelledBundle,
+      expectedRevision: runningRecord.revision,
+    });
+    await control.releaseLease({
+      runId: 'run_cancel_signal',
+      leaseId: cancelledRecord.bundle.leases[0]?.id,
+      releasedAt: '2026-04-08T13:04:00.000Z',
+      releaseReason: 'cancelled',
+    });
+
+    const executed = await executionPromise;
+    expect(observedSignal?.aborted).toBe(true);
+    expect(executed.bundle.run.status).toBe('cancelled');
+    expect(executed.bundle.steps[0]?.status).toBe('cancelled');
+    expect(executed.bundle.leases[0]?.releaseReason).toBe('cancelled');
+  });
+
   it('persists and resolves local action requests emitted from step output', async () => {
     const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), 'auracall-runtime-runner-'));
     cleanup.push(homeDir);

@@ -241,6 +241,21 @@ describe('ensureLoggedIn', () => {
 });
 
 describe('waitForAssistantResponse', () => {
+  test('stops immediately when the caller aborts response waiting', async () => {
+    const abortController = new AbortController();
+    abortController.abort(new Error('durable run cancelled'));
+    const runtime = {
+      evaluate: vi.fn(),
+    } as unknown as ChromeClient['Runtime'];
+
+    await expect(
+      waitForAssistantResponse(runtime, 60_000, logger, undefined, {
+        abortSignal: abortController.signal,
+      }),
+    ).rejects.toThrow('durable run cancelled');
+    expect(runtime.evaluate).not.toHaveBeenCalled();
+  });
+
   test('returns captured assistant payload', async () => {
     const runtime = {
       evaluate: vi.fn().mockImplementation(async (params: { awaitPromise?: boolean; expression?: string }) => {

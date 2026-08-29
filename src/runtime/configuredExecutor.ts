@@ -1408,6 +1408,7 @@ export function createConfiguredStoredStepExecutor(
 
     const browserRunOptions: BrowserRunOptions = {
       prompt: promptTransport.prompt,
+      abortSignal: context.abortSignal,
       attachments: promptTransport.attachments,
       browserOperationOwnerCommand: `response-run:${context.record.runId}:${context.step.agentId}`,
       config: {

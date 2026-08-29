@@ -1,5 +1,30 @@
 # RUNBOOK
 
+## Turn 501 | 2026-08-29
+
+- Opened Plan 0351 after preserved run evidence disproved the apparent
+  provider stall. Response `resp_affda6f3fdbe485b880f380dc61810f6` was
+  cancelled and released its lease after about 396 seconds, while the retained
+  ChatGPT task continued and logged remote completion at 526.7 seconds.
+- The runner currently rechecks terminal cancellation only after
+  `executeStep` settles. Its execution context has no abort signal, configured
+  browser options receive none, and ChatGPT response polling has an internal
+  unused abort parameter.
+- The critical path is durable cancellation observation, one propagated signal,
+  provider-free regressions, installed retained-browser cancellation proof,
+  and unchanged Agent Browser session/profile/PID/target authority. Graphiti
+  extraction approval remains outside this slice.
+- Implemented one durable cancellation watcher and propagated its exact abort
+  signal through configured browser execution and ChatGPT response polling.
+- Installed response `resp_b801ecd4df1d44829b83a9728f446f08` reached a
+  running step, submitted through the retained lane, then cancelled and
+  completed browser cleanup in about 1.2 seconds. Its lease released with
+  reason `cancelled`.
+- Agent Browser released temporary target `2DC121752AA76B1057754873575488B5`
+  about four seconds later. PID `294633` and all three pre-existing page
+  targets remained alive; no replacement browser was launched. Plan 0351
+  closes accepted.
+
 ## Turn 500 | 2026-08-29
 
 - Opened Plan 0350 after a consequential configured ChatGPT document run

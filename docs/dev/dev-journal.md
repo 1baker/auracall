@@ -1,3 +1,26 @@
+## 2026-08-29 | Plan 0351 durable browser-run cancellation
+
+- A configured response that appeared stalled actually completed its retained
+  ChatGPT work at 526.7 seconds, after operator cancellation had already marked
+  the durable run cancelled and released its lease at about 396 seconds.
+- Stored execution protects terminal state from late completion but does not
+  interrupt the in-flight provider promise. The runner context lacks an abort
+  signal, configured browser execution cannot receive one, and ChatGPT's
+  response watcher does not use its internal abort hook.
+- Repair the single cancellation chain and prove prompt installed cancellation
+  without closing or replacing the Agent Browser lane. Graphiti submission and
+  approval remain gated and unchanged.
+- Added a durable cancellation watcher to stored-step execution and propagated
+  its abort signal through configured browser options and ChatGPT response
+  polling.
+- Reattached the already-live external BYOP Chrome to
+  `session:auracall-chatgpt-bridge-v3` after current service inventory lost the
+  registration; the same PID, profile, and tabs were reused.
+- Live canary `resp_b801ecd4df1d44829b83a9728f446f08` proved confirmed
+  submission, terminal cancellation and lease release, browser cleanup in
+  about 1.2 seconds, temporary-tab release in about four seconds, and
+  preservation of every pre-existing page target. Plan 0351 closes accepted.
+
 ## 2026-08-29 | Plan 0350 configured ChatGPT upload boundary
 
 - A preserved configured document run transferred 21 text attachments but

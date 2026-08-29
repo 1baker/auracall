@@ -21,6 +21,7 @@ describe('configured stored-step executor', () => {
   });
 
   it('executes a Grok browser-backed step from runtime-profile config and returns response output', async () => {
+    const abortController = new AbortController();
     const runBrowserModeImpl = vi.fn(async (_options) => ({
       answerText: 'AURACALL_TEAM_SMOKE_OK',
       answerMarkdown: 'AURACALL_TEAM_SMOKE_OK',
@@ -89,11 +90,13 @@ describe('configured stored-step executor', () => {
           notes: [],
         },
       } as never,
+      abortSignal: abortController.signal,
     });
 
     expect(runBrowserModeImpl).toHaveBeenCalledTimes(1);
     expect(runBrowserModeImpl.mock.calls[0]?.[0]).toMatchObject({
       prompt: 'Reply exactly with AURACALL_TEAM_SMOKE_OK',
+      abortSignal: abortController.signal,
       browserOperationOwnerCommand: 'response-run:teamrun_1:auracall-orchestrator',
       config: {
         auracallProfileName: 'default',

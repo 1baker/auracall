@@ -2766,6 +2766,7 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 				logger,
 				baselineTurns ?? undefined,
 				{
+					abortSignal: options.abortSignal,
 					baselineAssistant: {
 						text: baselineAssistantText,
 						messageId: baselineAssistantMessageId,
@@ -3869,6 +3870,7 @@ async function runRemoteBrowserMode(
 			logger,
 			baselineTurns ?? undefined,
 			{
+				abortSignal: options.abortSignal,
 				baselineAssistant: {
 					text: baselineAssistantText,
 					messageId: baselineAssistantMessageId,
@@ -4444,6 +4446,7 @@ async function waitForAssistantResponseWithReload(
 	logger: BrowserLogger,
 	minTurnIndex?: number,
 	options: {
+		abortSignal?: AbortSignal;
 		onResponseIncoming?: () => void | Promise<void>;
 		onPassiveDomProbe?: () => void | Promise<void>;
 		baselineAssistant?: {

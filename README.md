@@ -1555,6 +1555,9 @@ Terminology note:
       - `{"runControl":{"action":"cancel-run","runId":"..."}}`
       - it only cancels runs that currently hold an active lease owned by the local configured runner/host
       - it releases that active lease with release reason `cancelled`
+      - the local runner observes durable cancellation and aborts its in-flight
+        configured browser wait; an already-submitted provider prompt cannot be
+        retracted, but AuraCall no longer waits for late provider completion
       - inactive or not-owned runs are rejected cleanly instead of being force-cancelled
     - `POST /status` now also accepts one bounded human-escalation resume action:
       - `{"runControl":{"action":"resume-human-escalation","runId":"...","note":"...","guidance":{...},"override":{"promptAppend":"...","structuredContext":{...}}}}`

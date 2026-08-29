@@ -14,6 +14,7 @@ const ASSISTANT_POLL_TIMEOUT_ERROR = 'assistant-response-watchdog-timeout';
 const PASSIVE_DOM_PROBE_INTERVAL_MS = 5_000;
 
 export interface WaitForAssistantResponseOptions {
+  abortSignal?: AbortSignal;
   onResponseIncoming?: () => void | Promise<void>;
   onPassiveDomProbe?: () => void | Promise<void>;
   baselineAssistant?: {
@@ -61,13 +62,14 @@ export async function waitForAssistantResponse(
     Runtime,
     timeoutMs,
     minTurnIndex,
-    undefined,
+    waitOptions.abortSignal,
     waitOptions,
   );
   if (completed) {
     logger('Captured assistant response via snapshot watchdog');
     return completed;
   }
+  waitOptions.abortSignal?.throwIfAborted();
   await logDomFailure(Runtime, logger, 'assistant-response');
   throw new Error(ASSISTANT_POLL_TIMEOUT_ERROR);
 }

@@ -37,6 +37,7 @@ export interface ExecuteStoredRunStepRuntimeEvidence {
 export interface ExecuteStoredRunStepContext {
   record: ExecutionRunStoredRecord;
   step: ExecutionRunStep;
+  abortSignal?: AbortSignal;
   runtimeEvidence?: {
     heartbeat: (evidence?: ExecuteStoredRunStepRuntimeEvidence) => Promise<void>;
   };
@@ -64,6 +65,7 @@ export interface ExecuteStoredRunOnceOptions {
   now?: () => string;
   leaseHeartbeatIntervalMs?: number;
   leaseHeartbeatTtlMs?: number;
+  cancellationPollIntervalMs?: number;
   control?: ExecutionRuntimeControlContract;
   store?: ExecutionRunRecordStore;
   executeStep?: (context: ExecuteStoredRunStepContext) => Promise<ExecuteStoredRunStepResult | undefined>;
@@ -92,6 +94,7 @@ export async function executeStoredExecutionRunOnce(
   const store = options.store ?? createExecutionRunRecordStore();
   const leaseHeartbeatIntervalMs = Math.max(0, options.leaseHeartbeatIntervalMs ?? 5_000);
   const leaseHeartbeatTtlMs = Math.max(1, options.leaseHeartbeatTtlMs ?? 15_000);
+  const cancellationPollIntervalMs = Math.max(10, options.cancellationPollIntervalMs ?? 1_000);
   const inspection = await control.inspectRun(options.runId);
   if (!inspection) {
     throw new Error(`Execution run ${options.runId} was not found`);
@@ -250,6 +253,14 @@ export async function executeStoredExecutionRunOnce(
     now,
     onHeartbeat: options.onLeaseHeartbeat,
   });
+  const executionAbortController = new AbortController();
+  const cancellationWatcher = startExecutionCancellationWatcher({
+    intervalMs: cancellationPollIntervalMs,
+    runId: options.runId,
+    stepId,
+    control,
+    controller: executionAbortController,
+  });
 
   try {
     const startedAt = now();
@@ -302,6 +313,7 @@ export async function executeStoredExecutionRunOnce(
     const result = await options.executeStep?.({
       record: currentRecord,
       step: executionContextStep,
+      abortSignal: executionAbortController.signal,
       runtimeEvidence: {
         heartbeat: async (evidence = {}) => {
           await leaseHeartbeat.heartbeat(evidence);
@@ -446,6 +458,7 @@ export async function executeStoredExecutionRunOnce(
     currentRecord = await store.writeRecord(failedBundle, { expectedRevision: currentRecord.revision });
     finalRecord = currentRecord;
   } finally {
+    await cancellationWatcher.stop();
     await leaseHeartbeat.stop();
     finalRecord = await releaseExecutionRunLeaseIfStillActive({
       control,
@@ -461,6 +474,47 @@ export async function executeStoredExecutionRunOnce(
     throw new Error(`Execution run ${options.runId} did not produce a final stored record`);
   }
   return finalRecord;
+}
+
+function startExecutionCancellationWatcher(input: {
+  intervalMs: number;
+  runId: string;
+  stepId: string;
+  control: ExecutionRuntimeControlContract;
+  controller: AbortController;
+}): { stop(): Promise<void> } {
+  let stopped = false;
+  let inFlight: Promise<void> = Promise.resolve();
+  const observeCancellation = async (): Promise<void> => {
+    if (stopped || input.controller.signal.aborted) return;
+    inFlight = inFlight
+      .catch(() => undefined)
+      .then(async () => {
+        if (stopped || input.controller.signal.aborted) return;
+        const record = await input.control.readRun(input.runId);
+        const step = record?.bundle.steps.find((candidate) => candidate.id === input.stepId);
+        if (record?.bundle.run.status === 'cancelled' || step?.status === 'cancelled') {
+          input.controller.abort(new Error(`Execution run ${input.runId} was cancelled.`));
+        }
+      })
+      .catch(() => undefined);
+    await inFlight.catch(() => undefined);
+  };
+  const timer = setInterval(() => {
+    void observeCancellation();
+  }, input.intervalMs);
+  if (typeof timer.unref === 'function') {
+    timer.unref();
+  }
+
+  return {
+    async stop() {
+      if (stopped) return;
+      stopped = true;
+      clearInterval(timer);
+      await inFlight.catch(() => undefined);
+    },
+  };
 }
 
 async function releaseExecutionRunLeaseIfStillActive(input: {

@@ -7,6 +7,14 @@
 Status: active
 Lane: P01
 
+- Closed accepted durable browser-run cancellation repair:
+  [docs/dev/plans/0351-2026-08-29-durable-run-cancellation.md](docs/dev/plans/0351-2026-08-29-durable-run-cancellation.md)
+  Current state: durable cancellation now reaches configured browser execution
+  and ChatGPT response polling. Installed response `resp_b801ecd4...` stopped
+  in about 1.2 seconds after cancellation, released its lease and temporary
+  tab, and preserved the retained Agent Browser session, profile, PID, and
+  pre-existing targets.
+
 - Closed accepted configured ChatGPT upload-boundary repair:
   [docs/dev/plans/0350-2026-08-29-configured-chatgpt-upload-boundary.md](docs/dev/plans/0350-2026-08-29-configured-chatgpt-upload-boundary.md)
   Current state: configured API/MCP execution now applies the direct CLI's
