@@ -468,6 +468,94 @@ describe('configured stored-step executor', () => {
     expect(attachment).toContain('full transcript line\nfull transcript line');
   });
 
+  it('bundles oversized configured Markdown attachment sets with full content and SHA-256 provenance', async () => {
+    const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), 'auracall-configured-bundle-'));
+    setAuracallHomeDirOverrideForTest(homeDir);
+    const sourceDir = path.join(homeDir, 'reviewed-sources');
+    await fs.mkdir(sourceDir, { recursive: true });
+    const artifacts = await Promise.all(
+      Array.from({ length: 11 }, async (_, index) => {
+        const sourcePath = path.join(sourceDir, `source-${index + 1}.md`);
+        await fs.writeFile(sourcePath, `# Source ${index + 1}\n\nReviewed evidence ${index + 1}.\n`, 'utf8');
+        return {
+          id: `source-${index + 1}`,
+          kind: 'file',
+          title: `source-${index + 1}.md`,
+          path: sourcePath,
+          uri: null,
+        };
+      }),
+    );
+    const capturedOptions: BrowserRunOptions[] = [];
+    const runBrowserModeImpl = vi.fn(async (options: BrowserRunOptions) => {
+      capturedOptions.push(options);
+      return {
+        answerText: 'bundle accepted',
+        answerMarkdown: 'bundle accepted',
+        tookMs: 1200,
+        answerTokens: 17,
+        answerChars: 15,
+        tabUrl: 'https://chatgpt.com/c/mock-bundle',
+        conversationId: 'mock-bundle',
+      };
+    });
+    const executeStoredRunStep = createConfiguredStoredStepExecutor(
+      {
+        browser: { managedProfileRoot: path.join(homeDir, 'profiles') },
+        runtimeProfiles: {
+          default: {
+            engine: 'browser',
+            defaultService: 'chatgpt',
+            browserProfile: 'default',
+            services: {
+              chatgpt: {
+                manualLoginProfileDir: path.join(homeDir, 'profiles', 'default', 'chatgpt'),
+              },
+            },
+          },
+        },
+      },
+      { runBrowserModeImpl },
+    );
+
+    await executeStoredRunStep?.({
+      record: {
+        runId: 'teamrun_bundle',
+        revision: 1,
+        bundle: { run: { id: 'teamrun_bundle' } },
+      } as never,
+      step: {
+        id: 'teamrun_bundle:step:1',
+        agentId: 'api-responses',
+        runtimeProfileId: 'default',
+        browserProfileId: 'default',
+        service: 'chatgpt',
+        input: {
+          prompt: `Use every reviewed source.\n${'Complete inline fallback.\n'.repeat(3000)}`,
+          artifacts,
+          structuredData: {},
+          notes: [],
+        },
+      } as never,
+    });
+
+    const options = capturedOptions[0];
+    expect(options?.attachments).toHaveLength(1);
+    expect(options?.attachments?.[0]?.displayPath).toBe('auracall-upload-bundle.md');
+    expect(options?.prompt).toContain('contains 12 complete source files');
+    expect(options?.prompt).toContain(
+      'The full AuraCall request is included as auracall-request.txt inside auracall-upload-bundle.md.',
+    );
+    const bundle = await fs.readFile(options?.attachments?.[0]?.path ?? '', 'utf8');
+    expect(bundle).toContain('# AuraCall reviewed source bundle');
+    expect(bundle.match(/\| \/.*source-\d+\.md \|/g)).toHaveLength(11);
+    expect(bundle).toContain('| auracall-request.txt |');
+    expect(bundle.match(/SHA-256: [a-f0-9]{64}/g)).toHaveLength(12);
+    expect(bundle).toContain('===== BEGIN AURACALL SOURCE 1 =====\n# Source 1');
+    expect(bundle).toContain('# Source 11\n\nReviewed evidence 11.');
+    expect(bundle).toContain('Complete inline fallback.\nComplete inline fallback.');
+  });
+
   it('extracts one bounded local shell action request from a JSON tool envelope', async () => {
     const runBrowserModeImpl = vi.fn(async () => ({
       answerText: JSON.stringify({

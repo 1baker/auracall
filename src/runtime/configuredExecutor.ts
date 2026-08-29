@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createExecutionResponseMessage } from './apiModel.js';
@@ -56,6 +57,26 @@ import {
 type MutableRecord = Record<string, unknown>;
 
 const BROWSER_INLINE_PROMPT_CHAR_BUDGET = 60_000;
+const BROWSER_ATTACHMENT_BUNDLE_THRESHOLD = 10;
+const BROWSER_ATTACHMENT_BUNDLE_MAX_BYTES = 20 * 1024 * 1024;
+const BROWSER_ATTACHMENT_BUNDLE_DISPLAY_PATH = 'auracall-upload-bundle.md';
+const BROWSER_ATTACHMENT_BUNDLE_TEXT_EXTENSIONS = new Set([
+  '.csv',
+  '.htm',
+  '.html',
+  '.json',
+  '.jsonl',
+  '.log',
+  '.markdown',
+  '.md',
+  '.rst',
+  '.tex',
+  '.tsv',
+  '.txt',
+  '.xml',
+  '.yaml',
+  '.yml',
+]);
 
 export interface CreateConfiguredStoredStepExecutorDeps {
   runBrowserModeImpl?: (options: BrowserRunOptions) => Promise<Awaited<ReturnType<typeof runBrowserMode>>>;
@@ -634,6 +655,111 @@ interface BrowserPromptTransport {
     originalPromptChars: number;
     attachmentPath?: string;
     attachmentDisplayPath?: string;
+    bundledAttachmentCount?: number;
+    bundleChecksumSha256?: string;
+  };
+}
+
+interface ConfiguredAttachmentBundleResult {
+  attachments: BrowserAttachment[];
+  bundledAttachmentCount: number;
+  bundleChecksumSha256: string | null;
+}
+
+function escapeMarkdownTableCell(value: string): string {
+  return value.replace(/\r?\n/g, ' ').replace(/\|/g, '\\|');
+}
+
+async function bundleConfiguredBrowserAttachments(input: {
+  context: ExecuteStoredRunStepContext;
+  attachments: BrowserAttachment[];
+}): Promise<ConfiguredAttachmentBundleResult> {
+  if (input.attachments.length <= BROWSER_ATTACHMENT_BUNDLE_THRESHOLD) {
+    return {
+      attachments: input.attachments,
+      bundledAttachmentCount: 0,
+      bundleChecksumSha256: null,
+    };
+  }
+
+  const sourceFiles: Array<{
+    displayPath: string;
+    content: Buffer;
+    checksumSha256: string;
+  }> = [];
+  let totalBytes = 0;
+  for (const attachment of input.attachments) {
+    const extension = path.extname(attachment.displayPath || attachment.path).toLowerCase();
+    if (!BROWSER_ATTACHMENT_BUNDLE_TEXT_EXTENSIONS.has(extension)) {
+      return {
+        attachments: input.attachments,
+        bundledAttachmentCount: 0,
+        bundleChecksumSha256: null,
+      };
+    }
+    const content = await fs.readFile(attachment.path);
+    totalBytes += content.length;
+    if (totalBytes > BROWSER_ATTACHMENT_BUNDLE_MAX_BYTES || content.includes(0)) {
+      return {
+        attachments: input.attachments,
+        bundledAttachmentCount: 0,
+        bundleChecksumSha256: null,
+      };
+    }
+    sourceFiles.push({
+      displayPath: attachment.displayPath,
+      content,
+      checksumSha256: createHash('sha256').update(content).digest('hex'),
+    });
+  }
+
+  const manifestLines = sourceFiles.map(
+    (source, index) =>
+      `| ${index + 1} | ${escapeMarkdownTableCell(source.displayPath)} | ${source.content.length} | ${source.checksumSha256} |`,
+  );
+  const sourceSections = sourceFiles.map((source, index) => {
+    const content = source.content.toString('utf8');
+    const trailingNewline = content.endsWith('\n') ? '' : '\n';
+    return [
+      `## Source ${index + 1}: ${source.displayPath}`,
+      '',
+      `SHA-256: ${source.checksumSha256}`,
+      `Bytes: ${source.content.length}`,
+      '',
+      `===== BEGIN AURACALL SOURCE ${index + 1} =====`,
+      `${content}${trailingNewline}===== END AURACALL SOURCE ${index + 1} =====`,
+    ].join('\n');
+  });
+  const bundleContent = [
+    '# AuraCall reviewed source bundle',
+    '',
+    'This attachment preserves every source file in full. The manifest binds each original path and byte content by SHA-256.',
+    '',
+    '| # | Original path | Bytes | SHA-256 |',
+    '|---:|---|---:|---|',
+    ...manifestLines,
+    '',
+    ...sourceSections.flatMap((section) => [section, '']),
+  ].join('\n');
+  const bundleBuffer = Buffer.from(bundleContent, 'utf8');
+  const bundleChecksumSha256 = createHash('sha256').update(bundleBuffer).digest('hex');
+  const runId = sanitizePathComponent(input.context.record.runId);
+  const stepId = sanitizePathComponent(input.context.step.id);
+  const dir = path.join(getAuracallHomeDir(), 'runtime', 'request-attachments', runId);
+  await fs.mkdir(dir, { recursive: true });
+  const bundlePath = path.join(dir, `${stepId}-${BROWSER_ATTACHMENT_BUNDLE_DISPLAY_PATH}`);
+  await fs.writeFile(bundlePath, bundleBuffer);
+
+  return {
+    attachments: [
+      {
+        path: bundlePath,
+        displayPath: BROWSER_ATTACHMENT_BUNDLE_DISPLAY_PATH,
+        sizeBytes: bundleBuffer.length,
+      },
+    ],
+    bundledAttachmentCount: sourceFiles.length,
+    bundleChecksumSha256,
   };
 }
 
@@ -642,48 +768,67 @@ async function prepareBrowserPromptTransport(input: {
   prompt: string;
   attachments: BrowserAttachment[];
 }): Promise<BrowserPromptTransport> {
-  if (input.prompt.length <= BROWSER_INLINE_PROMPT_CHAR_BUDGET) {
-    return {
-      prompt: input.prompt,
-      attachments: input.attachments,
-      metadata: {
-        mode: 'inline',
-        originalPromptChars: input.prompt.length,
-      },
-    };
-  }
+  let mode: BrowserPromptTransport['metadata']['mode'] = 'inline';
+  let prompt = input.prompt;
+  let attachments = input.attachments;
+  let attachmentPath: string | undefined;
+  let attachmentDisplayPath: string | undefined;
 
-  const runId = sanitizePathComponent(input.context.record.runId);
-  const stepId = sanitizePathComponent(input.context.step.id);
-  const dir = path.join(getAuracallHomeDir(), 'runtime', 'request-attachments', runId);
-  await fs.mkdir(dir, { recursive: true });
-  const displayPath = 'auracall-request.txt';
-  const attachmentPath = path.join(dir, `${stepId}-${displayPath}`);
-  await fs.writeFile(attachmentPath, input.prompt, 'utf8');
-  const stats = await fs.stat(attachmentPath);
-  const responseFormatInstruction = buildResponseFormatInstruction(input.context.step.input.structuredData?.metadata);
-  const shortPrompt = [
-    `The full AuraCall request is attached as ${displayPath}.`,
-    'Read the attachment completely and answer the request it contains.',
-    'Do not summarize the attachment unless the request explicitly asks for a summary.',
-    responseFormatInstruction,
-  ].filter((line): line is string => line !== null).join('\n');
-
-  return {
-    prompt: shortPrompt,
-    attachments: [
-      ...input.attachments,
+  if (input.prompt.length > BROWSER_INLINE_PROMPT_CHAR_BUDGET) {
+    mode = 'request_attachment';
+    const runId = sanitizePathComponent(input.context.record.runId);
+    const stepId = sanitizePathComponent(input.context.step.id);
+    const dir = path.join(getAuracallHomeDir(), 'runtime', 'request-attachments', runId);
+    await fs.mkdir(dir, { recursive: true });
+    attachmentDisplayPath = 'auracall-request.txt';
+    attachmentPath = path.join(dir, `${stepId}-${attachmentDisplayPath}`);
+    await fs.writeFile(attachmentPath, input.prompt, 'utf8');
+    const stats = await fs.stat(attachmentPath);
+    const responseFormatInstruction = buildResponseFormatInstruction(input.context.step.input.structuredData?.metadata);
+    prompt = [
+      `The full AuraCall request is attached as ${attachmentDisplayPath}.`,
+      'Read the attachment completely and answer the request it contains.',
+      'Do not summarize the attachment unless the request explicitly asks for a summary.',
+      responseFormatInstruction,
+    ].filter((line): line is string => line !== null).join('\n');
+    attachments = [
+      ...attachments,
       {
         path: attachmentPath,
-        displayPath,
+        displayPath: attachmentDisplayPath,
         sizeBytes: stats.size,
       },
-    ],
+    ];
+  }
+
+  const bundle = await bundleConfiguredBrowserAttachments({ context: input.context, attachments });
+  if (bundle.bundledAttachmentCount > 0) {
+    if (attachmentDisplayPath) {
+      prompt = prompt.replace(
+        `The full AuraCall request is attached as ${attachmentDisplayPath}.`,
+        `The full AuraCall request is included as ${attachmentDisplayPath} inside ${BROWSER_ATTACHMENT_BUNDLE_DISPLAY_PATH}.`,
+      );
+    }
+    prompt = [
+      `${BROWSER_ATTACHMENT_BUNDLE_DISPLAY_PATH} contains ${bundle.bundledAttachmentCount} complete source files with an original-path and SHA-256 manifest. Treat each named source as separately provided and read every source required by the request.`,
+      prompt,
+    ].join('\n\n');
+  }
+
+  return {
+    prompt,
+    attachments: bundle.attachments,
     metadata: {
-      mode: 'request_attachment',
+      mode,
       originalPromptChars: input.prompt.length,
-      attachmentPath,
-      attachmentDisplayPath: displayPath,
+      ...(attachmentPath ? { attachmentPath } : {}),
+      ...(attachmentDisplayPath ? { attachmentDisplayPath } : {}),
+      ...(bundle.bundledAttachmentCount > 0
+        ? {
+            bundledAttachmentCount: bundle.bundledAttachmentCount,
+            bundleChecksumSha256: bundle.bundleChecksumSha256 ?? undefined,
+          }
+        : {}),
     },
   };
 }
@@ -1095,6 +1240,11 @@ export function createConfiguredStoredStepExecutor(
       prompt: effectivePrompt,
       attachments: buildBrowserAttachments(context),
     });
+    if (promptTransport.metadata.bundledAttachmentCount) {
+      deps.logger?.(
+        `Bundled ${promptTransport.metadata.bundledAttachmentCount} text attachments into ${BROWSER_ATTACHMENT_BUNDLE_DISPLAY_PATH} (sha256:${promptTransport.metadata.bundleChecksumSha256}).`,
+      );
+    }
     const providerSessionAuthority = createProviderSessionAuthority(executionConfig);
     const providerSessionContext = {
       providerId: service,

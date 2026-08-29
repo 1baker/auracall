@@ -22379,3 +22379,24 @@ browser-stage lifecycle observability, not transcript truncation.
   session, execute `tab_new`, fresh inventory verification, and `cdp_attach`
   through that exact session stream. A dashboard route is discovery authority,
   not necessarily the execution route for the selected browser.
+
+## 2026-08-29 | Bundle configured text uploads after prompt spillover
+
+- **Symptom:** a configured document run transferred 20 reviewed Markdown
+  sources plus `auracall-request.txt`, but ChatGPT never re-enabled its composer
+  and AuraCall timed out at attachment readiness.
+- **Cause:** direct CLI prompt assembly bundled text sets above ten inputs, but
+  configured API/MCP execution bypassed that policy and handed every file to
+  the browser separately.
+- **Fix:** after large-prompt spillover is known, package more than ten eligible
+  text inputs into one readable Markdown file containing original paths, byte
+  counts, per-source SHA-256 values, complete contents, and a bundle digest.
+  Keep small, binary, unsupported, and over-20-MiB sets unchanged.
+- **Lesson:** attachment-count policy belongs at every prompt-transport entry
+  point, after generated request files have been added. Transfer success alone
+  is not composer-readiness proof.
+- **Verification:** 34 focused assertions, typecheck, focused lint, build, plan
+  audit, CodeGraph sync, installed-runtime digest parity, and a live retained-
+  browser retry passed. The retry reduced 21 sources to one upload, produced
+  equivalent DOCX/PDF artifacts, passed independent and Codex release audits,
+  and preserved the Agent Browser session, profile, and PID.

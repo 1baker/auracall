@@ -1,5 +1,35 @@
 # RUNBOOK
 
+## Turn 500 | 2026-08-29
+
+- Opened Plan 0350 after a consequential configured ChatGPT document run
+  transferred 21 Markdown/text attachments but never regained an enabled
+  composer. Agent Browser PID, retained session, profile, and exact tab were
+  healthy; the failure was isolated to AuraCall's configured upload boundary.
+- Direct CLI prompt assembly already bundles text sets above ten inputs, while
+  configured API/MCP execution passed every artifact and its generated large
+  request attachment directly to the browser. The repair reuses that safety
+  intent after prompt spillover is known.
+- Configured runs now package more than ten eligible text files into one
+  readable Markdown attachment with original paths, byte counts, complete
+  contents, per-source SHA-256 values, and a bundle SHA-256. Unsupported or
+  over-20-MiB sets retain existing behavior.
+- Provider-free regression coverage proves the exact combined case: eleven
+  reviewed Markdown artifacts plus a large inline fallback become one upload,
+  and the composer instruction accurately names the nested request file.
+- Thirty-four focused tests, typecheck, focused lint, build, plan audit,
+  CodeGraph sync, and diff hygiene passed. Built and installed runtime digests
+  match, and only the AuraCall API was restarted.
+- Live response `resp_cd4d525168a34f75a52ff9a6d6033153` bundled 21 inputs
+  into one 307,937-byte upload, regained composer readiness, and generated a
+  2,189-word DOCX plus equivalent six-page PDF. Independent relevance audit
+  `resp_252c9e4417a045099df0d2745c23cbc4` and digest-bound Codex review passed;
+  the thought released with `done=true`.
+- The retained Agent Browser session `auracall-chatgpt-bridge-v3`, profile
+  `auracall-chatgpt-live`, and PID `294633` remained authoritative throughout.
+  Plan 0350 closes accepted, with artifacts published as Preview session
+  `50dc18953435`.
+
 ## Turn 499 | 2026-08-15
 
 - Opened Plan 0330 as the deferred PTY/toolchain successor. AuraCall still

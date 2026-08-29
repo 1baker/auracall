@@ -7,6 +7,14 @@
 Status: active
 Lane: P01
 
+- Closed accepted configured ChatGPT upload-boundary repair:
+  [docs/dev/plans/0350-2026-08-29-configured-chatgpt-upload-boundary.md](docs/dev/plans/0350-2026-08-29-configured-chatgpt-upload-boundary.md)
+  Current state: configured API/MCP execution now applies the direct CLI's
+  large-text safety intent after prompt spillover, bundling 21 reviewed inputs
+  into one readable digest-manifested Markdown upload. The preserved workflow
+  completed DOCX/PDF creation, independent relevance audit, Codex review, and
+  release while retaining the same Agent Browser session, profile, and PID.
+
 - Active greenfield console Search/archive workbench:
   [docs/dev/plans/0347-2026-08-20-greenfield-console-search-workbench.md](docs/dev/plans/0347-2026-08-20-greenfield-console-search-workbench.md)
   Current state: Slice 1 is shipped locally at `/console?view=search` with

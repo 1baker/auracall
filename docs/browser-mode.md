@@ -335,6 +335,13 @@ This mode is ideal when you have a macOS VM (or spare Mac mini) logged into Chat
 ## Limitations / Follow-Up Plan
 
 - **Attachment lifecycle** – in `auto` mode we prefer inlining files into the composer (fewer moving parts). When we do upload, each `--file` path is uploaded separately (or bundled) so ChatGPT can ingest filenames/content. The automation waits for uploads to finish (send button enabled, upload chips visible) before submitting. When inline paste is rejected by ChatGPT (too large), Aura-Call retries automatically with uploads.
+- **Configured large text sets** – browser-backed API/MCP runs package more
+  than ten eligible text attachments into one readable
+  `auracall-upload-bundle.md` before upload. Its manifest records every
+  original path, byte count, and SHA-256 digest, followed by the complete file
+  contents. If the request itself exceeded the inline composer budget,
+  `auracall-request.txt` is included inside the same bundle. Binary, unsupported,
+  or over-20-MiB sets retain the existing separate-attachment behavior.
 - **Model picker drift** – we rely on heuristics to pick GPT-5.2 variants. If OpenAI changes the DOM we need to refresh the selectors quickly. Consider snapshot tests or a small “self check” command.
 - **Non-mac platforms** – window hiding uses AppleScript today; Linux/Windows just ignore the flag. We should detect platforms explicitly and document the behavior.
 - **Streaming UX** – browser runs cannot stream tokens, so we log a warning before launching Chrome. Investigate whether we can stream clipboard deltas via mutation observers for a closer UX.

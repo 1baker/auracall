@@ -1,3 +1,15 @@
+## 2026-08-29 | Plan 0350 configured ChatGPT upload boundary
+
+- A preserved configured document run transferred 21 text attachments but
+  ChatGPT never re-enabled its composer. The retained Agent Browser lane was
+  healthy, so no browser replacement or lifecycle change is authorized.
+- The configured executor now bundles text-only sets above ten files after
+  large-prompt spillover is added. One Markdown attachment preserves every
+  original path, byte count, full body, and SHA-256 digest.
+- Focused regression coverage passes for eleven reviewed Markdown files plus
+  the generated `auracall-request.txt`. Validation, installed-runtime parity,
+  live retry, and artifact release auditing remain open.
+
 ## 2026-08-15 | Plan 0330 maintained cross-platform PTY runtime
 
 - Opened the deferred native dependency successor after Plan 0329 established
@@ -48056,3 +48068,19 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   hints and recovery records. Its 24 focused assertions and the 23 bridge
   assertions pass together with typecheck, focused lint, build, plan audit, and
   CodeGraph synchronization.
+
+## 2026-08-29 | Close configured ChatGPT upload boundary
+
+- Configured execution now bundles more than ten eligible reviewed text inputs
+  only after the generated large-request attachment is known, preserving source
+  paths, byte counts, complete contents, per-source digests, and bundle digest.
+- Thirty-four focused tests, typecheck, focused lint, production build, plan
+  audit, CodeGraph synchronization, installed-runtime digest parity, healthy
+  API restart, and diff hygiene passed.
+- The preserved live workflow uploaded one 307,937-byte bundle instead of 21
+  separate files, regained composer readiness, and completed DOCX/PDF creation.
+  Independent relevance audit and exact-artifact Codex review passed before
+  release reached `done=true`.
+- Agent Browser retained the same `auracall-chatgpt-bridge-v3` session,
+  `auracall-chatgpt-live` profile, and PID `294633`; no duplicate browser lane
+  was launched and no retained tab was closed.
