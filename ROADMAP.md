@@ -7,6 +7,15 @@
 Status: active
 Lane: P01
 
+- Active headless ChatGPT broker contract:
+  [docs/dev/plans/0352-2026-08-31-headless-chatgpt-broker-contract.md](docs/dev/plans/0352-2026-08-31-headless-chatgpt-broker-contract.md)
+  Current state: AuraCall now carries and enforces an exact browser host across
+  request storage, access planning, final inventory, recovery, and runtime
+  evidence. The visually unattended operational default is hidden
+  `remote_headed`; installed run `resp_908b49...` completed with exact host and
+  conversation proof. True `local_headless` remains an explicit fail-closed
+  diagnostic because ChatGPT presents Cloudflare before prompt submission.
+
 - Closed accepted durable browser-run cancellation repair:
   [docs/dev/plans/0351-2026-08-29-durable-run-cancellation.md](docs/dev/plans/0351-2026-08-29-durable-run-cancellation.md)
   Current state: durable cancellation now reaches configured browser execution

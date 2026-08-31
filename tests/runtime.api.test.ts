@@ -22,6 +22,7 @@ describe('runtime api model', () => {
         composerTool: 'deep-research',
         deepResearchPlanAction: 'edit',
         chatgptConversationUrl: 'https://chatgpt.com/c/pinned-review',
+        browserHost: 'local_headless',
       },
     });
 
@@ -36,6 +37,7 @@ describe('runtime api model', () => {
         composerTool: 'deep-research',
         deepResearchPlanAction: 'edit',
         chatgptConversationUrl: 'https://chatgpt.com/c/pinned-review',
+        browserHost: 'local_headless',
       },
     });
   });

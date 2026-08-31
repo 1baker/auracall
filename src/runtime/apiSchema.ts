@@ -15,6 +15,15 @@ import { ExecutionRunRecordBundleSchema } from './schema.js';
 
 export const ExecutionTransportSchema = z.enum(['api', 'browser', 'auto']);
 
+export const ExecutionBrowserHostSchema = z.enum([
+  'local_headless',
+  'local_headed',
+  'docker_headed',
+  'remote_headed',
+  'cloud_provider',
+  'attached_existing',
+]);
+
 export const ExecutionResponseStatusSchema = z.enum(['in_progress', 'completed', 'failed', 'cancelled']);
 
 export const ExecutionResponseOutputContentPartTypeSchema = z.enum(['output_text']);
@@ -41,6 +50,7 @@ export const ExecutionRequestExtensionHintsSchema: z.ZodType<ExecutionRequestExt
   composerTool: z.string().nullable().optional(),
   deepResearchPlanAction: z.enum(['start', 'edit']).nullable().optional(),
   chatgptConversationUrl: z.string().nullable().optional(),
+  browserHost: ExecutionBrowserHostSchema.nullable().optional(),
 });
 
 export const ExecutionRequestInputMessageSchema: z.ZodType<ExecutionRequestInputMessage> = z.object({

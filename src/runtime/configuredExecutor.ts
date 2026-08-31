@@ -22,6 +22,7 @@ import {
   reattachAgentBrowserBrokerTab,
   withAgentBrowserBrokerCleanup,
   type AgentBrowserBridgeResult,
+  type AgentBrowserHost,
 } from '../browser/service/agentBrowserBridge.js';
 import type {
   BrowserAttachment,
@@ -265,6 +266,7 @@ function buildBrowserRuntimeMetadataFromEvidence(input: {
         : undefined,
     agentBrowserBaseUrl: asNonEmptyString(details.agentBrowserBaseUrl) ?? undefined,
     agentBrowserBrowserId: asNonEmptyString(details.agentBrowserBrowserId) ?? undefined,
+    agentBrowserBrowserHost: asAgentBrowserHost(details.agentBrowserBrowserHost) ?? undefined,
     agentBrowserCanonicalTargetId:
       asNonEmptyString(details.agentBrowserCanonicalTargetId) ?? undefined,
     agentBrowserExactUrlTargetCount:
@@ -272,6 +274,7 @@ function buildBrowserRuntimeMetadataFromEvidence(input: {
     agentBrowserProcessId: asFiniteNumber(details.agentBrowserProcessId) ?? undefined,
     agentBrowserProfileId: asNonEmptyString(details.agentBrowserProfileId) ?? undefined,
     agentBrowserRequestedUrl: asNonEmptyString(details.agentBrowserRequestedUrl) ?? undefined,
+    agentBrowserRequestedHost: asAgentBrowserHost(details.agentBrowserRequestedHost) ?? undefined,
     agentBrowserServiceTabHandle: isRecord(details.agentBrowserServiceTabHandle)
       ? details.agentBrowserServiceTabHandle
       : undefined,
@@ -603,6 +606,17 @@ function asThinkingTimeLevel(value: unknown): 'light' | 'standard' | 'extended' 
 
 function asChatgptMode(value: unknown): 'chat' | 'work' | null {
   return value === 'chat' || value === 'work' ? value : null;
+}
+
+function asAgentBrowserHost(value: unknown): AgentBrowserHost | null {
+  return value === 'local_headless' ||
+    value === 'local_headed' ||
+    value === 'docker_headed' ||
+    value === 'remote_headed' ||
+    value === 'cloud_provider' ||
+    value === 'attached_existing'
+    ? value
+    : null;
 }
 
 function readRuntimeServiceConfig(
@@ -1194,6 +1208,11 @@ export function createConfiguredStoredStepExecutor(
       asDeepResearchPlanAction(browserProfileConfig?.deepResearchPlanAction) ??
       asDeepResearchPlanAction(browserConfigRecord?.deepResearchPlanAction) ??
       null;
+    const agentBrowserHost =
+      asAgentBrowserHost(requestAuracall?.browserHost) ??
+      asAgentBrowserHost(runtimeServiceConfig?.browserHost) ??
+      asAgentBrowserHost(globalServiceConfig?.browserHost) ??
+      null;
     const projectId =
       asNonEmptyString(agentConfig?.projectId) ??
       asNonEmptyString(runtimeServiceConfig?.projectId) ??
@@ -1287,11 +1306,13 @@ export function createConfiguredStoredStepExecutor(
         | 'agentBrowserBridgeMode'
         | 'agentBrowserBaseUrl'
         | 'agentBrowserBrowserId'
+        | 'agentBrowserBrowserHost'
         | 'agentBrowserCanonicalTargetId'
         | 'agentBrowserExactUrlTargetCount'
         | 'agentBrowserProcessId'
         | 'agentBrowserProfileId'
         | 'agentBrowserRequestedUrl'
+        | 'agentBrowserRequestedHost'
         | 'agentBrowserServiceTabHandle'
         | 'agentBrowserSessionName'
         | 'agentBrowserTabReconciliation'
@@ -1313,11 +1334,13 @@ export function createConfiguredStoredStepExecutor(
       agentBrowserBridgeMode: runtime?.agentBrowserBridgeMode ?? null,
       agentBrowserBaseUrl: runtime?.agentBrowserBaseUrl ?? null,
       agentBrowserBrowserId: runtime?.agentBrowserBrowserId ?? null,
+      agentBrowserBrowserHost: runtime?.agentBrowserBrowserHost ?? null,
       agentBrowserCanonicalTargetId: runtime?.agentBrowserCanonicalTargetId ?? null,
       agentBrowserExactUrlTargetCount: runtime?.agentBrowserExactUrlTargetCount ?? null,
       agentBrowserProcessId: runtime?.agentBrowserProcessId ?? null,
       agentBrowserProfileId: runtime?.agentBrowserProfileId ?? null,
       agentBrowserRequestedUrl: runtime?.agentBrowserRequestedUrl ?? null,
+      agentBrowserRequestedHost: runtime?.agentBrowserRequestedHost ?? null,
       agentBrowserServiceTabHandle: runtime?.agentBrowserServiceTabHandle ?? null,
       agentBrowserSessionName: runtime?.agentBrowserSessionName ?? null,
       agentBrowserTabReconciliation: runtime?.agentBrowserTabReconciliation ?? null,
@@ -1415,6 +1438,7 @@ export function createConfiguredStoredStepExecutor(
         auracallProfileName: browserFamilyProfileName ?? runtimeSelection.runtimeProfileId,
         selectedAgentId: context.step.agentId,
         target: service,
+        agentBrowserHost,
         projectId,
         conversationId: null,
         url: service === 'chatgpt' ? (targetUrl ?? undefined) : undefined,
@@ -1494,11 +1518,13 @@ export function createConfiguredStoredStepExecutor(
             agentBrowserBridgeMode: hint.agentBrowserBridgeMode ?? null,
             agentBrowserBaseUrl: hint.agentBrowserBaseUrl ?? null,
             agentBrowserBrowserId: hint.agentBrowserBrowserId ?? null,
+            agentBrowserBrowserHost: hint.agentBrowserBrowserHost ?? null,
             agentBrowserCanonicalTargetId: hint.agentBrowserCanonicalTargetId ?? null,
             agentBrowserExactUrlTargetCount: hint.agentBrowserExactUrlTargetCount ?? null,
             agentBrowserProcessId: hint.agentBrowserProcessId ?? null,
             agentBrowserProfileId: hint.agentBrowserProfileId ?? null,
             agentBrowserRequestedUrl: hint.agentBrowserRequestedUrl ?? null,
+            agentBrowserRequestedHost: hint.agentBrowserRequestedHost ?? null,
             agentBrowserServiceTabHandle: hint.agentBrowserServiceTabHandle ?? null,
             agentBrowserSessionName: hint.agentBrowserSessionName ?? null,
             agentBrowserTabReconciliation: hint.agentBrowserTabReconciliation ?? null,
@@ -1583,6 +1609,7 @@ export function createConfiguredStoredStepExecutor(
           recoveredBridge = await reattachBroker({
             baseUrl: recoveredRuntime.agentBrowserBaseUrl,
             browserId: recoveredRuntime.agentBrowserBrowserId,
+            browserHost: recoveredRuntime.agentBrowserRequestedHost ?? agentBrowserHost,
             profileId: recoveredRuntime.agentBrowserProfileId,
             serviceTabHandle: recoveredRuntime.agentBrowserServiceTabHandle,
             sessionName: recoveredRuntime.agentBrowserSessionName,
@@ -1601,11 +1628,14 @@ export function createConfiguredStoredStepExecutor(
               recoveredRuntime.chromeTargetId,
             agentBrowserBaseUrl: recoveredBridge.baseUrl,
             agentBrowserBrowserId: recoveredBridge.browserId,
+            agentBrowserBrowserHost: recoveredBridge.browserHost,
             agentBrowserCanonicalTargetId: recoveredBridge.canonicalTargetId,
             agentBrowserExactUrlTargetCount: recoveredBridge.exactUrlTargetCount,
             agentBrowserProcessId: recoveredBridge.browserProcessId,
             agentBrowserProfileId: recoveredBridge.profileId,
             agentBrowserRequestedUrl: recoveredBridge.requestedUrl,
+            agentBrowserRequestedHost:
+              recoveredRuntime.agentBrowserRequestedHost ?? agentBrowserHost ?? undefined,
             agentBrowserServiceTabHandle: recoveredBridge.serviceTabHandle,
             agentBrowserSessionName: recoveredBridge.sessionName,
             agentBrowserAcquisitionDecision: recoveredBridge.acquisitionDecision,

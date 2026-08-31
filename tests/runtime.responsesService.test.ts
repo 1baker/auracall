@@ -254,6 +254,7 @@ describe('runtime responses service', () => {
       ],
       auracall: {
         agent: 'pro-extended-chatgpt-soylei-che4470-seminar-grading',
+        browserHost: 'local_headless',
         runtimeProfile: 'wsl-chrome-3',
         service: 'chatgpt',
         transport: 'browser',
@@ -266,6 +267,9 @@ describe('runtime responses service', () => {
     });
     const record = await control.readRun('resp_service_attachments_1');
     expect(record?.bundle.run.initialInputs.attachments).toHaveLength(3);
+    expect(record?.bundle.run.initialInputs.auracall).toEqual(
+      expect.objectContaining({ browserHost: 'local_headless' }),
+    );
     expect(record?.bundle.steps[0]?.input.artifacts).toEqual([
       {
         id: 'rubric',

@@ -559,6 +559,9 @@ function normalizeAuracallFromRecord(input: unknown): NonNullable<ExecutionReque
 	const deepResearchPlanAction = normalizeDeepResearchPlanAction(input.deepResearchPlanAction);
 	if (deepResearchPlanAction !== null) next.deepResearchPlanAction = deepResearchPlanAction;
 
+	const browserHost = normalizeExecutionBrowserHost(input.browserHost);
+	if (browserHost !== null) next.browserHost = browserHost;
+
 	return next;
 }
 
@@ -569,6 +572,19 @@ function normalizeExecutionTransport(value: unknown): ExecutionTransport | null 
 
 function normalizeDeepResearchPlanAction(value: unknown): "start" | "edit" | null {
 	return value === "start" || value === "edit" ? value : null;
+}
+
+function normalizeExecutionBrowserHost(
+	value: unknown,
+): NonNullable<NonNullable<ExecutionRequest["auracall"]>["browserHost"]> | null {
+	return value === "local_headless" ||
+		value === "local_headed" ||
+		value === "docker_headed" ||
+		value === "remote_headed" ||
+		value === "cloud_provider" ||
+		value === "attached_existing"
+		? value
+		: null;
 }
 
 function normalizeNullableString(value: unknown): string | null {

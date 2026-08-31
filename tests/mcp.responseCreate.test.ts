@@ -47,6 +47,7 @@ describe('mcp response_create tool', () => {
       transport: 'browser',
       composerTool: 'deep-research',
       deepResearchPlanAction: 'edit',
+      browserHost: 'local_headless',
       metadata: {
         smoke: true,
       },
@@ -72,6 +73,7 @@ describe('mcp response_create tool', () => {
         transport: 'browser',
         composerTool: 'deep-research',
         deepResearchPlanAction: 'edit',
+        browserHost: 'local_headless',
       },
     });
     expect(result).toMatchObject({

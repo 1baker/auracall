@@ -129,6 +129,11 @@ Current limits:
     configured stored-step executor path as normal Aura-Call runtime work
   - direct `/v1/responses` requests can opt into deterministic model output
     with `auracall.outputContract: "auracall.step-output.v1"`
+  - direct browser-backed requests can set `auracall.browserHost` to
+    `local_headless`, `local_headed`, `docker_headed`, `remote_headed`,
+    `cloud_provider`, or `attached_existing`. An explicit value requires Agent
+    Browser authority and fails before prompt submission if the access plan or
+    final browser inventory does not match it.
   - direct `/v1/responses` requests may include `attachments`. Local paths and
     `file://` URIs are projected into the stored step artifact list so the
     browser executor can upload them; remote HTTP(S) URIs are preserved as

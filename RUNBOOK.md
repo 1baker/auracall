@@ -1,5 +1,58 @@
 # RUNBOOK
 
+## Turn 502 | 2026-08-31
+
+- Opened Plan 0352 for the requested headless prompt-to-ChatGPT workflow.
+- Current source proves AuraCall persists runtime, service, agent, transport,
+  and conversation hints but sends only profile, target identity, and URL to
+  Agent Browser; it neither requests nor verifies a browser host.
+- A no-launch access plan with target `chatgpt` and
+  `browserHost=local_headless` selects the authenticated
+  `auracall-chatgpt-live` profile and returns an available headless `tab_new`
+  request. Its active `remote_headed` lease correctly prevents a duplicate
+  profile process.
+- Installed Agent Browser doctor reports three drift findings, including a
+  deleted daemon executable and partial workstation payload. Implementation
+  and provider-free validation proceed first; retained-lane migration waits
+  for drift reconciliation and an idle-lane proof.
+- The critical path is one typed durable request hint, broker fail-closed host
+  enforcement, Graphiti adapter selection, focused validation, installed
+  reconciliation, and one real headless ChatGPT canary.
+- Implemented the typed request and persistence contract, broker-required
+  propagation, copied-plan and final-inventory host checks, requested/actual
+  runtime evidence, and the Codex Research adapter default. Ninety-eight
+  focused tests, typecheck, strict source/test lint, build, and plan audit pass.
+- Installed AuraCall was replaced and restarted while the old headed profile
+  was preserved until an idle-lane check found zero jobs. The shared profile
+  was then migrated without a duplicate process.
+- A scoped Agent Browser capability binding selects the validated bundled Linux
+  Chrome only for AuraCall + ChatGPT. Canary
+  `resp_240868fe699a4878a75a70abfc7e2ff7` proved requested and actual
+  `local_headless`, profile `chatgpt-pro`, PID `760483`, and one exact target.
+- True headless stopped at ChatGPT's Cloudflare `Just a moment` challenge.
+  Automated challenge bypass is out of scope. Hidden `remote_headed` control
+  canary `resp_044b85e755e4425e8b87a700d3f88766` passed that boundary and
+  reached the exact retained Workshop conversation.
+- Independent Pro guard `auracall-headless-contract-20260831` scored 88 and
+  identified one blocker: the adapter default still selected the provider-
+  blocked true-headless route. Codex changed the omitted-host default to hidden
+  `remote_headed`, preserved explicit `local_headless`, and added a distinct
+  incomplete `challenge-blocked` classification.
+- Provider-free regression proves the omitted default is `remote_headed` and
+  explicit `local_headless` is unchanged. Installed response
+  `resp_908b49b085b349ce8641a0a289ba659f` then completed without resubmission:
+  requested and actual host `remote_headed`, Agent Browser required, profile
+  `chatgpt-pro`, PID `766283`, one exact target, exact Workshop conversation,
+  and validated structured token `DEFAULT_HIDDEN_REMOTE_HEADED_OK_20260831`.
+- Plan 0352 remains open only for technically true `local_headless` completion;
+  the visually unattended hidden-browser workflow is now the operational
+  default and does not claim that a headed Chromium process is technically
+  headless.
+- Follow-up Pro guard `auracall-hidden-headless-default-20260831` passed at 98
+  with high confidence, no blockers, no nonblocking findings, and no remaining
+  checks. The saved response, nonce, fingerprint, runtime profile, and exact
+  Workshop conversation all matched the precommitted review request.
+
 ## Turn 501 | 2026-08-29
 
 - Opened Plan 0351 after preserved run evidence disproved the apparent

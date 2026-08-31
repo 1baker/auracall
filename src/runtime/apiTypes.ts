@@ -2,6 +2,14 @@ import type { ExecutionRunRecordBundle } from './types.js';
 
 export type ExecutionTransport = 'api' | 'browser' | 'auto';
 
+export type ExecutionBrowserHost =
+  | 'local_headless'
+  | 'local_headed'
+  | 'docker_headed'
+  | 'remote_headed'
+  | 'cloud_provider'
+  | 'attached_existing';
+
 export type ExecutionResponseStatus = 'in_progress' | 'completed' | 'failed' | 'cancelled';
 
 export type ExecutionResponseOutputContentPartType = 'output_text';
@@ -27,6 +35,7 @@ export interface ExecutionRequestExtensionHints {
   composerTool?: string | null;
   deepResearchPlanAction?: 'start' | 'edit' | null;
   chatgptConversationUrl?: string | null;
+  browserHost?: ExecutionBrowserHost | null;
 }
 
 export interface ExecutionRequestInputMessage {

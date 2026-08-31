@@ -257,6 +257,12 @@ auracall tui
 Engine auto-picks API when `OPENAI_API_KEY` is set, otherwise browser; browser is stable on macOS and works on Linux and Windows. On Linux pass `--browser-chrome-path/--browser-cookie-path` if detection fails; on Windows prefer `--browser-manual-login` or inline cookies if decryption is blocked. From WSL, integrated Windows Chrome runs now use an auto-assigned DevTools port plus Aura-Call’s built-in `windows-loopback` relay by default, so firewall rules and `portproxy` are only for manual direct-CDP debugging.
 
 Current browser-mode default posture:
+- direct `/v1/responses` and MCP `response_create` calls may set
+  `auracall.browserHost` or `browserHost` to an exact Agent Browser host such
+  as `local_headless`. An explicit host requirement disables AuraCall's
+  compatibility-browser fallback, is copied into the access plan, and must
+  match the planned request plus final browser inventory before prompt
+  submission. Runtime diagnostics retain both requested and actual host.
 - `auto` is the default for ChatGPT and Grok. AuraCall asks agent-browser for
   an access plan first and uses the exact broker-owned tab when that service is
   available. It enters the compatibility AuraCall-managed browser path only

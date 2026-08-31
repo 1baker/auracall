@@ -1576,10 +1576,20 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 	}
 
 	const bridgeMode = resolveAgentBrowserBridgeMode();
+	if (
+		config.agentBrowserHost &&
+		bridgeMode === "off" &&
+		(target === "chatgpt" || target === "grok")
+	) {
+		throw new Error(
+			`Explicit browser host ${config.agentBrowserHost} requires the agent-browser broker, but AURACALL_AGENT_BROWSER_BRIDGE=off.`,
+		);
+	}
 	if (bridgeMode !== "off" && (target === "chatgpt" || target === "grok")) {
 		const brokerUrl = resolveAgentBrowserBrokerUrl(target, config.url);
 		const bridge = await acquireAgentBrowserBrokerTab({
 			abortSignal: options.abortSignal,
+			browserHost: config.agentBrowserHost,
 			logger,
 			mode: bridgeMode,
 			profileId: resolveAgentBrowserBrokerProfile(target),
@@ -3160,11 +3170,13 @@ function withAgentBrowserRuntimeHints(
 		agentBrowserBridgeMode: bridgeMode,
 		agentBrowserBaseUrl: bridge.baseUrl,
 		agentBrowserBrowserId: bridge.browserId,
+		agentBrowserBrowserHost: bridge.browserHost,
 		agentBrowserCanonicalTargetId: bridge.canonicalTargetId,
 		agentBrowserExactUrlTargetCount: bridge.exactUrlTargetCount,
 		agentBrowserProcessId: bridge.browserProcessId,
 		agentBrowserProfileId: bridge.profileId,
 		agentBrowserRequestedUrl: bridge.requestedUrl,
+		agentBrowserRequestedHost: options.config?.agentBrowserHost ?? undefined,
 		agentBrowserServiceTabHandle: bridge.serviceTabHandle,
 		agentBrowserSessionName: bridge.sessionName,
 		agentBrowserTabReconciliation: bridge.tabReconciliation,

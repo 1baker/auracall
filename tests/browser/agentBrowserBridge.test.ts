@@ -118,6 +118,22 @@ describe("agent-browser bridge", () => {
 		expect(fetch).not.toHaveBeenCalled();
 	});
 
+	test("rejects an explicit browser host when the broker is disabled", async () => {
+		const fetch = vi.fn();
+		await expect(
+			acquireAgentBrowserBrokerTab(
+				{
+					mode: "off",
+					browserHost: "local_headless",
+					targetServiceId: "chatgpt",
+					url: "https://chatgpt.com/",
+				},
+				{ fetch: fetch as never },
+			),
+		).rejects.toThrow("explicit agent-browser host requirement conflicts with bridge mode off");
+		expect(fetch).not.toHaveBeenCalled();
+	});
+
 	test("reattaches an exact retained broker handle after the AuraCall process restarts", async () => {
 		const handle = {
 			browserId: "session:auracall-chatgpt-broker-v7",
@@ -576,6 +592,230 @@ describe("agent-browser bridge", () => {
 			action: "tab_handle_release",
 			serviceTabHandle: { targetId: "target-1" },
 		});
+	});
+
+	test("requires and proves an explicit headless browser host before attach", async () => {
+		const requestedUrl = "https://chatgpt.com/c/headless-contract";
+		const handle = {
+			browserId: "session:auracall-headless",
+			profileId: "chatgpt-pro",
+			sessionName: "auracall-headless",
+			targetId: "headless-target",
+			url: requestedUrl,
+			valid: true,
+		};
+		let tabOpened = false;
+		let plannedUrl = "";
+		const fetch = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+			const value = String(url);
+			if (value.endsWith("/api/service/browsers")) {
+				return jsonResponse({
+					success: true,
+					data: {
+						browsers: tabOpened
+							? [
+									{
+										health: "ready",
+										host: "local_headless",
+										pid: 41235,
+										id: handle.browserId,
+										profileId: handle.profileId,
+										tabHandles: [handle],
+									},
+								]
+							: [],
+					},
+				});
+			}
+			if (value.includes("/api/service/access-plan?")) {
+				plannedUrl = value;
+				return jsonResponse({
+					success: true,
+					data: {
+						selectedProfile: { id: handle.profileId },
+						decision: {
+							profileReuse: { recommendedAction: "launch_new_browser" },
+							serviceRequest: {
+								available: true,
+								request: {
+									action: "tab_new",
+									url: requestedUrl,
+									params: { browserHost: "local_headless" },
+								},
+							},
+						},
+					},
+				});
+			}
+			const request = JSON.parse(String(init?.body)) as Record<string, unknown>;
+			if (request.action === "tab_new") {
+				tabOpened = true;
+				return jsonResponse({
+					success: true,
+					data: { serviceTabHandle: handle, tabAcquisitionDecision: "opened_new_tab" },
+				});
+			}
+			return jsonResponse({
+				success: true,
+				data: {
+					browserWebSocketUrl: "ws://127.0.0.1:49506/devtools/browser/headless",
+					detachRequired: true,
+				},
+			});
+		});
+
+		const result = await acquireAgentBrowserBrokerTab(
+			{
+				mode: "auto",
+				browserHost: "local_headless",
+				profileId: handle.profileId,
+				targetServiceId: "chatgpt",
+				url: requestedUrl,
+			},
+			{
+				fetch: fetch as never,
+				listStreamFiles: async () => ["/runtime/dashboard-service-backend.stream"],
+				readStreamFile: async () => "46515\n",
+			},
+		);
+
+		expect(new URL(plannedUrl).searchParams.get("browserHost")).toBe("local_headless");
+		expect(new URL(plannedUrl).searchParams.get("targetServiceId")).toBe("chatgpt");
+		expect(result).toMatchObject({
+			browserHost: "local_headless",
+			browserId: handle.browserId,
+			profileId: handle.profileId,
+		});
+	});
+
+	test("rejects a planned tab request that changes the explicit browser host", async () => {
+		let serviceRequestAttempted = false;
+		const fetch = vi.fn(async (url: string | URL | Request) => {
+			const value = String(url);
+			if (value.endsWith("/api/service/browsers")) {
+				return jsonResponse({ success: true, data: { browsers: [] } });
+			}
+			if (value.includes("/api/service/access-plan?")) {
+				return jsonResponse({
+					success: true,
+					data: {
+						selectedProfile: { id: "chatgpt-pro" },
+						decision: {
+							profileReuse: { recommendedAction: "launch_new_browser" },
+							serviceRequest: {
+								available: true,
+								request: {
+									action: "tab_new",
+									url: "https://chatgpt.com/c/headless-contract",
+									params: { browserHost: "remote_headed" },
+								},
+							},
+						},
+					},
+				});
+			}
+			serviceRequestAttempted = true;
+			return jsonResponse({ success: true, data: {} });
+		});
+
+		await expect(
+			acquireAgentBrowserBrokerTab(
+				{
+					mode: "auto",
+					browserHost: "local_headless",
+					profileId: "chatgpt-pro",
+					targetServiceId: "chatgpt",
+					url: "https://chatgpt.com/c/headless-contract",
+				},
+				{
+					fetch: fetch as never,
+					listStreamFiles: async () => ["/runtime/dashboard-service-backend.stream"],
+					readStreamFile: async () => "46515\n",
+				},
+			),
+		).rejects.toThrow("did not preserve requested browser host local_headless");
+		expect(serviceRequestAttempted).toBe(false);
+	});
+
+	test("rejects final broker inventory that does not prove the explicit browser host", async () => {
+		const requestedUrl = "https://chatgpt.com/c/headless-contract";
+		const handle = {
+			browserId: "session:auracall-headless",
+			profileId: "chatgpt-pro",
+			sessionName: "auracall-headless",
+			targetId: "headless-target",
+			url: requestedUrl,
+			valid: true,
+		};
+		let tabOpened = false;
+		let attachAttempted = false;
+		const fetch = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+			const value = String(url);
+			if (value.endsWith("/api/service/browsers")) {
+				return jsonResponse({
+					success: true,
+					data: {
+						browsers: tabOpened
+							? [{
+								health: "ready",
+								host: "remote_headed",
+								pid: 41235,
+								id: handle.browserId,
+								profileId: handle.profileId,
+								tabHandles: [handle],
+							}]
+							: [],
+					},
+				});
+			}
+			if (value.includes("/api/service/access-plan?")) {
+				return jsonResponse({
+					success: true,
+					data: {
+						selectedProfile: { id: handle.profileId },
+						decision: {
+							profileReuse: { recommendedAction: "launch_new_browser" },
+							serviceRequest: {
+								available: true,
+								request: {
+									action: "tab_new",
+									url: requestedUrl,
+									params: { browserHost: "local_headless" },
+								},
+							},
+						},
+					},
+				});
+			}
+			const request = JSON.parse(String(init?.body)) as Record<string, unknown>;
+			if (request.action === "tab_new") {
+				tabOpened = true;
+				return jsonResponse({
+					success: true,
+					data: { serviceTabHandle: handle, tabAcquisitionDecision: "opened_new_tab" },
+				});
+			}
+			attachAttempted = true;
+			return jsonResponse({ success: true, data: {} });
+		});
+
+		await expect(
+			acquireAgentBrowserBrokerTab(
+				{
+					mode: "auto",
+					browserHost: "local_headless",
+					profileId: handle.profileId,
+					targetServiceId: "chatgpt",
+					url: requestedUrl,
+				},
+				{
+					fetch: fetch as never,
+					listStreamFiles: async () => ["/runtime/dashboard-service-backend.stream"],
+					readStreamFile: async () => "46515\n",
+				},
+			),
+		).rejects.toThrow("returned browser host remote_headed instead of requested local_headless");
+		expect(attachAttempted).toBe(false);
 	});
 
 	test("preserves the exact broker tab when legacy acquisition evidence is absent", async () => {

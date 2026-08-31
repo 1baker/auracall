@@ -6,12 +6,21 @@ const DEFAULT_TIMEOUT_MS = 5_000;
 
 export type AgentBrowserBridgeMode = "auto" | "required" | "off";
 
+export type AgentBrowserHost =
+	| "local_headless"
+	| "local_headed"
+	| "docker_headed"
+	| "remote_headed"
+	| "cloud_provider"
+	| "attached_existing";
+
 export type AgentBrowserBridgeResult = {
 	acquisitionDecision?: string;
 	acquisitionEvidence?: "broker_inventory" | "planned_request_legacy" | "service_response";
 	baseUrl: string;
 	browserId: string;
 	browserProcessId?: number;
+	browserHost?: AgentBrowserHost;
 	canonicalTargetId?: string;
 	chromeHost?: string;
 	chromePort?: number;
@@ -33,6 +42,7 @@ export type AgentBrowserBrokerInput = {
 	agentName?: string;
 	logger?: (message: string) => void;
 	mode?: AgentBrowserBridgeMode;
+	browserHost?: AgentBrowserHost | null;
 	profileId?: string | null;
 	serviceName?: string;
 	targetServiceId: "chatgpt" | "gemini" | "grok";
@@ -45,6 +55,7 @@ export type AgentBrowserBrokerReattachInput = {
 	agentName?: string;
 	baseUrl?: string | null;
 	browserId: string;
+	browserHost?: AgentBrowserHost | null;
 	logger?: (message: string) => void;
 	profileId: string;
 	serviceName?: string;
@@ -57,6 +68,7 @@ export type AgentBrowserBrokerReattachInput = {
 type BrowserRecord = {
 	cdpEndpoint?: string | null;
 	health?: string | null;
+	host?: AgentBrowserHost | null;
 	id?: string | null;
 	pid?: number | null;
 	profileId?: string | null;
@@ -299,11 +311,24 @@ function tabAcquisitionFromResponse(response: JsonResponse): {
 function validatePlannedTabRequest(
 	request: Record<string, unknown> | undefined,
 	url: string,
+	browserHost?: AgentBrowserHost | null,
 ): Record<string, unknown> {
 	if (!request || request.action !== "tab_new" || request.url !== url) {
 		throw new Error(
 			`agent-browser access plan did not return an exact tab_new request for ${url}: ${JSON.stringify(request ?? null)}`,
 		);
+	}
+	if (browserHost) {
+		const params = request.params;
+		const plannedHost =
+			params && typeof params === "object" && !Array.isArray(params)
+				? (params as Record<string, unknown>).browserHost
+				: null;
+		if (plannedHost !== browserHost) {
+			throw new Error(
+				`agent-browser access plan did not preserve requested browser host ${browserHost}: ${JSON.stringify(request)}`,
+			);
+		}
 	}
 	return request;
 }
@@ -410,6 +435,11 @@ export async function reattachAgentBrowserBrokerTab(
 		);
 	}
 	const { route, candidate } = matchedRoutes[0];
+	if (input.browserHost && candidate.browser.host !== input.browserHost) {
+		throw new Error(
+			`agent-browser restart recovery found browser host ${String(candidate.browser.host ?? "missing")} instead of requested ${input.browserHost}`,
+		);
+	}
 	const canonicalTargetId = String(candidate.handle.targetId ?? "").trim();
 	const exactUrlTargetCount = input.url
 		? distinctTargetCount(
@@ -453,6 +483,7 @@ export async function reattachAgentBrowserBrokerTab(
 		acquisitionEvidence: "broker_inventory",
 		baseUrl: route.baseUrl,
 		browserId: input.browserId,
+		browserHost: candidate.browser.host ?? undefined,
 		browserProcessId,
 		canonicalTargetId,
 		chromeHost: endpoint.host,
@@ -473,7 +504,13 @@ export async function acquireAgentBrowserBrokerTab(
 	dependencies: AgentBrowserBridgeDependencies = {},
 ): Promise<AgentBrowserBridgeResult | null> {
 	const mode = input.mode ?? resolveAgentBrowserBridgeMode();
-	if (mode === "off") return null;
+	if (mode === "off") {
+		if (input.browserHost) {
+			throw new Error("an explicit agent-browser host requirement conflicts with bridge mode off");
+		}
+		return null;
+	}
+	const brokerRequired = mode === "required" || Boolean(input.browserHost);
 	const logger = input.logger ?? (() => undefined);
 	let brokerAuthorityClaimed = false;
 	const fetchImpl = dependencies.fetch ?? globalThis.fetch;
@@ -518,6 +555,7 @@ export async function acquireAgentBrowserBrokerTab(
 					targetServiceId: input.targetServiceId,
 					url: input.url,
 					...(profileId ? { runtimeProfile: profileId } : {}),
+					...(input.browserHost ? { browserHost: input.browserHost } : {}),
 				});
 				const plan = await requestJson(
 					fetchImpl,
@@ -553,7 +591,7 @@ export async function acquireAgentBrowserBrokerTab(
 						`agent-browser access plan returned no usable tab request: ${JSON.stringify(serviceRequest)}`,
 					);
 				}
-				const plannedRequest = validatePlannedTabRequest(request, input.url);
+				const plannedRequest = validatePlannedTabRequest(request, input.url, input.browserHost);
 				const plannedSessionName =
 					typeof plannedRequest.sessionName === "string" ? plannedRequest.sessionName.trim() : "";
 				const requestRoute =
@@ -632,6 +670,11 @@ export async function acquireAgentBrowserBrokerTab(
 						`agent-browser exact target profile mismatch: expected ${selectedProfileId}, got ${effectiveProfileId}`,
 					);
 				}
+				if (input.browserHost && candidate.browser.host !== input.browserHost) {
+					throw new Error(
+						`agent-browser returned browser host ${String(candidate.browser.host ?? "missing")} instead of requested ${input.browserHost}`,
+					);
+				}
 				const attached = await requestJson(
 					fetchImpl,
 					requestRoute.baseUrl,
@@ -663,6 +706,7 @@ export async function acquireAgentBrowserBrokerTab(
 					acquisitionEvidence: acquisition.evidence,
 					baseUrl: requestRoute.baseUrl,
 					browserId,
+					browserHost: candidate.browser.host ?? undefined,
 					browserProcessId,
 					canonicalTargetId,
 					chromeHost: endpoint.host,
@@ -688,16 +732,21 @@ export async function acquireAgentBrowserBrokerTab(
 		throw lastError ?? new Error("no agent-browser service route accepted the browser request");
 	} catch (error) {
 		const message = error instanceof Error ? error.message : String(error);
-		if (mode === "auto" && !brokerAuthorityClaimed && !input.abortSignal?.aborted) {
+		if (
+			mode === "auto" &&
+			!brokerRequired &&
+			!brokerAuthorityClaimed &&
+			!input.abortSignal?.aborted
+		) {
 			logger(
 				`[agent-browser] No broker authority was established (${message}); continuing through AuraCall's compatibility browser path.`,
 			);
 			return null;
 		}
-		if (mode === "auto" && input.abortSignal?.aborted) {
+		if (mode === "auto" && !brokerRequired && input.abortSignal?.aborted) {
 			throw new Error(`agent-browser broker auto mode aborted before fallback: ${message}`);
 		}
-		if (mode === "auto") {
+		if (mode === "auto" && !brokerRequired) {
 			throw new Error(`agent-browser broker auto mode claimed authority but failed: ${message}`);
 		}
 		throw new Error(`agent-browser broker required but unavailable: ${message}`);

@@ -1263,6 +1263,7 @@ describe('configured stored-step executor', () => {
                 composerTool: 'deep-research',
                 deepResearchPlanAction: 'edit',
                 chatgptConversationUrl: 'https://chatgpt.com/c/pinned-observation-review',
+                browserHost: 'local_headless',
               },
             },
           },
@@ -1292,6 +1293,7 @@ describe('configured stored-step executor', () => {
           workModel: 'Research',
           composerTool: 'deep-research',
           deepResearchPlanAction: 'edit',
+          agentBrowserHost: 'local_headless',
           url: 'https://chatgpt.com/c/pinned-observation-review',
           chatgptUrl: 'https://chatgpt.com/c/pinned-observation-review',
           providerSessionAuthorization: expect.objectContaining({

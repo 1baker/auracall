@@ -28,11 +28,13 @@ scoped keys, response batches, attachments, and polling rules, see
 ### `response_create`
 - Inputs: `model`, `input`, optional `instructions`, `runtimeProfile`,
   `agent`, `service`, `transport`, `outputContract`, `composerTool`,
-  `deepResearchPlanAction`, `attachments`, and `metadata`.
+  `deepResearchPlanAction`, `browserHost`, `attachments`, and `metadata`.
 - Behavior: creates one durable response run through the same stored-step
   response service used by local API `/v1/responses`. Browser-backed ChatGPT
   calls can request volatile workbench tools per call, for example
   `composerTool = "deep-research"` with `deepResearchPlanAction = "edit"`.
+  `browserHost = "local_headless"` requires an exact headless Agent Browser
+  plan and inventory match without compatibility fallback.
   The structured result is `object = "response"` and its `id` can be polled
   through `run_status`.
 - Agent model ids resolve through the effective config plus registry catalog.

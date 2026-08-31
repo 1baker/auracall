@@ -1,5 +1,6 @@
 import type * as BaseTypes from '../../packages/browser-service/src/types.js';
 import type { ProviderSessionAuthorization } from './providers/providerSessionAuthority.js';
+import type { AgentBrowserHost } from './service/agentBrowserBridge.js';
 
 export type {
   ChromeClient,
@@ -56,6 +57,7 @@ type LlmBrowserFields = {
   thinkingTime?: ThinkingTimeLevel;
   composerTool?: string | null;
   deepResearchPlanAction?: ChatgptDeepResearchPlanAction;
+  agentBrowserHost?: AgentBrowserHost | null;
   providerSessionAuthorization?: ProviderSessionAuthorization;
 };
 
@@ -66,11 +68,13 @@ export type BrowserRuntimeMetadata = BaseTypes.BrowserRuntimeMetadata & {
   agentBrowserBridgeMode?: 'auto' | 'required' | 'off';
   agentBrowserBaseUrl?: string;
   agentBrowserBrowserId?: string;
+  agentBrowserBrowserHost?: AgentBrowserHost;
   agentBrowserCanonicalTargetId?: string;
   agentBrowserExactUrlTargetCount?: number;
   agentBrowserProcessId?: number;
   agentBrowserProfileId?: string;
   agentBrowserRequestedUrl?: string;
+  agentBrowserRequestedHost?: AgentBrowserHost;
   agentBrowserServiceTabHandle?: Record<string, unknown>;
   agentBrowserSessionName?: string;
   agentBrowserTabReconciliation?: 'preserved_selection_only';
