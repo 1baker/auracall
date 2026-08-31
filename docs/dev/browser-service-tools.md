@@ -41,6 +41,13 @@ entry, durable handoff URL, and exact executable proof are activation
 prerequisites. Repository contract tests do not authorize or substitute for a
 live browser launch.
 
+After a successful broker `tab_new`, AuraCall allows up to 15 seconds for the
+exact returned browser/profile/session/target/URL handle to appear in Agent
+Browser's authoritative inventory. This is inventory convergence, not relaxed
+identity matching: multiple candidates fail immediately, and a task-created
+tab is released if exact verification does not converge. Pre-existing or
+legacy-evidence tabs remain preserved.
+
 ## Metadata-only agent-browser network detail
 
 Do not print `agent-browser --json network requests` or

@@ -1,3 +1,22 @@
+## 2026-08-31 | Plan 0353 three-topic Agent Browser end-to-end proof
+
+- Two live workflow attempts failed before provider submission because the
+  exact tab returned by Agent Browser was not yet present in AuraCall's first
+  authoritative inventory read.
+- Broker acquisition now waits within a strict 15-second convergence window,
+  still rejects ambiguity immediately, and releases only a task-created tab if
+  verification cannot complete.
+- Provider-free regressions prove delayed convergence and exact cleanup. The
+  companion Codex Research evaluator now reports this as non-human
+  `broker-consistency`, not `identity-unverified`.
+- Installed/runtime digest parity and service health passed. Three distinct
+  live responses completed with independently correct outputs and clean task
+  release while preserving the retained browser.
+- The browser document run materialized a 2,418-word DOCX and seven-page PDF;
+  the separate Pro audit passed every relevance and accuracy gate, and Codex
+  verified content, representative rendered pages, and unchanged digests.
+  Plan 0353 closes accepted.
+
 ## 2026-08-29 | Plan 0351 durable browser-run cancellation
 
 - A configured response that appeared stalled actually completed its retained

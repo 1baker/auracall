@@ -3,6 +3,9 @@ import os from "node:os";
 import path from "node:path";
 
 const DEFAULT_TIMEOUT_MS = 5_000;
+const DEFAULT_BROKER_INVENTORY_CONVERGENCE_TIMEOUT_MS = 15_000;
+const DEFAULT_BROKER_INVENTORY_POLL_INTERVAL_MS = 250;
+const DEFAULT_BROKER_INVENTORY_MAX_ATTEMPTS = 61;
 
 export type AgentBrowserBridgeMode = "auto" | "required" | "off";
 
@@ -88,8 +91,12 @@ type JsonResponse = {
 
 export type AgentBrowserBridgeDependencies = {
 	fetch?: typeof globalThis.fetch;
+	inventoryConvergenceTimeoutMs?: number;
+	inventoryMaxAttempts?: number;
+	inventoryPollIntervalMs?: number;
 	listStreamFiles?: () => Promise<string[]>;
 	readStreamFile?: (filePath: string) => Promise<string>;
+	sleep?: (milliseconds: number) => Promise<void>;
 };
 
 export function resolveAgentBrowserBridgeMode(
@@ -370,6 +377,107 @@ function distinctTargetCount(candidates: BrokerCandidate[]): number {
 	).size;
 }
 
+async function waitForRetainedBrokerCandidate(input: {
+	abortSignal?: AbortSignal;
+	baseUrl: string;
+	browserId: string;
+	dependencies: AgentBrowserBridgeDependencies;
+	fetch: typeof globalThis.fetch;
+	profileId: string;
+	serviceTabHandle: Record<string, unknown>;
+	sessionName: string;
+	url: string;
+}): Promise<{ browsers: BrowserRecord[]; candidate: BrokerCandidate }> {
+	const timeoutMs =
+		input.dependencies.inventoryConvergenceTimeoutMs ??
+		DEFAULT_BROKER_INVENTORY_CONVERGENCE_TIMEOUT_MS;
+	const maxAttempts =
+		input.dependencies.inventoryMaxAttempts ?? DEFAULT_BROKER_INVENTORY_MAX_ATTEMPTS;
+	const pollIntervalMs =
+		input.dependencies.inventoryPollIntervalMs ?? DEFAULT_BROKER_INVENTORY_POLL_INTERVAL_MS;
+	const sleep =
+		input.dependencies.sleep ??
+		((milliseconds: number) => new Promise<void>((resolve) => setTimeout(resolve, milliseconds)));
+	const convergenceSignal = AbortSignal.timeout(timeoutMs);
+	const signal = input.abortSignal
+		? AbortSignal.any([input.abortSignal, convergenceSignal])
+		: convergenceSignal;
+	let lastCandidates: BrokerCandidate[] = [];
+
+	for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+		try {
+			const browsersResponse = await requestJson(
+				input.fetch,
+				input.baseUrl,
+				"/api/service/browsers",
+				{ method: "GET" },
+				signal,
+				DEFAULT_TIMEOUT_MS,
+			);
+			const browsers = (browsersResponse.data?.browsers ?? []) as BrowserRecord[];
+			lastCandidates = retainedBrokerCandidates({
+				browsers,
+				browserId: input.browserId,
+				profileId: input.profileId,
+				serviceTabHandle: input.serviceTabHandle,
+				sessionName: input.sessionName,
+				url: input.url,
+			});
+			if (lastCandidates.length === 1) {
+				return { browsers, candidate: lastCandidates[0] };
+			}
+			if (lastCandidates.length > 1) {
+				requireUniqueBrokerCandidate(lastCandidates, "returned-handle verification");
+			}
+		} catch (error) {
+			if (!convergenceSignal.aborted || input.abortSignal?.aborted) throw error;
+			break;
+		}
+		if (attempt < maxAttempts && !convergenceSignal.aborted) {
+			await sleep(pollIntervalMs);
+		}
+	}
+
+	return {
+		browsers: [],
+		candidate: requireUniqueBrokerCandidate(
+			lastCandidates,
+			"returned-handle verification after bounded inventory convergence",
+		),
+	};
+}
+
+async function releaseNewBrokerTabAfterAcquisitionFailure(input: {
+	baseUrl: string;
+	fetch: typeof globalThis.fetch;
+	labels: { agentName: string; serviceName: string; taskName: string };
+	profileId: string;
+	serviceTabHandle: Record<string, unknown>;
+}): Promise<void> {
+	const response = await requestJson(
+		input.fetch,
+		input.baseUrl,
+		"/api/service/request",
+		{
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify({
+				action: "tab_handle_release",
+				...input.labels,
+				runtimeProfile: input.profileId,
+				serviceTabHandle: input.serviceTabHandle,
+			}),
+		},
+		undefined,
+		15_000,
+	);
+	if (response.data?.released !== true && response.data?.tabMissing !== true) {
+		throw new Error(
+			`agent-browser failed-acquisition tab release was not verified: ${JSON.stringify(response.data ?? {})}`,
+		);
+	}
+}
+
 export async function reattachAgentBrowserBrokerTab(
 	input: AgentBrowserBrokerReattachInput,
 	dependencies: AgentBrowserBridgeDependencies = {},
@@ -616,11 +724,6 @@ export async function acquireAgentBrowserBrokerTab(
 				if (!returnedHandle) {
 					throw new Error("agent-browser tab request returned no serviceTabHandle");
 				}
-				if (returnedHandle.url !== input.url) {
-					throw new Error(
-						`agent-browser tab request returned a non-canonical URL: expected ${input.url}, got ${String(returnedHandle.url ?? "missing")}`,
-					);
-				}
 				const acquisition = tabAcquisitionFromResponse(acquired);
 				const browserId = String(returnedHandle.browserId ?? acquired.data?.browserId ?? "");
 				const sessionName = String(
@@ -629,99 +732,120 @@ export async function acquireAgentBrowserBrokerTab(
 						acquired.data?.sessionId ??
 						browserId.replace(/^session:/, ""),
 				);
-				if (!browserId || !sessionName) {
-					throw new Error("agent-browser tab request returned no browser/session identity");
-				}
-				const browsersResponse = await requestJson(
-					fetchImpl,
-					requestRoute.baseUrl,
-					"/api/service/browsers",
-					{ method: "GET" },
-					input.abortSignal,
-					15_000,
-				);
-				const browsers = (browsersResponse.data?.browsers ?? []) as BrowserRecord[];
-				const candidate = requireUniqueBrokerCandidate(
-					retainedBrokerCandidates({
-						browsers,
+				try {
+					if (returnedHandle.url !== input.url) {
+						throw new Error(
+							`agent-browser tab request returned a non-canonical URL: expected ${input.url}, got ${String(returnedHandle.url ?? "missing")}`,
+						);
+					}
+					if (!browserId || !sessionName) {
+						throw new Error("agent-browser tab request returned no browser/session identity");
+					}
+					if (returnedHandle.profileId !== selectedProfileId) {
+						throw new Error(
+							`agent-browser returned handle profile mismatch: expected ${selectedProfileId}, got ${String(returnedHandle.profileId ?? "missing")}`,
+						);
+					}
+					const { browsers, candidate } = await waitForRetainedBrokerCandidate({
+						abortSignal: input.abortSignal,
+						baseUrl: requestRoute.baseUrl,
 						browserId,
+						dependencies,
+						fetch: fetchImpl,
 						profileId: selectedProfileId,
 						serviceTabHandle: returnedHandle,
 						sessionName,
 						url: input.url,
-					}),
-					`${String(recommendedAction)} returned-handle verification`,
-				);
-				const serviceTabHandle = candidate.handle;
-				const canonicalTargetId = String(serviceTabHandle.targetId ?? "").trim();
-				const exactUrlTargetCount = distinctTargetCount(
-					exactBrokerCandidates({
-						browsers,
-						browserId,
-						profileId: selectedProfileId,
-						sessionName,
-						url: input.url,
-					}),
-				);
-
-				const effectiveProfileId = String(serviceTabHandle.profileId ?? selectedProfileId);
-				if (effectiveProfileId !== selectedProfileId) {
-					throw new Error(
-						`agent-browser exact target profile mismatch: expected ${selectedProfileId}, got ${effectiveProfileId}`,
-					);
-				}
-				if (input.browserHost && candidate.browser.host !== input.browserHost) {
-					throw new Error(
-						`agent-browser returned browser host ${String(candidate.browser.host ?? "missing")} instead of requested ${input.browserHost}`,
-					);
-				}
-				const attached = await requestJson(
-					fetchImpl,
-					requestRoute.baseUrl,
-					"/api/service/request",
-					{
-						method: "POST",
-						headers: { "content-type": "application/json" },
-						body: JSON.stringify({
-							action: "cdp_attach",
-							...labels,
-							cdpAttachmentAllowed: true,
-							runtimeProfile: effectiveProfileId,
-							serviceTabHandle,
+					});
+					const serviceTabHandle = candidate.handle;
+					const canonicalTargetId = String(serviceTabHandle.targetId ?? "").trim();
+					const exactUrlTargetCount = distinctTargetCount(
+						exactBrokerCandidates({
+							browsers,
+							browserId,
+							profileId: selectedProfileId,
+							sessionName,
+							url: input.url,
 						}),
-					},
-					input.abortSignal,
-					15_000,
-				);
-				const endpoint = parseBrowserWebSocketEndpoint(attached.data?.browserWebSocketUrl);
-				const browserProcessId = Number(candidate.browser.pid);
-				if (!Number.isInteger(browserProcessId) || browserProcessId < 1) {
-					throw new Error("agent-browser retained tab has no live browser process identity");
+					);
+
+					const effectiveProfileId = String(serviceTabHandle.profileId ?? selectedProfileId);
+					if (effectiveProfileId !== selectedProfileId) {
+						throw new Error(
+							`agent-browser exact target profile mismatch: expected ${selectedProfileId}, got ${effectiveProfileId}`,
+						);
+					}
+					if (input.browserHost && candidate.browser.host !== input.browserHost) {
+						throw new Error(
+							`agent-browser returned browser host ${String(candidate.browser.host ?? "missing")} instead of requested ${input.browserHost}`,
+						);
+					}
+					const attached = await requestJson(
+						fetchImpl,
+						requestRoute.baseUrl,
+						"/api/service/request",
+						{
+							method: "POST",
+							headers: { "content-type": "application/json" },
+							body: JSON.stringify({
+								action: "cdp_attach",
+								...labels,
+								cdpAttachmentAllowed: true,
+								runtimeProfile: effectiveProfileId,
+								serviceTabHandle,
+							}),
+						},
+						input.abortSignal,
+						15_000,
+					);
+					const endpoint = parseBrowserWebSocketEndpoint(attached.data?.browserWebSocketUrl);
+					const browserProcessId = Number(candidate.browser.pid);
+					if (!Number.isInteger(browserProcessId) || browserProcessId < 1) {
+						throw new Error("agent-browser retained tab has no live browser process identity");
+					}
+					logger(
+						`[agent-browser] Broker attached ${effectiveProfileId} through ${browserId}; AuraCall will not launch Chrome.`,
+					);
+					return {
+						acquisitionDecision: acquisition.decision,
+						acquisitionEvidence: acquisition.evidence,
+						baseUrl: requestRoute.baseUrl,
+						browserId,
+						browserHost: candidate.browser.host ?? undefined,
+						browserProcessId,
+						canonicalTargetId,
+						chromeHost: endpoint.host,
+						chromePort: endpoint.port,
+						exactUrlTargetCount,
+						detachRequired: attached.data?.detachRequired !== false,
+						detachState: attached.data?.detachRequired === false ? "detached" : "attached",
+						releaseRequired: acquisition.decision === "opened_new_tab",
+						releaseState: acquisition.decision === "opened_new_tab" ? "retained" : "preserved",
+						profileId: effectiveProfileId,
+						requestedUrl: input.url,
+						serviceTabHandle,
+						sessionName,
+						tabReconciliation: "preserved_selection_only",
+					};
+				} catch (error) {
+					if (acquisition.decision === "opened_new_tab") {
+						try {
+							await releaseNewBrokerTabAfterAcquisitionFailure({
+								baseUrl: requestRoute.baseUrl,
+								fetch: fetchImpl,
+								labels,
+								profileId: selectedProfileId,
+								serviceTabHandle: returnedHandle,
+							});
+						} catch (cleanupError) {
+							throw new AggregateError(
+								[error, cleanupError],
+								"agent-browser acquisition verification and exact tab cleanup both failed",
+							);
+						}
+					}
+					throw error;
 				}
-				logger(
-					`[agent-browser] Broker attached ${effectiveProfileId} through ${browserId}; AuraCall will not launch Chrome.`,
-				);
-				return {
-					acquisitionDecision: acquisition.decision,
-					acquisitionEvidence: acquisition.evidence,
-					baseUrl: requestRoute.baseUrl,
-					browserId,
-					browserHost: candidate.browser.host ?? undefined,
-					browserProcessId,
-					canonicalTargetId,
-					chromeHost: endpoint.host,
-					chromePort: endpoint.port,
-					exactUrlTargetCount,
-					detachRequired: attached.data?.detachRequired !== false,
-					detachState: attached.data?.detachRequired === false ? "detached" : "attached",
-					releaseRequired: acquisition.decision === "opened_new_tab",
-					releaseState: acquisition.decision === "opened_new_tab" ? "retained" : "preserved",
-					profileId: effectiveProfileId,
-					requestedUrl: input.url,
-					serviceTabHandle,
-					sessionName,
-					tabReconciliation: "preserved_selection_only",
-				};
 			} catch (error) {
 				if (accessPlanResolved) {
 					throw error;

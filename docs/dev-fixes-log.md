@@ -1,3 +1,14 @@
+- 2026-08-31: A successful `tab_new` response can precede convergence of the
+  exact returned handle into Agent Browser's authoritative browser inventory.
+  Poll that exact browser/profile/session/target/URL identity within a bounded
+  window, fail immediately on ambiguity, and release only the task-created tab
+  if verification never converges. Treat this as broker consistency, not a
+  login or human-verification request.
+  The installed repair then completed three distinct live topics, released
+  each task lease and tab, preserved the retained browser, and produced a
+  digest-verified DOCX/PDF report whose independent Pro audit had zero failed
+  relevance or accuracy gates.
+
 - 2026-08-15: SQLite and recursive temp-directory tests that are fast locally
   can cross a five-second default on a loaded native Windows runner. Give only
   those integration tests a bounded explicit timeout, and use `fs.rm` retry

@@ -7,6 +7,13 @@
 Status: active
 Lane: P01
 
+- Closed accepted three-topic Agent Browser end-to-end proof:
+  [docs/dev/plans/0353-2026-08-31-three-topic-agent-browser-e2e.md](docs/dev/plans/0353-2026-08-31-three-topic-agent-browser-e2e.md)
+  Current state: bounded convergence and exact task-tab cleanup are installed.
+  Three distinct retained-browser prompts completed with verified answers,
+  matching DOCX/PDF artifacts, and a zero-blocker independent accuracy and
+  relevance audit.
+
 - Active headless ChatGPT broker contract:
   [docs/dev/plans/0352-2026-08-31-headless-chatgpt-broker-contract.md](docs/dev/plans/0352-2026-08-31-headless-chatgpt-broker-contract.md)
   Current state: AuraCall now carries and enforces an exact browser host across

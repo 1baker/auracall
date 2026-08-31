@@ -360,6 +360,175 @@ describe("agent-browser bridge", () => {
 		expect(requests.map((request) => request.action)).toEqual(["tab_new", "cdp_attach"]);
 	});
 
+	test("waits for the exact returned handle to converge in broker inventory", async () => {
+		const requestedUrl = "https://chatgpt.com/c/converging-target";
+		const handle = {
+			browserId: "session:auracall-chatgpt",
+			profileId: "chatgpt-pro",
+			sessionName: "auracall-chatgpt",
+			targetId: "converging-target",
+			url: requestedUrl,
+			valid: true,
+		};
+		const requests: Array<Record<string, unknown>> = [];
+		let inventoryReads = 0;
+		const fetch = vi.fn(async (requestUrl: string | URL | Request, init?: RequestInit) => {
+			const value = String(requestUrl);
+			if (value.endsWith("/api/service/browsers")) {
+				inventoryReads += 1;
+				return jsonResponse({
+					success: true,
+					data: {
+						browsers:
+							inventoryReads < 3
+								? []
+								: [
+										{
+											health: "ready",
+											host: "remote_headed",
+											pid: 41234,
+											id: handle.browserId,
+											profileId: handle.profileId,
+											tabHandles: [handle],
+										},
+									],
+					},
+				});
+			}
+			if (value.includes("/api/service/access-plan?")) {
+				return jsonResponse({
+					success: true,
+					data: {
+						selectedProfile: { id: handle.profileId },
+						decision: {
+							profileReuse: { recommendedAction: "launch_new_browser" },
+							serviceRequest: {
+								available: true,
+								request: { action: "tab_new", url: requestedUrl },
+							},
+						},
+					},
+				});
+			}
+			const request = JSON.parse(String(init?.body)) as Record<string, unknown>;
+			requests.push(request);
+			if (request.action === "tab_new") {
+				return jsonResponse({
+					success: true,
+					data: {
+						serviceTabHandle: handle,
+						sharedAcquisition: {
+							action: "opened_new_tab",
+							mode: "tab_new",
+							tabOpened: true,
+						},
+					},
+				});
+			}
+			return jsonResponse({
+				success: true,
+				data: {
+					browserWebSocketUrl: "ws://127.0.0.1:49505/devtools/browser/converged",
+					detachRequired: true,
+				},
+			});
+		});
+
+		const result = await acquireAgentBrowserBrokerTab(
+			{
+				mode: "required",
+				profileId: handle.profileId,
+				targetServiceId: "chatgpt",
+				url: requestedUrl,
+			},
+			{
+				fetch: fetch as never,
+				inventoryMaxAttempts: 3,
+				inventoryPollIntervalMs: 0,
+				listStreamFiles: async () => ["/runtime/dashboard-service-backend.stream"],
+				readStreamFile: async () => "46515\n",
+				sleep: async () => undefined,
+			},
+		);
+
+		expect(result?.canonicalTargetId).toBe(handle.targetId);
+		expect(inventoryReads).toBe(3);
+		expect(requests.map((request) => request.action)).toEqual(["tab_new", "cdp_attach"]);
+	});
+
+	test("releases a newly opened tab when exact inventory convergence never completes", async () => {
+		const requestedUrl = "https://chatgpt.com/c/nonconverging-target";
+		const handle = {
+			browserId: "session:auracall-chatgpt",
+			profileId: "chatgpt-pro",
+			sessionName: "auracall-chatgpt",
+			targetId: "nonconverging-target",
+			url: requestedUrl,
+			valid: true,
+		};
+		const requests: Array<Record<string, unknown>> = [];
+		const fetch = vi.fn(async (requestUrl: string | URL | Request, init?: RequestInit) => {
+			const value = String(requestUrl);
+			if (value.endsWith("/api/service/browsers")) {
+				return jsonResponse({ success: true, data: { browsers: [] } });
+			}
+			if (value.includes("/api/service/access-plan?")) {
+				return jsonResponse({
+					success: true,
+					data: {
+						selectedProfile: { id: handle.profileId },
+						decision: {
+							profileReuse: { recommendedAction: "launch_new_browser" },
+							serviceRequest: {
+								available: true,
+								request: { action: "tab_new", url: requestedUrl },
+							},
+						},
+					},
+				});
+			}
+			const request = JSON.parse(String(init?.body)) as Record<string, unknown>;
+			requests.push(request);
+			if (request.action === "tab_new") {
+				return jsonResponse({
+					success: true,
+					data: {
+						serviceTabHandle: handle,
+						sharedAcquisition: {
+							action: "opened_new_tab",
+							mode: "tab_new",
+							tabOpened: true,
+						},
+					},
+				});
+			}
+			if (request.action === "tab_handle_release") {
+				return jsonResponse({ success: true, data: { released: true } });
+			}
+			throw new Error("attach must not run before exact inventory convergence");
+		});
+
+		await expect(
+			acquireAgentBrowserBrokerTab(
+				{
+					mode: "required",
+					profileId: handle.profileId,
+					targetServiceId: "chatgpt",
+					url: requestedUrl,
+				},
+				{
+					fetch: fetch as never,
+					inventoryMaxAttempts: 3,
+					inventoryPollIntervalMs: 0,
+					listStreamFiles: async () => ["/runtime/dashboard-service-backend.stream"],
+					readStreamFile: async () => "46515\n",
+					sleep: async () => undefined,
+				},
+			),
+		).rejects.toThrow("bounded inventory convergence");
+		expect(requests.map((request) => request.action)).toEqual(["tab_new", "tab_handle_release"]);
+	});
+
 	test("fails closed before attach when the returned handle URL differs from the requested URL", async () => {
 		const requestedUrl = "https://chatgpt.com/c/requested";
 		const returnedHandle = {
@@ -756,14 +925,16 @@ describe("agent-browser bridge", () => {
 					success: true,
 					data: {
 						browsers: tabOpened
-							? [{
-								health: "ready",
-								host: "remote_headed",
-								pid: 41235,
-								id: handle.browserId,
-								profileId: handle.profileId,
-								tabHandles: [handle],
-							}]
+							? [
+									{
+										health: "ready",
+										host: "remote_headed",
+										pid: 41235,
+										id: handle.browserId,
+										profileId: handle.profileId,
+										tabHandles: [handle],
+									},
+								]
 							: [],
 					},
 				});
@@ -1354,7 +1525,7 @@ describe("agent-browser bridge", () => {
 					readStreamFile: async () => "46515\n",
 				},
 			),
-		).rejects.toThrow("requires exactly one exact broker target; found 0");
+		).rejects.toThrow("returned handle profile mismatch: expected chatgpt-pro, got wrong-profile");
 	});
 
 	test("fails closed when reuse_existing_browser has multiple exact targets", async () => {

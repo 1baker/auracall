@@ -1,5 +1,33 @@
 # RUNBOOK
 
+## Turn 503 | 2026-08-31
+
+- Opened Plan 0353 after two exact live attempts failed before ChatGPT prompt
+  submission. Agent Browser created each tab, but AuraCall's immediate single
+  inventory read found zero exact returned-handle candidates.
+- Implemented a bounded post-acquisition inventory convergence loop. Ambiguity
+  still fails immediately; URL, profile, browser, session, target, and host
+  identity remain exact.
+- Added failure cleanup that releases only a newly opened task tab when
+  post-acquisition verification fails. Existing and legacy-evidence tabs remain
+  preserved.
+- Added delayed-convergence and nonconvergence-cleanup regressions. The focused
+  bridge and configured-executor suite passes 54 assertions with TypeScript
+  checking green.
+- Corrected the Codex Research live evaluator so broker-target/inventory
+  consistency failures are internal and non-human while Cloudflare remains an
+  explicit human gate. Two evaluator regressions pass.
+- Built/installed bridge SHA-256 parity, API health, full source checks, lint,
+  build, plan audit, CodeGraph sync, and both evaluator regressions pass.
+- Three materially different live responses completed with distinct tokens and
+  deterministic accuracy checks; every lease and task tab was released while
+  the retained `chatgpt-pro` browser stayed ready.
+- The ordered bilateral workflow used one bridge transit. Browser-created
+  DOCX/PDF artifacts contain 2,418 words and seven pages with 0.9872 token
+  overlap. Independent Pro audit
+  `resp_a6b9dc7977244495ae520b6c1ec6ba57` passed with zero failed gates, and
+  Codex content, visual, structure, and digest review released the workflow.
+
 ## Turn 502 | 2026-08-31
 
 - Opened Plan 0352 for the requested headless prompt-to-ChatGPT workflow.
