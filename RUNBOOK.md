@@ -52,6 +52,15 @@
   with high confidence, no blockers, no nonblocking findings, and no remaining
   checks. The saved response, nonce, fingerprint, runtime profile, and exact
   Workshop conversation all matched the precommitted review request.
+- After manually clearing the provider challenge in the headed lane, strict
+  `local_headless` retry `resp_3943c7b943c044bbabb1cbd8ea313c0a` still failed
+  at Cloudflare. Requested and actual host both equal `local_headless`, the
+  profile is `chatgpt-pro`, exact target count is one, and durable failure
+  details now correctly report `cloudflare-challenge` with `headless: true`.
+- Fixed broker execution to derive headless challenge/retention behavior from
+  Agent Browser's actual host. This closes the misleading `headless: false`
+  evidence path while retaining configured posture for attached or unspecified
+  hosts. The strict retry remains correctly classified `challenge-blocked`.
 
 ## Turn 501 | 2026-08-29
 

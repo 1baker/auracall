@@ -851,6 +851,28 @@ export function shouldPreserveBrowserOnErrorForTest(error: unknown, headless: bo
 	return shouldPreserveBrowserOnError(error, headless);
 }
 
+function resolveBrokerHeadless(
+	configuredHeadless: boolean,
+	browserHost: AgentBrowserBridgeResult["browserHost"],
+): boolean {
+	if (browserHost === "local_headless") return true;
+	if (
+		browserHost === "local_headed" ||
+		browserHost === "docker_headed" ||
+		browserHost === "remote_headed"
+	) {
+		return false;
+	}
+	return configuredHeadless;
+}
+
+export function resolveBrokerHeadlessForTest(
+	configuredHeadless: boolean,
+	browserHost: AgentBrowserBridgeResult["browserHost"],
+): boolean {
+	return resolveBrokerHeadless(configuredHeadless, browserHost);
+}
+
 function shouldKeepManagedChatgptBrowserOpen(options: {
 	keepBrowser: boolean;
 	preserveBrowserOnError: boolean;
@@ -1602,6 +1624,7 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 		if (bridge?.chromeHost && bridge.chromePort) {
 			const brokerConfig = {
 				...config,
+				headless: resolveBrokerHeadless(config.headless, bridge.browserHost),
 				url: brokerUrl,
 				chatgptUrl: target === "chatgpt" ? brokerUrl : config.chatgptUrl,
 				grokUrl: target === "grok" ? brokerUrl : config.grokUrl,

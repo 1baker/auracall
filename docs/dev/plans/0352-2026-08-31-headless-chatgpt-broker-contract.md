@@ -39,6 +39,15 @@ headed retained lane.
   98/100 with high confidence, no blockers, no nonblocking findings, and no
   remaining checks. It explicitly accepted the operational hidden-headed
   posture without treating it as technically true headless.
+- A post-clearance strict retry still stopped at Cloudflare. Installed run
+  `resp_3943c7b943c044bbabb1cbd8ea313c0a` durably records requested and actual
+  host `local_headless`, profile `chatgpt-pro`, one exact target, failure stage
+  `cloudflare-challenge`, and `headless: true`; the adapter classifies it as
+  incomplete `challenge-blocked`.
+- AuraCall now derives its challenge/retention posture from the Agent Browser
+  broker's actual host. This prevents a `local_headless` run from being
+  mislabeled as headed and preserves the existing behavior for attached or
+  unspecified hosts.
 
 ## Scope
 

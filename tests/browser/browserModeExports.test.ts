@@ -9,6 +9,7 @@ import {
   resolveBrowserRuntimeEntryContextForTest,
   acquireBrowserExecutionOperationForTest,
   releaseBrowserExecutionOperationAfterPreflightFailureForTest,
+  resolveBrokerHeadlessForTest,
   sanitizeThinkingTextForTest,
   shouldPreserveBrowserOnErrorForTest,
   shouldKeepManagedChatgptBrowserOpenForTest,
@@ -64,6 +65,15 @@ describe('browserMode exports', () => {
     expect(shouldPreserveBrowserOnErrorForTest(manualClear, true)).toBe(false);
     expect(shouldPreserveBrowserOnErrorForTest(other, false)).toBe(false);
     expect(shouldPreserveBrowserOnErrorForTest(new Error('nope'), false)).toBe(false);
+  });
+
+  test('uses broker host posture as the authority for challenge handling', () => {
+    expect(resolveBrokerHeadlessForTest(false, 'local_headless')).toBe(true);
+    expect(resolveBrokerHeadlessForTest(true, 'local_headed')).toBe(false);
+    expect(resolveBrokerHeadlessForTest(true, 'docker_headed')).toBe(false);
+    expect(resolveBrokerHeadlessForTest(true, 'remote_headed')).toBe(false);
+    expect(resolveBrokerHeadlessForTest(true, 'attached_existing')).toBe(true);
+    expect(resolveBrokerHeadlessForTest(false, undefined)).toBe(false);
   });
 
   test('does not treat browser-operation lock release as a keep-browser request', () => {
