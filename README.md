@@ -32,6 +32,13 @@ failure must be handled as failure, not permission to replay or silently move
 the required inline text into an attachment. Verify installed transport before
 relying on this field; older runtimes do not enforce it.
 
+Configured ChatGPT response-artifact collection now requires a captured assistant
+message ID bound to the returned text. Only that message's artifacts are eligible;
+same-named files elsewhere in the conversation are not a fallback. Missing identity
+blocks artifact acceptance without sending an automatic correction prompt. This
+source change is not yet installed in the local runtime (Plan 0355); existing
+responses do not acquire provenance retroactively.
+
 ```bash
 # Copy the bundle and paste into ChatGPT
 auracall --render --copy -p "Review the TS data layer for schema drift" --file "src/**/*.ts,*/*.test.ts"

@@ -1,3 +1,7 @@
+- 2026-09-08: Browser-session proof and a conversation-wide artifact listing do
+  not bind a file to the current response. Plan 0355 is implementing exact
+  assistant-message selection; matching filenames and cache paths are insufficient.
+
 - 2026-09-08: Preserving a long request in an attachment does not satisfy an
   explicit inline fallback contract. Make configured prompt transport intent
   explicit and fail on unsupported modes; retain automatic spillover for

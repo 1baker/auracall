@@ -76,6 +76,7 @@ import {
 	wasChromeLaunchedByAuracall,
 } from "./chromeLifecycle.js";
 import { resolveBrowserConfig } from "./config.js";
+import { verifiedAssistantMessageId } from "./actions/assistantResponse.js";
 import {
 	CHATGPT_URL,
 	CONVERSATION_TURN_SELECTOR,
@@ -3035,6 +3036,7 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 			answerText,
 			answerMarkdown,
 			answerHtml: answerHtml.length > 0 ? answerHtml : undefined,
+			answerMessageId: verifiedAssistantMessageId(answerText, answer, baselineAssistantMessageId),
 			tookMs: durationMs,
 			answerTokens,
 			answerChars,
@@ -4089,6 +4091,7 @@ async function runRemoteBrowserMode(
 			answerText,
 			answerMarkdown,
 			answerHtml: answerHtml.length > 0 ? answerHtml : undefined,
+			answerMessageId: verifiedAssistantMessageId(answerText, answer, baselineAssistantMessageId),
 			tookMs: durationMs,
 			answerTokens,
 			answerChars,

@@ -13,6 +13,17 @@ import { buildClickDispatcher } from './domEvents.js';
 const ASSISTANT_POLL_TIMEOUT_ERROR = 'assistant-response-watchdog-timeout';
 const PASSIVE_DOM_PROBE_INTERVAL_MS = 5_000;
 
+export function verifiedAssistantMessageId(
+  text: string,
+  captured: { text: string; meta: { messageId?: string | null } },
+  baselineMessageId?: string | null,
+): string | null {
+  const id = captured.meta.messageId?.trim();
+  const normalize = (value: string) => value.replace(/\s+/g, ' ').trim();
+  return id && id !== baselineMessageId?.trim() && normalize(text)
+    && normalize(text) === normalize(captured.text) ? id : null;
+}
+
 export interface WaitForAssistantResponseOptions {
   abortSignal?: AbortSignal;
   onResponseIncoming?: () => void | Promise<void>;

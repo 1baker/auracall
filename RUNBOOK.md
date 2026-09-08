@@ -1,5 +1,15 @@
 # RUNBOOK
 
+## Turn 504 | 2026-09-08
+
+- Opened Plan 0355 for response-to-artifact ownership after two completed
+  writer responses exposed the same cached downloads. Conversation-wide
+  materialization does not establish ownership by the current assistant turn.
+- Added a strict message-ID exclusion helper with six passing provider-free
+  tests. It is not yet connected to browser result propagation or installed.
+- The independent artifact audit remains active; no provider restart, browser
+  replacement, cache deletion, or replay was performed. Release remains unverified.
+
 ## Turn 503 | 2026-08-31
 
 - Opened Plan 0353 after two exact live attempts failed before ChatGPT prompt

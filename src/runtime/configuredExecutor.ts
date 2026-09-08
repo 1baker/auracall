@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createExecutionResponseMessage } from './apiModel.js';
+import { createResponseArtifactExclusion } from './responseArtifactScope.js';
 import type { ExecuteStoredRunStepContext, ExecuteStoredRunStepResult } from './runner.js';
 import type { ExecutionServiceHostDeps } from './serviceHost.js';
 import type { TeamRunArtifactRef } from '../teams/types.js';
@@ -98,6 +99,7 @@ export interface ConfiguredGeminiNativePromptInput {
 }
 
 interface BrowserResponseArtifactMaterializerInput {
+  answerMessageId: string | null;
   service: 'chatgpt' | 'gemini' | 'grok';
   executionConfig: Record<string, unknown>;
   conversationId: string | null;
@@ -489,7 +491,7 @@ function artifactRefFromProviderArtifact(value: Record<string, unknown>): TeamRu
   };
 }
 
-async function materializeBrowserResponseArtifacts(
+export async function materializeBrowserResponseArtifacts(
   input: BrowserResponseArtifactMaterializerInput,
 ): Promise<BrowserResponseArtifactMaterializerResult> {
   if (!input.conversationId) {
@@ -533,6 +535,8 @@ async function materializeBrowserResponseArtifacts(
     expectation: authorization.authority.resolveExpectation(providerSessionContext),
   };
   const result = await llmService.materializeConversationArtifacts(input.conversationId, {
+    excludeArtifact: input.service === 'chatgpt'
+      ? createResponseArtifactExclusion(input.answerMessageId) : undefined,
     projectId: input.projectId ?? undefined,
     refresh: true,
     listOptions: {
@@ -566,6 +570,7 @@ async function materializeBrowserResponseArtifacts(
       metadata: {
         ...(existing?.metadata ?? {}),
         ...(artifact.metadata ?? {}),
+        responseMessageId: input.answerMessageId,
       },
     });
   }
@@ -1734,8 +1739,10 @@ export function createConfiguredStoredStepExecutor(
     const materializeBrowserResult = async (
       result: Awaited<ReturnType<typeof runBrowserMode>>,
     ): Promise<BrowserResponseArtifactMaterializerResult> => {
+      if (service === 'chatgpt') createResponseArtifactExclusion(result.answerMessageId);
       return deps.browserResponseArtifactMaterializer
         ? await deps.browserResponseArtifactMaterializer({
+            answerMessageId: result.answerMessageId ?? null,
             service,
             executionConfig,
             conversationId: result.conversationId ?? null,
@@ -1748,6 +1755,7 @@ export function createConfiguredStoredStepExecutor(
             providerSessionProof: providerSessionAuthorization.proof ?? null,
           })
         : await materializeBrowserResponseArtifacts({
+            answerMessageId: result.answerMessageId ?? null,
             service,
             executionConfig,
             conversationId: result.conversationId ?? null,
@@ -1784,6 +1792,7 @@ export function createConfiguredStoredStepExecutor(
     }
     if (
       service === 'chatgpt' &&
+      asNonEmptyString(browserResult.answerMessageId) &&
       shouldMaterializeBrowserResponseArtifacts(structuredMetadata) &&
       !hasRequiredBrowserResponseArtifactMaterialized({
         metadata: structuredMetadata,
@@ -1855,6 +1864,7 @@ export function createConfiguredStoredStepExecutor(
               provider: service,
               service,
               conversationId: browserResult.conversationId ?? null,
+              answerMessageId: browserResult.answerMessageId ?? null,
               tabUrl: browserResult.tabUrl ?? null,
               chromeTargetId: browserResult.chromeTargetId ?? null,
               runtimeProfileId: runtimeSelection.runtimeProfileId,
@@ -1911,6 +1921,7 @@ export function createConfiguredStoredStepExecutor(
             service,
             conversationId: browserResult.conversationId ?? null,
             tabUrl: browserResult.tabUrl ?? null,
+            answerMessageId: browserResult.answerMessageId ?? null,
             chromeTargetId: browserResult.chromeTargetId ?? null,
             runtimeProfileId: runtimeSelection.runtimeProfileId,
             browserProfileId: runtimeSelection.browserProfileId,

@@ -7,6 +7,11 @@
 Status: active
 Lane: P01
 
+- Active exact-response artifact provenance repair:
+  [docs/dev/plans/0355-2026-09-08-response-bound-artifact-selection.md](docs/dev/plans/0355-2026-09-08-response-bound-artifact-selection.md)
+  Current state: browser identity propagation and runtime selection are wired;
+  92 focused tests pass. Installed verification and live provenance remain open.
+
 - Active required-inline browser transport repair:
   [docs/dev/plans/0354-2026-09-08-required-inline-browser-transport.md](docs/dev/plans/0354-2026-09-08-required-inline-browser-transport.md)
   Current state: explicit inline fallback is currently converted to an

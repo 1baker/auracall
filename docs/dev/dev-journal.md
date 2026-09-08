@@ -1,3 +1,20 @@
+## 2026-09-08 | Plan 0355 exact-response artifact provenance
+
+- Materializer-boundary coverage now verifies current-message selection among
+  old/current same-name artifacts and unchanged session-authority checks.
+  Ninety-two focused tests, typecheck, and the 356-plan audit pass. Browser
+  turn-boundary/export tests also passed in the preceding source check.
+  The first new boundary test used the wrong mock module and failed before
+  cache identity resolution; the corrected isolated mock test passes.
+
+- Confirmed that configured materialization is conversation-wide and does not
+  consume the assistant-message identity already captured by the browser.
+- Exact-message exclusion helper passes six provider-free tests; runtime wiring
+  and installed verification remain open. No claim that stale capture is fixed.
+- Runtime wiring now propagates text-verified assistant identity, filters through
+  the existing artifact exclusion hook, and prevents corrective POST on missing
+  identity. Forty-three focused tests and full lint pass; installed proof remains open.
+
 ## 2026-09-08 | Plan 0354 required-inline browser transport
 
 - Confirmed that configured prompt spillover can violate an explicitly

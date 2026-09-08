@@ -2102,6 +2102,7 @@ describe('configured stored-step executor', () => {
       }
       return {
       answerText: 'legacy_readout.json ready',
+      answerMessageId: 'current-artifact-message',
       answerMarkdown: 'legacy_readout.json ready',
       tookMs: 700,
       answerTokens: 8,
@@ -2203,6 +2204,7 @@ describe('configured stored-step executor', () => {
       expect.objectContaining({
         service: 'chatgpt',
         conversationId: 'mock-registry-artifact',
+        answerMessageId: 'current-artifact-message',
         projectId: 'proj_registry',
         configuredUrl: 'https://chatgpt.com/g/proj_registry/project',
         tabUrl: 'https://chatgpt.com/g/proj_registry/c/mock-registry-artifact',
@@ -2281,7 +2283,7 @@ describe('configured stored-step executor', () => {
     );
   });
 
-  it('fails declared browser response artifact runs when only status text is returned', async () => {
+  it('rejects missing response identity without materializing conversation files or sending a correction', async () => {
     const runBrowserModeImpl = vi.fn(async () => ({
       answerText: "I'll create the artifact now.",
       answerMarkdown: "I'll create the artifact now.",
@@ -2376,6 +2378,8 @@ describe('configured stored-step executor', () => {
         } as never,
       }),
     ).rejects.toThrow(/completed without required artifact legacy_readout\.json/);
+    expect(runBrowserModeImpl).toHaveBeenCalledTimes(1);
+    expect(browserResponseArtifactMaterializer).not.toHaveBeenCalled();
   });
 
   it('retries once in the same ChatGPT conversation when a required artifact reply is status-only', async () => {
@@ -2383,6 +2387,7 @@ describe('configured stored-step executor', () => {
       .fn()
       .mockResolvedValueOnce({
         answerText: "I'll create the artifact now.",
+        answerMessageId: 'status-message',
         answerMarkdown: "I'll create the artifact now.",
         tookMs: 700,
         answerTokens: 8,
@@ -2395,6 +2400,7 @@ describe('configured stored-step executor', () => {
       })
       .mockResolvedValueOnce({
         answerText: '[legacy_readout.json](sandbox:/mnt/data/legacy_readout.json)',
+        answerMessageId: 'corrected-artifact-message',
         answerMarkdown: '[legacy_readout.json](sandbox:/mnt/data/legacy_readout.json)',
         tookMs: 900,
         answerTokens: 10,

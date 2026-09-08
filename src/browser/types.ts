@@ -116,6 +116,7 @@ export type BrowserRunOptions = Omit<BaseTypes.BrowserRunOptions, 'config' | 'ru
 };
 
 export type BrowserRunResult = BaseTypes.BrowserRunResult & {
+  answerMessageId?: string | null;
   chromeTargetId?: string | null;
   conversationId?: string;
   composerTool?: string | null;
