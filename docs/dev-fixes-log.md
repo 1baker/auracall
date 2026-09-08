@@ -1,3 +1,8 @@
+- 2026-09-08: Preserving a long request in an attachment does not satisfy an
+  explicit inline fallback contract. Make configured prompt transport intent
+  explicit and fail on unsupported modes; retain automatic spillover for
+  ordinary callers. Source-level enforcement is not installed composer proof.
+
 - 2026-08-31: A successful `tab_new` response can precede convergence of the
   exact returned handle into Agent Browser's authoritative browser inventory.
   Poll that exact browser/profile/session/target/URL identity within a bounded

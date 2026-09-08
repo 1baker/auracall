@@ -1,3 +1,15 @@
+## 2026-09-08 | Plan 0354 required-inline browser transport
+
+- Confirmed that configured prompt spillover can violate an explicitly
+  requested inline fallback while preserving the text in an attachment.
+- Add `metadata.browserPromptTransport=inline_required` at the existing
+  configured-executor seam; keep automatic spillover as the default and reject
+  malformed policy values. The existing active writer request is unchanged.
+- All 72 focused executor/response-service tests, typecheck, complete lint,
+  zero-error planning audit, and diff hygiene pass. Independent closed-world
+  review found no blocking regression. Installation, actual composer evidence,
+  and full document release remain pending; no browser or API restart occurred.
+
 ## 2026-08-31 | Plan 0353 three-topic Agent Browser end-to-end proof
 
 - Two live workflow attempts failed before provider submission because the

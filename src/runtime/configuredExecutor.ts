@@ -666,6 +666,7 @@ interface BrowserPromptTransport {
   attachments: BrowserAttachment[];
   metadata: {
     mode: 'inline' | 'request_attachment';
+    policy: 'auto' | 'inline_required';
     originalPromptChars: number;
     attachmentPath?: string;
     attachmentDisplayPath?: string;
@@ -788,7 +789,14 @@ async function prepareBrowserPromptTransport(input: {
   let attachmentPath: string | undefined;
   let attachmentDisplayPath: string | undefined;
 
-  if (input.prompt.length > BROWSER_INLINE_PROMPT_CHAR_BUDGET) {
+  const metadata = input.context.step.input.structuredData?.metadata;
+  const requestedPolicy = isRecord(metadata) ? metadata.browserPromptTransport : undefined;
+  if (requestedPolicy !== undefined && requestedPolicy !== 'auto' && requestedPolicy !== 'inline_required') {
+    throw new Error('browserPromptTransport must be auto or inline_required.');
+  }
+  const policy = requestedPolicy ?? 'auto';
+
+  if (policy === 'auto' && input.prompt.length > BROWSER_INLINE_PROMPT_CHAR_BUDGET) {
     mode = 'request_attachment';
     const runId = sanitizePathComponent(input.context.record.runId);
     const stepId = sanitizePathComponent(input.context.step.id);
@@ -834,6 +842,7 @@ async function prepareBrowserPromptTransport(input: {
     attachments: bundle.attachments,
     metadata: {
       mode,
+      policy,
       originalPromptChars: input.prompt.length,
       ...(attachmentPath ? { attachmentPath } : {}),
       ...(attachmentDisplayPath ? { attachmentDisplayPath } : {}),

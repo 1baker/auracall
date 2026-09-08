@@ -1,5 +1,12 @@
 # Testing quickstart
 
+- Required-inline configured browser transport is provider-free:
+  `pnpm exec vitest run tests/runtime.configuredExecutor.test.ts tests/runtime.responsesService.test.ts --maxWorkers 1`.
+  It proves policy persistence, exact prompt preservation around the 60,000
+  character boundary, independent source bundling, default auto compatibility,
+  and rejection of invalid modes before a browser call. It does not prove
+  acceptance of large messages by a live provider composer.
+
 - CI Node runtime contract: `pnpm run check:ci-runtime` binds the canonical
   Node 22+ minimum in `package.json` to the GitHub Actions matrix. CI exercises
   Node 22 on Ubuntu, macOS, and the current Windows runner plus active

@@ -20338,3 +20338,23 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   PID 3246087 and CDP port 43545 throughout installation and service restart.
 - Do not describe the browser fix as fully live-proven until a terminal run with
   intentionally identical response text completes through AuraCall.
+
+## Turn 447 | 2026-09-08
+
+- Opened [Plan 0354](docs/dev/plans/0354-2026-09-08-required-inline-browser-transport.md)
+  for accepted finding INLINE-01. The configured transport preserved request
+  content in an attachment but did not preserve the explicitly required
+  complete inline fallback.
+- Source repair remains independent of the in-flight writer request and the
+  pre-existing dirty browser-bridge file. Primary owns implementation;
+  `inline_transport_tests` owns bounded read-only closed-world regression review.
+- State transition: observed mismatch to source remediation. Acceptance state:
+  incomplete. Progress classification: blocker_reduction through confirmed
+  transport evidence. Runtime rollout and actual inline delivery remain open;
+  no provider restart or prompt replay is authorized by a passing unit test.
+- Source checkpoint: 72 focused TypeScript tests, complete lint/typecheck,
+  zero-error plan audit, and diff hygiene passed. Independent closed-world
+  reviewer `/root/inline_transport_tests` found no blocking regression; primary
+  accepted the source review and ran validation itself. The companion document
+  client requests required-inline on future creation/audit submissions, with
+  65 focused Python tests passing. Source is staged; live transport remains open.

@@ -7,6 +7,12 @@
 Status: active
 Lane: P01
 
+- Active required-inline browser transport repair:
+  [docs/dev/plans/0354-2026-09-08-required-inline-browser-transport.md](docs/dev/plans/0354-2026-09-08-required-inline-browser-transport.md)
+  Current state: explicit inline fallback is currently converted to an
+  attachment; source repair and provider-free verification proceed while the
+  existing writer request is preserved. Runtime rollout remains pending.
+
 - Closed accepted three-topic Agent Browser end-to-end proof:
   [docs/dev/plans/0353-2026-08-31-three-topic-agent-browser-e2e.md](docs/dev/plans/0353-2026-08-31-three-topic-agent-browser-e2e.md)
   Current state: bounded convergence and exact task-tab cleanup are installed.

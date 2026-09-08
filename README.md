@@ -22,6 +22,16 @@ offered through npm or Homebrew.
 
 Requires Node 22+.
 
+Configured browser requests may set `metadata.browserPromptTransport` to
+`inline_required` when the complete request must remain in the browser
+composer, even above the automatic 60,000-character attachment threshold.
+Omitted or `auto` retains existing spillover behavior; other values fail before
+provider execution. Source-attachment bundling remains independent. This policy
+does not promise that a provider accepts arbitrarily large messages: a composer
+failure must be handled as failure, not permission to replay or silently move
+the required inline text into an attachment. Verify installed transport before
+relying on this field; older runtimes do not enforce it.
+
 ```bash
 # Copy the bundle and paste into ChatGPT
 auracall --render --copy -p "Review the TS data layer for schema drift" --file "src/**/*.ts,*/*.test.ts"

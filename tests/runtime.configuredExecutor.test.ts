@@ -559,6 +559,78 @@ describe('configured stored-step executor', () => {
     expect(bundle).toContain('Complete inline fallback.\nComplete inline fallback.');
   });
 
+  it.each([
+    { policy: undefined, length: 59999, inline: true },
+    { policy: 'auto', length: 60000, inline: true },
+    { policy: 'auto', length: 60001, inline: false },
+    { policy: 'inline_required', length: 59999, inline: true },
+    { policy: 'inline_required', length: 60000, inline: true },
+    { policy: 'inline_required', length: 60001, inline: true },
+    { policy: 'inline_required', length: 160804, inline: true, sources: 11 },
+    { policy: 'inline_required', length: 59999, inline: true, notes: ['Required extra instructions.'] },
+    { policy: 'typo', length: 100, invalid: true },
+    { policy: null, length: 100, invalid: true },
+    { policy: { mode: 'inline_required' }, length: 100, invalid: true },
+  ])('enforces browser prompt transport $policy at $length characters', async (testCase) => {
+    const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), 'auracall-inline-policy-'));
+    setAuracallHomeDirOverrideForTest(homeDir);
+    try {
+      const runBrowserModeImpl = vi.fn(async (_options: BrowserRunOptions) => ({
+        answerText: 'OK', answerMarkdown: 'OK', tookMs: 1, answerTokens: 1, answerChars: 2,
+        tabUrl: 'https://chatgpt.com/c/mock-inline', conversationId: 'mock-inline',
+      }));
+      const executor = createConfiguredStoredStepExecutor({
+        browser: { managedProfileRoot: path.join(homeDir, 'profiles') },
+        runtimeProfiles: { default: { engine: 'browser', defaultService: 'chatgpt', browserProfile: 'default' } },
+      }, { runBrowserModeImpl });
+      const artifacts = [];
+      for (let index = 0; index < (testCase.sources ?? 0); index += 1) {
+        const sourcePath = path.join(homeDir, `source-${index}.md`);
+        await fs.writeFile(sourcePath, `# Reviewed source ${index}\nFull evidence.\n`);
+        artifacts.push({ id: `source-${index}`, kind: 'file', path: sourcePath });
+      }
+      const prompt = `BEGIN α\n${'x'.repeat(testCase.length - 14)}\nEND Ω`;
+      expect(prompt.length).toBe(testCase.length);
+      const pending = executor?.({
+        record: { runId: 'inline-policy', revision: 1, bundle: { run: { id: 'inline-policy' } } } as never,
+        step: {
+          id: 'inline-policy:step:1', agentId: 'api-responses', runtimeProfileId: 'default',
+          browserProfileId: 'default', service: 'chatgpt',
+          input: { prompt, artifacts, notes: testCase.notes ?? [], structuredData: {
+            metadata: testCase.policy === undefined ? {} : { browserPromptTransport: testCase.policy },
+          } },
+        } as never,
+      });
+      if (testCase.invalid) {
+        await expect(pending).rejects.toThrow('browserPromptTransport must be auto or inline_required');
+        expect(runBrowserModeImpl).not.toHaveBeenCalled();
+        return;
+      }
+      const result = await pending;
+      expect(runBrowserModeImpl).toHaveBeenCalledTimes(1);
+      const options = runBrowserModeImpl.mock.calls[0]?.[0];
+      if (testCase.inline) {
+        expect(options?.prompt).toContain(prompt);
+        if (!testCase.sources && !testCase.notes) expect(options?.prompt).toBe(prompt);
+        expect(options?.prompt).not.toContain('The full AuraCall request is attached');
+        expect(options?.attachments?.some((item) => item.displayPath === 'auracall-request.txt')).toBe(false);
+        if (testCase.sources) {
+          const bundle = await fs.readFile(options?.attachments?.[0]?.path ?? '', 'utf8');
+          expect(options?.prompt).toContain('contains 11 complete source files');
+          expect(bundle.match(/SHA-256: [a-f0-9]{64}/g)).toHaveLength(11);
+          expect(bundle).not.toContain('auracall-request.txt');
+        }
+      } else {
+        const attachment = await fs.readFile(options?.attachments?.[0]?.path ?? '', 'utf8');
+        expect(attachment).toBe(prompt);
+      }
+      expect(JSON.stringify(result)).toContain(`"policy":"${testCase.policy ?? 'auto'}"`);
+    } finally {
+      setAuracallHomeDirOverrideForTest(null);
+      await fs.rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
   it('extracts one bounded local shell action request from a JSON tool envelope', async () => {
     const runBrowserModeImpl = vi.fn(async () => ({
       answerText: JSON.stringify({

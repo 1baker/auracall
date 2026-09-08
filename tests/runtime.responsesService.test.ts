@@ -144,7 +144,7 @@ describe('runtime responses service', () => {
     });
   });
 
-  it('reconstructs the execution request and step context when executing stored direct runs', async () => {
+  it.each([undefined, 'auto', 'inline_required'])('reconstructs stored direct request transport %s', async (transportPolicy) => {
     const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), 'auracall-runtime-responses-'));
     cleanup.push(homeDir);
     setAuracallHomeDirOverrideForTest(homeDir);
@@ -152,6 +152,7 @@ describe('runtime responses service', () => {
     let capturedRequest: ExecutionRequest | null = null;
     let capturedStepId: string | null = null;
     let capturedStepStructuredData: Record<string, unknown> | null = null;
+    const requestMetadata = transportPolicy === undefined ? {} : { browserPromptTransport: transportPolicy };
 
     const service = createExecutionResponsesService({
       now: () => new Date('2026-04-08T14:10:00.000Z'),
@@ -176,6 +177,7 @@ describe('runtime responses service', () => {
     const created = await service.createResponse({
       model: 'gpt-5.2',
       input: 'Run once.',
+      metadata: requestMetadata,
       instructions: 'Use structured output.',
       auracall: {
         runtimeProfile: 'default',
@@ -198,7 +200,7 @@ describe('runtime responses service', () => {
     expect(capturedRequest).toEqual({
       model: 'gpt-5.2',
       input: 'Run once.',
-      metadata: {},
+      metadata: requestMetadata,
       instructions: 'Use structured output.',
       tools: [],
       attachments: [],
@@ -211,6 +213,7 @@ describe('runtime responses service', () => {
     });
     expect(capturedStepId).toBe('resp_service_ctx_1:step:1');
     expect(capturedStepStructuredData).toMatchObject({
+      metadata: requestMetadata,
       outputContract: AURACALL_STEP_OUTPUT_CONTRACT_VERSION,
     });
   });
