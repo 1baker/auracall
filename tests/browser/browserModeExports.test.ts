@@ -131,6 +131,22 @@ describe('browserMode exports', () => {
     ).toBe(false);
   });
 
+  test('shared JSON prefixes do not override distinct message identities', () => {
+    const prefix = JSON.stringify({ schema: 'codex.thought_document_audit.v1', checks: 'passed '.repeat(40) });
+    const input = {
+      baselineText: `${prefix} old assessment`, baselineMessageId: 'old', baselineTurnId: 'turn-1',
+      answerText: `${prefix} new assessment`, answerMessageId: 'new', answerTurnId: 'turn-2',
+    };
+    expect(shouldTreatChatgptAssistantResponseAsStaleForTest(input)).toBe(false);
+    for (const overrides of [
+      { answerMessageId: 'old' }, { answerTurnId: 'turn-1' },
+      { answerMessageId: undefined }, { baselineMessageId: undefined },
+      { answerText: input.baselineText }, { answerText: `Prelude ${input.baselineText}` },
+    ]) {
+      expect(shouldTreatChatgptAssistantResponseAsStaleForTest({ ...input, ...overrides })).toBe(true);
+    }
+  });
+
   test('extracts parseable JSON objects from ChatGPT DOM text', () => {
     expect(parseJsonObject(extractParseableJsonObjectTextForTest('```json\n{"ok":true}\n```') ?? '{}')).toEqual({
       ok: true,

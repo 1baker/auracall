@@ -966,11 +966,15 @@ function shouldTreatChatgptAssistantResponseAsStale(options: {
 	const endsWithBaseline =
 		normalizedAnswer.length > baselineNormalized.length &&
 		normalizedAnswer.endsWith(baselineNormalized);
+	const distinctMessageIds =
+		Boolean(options.baselineMessageId) &&
+		Boolean(options.answerMessageId) &&
+		options.answerMessageId !== options.baselineMessageId;
 	return (
 		sameMessageId ||
 		sameTurnId ||
 		normalizedAnswer === baselineNormalized ||
-		(baselinePrefix.length > 0 && normalizedAnswer.startsWith(baselinePrefix)) ||
+		(!distinctMessageIds && baselinePrefix.length > 0 && normalizedAnswer.startsWith(baselinePrefix)) ||
 		endsWithBaseline
 	);
 }
@@ -2724,7 +2728,6 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 			text.toLowerCase().replace(/\s+/g, " ").trim();
 		const readFreshAssistantCandidate = async (
 			baselineNormalized: string,
-			baselinePrefix: string,
 		): Promise<{
 			text: string;
 			html?: string;
@@ -2742,10 +2745,14 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 			for (const snapshot of snapshots) {
 				const text = typeof snapshot?.text === "string" ? snapshot.text.trim() : "";
 				if (!text) continue;
-				const normalized = normalizeForComparison(text);
-				const isBaseline =
-					normalized === baselineNormalized ||
-					(baselinePrefix.length > 0 && normalized.startsWith(baselinePrefix));
+				const isBaseline = shouldTreatChatgptAssistantResponseAsStale({
+					baselineText: baselineNormalized,
+					baselineMessageId: baselineAssistantMessageId,
+					baselineTurnId: baselineAssistantTurnId,
+					answerText: text,
+					answerMessageId: snapshot?.messageId,
+					answerTurnId: snapshot?.turnId,
+				});
 				if (isBaseline) continue;
 				const candidate = {
 					text,
@@ -2766,13 +2773,9 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 			return best;
 		};
 		const waitForFreshAssistantResponse = async (baselineNormalized: string, timeoutMs: number) => {
-			const baselinePrefix =
-				baselineNormalized.length >= 80
-					? baselineNormalized.slice(0, Math.min(200, baselineNormalized.length))
-					: "";
 			const deadline = Date.now() + timeoutMs;
 			while (Date.now() < deadline) {
-				const candidate = await readFreshAssistantCandidate(baselineNormalized, baselinePrefix);
+				const candidate = await readFreshAssistantCandidate(baselineNormalized);
 				if (candidate) {
 					return candidate;
 				}
@@ -3841,7 +3844,6 @@ async function runRemoteBrowserMode(
 			text.toLowerCase().replace(/\s+/g, " ").trim();
 		const readFreshAssistantCandidate = async (
 			baselineNormalized: string,
-			baselinePrefix: string,
 		): Promise<{
 			text: string;
 			html?: string;
@@ -3859,10 +3861,14 @@ async function runRemoteBrowserMode(
 			for (const snapshot of snapshots) {
 				const text = typeof snapshot?.text === "string" ? snapshot.text.trim() : "";
 				if (!text) continue;
-				const normalized = normalizeForComparison(text);
-				const isBaseline =
-					normalized === baselineNormalized ||
-					(baselinePrefix.length > 0 && normalized.startsWith(baselinePrefix));
+				const isBaseline = shouldTreatChatgptAssistantResponseAsStale({
+					baselineText: baselineNormalized,
+					baselineMessageId: baselineAssistantMessageId,
+					baselineTurnId: baselineAssistantTurnId,
+					answerText: text,
+					answerMessageId: snapshot?.messageId,
+					answerTurnId: snapshot?.turnId,
+				});
 				if (isBaseline) continue;
 				const candidate = {
 					text,
@@ -3883,13 +3889,9 @@ async function runRemoteBrowserMode(
 			return best;
 		};
 		const waitForFreshAssistantResponse = async (baselineNormalized: string, timeoutMs: number) => {
-			const baselinePrefix =
-				baselineNormalized.length >= 80
-					? baselineNormalized.slice(0, Math.min(200, baselineNormalized.length))
-					: "";
 			const deadline = Date.now() + timeoutMs;
 			while (Date.now() < deadline) {
-				const candidate = await readFreshAssistantCandidate(baselineNormalized, baselinePrefix);
+				const candidate = await readFreshAssistantCandidate(baselineNormalized);
 				if (candidate) {
 					return candidate;
 				}

@@ -7,6 +7,11 @@
 Status: active
 Lane: P01
 
+- Active audit-prefix freshness repair:
+  [Plan 0356](docs/dev/plans/0356-2026-09-10-chatgpt-audit-prefix-freshness.md).
+  Current state: source predicate and fallback readers fixed; 23 focused tests
+  pass. Installed-runtime verification and audit recovery remain open.
+
 - Active exact-response artifact provenance repair:
   [docs/dev/plans/0355-2026-09-08-response-bound-artifact-selection.md](docs/dev/plans/0355-2026-09-08-response-bound-artifact-selection.md)
   Current state: browser identity propagation and runtime selection are wired;

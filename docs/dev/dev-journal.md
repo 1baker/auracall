@@ -1,3 +1,15 @@
+## 2026-09-10 | Plan 0356 audit-prefix freshness
+
+- Revalidated 23 focused tests, typecheck, full lint, production build, and
+  357-plan audit with zero errors. Build bridge bytes match installed bridge.
+  Failed audit is terminal with released lease; refresh ownership again before
+  installation. No new audit submission or service restart yet.
+- Two distinct assistant answers shared the first 200 normalized JSON characters
+  but differed in full text. The prefix heuristic overrode their distinct IDs.
+- Source fix suppresses only that heuristic with distinct IDs and unifies local
+  and remote fallback checks. Twenty-three focused tests pass; installation and
+  live recovery remain unverified. Pre-existing bridge edits are preserved.
+
 ## 2026-09-08 | Plan 0355 exact-response artifact provenance
 
 - Materializer-boundary coverage now verifies current-message selection among

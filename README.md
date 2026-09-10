@@ -33,6 +33,12 @@ the required inline text into an attachment. Verify installed transport before
 relying on this field; older runtimes do not enforce it.
 
 Configured ChatGPT response-artifact collection now requires a captured assistant
+message ID bound to the returned text. ChatGPT freshness checks allow shared JSON
+prefixes only when both assistant message IDs exist and differ; identical text,
+reused identities and baseline suffixes still fail. This source fix is pending
+installed verification (Plan 0356).
+
+Configured ChatGPT response-artifact collection requires a captured assistant
 message ID bound to the returned text. Only that message's artifacts are eligible;
 same-named files elsewhere in the conversation are not a fallback. Missing identity
 blocks artifact acceptance without sending an automatic correction prompt. This

@@ -1,5 +1,22 @@
 # RUNBOOK
 
+## Turn 506 | 2026-09-10
+
+- Plan 0356 source validation is green: 23 focused tests, typecheck, full lint,
+  production build, diff hygiene, and zero-error 357-plan audit.
+- Confirmed historical audit terminal/released. Built bridge bytes match the
+  installed pre-existing bridge; preserve its uncommitted source changes.
+- Installation and fresh audit receipt remain unverified. No browser or API
+  restart, receipt rewrite, or new provider submission was performed.
+
+## Turn 505 | 2026-09-10
+
+- Plan 0356 fixes a reproduced shared-JSON-prefix false positive for distinct
+  ChatGPT assistant message identities. Both capture fallback readers now use
+  the same freshness predicate; genuine identity/repetition guards remain.
+- All 23 browser export tests pass. Runtime installation and audit recovery
+  remain pending. No failed receipt was rewritten or browser replaced.
+
 ## Turn 504 | 2026-09-08
 
 - Opened Plan 0355 for response-to-artifact ownership after two completed

@@ -1,3 +1,8 @@
+- 2026-09-10: Structured audits can share long JSON prefixes without being stale.
+  Distinct assistant message IDs now suppress only the prefix heuristic; reused
+  message/turn IDs, identical text and baseline suffixes remain rejected. Both
+  capture fallback paths use the same rule. Source-only until installed proof.
+
 - 2026-09-08: Browser-session proof and a conversation-wide artifact listing do
   not bind a file to the current response. Plan 0355 is implementing exact
   assistant-message selection; matching filenames and cache paths are insufficient.
