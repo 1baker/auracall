@@ -49626,3 +49626,16 @@ Chat repair integrated. Inventory complete at 11. Blank-tab readiness fix instal
 - P44 cleanup then passed fresh clean, ignored-file, local/remote equality,
   target-ancestry, and process-cwd gates. Git removed only the Plan 0351
   worktree and local branch; the exact remote checkpoint remains retained.
+
+## 2026-09-12 | ChatGPT app-security approval exposure
+
+- A developer app can trigger a separate consent dialog with one `Allow`
+  action and a `Suspicious Instruction` warning. Treat it as approval only when
+  the exact `Allow ChatGPT to use <app>?` heading, warning, and one Allow control
+  share a visible dialog; generic Allow prompts are not sufficient.
+- Keep consent semantics explicit: manual mode exposes the exact surface,
+  allow-once may activate it, and always-allow must fail closed when ChatGPT
+  offers no persistent choice.
+- Developer-app submissions that need approval handling must select the shared
+  assistant-response lifecycle. Do not recreate response polling inside the
+  provider adapter.
