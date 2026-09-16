@@ -49653,3 +49653,10 @@ Chat repair integrated. Inventory complete at 11. Blank-tab readiness fix instal
   across tests; transient child-process churn is not treated as ownership proof.
 - No installed-runtime refresh, browser mutation, approval click, ChatGPT Send,
   provider call, retry, scheduler control, release, or deployment was run.
+
+## 2026-09-16 | Plan 0352 integrated
+
+- GitHub PR 13 merged the exact validated integration head `a8c923274` into
+  canonical `main` at `61548857a` with no additional runtime/provider effect.
+- P45 now records `INTEGRATED` custody and the exact canonical merge receipt;
+  installed and live-provider acceptance remain explicitly separate.
