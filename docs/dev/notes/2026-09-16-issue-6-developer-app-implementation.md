@@ -2,10 +2,10 @@
 
 Work item: `ecochran76/auracall#6` · Lane: P16 · Plan 0323 revision 8.
 Base: `dc0b909fb3d6d3354e5c2fee9f4ac6525cc94157`.
-Branch: `fix/issue-6-developer-app-response` (local only; not published/integrated).
+Branch: `fix/issue-6-developer-app-response` (published; not integrated).
 Source commit: `1a2fe5aab68180b27d3999cc8de581f81630471a`.
-The subsequent docs-only closeout updates this exact checkpoint; both remain
-local and unpublished.
+The subsequent docs-only closeout updates this exact checkpoint; the branch is
+published for review and remains unintegrated.
 
 ## Authority and ownership
 

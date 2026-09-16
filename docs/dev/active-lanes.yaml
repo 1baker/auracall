@@ -542,14 +542,14 @@ lanes:
     plan_state: OPEN
     custody_state: ACTIVE_WORKTREE
     checkpoint: 1a2fe5aab68180b27d3999cc8de581f81630471a
-    remote_ref: null
+    remote_ref: refs/remotes/origin/fix/issue-6-developer-app-response
     integration: merge
     work_items: [ecochran76/auracall#6]
     dependencies: []
     overlaps: [P22, P45, P46]
     reconciled_overlaps: [P22, P45, P46]
     blocker: null
-    disposition: Issue 6 shared-high-level terminal-response recovery is provider-free accepted locally. Publication and integration are withheld; installed/live acceptance and historical effect receipts remain separate.
+    disposition: Issue 6 shared-high-level terminal-response recovery is provider-free accepted and published for review. Integration is pending; installed/live acceptance and historical effect receipts remain separate.
     updated_at: 2026-09-16
     reconciliation_note: Current main owns exact mention and shared lifecycle; P45 approval recognition is reused without a provider-local watcher. User-authorized delegated implementation supersedes historical no-subagent constraints. The prior P16 slice integrated at 9cdb92d2058606f3f5c8029843696494f54ca290; this recovery is not integrated.
     validation_ref: docs/dev/notes/2026-09-16-issue-6-developer-app-implementation.md
