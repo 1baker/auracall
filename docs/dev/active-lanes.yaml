@@ -858,8 +858,8 @@ lanes:
     validation_ref: docs/dev/notes/2026-09-11-plan0351-current-latest-live-acceptance.json
     blocker: null
     integration_receipt: a47801d6a440685c0822e843421b184fa89961a5
-    disposition: Exact install and one zero-retry LitScout attempt passed; ChatGPT reached and stopped before approve_search_plan with no approval, provider, retry, or canonical DB effect. The repair and receipt are integrated into main.
-    updated_at: 2026-09-11
+    disposition: Exact install and one zero-retry LitScout attempt passed; ChatGPT reached and stopped before approve_search_plan with no approval, provider, retry, or canonical DB effect. The repair and receipt are integrated into main; the clean ancestral local worktree and branch were removed after fresh custody and process-owner checks while the remote ref remains retained.
+    updated_at: 2026-09-16
   - id: P45
     objective: Detect ChatGPT's single-action app-security approval dialog through the shared response lifecycle without granting persistent approval.
     plan: docs/dev/plans/0352-2026-09-12-chatgpt-app-security-approval.md

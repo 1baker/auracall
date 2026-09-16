@@ -49623,3 +49623,6 @@ Chat repair integrated. Inventory complete at 11. Blank-tab readiness fix instal
   provider-free accepted and integration-ready.
 - P08, P16, P18, P29, and P45 carry exact GitHub issue locators. The active
   planning audit and 37-test lane-auditor suite pass before checkpointing.
+- P44 cleanup then passed fresh clean, ignored-file, local/remote equality,
+  target-ancestry, and process-cwd gates. Git removed only the Plan 0351
+  worktree and local branch; the exact remote checkpoint remains retained.
