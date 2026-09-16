@@ -909,11 +909,11 @@ lanes:
   - id: P47
     objective: Restore the missing adopted model-selection policy and fail closed on dangling AGENTS.md policy targets.
     plan: docs/dev/plans/0354-2026-09-16-policy-target-integrity.md
-    plan_ref: refs/heads/fix/issue-20-policy-target-integrity
+    plan_ref: refs/remotes/origin/main
     branch: fix/issue-20-policy-target-integrity
     target: main
-    plan_state: OPEN
-    custody_state: ACTIVE_WORKTREE
+    plan_state: CLOSED
+    custody_state: INTEGRATED
     checkpoint: 3fdbbabb69091af0f7aa5ed93ed84e5c869b53c8
     remote_ref: refs/remotes/origin/fix/issue-20-policy-target-integrity
     integration: merge
@@ -922,7 +922,8 @@ lanes:
     overlaps: []
     reconciled_overlaps: []
     blocker: null
-    disposition: Provider-free repair accepted locally and published for pull-request integration; canonical reconciliation remains pending.
+    integration_receipt: 57a0796662bf592f11b1edcc1d33db37f8452dee
+    disposition: Policy 0030 and the dangling-target audit merged through issue-backed PR 23; the clean ancestral implementation worktree and local branch were removed after remote-custody and process-owner checks while the remote ref remains retained.
     updated_at: 2026-09-16
     validation_ref: docs/dev/notes/2026-09-16-issue-20-policy-target-integrity.md
-    validation_status: provider-free-accepted-local
+    validation_status: provider-free-integrated
