@@ -1,5 +1,11 @@
 ## 2026-09-16 | Issue 6 shared developer-app terminal lifecycle
 
+- Closed-world final review reproduced stale local root identity after an
+  immediate committed-Send failure. Both real local terminal-failure and manual
+  approval fixtures failed RED; the common failure exit now awaits the existing
+  runtime hint refresh. Remote mocked connection and explicit local reused-
+  browser fixture remain hermetic; real launch is forbidden.
+
 - P16 revision 8 replaces the rejected low-level assistant_response call with
   one high-level runBrowserMode invocation. Exact mention is rechecked before
   Send in both local and remote paths; P45 approval handling stays shared.

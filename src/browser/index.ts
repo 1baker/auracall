@@ -3179,6 +3179,8 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 				guardedError,
 			);
 		}
+		// Bind late /c/ navigation to terminal failures before handing off the result.
+		await emitRuntimeHint();
 		if (!socketClosed) {
 			logger(`Failed to complete ChatGPT run: ${guardedError.message}`);
 			if ((config.debug || process.env.CHATGPT_DEVTOOLS_TRACE === "1") && guardedError.stack) {
@@ -3190,7 +3192,6 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 			logger(`Chrome window closed before completion: ${guardedError.message}`);
 			logger(guardedError.stack);
 		}
-		await emitRuntimeHint();
 		throw new BrowserAutomationError(
 			"Chrome window closed before auracall finished. Please keep it open until completion.",
 			{

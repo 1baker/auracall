@@ -1,3 +1,8 @@
+- 2026-09-16: Refresh local runtime identity before ordinary terminal failure
+  exits, not only socket loss or observation expiry. A committed Send can fail
+  on manual approval before the background conversation hint sees `/c/<id>`;
+  await the existing hint once and test a URL transition published only at failure.
+
 - 2026-09-16: A mocked developer-app `runPrompt` cannot prove terminal response
   when the real provider only accepts prompt_submitted. Cross the real adapter
   to shared high-level lifecycle with hermetic transport, keep approval handling

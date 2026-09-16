@@ -71,8 +71,11 @@ pnpm exec vitest run tests/browser/chatgptDeveloperAppLifecycle.test.ts tests/br
   the four-file adapter/lifecycle/CLI/structure replay passed 64/64 in 1.73
   seconds; typecheck, rebuild and zero-finding scoped lint passed again.
 - Lifecycle fixture uses the real adapter, bridge, runBrowserMode, canonical
-  account authority and P45 handler. CDP transport and UI primitives are mocked;
-  launch/connect functions fail closed. `readChromePid=1234` and
+  account authority and P45 handler. CDP transport and UI primitives are mocked.
+  The remote connector is mocked to succeed; real launch/connect operations
+  fail closed. The local failure fixture explicitly supplies a mocked reused
+  Chrome and local target connection, while real launch remains forbidden.
+  Managed-profile bootstrap and state writes are also mocked. `readChromePid=1234` and
   `isChromeAlive=true` are mocked, and proof asserts PID 1234 plus the exact
   fixture target. Arbitrary-host rejection is tested with the live local PID
   mock explicitly restored, so absence cannot accidentally explain the refusal.
@@ -105,3 +108,29 @@ and explicit live DAS-R5. No historical experiment retry or allowance was
 consumed or renewed. Arbitrary remote Chrome without attributable process
 provenance remains unsupported. The mutation-deadline and refresh-inventory
 follow-ups stay separate. GitHub issue 6 was not changed by this worker.
+
+## Closed-world local terminal-identity repair
+
+Primary accepted Sol's final local-path finding: a committed Send followed by
+an immediate ordinary/manual-approval failure could return before the next
+background URL hint, leaving root URL and null conversation identity. The real
+local lifecycle fixture reproduced both cases RED with exactly one Send and
+`effect_observed`. Awaiting the existing `emitRuntimeHint` before terminal
+failure branching repairs the stale result; the prior socket-error refresh is
+moved to the common boundary rather than duplicated. The fixture publishes the
+`/c/fixture-conversation` URL only when response waiting fails, so earlier
+account or pre-submit hints cannot satisfy the assertion accidentally.
+
+Follow-up validation:
+
+```sh
+pnpm exec vitest run tests/browser/chatgptDeveloperAppLifecycle.test.ts tests/browser/llmServicePromptStructure.test.ts tests/browser/chatgptDeveloperApps.test.ts tests/cli/chatgptDeveloperAppsCommand.test.ts
+pnpm -s typecheck
+pnpm exec biome lint src/browser/index.ts tests/browser/chatgptDeveloperAppLifecycle.test.ts
+git diff --check
+```
+
+Result: 66/66 tests across four files in 1.69 seconds; typecheck passed; scoped
+lint zero findings; diff hygiene passed. Fresh pre/post `/proc` process/cwd
+censuses found zero worktree-owned browser processes. No live/browser action,
+publication or runtime installation accompanied this remediation.

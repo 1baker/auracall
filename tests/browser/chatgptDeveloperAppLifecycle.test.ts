@@ -17,6 +17,9 @@ const fixture = vi.hoisted(() => ({
 	assertSelected: vi.fn(),
 	forbiddenLaunch: vi.fn(),
 	closeTarget: vi.fn(),
+	localConnect: vi.fn(),
+	localReuse: vi.fn(),
+	localOpen: vi.fn(),
 }));
 vi.mock("../../src/browser/providers/providerSessionAuthority.js", async (original) => {
 	const actual = await original<typeof import("../../src/browser/providers/providerSessionAuthority.js")>();
@@ -28,9 +31,11 @@ vi.mock("../../src/browser/chromeLifecycle.js", async (original) => ({
 	connectToRemoteChrome: fixture.connect,
 	closeRemoteChromeTarget: fixture.closeTarget,
 	launchChrome: fixture.forbiddenLaunch,
-	reuseRunningChromeProfile: fixture.forbiddenLaunch,
+	reuseRunningChromeProfile: fixture.localReuse,
 	connectToChrome: fixture.forbiddenLaunch,
-	connectToChromeTarget: fixture.forbiddenLaunch,
+	connectToChromeTarget: fixture.localConnect,
+	openChromeTarget: fixture.localOpen,
+	registerTerminationHooks: vi.fn(() => () => {}),
 }));
 vi.mock("../../src/browser/pageActions.js", async (original) => ({
 	...(await original<typeof import("../../src/browser/pageActions.js")>()),
@@ -66,6 +71,13 @@ vi.mock("../../src/browser/chatgptRateLimitGuard.js", async (original) => ({
 vi.mock("../../src/browser/profileState.js", async (original) => ({
 	...(await original<typeof import("../../src/browser/profileState.js")>()),
 	readChromePid: vi.fn(async () => 1234),
+	writeDevToolsActivePort: vi.fn(async () => {}),
+	writeChromePid: vi.fn(async () => {}),
+}));
+vi.mock("../../src/browser/profileStore.js", async (original) => ({
+	...(await original<typeof import("../../src/browser/profileStore.js")>()),
+	bootstrapManagedProfile: vi.fn(async () => ({ cloned: false })),
+	findBrowserCookieFile: vi.fn(() => null),
 }));
 vi.mock("../../src/browser/processCheck.js", async (original) => ({
 	...(await original<typeof import("../../src/browser/processCheck.js")>()),
@@ -96,14 +108,16 @@ function setup(
 		terminalFailure?: boolean;
 		manualApproval?: boolean;
 		wrongIdentity?: boolean;
+		lateTerminalUrl?: boolean;
 	} = {},
 ) {
 	let submitted = false;
+	let terminalObserved = false;
 	const evaluate = vi.fn(async ({ expression }: { expression: string }) => {
 		if (expression === "location.href")
 			return {
 				result: {
-					value: submitted ? "https://chatgpt.com/c/fixture-conversation" : "https://chatgpt.com/",
+					value: submitted && (!options.lateTerminalUrl || terminalObserved) ? "https://chatgpt.com/c/fixture-conversation" : "https://chatgpt.com/",
 				},
 			};
 		if (expression.startsWith("document.querySelectorAll("))
@@ -158,7 +172,13 @@ function setup(
 		submitted ? { text: "App terminal answer", messageId: "answer-1" } : null,
 	);
 	fixture.wait.mockImplementation(async (_runtime, _timeout, _logger, _boundary, callbacks) => {
-		await callbacks.onPassiveDomProbe(); // Real P45 handler, not an app-local watcher.
+		try {
+			await callbacks.onPassiveDomProbe(); // Real P45 handler, not an app-local watcher.
+		} catch (error) {
+			terminalObserved = true;
+			throw error;
+		}
+		terminalObserved = true;
 		if (options.terminalFailure) throw new Error("terminal provider failure");
 		return { text: "App terminal answer", meta: { messageId: "answer-1" } };
 	});
@@ -174,6 +194,25 @@ beforeEach(() => {
 	vi.resetAllMocks();
 	fixture.forbiddenLaunch.mockImplementation(() => {
 		throw new Error("TEST SAFETY: real/local browser launch forbidden");
+	});
+	for (const mock of [fixture.localConnect, fixture.localReuse, fixture.localOpen]) {
+		mock.mockImplementation(fixture.forbiddenLaunch);
+	}
+});
+
+describe("developer app to real shared local lifecycle", () => {
+	it.each([{ terminalFailure: true }, { manualApproval: true }])("refreshes a late terminal conversation before returning committed-Send failure: %j", async (failure) => {
+		const { client } = setup({ ...failure, lateTerminalUrl: true });
+		fixture.localReuse.mockResolvedValue({ pid: 1234, port: 12345, kill: vi.fn() });
+		fixture.localOpen.mockResolvedValue({ id: "fixture-target", url: "https://chatgpt.com/" });
+		fixture.localConnect.mockResolvedValue(client);
+		const localConfig = { ...config, model: "current", browser: { ...config.browser, remoteChrome: null, debugPort: 12345, keepBrowser: true, cookieSync: false } };
+		const adapter = createChatgptDeveloperAppBrowserAdapter({ userConfig: localConfig } as never, vi.fn(), { browserOperationOwned: true });
+		const result = await adapter.submitTest(app, "Use the app to answer.");
+		expect(result, result.message).toMatchObject({ status: "failed", conversationId: "fixture-conversation", terminalUrl: "https://chatgpt.com/c/fixture-conversation", effectState: "effect_observed", retrySafe: false });
+		expect(fixture.submit).toHaveBeenCalledTimes(1);
+		expect(fixture.connect).not.toHaveBeenCalled();
+		expect(fixture.forbiddenLaunch).not.toHaveBeenCalled();
 	});
 });
 
