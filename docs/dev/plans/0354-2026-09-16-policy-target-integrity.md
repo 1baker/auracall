@@ -9,11 +9,11 @@ Work item: ecochran76/auracall#20
 
 ## Current State
 
-The missing-target defect is reproduced and repaired locally. Policy 0030 now
+The missing-target defect is reproduced and repaired on the published branch. Policy 0030 now
 matches the adopted selector module body, and the ordinary plan audit validates
 every backtick-delimited `AGENTS.md` durable policy target through a focused,
-deterministic helper. Provider-free validation is green; publication,
-integration, and final custody cleanup remain.
+deterministic helper. Provider-free validation is green; pull-request
+integration and final custody cleanup remain.
 
 ## Objective
 

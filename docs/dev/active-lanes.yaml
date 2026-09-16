@@ -915,14 +915,14 @@ lanes:
     plan_state: OPEN
     custody_state: ACTIVE_WORKTREE
     checkpoint: 3fdbbabb611cb03fb8d9b7e91512a86fc702f550
-    remote_ref: null
+    remote_ref: refs/remotes/origin/fix/issue-20-policy-target-integrity
     integration: merge
     work_items: [ecochran76/auracall#20]
     dependencies: []
     overlaps: []
     reconciled_overlaps: []
     blocker: null
-    disposition: Missing durable policy and false-green adoption audit reproduced; bounded provider-free repair is in progress.
+    disposition: Provider-free repair accepted locally and published for pull-request integration; canonical reconciliation remains pending.
     updated_at: 2026-09-16
     validation_ref: docs/dev/notes/2026-09-16-issue-20-policy-target-integrity.md
     validation_status: provider-free-accepted-local
