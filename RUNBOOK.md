@@ -439,7 +439,9 @@
   tracked/untracked clean, and process-unowned. Removed its local worktree and
   local branch; retained remote branch `55c57ca5c` for recovery.
 
-- P16 reconciliation supersedes the Turn 550 preservation note: current main's
+- P16 reconciliation supersedes the Turn 550 preservation note. The durable
+  branch-local plan is `docs/dev/plans/0323-2026-08-30-chatgpt-developer-app-submit-selection.md`
+  at `refs/remotes/origin/fix/plan0323-developer-app-mention`; current main's
   exact ecosystem-mention and Skill CLI paths are authoritative. Retain P16's
   two-pass app-composer cleanup, inherited-`composerTool` removal, and current
   Chat-model request. Do not restore its three response-wait CLI options or

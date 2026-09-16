@@ -1,4 +1,5 @@
 schema_version: 1
+work_item_tracking: required
 lanes:
   - id: P01
     objective: Reconcile AuraCall Git custody and review Oracle only as a separate reference project.
@@ -133,18 +134,19 @@ lanes:
     branch: fix/plan0315-aggregate-status-latency
     target: main
     plan_state: OPEN
-    custody_state: ACTIVE_WORKTREE
+    custody_state: PAUSED_REF
     checkpoint: 9860b9d49be75c7ff3bcdb5ed344ae28bb9f5f2a
     remote_ref: refs/remotes/origin/fix/plan0315-aggregate-status-latency
     integration: merge
+    work_items: [ecochran76/auracall#9]
     dependencies: [P07]
     overlaps: []
     validation_status: implementation-accepted-installed-proof-blocked
     validation_ref: 025453473c5957fb72abb7ed787cb6d1266951e6
     integration_receipt: null
     blocker: The auracall-gemini-pro target retains a manual_clear_required google-sorry guard; human clearance is required before P08 may pause the scheduler or install.
-    disposition: Refreshed provider-free repair and later policy-rollout checkpoint are clean and published; 15 current cwd owners retain the active worktree, and installed proof remains blocked without consuming any effect allowance.
-    updated_at: 2026-09-09
+    disposition: Refreshed provider-free repair remains published on its remote ref; the former shared checkout now belongs to a different mixed-history branch, so P08 is paused pending main-aligned recovery and installed proof.
+    updated_at: 2026-09-16
     recovery_ref: refs/remotes/origin/wip/plan0337-browser-edits-recovery
     recovery_checkpoint: 3696f6dd337b703f42997753a576bd8364203102
     recovery_disposition: Seven original dirty files preserved byte-for-byte as unaccepted WIP; no browser repair integrated.
@@ -305,16 +307,17 @@ lanes:
     checkpoint: 317b6b372da57d295629abb78e2b1daa8ad8bb33
     remote_ref: refs/remotes/origin/ops/plan0325-installed-fairness-canary
     integration: direct
+    work_items: [ecochran76/auracall#10]
     dependencies: [P17]
     overlaps: [P08]
     validation_status: external-foreground-browser-hard-stop
     validation_ref: 87fec070638981f87095f1e2830192a0ba3cd9a3
     integration_receipt: 87fec070638981f87095f1e2830192a0ba3cd9a3
-    disposition: Gemini remains disabled and untouched; install/canary allowances remain unused while external BYOP Chrome PID 1933 owns the exact wsl-chrome-3 managed browser profile without an AuraCall or Agent Browser lease.
-    updated_at: 2026-09-01
+    disposition: Gemini remains disabled and untouched; install/canary allowances remain unused while a retained external owner holds the exact wsl-chrome-3 managed browser profile.
+    updated_at: 2026-09-16
     reconciled_overlaps: [P08]
     reconciliation_note: Plan 0337 preserves unfinished P08 and P16 without source integration; existing integrated receipt ancestry resolves completed-lane overlap; P27 runtime custody is retained.
-    custody_note: Exact paused plan branch published by Plan 0337; operational blockers are historical plan evidence and were not re-probed or cleared.
+    custody_note: Exact paused plan branch remains published. A fresh read-only census replaced the stale historical PID claim but did not establish transfer authority for the retained browser runtime.
   - id: P19
     objective: Preserve long-running ChatGPT turns as resumable when only AuraCall's observation lease expires, with bounded read-only recovery and no resend.
     plan: docs/dev/plans/0326-2026-09-02-chatgpt-long-prompt-observation-recovery.md
@@ -501,6 +504,7 @@ lanes:
     checkpoint: d942e80d87b8b76b17d9eecac7b5872ab30cfd67
     remote_ref: refs/remotes/origin/fix/plan0336-skill-prompt-invocation
     integration: merge
+    work_items: [ecochran76/auracall#8]
     dependencies: [P27, P28]
     overlaps: []
     validation_status: native-submission-proven-execution-unaccepted
@@ -536,10 +540,11 @@ lanes:
     branch: fix/plan0323-developer-app-mention
     target: main
     plan_state: OPEN
-    custody_state: INTEGRATED_NO_WORKTREE
+    custody_state: INTEGRATED
     checkpoint: 15a58a694d5f189dae2106ac9c931b8487e073ce
     remote_ref: refs/remotes/origin/fix/plan0323-developer-app-mention
     integration: merge
+    work_items: [ecochran76/auracall#6]
     dependencies: []
     overlaps: [P22]
     reconciled_overlaps: [P22]
@@ -842,7 +847,7 @@ lanes:
     target: main
     plan_state: CLOSED
     custody_state: INTEGRATED
-    checkpoint: e551504d4
+    checkpoint: e551504d4bca15825e79c6c784acd6a7a264f23b
     remote_ref: refs/remotes/origin/fix/plan0351-chatgpt-current-latest
     integration: merge
     dependencies: [P43]
@@ -855,3 +860,26 @@ lanes:
     integration_receipt: a47801d6a440685c0822e843421b184fa89961a5
     disposition: Exact install and one zero-retry LitScout attempt passed; ChatGPT reached and stopped before approve_search_plan with no approval, provider, retry, or canonical DB effect. The repair and receipt are integrated into main.
     updated_at: 2026-09-11
+  - id: P45
+    objective: Detect ChatGPT's single-action app-security approval dialog through the shared response lifecycle without granting persistent approval.
+    plan: docs/dev/plans/0352-2026-09-12-chatgpt-app-security-approval.md
+    plan_ref: refs/remotes/origin/fix/plan0352-chatgpt-security-approval
+    branch: fix/plan0352-chatgpt-security-approval
+    target: main
+    plan_state: CLOSED
+    custody_state: INTEGRATION_READY
+    checkpoint: 67a1c990823616a7883fb51dc8b4793c86dce8d3
+    remote_ref: refs/remotes/origin/fix/plan0352-chatgpt-security-approval
+    integration: merge
+    work_items: [ecochran76/auracall#4]
+    dependencies: [P16]
+    overlaps: [P16]
+    reconciled_overlaps: [P16]
+    reconciliation_note: P45 reuses the shared response lifecycle and does not absorb P16's remaining terminal-response or live-acceptance work.
+    validation_status: passed
+    validation_ref: 67a1c990823616a7883fb51dc8b4793c86dce8d3
+    acceptance_receipt: docs/dev/notes/2026-09-12-plan0352-provider-free-acceptance.json
+    integration_receipt: null
+    blocker: null
+    disposition: Provider-free repair and closeout are published, clean, and ready for issue-backed integration; installed and live-provider proof remain separate.
+    updated_at: 2026-09-16
