@@ -2,11 +2,11 @@
 
 State: OPEN
 Lane: P08
-Operational state: SOURCE_VALIDATED_TEST_BROWSER_SIDE_EFFECT_CLEANED
-Branch: fix/issue-9-aggregate-status
+Operational state: SOURCE_INTEGRATED_INSTALLED_BLOCKED
+Branch: main
 Target: main
 Integration: merge
-Revision: 5 | 2026-09-16
+Revision: 6 | 2026-09-16
 Work item: ecochran76/auracall#9
 
 ## Recovery Packet | 2026-09-16
@@ -44,8 +44,9 @@ or launching provider/browser work.
 
 ## Current State
 
-- Main-aligned recovery is published in PR 17 under issue 9; integration and
-  installed proof remain pending. The historical candidate's diagnosis measured
+- Main-aligned recovery merged through PR 17 at canonical receipt
+  `1fdd4d088d0c0374f97e3482e31e23736af1d877`; provider-free source integration
+  is complete and installed proof remains pending. The historical candidate's diagnosis measured
   local claims at 5.1 seconds, archive hydration at 3.9-6.0 seconds, and repeated
   browser/job readback. Its source timings (4.76, 4.18, 1.53 seconds) are historical,
   not current installed acceptance.
