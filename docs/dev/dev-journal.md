@@ -49660,3 +49660,14 @@ Chat repair integrated. Inventory complete at 11. Blank-tab readiness fix instal
   canonical `main` at `61548857a` with no additional runtime/provider effect.
 - P45 now records `INTEGRATED` custody and the exact canonical merge receipt;
   installed and live-provider acceptance remain explicitly separate.
+
+## 2026-09-16 | Mixed historical branch registered for decomposition
+
+- Issue 5 now owns P46 / Plan 0353 and the exact clean, equal-remote checkpoint
+  `0531931410a1f362f1138cd5b66758b51d6347db`.
+- The 24 unique commits are individually routed to issues 6, 7, or 9, marked as
+  historical merge topology, or identified as canonical/superseded policy.
+- Multiple process working directories still own the source worktree. No file,
+  branch, process, ignored artifact, or worktree in that checkout was changed.
+- Direct PR integration, rebase, force-push, and cleanup are prohibited; child
+  recovery must start from current canonical `main`.

@@ -883,3 +883,25 @@ lanes:
     blocker: null
     disposition: Provider-free repair and closeout merged through issue-backed PR 13 at the exact canonical receipt; installed and live-provider proof remain separate.
     updated_at: 2026-09-16
+  - id: P46
+    objective: Decompose the occupied mixed historical branch into current-main issue-backed recovery lanes without merging or rewriting it.
+    plan: docs/dev/plans/0353-2026-09-16-mixed-branch-decomposition.md
+    plan_ref: refs/remotes/origin/chore/issue-5-register-mixed-lane
+    branch: fix/chatgpt-developer-mode-refresh-reread
+    target: main
+    plan_state: OPEN
+    custody_state: ACTIVE_WORKTREE
+    checkpoint: 0531931410a1f362f1138cd5b66758b51d6347db
+    remote_ref: refs/remotes/origin/fix/chatgpt-developer-mode-refresh-reread
+    integration: decompose-no-direct-merge
+    work_items: [ecochran76/auracall#5]
+    dependencies: [P08, P16]
+    overlaps: [P08, P16, P18, P29, P45]
+    reconciled_overlaps: [P08, P16, P18, P29, P45]
+    reconciliation_note: P46 owns commit disposition and eventual custody cleanup only; issues 6, 7, 9, and 10 retain their product and live-effect outcomes.
+    validation_status: commit-disposition-recorded
+    validation_ref: docs/dev/notes/2026-09-16-issue-5-mixed-branch-disposition.md
+    integration_receipt: null
+    blocker: The clean mixed worktree has active process-cwd owners and must remain untouched until they release it and every routed child outcome is reconciled.
+    disposition: All 24 unique commits have an explicit route or non-cherry-pick disposition; the branch is prohibited from direct integration and remains retained for child recovery.
+    updated_at: 2026-09-16
