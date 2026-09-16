@@ -273,6 +273,7 @@ export function createRunArchiveService(deps: RunArchiveServiceDeps = {}): RunAr
       evidenceStore,
       indexStore,
       updatedAt: now().toISOString(),
+      refreshMode,
     }).then((record) => record.items);
   }
   return {
@@ -288,6 +289,7 @@ export function createRunArchiveService(deps: RunArchiveServiceDeps = {}): RunAr
       );
     },
     async listItemsBatch(requests) {
+      if (requests.length === 0) return [];
       const normalizedRequests = requests.map((request) => ({
         ...request,
         kind: normalizeKind(request.kind),
@@ -299,6 +301,7 @@ export function createRunArchiveService(deps: RunArchiveServiceDeps = {}): RunAr
       return requests.map((request) => createRunArchiveListResult(items, request, generatedAt));
     },
     async listItemsBatchAvailability(requests) {
+      if (requests.length === 0) return [];
       const normalizedRequests = requests.map((request) => ({
         ...request,
         kind: normalizeKind(request.kind),
@@ -520,8 +523,11 @@ async function backfillIndexItems(input: {
   evidenceStore: RunArchiveEvidenceStore;
   indexStore: RunArchiveIndexStore;
   updatedAt: string;
+  refreshMode?: 'full' | 'availability';
 }): Promise<RunArchiveIndexRecord> {
-  const items = await collectArchiveItems(input);
+  const items = await collectArchiveItems(input, {
+    includeChecksum: input.refreshMode !== 'availability',
+  });
   return input.indexStore.writeIndex(items, { updatedAt: input.updatedAt });
 }
 
@@ -576,7 +582,7 @@ async function collectArchiveItems(deps: {
   mediaStore: MediaGenerationRecordStore;
   historyItemStore?: RunArchiveHistoryItemStore;
   evidenceStore?: RunArchiveEvidenceStore;
-}): Promise<RunArchiveItem[]> {
+}, options: { includeChecksum?: boolean } = {}): Promise<RunArchiveItem[]> {
   const [runRecords, batchRecords, mediaRecords, historyItems, evidenceRecords] = await Promise.all([
     deps.runStore.listBundles().then((bundles) => bundles.map((bundle) => ({
       runId: bundle.run.id,
@@ -595,7 +601,7 @@ async function collectArchiveItems(deps: {
     ...buildMediaArchiveItems(mediaRecords),
     ...historyItems,
     ...evidenceRecords.map(buildEvidenceArchiveItem),
-  ]);
+  ], options);
 }
 
 async function refreshIndexedFileMetadata(

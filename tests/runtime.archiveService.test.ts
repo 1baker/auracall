@@ -165,6 +165,17 @@ describe('run archive service', () => {
     ]);
   });
 
+  test('returns empty batch reads without touching archive storage', async () => {
+    const readIndex = vi.fn();
+    const service = createRunArchiveService({
+      indexStore: { readIndex } as unknown as RunArchiveIndexStore,
+    });
+
+    await expect(service.listItemsBatch?.([])).resolves.toEqual([]);
+    await expect(service.listItemsBatchAvailability?.([])).resolves.toEqual([]);
+    expect(readIndex).not.toHaveBeenCalled();
+  });
+
   test('refreshes status availability without rereading local asset contents', async () => {
     const homeDir = await mkdtemp(path.join(os.tmpdir(), 'auracall-run-archive-availability-'));
     setAuracallHomeDirOverrideForTest(homeDir);
@@ -203,6 +214,42 @@ describe('run archive service', () => {
       id: 'generated-artifact:availability-only',
       fileAvailable: true,
       checksumSha256: 'existing-checksum',
+    });
+  });
+
+  test('backfills a missing archive index without hashing local asset contents for status availability', async () => {
+    const homeDir = await mkdtemp(path.join(os.tmpdir(), 'auracall-run-archive-cold-availability-'));
+    setAuracallHomeDirOverrideForTest(homeDir);
+    const assetPath = path.join(homeDir, 'cold-asset.txt');
+    const historyIndexPath = path.join(homeDir, 'runtime', 'archive', 'history-items', 'index.json');
+    await writeFile(assetPath, 'cold status still needs only bounded availability', 'utf8');
+    await mkdir(path.dirname(historyIndexPath), { recursive: true });
+    await writeFile(historyIndexPath, JSON.stringify([
+      createArchiveItemFixture({
+        id: 'upload:cold-availability',
+        kind: 'upload',
+        provider: 'chatgpt',
+        runtimeProfile: 'default',
+        localPath: assetPath,
+        fileAvailable: true,
+        checksumSha256: 'persisted-cold-checksum',
+      }),
+    ]), 'utf8');
+    const readFile = vi.spyOn(fs, 'readFile');
+    const service = createRunArchiveService();
+
+    const results = await service.listItemsBatchAvailability?.([
+      { provider: 'chatgpt', runtimeProfile: 'default', assetAvailability: 'available' },
+    ]);
+
+    expect(readFile.mock.calls.some(([filePath]) => filePath === assetPath)).toBe(false);
+    expect(results?.[0]?.items).toMatchObject([{
+      id: 'upload:cold-availability',
+      fileAvailable: true,
+      checksumSha256: 'persisted-cold-checksum',
+    }]);
+    await expect(readRunArchiveIndex()).resolves.toMatchObject({
+      items: [{ id: 'upload:cold-availability', checksumSha256: 'persisted-cold-checksum' }],
     });
   });
 

@@ -4,7 +4,9 @@
   permission/device errors. A successful stat alone is not readable-file proof.
   Preserve bundle-only exclusion when replacing the runtime listing seam.
   Status-only HTTP fixtures must disable unrelated startup reconciliation and
-  assert conservation of remote and locally materialized inventory.
+  assert conservation of remote and locally materialized inventory. Carry the
+  bounded availability mode through cold-index backfill too; otherwise status
+  can silently resume full payload hashing when the archive index is missing.
 
 - 2026-09-11: A test suite labeled provider-free is not proof of zero browser
   effects. After broad or full validation, run a fresh OS process/cwd census.

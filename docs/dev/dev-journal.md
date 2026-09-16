@@ -49697,3 +49697,7 @@ Chat repair integrated. Inventory complete at 11. Blank-tab readiness fix instal
 - Primary publication verified remote SHA `61ca2ef80ff509db93144686e04a9fd952ebca2b`
   and opened issue-linked PR 17. The lane catalog now uses the published remote
   selector; installed acceptance and issue closure remain explicitly open.
+- Independent PR review found cold availability backfill still hashed payloads
+  when the archive index was absent. Availability mode now reaches that
+  backfill, retaining persisted checksums while probing at most one byte; the
+  focused regression, typecheck, scoped lint, and CodeGraph sync pass.

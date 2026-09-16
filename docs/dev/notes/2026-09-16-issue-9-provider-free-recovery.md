@@ -44,6 +44,12 @@ browser; this invalidates a zero-browser-effect claim (see below).
   `pnpm vitest run tests/http.responsesServer.test.ts --maxWorkers=1`:
   218/218 passed, 24.63 seconds. This is a change-driven rerun after the
   documented fixture repair, not an unexplained retry of the original failure.
+- Independent review found that a missing archive index still took the ordinary
+  checksum-producing backfill path. The recovery now carries availability mode
+  through cold-index backfill as well, and empty batch requests return without
+  touching storage. The two focused regressions passed 2/2 and prove the asset
+  payload is not read and a persisted checksum is retained; typecheck, scoped
+  lint, CodeGraph sync, and diff hygiene passed afterward.
 - `pnpm run typecheck` passed. `pnpm run build` passed, including both user
   interfaces and vendor/config packaging.
 - Scoped source `pnpm exec biome lint` passed with zero warnings. Including
@@ -109,6 +115,6 @@ runtime ownership, and remaining ASL-R6 obligations have current receipts.
 Publication receipt: the primary pushed remote branch
 `fix/issue-9-aggregate-status` at
 `61ca2ef80ff509db93144686e04a9fd952ebca2b` and opened issue-linked PR 17.
-After catalog reconciliation, the verified PR head is
-`868e9493265ebdf1c6c33a2c3775d8902c4b6d34`. This publication does not
+Subsequent review fixes advance the PR head, so publication checkpoints here
+are historical locators rather than the merge receipt. Publication does not
 satisfy installed acceptance or close issue 9.
