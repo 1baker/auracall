@@ -150,12 +150,18 @@ auracall --profile wsl-chrome-3 apps --target chatgpt test Corel33t \
 # ecosystem picker, not the generic top-level tools menu. Source
 # `apps test --submit` uses that path and verifies the exact composer-local
 # plugin identity before Send, then remains in the shared response lifecycle so
-# tool and app-security approvals are detected. Manual mode exposes the exact
-# approval for browser review; allow-once may select a one-time `Allow`, while
+# tool and app-security approvals are detected. Manual approval returns a
+# terminal failed/nonzero result (not a guaranteed preserved browser handoff);
+# allow-once may select a one-time `Allow`, while
 # always-allow refuses to downgrade persistent consent. Installed acceptance
 # requires a user runtime containing that repair.
 # Developer-app tests preserve the active Chat model (`modelStrategy=current`);
 # a separately resolved `--model` value is not proof that the UI switched.
+# The per-run request uses fresh-root Chat and removes inherited composer-tool,
+# Work/project/conversation targeting. JSON and text return answerText,
+# conversationId, terminal/current URL, effectState and retrySafe. Unknown or
+# observed Send effects are never retry-safe; there is no automatic resubmit.
+# Issue 6 provider-free fixtures prove this source seam, not installed/live use.
 # Create, refresh, submitted tests, and uninstall require --expected-account
 # plus --yes. OAuth, MFA, consent, CAPTCHA, and verification remain human gates.
 # `awaiting-human` is emitted only after AuraCall observes a fresh OAuth or

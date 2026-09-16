@@ -1,14 +1,19 @@
 # Aura-Call Roadmap
 
+- P16 / issue 6 revision-8 recovery implements developer-app terminal response
+  through the real shared local/remote lifecycle, with exact app selection,
+  one Send and honest answer/identity/effect evidence. Provider-free validation
+  and local commits only; integration, installation and live proof remain open.
+
 - Active decomposition lane P46: [Plan 0353](docs/dev/plans/0353-2026-09-16-mixed-branch-decomposition.md)
   registers the process-owned mixed historical branch under GitHub issue 5.
   Its 24 unique commits route to issues 6, 7, and 9 or explicit historical
   dispositions; the branch must never be proposed as one pull request.
 
 - Provider-free accepted and integrated P45: [Plan 0352](docs/dev/plans/0352-2026-09-12-chatgpt-app-security-approval.md)
-  detects ChatGPT's single-`Allow` suspicious-instruction app-security dialog
-  and routes developer-app test submissions through the shared response and
-  approval lifecycle. PR 13 integrated the validated current-main replay at
+  detects ChatGPT's single-`Allow` suspicious-instruction app-security dialog.
+  Its historical developer-app shared-routing claim did not cross the real
+  low-level boundary; issue 6/P16 owns that recovery. PR 13 integrated the replay at
   `61548857a`; installation and live acceptance remain separate.
 
 - Live-accepted integrated P44: [Plan 0351](docs/dev/plans/0351-2026-09-11-chatgpt-current-latest-selection.md)

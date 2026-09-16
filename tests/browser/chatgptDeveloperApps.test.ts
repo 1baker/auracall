@@ -35,9 +35,6 @@ describe("deriveChatgptDeveloperAppState", () => {
 				userConfig: {} as never,
 				getUserIdentity,
 				connectDevTools,
-				runPrompt: async () => {
-					throw new Error("should not prompt");
-				},
 			},
 			async () => {
 				throw new Error("should not create a browser");
@@ -70,9 +67,6 @@ describe("deriveChatgptDeveloperAppState", () => {
 				userConfig: {} as never,
 				getUserIdentity: async () => null,
 				connectDevTools,
-				runPrompt: async () => {
-					throw new Error("should not prompt");
-				},
 			},
 			async () => {
 				throw new Error("should not create a browser");
@@ -117,9 +111,6 @@ describe("deriveChatgptDeveloperAppState", () => {
 						} as never,
 						port: 45015,
 					}),
-					runPrompt: async () => {
-						throw new Error("should not prompt");
-					},
 				},
 				async () => {
 					throw new Error("should not create a browser");
@@ -165,9 +156,6 @@ describe("deriveChatgptDeveloperAppState", () => {
 						} as never,
 						port: 45015,
 					}),
-					runPrompt: async () => {
-						throw new Error("should not prompt");
-					},
 				},
 				async () => {
 					throw new Error("should not create a browser");
@@ -193,11 +181,12 @@ describe("deriveChatgptDeveloperAppState", () => {
 	});
 
 	it("preserves the active model and routes submission through the exact app mention", async () => {
-		const runPrompt = vi.fn(async () => ({
+		const runBrowser = vi.fn(async () => ({
+			answerText: "App answer",
 			conversationId: "conversation-1",
-			url: "https://chatgpt.com/c/conversation-1",
+			tabUrl: "https://chatgpt.com/c/conversation-1",
 		}));
-		const createBrowser = vi.fn(async () => ({ runPrompt }));
+		const createBrowser = vi.fn();
 		const adapter = createChatgptDeveloperAppBrowserAdapter(
 			{
 				userConfig: {
@@ -208,41 +197,42 @@ describe("deriveChatgptDeveloperAppState", () => {
 				},
 			} as never,
 			createBrowser as never,
+			{ runBrowser: runBrowser as never, browserOperationOwned: true },
 		);
 		const app = {
 			pluginId: "plugin_asdk_app_litscout",
 			appIds: ["asdk_app_litscout"],
 			name: "LitScout",
 		};
-		await adapter.submitTest(app, "Use only LitScout.");
-
-		expect(createBrowser).toHaveBeenCalledWith(
-			expect.objectContaining({
-				browser: expect.objectContaining({
-					modelStrategy: "current",
-				}),
-			}),
-		);
-		expect(createBrowser).toHaveBeenCalledWith(
-			expect.objectContaining({
-				browser: expect.not.objectContaining({ composerTool: expect.anything() }),
-			}),
-		);
-		expect(createBrowser).not.toHaveBeenCalledWith(
-			expect.objectContaining({
-				browser: expect.objectContaining({ composerTool: "LitScout" }),
-			}),
-		);
-		expect(runPrompt).toHaveBeenCalledWith({
-			prompt: "Use only LitScout.",
-			completionMode: "assistant_response",
-			timeoutMs: 120_000,
-			modelStrategy: "current",
-			ecosystemMention: {
-				label: "LitScout",
-				acceptedPluginIds: ["plugin_asdk_app_litscout", "asdk_app_litscout"],
-			},
+		const result = await adapter.submitTest(app, "Use only LitScout.");
+		expect(createBrowser).not.toHaveBeenCalled();
+		expect(runBrowser).toHaveBeenCalledTimes(1);
+		expect(result).toMatchObject({
+			status: "completed",
+			answerText: "App answer",
+			conversationId: "conversation-1",
+			effectState: "effect_observed",
+			retrySafe: false,
 		});
+		expect(runBrowser).toHaveBeenCalledWith(
+			expect.objectContaining({
+				prompt: "Use only LitScout.",
+				completionMode: "assistant_response",
+				skipBrowserExecutionOperation: true,
+				config: expect.objectContaining({
+					timeoutMs: 120_000,
+					modelStrategy: "current",
+					composerTool: null,
+					conversationId: null,
+					projectId: null,
+					url: "https://chatgpt.com/",
+				}),
+				ecosystemMention: {
+					label: "LitScout",
+					acceptedPluginIds: ["plugin_asdk_app_litscout", "asdk_app_litscout"],
+				},
+			}),
+		);
 	});
 
 	it("does not claim an OAuth human gate when no app or fresh handoff exists", () => {

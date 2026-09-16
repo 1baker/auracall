@@ -110,6 +110,17 @@ export async function ensureChatgptEcosystemMention(
 	}
 }
 
+export async function assertChatgptEcosystemMentionSelected(
+	client: ChromeClient,
+	request: ChatgptEcosystemMentionRequest,
+): Promise<void> {
+	const selected = await readChatgptEcosystemMention(client);
+	const accepted = request.acceptedPluginIds.map(normalizeAppIdentity).filter(Boolean);
+	if (!selected || !accepted.includes(normalizeAppIdentity(selected.pluginId))) {
+		throw new Error(`ChatGPT developer app ${request.label} selection changed before Send.`);
+	}
+}
+
 function normalizeAppIdentity(value: string | null | undefined): string {
 	return normalize(value)
 		.replace(/^plugin:/, "")

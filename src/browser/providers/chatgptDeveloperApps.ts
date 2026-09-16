@@ -1,6 +1,11 @@
 import type { DevToolsConnectionOptions } from "../../../packages/browser-service/src/types.js";
 import type { ResolvedUserConfig } from "../../config.js";
 import {
+	submitChatgptDeveloperApp,
+	type DeveloperAppSubmissionEvidence,
+	type DeveloperAppSubmissionOptions,
+} from "../chatgptDeveloperAppSubmission.js";
+import {
 	ensureChatgptEcosystemMention,
 	readChatgptEcosystemMention,
 } from "../actions/chatgptEcosystemMention.js";
@@ -62,8 +67,8 @@ export type ChatgptDeveloperAppBrowserTarget = Pick<
 > &
 	Partial<Omit<ChatgptDeveloperAppBrowserEntry, "pluginId" | "appIds" | "name">>;
 
-export interface ChatgptDeveloperAppBrowserMutationOutcome {
-	status: "completed" | "awaiting-human";
+export interface ChatgptDeveloperAppBrowserMutationOutcome extends DeveloperAppSubmissionEvidence {
+	status: "completed" | "awaiting-human" | "failed";
 	message: string;
 	currentUrl?: string | null;
 	app?: ChatgptDeveloperAppBrowserTarget | null;
@@ -127,19 +132,6 @@ export interface ChatgptDeveloperAppBrowserClient {
 	connectDevTools(
 		options?: DevToolsConnectionOptions,
 	): Promise<{ client: ChromeClient; port: number }>;
-	runPrompt(input: {
-		prompt: string;
-		completionMode: "assistant_response" | "prompt_submitted";
-		timeoutMs?: number | null;
-		modelStrategy?: "current";
-		ecosystemMention?: {
-			label: string;
-			acceptedPluginIds: string[];
-		};
-	}): Promise<{
-		conversationId?: string | null;
-		url?: string | null;
-	}>;
 }
 
 export type ChatgptDeveloperAppBrowserClientFactory = (
@@ -151,8 +143,9 @@ export class ChatgptDeveloperAppBrowserAdapter {
 
 	constructor(
 		private readonly browser: ChatgptDeveloperAppBrowserClient,
-		private readonly createBrowser: ChatgptDeveloperAppBrowserClientFactory,
+		_createBrowser: ChatgptDeveloperAppBrowserClientFactory,
 		private readonly abortSignal?: AbortSignal,
+		private readonly submissionOptions: DeveloperAppSubmissionOptions = {},
 	) {}
 
 	async readState(): Promise<ChatgptDeveloperAppBrowserState> {
@@ -367,30 +360,12 @@ export class ChatgptDeveloperAppBrowserAdapter {
 		app: ChatgptDeveloperAppBrowserTarget,
 		prompt: string,
 	): Promise<ChatgptDeveloperAppBrowserMutationOutcome> {
-		const { composerTool: _composerTool, ...browserWithoutComposerTool } =
-			this.browser.userConfig.browser ?? {};
-		const testConfig: ResolvedUserConfig = {
-			...this.browser.userConfig,
-			browser: {
-				...browserWithoutComposerTool,
-				modelStrategy: "current",
-			},
-		};
-		const testBrowser = await this.createBrowser(testConfig);
-		const result = await testBrowser.runPrompt({
-			prompt,
-			completionMode: "assistant_response",
-			timeoutMs: 120_000,
-			modelStrategy: "current",
-			ecosystemMention: {
-				label: app.name,
-				acceptedPluginIds: [app.pluginId, ...app.appIds],
-			},
+		const result = await submitChatgptDeveloperApp(this.browser.userConfig, app, prompt, {
+			...this.submissionOptions,
+			abortSignal: this.abortSignal,
 		});
 		return {
-			status: "completed",
-			message: `${app.name} test prompt completed${result.conversationId ? ` in conversation ${result.conversationId}` : ""}.`,
-			currentUrl: result.url ?? null,
+			...result,
 			app,
 		};
 	}
@@ -577,9 +552,14 @@ function runDeveloperAppAttachmentStage<T>(
 export function createChatgptDeveloperAppBrowserAdapter(
 	browser: ChatgptDeveloperAppBrowserClient,
 	createBrowser: ChatgptDeveloperAppBrowserClientFactory,
-	options: { abortSignal?: AbortSignal } = {},
+	options: DeveloperAppSubmissionOptions = {},
 ): ChatgptDeveloperAppBrowserAdapter {
-	return new ChatgptDeveloperAppBrowserAdapter(browser, createBrowser, options.abortSignal);
+	return new ChatgptDeveloperAppBrowserAdapter(
+		browser,
+		createBrowser,
+		options.abortSignal,
+		options,
+	);
 }
 
 export function deriveChatgptDeveloperAppState(

@@ -1,3 +1,22 @@
+## 2026-09-16 | Issue 6 shared developer-app terminal lifecycle
+
+- Closed-world final review reproduced stale local root identity after an
+  immediate committed-Send failure. Both real local terminal-failure and manual
+  approval fixtures failed RED; the common failure exit now awaits the existing
+  runtime hint refresh. Remote mocked connection and explicit local reused-
+  browser fixture remain hermetic; real launch is forbidden.
+
+- P16 revision 8 replaces the rejected low-level assistant_response call with
+  one high-level runBrowserMode invocation. Exact mention is rechecked before
+  Send in both local and remote paths; P45 approval handling stays shared.
+- The real remote fixture exposed stale URL and missing process provenance;
+  current shared helpers now supply terminal identity and fresh account proof.
+  Failures preserve conservative effect evidence, do not retry, and return
+  nonzero CLI status. Manual approval is not a guaranteed retained handoff.
+- Delegated implementation is explicitly user-authorized and supersedes old
+  no-subagent constraints. Local validation only; installed/live acceptance,
+  publication and integration remain primary-owned gates. See issue-6 receipt.
+
 ## 2026-09-02 | Plan 0329 ChatGPT Skill CRUD opened
 
 - Plan 0328 is integrated and installed/live accepted, so the handoff's timeout
