@@ -21582,3 +21582,12 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
 - Mark source custody integrated and retire the temporary source worktree only
   after a clean OS cwd census. Keep issue 9 and Plan 0315 open; no installed,
   scheduler, browser, or provider acceptance runs in this reconciliation.
+
+## Turn 578 | 2026-09-16
+
+- Reconcile P16 / issue 6 from current-main evidence: exact ecosystem-mention
+  selection is integrated, but the real low-level adapter rejects the
+  `assistant_response` mode requested by developer-app submit.
+- Record the mocked-test coverage hole and mark one bounded shared-high-level
+  lifecycle bridge READY. Do not open an implementation worktree or invoke a
+  provider in this audit-only packet.

@@ -49709,3 +49709,10 @@ Chat repair integrated. Inventory complete at 11. Blank-tab readiness fix instal
   historical lane population was migrated, contrary to Policy 0031 adoption
   order; the catalog returns to optional validation while all new/open issue
   lanes keep their explicit locators.
+## 2026-09-16 | Issue 6 developer-app audit reconciliation
+
+- P16 exact developer-app selection is integrated,
+  but the current submit path requests `assistant_response` from a low-level
+  adapter that rejects it. The mocked unit seam explains the false-green 76/76
+  focused result. Issue 6 is READY for a shared-high-level lifecycle bridge; no
+  implementation worktree or provider action was opened in this audit.
