@@ -2,10 +2,9 @@
 
 Work item: `ecochran76/auracall#6` · Lane: P16 · Plan 0323 revision 8.
 Base: `dc0b909fb3d6d3354e5c2fee9f4ac6525cc94157`.
-Branch: `fix/issue-6-developer-app-response` (published; not integrated).
+Branch: `fix/issue-6-developer-app-response` (merged through PR 21).
 Source commit: `1a2fe5aab68180b27d3999cc8de581f81630471a`.
-The subsequent docs-only closeout updates this exact checkpoint; the branch is
-published for review and remains unintegrated.
+Canonical integration receipt: `c3800d460019f6dcf11fee29e9ddabc7907e44b0`.
 
 ## Authority and ownership
 
@@ -100,11 +99,9 @@ pnpm exec vitest run tests/browser/chatgptDeveloperAppLifecycle.test.ts tests/br
 
 ## Remaining gates
 
-Provider-free acceptance is not publication, current installed parity or live
-acceptance. Primary must review the local commit and reconcile the proposed
-catalog/checkpoint with canonical main before any separately authorized
-publication/integration. Plan 0323 remains OPEN for current installed DAS-R3
-and explicit live DAS-R5. No historical experiment retry or allowance was
+Provider-free source is published and integrated, but it is not current
+installed parity or live acceptance. Plan 0323 remains OPEN for current
+installed DAS-R3 and explicit live DAS-R5. No historical experiment retry or allowance was
 consumed or renewed. Arbitrary remote Chrome without attributable process
 provenance remains unsupported. The mutation-deadline and refresh-inventory
 follow-ups stay separate. GitHub issue 6 was not changed by this worker.

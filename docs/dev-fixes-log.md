@@ -22596,3 +22596,7 @@ ChatGPT commits a native Skill mention before the user text. Prompt equality mus
   Developer-app tests must cross the real high-level orchestration seam when
   terminal response, approvals, effect classification, and no-retry behavior
   are the contract; retain low-level prompt-submitted-only boundaries.
+- 2026-09-16: Refresh terminal browser identity before every local failure exit,
+  not only socket-close exits. A committed Send can fail during approval or
+  response handling after navigation reaches `/c/<id>`; awaited runtime-hint
+  capture preserves the exact conversation without authorizing a resend.

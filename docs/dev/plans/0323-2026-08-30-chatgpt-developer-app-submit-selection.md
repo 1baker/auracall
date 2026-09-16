@@ -2,17 +2,18 @@
 
 State: OPEN
 Lane: P16
-Operational state: TERMINAL_RESPONSE_PROVIDER_FREE_ACCEPTED_LOCAL
+Operational state: TERMINAL_RESPONSE_PROVIDER_FREE_INTEGRATED_INSTALL_LIVE_BLOCKED
 Branch: fix/issue-6-developer-app-response
 Target: main
 Integration: merge
-Revision: 8 | 2026-09-16
+Revision: 9 | 2026-09-16
 
 ## Current State
 
-- Issue `ecochran76/auracall#6` recovery owns one local-only implementation on
-  `fix/issue-6-developer-app-response`, based on
-  `dc0b909fb3d6d3354e5c2fee9f4ac6525cc94157`. The adapter now invokes the real
+- Issue `ecochran76/auracall#6` recovery source merged through PR 21 at
+  `c3800d460019f6dcf11fee29e9ddabc7907e44b0`; the clean, remote-equal,
+  process-unowned implementation worktree and local branch were removed while
+  the remote source ref was retained. The adapter now invokes the real
   shared high-level lifecycle once, returns terminal answer/identity/effect
   evidence, and never retries submission. Local and remote paths retain exact
   mention selection and revalidate it after prompt replacement before Send.
@@ -24,7 +25,7 @@ Revision: 8 | 2026-09-16
 - The remote provider-free seam additionally exposed missing browser-process
   provenance and stale root URL. Shared process resolution and fresh terminal
   location readback now supply honest account proof and conversation identity.
-- Sole implementation ownership is the delegated issue-6 worker; primary owns
+- Sole implementation ownership was the delegated issue-6 worker; primary owned
   independent review and integration. Current user-authorized subagent work
   supersedes historical no-subagent constraints for this bounded recovery.
   Other worktrees and historical generic-tool/provider-local-watcher patches
@@ -128,9 +129,10 @@ evidence without duplicating provider-local response or approval watchers.
 4. Revision 8 routes the developer-app helper through high-level
    `runBrowserMode`; low-level provider `runPrompt` remains prompt-submitted-only.
    Prove the seam with mocked transport and real shared response/approval logic.
-5. Commit provider-free source and receipts locally. Publication, integration,
-   exact installation and live acceptance remain separate primary-owned gates;
-   no extra research Send or historical experiment retry is authorized.
+5. Commit provider-free source and receipts, publish through an issue-linked PR,
+   and integrate only after remote-SHA, diff, mergeability, check and review-thread
+   gates pass. Exact installation and live acceptance remain separate gates; no
+   extra research Send or historical experiment retry is authorized.
 
 ## Acceptance Criteria
 
@@ -140,11 +142,12 @@ evidence without duplicating provider-local response or approval watchers.
   developer-app/composer/ChatGPT prompt contracts pass, including the atomic
   pill-to-literal cleanup transition.
 - `DAS-R3`: typecheck, build, and source/installed parity pass.
-- `DAS-R4`: revision-8 provider-free accepted locally: 132/132 affected tests,
+- `DAS-R4`: revision-9 provider-free accepted and integrated through PR 21:
+  132/132 affected tests,
   real shared lifecycle fixture, terminal success/failure, exactly-one Send,
   conservative effect state, exact selection, retained prompt-structure guard,
   typecheck/build/lint/audits. Historical provider-local mode remains rejected;
-  publication, integration and installed/live evidence remain separate.
+  installed/live evidence remains separate.
 - `DAS-R5`: one authorized live Experiment 18 Send proves exact app selection,
   continued tool approvals, and terminal response capture on the expected
   account; its LitScout effects are governed and audited by Plan 0477.
