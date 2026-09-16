@@ -39,3 +39,14 @@ The isolated worktree initially lacked `node_modules`; validation was rerun
 with the repository's existing pinned dependency tree through a temporary
 worktree-local symlink. No dependency install, runtime install, browser,
 provider, or live-system action occurred.
+
+## Integration and cleanup
+
+- PR 23 merged to canonical `main` at
+  `57a0796662bf592f11b1edcc1d33db37f8452dee`.
+- The published source branch resolved exactly to
+  `af85d7b1c76bcafe107ee6ad88c78c9073af1924` before integration.
+- The temporary dependency symlink was removed.
+- The clean, remote-equal, merge-ancestral implementation worktree and local
+  branch were removed after its task-owned process-cwd pipeline was terminated
+  and a fresh ownership census returned no owners. The remote ref is retained.

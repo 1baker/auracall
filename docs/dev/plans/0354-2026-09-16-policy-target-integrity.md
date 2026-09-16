@@ -1,6 +1,6 @@
 # Policy target integrity | 0354-2026-09-16
 
-State: OPEN
+State: CLOSED
 Lane: P47
 Branch: fix/issue-20-policy-target-integrity
 Target: main
@@ -9,11 +9,11 @@ Work item: ecochran76/auracall#20
 
 ## Current State
 
-The missing-target defect is reproduced and repaired on the published branch. Policy 0030 now
-matches the adopted selector module body, and the ordinary plan audit validates
-every backtick-delimited `AGENTS.md` durable policy target through a focused,
-deterministic helper. Provider-free validation is green; pull-request
-integration and final custody cleanup remain.
+Policy 0030 and the deterministic dangling-target audit are integrated on
+canonical `main` through PR 23 at
+`57a0796662bf592f11b1edcc1d33db37f8452dee`. Provider-free validation is green,
+and the clean, remote-equal, process-unowned implementation worktree and local
+branch have been removed while the remote recovery ref remains retained.
 
 ## Objective
 

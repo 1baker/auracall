@@ -49757,3 +49757,7 @@ Chat repair integrated. Inventory complete at 11. Blank-tab readiness fix instal
   ordinary plan audit, with a focused provider-free contract test.
 - No model calibration, runtime, browser, provider, installation, or release
   action is part of this governance repair.
+- PR 23 merged the repair at
+  `57a0796662bf592f11b1edcc1d33db37f8452dee`; remote custody, exact source
+  locators, merge ancestry, and process ownership were re-read before the clean
+  implementation worktree and local branch were removed.
