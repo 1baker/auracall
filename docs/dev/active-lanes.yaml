@@ -130,12 +130,12 @@ lanes:
   - id: P08
     objective: Reduce aggregate API status latency below the existing default five-second client budget without weakening status semantics.
     plan: docs/dev/plans/0315-2026-08-25-aggregate-status-latency.md
-    plan_ref: refs/heads/fix/issue-9-aggregate-status
+    plan_ref: refs/remotes/origin/fix/issue-9-aggregate-status
     branch: fix/issue-9-aggregate-status
     target: main
     plan_state: OPEN
     custody_state: ACTIVE_WORKTREE
-    checkpoint: b35077504ae92972cf22c4957e7c30036c43dbce
+    checkpoint: 61ca2ef80ff509db93144686e04a9fd952ebca2b
     remote_ref: refs/remotes/origin/fix/issue-9-aggregate-status
     integration: merge
     work_items: [ecochran76/auracall#9]
@@ -144,8 +144,8 @@ lanes:
     validation_status: source-passed-test-browser-side-effect-cleaned
     validation_ref: docs/dev/notes/2026-09-16-issue-9-provider-free-recovery.md
     integration_receipt: null
-    blocker: Test-induced browser side effect was cleaned by the primary but zero browser effect remains unproved; installed acceptance requires fresh scheduler/browser/provider-guard evidence. Publication is primary-owned.
-    disposition: Main-aligned provider-free recovery is active locally under issue 9; the historical remote ref preserves candidate custody until the primary publishes the recovered branch.
+    blocker: Test-induced browser side effect was cleaned by the primary but zero browser effect remains unproved; installed acceptance requires fresh scheduler/browser/provider-guard evidence.
+    disposition: Main-aligned provider-free recovery is published in PR 17 under issue 9; the historical candidate ref remains evidence-only.
     updated_at: 2026-09-16
     recovery_ref: refs/remotes/origin/wip/plan0337-browser-edits-recovery
     recovery_checkpoint: 3696f6dd337b703f42997753a576bd8364203102

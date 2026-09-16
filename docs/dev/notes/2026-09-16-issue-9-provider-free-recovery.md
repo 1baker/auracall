@@ -105,3 +105,8 @@ not as zero browser effect. The historical ASL-R6 invariant remains unproved.
 Issue 9 and Plan 0315 remain open until the exact installed source and three
 consecutive default status reads under five seconds, narrow endpoint parity,
 runtime ownership, and remaining ASL-R6 obligations have current receipts.
+
+Publication receipt: the primary pushed remote branch
+`fix/issue-9-aggregate-status` at
+`61ca2ef80ff509db93144686e04a9fd952ebca2b` and opened issue-linked PR 17.
+This publication does not satisfy installed acceptance or close issue 9.

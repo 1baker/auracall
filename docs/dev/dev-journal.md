@@ -49694,3 +49694,6 @@ Chat repair integrated. Inventory complete at 11. Blank-tab readiness fix instal
 - Primary cleanup subsequently verified and terminated only the exact six
   attributable Chrome/crashpad PIDs and reported a clean profile-path census.
   This worker accepts the primary's cleanup receipt; no further tests ran.
+- Primary publication verified remote SHA `61ca2ef80ff509db93144686e04a9fd952ebca2b`
+  and opened issue-linked PR 17. The lane catalog now uses the published remote
+  selector; installed acceptance and issue closure remain explicitly open.
