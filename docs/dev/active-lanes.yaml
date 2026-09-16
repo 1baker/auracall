@@ -867,7 +867,7 @@ lanes:
     branch: fix/plan0352-chatgpt-security-approval
     target: main
     plan_state: CLOSED
-    custody_state: INTEGRATION_READY
+    custody_state: INTEGRATED
     checkpoint: 67a1c990823616a7883fb51dc8b4793c86dce8d3
     remote_ref: refs/remotes/origin/fix/plan0352-chatgpt-security-approval
     integration: merge
@@ -879,7 +879,7 @@ lanes:
     validation_status: passed
     validation_ref: 67a1c990823616a7883fb51dc8b4793c86dce8d3
     acceptance_receipt: docs/dev/notes/2026-09-12-plan0352-provider-free-acceptance.json
-    integration_receipt: null
+    integration_receipt: 61548857a8748ee9ad53bb1f6f78ee66373d0f66
     blocker: null
-    disposition: Provider-free repair and closeout are published, clean, and ready for issue-backed integration; installed and live-provider proof remain separate.
+    disposition: Provider-free repair and closeout merged through issue-backed PR 13 at the exact canonical receipt; installed and live-provider proof remain separate.
     updated_at: 2026-09-16
