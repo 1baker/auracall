@@ -2,6 +2,7 @@
 
 Work item: `ecochran76/auracall#20` · Lane: P47 · Plan 0354.
 Base: `f8c174ba92a5053f97dc31b12397b04e32542e45`.
+Source commit: `3fdbbabb611cb03fb8d9b7e91512a86fc702f550`.
 
 ## Reproduced defect
 

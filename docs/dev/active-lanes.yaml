@@ -914,7 +914,7 @@ lanes:
     target: main
     plan_state: OPEN
     custody_state: ACTIVE_WORKTREE
-    checkpoint: f8c174ba92a5053f97dc31b12397b04e32542e45
+    checkpoint: 3fdbbabb611cb03fb8d9b7e91512a86fc702f550
     remote_ref: null
     integration: merge
     work_items: [ecochran76/auracall#20]
