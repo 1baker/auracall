@@ -906,3 +906,23 @@ lanes:
     blocker: The clean mixed worktree has active process-cwd owners and must remain untouched until they release it and every routed child outcome is reconciled.
     disposition: All 24 unique commits have an explicit route or non-cherry-pick disposition; the branch is prohibited from direct integration and remains retained for child recovery.
     updated_at: 2026-09-16
+  - id: P47
+    objective: Restore the missing adopted model-selection policy and fail closed on dangling AGENTS.md policy targets.
+    plan: docs/dev/plans/0354-2026-09-16-policy-target-integrity.md
+    plan_ref: refs/heads/fix/issue-20-policy-target-integrity
+    branch: fix/issue-20-policy-target-integrity
+    target: main
+    plan_state: OPEN
+    custody_state: ACTIVE_WORKTREE
+    checkpoint: f8c174ba92a5053f97dc31b12397b04e32542e45
+    remote_ref: null
+    integration: merge
+    work_items: [ecochran76/auracall#20]
+    dependencies: []
+    overlaps: []
+    reconciled_overlaps: []
+    blocker: null
+    disposition: Missing durable policy and false-green adoption audit reproduced; bounded provider-free repair is in progress.
+    updated_at: 2026-09-16
+    validation_ref: docs/dev/notes/2026-09-16-issue-20-policy-target-integrity.md
+    validation_status: provider-free-accepted-local

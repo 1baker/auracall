@@ -49747,3 +49747,13 @@ Chat repair integrated. Inventory complete at 11. Blank-tab readiness fix instal
 - The clean, remote-equal, process-unowned implementation worktree and local
   branch were removed; the remote recovery ref remains. Issue 6 is blocked on
   separately authorized installed parity and live DAS-R5, not source integration.
+
+## 2026-09-16 | Issue 20 policy-target integrity
+
+- The selector bundle and `AGENTS.md` reported model-selection policy adoption,
+  but durable policy 0030 was missing. The upgrade audit remained green because
+  entrypoint text was treated as adoption proof without checking its target.
+- P47 restores the adopted module body and adds the dangling-target check to the
+  ordinary plan audit, with a focused provider-free contract test.
+- No model calibration, runtime, browser, provider, installation, or release
+  action is part of this governance repair.

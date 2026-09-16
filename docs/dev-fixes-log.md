@@ -22600,3 +22600,6 @@ ChatGPT commits a native Skill mention before the user text. Prompt equality mus
   not only socket-close exits. A committed Send can fail during approval or
   response handling after navigation reaches `/c/<id>`; awaited runtime-hint
   capture preserves the exact conversation without authorizing a resend.
+- 2026-09-16: Policy entrypoint wiring is not adoption proof unless every named
+  durable target exists. Audit `AGENTS.md` policy paths as real files so an
+  installed selector manifest cannot hide a missing repo-local authority.

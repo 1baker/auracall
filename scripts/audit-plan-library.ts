@@ -4,6 +4,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
+import { collectMissingPolicyTargets } from './policy-entry-audit.js';
 
 type CandidateAction = 'keep' | 'merge' | 'retire';
 
@@ -149,6 +150,8 @@ function collectValidationErrors(
   if (roadmapText.includes(staleWorkspacePath)) {
     errors.push(`ROADMAP.md: contains stale absolute workspace path ${staleWorkspacePath}`);
   }
+
+  errors.push(...collectMissingPolicyTargets(agentsText, repoRoot));
 
   for (const candidate of rawCandidates) {
     if (!candidate.relPath.startsWith('docs/dev/plans/')) {
