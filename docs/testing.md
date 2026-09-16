@@ -195,6 +195,24 @@
     before Send. It then uses the shared assistant-response lifecycle so tool
     and app-security approval gates are detected and exposed. Provider/live
     behavior remains unaccepted until separately authorized
+  - issue-6 fixtures in `tests/browser/chatgptDeveloperAppLifecycle.test.ts`
+    cross the real adapter -> shared runBrowserMode -> remote response/P45
+    seam with hermetic transport and fail-closed launcher mocks. They prove
+    exactly one Send, terminal answer and refreshed URL/conversation identity,
+    unknown/observed/pre-effect failure evidence, account/selection refusal,
+    no automatic resubmit, and explicit incompatible-input refusal. The shared
+    structural guard retains symmetric local/remote hooks and keeps the
+    low-level adapter prompt-submitted-only
+  - submitted app tests override inherited Work/tool/project/conversation
+    routing with fresh-root Chat/current semantics. Manual approval is terminal
+    `failed` with nonzero CLI exit, not a guaranteed human handoff; JSON/plain
+    output carries answer text, identity, URL, effect state and retry safety.
+    Source fixtures do not accept installed parity, approval clicks or live use
+  - developer-app remote lifecycle proof is limited to attributable managed
+    local/WSL Chrome exposed on loopback (including the canonical
+    `windows-loopback` alias) with a live matching managed-profile
+    PID. Arbitrary remote endpoints or missing process provenance fail before
+    Send; a local PID file must never authorize an unrelated remote browser
   - developer-app submit tests preserve the active Chat model. Record the
     visible composer model separately from any configured/resolved `--model`
     value; the latter does not prove a UI selection

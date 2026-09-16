@@ -1,4 +1,5 @@
 import { BrowserAutomationClient } from "../browser/client.js";
+import type { DeveloperAppSubmissionEvidence } from "../browser/chatgptDeveloperAppSubmission.js";
 import {
 	type ChatgptDeveloperAppBrowserClient,
 	type ChatgptDeveloperAppBrowserClientFactory,
@@ -53,6 +54,7 @@ type ChatgptDeveloperAppCliAdapter = ChatgptDeveloperAppAdapter & {
 };
 
 export interface ChatgptDeveloperAppCliDependencies {
+	browserOperationOwned?: boolean;
 	listTimeoutMs?: number;
 	closeTimeoutMs?: number;
 	createBrowser?: (
@@ -62,7 +64,7 @@ export interface ChatgptDeveloperAppCliDependencies {
 	createAdapter?: (
 		browser: ChatgptDeveloperAppBrowserClient,
 		createBrowser: ChatgptDeveloperAppBrowserClientFactory,
-		options: { abortSignal?: AbortSignal },
+		options: { abortSignal?: AbortSignal; browserOperationOwned?: boolean },
 	) => ChatgptDeveloperAppCliAdapter;
 }
 
@@ -76,8 +78,8 @@ export interface ChatgptDeveloperAppCreateInput {
 	connection: "server-url" | "tunnel";
 }
 
-export interface ChatgptDeveloperAppMutationOutcome {
-	status: "completed" | "awaiting-human" | "recreate-pending";
+export interface ChatgptDeveloperAppMutationOutcome extends DeveloperAppSubmissionEvidence {
+	status: "completed" | "awaiting-human" | "recreate-pending" | "failed";
 	message: string;
 	currentUrl?: string | null;
 	app?: ChatgptDeveloperApp | null;
@@ -300,7 +302,10 @@ export async function runChatgptDeveloperAppOperationForCli(
 		active.adapter = createAdapter(
 			browser,
 			(config) => createBrowser(config, { target: "chatgpt" }),
-			{ abortSignal: abortController?.signal },
+			{
+				abortSignal: abortController?.signal,
+				browserOperationOwned: dependencies.browserOperationOwned,
+			},
 		);
 		abortController?.signal.throwIfAborted();
 		return executeChatgptDeveloperAppOperation(input, active.adapter);
@@ -379,6 +384,13 @@ export function formatChatgptDeveloperAppOperationResult(
 			`Status: ${result.status}`,
 			result.outcome.message,
 			...(result.outcome.currentUrl ? [`Current URL: ${result.outcome.currentUrl}`] : []),
+			...(result.outcome.conversationId ? [`Conversation: ${result.outcome.conversationId}`] : []),
+			...(result.outcome.effectState
+				? [
+						`Provider effect: ${result.outcome.effectState}; retry safe: ${result.outcome.retrySafe === true ? "yes" : "no"}`,
+					]
+				: []),
+			...(result.outcome.answerText !== undefined ? [`Answer: ${result.outcome.answerText}`] : []),
 		].join("\n");
 	}
 	const rows = result.state.apps.map((app) =>

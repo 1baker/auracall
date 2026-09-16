@@ -3,6 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import type { LaunchedChrome } from "chrome-launcher";
 import { classifyBrowserToolsBlockingState } from "../../packages/browser-service/src/browserTools.js";
+import { isWindowsLoopbackRemoteHost } from "../../packages/browser-service/src/windowsLoopbackRelay.js";
 import {
 	type BrowserOperationAcquiredResult,
 	createFileBackedBrowserOperationDispatcher,
@@ -23,6 +24,10 @@ import {
 } from "./actions/chatgptDeepResearch.js";
 import { ensureChatgptWorkModelSelection } from "./actions/chatgptWorkModelSelection.js";
 import { createChatgptToolApprovalHandler } from "./actions/chatgptToolApproval.js";
+import {
+	ensureChatgptEcosystemMention,
+	assertChatgptEcosystemMentionSelected,
+} from "./actions/chatgptEcosystemMention.js";
 import {
 	ensureGrokLoggedIn,
 	ensureGrokPromptReady,
@@ -1621,6 +1626,22 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 	const attachments: BrowserAttachment[] = options.attachments ?? [];
 	const fallbackSubmission = options.fallbackSubmission;
 	const { config, target, logger } = await resolveBrowserRuntimeEntryContext(options);
+	if (
+		options.ecosystemMention &&
+		(target !== "chatgpt" ||
+			config.chatgptMode === "work" ||
+			config.composerTool ||
+			options.fallbackSubmission ||
+			attachments.length > 0 ||
+			config.projectId ||
+			config.conversationId ||
+			new URL(config.url).pathname !== "/")
+	) {
+		throw new BrowserAutomationError(
+			"Developer-app mentions require a fresh ChatGPT Chat root without a composer tool, attachments, existing conversation/project, or fallback submission.",
+			{ effectState: "pre_effect" },
+		);
+	}
 	options.abortSignal?.throwIfAborted();
 	const runtimeHintCb = options.runtimeHintCb;
 	const runtimeEvidenceCb = options.runtimeEvidenceCb;
@@ -1653,6 +1674,9 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 			);
 		}
 
+		if (options.skipBrowserExecutionOperation) {
+			return runRemoteBrowserMode(promptText, attachments, config, logger, options);
+		}
 		return withBrowserExecutionOperation(config, target, logger, () =>
 			runRemoteBrowserMode(promptText, attachments, config, logger, options),
 		);
@@ -2060,10 +2084,7 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 				void (async () => {
 					const progress = runtimeForGuard
 						? await withTimeout(
-								readAssistantResponseProgress(
-									runtimeForGuard,
-									responseBoundary ?? undefined,
-								),
+								readAssistantResponseProgress(runtimeForGuard, responseBoundary ?? undefined),
 								750,
 								"Timed out capturing final ChatGPT response state.",
 							).catch(() => null)
@@ -2330,7 +2351,9 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 		const chatgptMode = config.chatgptMode ?? "chat";
 		await raceWithDisconnect(ensureChatgptComposerMode(Runtime, chatgptMode, logger));
 		await raceWithDisconnect(ensurePromptReady(Runtime, config.inputTimeoutMs, logger));
-		logger(`Prompt textarea ready (after ${chatgptMode} mode, ${promptText.length.toLocaleString()} chars queued)`);
+		logger(
+			`Prompt textarea ready (after ${chatgptMode} mode, ${promptText.length.toLocaleString()} chars queued)`,
+		);
 		const modelStrategy = config.modelStrategy ?? DEFAULT_MODEL_STRATEGY;
 		const modelSelectionPlan = resolveChatgptModelSelectionPlan({
 			mode: chatgptMode,
@@ -2342,7 +2365,13 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 			await raceWithDisconnect(dismissOpenMenus(Runtime).catch(() => false));
 			observedModel = await raceWithDisconnect(
 				withRetries(
-					() => ensureModelSelection(Runtime, modelSelectionPlan.model, logger, modelSelectionPlan.strategy),
+					() =>
+						ensureModelSelection(
+							Runtime,
+							modelSelectionPlan.model,
+							logger,
+							modelSelectionPlan.strategy,
+						),
 					{
 						retries: 2,
 						delayMs: 300,
@@ -2424,7 +2453,12 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 			await raceWithDisconnect(dismissOpenMenus(Runtime).catch(() => false));
 			await raceWithDisconnect(
 				withRetries(
-					() => ensureChatgptComposerTool(client as ChromeClient, config.composerTool as string, logger),
+					() =>
+						ensureChatgptComposerTool(
+							client as ChromeClient,
+							config.composerTool as string,
+							logger,
+						),
 					{
 						retries: 2,
 						delayMs: 300,
@@ -2457,6 +2491,9 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 			logger(
 				`Prompt textarea ready (after composer tool, ${promptText.length.toLocaleString()} chars queued)`,
 			);
+		}
+		if (options.ecosystemMention) {
+			await ensureChatgptEcosystemMention(client as ChromeClient, options.ecosystemMention);
 		}
 		const submitOnce = async (prompt: string, submissionAttachments: BrowserAttachment[]) => {
 			if (config.projectId) {
@@ -2530,9 +2567,21 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 					attachmentNames: sendAttachmentNames,
 					baselineTurns: baselineTurns ?? undefined,
 					inputTimeoutMs: config.inputTimeoutMs ?? undefined,
+					beforeSend: async () => {
+						if (options.ecosystemMention) {
+							await assertChatgptEcosystemMentionSelected(
+								client as ChromeClient,
+								options.ecosystemMention,
+							);
+							// Send may take effect even if its CDP acknowledgement is lost.
+							providerEffectState = "unknown";
+							options.onProviderEffectState?.("unknown");
+						}
+					},
 					onPromptDispatched: async () => {
 						promptDispatchedAt = Date.now();
 						providerEffectState = "unknown";
+						options.onProviderEffectState?.("unknown");
 						recordPassiveObservation({
 							state: "response-incoming",
 							source: "browser-service",
@@ -2545,6 +2594,7 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 				logger,
 			);
 			providerEffectState = "effect_observed";
+			options.onProviderEffectState?.("effect_observed");
 			if (typeof committedTurns === "number" && Number.isFinite(committedTurns)) {
 				if (baselineTurns === null || committedTurns > baselineTurns) {
 					baselineTurns = Math.max(0, committedTurns - 1);
@@ -3163,7 +3213,11 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 				if (!connectionClosedUnexpectedly) {
 					const closePromise = client?.close();
 					if (closePromise) {
-						await withTimeout(closePromise, 5_000, "Timed out closing the ChatGPT DevTools client.");
+						await withTimeout(
+							closePromise,
+							5_000,
+							"Timed out closing the ChatGPT DevTools client.",
+						);
 					}
 				}
 			} catch {
@@ -3370,6 +3424,7 @@ async function runRemoteBrowserMode(
 				chromeTargetId: remoteTargetId ?? undefined,
 				tabUrl: lastUrl,
 				observedModel,
+				conversationId: lastUrl ? extractConversationIdFromUrl(lastUrl) : undefined,
 				controllerPid: process.pid,
 				thinkingTime: selectedThinkingTime ?? undefined,
 				chatgptProMode: selectedChatgptProMode ?? undefined,
@@ -3399,6 +3454,19 @@ async function runRemoteBrowserMode(
 	let removeDialogHandler: (() => void) | null = null;
 	let runtimeForGuard: ChromeClient["Runtime"] | null = null;
 	const passiveObservations: BrowserPassiveObservation[] = [];
+	const refreshTerminalIdentity = async () => {
+		if (!client) return;
+		try {
+			const { result } = await client.Runtime.evaluate({
+				expression: "location.href",
+				returnByValue: true,
+			});
+			if (typeof result?.value === "string") lastUrl = result.value;
+		} catch {
+			/* Retain the last observed identity if transport was lost. */
+		}
+		await emitRuntimeHint();
+	};
 
 	try {
 		const connection = await connectToRemoteChrome(host, port, logger, config.url, {
@@ -3436,11 +3504,24 @@ async function runRemoteBrowserMode(
 			action: "ChatGPT remote prompt preparation",
 		});
 		await ensureLoggedIn(Runtime, logger, { remoteSession: true });
+		// A local PID file cannot authorize an arbitrary remote host. Retain an
+		// explicitly supplied authority context; otherwise resolve only loopback.
+		const remoteProcessId =
+			config.providerSessionAuthorization?.context.browserProcessId ??
+			(["127.0.0.1", "localhost", "::1", "[::1]"].includes(host.toLowerCase()) || isWindowsLoopbackRemoteHost(host)
+				? await resolveChatgptProviderSessionProcessId({
+						launchedPid: null,
+						userDataDir:
+							config.providerSessionAuthorization?.context.managedBrowserProfile ??
+							resolveBrowserLaunchPlan({ source: { kind: "session-config", config } })
+								.managedBrowserProfile.directory,
+					})
+				: null);
 		const verifiedChatgptIdentity = await assertChatgptAccountSessionPreflight(
 			Runtime,
 			config,
 			logger,
-			{ browserTargetId: remoteTargetId },
+			{ browserProcessId: remoteProcessId, browserTargetId: remoteTargetId },
 		);
 		selectedChatgptAccountLevel = verifiedChatgptIdentity?.accountLevel ?? null;
 		selectedChatgptAccountPlanType = verifiedChatgptIdentity?.accountPlanType ?? null;
@@ -3476,7 +3557,9 @@ async function runRemoteBrowserMode(
 		const chatgptMode = config.chatgptMode ?? "chat";
 		await ensureChatgptComposerMode(Runtime, chatgptMode, logger);
 		await ensurePromptReady(Runtime, config.inputTimeoutMs, logger);
-		logger(`Prompt textarea ready (after ${chatgptMode} mode, ${promptText.length.toLocaleString()} chars queued)`);
+		logger(
+			`Prompt textarea ready (after ${chatgptMode} mode, ${promptText.length.toLocaleString()} chars queued)`,
+		);
 		const modelStrategy = config.modelStrategy ?? DEFAULT_MODEL_STRATEGY;
 		const modelSelectionPlan = resolveChatgptModelSelectionPlan({
 			mode: chatgptMode,
@@ -3487,7 +3570,13 @@ async function runRemoteBrowserMode(
 		if (modelSelectionPlan.kind === "chat-model") {
 			await dismissOpenMenus(Runtime).catch(() => false);
 			observedModel = await withRetries(
-				() => ensureModelSelection(Runtime, modelSelectionPlan.model, logger, modelSelectionPlan.strategy),
+				() =>
+					ensureModelSelection(
+						Runtime,
+						modelSelectionPlan.model,
+						logger,
+						modelSelectionPlan.strategy,
+					),
 				{
 					retries: 2,
 					delayMs: 300,
@@ -3586,6 +3675,9 @@ async function runRemoteBrowserMode(
 			);
 		}
 
+		if (options.ecosystemMention) {
+			await ensureChatgptEcosystemMention(client as ChromeClient, options.ecosystemMention);
+		}
 		const submitOnce = async (prompt: string, submissionAttachments: BrowserAttachment[]) => {
 			if (config.projectId) {
 				await assertChatgptProjectDispatchContext(
@@ -3634,14 +3726,28 @@ async function runRemoteBrowserMode(
 					attachmentNames,
 					baselineTurns: baselineTurns ?? undefined,
 					inputTimeoutMs: config.inputTimeoutMs ?? undefined,
+					beforeSend: async () => {
+						if (options.ecosystemMention) {
+							await assertChatgptEcosystemMentionSelected(
+								client as ChromeClient,
+								options.ecosystemMention,
+							);
+							// Send may take effect even if its CDP acknowledgement is lost.
+							providerEffectState = "unknown";
+							options.onProviderEffectState?.("unknown");
+						}
+					},
 					onPromptDispatched: async () => {
 						providerEffectState = "unknown";
+						options.onProviderEffectState?.("unknown");
 					},
 				},
 				prompt,
 				logger,
 			);
 			providerEffectState = "effect_observed";
+			options.onProviderEffectState?.("effect_observed");
+			await refreshTerminalIdentity();
 			if (typeof committedTurns === "number" && Number.isFinite(committedTurns)) {
 				if (baselineTurns === null || committedTurns > baselineTurns) {
 					baselineTurns = Math.max(0, committedTurns - 1);
@@ -4051,6 +4157,7 @@ async function runRemoteBrowserMode(
 		const durationMs = Date.now() - startedAt;
 		const answerChars = answerText.length;
 		const answerTokens = estimateTokenCount(answerMarkdown);
+		await refreshTerminalIdentity();
 		await noteChatgptBrowserMutationSuccess(config, config.manualLoginProfileDir ?? null).catch(
 			() => undefined,
 		);
@@ -4097,6 +4204,7 @@ async function runRemoteBrowserMode(
 			managedProfileDir: config.manualLoginProfileDir ?? null,
 			effectState: readProviderEffectState(normalizedError, providerEffectState),
 		});
+		await refreshTerminalIdentity();
 		stopThinkingMonitor?.();
 		const socketClosed = connectionClosedUnexpectedly || isWebSocketClosureError(guardedError);
 		connectionClosedUnexpectedly = connectionClosedUnexpectedly || socketClosed;
@@ -4454,7 +4562,13 @@ async function waitForAssistantResponseWithReload(
 		},
 	};
 	try {
-		return await waitForAssistantResponse(Runtime, timeoutMs, logger, responseBoundary, trackedOptions);
+		return await waitForAssistantResponse(
+			Runtime,
+			timeoutMs,
+			logger,
+			responseBoundary,
+			trackedOptions,
+		);
 	} catch (error) {
 		if (!shouldReloadAfterAssistantError(error)) {
 			throw error;
@@ -4509,7 +4623,13 @@ async function waitForAssistantResponseWithReload(
 		}
 		await delay(1000);
 		try {
-			return await waitForAssistantResponse(Runtime, timeoutMs, logger, responseBoundary, trackedOptions);
+			return await waitForAssistantResponse(
+				Runtime,
+				timeoutMs,
+				logger,
+				responseBoundary,
+				trackedOptions,
+			);
 		} catch (retryError) {
 			const retryProgress = await readAssistantResponseProgress(Runtime, responseBoundary).catch(
 				() => progressTracker.latest,

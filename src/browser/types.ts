@@ -96,6 +96,8 @@ export type BrowserAutomationConfig = Omit<BaseTypes.BrowserAutomationConfig, 'b
 
 export type BrowserRunOptions = Omit<BaseTypes.BrowserRunOptions, 'config' | 'runtimeHintCb'> & {
   config?: BrowserAutomationConfig;
+  ecosystemMention?: import('./actions/chatgptEcosystemMention.js').ChatgptEcosystemMentionRequest;
+  onProviderEffectState?: (state: 'pre_effect' | 'unknown' | 'effect_observed') => void;
   runtimeHintCb?: (hint: BrowserRuntimeMetadata) => void | Promise<void>;
   runtimeEvidenceCb?: (evidence: BrowserRuntimeEvidence) => void | Promise<void>;
 };

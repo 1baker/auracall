@@ -5520,7 +5520,8 @@ async function runChatgptDeveloperAppsCliAction(
     throw new Error(formatBrowserOperationBusyResult(acquired));
   }
   try {
-    const result = await runChatgptDeveloperAppOperationForCli(userConfig, input);
+    const result = await runChatgptDeveloperAppOperationForCli(userConfig, input, { browserOperationOwned: true });
+    if (result.action !== 'list' && result.status === 'failed') process.exitCode = 1;
     if (commandOptions.json) {
       console.log(JSON.stringify(result, null, 2));
       return;

@@ -1,3 +1,12 @@
+- 2026-09-16: A mocked developer-app `runPrompt` cannot prove terminal response
+  when the real provider only accepts prompt_submitted. Cross the real adapter
+  to shared high-level lifecycle with hermetic transport, keep approval handling
+  shared, reverify the exact app after prompt replacement, and prove one Send
+  on success and failure. Merge error/callback effects conservatively, refresh
+  remote conversation identity after Send, and require real process/target
+  provenance. Manual approval is failed/nonzero unless a retained handoff is
+  actually proved. Provider-free source proof is not installed/live acceptance.
+
 - 2026-09-16: Do not set active-lane `work_item_tracking` to `required` until
   every existing catalog entry has a truthful stable locator. Keep validation
   optional during migration; never invent issue or backlog locators for closed

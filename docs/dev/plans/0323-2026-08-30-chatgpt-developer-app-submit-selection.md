@@ -2,28 +2,35 @@
 
 State: OPEN
 Lane: P16
-Operational state: TERMINAL_RESPONSE_PROVIDER_FREE_GAP_READY
-Branch: fix/plan0323-developer-app-mention
+Operational state: TERMINAL_RESPONSE_PROVIDER_FREE_ACCEPTED_LOCAL
+Branch: fix/issue-6-developer-app-response
 Target: main
 Integration: merge
-Revision: 7 | 2026-09-16
+Revision: 8 | 2026-09-16
 
 ## Current State
 
-- Issue `ecochran76/auracall#6` is READY for the remaining provider-free
-  terminal-response bridge. A 2026-09-16 current-main audit found that
-  `ChatgptDeveloperAppBrowserAdapter.submitTest` requests
-  `completionMode: "assistant_response"`, while the real low-level ChatGPT
-  adapter rejects every mode except `prompt_submitted` before browser
-  interaction. The passing developer-app unit test mocks `runPrompt`, so the
-  five focused suites pass 76/76 without crossing the broken boundary.
-- The remaining slice must route through the existing high-level local/remote
-  `runBrowserMode` lifecycle, reuse the integrated P45 approval handler, retain
-  exact `ecosystemMention`, return answer/conversation/terminal URL and effect
-  state, and prove exactly one submit with no automatic retry. Historical
-  provider-local watcher and generic `composerTool` patches must not be replayed.
-- No implementation worktree is assigned by this audit. Installed/live DSR5
-  remains a separate explicit-authority gate after provider-free integration.
+- Issue `ecochran76/auracall#6` recovery owns one local-only implementation on
+  `fix/issue-6-developer-app-response`, based on
+  `dc0b909fb3d6d3354e5c2fee9f4ac6525cc94157`. The adapter now invokes the real
+  shared high-level lifecycle once, returns terminal answer/identity/effect
+  evidence, and never retries submission. Local and remote paths retain exact
+  mention selection and revalidate it after prompt replacement before Send.
+- Per-run semantics are fresh root Chat/current model, with inherited
+  composerTool/project/conversation/Work settings removed or overridden;
+  incompatible explicit high-level mention inputs fail before effect. P45
+  approval handling stays shared. Manual approval is terminal failure, not an
+  asserted preserved human handoff. Installed/live DAS-R5 is not authorized.
+- The remote provider-free seam additionally exposed missing browser-process
+  provenance and stale root URL. Shared process resolution and fresh terminal
+  location readback now supply honest account proof and conversation identity.
+- Sole implementation ownership is the delegated issue-6 worker; primary owns
+  independent review and integration. Current user-authorized subagent work
+  supersedes historical no-subagent constraints for this bounded recovery.
+  Other worktrees and historical generic-tool/provider-local-watcher patches
+  remain untouched. See the issue-6 implementation receipt for exact checks.
+
+## Historical Evidence (not current terminal-response acceptance)
 
 - The operator authorized the recommended P16 reconciliation on 2026-09-09.
   Published `main` at `d22c7e46f` already contains a newer shared-helper
@@ -91,6 +98,9 @@ Revision: 7 | 2026-09-16
 Make an authorized `apps test --submit` preserve the exact selected ChatGPT
 developer app through prompt replacement and Send by using the same verified
 ecosystem-mention path as the existing no-submit selection smoke.
+Revision 8 adds the issue-6 terminal milestone: complete that one submission
+through the shared lifecycle and return honest answer, identity and failure
+evidence without duplicating provider-local response or approval watchers.
 
 ## Evidence And Cause
 
@@ -115,12 +125,12 @@ ecosystem-mention path as the existing no-submit selection smoke.
 3. Clear an atomic ecosystem mention with at most two verified deletion passes,
    then run focused developer-app, composer-replacement, and ChatGPT prompt tests,
    then typecheck and build.
-4. Keep `prompt_submitted` as the developer-app helper boundary. Any future
-   terminal-response mode must reuse the shared high-level response and
-   approval lifecycle rather than adding it to the provider adapter.
-5. Install the exact candidate. Use separately governed LitScout Experiment
-   18 as the one terminal-response live validation. Do not consume an extra
-   research Send merely to duplicate the submit proof.
+4. Revision 8 routes the developer-app helper through high-level
+   `runBrowserMode`; low-level provider `runPrompt` remains prompt-submitted-only.
+   Prove the seam with mocked transport and real shared response/approval logic.
+5. Commit provider-free source and receipts locally. Publication, integration,
+   exact installation and live acceptance remain separate primary-owned gates;
+   no extra research Send or historical experiment retry is authorized.
 
 ## Acceptance Criteria
 
@@ -130,9 +140,11 @@ ecosystem-mention path as the existing no-submit selection smoke.
   developer-app/composer/ChatGPT prompt contracts pass, including the atomic
   pill-to-literal cleanup transition.
 - `DAS-R3`: typecheck, build, and source/installed parity pass.
-- `DAS-R4`: NOT ACCEPTED. The attempted provider-local terminal mode failed the
-  current prompt-structure gate and was removed during reconciliation. A
-  successor must route through the shared high-level response lifecycle.
+- `DAS-R4`: revision-8 provider-free accepted locally: 132/132 affected tests,
+  real shared lifecycle fixture, terminal success/failure, exactly-one Send,
+  conservative effect state, exact selection, retained prompt-structure guard,
+  typecheck/build/lint/audits. Historical provider-local mode remains rejected;
+  publication, integration and installed/live evidence remain separate.
 - `DAS-R5`: one authorized live Experiment 18 Send proves exact app selection,
   continued tool approvals, and terminal response capture on the expected
   account; its LitScout effects are governed and audited by Plan 0477.
@@ -141,14 +153,15 @@ ecosystem-mention path as the existing no-submit selection smoke.
 
 - One source implementation plus evidence-driven composer and terminal-watcher
   repairs.
-- This reconciliation slice permits provider-free source integration and one
-  supported installed-runtime refresh after published-main acceptance. It does
-  not authorize the Plan-0477-governed experiment Send or any other prompt.
+- Revision 8 permits provider-free source edits, validation and local commits
+  only. It does not authorize push, PR, merge, installation, runtime/scheduler
+  mutation, browser/provider action or any Plan-0477 experiment retry.
 - No app recreation, OAuth reconnect, scheduler mutation, unrelated browser
   cleanup, or extra canary Send.
 
 ## Definition Of Done
 
 `DAS-R1` through `DAS-R3` must have current source and installed evidence.
-`DAS-R4` and `DAS-R5` remain explicit open acceptance work; neither may be
-claimed from this provider-free reconciliation.
+`DAS-R4` is the bounded revision-8 provider-free terminal-response milestone.
+`DAS-R5` and current source/installed parity remain separate open gates; neither
+may be claimed from provider-free source validation.

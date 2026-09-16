@@ -536,25 +536,24 @@ lanes:
   - id: P16
     objective: Complete exact ChatGPT developer-app submit selection and response capture.
     plan: docs/dev/plans/0323-2026-08-30-chatgpt-developer-app-submit-selection.md
-    plan_ref: refs/remotes/origin/fix/plan0323-developer-app-mention
-    branch: fix/plan0323-developer-app-mention
+    plan_ref: refs/heads/fix/issue-6-developer-app-response
+    branch: fix/issue-6-developer-app-response
     target: main
     plan_state: OPEN
-    custody_state: INTEGRATED
-    checkpoint: 15a58a694d5f189dae2106ac9c931b8487e073ce
-    remote_ref: refs/remotes/origin/fix/plan0323-developer-app-mention
+    custody_state: ACTIVE_WORKTREE
+    checkpoint: dc0b909fb3d6d3354e5c2fee9f4ac6525cc94157
+    remote_ref: null
     integration: merge
     work_items: [ecochran76/auracall#6]
     dependencies: []
-    overlaps: [P22]
-    reconciled_overlaps: [P22]
+    overlaps: [P22, P45, P46]
+    reconciled_overlaps: [P22, P45, P46]
     blocker: null
-    disposition: Exact ecosystem-mention selection is integrated, but current main still routes developer-app tests into an assistant_response mode rejected by the real low-level adapter, and the mocked unit seam hides that contradiction. Issue 6 is READY for one bounded shared-high-level lifecycle bridge; live acceptance remains separate.
+    disposition: Issue 6 shared-high-level terminal-response recovery is provider-free accepted locally. Publication and integration are withheld; installed/live acceptance and historical effect receipts remain separate.
     updated_at: 2026-09-16
-    reconciliation_note: Current main owns exact ecosystem-mention, Skill CLI, composer, and prompt-lifecycle behavior; 214 broader tests, build, scoped lint, typecheck, and the plan audit pass before integration.
-    integration_receipt: 9cdb92d2058606f3f5c8029843696494f54ca290
-    validation_ref: docs/dev/notes/2026-09-16-issue-6-developer-app-audit.md
-    validation_status: provider-free-contract-gap-confirmed-implementation-ready
+    reconciliation_note: Current main owns exact mention and shared lifecycle; P45 approval recognition is reused without a provider-local watcher. User-authorized delegated implementation supersedes historical no-subagent constraints. The prior P16 slice integrated at 9cdb92d2058606f3f5c8029843696494f54ca290; this recovery is not integrated.
+    validation_ref: docs/dev/notes/2026-09-16-issue-6-developer-app-implementation.md
+    validation_status: provider-free-accepted-local-only
   - id: P24
     objective: Restore current ChatGPT composer intelligence selection with safe upload discovery.
     plan: docs/dev/plans/0331-2026-09-03-chatgpt-composer-intelligence-picker.md

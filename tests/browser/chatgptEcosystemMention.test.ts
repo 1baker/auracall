@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	ensureChatgptEcosystemMention,
+	assertChatgptEcosystemMentionSelected,
 	readChatgptEcosystemMention,
 } from "../../src/browser/actions/chatgptEcosystemMention.js";
 
@@ -17,6 +18,34 @@ vi.mock("../../src/browser/service/ui.js", async (importOriginal) => ({
 }));
 
 describe("ChatGPT ecosystem mention selection", () => {
+	it.each([
+		null,
+		{ label: "LitScout", pluginId: "plugin_other" },
+	])("refuses changed or ambiguous pre-Send selection: %j", async (selection) => {
+		const client = { Runtime: { evaluate: vi.fn(async () => ({ result: { value: selection } })) } };
+		await expect(
+			assertChatgptEcosystemMentionSelected(client as never, {
+				label: "LitScout",
+				acceptedPluginIds: ["asdk_app_litscout"],
+			}),
+		).rejects.toThrow("selection changed before Send");
+	});
+	it("revalidates normalized exact identity without reopening the picker", async () => {
+		const client = {
+			Runtime: {
+				evaluate: vi.fn(async () => ({
+					result: { value: { label: "LitScout", pluginId: "plugin:asdk_app_litscout" } },
+				})),
+			},
+		};
+		await expect(
+			assertChatgptEcosystemMentionSelected(client as never, {
+				label: "LitScout",
+				acceptedPluginIds: ["plugin_asdk_app_litscout"],
+			}),
+		).resolves.toBeUndefined();
+		expect(uiMocks.pressButton).not.toHaveBeenCalled();
+	});
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});

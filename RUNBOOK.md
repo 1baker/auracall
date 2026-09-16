@@ -1,5 +1,19 @@
 # RUNBOOK
 
+## Turn 616 | 2026-09-16
+
+- P16/issue 6 recovery started from `dc0b909fb3d6d3354e5c2fee9f4ac6525cc94157`
+  on local-only `fix/issue-6-developer-app-response`. The sole delegated owner
+  implements the shared terminal-response bridge; primary owns review and any
+  later integration. Current user authority supersedes historical no-subagent
+  constraints for this recovery.
+- The real hermetic remote seam exposed missing process provenance and stale
+  root URL, in addition to the audited low-level completion-mode mismatch.
+  Shared process resolution and terminal identity readback now cover both.
+  Turn 613's developer-app routing claim is historical, not acceptance of this
+  seam. No live, install, scheduler, GitHub or publication action is in scope.
+- Exact validation and process census: issue-6 implementation receipt.
+
 - Opened P46 / [Plan 0353](docs/dev/plans/0353-2026-09-16-mixed-branch-decomposition.md)
   under GitHub issue 5. The clean, equal-remote mixed worktree remains
   process-owned and untouched. Its exact 24-commit ledger routes aggregate
