@@ -49581,3 +49581,17 @@ Chat repair integrated. Inventory complete at 11. Blank-tab readiness fix instal
 - Exact published topic `e551504d4` merged non-fast-forward into `main` at
   `a47801d6a` without additional browser or provider effect. The checked
   `Latest` current-model repair and product-gate receipt are canonical.
+## 2026-09-16 | GitHub issue, PR, and worktree policy adoption
+
+- Installed the missing `forge-issue-reporting` and
+  `github-issue-operations` modules from the pinned v0.1.26 selector and wired
+  them through `AGENTS.md`.
+- Retained the existing pull-request, work-item, branch, commit, and worktree
+  policies without duplication.
+- Added a repo-local GitHub target registry for owned fork
+  `ecochran76/auracall`. Fresh readback shows `ADMIN` capability while Issues
+  and private vulnerability reporting are disabled, so only read inspection is
+  allowlisted and every issue mutation remains fail-closed.
+- No GitHub issue, label, assignment, milestone, Project, PR, repository
+  setting, branch, or worktree mutation was performed as part of provider
+  validation.
