@@ -1,5 +1,10 @@
 # Aura-Call Roadmap
 
+- Active decomposition lane P46: [Plan 0353](docs/dev/plans/0353-2026-09-16-mixed-branch-decomposition.md)
+  registers the process-owned mixed historical branch under GitHub issue 5.
+  Its 24 unique commits route to issues 6, 7, and 9 or explicit historical
+  dispositions; the branch must never be proposed as one pull request.
+
 - Provider-free accepted P45: [Plan 0352](docs/dev/plans/0352-2026-09-12-chatgpt-app-security-approval.md)
   detects ChatGPT's single-`Allow` suspicious-instruction app-security dialog
   and routes developer-app test submissions through the shared response and

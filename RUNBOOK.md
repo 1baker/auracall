@@ -1,5 +1,11 @@
 # RUNBOOK
 
+- Opened P46 / [Plan 0353](docs/dev/plans/0353-2026-09-16-mixed-branch-decomposition.md)
+  under GitHub issue 5. The clean, equal-remote mixed worktree remains
+  process-owned and untouched. Its exact 24-commit ledger routes aggregate
+  status to issue 9, developer-app work to issue 6, Deep Research work to issue
+  7, and policy/topology commits to explicit no-replay dispositions.
+
 ## Turn 614 | 2026-09-12
 
 - Published P45's two-commit stack through closeout `8e4e13b05`; local HEAD and
