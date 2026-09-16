@@ -44,7 +44,7 @@ or launching provider/browser work.
 
 ## Current State
 
-- Main-aligned recovery is implemented locally under issue 9; publication and
+- Main-aligned recovery is published in PR 17 under issue 9; integration and
   installed proof remain pending. The historical candidate's diagnosis measured
   local claims at 5.1 seconds, archive hydration at 3.9-6.0 seconds, and repeated
   browser/job readback. Its source timings (4.76, 4.18, 1.53 seconds) are historical,

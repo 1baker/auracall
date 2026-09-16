@@ -109,4 +109,6 @@ runtime ownership, and remaining ASL-R6 obligations have current receipts.
 Publication receipt: the primary pushed remote branch
 `fix/issue-9-aggregate-status` at
 `61ca2ef80ff509db93144686e04a9fd952ebca2b` and opened issue-linked PR 17.
-This publication does not satisfy installed acceptance or close issue 9.
+After catalog reconciliation, the verified PR head is
+`868e9493265ebdf1c6c33a2c3775d8902c4b6d34`. This publication does not
+satisfy installed acceptance or close issue 9.
