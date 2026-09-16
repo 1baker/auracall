@@ -49639,3 +49639,17 @@ Chat repair integrated. Inventory complete at 11. Blank-tab readiness fix instal
 - Developer-app submissions that need approval handling must select the shared
   assistant-response lifecycle. Do not recreate response polling inside the
   provider adapter.
+
+## 2026-09-16 | Plan 0352 issue-backed integration replay
+
+- Preserved the accepted source branch at `67a1c9908` and replayed its three
+  commits onto current canonical `main` as
+  `integration/issue-4-chatgpt-security-approval` for GitHub issue 4.
+- Conflict resolution retained the issue-backed P45 catalog projection and P44
+  cleanup evidence while preserving the Plan 0352 acceptance history.
+- Provider-free validation passes 136 affected tests, typecheck, production
+  build, scoped lint, active-lane audit, active planning audit, goal audit, and
+  diff hygiene. The managed-browser root PID/profile census was unchanged
+  across tests; transient child-process churn is not treated as ownership proof.
+- No installed-runtime refresh, browser mutation, approval click, ChatGPT Send,
+  provider call, retry, scheduler control, release, or deployment was run.
