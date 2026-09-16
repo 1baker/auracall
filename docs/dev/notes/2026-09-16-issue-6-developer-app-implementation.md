@@ -3,7 +3,7 @@
 Work item: `ecochran76/auracall#6` · Lane: P16 · Plan 0323 revision 8.
 Base: `dc0b909fb3d6d3354e5c2fee9f4ac6525cc94157`.
 Branch: `fix/issue-6-developer-app-response` (local only; not published/integrated).
-Source commit: `52b3ed19515fe716abc85d2c00b71ee4430cfb59`.
+Source commit: `1a2fe5aab68180b27d3999cc8de581f81630471a`.
 The subsequent docs-only closeout updates this exact checkpoint; both remain
 local and unpublished.
 
