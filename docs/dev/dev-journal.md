@@ -49687,3 +49687,10 @@ Chat repair integrated. Inventory complete at 11. Blank-tab readiness fix instal
   publication, integration, fresh runtime gates, and installed acceptance.
   Subagent delegation follows the current user instruction, superseding only
   the old plan's no-subagent constraint. Issue 9 remains open.
+- Post-test process readback found unexpected Chrome PID `14066`, managed
+  `wsl-chrome-2/chatgpt`, debugging port `45013`, `about:blank`, with this
+  worktree as cwd. Disposable test home did not prevent this isolation failure.
+  The primary received exact process evidence; no attach or termination ran.
+- Primary cleanup subsequently verified and terminated only the exact six
+  attributable Chrome/crashpad PIDs and reported a clean profile-path census.
+  This worker accepts the primary's cleanup receipt; no further tests ran.

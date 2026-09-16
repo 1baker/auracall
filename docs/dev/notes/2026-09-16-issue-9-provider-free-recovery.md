@@ -1,9 +1,9 @@
 # Issue 9 Provider-Free Recovery Receipt
 
-Work item: `ecochran76/auracall#9`  
-Lane: P08 / Plan 0315  
-Branch: `fix/issue-9-aggregate-status`  
-Canonical base: `b35077504ae92972cf22c4957e7c30036c43dbce`  
+Work item: `ecochran76/auracall#9`
+Lane: P08 / Plan 0315
+Branch: `fix/issue-9-aggregate-status`
+Canonical base: `b35077504ae92972cf22c4957e7c30036c43dbce`
 Historical patch: `025453473c5957fb72abb7ed787cb6d1266951e6`
 
 ## Result
@@ -25,7 +25,9 @@ integrity or absence of a later read error.
 
 All commands ran in the isolated recovery worktree. Tests used a disposable
 `AURACALL_HOME_DIR`; the repository test setup also gives each worker a
-disposable default home. No installed-runtime or provider command ran.
+disposable default home. No installed-runtime or provider command was invoked
+explicitly. Post-test process evidence nevertheless found an unexpected managed
+browser; this invalidates a zero-browser-effect claim (see below).
 
 - Initial status selection: 67 passed, 253 skipped across six selected files.
 - First full affected run: 325 passed, one failed. The historical HTTP
@@ -61,9 +63,11 @@ disposable default home. No installed-runtime or provider command ran.
 The primary reused the `aggregate_status_audit` worker for one bounded
 implementation packet; no nested delegation occurred. Current user-authorized
 parallelism supersedes the plan's historical no-subagent restriction for this
-recovery. The audit recommended Sol/high for economical implementation;
-effective model/effort and allocation are not exposed to the worker. The
-worker owns this validation receipt; primary reconciliation remains explicit.
+recovery. The audit recommended Sol/high for economical implementation, but the
+parallel thread limit prevented opening another worker. The primary therefore
+reused the already-contextualized Astra/high audit worker and retained forge,
+integration, runtime, and acceptance authority. The worker owns this validation
+receipt; primary reconciliation remains explicit.
 
 The worker may commit locally but may not publish, mutate GitHub, merge,
 install, control the scheduler, or invoke browsers/providers. The primary must
@@ -71,6 +75,32 @@ publish and verify the branch/checkpoint, inspect the published patch, integrate
 through the governed PR flow, and separately refresh runtime guards before
 installed acceptance. Historical manual-clear guards do not prove current
 guard state. No scheduler pause/resume or install/restart allowance was used.
+
+## Post-Test Browser Isolation Finding
+
+After commit `e14b49d021174b62f52d0d9834c7d3619e6537e4`, a fresh `/proc` cwd
+census found Chrome root PID `14066` with this recovery worktree as its cwd.
+Its command line names managed browser directory
+`/home/ecochran76/.auracall/browser-profiles/wsl-chrome-2/chatgpt`, source browser
+profile `Profile 1`, debugging port `45013`, and `about:blank`. `ps` reports
+startup at `2026-09-16 09:44:25` local time, PPID `51939`; crashpad processes
+`14075`/`14078` and Chrome descendants `14084`/`14118`/`14120` were observed.
+
+This is an isolation failure despite the disposable test home. The exact
+launching test and any provider navigation are not established by the process
+readback. No attach, inspection through CDP, termination, or cleanup was
+performed. The primary was notified immediately. Preserve the worktree while
+these processes own it; runtime isolation/cleanup requires primary disposition
+before any claim of ASL-R6 zero browser effect or installed acceptance.
+
+Primary cleanup receipt: the primary independently verified the six exact
+attributable Chrome/crashpad PIDs, their cwd, managed browser directory, and
+port, then sent TERM only to `14066`, `14075`, `14078`, `14084`, `14118`, and
+`14120`. The primary reports all exited and a fresh profile-path process scan
+matched only its own census command. This worker accepts that delegated cleanup
+evidence as reported; it did not repeat the cleanup or launch further tests.
+Record the event as a test-induced browser side effect cleaned by the primary,
+not as zero browser effect. The historical ASL-R6 invariant remains unproved.
 
 Issue 9 and Plan 0315 remain open until the exact installed source and three
 consecutive default status reads under five seconds, narrow endpoint parity,

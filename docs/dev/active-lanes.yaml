@@ -141,10 +141,10 @@ lanes:
     work_items: [ecochran76/auracall#9]
     dependencies: [P07]
     overlaps: []
-    validation_status: provider-free-passed-installed-proof-pending
+    validation_status: source-passed-test-browser-side-effect-cleaned
     validation_ref: docs/dev/notes/2026-09-16-issue-9-provider-free-recovery.md
     integration_receipt: null
-    blocker: Installed acceptance requires fresh scheduler/browser/provider-guard evidence; historical manual-clear evidence is not a current readback. Recovery publication is owned by the primary.
+    blocker: Test-induced browser side effect was cleaned by the primary but zero browser effect remains unproved; installed acceptance requires fresh scheduler/browser/provider-guard evidence. Publication is primary-owned.
     disposition: Main-aligned provider-free recovery is active locally under issue 9; the historical remote ref preserves candidate custody until the primary publishes the recovered branch.
     updated_at: 2026-09-16
     recovery_ref: refs/remotes/origin/wip/plan0337-browser-edits-recovery

@@ -21569,3 +21569,7 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   startup boundary. See Plan 0315 for current validation and remaining gates.
 - No installed runtime, scheduler control, browser, or provider action belongs
   to this packet. Issue 9 remains open pending installed five-second acceptance.
+- Validation nevertheless launched an unexpected `wsl-chrome-2/chatgpt`
+  `about:blank` Chrome tree. The primary terminated only the six attributable
+  PIDs and verified a clean profile-path census; zero-browser-effect acceptance
+  remains unproved and the event is retained in the recovery receipt.

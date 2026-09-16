@@ -2,7 +2,7 @@
 
 State: OPEN
 Lane: P08
-Operational state: PROVIDER_FREE_ACCEPTED_PENDING_PUBLICATION_AND_INSTALLED_PROOF
+Operational state: SOURCE_VALIDATED_TEST_BROWSER_SIDE_EFFECT_CLEANED
 Branch: fix/issue-9-aggregate-status
 Target: main
 Integration: merge
@@ -30,9 +30,10 @@ Work item: ecochran76/auracall#9
 - Terminal condition: locally committed provider-free evidence returned to the
   primary. Publication and installed acceptance remain open; this packet cannot
   close issue 9 or consume install/restart and scheduler pause/resume allowances.
-- Model routing: the existing audit worker is reused for bounded implementation
-  to avoid duplicate context. Requested economical routing is Sol/high; effective
-  model configuration is not exposed by the collaboration runtime.
+- Model routing: the existing Astra/high audit worker is reused for bounded
+  implementation to avoid duplicate context. The audit recommended Sol/high,
+  but the parallel thread limit prevented opening another worker; the primary
+  retained forge, integration, runtime, and acceptance authority.
 
 ## Stable Objective
 
@@ -61,6 +62,13 @@ or launching provider/browser work.
   affected tests passed, followed by 218 HTTP tests after strengthening the
   availability-preference and immutable-registry assertions. ASL-R5 and the
   installed/publication portions of ASL-R6 remain unproved.
+- A post-test cwd census found unexpected managed Chrome PID `14066`, port
+  `45013`, using `wsl-chrome-2/chatgpt` with `about:blank`. Source checks pass,
+  but zero browser effect is disproved; see the receipt for exact provenance.
+  The worker did not attach or terminate. The primary verified and terminated
+  the exact six attributable Chrome/crashpad processes and reports a clean
+  profile-path census. This cleaned test-induced side effect does not establish
+  the original zero-browser-effect invariant; installed proof remains open.
 
 ## Historical Baseline | 2026-08-25
 
