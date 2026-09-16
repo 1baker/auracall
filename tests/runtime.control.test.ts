@@ -6,6 +6,7 @@ import { setAuracallHomeDirOverrideForTest } from '../src/auracallHome.js';
 import { getActiveExecutionRunLease } from '../src/runtime/contract.js';
 import { createExecutionRuntimeControl } from '../src/runtime/control.js';
 import { createExecutionRunRecordBundleFromTeamRun } from '../src/runtime/model.js';
+import { createExecutionRunRecordStore, getExecutionRunDir } from '../src/runtime/store.js';
 import { createTeamRunBundle } from '../src/teams/model.js';
 
 function createBundle(runId = 'team_run_control') {
@@ -126,6 +127,41 @@ describe('runtime control module', () => {
 
     const listed = await control.listRuns({ limit: 10 });
     expect(listed.map((record) => record.runId).sort()).toEqual(['team_run_alpha', 'team_run_beta']);
+  });
+
+  it('lists stored records without rereading each record after the bulk scan', async () => {
+    const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), 'auracall-runtime-control-'));
+    cleanup.push(homeDir);
+    setAuracallHomeDirOverrideForTest(homeDir);
+
+    const store = createExecutionRunRecordStore();
+    const writer = createExecutionRuntimeControl(store);
+    await writer.createRun(createBundle('team_run_bulk_alpha'));
+    await writer.createRun(createBundle('team_run_bulk_beta'));
+    const legacyDir = getExecutionRunDir('team_run_legacy');
+    await fs.mkdir(legacyDir, { recursive: true });
+    await fs.writeFile(path.join(legacyDir, 'bundle.json'), JSON.stringify(createBundle('team_run_legacy')));
+
+    let readRecordCalls = 0;
+    const control = createExecutionRuntimeControl({
+      ...store,
+      async readRecord(runId) {
+        readRecordCalls += 1;
+        return store.readRecord(runId);
+      },
+    });
+
+    const listed = await control.listRuns({ limit: 10 });
+
+    expect(listed.map((record) => record.runId).sort()).toEqual([
+      'team_run_bulk_alpha',
+      'team_run_bulk_beta',
+    ]);
+    expect(readRecordCalls).toBe(0);
+    const legacyControl = createExecutionRuntimeControl({ ...store, listRecords: undefined });
+    for (const options of [{}, { limit: 1 }, { limit: 0 }, { sourceKind: 'direct' as const }, { statuses: ['planned' as const] }]) {
+      expect(await control.listRuns(options)).toEqual(await legacyControl.listRuns(options));
+    }
   });
 
   it('persists patched run bundles via the control persist route', async () => {

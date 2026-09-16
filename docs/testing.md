@@ -1,5 +1,11 @@
 # Testing quickstart
 
+- Aggregate-status recovery contract (provider-free):
+  `pnpm vitest run tests/runtime.store.test.ts tests/runtime.control.test.ts tests/runtime.claims.test.ts tests/runtime.serviceHost.test.ts tests/runtime.archiveService.test.ts tests/http.responsesServer.test.ts --maxWorkers=2`.
+  Run the combined files to cover bulk-list parity, bounded availability and
+  failure evidence, local-claim snapshots, HTTP hydration, and fixture isolation.
+  Installed five-second acceptance remains separate under Plan 0315 / issue 9.
+
 - Skill invocation continuity: `pnpm vitest run tests/browser/chatgptSkillRun.test.ts tests/browser/chatgptSkills.test.ts tests/browser/promptComposer.test.ts tests/cli/chatgptSkillsCommand.test.ts`. Proves same-client selection and submission, pre-send account/marker rejection, uncertain-send preservation, and unchanged non-submitting selection. Live acceptance separately requires provider evidence of actual Skill loading.
 
 - Provider-free runtime work must bracket broad `pnpm test` runs with exact

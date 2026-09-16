@@ -49671,3 +49671,33 @@ Chat repair integrated. Inventory complete at 11. Blank-tab readiness fix instal
   branch, process, ignored artifact, or worktree in that checkout was changed.
 - Direct PR integration, rebase, force-push, and cleanup are prohibited; child
   recovery must start from current canonical `main`.
+
+## 2026-09-16 | Issue 9 aggregate-status recovery
+
+- Recovered source/test hunks from `025453473` onto canonical `b35077504` in
+  `fix/issue-9-aggregate-status`, preserving current artifact-recovery wiring.
+- Bulk persisted records and local-claim snapshots remove redundant reads.
+  Availability checks retain checksum evidence, probe only one byte, preserve
+  directory and read-failure behavior, and always close file handles.
+- The full affected run reproduced the historical HTTP fixture failure: 325
+  passed and one failed. Startup reconciliation was enabled in a status-only
+  fixture; disabling its startup effects and conserving two remote minus one
+  local artifact repairs the assertion without changing production arithmetic.
+- Provider-free validation and local commit are worker-owned; the primary owns
+  publication, integration, fresh runtime gates, and installed acceptance.
+  Subagent delegation follows the current user instruction, superseding only
+  the old plan's no-subagent constraint. Issue 9 remains open.
+- Post-test process readback found unexpected Chrome PID `14066`, managed
+  `wsl-chrome-2/chatgpt`, debugging port `45013`, `about:blank`, with this
+  worktree as cwd. Disposable test home did not prevent this isolation failure.
+  The primary received exact process evidence; no attach or termination ran.
+- Primary cleanup subsequently verified and terminated only the exact six
+  attributable Chrome/crashpad PIDs and reported a clean profile-path census.
+  This worker accepts the primary's cleanup receipt; no further tests ran.
+- Primary publication verified remote SHA `61ca2ef80ff509db93144686e04a9fd952ebca2b`
+  and opened issue-linked PR 17. The lane catalog now uses the published remote
+  selector; installed acceptance and issue closure remain explicitly open.
+- Independent PR review found cold availability backfill still hashed payloads
+  when the archive index was absent. Availability mode now reaches that
+  backfill, retaining persisted checksums while probing at most one byte; the
+  focused regression, typecheck, scoped lint, and CodeGraph sync pass.
