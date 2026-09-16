@@ -3,8 +3,9 @@
 Work item: `ecochran76/auracall#6` · Lane: P16 · Plan 0323 revision 8.
 Base: `dc0b909fb3d6d3354e5c2fee9f4ac6525cc94157`.
 Branch: `fix/issue-6-developer-app-response` (local only; not published/integrated).
-Source commit: the implementation commit containing this receipt; exact local
-SHA is recorded by the subsequent closeout receipt/catalog checkpoint.
+Source commit: `52b3ed19515fe716abc85d2c00b71ee4430cfb59`.
+The subsequent docs-only closeout updates this exact checkpoint; both remain
+local and unpublished.
 
 ## Authority and ownership
 
@@ -84,6 +85,12 @@ pnpm exec vitest run tests/browser/chatgptDeveloperAppLifecycle.test.ts tests/br
   Scoped `biome lint` on 11 source/test files: zero findings. `git diff --check`:
   passed. Active-only and goal-only planning audits: `ok=true`, no problems;
   `pnpm -s plans:audit`: 353 candidates, zero validation errors.
+- The bounded active-lane audit against the local topic ref intentionally
+  remains fail-closed: `P16: local branch has no configured remote custody`
+  and `P16: catalog checkpoint does not match the local branch tip`. The
+  catalog pins the validated source SHA; its docs-only closeout is ahead, and
+  publication is prohibited for this worker. Primary must reconcile the final
+  published tip into the canonical catalog; no clean custody claim is made.
 - Fresh `/proc` process/cwd censuses bracketed hermetic validation and found
   zero issue-worktree-owned Chrome/Chromium/Firefox/Brave processes. No unexpected
   process side effects were observed or cleaned in this issue-6 recovery.
