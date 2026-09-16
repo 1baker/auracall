@@ -22578,3 +22578,7 @@ ChatGPT commits a native Skill mention before the user text. Prompt equality mus
   allow-once, and reject persistent-policy downgrade.
 - Route `apps test --submit` through shared assistant-response handling so the
   existing approval watcher remains the single lifecycle owner.
+- 2026-09-16: A provider adapter mock is not lifecycle integration proof.
+  Developer-app tests must cross the real high-level orchestration seam when
+  terminal response, approvals, effect classification, and no-retry behavior
+  are the contract; retain low-level prompt-submitted-only boundaries.

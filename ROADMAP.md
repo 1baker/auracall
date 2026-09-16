@@ -82,14 +82,16 @@
   September 10 Deep Research conversation is authoritative and may not be
   retried.
 
-- P16 source reconciliation is provider-free green. Its branch-local authority is
+- P16 exact-selection reconciliation is integrated, but issue 6 records a
+  provider-free terminal-response contract gap hidden by a mocked `runPrompt`
+  seam. Its branch-local authority is
   `docs/dev/plans/0323-2026-08-30-chatgpt-developer-app-submit-selection.md`
   at `refs/remotes/origin/fix/plan0323-developer-app-mention`; current main owns exact
   ecosystem-mention selection; the reconciled delta removes inherited generic
   tool routing, preserves current-model submission, and safely clears an
   unwrapped app mention. The obsolete provider-local response watcher was
-  rejected by the prompt-lifecycle architecture gate; response/live acceptance
-  remains open.
+  rejected by the prompt-lifecycle architecture gate. The next bounded slice
+  must use the shared high-level lifecycle; response/live acceptance remains open.
 
 - Completed P32: [Plan 0339](docs/dev/plans/0339-2026-09-09-installed-runtime-and-git-maintenance.md) proves current-main installed-runtime parity and closes the newly eligible P27 worktree while preserving its downstream verification ref and every unfinished lane.
 

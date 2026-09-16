@@ -3,7 +3,7 @@
 State: OPEN
 Lane: P08
 Operational state: SOURCE_INTEGRATED_INSTALLED_BLOCKED
-Branch: main
+Branch: fix/issue-9-aggregate-status
 Target: main
 Integration: merge
 Revision: 6 | 2026-09-16

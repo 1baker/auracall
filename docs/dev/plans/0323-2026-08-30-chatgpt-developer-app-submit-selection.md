@@ -2,13 +2,28 @@
 
 State: OPEN
 Lane: P16
-Operational state: INSTALLED_CURRENT_LIVE_ACCEPTANCE_OPEN
+Operational state: TERMINAL_RESPONSE_PROVIDER_FREE_GAP_READY
 Branch: fix/plan0323-developer-app-mention
 Target: main
 Integration: merge
-Revision: 6 | 2026-09-09
+Revision: 7 | 2026-09-16
 
 ## Current State
+
+- Issue `ecochran76/auracall#6` is READY for the remaining provider-free
+  terminal-response bridge. A 2026-09-16 current-main audit found that
+  `ChatgptDeveloperAppBrowserAdapter.submitTest` requests
+  `completionMode: "assistant_response"`, while the real low-level ChatGPT
+  adapter rejects every mode except `prompt_submitted` before browser
+  interaction. The passing developer-app unit test mocks `runPrompt`, so the
+  five focused suites pass 76/76 without crossing the broken boundary.
+- The remaining slice must route through the existing high-level local/remote
+  `runBrowserMode` lifecycle, reuse the integrated P45 approval handler, retain
+  exact `ecosystemMention`, return answer/conversation/terminal URL and effect
+  state, and prove exactly one submit with no automatic retry. Historical
+  provider-local watcher and generic `composerTool` patches must not be replayed.
+- No implementation worktree is assigned by this audit. Installed/live DSR5
+  remains a separate explicit-authority gate after provider-free integration.
 
 - The operator authorized the recommended P16 reconciliation on 2026-09-09.
   Published `main` at `d22c7e46f` already contains a newer shared-helper
