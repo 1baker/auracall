@@ -6,6 +6,17 @@
   status to issue 9, developer-app work to issue 6, Deep Research work to issue
   7, and policy/topology commits to explicit no-replay dispositions.
 
+## Turn 615 | 2026-09-16
+
+- PR 13 integrated P45's validated current-main replay at canonical merge
+  `61548857a`; PR 14 recorded that exact receipt in the active-lane catalog.
+- The Plan 0352 worktree and merged local integration branches were removed
+  after fresh custody gates. The original accepted source branch remains
+  retained at `67a1c9908` because replayed commits are not ancestry-equivalent.
+- No installed-runtime refresh, browser/provider effect, approval click,
+  release, or deployment accompanied integration. Installed/live acceptance
+  remains separate.
+
 ## Turn 614 | 2026-09-12
 
 - Published P45's two-commit stack through closeout `8e4e13b05`; local HEAD and

@@ -5,11 +5,11 @@
   Its 24 unique commits route to issues 6, 7, and 9 or explicit historical
   dispositions; the branch must never be proposed as one pull request.
 
-- Provider-free accepted P45: [Plan 0352](docs/dev/plans/0352-2026-09-12-chatgpt-app-security-approval.md)
+- Provider-free accepted and integrated P45: [Plan 0352](docs/dev/plans/0352-2026-09-12-chatgpt-app-security-approval.md)
   detects ChatGPT's single-`Allow` suspicious-instruction app-security dialog
   and routes developer-app test submissions through the shared response and
-  approval lifecycle. Implementation checkpoint `61c62c6d6` is integration-
-  ready; installation and live acceptance remain separate.
+  approval lifecycle. PR 13 integrated the validated current-main replay at
+  `61548857a`; installation and live acceptance remain separate.
 
 - Live-accepted integrated P44: [Plan 0351](docs/dev/plans/0351-2026-09-11-chatgpt-current-latest-selection.md)
   recognizes ChatGPT's checked `Latest` row during read-only current-model
@@ -108,8 +108,8 @@
 
 ### Current Execution Board
 
-Status: P45 provider-free accepted and integration-ready
-Lanes: P01-P07, P09-P15, P17, P19-P28, P30-P45 (completed/accepted); P08, P16, P18, P29 (open)
+Status: P45 provider-free accepted and integrated; P46 decomposition active
+Lanes: P01-P07, P09-P15, P17, P19-P28, P30-P45 (completed/accepted); P08, P16, P18, P29, P46 (open)
 
 - Completed-with-terminal-evidence installed/live successor:
   [Plan 0349](docs/dev/plans/0349-2026-09-11-installed-plan0348-live-acceptance.md)
