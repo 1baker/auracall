@@ -49581,3 +49581,48 @@ Chat repair integrated. Inventory complete at 11. Blank-tab readiness fix instal
 - Exact published topic `e551504d4` merged non-fast-forward into `main` at
   `a47801d6a` without additional browser or provider effect. The checked
   `Latest` current-model repair and product-gate receipt are canonical.
+## 2026-09-16 | GitHub issue, PR, and worktree policy adoption
+
+- Adopted the missing work-item traceability, collaborative development,
+  forge issue reporting, and GitHub issue operations modules and wired them
+  through `AGENTS.md`.
+- Retained the existing branch, commit, validation, and worktree policies
+  without duplicating their authority.
+- Added a repo-local GitHub target registry for owned fork
+  `ecochran76/auracall`. Fresh readback shows `ADMIN` capability while Issues
+  and private vulnerability reporting are disabled, so only read inspection is
+  allowlisted and every issue mutation remains fail-closed.
+- No GitHub issue, label, assignment, milestone, Project, PR, repository
+  setting, branch, or worktree mutation was performed as part of provider
+  validation.
+
+## 2026-09-16 | GitHub issue operations configured
+
+- Under explicit operator direction, enabled GitHub Issues and private
+  vulnerability reporting on owned fork `ecochran76/auracall`; fresh provider
+  readback confirms both features are enabled.
+- Expanded the repo-local target registry to allow read, create, comment, edit,
+  existing-label application, close, and reopen. Assignment, milestones,
+  Projects/planning, label creation, transfer, and repository-setting changes
+  remain excluded.
+- Mapped the existing GitHub labels without creating or changing provider
+  labels. No issue, comment, label application, assignment, milestone, Project,
+  PR, branch, or worktree was created or changed.
+
+## 2026-09-16 | Issue-backed lane governance reconciliation
+
+- Created GitHub issues 3 through 11 from the approved product-lane breakdown
+  after a fresh owned-fork capability and label preflight.
+- Issue 3 owns this canonical governance slice on
+  `chore/issue-3-lane-governance`; no provider or installed-runtime mutation is
+  in scope.
+- Required work-item validation now applies to actionable lanes while closed,
+  integrated history remains durable without retrospective placeholder issues.
+- P08 is truthfully paused without a worktree, P16 uses valid integrated
+  custody, P44 carries its full published checkpoint, and P45 is registered as
+  provider-free accepted and integration-ready.
+- P08, P16, P18, P29, and P45 carry exact GitHub issue locators. The active
+  planning audit and 37-test lane-auditor suite pass before checkpointing.
+- P44 cleanup then passed fresh clean, ignored-file, local/remote equality,
+  target-ancestry, and process-cwd gates. Git removed only the Plan 0351
+  worktree and local branch; the exact remote checkpoint remains retained.

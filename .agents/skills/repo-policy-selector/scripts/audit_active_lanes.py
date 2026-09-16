@@ -275,6 +275,9 @@ def audit_repo(
         }
     if catalog.get("schema_version") != 1:
         problems.append("catalog schema_version must be 1")
+    work_item_tracking = str(catalog.get("work_item_tracking", "optional"))
+    if work_item_tracking not in {"optional", "required"}:
+        problems.append("catalog work_item_tracking must be optional or required")
     lanes_value = catalog.get("lanes")
     if not isinstance(lanes_value, list):
         lanes_value = []
@@ -331,6 +334,27 @@ def audit_repo(
             for dependency in dependencies:
                 if dependency not in known_lane_ids:
                     problems.append(f"{lane_id}: unknown dependency lane: {dependency}")
+        work_items = lane.get("work_items", [])
+        if not isinstance(work_items, list):
+            problems.append(f"{lane_id}: work_items must be a list")
+        else:
+            actionable = (
+                lane.get("plan_state") in {"PLANNED", "OPEN", "BLOCKED"}
+                or lane.get("custody_state")
+                in {"ACTIVE_WORKTREE", "PAUSED_REF", "INTEGRATION_READY"}
+            )
+            if work_item_tracking == "required" and actionable and not work_items:
+                problems.append(
+                    f"{lane_id}: actionable lane requires at least one work-item locator"
+                )
+            for locator in work_items:
+                if (
+                    not isinstance(locator, str)
+                    or not locator
+                    or len(locator) > 200
+                    or any(character.isspace() for character in locator)
+                ):
+                    problems.append(f"{lane_id}: invalid work-item locator: {locator}")
         if lane.get("plan_state") not in allowed_plan_states:
             problems.append(f"{lane_id}: invalid plan_state: {lane.get('plan_state')}")
         if lane.get("custody_state") not in allowed_custody_states:
@@ -603,6 +627,7 @@ def audit_repo(
         "repo_root": str(repo),
         "default_ref": default_ref,
         "catalog_path": catalog_path,
+        "work_item_tracking": work_item_tracking,
         "remote": remote,
         "branch_prefixes": (
             [] if catalog_only or selected_branches else list(branch_prefixes)

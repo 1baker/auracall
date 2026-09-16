@@ -174,6 +174,10 @@ Read and follow:
 - `docs/dev/policies/0027-preview-artifact-review.md`
 - `docs/dev/policies/0028-active-lane-coordination.md`
 - `docs/dev/policies/0029-code-testing-discipline.md`
+- `docs/dev/policies/0031-work-item-traceability.md`
+- `docs/dev/policies/0032-collaborative-development-workflow.md`
+- `docs/dev/policies/0033-forge-issue-reporting.md`
+- `docs/dev/policies/0034-github-issue-operations.md`
 
 ## Scope
 

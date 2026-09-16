@@ -71,7 +71,9 @@
   September 10 Deep Research conversation is authoritative and may not be
   retried.
 
-- P16 source reconciliation is provider-free green: current main owns exact
+- P16 source reconciliation is provider-free green. Its branch-local authority is
+  `docs/dev/plans/0323-2026-08-30-chatgpt-developer-app-submit-selection.md`
+  at `refs/remotes/origin/fix/plan0323-developer-app-mention`; current main owns exact
   ecosystem-mention selection; the reconciled delta removes inherited generic
   tool routing, preserves current-model submission, and safely clears an
   unwrapped app mention. The obsolete provider-local response watcher was
