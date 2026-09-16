@@ -1,5 +1,48 @@
 # RUNBOOK
 
+## Turn 614 | 2026-09-12
+
+- Published P45's two-commit stack through closeout `8e4e13b05`; local HEAD and
+  `origin/fix/plan0352-chatgpt-security-approval` are equal.
+- Source remains provider-free accepted. The next gate is non-fast-forward
+  integration into current main, followed by a separately governed exact
+  install and manual-approval live acceptance; neither ran this turn.
+
+## Turn 613 | 2026-09-12
+
+- P45 provider-free acceptance passes at implementation checkpoint
+  `61c62c6d6`: 69 focused and 352 widened tests, including the shared prompt-
+  structure guard, plus typecheck, production build, zero-finding scoped lint,
+  diff hygiene, and the 352-candidate zero-error plan audit.
+- Exact heading+warning+single-Allow recognition now exposes app-security
+  consent in manual mode, supports explicit allow-once, and refuses an
+  always-allow downgrade. Developer-app submission reuses the shared assistant-
+  response/approval lifecycle rather than adding a provider-local watcher.
+- LitScout reconciliation is frozen at ledger 2,930 lines (two new transport-
+  successful invocations), exact-action execution/attempt/receipt counts
+  226/227/744, zero Session 129 memberships, and 5,900 external events with
+  zero after the attempt. The rejected token remains terminal and unretired.
+- No install or live retest ran. Existing installed CLI PID `62171`, API PID
+  `51128`, and Chrome PID `71128` were preserved untouched. P45 is integration-
+  ready; installed/live proof is a separate gate.
+
+## Turn 612 | 2026-09-12
+
+- Opened P45 / [Plan 0352](docs/dev/plans/0352-2026-09-12-chatgpt-app-security-approval.md)
+  from exact integrated main `da5acac0a2` after the operator manually continued
+  the retained LitScout conversation.
+- ChatGPT exposed a single-action `Allow ChatGPT to use LitScout?` security
+  dialog with `Suspicious Instruction`; AuraCall currently detects only paired
+  `Allow once` / `Always allow` tool cards and its developer-app submit helper
+  exits before the shared response/approval watcher.
+- The operator's one manual approval reached LitScout once. LitScout rejected
+  the exact action during pre-effect validation; exact-action execution,
+  attempt, receipt, external-effect, and Session 129 membership state did not
+  advance. No retry is allowed or planned.
+- P45 owns a provider-free exact-dialog fixture and shared-lifecycle repair.
+  It authorizes no install, browser/provider action, approval click, or LitScout
+  retry.
+
 ## Turn 611 | 2026-09-11
 
 - Merged exact published P44 topic `e551504d4` non-fast-forward into `main` at
