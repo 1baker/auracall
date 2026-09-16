@@ -21573,3 +21573,12 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   `about:blank` Chrome tree. The primary terminated only the six attributable
   PIDs and verified a clean profile-path census; zero-browser-effect acceptance
   remains unproved and the event is retained in the recovery receipt.
+
+## Turn 577 | 2026-09-16
+
+- PR 17 merged the P08 provider-free recovery at canonical receipt
+  `1fdd4d088d0c0374f97e3482e31e23736af1d877` after an independent closed-world
+  review repaired cold-index hashing and reported no remaining source blocker.
+- Mark source custody integrated and retire the temporary source worktree only
+  after a clean OS cwd census. Keep issue 9 and Plan 0315 open; no installed,
+  scheduler, browser, or provider acceptance runs in this reconciliation.

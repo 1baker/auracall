@@ -118,3 +118,8 @@ Publication receipt: the primary pushed remote branch
 Subsequent review fixes advance the PR head, so publication checkpoints here
 are historical locators rather than the merge receipt. Publication does not
 satisfy installed acceptance or close issue 9.
+
+Integration receipt: PR 17 merged without force at canonical main commit
+`1fdd4d088d0c0374f97e3482e31e23736af1d877`. Source custody is integrated;
+issue 9 and Plan 0315 remain open only for the separately governed installed
+acceptance and the unresolved zero-browser-effect requirement.

@@ -1,3 +1,8 @@
+- 2026-09-16: Do not set active-lane `work_item_tracking` to `required` until
+  every existing catalog entry has a truthful stable locator. Keep validation
+  optional during migration; never invent issue or backlog locators for closed
+  historical lanes merely to satisfy the auditor.
+
 - 2026-09-16: Aggregate status must not reread every runtime record after a
   bulk scan or hash full archive assets merely to count available evidence.
   Reuse persisted snapshots and probe bounded reads, preserving directory and

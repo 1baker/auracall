@@ -1,5 +1,5 @@
 schema_version: 1
-work_item_tracking: required
+work_item_tracking: optional
 lanes:
   - id: P01
     objective: Reconcile AuraCall Git custody and review Oracle only as a separate reference project.
@@ -130,22 +130,22 @@ lanes:
   - id: P08
     objective: Reduce aggregate API status latency below the existing default five-second client budget without weakening status semantics.
     plan: docs/dev/plans/0315-2026-08-25-aggregate-status-latency.md
-    plan_ref: refs/remotes/origin/fix/issue-9-aggregate-status
+    plan_ref: refs/remotes/origin/main
     branch: fix/issue-9-aggregate-status
     target: main
     plan_state: OPEN
-    custody_state: ACTIVE_WORKTREE
-    checkpoint: 61ca2ef80ff509db93144686e04a9fd952ebca2b
+    custody_state: INTEGRATED
+    checkpoint: 81081bd29a1e152b7da106495c27e5510e49349b
     remote_ref: refs/remotes/origin/fix/issue-9-aggregate-status
     integration: merge
     work_items: [ecochran76/auracall#9]
     dependencies: [P07]
     overlaps: []
-    validation_status: source-passed-test-browser-side-effect-cleaned
+    validation_status: provider-free-integrated-installed-proof-blocked
     validation_ref: docs/dev/notes/2026-09-16-issue-9-provider-free-recovery.md
-    integration_receipt: null
+    integration_receipt: 1fdd4d088d0c0374f97e3482e31e23736af1d877
     blocker: Test-induced browser side effect was cleaned by the primary but zero browser effect remains unproved; installed acceptance requires fresh scheduler/browser/provider-guard evidence.
-    disposition: Main-aligned provider-free recovery is published in PR 17 under issue 9; the historical candidate ref remains evidence-only.
+    disposition: Provider-free recovery merged through PR 17 at the exact canonical receipt; the source worktree is retired after a clean ownership census. Installed five-second acceptance remains open under issue 9.
     updated_at: 2026-09-16
     recovery_ref: refs/remotes/origin/wip/plan0337-browser-edits-recovery
     recovery_checkpoint: 3696f6dd337b703f42997753a576bd8364203102

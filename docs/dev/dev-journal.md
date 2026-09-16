@@ -49701,3 +49701,11 @@ Chat repair integrated. Inventory complete at 11. Blank-tab readiness fix instal
   when the archive index was absent. Availability mode now reaches that
   backfill, retaining persisted checksums while probing at most one byte; the
   focused regression, typecheck, scoped lint, and CodeGraph sync pass.
+- PR 17 merged without force at canonical receipt `1fdd4d088`. P08 source
+  custody is integrated; issue 9 and Plan 0315 remain open for installed timing,
+  runtime ownership, guard readback, and the zero-browser-effect obligation.
+- Current policy audit also repaired malformed H1 metadata in closed Plans 0017
+  and 0018. Required catalog work-item validation had been enabled before the
+  historical lane population was migrated, contrary to Policy 0031 adoption
+  order; the catalog returns to optional validation while all new/open issue
+  lanes keep their explicit locators.
