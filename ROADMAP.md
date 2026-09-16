@@ -310,6 +310,9 @@ Lanes: P01-P07, P09-P15, P17, P19-P28, P30-P45 (completed/accepted); P08, P16, P
   existing default five-second client budget. Three installed baseline probes
   timed out in 7.2-7.8 seconds. Payload semantics, provider/browser behavior,
   and live-follow policy remain frozen.
+  Issue `ecochran76/auracall#9` now recovers the historical provider-free patch
+  on `fix/issue-9-aggregate-status`; installed acceptance remains a separate
+  gate requiring fresh scheduler/browser/provider-guard evidence.
 
 - Completed bounded live-follow recovery:
   [docs/dev/plans/0314-2026-08-24-bounded-live-follow-recovery.md](docs/dev/plans/0314-2026-08-24-bounded-live-follow-recovery.md)

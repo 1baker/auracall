@@ -130,22 +130,22 @@ lanes:
   - id: P08
     objective: Reduce aggregate API status latency below the existing default five-second client budget without weakening status semantics.
     plan: docs/dev/plans/0315-2026-08-25-aggregate-status-latency.md
-    plan_ref: refs/remotes/origin/fix/plan0315-aggregate-status-latency
-    branch: fix/plan0315-aggregate-status-latency
+    plan_ref: refs/heads/fix/issue-9-aggregate-status
+    branch: fix/issue-9-aggregate-status
     target: main
     plan_state: OPEN
-    custody_state: PAUSED_REF
-    checkpoint: 9860b9d49be75c7ff3bcdb5ed344ae28bb9f5f2a
-    remote_ref: refs/remotes/origin/fix/plan0315-aggregate-status-latency
+    custody_state: ACTIVE_WORKTREE
+    checkpoint: b35077504ae92972cf22c4957e7c30036c43dbce
+    remote_ref: refs/remotes/origin/fix/issue-9-aggregate-status
     integration: merge
     work_items: [ecochran76/auracall#9]
     dependencies: [P07]
     overlaps: []
-    validation_status: implementation-accepted-installed-proof-blocked
-    validation_ref: 025453473c5957fb72abb7ed787cb6d1266951e6
+    validation_status: provider-free-passed-installed-proof-pending
+    validation_ref: docs/dev/notes/2026-09-16-issue-9-provider-free-recovery.md
     integration_receipt: null
-    blocker: The auracall-gemini-pro target retains a manual_clear_required google-sorry guard; human clearance is required before P08 may pause the scheduler or install.
-    disposition: Refreshed provider-free repair remains published on its remote ref; the former shared checkout now belongs to a different mixed-history branch, so P08 is paused pending main-aligned recovery and installed proof.
+    blocker: Installed acceptance requires fresh scheduler/browser/provider-guard evidence; historical manual-clear evidence is not a current readback. Recovery publication is owned by the primary.
+    disposition: Main-aligned provider-free recovery is active locally under issue 9; the historical remote ref preserves candidate custody until the primary publishes the recovered branch.
     updated_at: 2026-09-16
     recovery_ref: refs/remotes/origin/wip/plan0337-browser-edits-recovery
     recovery_checkpoint: 3696f6dd337b703f42997753a576bd8364203102

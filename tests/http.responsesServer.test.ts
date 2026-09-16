@@ -3159,7 +3159,7 @@ describe("http responses adapter", () => {
 		}
 	});
 
-	it("hydrates broad live-follow status from terminal history materialization jobs", async () => {
+	it.each(["batch", "availability"])("hydrates broad live-follow status from terminal history materialization jobs with %s archive reads", async (archiveMode) => {
 		const homeDir = await fs.mkdtemp(
 			path.join(os.tmpdir(), "auracall-http-account-mirror-status-history-hydration-"),
 		);
@@ -3363,7 +3363,8 @@ describe("http responses adapter", () => {
 				accountMirrorStatusRegistry: registry,
 				runArchiveService: {
 					listItems: listArchiveItems,
-					listItemsBatch: listArchiveItemsBatch,
+					listItemsBatch: archiveMode === "availability" ? vi.fn(async () => { throw new Error("full batch must not run"); }) : listArchiveItemsBatch,
+					...(archiveMode === "availability" ? { listItemsBatchAvailability: listArchiveItemsBatch } : {}),
 				} as unknown as RunArchiveService,
 				historyMaterializationService: {
 					listJobs: listHistoryMaterializationJobs,
@@ -3554,8 +3555,14 @@ describe("http responses adapter", () => {
 			metrics: { total: 0, byStatus: {}, active: 0, terminal: 0 },
 		}));
 
+		// This fixture owns two remote artifacts and one materialized archive item.
+		// Startup reconciliation must not race the status-only hydration assertion.
 		const server = await createResponsesHttpServer(
-			{ host: "127.0.0.1", port: 0 },
+			{
+				host: "127.0.0.1", port: 0,
+				resumeAccountMirrorCompletionsOnStart: false,
+				reconcileAccountMirrorLiveFollowOnStart: false,
+			},
 			{
 				now: () => new Date("2026-07-09T14:40:00.000Z"),
 				config,
@@ -3596,7 +3603,11 @@ describe("http responses adapter", () => {
 			);
 			expect(account?.materializationBacklog).toMatchObject({
 				localMaterialized: { artifacts: 1, total: 1 },
-				remoteKnownMissingLocal: { artifacts: 0, total: 0 },
+				remoteKnownMissingLocal: { artifacts: 1, total: 1 },
+			});
+			expect(registry.readStatus().entries[0]?.metadataEvidence?.assetInventory).toMatchObject({
+				localMaterialized: { artifacts: 0 },
+				remoteKnownMissingLocal: { artifacts: 2 },
 			});
 			expect(listArchiveItems).toHaveBeenCalledWith(
 				expect.objectContaining({

@@ -165,6 +165,88 @@ describe('run archive service', () => {
     ]);
   });
 
+  test('refreshes status availability without rereading local asset contents', async () => {
+    const homeDir = await mkdtemp(path.join(os.tmpdir(), 'auracall-run-archive-availability-'));
+    setAuracallHomeDirOverrideForTest(homeDir);
+    const assetPath = path.join(homeDir, 'asset.txt');
+    await writeFile(assetPath, 'status only needs current file availability', 'utf8');
+    const indexStore = {
+      readIndex: vi.fn(async () => ({
+        object: 'run_archive_index' as const,
+        version: 1,
+        updatedAt: '2026-08-25T16:00:00.000Z',
+        itemCount: 1,
+        items: [createArchiveItemFixture({
+          id: 'generated-artifact:availability-only',
+          kind: 'generated_artifact',
+          provider: 'chatgpt',
+          runtimeProfile: 'default',
+          localPath: assetPath,
+          fileAvailable: true,
+          checksumSha256: 'existing-checksum',
+        })],
+      })),
+      writeIndex: vi.fn(),
+      upsertItems: vi.fn(),
+      readItem: vi.fn(),
+      listItems: vi.fn(),
+    } as unknown as RunArchiveIndexStore;
+    const service = createRunArchiveService({ indexStore });
+    const readFile = vi.spyOn(fs, 'readFile');
+
+    const results = await service.listItemsBatchAvailability?.([
+      { provider: 'chatgpt', runtimeProfile: 'default', assetAvailability: 'available' },
+    ]);
+
+    expect(readFile).not.toHaveBeenCalled();
+    expect(results?.[0]?.items[0]).toMatchObject({
+      id: 'generated-artifact:availability-only',
+      fileAvailable: true,
+      checksumSha256: 'existing-checksum',
+    });
+  });
+
+  test.each(['EACCES', 'EPERM', 'ENODEV', 'ESTALE', 'EIO'])('retains %s evidence during status availability refresh', async (code) => {
+    const localPath = '/unavailable/status-asset';
+    const indexStore = {
+      readIndex: vi.fn(async () => ({
+        object: 'run_archive_index', version: 1, updatedAt: '2026-09-16T00:00:00.000Z', itemCount: 1,
+        items: [createArchiveItemFixture({ id: 'upload:unavailable', kind: 'upload', localPath, fileAvailable: true })],
+      })),
+      upsertItems: vi.fn(),
+    } as unknown as RunArchiveIndexStore;
+    vi.spyOn(fs, 'open').mockRejectedValueOnce(Object.assign(new Error(code), { code }));
+    const service = createRunArchiveService({ indexStore });
+    await expect(service.listItemsBatchAvailability?.([{ kind: 'upload' }])).resolves.toMatchObject([{
+      items: [{ fileAvailable: false, metadata: { unavailableErrorCode: code, unavailableReason: 'local-file-unavailable' } }],
+    }]);
+  });
+
+  test('rejects directories and closes bounded availability probes after read failures', async () => {
+    const homeDir = await mkdtemp(path.join(os.tmpdir(), 'auracall-archive-status-errors-'));
+    setAuracallHomeDirOverrideForTest(homeDir);
+    const item = createArchiveItemFixture({ id: 'upload:directory', kind: 'upload', localPath: homeDir });
+    const indexStore = {
+      readIndex: vi.fn(async () => ({
+        object: 'run_archive_index', version: 1, updatedAt: '2026-09-16T00:00:00.000Z', itemCount: 1, items: [item],
+      })),
+      upsertItems: vi.fn(),
+    } as unknown as RunArchiveIndexStore;
+    const service = createRunArchiveService({ indexStore });
+    await expect(service.listItemsBatchAvailability?.([{}])).rejects.toMatchObject({ code: 'EISDIR' });
+    const close = vi.fn(async () => {});
+    const read = vi.fn(async () => { throw Object.assign(new Error('read failed'), { code: 'EIO' }); });
+    vi.spyOn(fs, 'open').mockResolvedValueOnce({
+      stat: async () => ({ isDirectory: () => false, isFile: () => true, size: 1024 }), read, close,
+    } as unknown as Awaited<ReturnType<typeof fs.open>>);
+    await expect(service.listItemsBatchAvailability?.([{}])).resolves.toMatchObject([{
+      items: [{ fileAvailable: false, metadata: { unavailableErrorCode: 'EIO' } }],
+    }]);
+    expect(read).toHaveBeenCalledWith(expect.any(Buffer), 0, 1, 0);
+    expect(close).toHaveBeenCalledOnce();
+    await fs.rm(homeDir, { recursive: true, force: true });
+  });
+
   test('projects existing runtime, batch, media, upload, artifact, and provider conversation records', async () => {
     const homeDir = await mkdtemp(path.join(os.tmpdir(), 'auracall-run-archive-'));
     setAuracallHomeDirOverrideForTest(homeDir);

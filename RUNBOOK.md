@@ -21558,3 +21558,14 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   Full fsck and commit-graph verification pass; the plan-library audit has zero
   validation errors, the reconciled active-lane audit is green, and final local
   main equals published origin/main.
+
+## Turn 576 | 2026-09-16
+
+- Plan 0315 / P08 / `ecochran76/auracall#9` resumes on
+  `fix/issue-9-aggregate-status` from canonical `b35077504` with one delegated
+  implementation owner and primary-owned publication/integration.
+- Recovery preserves bulk-list filtering and archive availability failures;
+  the historical HTTP fixture failure is retained and repaired at its isolated
+  startup boundary. See Plan 0315 for current validation and remaining gates.
+- No installed runtime, scheduler control, browser, or provider action belongs
+  to this packet. Issue 9 remains open pending installed five-second acceptance.
