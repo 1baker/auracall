@@ -5,6 +5,7 @@ import {
   uploadAttachmentFile,
   waitForAttachmentCompletion,
   navigateToChatGPT,
+  assertExactRemoteTargetUrl,
   navigateToPromptReadyWithFallback,
   ensurePromptReady,
   ensureNotBlocked,
@@ -85,6 +86,28 @@ describe('navigateToChatGPT', () => {
     );
     expect(navigate).toHaveBeenCalledWith({ url: 'https://chat.openai.com' });
     expect(runtime.evaluate).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('assertExactRemoteTargetUrl', () => {
+  test('rejects a different retained conversation before a prompt can be composed', async () => {
+    const runtime = {
+      evaluate: vi.fn().mockResolvedValue({ result: { value: 'https://chatgpt.com/c/older-conversation' } }),
+    } as unknown as ChromeClient['Runtime'];
+    await expect(assertExactRemoteTargetUrl(runtime, 'https://chatgpt.com/', 'before-navigation')).rejects.toMatchObject({
+      details: {
+        code: 'agent_browser_exact_target_url_mismatch',
+        phase: 'before-navigation',
+        actualUrl: 'https://chatgpt.com/c/older-conversation',
+      },
+    });
+  });
+
+  test('accepts equivalent root URLs', async () => {
+    const runtime = {
+      evaluate: vi.fn().mockResolvedValue({ result: { value: 'https://chatgpt.com/' } }),
+    } as unknown as ChromeClient['Runtime'];
+    await expect(assertExactRemoteTargetUrl(runtime, 'https://chatgpt.com', 'after-navigation')).resolves.toBeUndefined();
   });
 });
 

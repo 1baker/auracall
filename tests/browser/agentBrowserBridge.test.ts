@@ -18,6 +18,22 @@ function jsonResponse(body: unknown): Response {
 }
 
 describe("agent-browser bridge", () => {
+	test("preserves both operation and detach failures in the terminal error", async () => {
+		const bridge = { baseUrl: "http://127.0.0.1:47777", browserId: "session:retained",
+			profileId: "chatgpt-pro", sessionName: "retained", detachRequired: true,
+			serviceTabHandle: { targetId: "original-target", valid: true } };
+		const fetch = vi.fn(async () => { throw new Error("detach endpoint unavailable"); });
+		await expect(withAgentBrowserBrokerCleanup(bridge, async () => {
+			throw new Error("target binding rejected");
+		}, { fetch: fetch as typeof globalThis.fetch })).rejects.toMatchObject({
+			name: "BrowserAutomationError",
+			message: expect.stringContaining("target binding rejected"),
+			details: {
+				code: "agent_browser_operation_and_cleanup_failed",
+				detachError: expect.stringContaining("detach endpoint unavailable"),
+			},
+		});
+	});
 	test("defaults bridge selection to auto and preserves explicit overrides", () => {
 		expect(resolveAgentBrowserBridgeMode(undefined)).toBe("auto");
 		expect(resolveAgentBrowserBridgeMode("required")).toBe("required");

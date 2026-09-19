@@ -104,6 +104,7 @@ import {
 	captureAssistantMarkdown,
 	clearComposerAttachments,
 	clearPromptComposer,
+	assertExactRemoteTargetUrl,
 	ensureChatgptComposerTool,
 	ensureLoggedIn,
 	ensureModelSelection,
@@ -3757,11 +3758,27 @@ async function runRemoteBrowserMode(
 		}
 		await Promise.all(domainEnablers);
 		removeDialogHandler = installJavaScriptDialogAutoDismissal(Page, logger);
+		if (agentBrowserBridge) {
+			const selectedUrl = typeof agentBrowserBridge.serviceTabHandle.url === "string"
+				? agentBrowserBridge.serviceTabHandle.url
+				: agentBrowserBridge.requestedUrl;
+			if (!selectedUrl) {
+				throw new BrowserAutomationError("agent-browser attachment is missing the selected target URL; refusing to compose or submit.", {
+					code: "agent_browser_exact_target_url_missing",
+					stage: "execute-browser",
+					retryable: false,
+				});
+			}
+			await assertExactRemoteTargetUrl(Runtime, selectedUrl, "before-navigation");
+		}
 
 		// Skip cookie sync for remote Chrome - it already has cookies
 		logger("Skipping cookie sync for remote Chrome (using existing session)");
 
 		await navigateToChatGPT(Page, Runtime, config.url, logger);
+		if (agentBrowserBridge) {
+			await assertExactRemoteTargetUrl(Runtime, config.url, "after-navigation");
+		}
 		await ensureNotBlocked(Runtime, config.headless, logger);
 		await ensureNoManualClearBlockingPage(Runtime, logger, {
 			action: "ChatGPT remote prompt preparation",

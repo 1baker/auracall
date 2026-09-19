@@ -73,6 +73,42 @@ export async function navigateToChatGPT(
   }
 }
 
+function normalizedNavigationUrl(value: string): string | null {
+  try {
+    const url = new URL(value);
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
+    const pathname = url.pathname === '/' ? '/' : url.pathname.replace(/\/+$/, '');
+    return `${url.origin}${pathname}${url.search}`;
+  } catch {
+    return null;
+  }
+}
+
+/** Proves the connected client is operating on the exact broker-selected tab. */
+export async function assertExactRemoteTargetUrl(
+  Runtime: ChromeClient['Runtime'],
+  expectedUrl: string,
+  phase: 'before-navigation' | 'after-navigation',
+): Promise<void> {
+  const result = await Runtime.evaluate({
+    expression: 'typeof location === "object" && location.href ? location.href : ""',
+    returnByValue: true,
+  });
+  const actualUrl = typeof result?.result?.value === 'string' ? result.result.value : '';
+  const expected = normalizedNavigationUrl(expectedUrl);
+  const actual = normalizedNavigationUrl(actualUrl);
+  if (!expected || !actual || expected !== actual) {
+    throw new BrowserAutomationError('Retained browser target URL did not match the exact agent-browser selection; refusing to compose or submit.', {
+      code: 'agent_browser_exact_target_url_mismatch',
+      stage: 'execute-browser',
+      phase,
+      retryable: false,
+      expectedUrl,
+      actualUrl: actualUrl || null,
+    });
+  }
+}
+
 export interface PromptReadyNavigationOptions {
   url: string;
   fallbackUrl?: string;

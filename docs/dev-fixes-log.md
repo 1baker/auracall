@@ -23466,3 +23466,16 @@ ChatGPT commits a native Skill mention before the user text. Prompt equality mus
 - Test the complete provider-free lifecycle: parent returns, the exact stored
   session transitions to completed, and recovery reads that id. An outer caller
   timeout must never be answered by resending the provider prompt.
+# 2026-09-19 — Broker-selected target URL and dual-failure preservation
+
+- Area: Agent Browser retained ChatGPT handoff.
+- Symptom: a broker-acquired root target could yield CDP observations from an
+  older conversation, while a simultaneous operation and detach failure was
+  reduced to one opaque aggregate message.
+- Fix: read and compare the exact target URL before and after navigation;
+  reject missing or mismatched URL receipts before prompt composition. Wrap
+  simultaneous operation/detach failures in a typed browser error with bounded
+  summaries and retain the original aggregate as the cause.
+- Verification: provider-free stale-target and dual-failure tests, typecheck,
+  scoped lint and diff hygiene pass. This does not authorize browser launch,
+  provider submission, replay or a live canary.

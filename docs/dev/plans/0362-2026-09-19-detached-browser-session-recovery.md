@@ -97,6 +97,12 @@ or inspect that session without another Send.
   preservation must be repaired and proven provider-free before any separately
   authorized future live canary. The one-prompt allowance for this pass is
   exhausted and no retry is permitted.
+- The repair is now committed-pending in the clean integration checkout:
+  AuraCall reads `location.href` through the exact attached target both before
+  and after navigation, rejects a missing or mismatched broker URL before prompt
+  composition, and records distinct action/detach failure summaries in a typed
+  browser error. Provider-free tests cover the stale-conversation and dual-error
+  cases. Installation and a new live canary remain separate gates.
 
 ## Bounds
 

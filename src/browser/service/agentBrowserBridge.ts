@@ -1,6 +1,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { BrowserAutomationError } from "../../oracle/errors.js";
 
 const DEFAULT_TIMEOUT_MS = 5_000;
 const DEFAULT_BROKER_INVENTORY_CONVERGENCE_TIMEOUT_MS = 15_000;
@@ -1011,26 +1012,43 @@ export async function withAgentBrowserBrokerCleanup<T>(
 	} = {},
 ): Promise<T> {
 	let actionError: unknown = null;
+	let actionFailed = false;
 	let result!: T;
 	try {
 		result = await action();
 	} catch (error) {
 		actionError = error;
+		actionFailed = true;
 	}
 	let detachError: unknown = null;
+	let detachFailed = false;
 	try {
 		await detachAgentBrowserBrokerTab(bridge, { fetch: options.fetch });
 	} catch (error) {
 		detachError = error;
+		detachFailed = true;
 	}
-	if (actionError && detachError) {
-		throw new AggregateError(
-			[actionError, detachError],
-			"AuraCall browser operation and agent-browser detach both failed",
+	if (actionFailed && detachFailed) {
+		const describe = (error: unknown) => {
+			const name = error instanceof Error && error.name ? error.name : "Error";
+			const message = error instanceof Error ? error.message : String(error);
+			return `${name}: ${message.replace(/\s+/g, " ").slice(0, 500)}`;
+		};
+		throw new BrowserAutomationError(
+			`AuraCall browser operation failed (${describe(actionError)}); agent-browser detach also failed (${describe(detachError)}).`,
+			{
+				code: "agent_browser_operation_and_cleanup_failed",
+				stage: "cleanup",
+				phase: "after",
+				retryable: false,
+				actionError: describe(actionError),
+				detachError: describe(detachError),
+			},
+			new AggregateError([actionError, detachError], "AuraCall browser operation and agent-browser detach both failed"),
 		);
 	}
-	if (actionError) throw actionError;
-	if (detachError) options.onCleanupError?.(detachError);
+	if (actionFailed) throw actionError;
+	if (detachFailed) options.onCleanupError?.(detachError);
 	return result;
 }
 

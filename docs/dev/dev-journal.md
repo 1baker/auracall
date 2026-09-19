@@ -2,6 +2,21 @@
 > branch work. Independent upstream entries follow; repeated dates and plan
 > numbers need their own receipt checks before being treated as current state.
 
+## 2026-09-19 | Plan 0362 exact broker target and cleanup failure evidence
+
+- The detached retained-browser canary had acquired an exact root target but
+  its read-only CDP control observed an older conversation. Add a fail-closed
+  URL receipt before and after AuraCall navigation whenever Agent Browser owns
+  the target; no composition or Send can occur after either mismatch.
+- Replace the opaque action-plus-detach aggregate terminal message with a typed
+  browser error that preserves bounded summaries of both failures and retains
+  the aggregate as its cause. This is diagnostic preservation, not retry or
+  reconciliation authority.
+- Provider-free validation passed: typecheck; 76 focused browser tests with
+  one existing skip; scoped Biome lint; and diff hygiene. No browser was
+  launched and no provider request was sent. Installation and a separately
+  authorized future live canary remain open.
+
 ## 2026-09-10 | Plan 0356 audit-prefix freshness
 
 - Revalidated 23 focused tests, typecheck, full lint, production build, and
