@@ -1,8 +1,8 @@
 # Plan 0360 dirty-checkout disposition
 
 This manifest closes the file-level review of the 70 paths preserved in
-`runtime/auracall-snapshot-20260919-GvOez6/changed-files.tar.gz` (SHA-256
-`8b8fbd7591e635452848de1d9fabd75fd123b2491416886428b6bdcff057911e`).
+`runtime/auracall-snapshot-20260919-Ry3eWI/changed-files.tar.gz` (SHA-256
+`6e9568f8b83f445e8afefbf687ae92b3bb3c6f72c74ad30f76b9fbe06c9ab248`).
 Each archived path appears exactly once below. “Selective” means only the
 proved behavior was adapted; it does not import unrelated recovery behavior
 from the original dirty file.
@@ -99,6 +99,11 @@ failed-response recovery, conversation-capacity, and explicit-new-conversation
 packets. Source fixtures and partial transport work do not establish installed
 custody or safe retained-browser operation, so Plan 0360 neither enables nor
 silently discards them. The private archive is their recovery source.
+
+The immediately preceding `GvOez6` archive remains preserved as historical
+evidence. Before closeout, the configured-native-authority source advanced by
+676 bytes in the original checkout; the new `Ry3eWI` archive captures that
+change and compares cleanly. Its deferred disposition is unchanged.
 
 ## Concurrent prompt-control ownership
 

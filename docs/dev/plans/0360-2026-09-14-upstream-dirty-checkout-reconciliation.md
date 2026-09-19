@@ -14,11 +14,15 @@ browser run, or publication is part of Plan 0360.
 - Integration worktree: `runtime/auracall-integration-20260914`, with the upstream merge still uncommitted.
 - Original checkout: `corpora/repos/auracall`, currently with 35 tracked edits
   and 35 untracked files. The current private byte-verified custody baseline is
-  `runtime/auracall-snapshot-20260919-GvOez6/changed-files.tar.gz` (70 paths,
-  SHA-256 `8b8fbd7591e635452848de1d9fabd75fd123b2491416886428b6bdcff057911e`).
+  `runtime/auracall-snapshot-20260919-Ry3eWI/changed-files.tar.gz` (70 paths,
+  SHA-256 `6e9568f8b83f445e8afefbf687ae92b3bb3c6f72c74ad30f76b9fbe06c9ab248`).
 - The earlier 68-path snapshot remains historical evidence but is no longer a
   byte-identical current baseline: five archived files changed size and the
   configured-native-authority source/test pair was added before this checkpoint.
+- The immediately preceding 70-path `GvOez6` snapshot is also retained. A final
+  custody check found that only the deferred configured-native-authority source
+  had advanced; `Ry3eWI` captures its additional 676 bytes and passed immediate
+  archive comparison without changing the disposition.
 - No copying of the original checkout as a whole and no change to the installed AuraCall runtime or retained browser.
 
 ## Independent review and selected carry

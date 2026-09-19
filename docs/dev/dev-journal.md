@@ -51127,3 +51127,8 @@ Chat repair integrated. Inventory complete at 11. Blank-tab readiness fix instal
   production build, diff hygiene, and the 426-candidate plan audit with zero
   validation errors. Plan 0360 closes in the local commit containing this note;
   Plan 0361 remains OPEN for retained-browser proof.
+- A post-commit custody check detected 676 new bytes only in the deferred
+  configured-native-authority source. The current 70-path baseline is now
+  `runtime/auracall-snapshot-20260919-Ry3eWI/` at SHA-256
+  `6e9568f8b83f445e8afefbf687ae92b3bb3c6f72c74ad30f76b9fbe06c9ab248`;
+  immediate archive comparison passed and the older snapshot is preserved.
