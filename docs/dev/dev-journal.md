@@ -17,6 +17,19 @@
   launched and no provider request was sent. Installation and a separately
   authorized future live canary remain open.
 
+## 2026-09-19 | Plan 0362 fresh canary admission blocked by profile custody
+
+- Installed `c3b63d9c` readback confirmed the exact-target and dual-failure
+  guards in the user runtime. The fresh canary then used Agent Browser's
+  no-launch access plan and browser-capability preflight only.
+- Admission selected external BYOP profile `auracall-chatgpt-live` but found no
+  compatible live browser. The only ready retained ChatGPT browser is owned as
+  `chatgpt-pro`; the service correctly refuses cross-profile reuse and would
+  otherwise launch a duplicate browser lane.
+- No tab was created, no navigation occurred, and no provider prompt was sent.
+  Preserve both profile identities and repair their binding before retrying;
+  the authorized fresh-prompt budget remains unused.
+
 ## 2026-09-10 | Plan 0356 audit-prefix freshness
 
 - Revalidated 23 focused tests, typecheck, full lint, production build, and

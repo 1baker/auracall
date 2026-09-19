@@ -23479,3 +23479,12 @@ ChatGPT commits a native Skill mention before the user text. Prompt equality mus
 - Verification: provider-free stale-target and dual-failure tests, typecheck,
   scoped lint and diff hygiene pass. This does not authorize browser launch,
   provider submission, replay or a live canary.
+
+# 2026-09-19 — Do not bridge distinct retained browser-profile identities
+
+- Area: AuraCall fresh-canary admission through Agent Browser.
+- Finding: a ready retained ChatGPT browser governed as `chatgpt-pro` does not
+  satisfy an access plan for separate external BYOP profile
+  `auracall-chatgpt-live`, even when both are ChatGPT-capable.
+- Rule: preserve the profile mismatch and stop before tab creation. Do not
+  launch a duplicate lane or relabel either profile to force a canary.

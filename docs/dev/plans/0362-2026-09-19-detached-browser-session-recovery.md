@@ -103,6 +103,13 @@ or inspect that session without another Send.
   composition, and records distinct action/detach failure summaries in a typed
   browser error. Provider-free tests cover the stale-conversation and dual-error
   cases. Installation and a new live canary remain separate gates.
+- Fresh-canary admission was attempted only through Agent Browser's no-launch
+  access plan after installation of `c3b63d9c`. It refused the canary before
+  tab creation or provider submission: the selected `auracall-chatgpt-live`
+  external BYOP profile has no compatible live browser, while the sole ready
+  retained ChatGPT browser is governed as `chatgpt-pro`. Do not collapse those
+  identities or launch a duplicate profile lane. Reconcile the exact profile
+  binding first; the fresh-prompt allowance was not consumed.
 
 ## Bounds
 
