@@ -51142,3 +51142,22 @@ Chat repair integrated. Inventory complete at 11. Blank-tab readiness fix instal
   `runtime/auracall-snapshot-20260919-Ry3eWI/` at SHA-256
   `6e9568f8b83f445e8afefbf687ae92b3bb3c6f72c74ad30f76b9fbe06c9ab248`;
   immediate archive comparison passed and the older snapshot is preserved.
+
+## 2026-09-19 | Plan 0361 live Pro-intelligence gate verified
+
+- Reapplied the narrow three-file gate against the exact installed AuraCall
+  baseline after a later package installation had removed the earlier patch.
+  Installed imports and symbol/digest checks pass, and the runtime manifest now
+  records patched plus rollback SHA-256 values.
+- Agent Browser retained the exact `chatgpt-pro` stock-Chrome browser under
+  `dashboard-service-backend`; AuraCall reattached that target without launching
+  another Chrome process or tab.
+- The live marker run logged `Thinking time: Pro (already selected)` and
+  `Required prompt intelligence: Pro` before `Clicked send button`. The marker
+  committed as the next user turn and ChatGPT began responding.
+- Independent post-send inspection of the same visible Power picker read
+  `aria-valuemin=0`, `aria-valuemax=4`, and `aria-valuenow=4`. The picker was
+  dismissed without changing its value. Plan 0361 is closed as verified.
+- Final focused validation passed 75 tests across thinking-time selection,
+  prompt submission, browser exports, prompt-adapter, and Skill-run surfaces;
+  current typecheck and diff hygiene also pass.
