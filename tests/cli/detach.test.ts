@@ -1,5 +1,27 @@
 import { describe, expect, test } from 'vitest';
-import { shouldDetachSession } from '../../src/cli/detach.js';
+import {
+  buildDetachedSessionProcessArgs,
+  shouldDetachSession,
+} from '../../src/cli/detach.js';
+
+describe('buildDetachedSessionProcessArgs', () => {
+  test('preserves the current Node loader arguments', () => {
+    expect(
+      buildDetachedSessionProcessArgs({
+        execArgv: ['--import', 'tsx/loader.mjs'],
+        entrypoint: '/repo/bin/auracall.ts',
+        sessionId: 'session-123',
+      }),
+    ).toEqual([
+      '--import',
+      'tsx/loader.mjs',
+      '--',
+      '/repo/bin/auracall.ts',
+      '--exec-session',
+      'session-123',
+    ]);
+  });
+});
 
 describe('shouldDetachSession', () => {
   test('disables detach when env disables it', () => {
@@ -10,6 +32,14 @@ describe('shouldDetachSession', () => {
       disableDetachEnv: true,
     });
     expect(result).toBe(false);
+
+    const browser = shouldDetachSession({
+      engine: 'browser',
+      model: 'chatgpt:premium',
+      waitPreference: false,
+      disableDetachEnv: true,
+    });
+    expect(browser).toBe(false);
   });
 
   test('disables detach for non-pro models (gemini, codex, 5.1)', () => {
@@ -36,6 +66,39 @@ describe('shouldDetachSession', () => {
       disableDetachEnv: false,
     });
     expect(standard).toBe(false);
+  });
+
+  test('allows an explicitly non-waiting local browser run to detach', () => {
+    const result = shouldDetachSession({
+      engine: 'browser',
+      model: 'chatgpt:premium',
+      waitPreference: false,
+      disableDetachEnv: false,
+    });
+
+    expect(result).toBe(true);
+  });
+
+  test('keeps the default waiting browser run inline', () => {
+    const result = shouldDetachSession({
+      engine: 'browser',
+      model: 'chatgpt:premium',
+      waitPreference: true,
+      disableDetachEnv: false,
+    });
+
+    expect(result).toBe(false);
+  });
+
+  test('allows explicit no-wait for a non-pro local API run', () => {
+    const result = shouldDetachSession({
+      engine: 'api',
+      model: 'gpt-5.1',
+      waitPreference: false,
+      disableDetachEnv: false,
+    });
+
+    expect(result).toBe(true);
   });
 
   test('allows detach for pro models when env permits', () => {

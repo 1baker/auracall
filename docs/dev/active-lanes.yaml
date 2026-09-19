@@ -855,3 +855,24 @@ lanes:
     integration_receipt: a47801d6a440685c0822e843421b184fa89961a5
     disposition: Exact install and one zero-retry LitScout attempt passed; ChatGPT reached and stopped before approve_search_plan with no approval, provider, retry, or canonical DB effect. The repair and receipt are integrated into main.
     updated_at: 2026-09-11
+  - id: P45
+    objective: Make explicit local browser no-wait runs survive caller exit through AuraCall's existing detached session and exact reattachment path.
+    plan: docs/dev/plans/0362-2026-09-19-detached-browser-session-recovery.md
+    plan_ref: refs/heads/codex/auracall-upstream-reconcile-20260914
+    branch: codex/auracall-upstream-reconcile-20260914
+    target: main
+    plan_state: OPEN
+    custody_state: ACTIVE_WORKTREE
+    checkpoint: 414b1c03
+    remote_ref: null
+    integration: merge
+    dependencies: [P44]
+    overlaps: [P08, P16, P18, P29]
+    reconciled_overlaps: [P08, P16, P18, P29]
+    reconciliation_note: P45 changes only root CLI detach eligibility, focused tests, and matching operator docs. It does not absorb aggregate status, developer-app response, Skill execution, scheduler, completion, materialization, or provider-selection work.
+    validation_status: provider-free-validated-install-pending
+    validation_ref: docs/dev/plans/0362-2026-09-19-detached-browser-session-recovery.md
+    integration_receipt: null
+    blocker: null
+    disposition: Source parser, detach policy, loader-preserving child launch, help, and same-session completion are verified provider-free. Narrow installed repair and one retained-browser canary remain; no provider effect has run.
+    updated_at: 2026-09-19

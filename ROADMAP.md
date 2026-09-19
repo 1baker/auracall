@@ -1,11 +1,15 @@
 # Aura-Call Roadmap
 
-- Open downstream integration reconciliation: [Plan 0360](docs/dev/plans/0360-2026-09-14-upstream-dirty-checkout-reconciliation.md)
-  preserves a fresh 70-path dirty-checkout custody baseline and carries the
+- Active detached-browser recovery: [Plan 0362](docs/dev/plans/0362-2026-09-19-detached-browser-session-recovery.md)
+  makes explicit local browser `--no-wait` use AuraCall's existing detached
+  session runner so caller timeout cannot orphan the observer or invite a
+  duplicate Send. Default interactive browser behavior remains inline.
+
+- Closed downstream integration reconciliation: [Plan 0360](docs/dev/plans/0360-2026-09-14-upstream-dirty-checkout-reconciliation.md)
+  preserved the final 70-path custody baseline and selectively integrated the
   scheduler, required-document-set, exact-artifact, and assistant-response
-  identity packets onto the staged upstream merge. Focused provider-free checks
-  are green; broad validation, final disposition, commit, installation, and live
-  retained-browser acceptance remain.
+  identity packets. Plan 0361 separately closed the installed Pro-before-Send
+  gate with live value-4 evidence.
 
 - Live-accepted integrated P44: [Plan 0351](docs/dev/plans/0351-2026-09-11-chatgpt-current-latest-selection.md)
   recognizes ChatGPT's checked `Latest` row during read-only current-model

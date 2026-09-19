@@ -115,6 +115,13 @@ Use this when a client app needs one answer from one configured agent.
 
 This is the minimum OpenAI-compatible path.
 
+For one-shot local browser CLI automation outside the Responses API, use
+explicit `--no-wait` and retain the returned AuraCall session id. The detached
+session runner continues after caller exit, and `auracall session <id>` reads or
+reattaches that same run. Do not launch a replacement command when the original
+session is still running. Default browser CLI use remains attached, and
+remote-host browser execution does not detach.
+
 When the selected model is a configured `agent:<agent_id>`, callers do not need
 to repeat `auracall.service` or `auracall.runtimeProfile`. AuraCall hydrates
 missing service/runtime routing from the effective agent catalog before

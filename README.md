@@ -2085,6 +2085,9 @@ pnpm mcp
 - Multi-model API runs with aggregated cost/usage, including OpenRouter IDs alongside first-party models.
 - Render/copy bundles for manual paste into ChatGPT when automation is blocked.
 - GPT‑5 Pro API runs detach by default; reattach via `auracall session <id>` / `auracall status` or block with `--wait`.
+- Local browser runs stay attached by default. Pass `--no-wait` for unattended
+  execution, retain the returned session id, and reattach with
+  `auracall session <id>` instead of resending a slow prompt.
 - Azure endpoints supported via `--azure-endpoint/--azure-deployment/--azure-api-version` or `AZURE_OPENAI_*` envs.
 - File safety: globs/excludes, size guards, `--files-report`.
 - Sessions you can replay (`auracall status`, `auracall session <id> --render`).
@@ -2116,6 +2119,7 @@ pnpm mcp
 | `--browser-timeout`, `--browser-input-timeout` | Control overall/browser input timeouts (supports h/m/s/ms). |
 | `--render`, `--copy` | Print and/or copy the assembled markdown bundle. |
 | `--wait` | Block for background API runs (e.g., GPT‑5.1 Pro) instead of detaching. |
+| `--no-wait` | Start a local run in the detached session runner and return its durable session id immediately. Browser runs remain attached by default. |
 | `--write-output <path>` | Save only the final answer (multi-model adds `.<model>`). |
 | `--files-report` | Print per-file token usage. |
 | `--dry-run [summary\|json\|full]` | Preview without sending. |

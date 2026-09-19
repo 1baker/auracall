@@ -51161,3 +51161,20 @@ Chat repair integrated. Inventory complete at 11. Blank-tab readiness fix instal
 - Final focused validation passed 75 tests across thinking-time selection,
   prompt submission, browser exports, prompt-adapter, and Skill-run surfaces;
   current typecheck and diff hygiene also pass.
+
+## 2026-09-19 | Plan 0362 detached session source path verified
+
+- Fixed the actual `--no-wait` parser contract: Commander emits `wait: false`,
+  which now overrides the normal attached browser default. Local explicit
+  no-wait is eligible for the existing detached runner; remote execution and
+  the environment kill switch remain inline.
+- A provider-free real-CLI probe exposed and repaired source-mode child launch:
+  preserving Node loader arguments lets the detached child update the exact
+  persisted session to completed instead of leaving a false pending receipt.
+- Source validation passes 46 focused assertions, typecheck, scoped lint,
+  production build, help inspection, diff hygiene, CodeGraph refresh, and the
+  427-plan zero-error audit.
+- A later installed audit found the 10:57 corpus reinstall removed Plan 0361's
+  narrow Pro-intelligence patch. No live prompt was sent. Installed acceptance
+  requires one rollback-protected patch restoring both contracts before the
+  single retained-browser canary.

@@ -116,6 +116,12 @@ You can pass the same payload inline (`--browser-inline-cookies '<json or base64
 - `--project-name` / `--conversation-name`: resolve browser project/conversation by cached name before starting a run. `--conversation-name` also accepts selectors like `latest` or `latest-1`.
 - `--chatgpt-url`: override the ChatGPT base URL. Works with the root homepage (`https://chatgpt.com/`) **or** a specific workspace/folder link such as `https://chatgpt.com/g/.../project`. `--browser-url` stays as a hidden alias.
 - `--browser-timeout`, `--browser-input-timeout`: `7200s (2h)`/`30s` defaults. Durations accept `ms`, `s`, `m`, or `h` and can be chained (`1h2m10s`). The long browser timeout is intentional for Extended/Pro/Deep Research materialization; callers should submit asynchronously and poll `GET /v1/runs/{run_id}/status` or MCP `run_status`.
+- Local browser CLI runs stay attached by default so immediate failures remain
+  visible. For unattended execution, pass `--no-wait`: AuraCall persists the
+  session before starting its detached runner, returns the exact session id,
+  and keeps the browser work alive after the invoking shell exits. Inspect or
+  resume only that id with `auracall session <id>`; never resend the prompt to
+  recover a slow result. Remote-host browser runs remain attached.
 - `--browser-chatgpt-mode <chat|work>`: select the ChatGPT composer mode. Omitted values resolve to `chat`. AuraCall prefers an exact visible radio or compact menu control; an established conversation may instead prove Chat through its visible, enabled ChatGPT prompt editor only when no mode control or Work marker is present. Work always requires explicit UI proof and fails closed when unavailable.
 - `--browser-work-model <label>`: request a model through Work's dedicated model-selection surface. AuraCall never sends this value to Chat's picker. Without this flag, Work preserves its current model; if a named Work selector cannot be found, the run fails closed.
 - `--browser-model-strategy <select|current|ignore>`: control ChatGPT model selection. `select` (default) switches to the requested model; `current` keeps the active model and logs its label; `ignore` skips the picker entirely. (Ignored for Gemini web runs.)

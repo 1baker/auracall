@@ -23122,3 +23122,33 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   Full fsck and commit-graph verification pass; the plan-library audit has zero
   validation errors, the reconciled active-lane audit is green, and final local
   main equals published origin/main.
+
+## Turn 576 | 2026-09-19
+
+- Plan 0362/P45 opens after Plan 0361's live canary proved Pro-before-Send but
+  its inline CLI observer was killed by the outer command host while ChatGPT
+  continued the exact turn.
+- Existing durable response polling, broker-authoritative restart recovery, and
+  same-turn read-only reattachment remain the architecture authority. The new
+  slice adds no response store or replay path.
+- The bounded defect is root CLI detach policy: explicit `--no-wait` is parsed,
+  but all browser runs are currently ineligible for the existing detached
+  runner. The repair will preserve default inline behavior, expose the option,
+  and prove one create-once, reattach-many retained-browser canary.
+
+## Turn 577 | 2026-09-19
+
+- Reproduced that Commander's negated option yields `wait: false`; AuraCall's
+  old resolver ignored that value, so browser `--no-wait` never reached detach
+  policy. Explicit local no-wait now detaches while defaults, remote execution,
+  and `AURACALL_NO_DETACH=1` remain inline.
+- The first stubbed detached CLI probe returned an id but remained pending
+  because the child lost the active `tsx` loader arguments. The repaired
+  launcher preserves `process.execArgv`; the exact same persisted session then
+  reached completed with no replay.
+- Provider-free validation passes 46 focused assertions, typecheck, scoped
+  lint, production build, help inspection, diff hygiene, CodeGraph refresh,
+  and the 427-plan zero-error audit.
+- Installed audit found a 10:57 corpus reinstall had removed the earlier
+  Pro-intelligence guard as well as lacking this repair. No provider effect ran;
+  the next gate is a narrow reversible installed patch restoring both contracts.

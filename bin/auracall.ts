@@ -13,7 +13,7 @@ if (process.argv[2] === 'auracall-mcp') {
   await startMcpServer();
   process.exit(0);
 }
-import { resolveEngine, type EngineMode, defaultWaitPreference } from '../src/cli/engine.js';
+import { resolveEngine, resolveWaitPreference, type EngineMode } from '../src/cli/engine.js';
 import { shouldRequirePrompt } from '../src/cli/promptRequirement.js';
 import chalk from 'chalk';
 import type {
@@ -54,7 +54,7 @@ import {
 } from '../src/cli/options.js';
 import { copyToClipboard } from '../src/cli/clipboard.js';
 import { buildMarkdownBundle } from '../src/cli/markdownBundle.js';
-import { shouldDetachSession } from '../src/cli/detach.js';
+import { buildDetachedSessionProcessArgs, shouldDetachSession } from '../src/cli/detach.js';
 import { applyHiddenAliases } from '../src/cli/hiddenAliases.js';
 import { buildBrowserConfig, resolveBrowserModelLabel } from '../src/cli/browserConfig.js';
 import {
@@ -989,8 +989,13 @@ program
   .option('--force', 'Force start a new session even if an identical prompt is already running.', false)
   .option('--debug-help', 'Show the advanced/debug option set and exit.', false)
   .option('--heartbeat <seconds>', 'Emit periodic in-progress updates (0 to disable).', parseHeartbeatOption, 30)
-  .addOption(new Option('--wait').default(undefined))
-  .addOption(new Option('--no-wait').default(undefined).hideHelp())
+  .addOption(new Option('--wait', 'Stay attached until the run reaches a terminal state.').default(undefined))
+  .addOption(
+    new Option(
+      '--no-wait',
+      'Start a local run in the detached session runner and return its durable session id immediately.',
+    ).default(undefined),
+  )
   .showHelpAfterError('(use --help for usage)');
 
 async function resolveProjectIdArg(
@@ -11138,7 +11143,7 @@ async function runRootCommand(options: CliOptions): Promise<void> {
   resolvedOptions.writeOutputPath = resolveOutputPath(options.writeOutput, process.cwd());
 
   // Decide whether to block until completion:
-  let waitPreference = resolveWaitFlag({
+  let waitPreference = resolveWaitPreference({
     waitFlag: options.wait,
     noWaitFlag: options.noWait,
     model: resolvedModel,
@@ -11620,7 +11625,13 @@ function exitAfterCompletedBrowserFileCommand(): void {
 async function launchDetachedSession(sessionId: string): Promise<boolean> {
   return new Promise((resolve, reject) => {
     try {
-      const args = ['--', CLI_ENTRYPOINT, '--exec-session', sessionId];
+      // Preserve loaders such as tsx when the source CLI is running directly.
+      // Installed builds normally have an empty execArgv and retain the same shape.
+      const args = buildDetachedSessionProcessArgs({
+        execArgv: process.execArgv,
+        entrypoint: CLI_ENTRYPOINT,
+        sessionId,
+      });
       const child = spawn(process.execPath, args, {
         detached: true,
         stdio: 'ignore',
@@ -11716,22 +11727,6 @@ function printDebugOptionGroup(entries: Array<[string, string]>): void {
     const label = chalk.cyan(flag.padEnd(flagWidth + 2));
     console.log(`  ${label}${description}`);
   });
-}
-
-function resolveWaitFlag({
-  waitFlag,
-  noWaitFlag,
-  model,
-  engine,
-}: {
-  waitFlag?: boolean;
-  noWaitFlag?: boolean;
-  model: ModelName;
-  engine: EngineMode;
-}): boolean {
-  if (waitFlag === true) return true;
-  if (noWaitFlag === true) return false;
-  return defaultWaitPreference(model, engine);
 }
 
 async function readArchiveEvidencePayloadForCli(options: {

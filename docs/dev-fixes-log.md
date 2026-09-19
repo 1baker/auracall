@@ -23453,3 +23453,16 @@ ChatGPT commits a native Skill mention before the user text. Prompt equality mus
 - Put a fail-closed selector after composer hydration and immediately before
   Send. For the required state, accept only slider value 4 after readback; keep
   the caller's model strategy unchanged.
+
+## 2026-09-19 | Detached CLI receipts require parser and child-runtime proof
+
+- Commander represents a negated option such as `--no-wait` as the positive
+  property set to `false`. Checking only a separate `noWait` property silently
+  preserves the default and makes the advertised flag ineffective.
+- A background session id proves only that the parent spawned a child. When the
+  source CLI relies on a Node loader such as `tsx`, the detached child must
+  preserve the active execution arguments or it can die while the durable
+  record remains falsely pending.
+- Test the complete provider-free lifecycle: parent returns, the exact stored
+  session transitions to completed, and recovery reads that id. An outer caller
+  timeout must never be answered by resending the provider prompt.

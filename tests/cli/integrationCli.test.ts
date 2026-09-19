@@ -3,6 +3,7 @@ import { mkdtemp, writeFile, readdir, readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import { execFile } from 'node:child_process';
+import { setTimeout as delay } from 'node:timers/promises';
 import { promisify } from 'node:util';
 
 const execFileAsync = promisify(execFile);
@@ -58,6 +59,62 @@ describe('oracle CLI integration', () => {
     expect(metadata.usage?.totalTokens).toBe(20);
     expect(metadata.options?.effectiveModelId).toBe('gpt-5.1');
 
+    await rm(auracallHome, { recursive: true, force: true });
+  }, INTEGRATION_TIMEOUT);
+
+  test('completes the same persisted session after --no-wait returns', async () => {
+    const auracallHome = await mkdtemp(path.join(os.tmpdir(), 'oracle-detached-'));
+    const env = {
+      ...process.env,
+      // biome-ignore lint/style/useNamingConvention: env var name
+      OPENAI_API_KEY: 'sk-integration',
+      // biome-ignore lint/style/useNamingConvention: env var name
+      AURACALL_HOME_DIR: auracallHome,
+      // biome-ignore lint/style/useNamingConvention: env var name
+      AURACALL_CLIENT_FACTORY: CLIENT_FACTORY,
+      // biome-ignore lint/style/useNamingConvention: env var name
+      AURACALL_NO_DETACH: '0',
+      // biome-ignore lint/style/useNamingConvention: env var name
+      AURACALL_DISABLE_KEYTAR: '1',
+    };
+
+    let stdout = '';
+    try {
+      ({ stdout } = await execFileAsync(
+        process.execPath,
+        [
+          TSX_BIN,
+          CLI_ENTRY,
+          '--engine',
+          'api',
+          '--prompt',
+          'Detached integration check',
+          '--model',
+          'gpt-5.1',
+          '--no-wait',
+        ],
+        { env },
+      ));
+    } catch (error) {
+      const failure = error as { stdout?: string; stderr?: string };
+      throw new Error(`detached CLI failed\nstdout: ${failure.stdout ?? ''}\nstderr: ${failure.stderr ?? ''}`);
+    }
+    expect(stdout).toContain('Session running in background. Reattach via:');
+
+    const sessionsDir = path.join(auracallHome, 'sessions');
+    const [sessionId] = await readdir(sessionsDir);
+    expect(sessionId).toBeTruthy();
+    const metadataPath = path.join(sessionsDir, sessionId, 'meta.json');
+
+    let metadata: { status?: string; response?: { requestId?: string } } = {};
+    for (let attempt = 0; attempt < 20; attempt += 1) {
+      metadata = JSON.parse(await readFile(metadataPath, 'utf8'));
+      if (metadata.status === 'completed') break;
+      await delay(100);
+    }
+
+    expect(metadata.status).toBe('completed');
+    expect(metadata.response?.requestId).toBe('mock-req');
     await rm(auracallHome, { recursive: true, force: true });
   }, INTEGRATION_TIMEOUT);
 
