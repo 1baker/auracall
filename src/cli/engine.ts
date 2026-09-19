@@ -10,6 +10,24 @@ export function defaultWaitPreference(model: string, engine: EngineMode): boolea
   return true; // browser or non-pro models are fast enough to block by default
 }
 
+export function resolveWaitPreference({
+  waitFlag,
+  noWaitFlag,
+  model,
+  engine,
+}: {
+  waitFlag?: boolean;
+  noWaitFlag?: boolean;
+  model: string;
+  engine: EngineMode;
+}): boolean {
+  if (waitFlag === true) return true;
+  // Commander represents a negated `--no-wait` option as `wait: false`.
+  // Keep the legacy noWait shape for callers that still construct options directly.
+  if (waitFlag === false || noWaitFlag === true) return false;
+  return defaultWaitPreference(model, engine);
+}
+
 /**
  * Determine which engine to use based on CLI flags and the environment.
  *

@@ -10,6 +10,9 @@ import {
 
 describe('semantic model selectors', () => {
   it.each([
+    ['chatgpt:premium', { desiredModel: '6 Pro' }],
+    ['chatgpt:gpt-6-astra', { desiredModel: '6 Pro' }],
+    ['astra', { desiredModel: '6 Pro' }],
     ['chatgpt:auto', { desiredModel: 'GPT-5.6 Terra' }],
     ['chatgpt:terra', { desiredModel: 'GPT-5.6 Terra' }],
     ['chatgpt:gpt-5.6-terra', { desiredModel: 'GPT-5.6 Terra' }],

@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { resolveEngine, defaultWaitPreference, type EngineMode } from '../src/cli/engine.js';
+import {
+  resolveEngine,
+  defaultWaitPreference,
+  resolveWaitPreference,
+  type EngineMode,
+} from '../src/cli/engine.js';
 
 // biome-ignore lint/style/useNamingConvention: env var names are uppercase with underscores
 const envWithKey = { ...process.env, OPENAI_API_KEY: 'sk-test' } as NodeJS.ProcessEnv;
@@ -36,5 +41,26 @@ describe('defaultWaitPreference', () => {
   it('keeps wait enabled for Codex and browser models', () => {
     expect(defaultWaitPreference('gpt-5.1-codex', 'api')).toBe(true);
     expect(defaultWaitPreference('gpt-5.2-pro', 'browser')).toBe(true);
+  });
+});
+
+describe('resolveWaitPreference', () => {
+  it("honors Commander's negated wait value", () => {
+    expect(
+      resolveWaitPreference({
+        waitFlag: false,
+        model: 'chatgpt:premium',
+        engine: 'browser',
+      }),
+    ).toBe(false);
+  });
+
+  it('preserves the default attached browser behavior', () => {
+    expect(
+      resolveWaitPreference({
+        model: 'chatgpt:premium',
+        engine: 'browser',
+      }),
+    ).toBe(true);
   });
 });

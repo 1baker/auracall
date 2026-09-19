@@ -134,6 +134,8 @@ export function resolveRunOptionsFromConfig({
 
 function resolveModelForChatgptSemanticSelection(selection: ChatgptSemanticModelSelection): ModelName {
   switch (selection.desiredModel) {
+    case '6 Pro':
+      return 'gpt-6-astra';
     case 'GPT-5.6 Sol':
       return BROWSER_COMPAT_THINKING_MODEL;
     case 'GPT-5.6 Terra':

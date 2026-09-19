@@ -44,6 +44,19 @@ describe('Config Resolver', () => {
     expect(result.model).toBe('gpt-5.6-sol');
   });
 
+  it('should resolve ChatGPT Premium intent to the GPT-6 Astra compatibility model', async () => {
+    vi.spyOn(configModule, 'loadUserConfig').mockResolvedValue({
+      config: { browser: {} } satisfies UserConfigInput,
+      path: '/tmp/config.json',
+      loaded: false,
+    });
+
+    const result = await resolveConfig({ engine: 'browser', model: 'chatgpt:premium' });
+
+    expect(result.engine).toBe('browser');
+    expect(result.model).toBe('gpt-6-astra');
+  });
+
   it('should resolve semantic ChatGPT Sol High selector to the Sol compatibility model', async () => {
     vi.spyOn(configModule, 'loadUserConfig').mockResolvedValue({
       config: { browser: {} } satisfies UserConfigInput,
