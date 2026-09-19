@@ -51174,7 +51174,27 @@ Chat repair integrated. Inventory complete at 11. Blank-tab readiness fix instal
 - Source validation passes 46 focused assertions, typecheck, scoped lint,
   production build, help inspection, diff hygiene, CodeGraph refresh, and the
   427-plan zero-error audit.
-- A later installed audit found the 10:57 corpus reinstall removed Plan 0361's
-  narrow Pro-intelligence patch. No live prompt was sent. Installed acceptance
-  requires one rollback-protected patch restoring both contracts before the
-  single retained-browser canary.
+- A later installed audit found a corpus reinstall lacked the detach repair.
+  The initial Pro-guard check targeted the wrong browser path; corrected
+  action-module and Send-path inspection proves that guard is present. The
+  three detach files now have a rollback-protected installed patch, and no live
+  prompt has yet been sent.
+
+## 2026-09-19 | Plan 0362 installed provider-free proof and bounded canary result
+
+- Moved the detach repair into the canonical corpus checkout used by the
+  user-runtime installer and added the missing `chatgpt:premium` resolution to
+  browser picker `6 Pro` with compatibility model `gpt-6-astra`.
+- Canonical validation passes 143 focused tests, typecheck, production build,
+  and diff hygiene. The final installed modules are byte-identical to that
+  build; an installed provider-free detached run returned immediately and its
+  exact persisted session reached `completed` with the mock receipt.
+- The one retained-browser canary returned in 4.068 seconds and continued in a
+  detached child, but its exact session reached terminal `error` before Send.
+  The current error surface collapsed the nested failure, and read-only control
+  for the supplied root target resolved to an older conversation URL.
+- Released only the proven-owned temporary canary tab. The retained browser
+  process, route, profile, and pre-existing conversations were preserved. No
+  retry was sent; Plan 0362 stays OPEN until target binding and nested error
+  preservation pass provider-free proof and a future canary is separately
+  authorized.

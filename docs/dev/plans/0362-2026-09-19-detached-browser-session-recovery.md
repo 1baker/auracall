@@ -79,15 +79,24 @@ or inspect that session without another Send.
 
 ## Validation Status
 
-- Provider-free source validation passes 46 focused assertions, typecheck,
-  scoped lint, production build, CLI help inspection, diff hygiene, CodeGraph
-  refresh, and the 427-candidate plan audit with zero errors.
-- The real CLI plus stubbed client returns from `--no-wait`; its detached child
-  updates that exact persisted session from pending to completed.
-- Installed retained-browser acceptance remains pending. A 10:57 reinstall from
-  the older corpus checkout removed both this repair and Plan 0361's previously
-  verified Pro-intelligence patch, so installation must be narrow, reversible,
-  and restore both safety contracts before the one live canary.
+- The canonical installer source now owns the detach repair and the
+  `chatgpt:premium` mapping to the `6 Pro` picker plus `gpt-6-astra`. Its focused
+  validation passes 143 tests, typecheck, production build, and diff hygiene.
+- The installed source/build files compare byte-for-byte. An installed
+  provider-free `--no-wait` run returned its durable session id and that exact
+  session independently reached `completed` with the expected mock receipt.
+- The one permitted retained-browser canary returned in 4.068 seconds and its
+  detached child continued under PID 1, but the same session ended in `error`.
+  The nested browser/detach failure was collapsed into one aggregate message;
+  Agent Browser inspection found no canary marker and therefore no Send.
+- The exact temporary target acquired for the canary was released after the
+  failure. Physical tab close succeeded while the retained browser process,
+  profile route, and two pre-existing conversation tabs remained intact.
+- `DBR-R6` remains open. The attempted exact root handle resolved read-only
+  control to an older conversation URL, so target binding and nested error
+  preservation must be repaired and proven provider-free before any separately
+  authorized future live canary. The one-prompt allowance for this pass is
+  exhausted and no retry is permitted.
 
 ## Bounds
 

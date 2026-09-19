@@ -23149,6 +23149,12 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
 - Provider-free validation passes 46 focused assertions, typecheck, scoped
   lint, production build, help inspection, diff hygiene, CodeGraph refresh,
   and the 427-plan zero-error audit.
-- Installed audit found a 10:57 corpus reinstall had removed the earlier
-  Pro-intelligence guard as well as lacking this repair. No provider effect ran;
-  the next gate is a narrow reversible installed patch restoring both contracts.
+- Canonical corpus source now owns the detach repair and Premium-to-6-Pro model
+  mapping. Its 143 focused tests, typecheck, build, installed byte parity,
+  provider-free dry run, and installed same-session completion proof pass.
+- The bounded retained-browser canary returned promptly and continued in the
+  detached child, but ended in a terminal aggregate error before Send. The
+  acquired temporary target was released without closing the retained browser
+  or its pre-existing conversations. Do not retry: first repair exact-handle
+  binding and preserve the nested failure reason, then require new live-canary
+  authorization.
