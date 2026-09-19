@@ -750,6 +750,54 @@ describe("llmService project file cache writes", () => {
 		}
 	});
 
+	test("threads the caller context deadline through artifact and file materialization reads", async () => {
+		const homeDir = await mkdtemp(path.join(os.tmpdir(), "auracall-llm-files-"));
+		setAuracallHomeDirOverrideForTest(homeDir);
+		const cacheContext: ProviderCacheContext = {
+			provider: "chatgpt",
+			userConfig: {} as ProviderCacheContext["userConfig"],
+			listOptions: {},
+			identityKey: "cache-test@example.com",
+		};
+		const store = new JsonCacheStore();
+		const provider = {
+			id: "chatgpt",
+			config: { id: "chatgpt", selectors: {} as never },
+			readConversationContext: vi.fn(),
+			downloadConversationFile: vi.fn(),
+		};
+		const service = new TestLlmService(provider as never, store, cacheContext);
+		const contextRead = vi.spyOn(service, "getConversationContext").mockResolvedValue({
+			provider: "chatgpt",
+			conversationId: "conversation-deadline",
+			messages: [],
+			artifacts: [],
+			files: [],
+		});
+
+		try {
+			await service.materializeConversationArtifacts("conversation-deadline", {
+				contextTimeoutMs: 240_000,
+			});
+			await service.materializeConversationFiles("conversation-deadline", {
+				contextTimeoutMs: 240_000,
+			});
+
+			expect(contextRead).toHaveBeenNthCalledWith(
+				1,
+				"conversation-deadline",
+				expect.objectContaining({ timeoutMs: 240_000 }),
+			);
+			expect(contextRead).toHaveBeenNthCalledWith(
+				2,
+				"conversation-deadline",
+				expect.objectContaining({ timeoutMs: 240_000 }),
+			);
+		} finally {
+			await rm(homeDir, { recursive: true, force: true });
+		}
+	});
+
 	test("materializeConversationArtifacts writes a sidecar fetch manifest without changing the attachment manifest shape", async () => {
 		const homeDir = await mkdtemp(path.join(os.tmpdir(), "auracall-llm-files-"));
 		setAuracallHomeDirOverrideForTest(homeDir);
@@ -870,6 +918,67 @@ describe("llmService project file cache writes", () => {
 					error: "artifact fetch failed",
 				}),
 			]);
+		} finally {
+			await rm(homeDir, { recursive: true, force: true });
+		}
+	});
+
+	test("settles and closes each scoped provider session before transferring the next artifact", async () => {
+		const homeDir = await mkdtemp(path.join(os.tmpdir(), "auracall-llm-artifact-settlement-"));
+		setAuracallHomeDirOverrideForTest(homeDir);
+		const cacheContext: ProviderCacheContext = {
+			provider: "chatgpt",
+			userConfig: {} as ProviderCacheContext["userConfig"],
+			listOptions: {},
+			identityKey: "cache-test@example.com",
+		};
+		const artifacts: ConversationArtifact[] = ["markdown", "docx", "pdf"].map((kind) => ({
+			id: `artifact-${kind}`,
+			title: `${kind.toUpperCase()} report`,
+			kind: "download",
+			uri: `sandbox:/mnt/data/${kind}-report.${kind === "markdown" ? "md" : kind}`,
+			metadata: { liveControlState: "available" },
+		}));
+		const closed: string[] = [];
+		const provider = {
+			id: "chatgpt",
+			config: { id: "chatgpt", selectors: {} as never },
+			readConversationContext: vi.fn(async () => ({
+				provider: "chatgpt",
+				conversationId: "conversation-settlement",
+				messages: [],
+				artifacts,
+			})),
+			materializeConversationArtifact: vi.fn(async (
+				_conversationId: string,
+				artifact: ConversationArtifact,
+				_destDir: string,
+				_projectId: string | undefined,
+				listOptions: BrowserProviderListOptions,
+			) => {
+				expect(listOptions.providerSession).toBeUndefined();
+				listOptions.providerSession = {
+					providerId: "chatgpt",
+					key: artifact.id,
+					value: {},
+					close: async () => { closed.push(artifact.id); },
+				};
+				return {
+					id: `file-${artifact.id}`,
+					name: `${artifact.id}.bin`,
+					provider: "chatgpt",
+					source: "conversation",
+					size: 1,
+					localPath: `/tmp/${artifact.id}.bin`,
+				} satisfies FileRef;
+			}),
+		};
+		const service = new TestLlmService(provider as never, new JsonCacheStore(), cacheContext);
+
+		try {
+			const result = await service.materializeConversationArtifacts("conversation-settlement");
+			expect(result.files).toHaveLength(3);
+			expect(closed).toEqual(artifacts.map((artifact) => artifact.id));
 		} finally {
 			await rm(homeDir, { recursive: true, force: true });
 		}
@@ -2080,7 +2189,77 @@ describe("llmService project file cache writes", () => {
 		expect(result.configuredUrl).toBe("https://grok.com/c/conversation-123");
 	});
 
-	test("buildListOptions preserves same-service provider-session provenance with an explicit endpoint", async () => {
+	test("buildListOptions preserves its own provider-session provenance across a second build", async () => {
+		const browserService = {
+			resolveServiceTarget: vi.fn(async () => ({
+				host: "127.0.0.1",
+				port: 45015,
+				browserProfile: "wsl-chrome-3",
+				sourceBrowserProfile: "Default",
+				managedBrowserProfile: "/tmp/managed/wsl-chrome-3/chatgpt",
+				browserProcessId: 70950,
+				tab: { targetId: "chatgpt-project-list", url: CHATGPT_URL },
+			})),
+		};
+		const provider = {
+			id: "chatgpt",
+			config: { id: "chatgpt", selectors: {} as never },
+		};
+		const service = new BuildListOptionsLlmService(
+			{ auracallProfile: "wsl-chrome-3", browser: { cache: {} } } as ResolvedUserConfig,
+			provider as never,
+			browserService,
+		);
+
+		const first = await service.buildListOptions();
+		const second = await service.buildListOptions(first);
+
+		expect(browserService.resolveServiceTarget).toHaveBeenCalledTimes(1);
+		expect(second.providerSessionAuthorization?.context).toMatchObject({
+			providerId: "chatgpt",
+			browserProfile: "wsl-chrome-3",
+			sourceBrowserProfile: "Default",
+			managedBrowserProfile: "/tmp/managed/wsl-chrome-3/chatgpt",
+			browserProcessId: 70950,
+			devtoolsHost: "127.0.0.1",
+			devtoolsPort: 45015,
+		});
+	});
+
+	test("buildListOptions drops inherited provenance when the explicit endpoint changes", async () => {
+		const browserService = {
+			resolveServiceTarget: vi.fn(async () => ({
+				host: "127.0.0.1",
+				port: 45015,
+				browserProfile: "wsl-chrome-3",
+				managedBrowserProfile: "/tmp/managed/wsl-chrome-3/chatgpt",
+				browserProcessId: 70950,
+				tab: { targetId: "chatgpt-project-list", url: CHATGPT_URL },
+			})),
+		};
+		const provider = {
+			id: "chatgpt",
+			config: { id: "chatgpt", selectors: {} as never },
+		};
+		const service = new BuildListOptionsLlmService(
+			{ auracallProfile: "wsl-chrome-3", browser: { cache: {} } } as ResolvedUserConfig,
+			provider as never,
+			browserService,
+		);
+
+		const first = await service.buildListOptions();
+		const second = await service.buildListOptions({ ...first, port: 45016 });
+
+		expect(second.providerSessionAuthorization?.context).toMatchObject({
+			browserProfile: null,
+			managedBrowserProfile: null,
+			browserProcessId: null,
+			devtoolsHost: "127.0.0.1",
+			devtoolsPort: 45016,
+		});
+	});
+
+	test("buildListOptions preserves same-service provenance with an explicit endpoint", async () => {
 		const browserService = {
 			resolveServiceTarget: vi.fn(async () => ({
 				host: "127.0.0.1",
@@ -2111,9 +2290,7 @@ describe("llmService project file cache writes", () => {
 		});
 
 		expect(browserService.resolveServiceTarget).toHaveBeenCalledTimes(1);
-		expect(explicit.providerSessionAuthorization).toBe(
-			resolved.providerSessionAuthorization,
-		);
+		expect(explicit.providerSessionAuthorization).toBe(resolved.providerSessionAuthorization);
 		expect(explicit.providerSessionAuthorization?.context).toMatchObject({
 			browserProfile: "agent-browser-chatgpt",
 			managedBrowserProfile: "/tmp/managed/chatgpt",

@@ -1,5 +1,14 @@
 # Browser Mode
 
+ChatGPT file uploads require a verified local-file action or one unambiguous
+visible composer with a visible editor and attachment trigger. When menu labels
+change, inactive or ambiguous composers are rejected; a hidden native file input
+is still valid. If the trigger declares which popover it controls, that popover
+must match.
+
+ChatGPT handoffs without a model selector keep the current model. An explicit
+semantic selector selects the requested model and thinking effort.
+
 Aura-Call’s `--engine browser` supports three different execution paths:
 
 - **ChatGPT automation** (GPT-* models): drives the ChatGPT web UI with Chrome automation.
@@ -65,7 +74,7 @@ You can pass the same payload inline (`--browser-inline-cookies '<json or base64
 ### CLI Options
 
 - `--engine browser`: enables browser mode (legacy `--browser` remains as an alias for now). Without `--engine`, Aura-Call chooses API when `OPENAI_API_KEY` exists, otherwise browser.
-- `--chatgpt`: shorthand for `--engine browser --model gpt-5.2` (ChatGPT automation).
+- `--chatgpt`: shorthand for `--engine browser --model chatgpt:fast` (ChatGPT automation).
 - `--gemini`: shorthand for `--engine browser --model gemini-3-pro` (Gemini web mode).
 - `--gemini-url`: override the Gemini web URL (e.g., a specific Gem).
 - `--grok-url`: override the Grok web URL (e.g., a project link like `https://grok.com/project/<id>`).
@@ -107,10 +116,12 @@ You can pass the same payload inline (`--browser-inline-cookies '<json or base64
 - `--project-name` / `--conversation-name`: resolve browser project/conversation by cached name before starting a run. `--conversation-name` also accepts selectors like `latest` or `latest-1`.
 - `--chatgpt-url`: override the ChatGPT base URL. Works with the root homepage (`https://chatgpt.com/`) **or** a specific workspace/folder link such as `https://chatgpt.com/g/.../project`. `--browser-url` stays as a hidden alias.
 - `--browser-timeout`, `--browser-input-timeout`: `7200s (2h)`/`30s` defaults. Durations accept `ms`, `s`, `m`, or `h` and can be chained (`1h2m10s`). The long browser timeout is intentional for Extended/Pro/Deep Research materialization; callers should submit asynchronously and poll `GET /v1/runs/{run_id}/status` or MCP `run_status`.
-- `--browser-chatgpt-mode <chat|work>`: select the ChatGPT composer mode. Omitted values resolve to `chat`, and AuraCall verifies the exact visible radio using `aria-checked` or `data-state`. Use `work` only for a deliberately requested Work run.
+- `--browser-chatgpt-mode <chat|work>`: select the ChatGPT composer mode. Omitted values resolve to `chat`. AuraCall prefers an exact visible radio or compact menu control; an established conversation may instead prove Chat through its visible, enabled ChatGPT prompt editor only when no mode control or Work marker is present. Work always requires explicit UI proof and fails closed when unavailable.
 - `--browser-work-model <label>`: request a model through Work's dedicated model-selection surface. AuraCall never sends this value to Chat's picker. Without this flag, Work preserves its current model; if a named Work selector cannot be found, the run fails closed.
 - `--browser-model-strategy <select|current|ignore>`: control ChatGPT model selection. `select` (default) switches to the requested model; `current` keeps the active model and logs its label; `ignore` skips the picker entirely. (Ignored for Gemini web runs.)
 - `--browser-thinking-time <light|standard|extended|heavy>`: set Chat mode's thinking-time intensity. It is not applied in Work mode because Work has a separate model system. You can also set a default in `~/.auracall/config.json` via `profiles.<name>.browser.thinkingTime` (legacy `browser.thinkingTime` still works).
+- Every ChatGPT browser submission has a final fail-closed send gate that selects and verifies `Pro` (value 4) on the Power slider. This is independent of model selection and overrides any preparation-time thinking level for the final Send.
+- `--browser-no-thinking-time`: omit any inherited semantic-selector thinking depth for one run, leaving the current provider depth untouched. It cannot be combined with `--browser-thinking-time`.
   - preferred long-term config surface:
     - `runtimeProfiles.<name>.services.<service>.thinkingTime`
   - legacy root `browser.thinkingTime` remains supported as transitional input
@@ -120,15 +131,20 @@ You can pass the same payload inline (`--browser-inline-cookies '<json or base64
   - Linux/macOS: `ps -ax | rg \"chrome.*remote-debugging-port\"` or `tr \"\\0\" \" \" < /proc/<pid>/cmdline | rg remote-debugging-port` to discover the active port.
   - Windows: `wmic process where \"name='chrome.exe'\" get ProcessId,CommandLine` or `Get-CimInstance Win32_Process -Filter \"Name = 'chrome.exe'\" | Select-Object ProcessId,CommandLine` to find the port flag.
 - `--browser-blocking-profile <fail|restart|restart-managed>`: choose what happens if Chrome is already running with the target profile but DevTools is not enabled. `restart-managed` (default) only restarts Aura-Call-managed profiles. (`restart-auracall` remains a supported alias.)
-- `--browser-no-cookie-sync`, `--browser-manual-login` (persistent automation profile + user-driven login), `--browser-headless`, `--browser-hide-window`, `--browser-keep-browser`, and the global `-v/--verbose` flag for detailed automation logs.
+- `--browser-cookie-sync` explicitly copies cookies from a source browser profile into the managed browser profile. Copying is off by default because provider token rotation in the managed browser can invalidate the source browser session. Prefer signing in once in the managed browser profile or supply `--browser-bootstrap-cookie-path` when that one-time copy is intentional. `--browser-no-cookie-sync` remains a compatibility override for stored configurations that enable copying.
+- `--browser-manual-login` (persistent automation profile + user-driven login), `--browser-headless`, `--browser-hide-window`, `--browser-keep-browser`, and the global `-v/--verbose` flag provide launch controls and diagnostics. An explicit `--browser-headless` is honored for a locally launched browser; visible/headful remains the safer default when human verification may be required. For `--remote-chrome`, AuraCall does not launch the browser, so local launch flags remain ignored as documented below.
 - `--browser-url`: override ChatGPT base URL if needed.
 - `--browser-attachments <auto|never|always>`: control how `--file` inputs are delivered in browser mode. Default `auto` pastes file contents inline up to ~60k characters and switches to uploads above that.
 - `--browser-inline-files`: alias for `--browser-attachments never` (forces inline paste; never uploads attachments).
 - `--browser-bundle-files`: bundle all resolved attachments into a single temp file before uploading (only used when uploads are enabled/selected).
 - `--force`: bypass the duplicate prompt guard if an identical prompt is already running. This does not control conversation reuse (a separate policy will handle reuse vs new conversation).
 - sqlite bindings: automatic rebuilds now require `AURACALL_ALLOW_SQLITE_REBUILD=1`. Without it, the CLI logs instructions instead of running `pnpm rebuild` on your behalf.
-- `--model`: the same flag used for API runs is accepted. ChatGPT automation supports **GPT-5.2** variants (Auto/Thinking/Instant/Pro): use `gpt-5.2`, `gpt-5.2-thinking`, `gpt-5.2-instant`, or `gpt-5.2-pro`. Grok automation defaults to `grok-4.20` / `grok` and still accepts explicit legacy `grok-4.1` values through the Grok model picker. Other GPT families still require API mode.
-- Cookie sync is mandatory—if we can’t copy cookies from Chrome, the run exits early. Use the hidden `--browser-allow-cookie-errors` flag only when you’re intentionally running logged out (it skips the early exit but still warns).
+- `--model`: the same flag used for API runs is accepted. For ChatGPT browser automation, prefer `chatgpt:fast`, `chatgpt:reasoning`, `chatgpt:reasoning-high`, `chatgpt:reasoning-max`, `chatgpt:premium`, or `chatgpt:legacy`. `chatgpt:premium` targets the current `6 Pro` UI label while retaining `gpt-6-astra` as its API identity; browser run metadata records the observed picker label separately. GPT-5.2 and Sol/Terra/Luna spellings remain compatibility inputs. Grok automation defaults to `grok-4.20` / `grok` and still accepts explicit legacy `grok-4.1` values through the Grok model picker.
+- Source browser profile cookie copying is opt-in. When enabled with
+  `--browser-cookie-sync`, failure to copy still fails closed unless the hidden
+  `--browser-allow-cookie-errors` escape hatch is intentionally supplied.
+  Existing cookies in the managed browser profile are reused without reading
+  or modifying the source browser profile.
 - Experimental cookie controls (hidden flags/env):
   - `--browser-cookie-names <comma-list>` or `AURACALL_BROWSER_COOKIE_NAMES`: allowlist which cookies to sync. Useful for “only NextAuth/Cloudflare, drop the rest.”
   - `--browser-cookie-wait <ms|s|m>`: if cookie sync fails or returns no cookies, wait once and retry (helps when macOS Keychain prompts are slow).

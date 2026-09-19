@@ -18,8 +18,10 @@ modules:
   - fieldwork-productization
   - monolith-extraction-discipline
   - architecture-guardrails
+  - code-testing-discipline
   - documentation-change-control
   - git-worktree-hygiene
+  - active-lane-coordination
   - commit-history-discipline
   - branch-and-integration-strategy
   - commit-and-push-cadence

@@ -61,6 +61,7 @@ import {
 	assertProviderSessionAuthorization,
 	createProviderSessionAuthority,
 	type ProviderSessionAuthority,
+	ProviderSessionAuthorityError,
 	type ProviderSessionContext,
 	type ProviderSessionProof,
 } from "../providers/providerSessionAuthority.js";
@@ -97,6 +98,8 @@ import type {
 	PromptInput,
 	PromptPlan,
 	PromptResult,
+	PromptWorkbenchInput,
+	PromptWorkbenchResult,
 } from "./types.js";
 
 const DEFAULT_HISTORY_LIMIT = 2000;
@@ -832,21 +835,42 @@ export abstract class LlmService {
 		const host = target?.host ?? overrides.host;
 		const port = target?.port ?? overrides.port;
 		const attachResolvedServiceTab = shouldAttachResolvedServiceTab(overrides);
+		const inheritedAuthorization = overrides.providerSessionAuthorization;
+		const inheritedContextCandidate =
+			inheritedAuthorization?.authority === this.providerSessionAuthority &&
+			inheritedAuthorization.context.providerId === this.providerId
+				? inheritedAuthorization.context
+				: null;
+		const inheritedEndpointMatches =
+			inheritedContextCandidate !== null &&
+			(inheritedContextCandidate.devtoolsHost === null ||
+				host === undefined ||
+				inheritedContextCandidate.devtoolsHost === host) &&
+			(inheritedContextCandidate.devtoolsPort === null ||
+				port === undefined ||
+				inheritedContextCandidate.devtoolsPort === port);
+		const inheritedContext = inheritedEndpointMatches ? inheritedContextCandidate : null;
 		const providerSessionContext: ProviderSessionContext = {
 			providerId: this.providerId,
 			auracallRuntimeProfile: this.resolveActiveProfileName(),
-			browserProfile: target?.browserProfile ?? null,
-			sourceBrowserProfile: target?.sourceBrowserProfile ?? null,
-			managedBrowserProfile: target?.managedBrowserProfile ?? null,
-			browserProcessId: target?.browserProcessId ?? null,
+			browserProfile: target?.browserProfile ?? inheritedContext?.browserProfile ?? null,
+			sourceBrowserProfile:
+				target?.sourceBrowserProfile ?? inheritedContext?.sourceBrowserProfile ?? null,
+			managedBrowserProfile:
+				target?.managedBrowserProfile ?? inheritedContext?.managedBrowserProfile ?? null,
+			browserProcessId: target?.browserProcessId ?? inheritedContext?.browserProcessId ?? null,
 			browserTargetId:
-				overrides.tabTargetId ?? (attachResolvedServiceTab ? target?.tab?.targetId : null) ?? null,
-			devtoolsHost: target?.host ?? overrides.host ?? null,
-			devtoolsPort: target?.port ?? overrides.port ?? null,
+				overrides.tabTargetId ??
+				(attachResolvedServiceTab ? target?.tab?.targetId : null) ??
+				inheritedContext?.browserTargetId ??
+				null,
+			devtoolsHost: target?.host ?? overrides.host ?? inheritedContext?.devtoolsHost ?? null,
+			devtoolsPort: target?.port ?? overrides.port ?? inheritedContext?.devtoolsPort ?? null,
 		};
 		const providerSessionExpectation =
 			this.providerSessionAuthority.resolveExpectation(providerSessionContext);
 		const providedProviderSessionAuthorization =
+			inheritedEndpointMatches &&
 			overrides.providerSessionAuthorization?.authority === this.providerSessionAuthority
 				? overrides.providerSessionAuthorization
 				: null;
@@ -1050,10 +1074,91 @@ export abstract class LlmService {
 		options?: BrowserProviderListOptions,
 	): Promise<ConversationListResult>;
 
-	abstract runPrompt(
-		input: PromptInput,
+	async preparePromptWorkbench(
+		input: PromptWorkbenchInput,
 		options?: BrowserProviderListOptions,
-	): Promise<PromptResult>;
+	): Promise<PromptWorkbenchResult> {
+		if (!this.provider.preparePromptWorkbench) {
+			throw new Error(`Prompt workbench preparation is not supported for ${this.providerId}.`);
+		}
+		const configuredUrl =
+			input.targetUrl ??
+			input.configuredUrl ??
+			options?.configuredUrl ??
+			input.listOptions?.configuredUrl ??
+			this.getConfiguredUrl() ??
+			this.getDefaultLaunchUrl();
+		const listOptions = await this.buildListOptions(
+			{ ...(options ?? input.listOptions), configuredUrl },
+			{ ensurePort: true },
+		);
+		return this.provider.preparePromptWorkbench(
+			{
+				targetUrl: configuredUrl,
+				desiredModel: input.desiredModel,
+				modelStrategy: input.modelStrategy,
+				chatgptMode: input.chatgptMode,
+				workModel: input.workModel,
+				inputTimeoutMs: input.inputTimeoutMs,
+				onProgress: input.onProgress,
+			},
+			listOptions,
+		);
+	}
+	async runPrompt(input: PromptInput, options?: BrowserProviderListOptions): Promise<PromptResult> {
+		if (!this.provider.runPrompt) {
+			throw new Error(`Prompt execution is not supported for ${this.providerId}.`);
+		}
+		const configuredUrl =
+			input.configuredUrl ??
+			options?.configuredUrl ??
+			input.listOptions?.configuredUrl ??
+			this.getConfiguredUrl() ??
+			this.getDefaultLaunchUrl();
+		const listOptions = this.scopeConversationListOptions(
+			await this.buildListOptions(
+				{ ...(options ?? input.listOptions), configuredUrl },
+				{ ensurePort: true },
+			),
+			input.projectId ?? undefined,
+		);
+		const plan = await this.planPrompt({
+			configuredUrl,
+			projectId: input.projectId,
+			projectName: input.projectName,
+			conversationId: input.conversationId,
+			conversationName: input.conversationName,
+			noProject: input.noProject,
+			allowAutoRefresh: input.allowAutoRefresh,
+			forceProjectRefresh: input.forceProjectRefresh,
+			forceConversationRefresh: input.forceConversationRefresh,
+			listOptions,
+		});
+		return this.withRetry(
+			() =>
+				this.provider.runPrompt?.(
+					{
+						prompt: input.prompt,
+						attachments: input.attachments,
+						capabilityId: input.capabilityId,
+						completionMode: input.completionMode,
+						targetUrl: plan.targetUrl,
+						projectId: plan.projectId,
+						conversationId: plan.conversationId,
+						desiredModel: input.desiredModel,
+						modelStrategy: input.modelStrategy,
+						thinkingTime: input.thinkingTime,
+						chatgptMode: input.chatgptMode,
+						workModel: input.workModel,
+						modelSelector: input.modelSelector,
+						timeoutMs: input.timeoutMs,
+						onProgress: input.onProgress,
+					},
+					this.scopeConversationListOptions(listOptions, plan.projectId ?? undefined),
+				) as Promise<PromptResult>,
+			{ action: "runPrompt", abortSignal: listOptions.abortSignal },
+		);
+	}
 
 	abstract renameConversation(
 		conversationId: string,
@@ -1651,7 +1756,11 @@ export abstract class LlmService {
 
 	async listConversationFiles(
 		conversationId: string,
-		options?: { projectId?: string; listOptions?: BrowserProviderListOptions },
+		options?: {
+			projectId?: string;
+			listOptions?: BrowserProviderListOptions;
+			contextTimeoutMs?: number;
+		},
 	): Promise<FileRef[]> {
 		const listOptions = this.scopeConversationListOptions(
 			options?.listOptions?.useProviderSession
@@ -1668,6 +1777,7 @@ export abstract class LlmService {
 		}
 		const context = await this.getConversationContext(conversationId, {
 			projectId: options?.projectId,
+			timeoutMs: options?.contextTimeoutMs,
 			listOptions,
 		});
 		const normalizedFiles = Array.isArray(context.files) ? context.files : [];
@@ -1681,6 +1791,7 @@ export abstract class LlmService {
 		options?: {
 			projectId?: string;
 			listOptions?: BrowserProviderListOptions;
+			contextTimeoutMs?: number;
 			refresh?: boolean;
 			maxItems?: number | null;
 			excludeArtifact?: (
@@ -1708,6 +1819,7 @@ export abstract class LlmService {
 			const context = await this.getConversationContext(conversationId, {
 				projectId: options?.projectId,
 				refresh: options?.refresh ?? true,
+				timeoutMs: options?.contextTimeoutMs,
 				listOptions,
 			});
 			const contextArtifacts = Array.isArray(context.artifacts) ? context.artifacts : [];
@@ -1876,6 +1988,14 @@ export abstract class LlmService {
 						status: "error",
 						error: normalizeArtifactFetchError(error),
 					});
+				} finally {
+					if (listOptions.useProviderSession === true) {
+						recordBrowserScrapeProviderAction(
+							listOptions,
+							"llmService.materializeConversationArtifacts.settleCandidateSession",
+						);
+						await closeScopedProviderSession(listOptions);
+					}
 				}
 			}
 			if (materialized.length > 0) {
@@ -1965,6 +2085,7 @@ export abstract class LlmService {
 		options?: {
 			projectId?: string;
 			listOptions?: BrowserProviderListOptions;
+			contextTimeoutMs?: number;
 			refresh?: boolean;
 			maxItems?: number | null;
 			excludeFile?: (file: FileRef) => boolean;
@@ -2030,6 +2151,7 @@ export abstract class LlmService {
 					listedConversationFiles = await Promise.race([
 						this.listConversationFiles(conversationId, {
 							projectId: options?.projectId,
+							contextTimeoutMs: options?.contextTimeoutMs,
 							listOptions,
 						}),
 						timeoutAfter<FileRef[]>(
@@ -2387,47 +2509,6 @@ export abstract class LlmService {
 			await this.refreshProjectKnowledgeCache(created.id, listOptions);
 		}
 		return created ?? null;
-	}
-
-	async runPlannedPrompt(input: PromptInput): Promise<PromptResult> {
-		if (!this.provider.runPrompt) {
-			throw new Error(`Prompt execution is not supported for ${this.providerId}.`);
-		}
-		const listOptions = this.scopeConversationListOptions(
-			await this.buildListOptions(input.listOptions, { ensurePort: true }),
-			input.projectId ?? undefined,
-		);
-		const plan = await this.planPrompt({
-			configuredUrl: input.configuredUrl,
-			projectId: input.projectId,
-			projectName: input.projectName,
-			conversationId: input.conversationId,
-			conversationName: input.conversationName,
-			noProject: input.noProject,
-			allowAutoRefresh: input.allowAutoRefresh,
-			forceProjectRefresh: input.forceProjectRefresh,
-			forceConversationRefresh: input.forceConversationRefresh,
-			listOptions,
-		});
-		return this.withRetry(
-			() =>
-				this.provider.runPrompt?.(
-					{
-						prompt: input.prompt,
-						attachments: input.attachments,
-						capabilityId: input.capabilityId,
-						completionMode: input.completionMode,
-						targetUrl: plan.targetUrl,
-						projectId: plan.projectId,
-						conversationId: plan.conversationId,
-						desiredModel: input.desiredModel,
-						timeoutMs: input.timeoutMs,
-						onProgress: input.onProgress,
-					},
-					this.scopeConversationListOptions(listOptions, plan.projectId ?? undefined),
-				) as Promise<PromptResult>,
-			{ action: "runPrompt" },
-		);
 	}
 
 	async toggleProjectSidebar(options?: {
@@ -3764,6 +3845,9 @@ export abstract class LlmService {
 		if (!settings || !this.isProviderRateLimitedError(error)) {
 			return error;
 		}
+		if (this.providerId === "chatgpt" && this.isProviderEffectObserved(error)) {
+			return error;
+		}
 		const now = Date.now();
 		const current = await this.readProviderGuardState();
 		const cooldownUntil = now + (this.extractProviderRetryAfterMs(error) ?? settings.cooldownMs);
@@ -3984,6 +4068,12 @@ export abstract class LlmService {
 	}
 
 	private isRetryableError(error: unknown): boolean {
+		if (error instanceof ProviderSessionAuthorityError) {
+			return false;
+		}
+		if (this.isProviderEffectObserved(error)) {
+			return false;
+		}
 		const message = error instanceof Error ? error.message : String(error);
 		if (this.providerId === "chatgpt" && isChatgptRateLimitMessage(message)) {
 			return true;
@@ -4000,6 +4090,15 @@ export abstract class LlmService {
 			message.includes("WebSocket connection closed") ||
 			message.includes("WebSocket is not open") ||
 			message.includes("ECONNRESET")
+		);
+	}
+
+	private isProviderEffectObserved(error: unknown): boolean {
+		return Boolean(
+			typeof error === "object" &&
+				error !== null &&
+				"details" in error &&
+				(error as { details?: { effectState?: string } }).details?.effectState === "effect_observed",
 		);
 	}
 
@@ -4037,7 +4136,7 @@ export abstract class LlmService {
 
 function shouldAttachResolvedServiceTab(overrides: BrowserProviderListOptions): boolean {
 	if (overrides.tabTargetId) return true;
-	return overrides.tabLifecycle !== "dispose-new";
+	return overrides.tabLifecycle !== "dispose-new" && overrides.tabLifecycle !== "retain-new";
 }
 
 function isRateLimitBlockingSurfaceError(error: unknown): boolean {

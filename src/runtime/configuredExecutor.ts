@@ -330,6 +330,16 @@ function buildBrowserResponseArtifactInstruction(
   service: 'chatgpt' | 'gemini' | 'grok',
 ): string | null {
   if (!shouldMaterializeBrowserResponseArtifacts(metadata)) return null;
+  const requiredNames = readRequiredBrowserResponseArtifactFileNames(metadata);
+  if (hasRequiredArtifactFileSet(metadata)) {
+    return [
+      `Create every required downloadable file, with these exact local filenames: ${requiredNames.join(', ')}.`,
+      'Do not substitute inline prose, a ZIP archive, or one file for the complete required set.',
+      ...(service === 'chatgpt' ? requiredNames.map(name =>
+        `Write /mnt/data/${path.basename(name)} and include [${path.basename(name)}](sandbox:/mnt/data/${path.basename(name)}).`) : []),
+      'Do not report the package ready until every required file exists and can be downloaded.',
+    ].join(' ');
+  }
   const fileName = readRequiredBrowserResponseArtifactFileName(metadata);
   const target = fileName ? ` named exactly ${fileName}` : '';
   const fileBaseName = fileName ? path.basename(fileName) : null;
@@ -355,7 +365,27 @@ function shouldMaterializeBrowserResponseArtifacts(metadata: unknown): boolean {
   const outputContract = isRecord(metadata.outputContract) ? metadata.outputContract : null;
   if (!outputContract) return false;
   const mode = asNonEmptyString(outputContract.mode)?.toLowerCase() ?? '';
-  return mode.includes('artifact') || asNonEmptyString(outputContract.artifactFileName) !== null;
+  return mode.includes('artifact') || readRequiredBrowserResponseArtifactFileNames(metadata).length > 0;
+}
+
+function hasRequiredArtifactFileSet(metadata: unknown): boolean {
+  return isRecord(metadata) && isRecord(metadata.outputContract) &&
+    metadata.outputContract.artifactFileNames !== undefined;
+}
+
+function readRequiredBrowserResponseArtifactFileNames(metadata: unknown): string[] {
+  const single = readRequiredBrowserResponseArtifactFileName(metadata);
+  if (!hasRequiredArtifactFileSet(metadata)) return single ? [single] : [];
+  const names = (metadata as MutableRecord).outputContract as MutableRecord;
+  const raw = names.artifactFileNames;
+  if (!Array.isArray(raw) || raw.length === 0 || raw.length > 32 ||
+      raw.some(name => typeof name !== 'string' || !name.trim() ||
+        name.trim() === '.' || name.trim() === '..' || name.includes('\\') ||
+        [...name].some(character => character.charCodeAt(0) < 32) ||
+        path.basename(name.trim()) !== name.trim())) {
+    throw new Error('outputContract.artifactFileNames must contain 1 to 32 nonempty local filenames');
+  }
+  return [...new Set([...(single ? [single] : []), ...raw.map(name => (name as string).trim())])];
 }
 
 function readRequiredBrowserResponseArtifactFileName(metadata: unknown): string | null {
@@ -393,17 +423,15 @@ function assertRequiredBrowserResponseArtifactMaterialized(input: {
   notes: string[];
   answerText: string;
 }): void {
-  const requiredFileName = readRequiredBrowserResponseArtifactFileName(input.metadata);
-  if (!requiredFileName && !shouldMaterializeBrowserResponseArtifacts(input.metadata)) {
+  const requiredFileNames = readRequiredBrowserResponseArtifactFileNames(input.metadata);
+  if (!requiredFileNames.length && !shouldMaterializeBrowserResponseArtifacts(input.metadata)) {
     return;
   }
-  const hasRequiredArtifact = requiredFileName
-    ? input.artifacts.some((artifact) => artifactMatchesRequiredFileName(artifact, requiredFileName) && artifactIsMaterializedFile(artifact))
-    : input.artifacts.some((artifact) => artifactIsMaterializedFile(artifact));
+  const hasRequiredArtifact = hasRequiredBrowserResponseArtifactMaterialized(input);
   if (hasRequiredArtifact) {
     return;
   }
-  const expected = requiredFileName ?? 'a browser response artifact';
+  const expected = requiredFileNames.length ? requiredFileNames.join(', ') : 'a browser response artifact';
   const materializationNote = input.notes.find((note) => note.includes('browser response artifact materialization'));
   const answerPreview = input.answerText.replace(/\s+/g, ' ').trim().slice(0, 240);
   throw new Error(
@@ -417,6 +445,14 @@ function hasRequiredBrowserResponseArtifactMaterialized(input: {
   metadata: unknown;
   artifacts: TeamRunArtifactRef[];
 }): boolean {
+  if (hasRequiredArtifactFileSet(input.metadata)) {
+    const names = readRequiredBrowserResponseArtifactFileNames(input.metadata);
+    return names.every(name => input.artifacts.some(artifact => {
+      const localPath = asNonEmptyString(artifact.path);
+      return localPath !== null &&
+        normalizeArtifactName(path.basename(localPath)) === normalizeArtifactName(path.basename(name));
+    }));
+  }
   const requiredFileName = readRequiredBrowserResponseArtifactFileName(input.metadata);
   if (!requiredFileName && !shouldMaterializeBrowserResponseArtifacts(input.metadata)) {
     return true;
@@ -430,6 +466,8 @@ function buildRequiredArtifactCorrectionPrompt(input: {
   metadata: unknown;
   previousAnswerText: string;
 }): string | null {
+  // Never repair an explicit package with the legacy single-file prompt.
+  if (hasRequiredArtifactFileSet(input.metadata)) return null;
   const requiredFileName = readRequiredBrowserResponseArtifactFileName(input.metadata);
   if (!requiredFileName) {
     return null;
@@ -622,6 +660,12 @@ function asAgentBrowserHost(value: unknown): AgentBrowserHost | null {
     value === 'attached_existing'
     ? value
     : null;
+}
+
+function asChatgptToolApproval(
+  value: unknown,
+): 'manual' | 'allow-once' | 'always-allow' | null {
+  return value === 'manual' || value === 'allow-once' || value === 'always-allow' ? value : null;
 }
 
 function readRuntimeServiceConfig(
@@ -1198,6 +1242,14 @@ export function createConfiguredStoredStepExecutor(
       asChatgptMode(browserProfileConfig?.chatgptMode) ??
       asChatgptMode(browserConfigRecord?.chatgptMode) ??
       'chat';
+    const chatgptToolApproval =
+      asChatgptToolApproval(requestAuracall?.chatgptToolApproval) ??
+      asChatgptToolApproval(runtimeServiceConfig?.chatgptToolApproval) ??
+      asChatgptToolApproval(globalServiceConfig?.chatgptToolApproval) ??
+      asChatgptToolApproval(runtimeBrowserConfig?.chatgptToolApproval) ??
+      asChatgptToolApproval(browserProfileConfig?.chatgptToolApproval) ??
+      asChatgptToolApproval(browserConfigRecord?.chatgptToolApproval) ??
+      'manual';
     const workModel =
       asNonEmptyString(requestAuracall?.workModel) ??
       asNonEmptyString(runtimeServiceConfig?.workModel) ??
@@ -1472,6 +1524,7 @@ export function createConfiguredStoredStepExecutor(
         manualLogin: true,
         manualLoginProfileDir,
         chatgptMode: service === 'chatgpt' ? chatgptMode : undefined,
+        chatgptToolApproval: service === 'chatgpt' ? chatgptToolApproval : undefined,
         workModel: service === 'chatgpt' ? workModel : null,
         chromePath:
           asNonEmptyString(runtimeBrowserConfig?.chromePath) ??
@@ -1874,6 +1927,7 @@ export function createConfiguredStoredStepExecutor(
               boundIdentityKey,
               configuredUrl: targetUrl,
               desiredModel,
+              observedModel: browserResult.observedModel ?? null,
               modelSelector: agentModelSelector,
               thinkingTime,
               promptTransport,
@@ -1930,6 +1984,7 @@ export function createConfiguredStoredStepExecutor(
             boundIdentityKey,
             configuredUrl: targetUrl,
             desiredModel,
+            observedModel: browserResult.observedModel ?? null,
             modelSelector: agentModelSelector,
             thinkingTime,
             promptTransport,

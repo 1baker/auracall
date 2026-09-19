@@ -5,6 +5,12 @@ Lane: P01
 
 ## Current State
 
+- 2026-08-23 maintenance slice: the projects CLI prebuilds browser list options
+  for cache identity and the provider service builds them again. The second
+  build must retain same-authority managed-profile/process provenance only when
+  the resolved DevTools endpoint remains compatible; it must discard foreign
+  authority or changed-endpoint context. This closes a concrete profile-family
+  mismatch without adding a new workflow or weakening account authorization.
 - roadmap classification: maintenance-only unless a concrete browser-profile
   family mismatch blocks the primary service/runner lane
 - this browser-profile refactor plan is still a live authority document from
@@ -410,3 +416,28 @@ Scope kept outside this browser-family plan:
 
 See:
 - [0007-2026-04-14-config-model-refactor.md](0007-2026-04-14-config-model-refactor.md)
+
+## Status Update (2026-08-15)
+
+Plan 0291 Candidate 1 completed the launch-plan-consumption boundary without a
+schema or operator-workflow change:
+
+- `src/browser/service/browserLaunchPlan.ts` now exposes the single ordinary
+  caller interface, `resolveBrowserLaunchPlan({ source, intent })`
+- the plan resolves AuraCall runtime profile, browser profile, source browser
+  profile, managed browser profile, provider binding, and normalized launch
+  policy once, then returns a recursively frozen result
+- browser runtime, tools, diagnostics, reattach, Account Mirror, Gemini native,
+  media, and history callers now consume the plan instead of reconstructing
+  merge order
+- `src/browser/config.ts` is normalization-only and no longer imports profile
+  resolution, removing the former implementation cycle
+- the old user, managed, session, and flattened launch-context helpers are
+  removed; typed profile-resolution objects remain internal implementation
+  inputs and schema compatibility support
+
+The provider-free gate passed after an independent test caught and closed one
+explicit-selection defect: a newly selected browser profile must replace stale
+flattened browser-owned launch fields, while an intent that merely restates the
+current identity must preserve legitimate advanced overrides. Live/manual
+browser checks remain separately effect-gated.

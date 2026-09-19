@@ -63,9 +63,10 @@ export function resolveChatgptModelSelectionPlan(input: {
 	workModel: string | null | undefined;
 	strategy: BrowserModelStrategy;
 }): ChatgptModelSelectionPlan {
-	if (input.strategy === "ignore" || input.strategy === "current") return { kind: "ignore" };
+	if (input.strategy === "ignore") return { kind: "ignore" };
 	if (input.mode === "work") {
 		const workModel = input.workModel?.trim();
+		if (input.strategy === "current") return { kind: "work-current" };
 		return workModel
 			? { kind: "work-model", model: workModel, strategy: input.strategy }
 			: { kind: "work-current" };
@@ -74,6 +75,46 @@ export function resolveChatgptModelSelectionPlan(input: {
 	return desiredModel
 		? { kind: "chat-model", model: desiredModel, strategy: input.strategy }
 		: { kind: "ignore" };
+}
+
+export function buildChatgptActiveConversationWorkMarkerHelpers(): string {
+	return `
+    const projectConversationRoute = (pathname) => {
+      const segments = String(pathname ?? '').split('/').filter(Boolean);
+      if (segments.length !== 4 || segments[0] !== 'g' || segments[2] !== 'c') return null;
+      const projectRoute = segments[1];
+      const conversationId = segments[3];
+      const projectId = projectRoute.match(/^(g-p-[a-z0-9]{20,})(?:-|$)/i)?.[1] ?? null;
+      if (!projectId || !conversationId) return null;
+      return { projectId, conversationId };
+    };
+    const isCurrentConversationRoute = (pathname) => {
+      if (pathname === location.pathname) return true;
+      const candidate = projectConversationRoute(pathname);
+      const current = projectConversationRoute(location.pathname);
+      return Boolean(
+        candidate &&
+        current &&
+        candidate.projectId === current.projectId &&
+        candidate.conversationId === current.conversationId
+      );
+    };
+    const hasActiveConversationWorkMarker = () =>
+      Array.from(document.querySelectorAll('a[href][data-active]'))
+        .filter(visible)
+        .some((node) => {
+          const href = node.getAttribute('href');
+          if (!href) return false;
+          let pathname = '';
+          try {
+            pathname = new URL(href, location.href).pathname;
+          } catch {
+            return false;
+          }
+          if (!isCurrentConversationRoute(pathname)) return false;
+          return Array.from(node.querySelectorAll('span'))
+            .some((marker) => normalize(marker.textContent) === 'work');
+        });`;
 }
 
 function buildChatgptComposerModeExpression(desiredMode: ChatgptComposerMode): string {
@@ -102,10 +143,25 @@ function buildChatgptComposerModeExpression(desiredMode: ChatgptComposerMode): s
         return label === 'chat with chatgpt';
       });
     const composerRoot = prompt?.closest('form[data-type="unified-composer"], form') || document;
-    const radios = Array.from(composerRoot.querySelectorAll('[role="radio"]'))
+    ${buildChatgptActiveConversationWorkMarkerHelpers()}
+    const readModes = (selector) => Array.from(composerRoot.querySelectorAll(selector))
       .filter(visible)
       .map((node) => ({ node, label: normalize(node.textContent) }))
       .filter(({ label }) => label === 'chat' || label === 'work');
+    // A root/project landing composer can hydrate before its sticky Work control.
+    // Only an established conversation may use the historical control-less fallback.
+    const establishedConversation = /^\\/c\\/[^/]+\\/?$/.test(location.pathname) ||
+      projectConversationRoute(location.pathname) !== null;
+    let radios = readModes('[role="radio"]');
+    let modeTriggers = readModes('button[aria-haspopup="menu"]');
+    if (!establishedConversation) {
+      const controlsStartedAt = performance.now();
+      while (radios.length === 0 && modeTriggers.length === 0 && performance.now() - controlsStartedAt < 10000) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        radios = readModes('[role="radio"]');
+        modeTriggers = readModes('button[aria-haspopup="menu"]');
+      }
+    }
     const radioTarget = radios.find(({ label }) => label === DESIRED_MODE);
     if (radioTarget) {
       if (isSelected(radioTarget.node)) return { status: 'already-selected', mode: DESIRED_MODE };
@@ -117,19 +173,42 @@ function buildChatgptComposerModeExpression(desiredMode: ChatgptComposerMode): s
       }
       return { status: 'selection-not-confirmed', mode: DESIRED_MODE };
     }
-    const modeTriggers = Array.from(composerRoot.querySelectorAll('button[aria-haspopup="menu"]'))
-      .filter(visible)
-      .map((node) => ({ node, label: normalize(node.textContent) }))
-      .filter(({ label }) => label === 'chat' || label === 'work');
     const trigger = modeTriggers[0];
     const triggerLabel = trigger?.label;
     if (triggerLabel === DESIRED_MODE) {
       return { status: 'already-selected', mode: DESIRED_MODE };
     }
-    if (!trigger && DESIRED_MODE === 'chat') {
-      if (prompt) return { status: 'default-chat', mode: DESIRED_MODE };
+    if (!trigger) {
+      const activeConversationIsWork = hasActiveConversationWorkMarker();
+      if (activeConversationIsWork) {
+        return DESIRED_MODE === 'work'
+          ? { status: 'already-selected', mode: DESIRED_MODE }
+          : { status: 'mode-not-found', availableModes: ['Work'] };
+      }
+      if (establishedConversation && DESIRED_MODE === 'chat' && radios.length === 0) {
+        const composerStartedAt = performance.now();
+        while (performance.now() - composerStartedAt < 10000) {
+          if (hasActiveConversationWorkMarker()) break;
+          const promptEditors = Array.from(document.querySelectorAll(
+            '#prompt-textarea[role="textbox"][contenteditable="true"], textarea#prompt-textarea, textarea[name="prompt-textarea"]',
+          )).filter((node) =>
+            visible(node) &&
+            node.getAttribute('aria-disabled') !== 'true' &&
+            !('disabled' in node && node.disabled === true)
+          );
+          if (promptEditors.length > 0) {
+            return { status: 'already-selected', mode: DESIRED_MODE };
+          }
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+      }
+      return {
+        status: 'mode-not-found',
+        availableModes: [...radios, ...modeTriggers]
+          .map(({ node }) => String(node.textContent ?? '').trim()).filter(Boolean),
+      };
     }
-    if (!trigger || !dispatchClickSequence(trigger.node)) {
+    if (!dispatchClickSequence(trigger.node)) {
       return {
         status: 'mode-not-found',
         availableModes: [...radios, ...modeTriggers]

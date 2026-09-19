@@ -2,7 +2,7 @@ import { mkdir } from 'node:fs/promises';
 import type { BrowserRuntimeMetadata, BrowserSessionConfig, ResolvedBrowserConfig } from './types.js';
 import type { BrowserLogger, ChromeClient } from './types.js';
 import { isDevToolsResponsive } from './processCheck.js';
-import { resolveManagedBrowserLaunchContextFromResolvedConfig } from './service/profileResolution.js';
+import { resolveBrowserLaunchPlan } from './service/browserLaunchPlan.js';
 import { navigateAndSettle } from './service/ui.js';
 import {
   connectToChromeTarget as connectToChromeTargetCore,
@@ -43,6 +43,14 @@ export interface ReattachDeps {
 export interface ReattachResult {
   answerText: string;
   answerMarkdown: string;
+  /** Identity of the captured assistant response, never the conversation or target. */
+  answerMessageId?: string | null;
+}
+
+function capturedAnswerMessageId(meta: unknown): string | null {
+  if (!meta || typeof meta !== 'object' || Array.isArray(meta)) return null;
+  const messageId = (meta as { messageId?: unknown }).messageId;
+  return typeof messageId === 'string' && messageId.trim() ? messageId.trim() : null;
 }
 
 export type ReattachFailureKind = 'target-missing' | 'wrong-browser-profile' | 'stale-target' | 'ambiguous';
@@ -333,7 +341,11 @@ export async function resumeBrowserSessionCore(
       }
     }
 
-    return { answerText: aligned.answerText, answerMarkdown: aligned.answerMarkdown };
+    return {
+      answerText: aligned.answerText,
+      answerMarkdown: aligned.answerMarkdown,
+      answerMessageId: capturedAnswerMessageId(recovered.meta),
+    };
   } catch (error) {
     const classified = describeReattachFailure(error);
     const message = error instanceof Error ? error.message : String(error);
@@ -387,12 +399,17 @@ async function resumeBrowserSessionViaNewChrome(
     throw new Error('Reattach runtime dependencies missing; cannot launch new Chrome.');
   }
   const resolved = runtimeDeps.resolveBrowserConfig(config ?? {});
-  const launchContext = resolveManagedBrowserLaunchContextFromResolvedConfig({
-    auracallProfile: config?.auracallProfileName ?? null,
-    browser: resolved,
-    target: resolved.target ?? 'chatgpt',
+  const launchPlan = resolveBrowserLaunchPlan({
+    source: {
+      kind: 'session-config',
+      config: {
+        ...resolved,
+        auracallProfileName: config?.auracallProfileName ?? null,
+      },
+    },
+    intent: { provider: resolved.target ?? 'chatgpt' },
   });
-  const userDataDir = launchContext.managedProfileDir;
+  const userDataDir = launchPlan.managedBrowserProfile.directory;
   await mkdir(userDataDir, { recursive: true });
   const chrome = await runtimeDeps.launchChrome(resolved, userDataDir, logger);
   const chromeHost = (chrome as unknown as { host?: string }).host ?? '127.0.0.1';
@@ -501,7 +518,11 @@ async function resumeBrowserSessionViaNewChrome(
     );
   }
 
-  return { answerText: aligned.answerText, answerMarkdown: aligned.answerMarkdown };
+  return {
+    answerText: aligned.answerText,
+    answerMarkdown: aligned.answerMarkdown,
+    answerMessageId: capturedAnswerMessageId(recovered.meta),
+  };
 }
 
 function classifyMissingReattachTarget(

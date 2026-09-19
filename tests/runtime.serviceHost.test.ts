@@ -2558,6 +2558,117 @@ describe("runtime service host", () => {
 		]);
 	});
 
+	it.each([
+		"affinity",
+		"execution-gate",
+	])("replaces rejected %s reservations without starving stranded recovery", async (rejection) => {
+		const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-runtime-service-host-"));
+		cleanup.push(homeDir);
+		setAuracallHomeDirOverrideForTest(homeDir);
+		const control = createExecutionRuntimeControl();
+		const runnersControl = createExecutionRunnerControl();
+		for (const [index, profile] of ["unavailable-a", "unavailable-b"].entries()) {
+			const bundle = createDirectBundle(`run_blocked_${index}`, `2026-04-08T15:0${index}:00.000Z`);
+			bundle.run.initialInputs.runtimeProfile = profile;
+			bundle.steps[0] = {
+				...requireFixtureValue(bundle.steps[0], "blocked step"),
+				runtimeProfileId: profile,
+			};
+			await control.createRun(bundle);
+		}
+		await control.createRun(
+			createRunningWithoutLeaseBundle("run_recoverable", "2026-04-08T15:02:00.000Z"),
+		);
+		await control.createRun(
+			createRunningWithoutLeaseBundle("run_later", "2026-04-08T15:03:00.000Z"),
+		);
+		await runnersControl.registerRunner({
+			runner: createExecutionRunnerRecord({
+				id: "runner:local",
+				hostId: "host:local",
+				status: "active",
+				startedAt: "2026-04-08T15:04:00.000Z",
+				lastHeartbeatAt: "2026-04-08T15:05:00.000Z",
+				expiresAt: "2026-04-08T15:10:00.000Z",
+				serviceIds: ["chatgpt"],
+				runtimeProfileIds: ["default"],
+				serviceAccountIds: ["service-account:chatgpt:operator@example.com"],
+			}),
+		});
+		const executed: string[] = [];
+		const host = createExecutionServiceHost({
+			control,
+			runnersControl,
+			ownerId: "host:local",
+			runnerId: rejection === "affinity" ? "runner:local" : undefined,
+			now: () => "2026-04-08T15:05:00.000Z",
+			createRunAffinity: (inspection) =>
+				createConfiguredExecutionRunAffinity(CHATGPT_ACCOUNT_AFFINITY_CONFIG, inspection),
+			executionGate: async (record) => ({
+				allowed: !record.runId.startsWith("run_blocked"),
+				reason: "test gate",
+			}),
+			executeStoredRunStep: async ({ record }) => {
+				executed.push(record.runId);
+				return { output: { summary: "recovered", artifacts: [], structuredData: {}, notes: [] } };
+			},
+		});
+		const result = await host.drainRunsOnce({ sourceKind: "direct", maxRuns: 1 });
+		expect(result.executedRunIds).toEqual(["run_recoverable"]);
+		expect(executed).toEqual(["run_recoverable"]);
+		for (const index of [0, 1]) {
+			expect(result.drained).toContainEqual(
+				expect.objectContaining({
+					runId: `run_blocked_${index}`,
+					reason: rejection === "affinity" ? "claim-owner-unavailable" : "execution-gate",
+				}),
+			);
+			expect((await control.readRun(`run_blocked_${index}`))?.bundle.leases).toEqual([]);
+		}
+		expect((await control.readRun("run_later"))?.bundle.steps[0]?.status).toBe("running");
+	});
+
+	it.each([
+		false,
+		true,
+	])("replaces a rejected recovery reservation using only future candidates (deferred=%s)", async (deferred) => {
+		const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-runtime-service-host-"));
+		cleanup.push(homeDir);
+		setAuracallHomeDirOverrideForTest(homeDir);
+		const control = createExecutionRuntimeControl();
+		for (const index of [0, 1]) {
+			const bundle = createDirectBundle(`run_runnable_${index}`, `2026-04-08T15:0${index}:00.000Z`);
+			if (deferred)
+				bundle.run.initialInputs.auracall = { transport: "browser", service: "chatgpt" };
+			await control.createRun(bundle);
+		}
+		await control.createRun(
+			createRunningWithoutLeaseBundle("run_recovery_blocked", "2026-04-08T15:02:00.000Z"),
+		);
+		await control.createRun(
+			createRunningWithoutLeaseBundle("run_recovery_ready", "2026-04-08T15:03:00.000Z"),
+		);
+		const started: string[] = [];
+		const host = createExecutionServiceHost({
+			control,
+			ownerId: "host:test",
+			now: () => "2026-04-08T15:05:00.000Z",
+			executionGate: async (record) => ({
+				allowed: record.runId !== "run_recovery_blocked",
+				reason: "test gate",
+			}),
+			executeStoredRunStep: async ({ record }) => {
+				started.push(record.runId);
+				return { output: { summary: "done", artifacts: [], structuredData: {}, notes: [] } };
+			},
+		});
+		const result = await host.drainRunsOnce({ sourceKind: "direct", maxRuns: 2 });
+		expect([...result.executedRunIds].sort()).toEqual(["run_recovery_ready", "run_runnable_0"]);
+		expect([...started].sort()).toEqual(["run_recovery_ready", "run_runnable_0"]);
+		expect((await control.readRun("run_recovery_blocked"))?.bundle.leases).toEqual([]);
+		expect((await control.readRun("run_runnable_1"))?.bundle.leases).toEqual([]);
+	});
+
 	it("prioritizes runnable work ahead of older recoverable stranded work under a cap", async () => {
 		const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-runtime-service-host-"));
 		cleanup.push(homeDir);

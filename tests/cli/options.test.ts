@@ -10,6 +10,7 @@ import {
   inferModelFromLabel,
   normalizeModelOption,
   parseHeartbeatOption,
+  parseTimeoutOption,
   mergePathLikeOptions,
   dedupePathInputs,
 } from '../../src/cli/options.ts';
@@ -137,6 +138,24 @@ describe('parseHeartbeatOption', () => {
   });
 });
 
+describe('parseTimeoutOption', () => {
+  test('parses human-readable duration units into seconds', () => {
+    expect(parseTimeoutOption('60m')).toBe(3_600);
+    expect(parseTimeoutOption('1h30m')).toBe(5_400);
+    expect(parseTimeoutOption('90s')).toBe(90);
+  });
+
+  test('retains numeric seconds and auto', () => {
+    expect(parseTimeoutOption('3600')).toBe(3_600);
+    expect(parseTimeoutOption('auto')).toBe('auto');
+  });
+
+  test('rejects partial or invalid duration expressions', () => {
+    expect(() => parseTimeoutOption('60minutes')).toThrow(InvalidArgumentError);
+    expect(() => parseTimeoutOption('1h-and-more')).toThrow(InvalidArgumentError);
+  });
+});
+
 describe('parseSearchOption', () => {
   test('accepts on/off variants', () => {
     expect(parseSearchOption('on')).toBe(true);
@@ -210,7 +229,7 @@ describe('inferModelFromLabel', () => {
   });
 
   test('falls back to pro when the label references pro', () => {
-    expect(inferModelFromLabel('ChatGPT Pro')).toBe('gpt-5.1-pro');
+    expect(inferModelFromLabel('ChatGPT Pro')).toBe('openai:frontier');
     expect(inferModelFromLabel('GPT-5.2 Pro')).toBe('gpt-5.2-pro');
     expect(inferModelFromLabel('GPT-5 Pro (Classic)')).toBe('gpt-5-pro');
   });
@@ -227,8 +246,8 @@ describe('inferModelFromLabel', () => {
     expect(inferModelFromLabel('Grok 4.2')).toBe('grok-4.20');
   });
 
-  test('falls back to the current pro alias when label empty and to gpt-5.2 for other ambiguous strings', () => {
-    expect(inferModelFromLabel('')).toBe('gpt-5.1-pro');
+  test('falls back to the durable frontier alias when label empty and to gpt-5.2 for other ambiguous strings', () => {
+    expect(inferModelFromLabel('')).toBe('openai:frontier');
     expect(inferModelFromLabel('something else')).toBe('gpt-5.2');
   });
 });

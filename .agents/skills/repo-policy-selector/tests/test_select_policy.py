@@ -160,6 +160,38 @@ class SelectPolicyRegressionTests(unittest.TestCase):
             modules = self.select_policy.base_modules_for_profile(profile_id, installed_library)
             self.assertIn("planning-discipline", modules, profile_id)
 
+    def test_code_testing_discipline_is_in_software_oriented_profiles(self):
+        installed_library = self.select_policy.enumerate_policy_library(self.policy_root)
+        for profile_id in (
+            "repo-product-engineering",
+            "standalone-library",
+            "skill-repo-maintainer",
+            "operations-platform",
+            "website-maintenance",
+            "seminal-workspace",
+        ):
+            modules = self.select_policy.base_modules_for_profile(profile_id, installed_library)
+            self.assertIn("code-testing-discipline", modules, profile_id)
+
+        for profile_id in ("course-workspace", "writing-project"):
+            modules = self.select_policy.base_modules_for_profile(profile_id, installed_library)
+            self.assertNotIn("code-testing-discipline", modules, profile_id)
+
+    def test_code_testing_discipline_keeps_budget_and_retry_contracts(self):
+        module_text = (self.policy_root / "modules" / "code-testing-discipline.md").read_text(encoding="utf-8")
+        for required in (
+            "cheapest layer that can prove it reliably",
+            "Unknown impact",
+            "periodic comprehensive run",
+            "Preserve the first failure",
+            "pass-on-retry as flaky",
+            "retained-risk mapping",
+            "presubmit_blocking_budget",
+            "presubmit_compute_budget",
+            "flaky_test_disposition_sla",
+        ):
+            self.assertIn(required, module_text)
+
     def test_complete_policy_coverage_reports_already_aligned(self):
         repo_root = self.make_repo()
         policy_dir = repo_root / "docs" / "dev" / "policies"
@@ -261,11 +293,86 @@ class SelectPolicyRegressionTests(unittest.TestCase):
 
         self.assertFalse(signals["mentions_goal_execution"])
 
+    def test_multi_track_worktree_language_selects_active_lane_coordination(self):
+        repo_root = self.make_repo(
+            agents_text="""
+            # Concurrent Engineering Work
+
+            Multiple projects use concurrent worktrees and off-main plans.
+            Check the active lane branch registry before opening another lane.
+            """,
+        )
+
+        signals = self.select_policy.detect_signals(repo_root)
+        installed_library = self.select_policy.enumerate_policy_library(self.policy_root)
+        _purpose, _subtype, _execution_bias, _profile, modules, reasons = self.select_policy.choose_profile(
+            signals, installed_library
+        )
+
+        self.assertTrue(signals["mentions_active_lane_coordination"])
+        self.assertIn("active-lane-coordination", modules, reasons)
+
+    def test_lightweight_writing_repo_does_not_gain_active_lane_coordination(self):
+        repo_root = self.make_repo(
+            readme_text="""
+            # Grant Proposal
+
+            This repository contains the authoritative proposal narrative and
+            supporting submission documents.
+            """,
+        )
+
+        signals = self.select_policy.detect_signals(repo_root)
+        installed_library = self.select_policy.enumerate_policy_library(self.policy_root)
+        purpose, _subtype, _execution_bias, profile, modules, _reasons = self.select_policy.choose_profile(
+            signals, installed_library
+        )
+
+        self.assertEqual((purpose, profile), ("writing-project", "writing-project"))
+        self.assertFalse(signals["mentions_active_lane_coordination"])
+        self.assertNotIn("active-lane-coordination", modules)
+
+    def test_general_git_policy_signal_selects_complete_git_discipline(self):
+        repo_root = self.make_repo(
+            readme_text="# Grant Proposal\n\nAuthoritative proposal deliverables.\n"
+        )
+        policy_dir = repo_root / "docs" / "dev" / "policies"
+        policy_dir.mkdir(parents=True, exist_ok=True)
+        (policy_dir / "0001-git-policy.md").write_text(
+            "# Git Policy\n\nUse a branch and worktree for revisions.\n",
+            encoding="utf-8",
+        )
+
+        signals = self.select_policy.detect_signals(repo_root)
+        installed_library = self.select_policy.enumerate_policy_library(self.policy_root)
+        purpose, _subtype, _execution_bias, profile, modules, reasons = self.select_policy.choose_profile(
+            signals, installed_library
+        )
+
+        self.assertEqual((purpose, profile), ("writing-project", "writing-project"))
+        self.assertTrue(signals["mentions_git_policy"])
+        for module_id in (
+            "git-worktree-hygiene",
+            "commit-history-discipline",
+            "branch-and-integration-strategy",
+            "commit-and-push-cadence",
+        ):
+            self.assertIn(module_id, modules, reasons)
+
     def test_long_horizon_profiles_include_goal_execution_governance(self):
         installed_library = self.select_policy.enumerate_policy_library(self.policy_root)
         for profile_id in ["repo-product-engineering", "operations-platform", "skill-repo-maintainer"]:
             modules = self.select_policy.base_modules_for_profile(profile_id, installed_library)
             self.assertIn("goal-execution-governance", modules, profile_id)
+
+    def test_active_lane_coordination_is_limited_to_multi_track_profiles(self):
+        installed_library = self.select_policy.enumerate_policy_library(self.policy_root)
+        for profile_id in ["repo-product-engineering", "operations-platform"]:
+            modules = self.select_policy.base_modules_for_profile(profile_id, installed_library)
+            self.assertIn("active-lane-coordination", modules, profile_id)
+        for profile_id in ["writing-project", "standalone-library"]:
+            modules = self.select_policy.base_modules_for_profile(profile_id, installed_library)
+            self.assertNotIn("active-lane-coordination", modules, profile_id)
 
     def test_codegraph_policy_maps_to_shared_codegraph_module(self):
         repo_root = self.make_repo(

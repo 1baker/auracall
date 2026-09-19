@@ -1737,6 +1737,7 @@ describe("account mirror completion service", () => {
 		expect(requestRefresh).toHaveBeenCalledTimes(1);
 		expect(requestRefresh).toHaveBeenCalledWith(
 			expect.objectContaining({
+				cleanupManagedBrowserAfterRefresh: true,
 				explicitRefresh: true,
 				ignoreMinimumInterval: false,
 				requestedPhase: null,
@@ -1817,21 +1818,25 @@ describe("account mirror completion service", () => {
 		});
 	});
 
-	test("does not re-arm a blocked bounded completion with run-one-pass", () => {
+	test.each([
+		"blocked",
+		"failed",
+	] as const)("does not re-arm a %s bounded completion with run-one-pass", (status) => {
 		const requestRefresh = vi.fn(async () => createRefreshResult());
+		const id = `acctmirror_bounded_${status}`;
 		const service = createAccountMirrorCompletionService({
 			registry: createAccountMirrorStatusRegistry({ config }),
 			refreshService: { requestRefresh },
 			initialOperations: [
 				{
 					object: "account_mirror_completion",
-					id: "acctmirror_bounded_blocked",
+					id,
 					provider: "chatgpt",
 					runtimeProfileId: "default",
 					mode: "bounded",
 					sweepMode: "steady_follow",
 					phase: "steady_follow",
-					status: "blocked",
+					status,
 					startedAt: "2026-07-31T11:45:00.000Z",
 					completedAt: "2026-07-31T11:59:00.000Z",
 					nextAttemptAt: null,
@@ -1841,22 +1846,102 @@ describe("account mirror completion service", () => {
 					materializationPolicy: "metadata_only",
 					mirrorCompleteness: null,
 					error: {
-						message: "Provider guard blocked the bounded run.",
-						code: "account_mirror_provider_cooldown",
+						message:
+							status === "blocked"
+								? "Provider guard blocked the bounded run."
+								: "The bounded collector failed.",
+						code:
+							status === "blocked"
+								? "account_mirror_provider_cooldown"
+								: "account_mirror_collector_failed",
 					},
 					lifecycleEvents: [],
 				},
 			],
 		});
 
-		expect(
-			service.control({ id: "acctmirror_bounded_blocked", action: "run_one_pass" }),
-		).toMatchObject({
-			status: "blocked",
+		expect(service.control({ id, action: "run_one_pass" })).toMatchObject({
+			status,
 			passCount: 0,
 			lifecycleEvents: [],
 		});
 		expect(requestRefresh).not.toHaveBeenCalled();
+	});
+
+	test("re-arms one failed live-follow pass without opening an unbounded retry loop", async () => {
+		const requestRefresh = vi.fn(async () => createRefreshResult());
+		const service = createAccountMirrorCompletionService({
+			registry: createAccountMirrorStatusRegistry({
+				config,
+				now: () => new Date("2026-08-24T16:30:00.000Z"),
+			}),
+			refreshService: { requestRefresh },
+			initialOperations: [
+				{
+					object: "account_mirror_completion",
+					id: "acctmirror_force_failed_one",
+					provider: "chatgpt",
+					runtimeProfileId: "wsl-chrome-3",
+					mode: "live_follow",
+					sweepMode: "steady_follow",
+					phase: "steady_follow",
+					status: "failed",
+					startedAt: "2026-08-24T15:45:00.000Z",
+					completedAt: "2026-08-24T16:00:00.000Z",
+					nextAttemptAt: null,
+					maxPasses: null,
+					passCount: 1,
+					forceRunUntilPassCount: 2,
+					lastRefresh: createRefreshResult(),
+					materializationPolicy: "metadata_only",
+					mirrorCompleteness: completeMirror,
+					error: {
+						message: "Timed out waiting for ChatGPT sidebar readiness after 587ms.",
+						code: null,
+					},
+					lifecycleEvents: [],
+				},
+			],
+			now: () => new Date("2026-08-24T16:30:00.000Z"),
+		});
+
+		expect(
+			service.control({ id: "acctmirror_force_failed_one", action: "run_one_pass" }),
+		).toMatchObject({
+			status: "queued",
+			completedAt: null,
+			forceRunUntilPassCount: 2,
+			error: null,
+			lifecycleEvents: [
+				{
+					type: "operator_forced_pass",
+					status: "queued",
+					previousStatus: "failed",
+				},
+			],
+		});
+
+		await waitFor(() => service.read("acctmirror_force_failed_one")?.passCount === 2);
+
+		expect(requestRefresh).toHaveBeenCalledWith(
+			expect.objectContaining({ cleanupManagedBrowserAfterRefresh: true }),
+		);
+		expect(service.read("acctmirror_force_failed_one")).toMatchObject({
+			status: "idle_waiting",
+			passCount: 2,
+			forceRunUntilPassCount: null,
+			error: null,
+		});
+		expect(requestRefresh).toHaveBeenCalledTimes(1);
+
+		expect(service.control({ id: "acctmirror_force_failed_one", action: "cancel" })).toMatchObject({
+			status: "cancelled",
+			passCount: 2,
+		});
+		expect(
+			service.control({ id: "acctmirror_force_failed_one", action: "run_one_pass" }),
+		).toMatchObject({ status: "cancelled", passCount: 2 });
+		expect(requestRefresh).toHaveBeenCalledTimes(1);
 	});
 
 	test("defaults to live follow and keeps running after a complete refresh", async () => {
@@ -1903,6 +1988,9 @@ describe("account mirror completion service", () => {
 		);
 
 		expect(requestRefresh).toHaveBeenCalledTimes(2);
+		for (const [refreshRequest] of requestRefresh.mock.calls) {
+			expect(refreshRequest).not.toHaveProperty("cleanupManagedBrowserAfterRefresh");
+		}
 		expect(sleep).toHaveBeenCalledWith(60_000);
 		expect(service.read("acctmirror_live_follow")).toMatchObject({
 			status: "idle_waiting",
@@ -2361,6 +2449,10 @@ describe("account mirror completion service", () => {
 				status: "queued",
 			},
 		}));
+		const readMaterializationBacklog = vi.fn(async () => ({
+			retrievableMissing: 5,
+			unknownOrDeferred: 0,
+		}));
 		const requestRefresh = vi.fn(async () => createRefreshResult());
 		const registry = createAccountMirrorStatusRegistry({
 			config,
@@ -2397,6 +2489,7 @@ describe("account mirror completion service", () => {
 			registry,
 			refreshService: { requestRefresh },
 			historyMaterializationService: { createJob },
+			readMaterializationBacklog,
 			now: () => new Date("2026-04-30T12:00:00.000Z"),
 			generateId: () => "acctmirror_complete_ledger_shortcut",
 			sleep: () => new Promise<void>(() => {}),
@@ -2412,6 +2505,7 @@ describe("account mirror completion service", () => {
 		await waitFor(() => createJob.mock.calls.length === 1);
 		const operation = service.read("acctmirror_complete_ledger_shortcut");
 		expect(requestRefresh).not.toHaveBeenCalled();
+		expect(readMaterializationBacklog).toHaveBeenCalledTimes(1);
 		expect(createJob).toHaveBeenCalledWith(
 			expect.objectContaining({
 				provider: "chatgpt",
@@ -2439,6 +2533,87 @@ describe("account mirror completion service", () => {
 			]),
 		);
 		service.control({ id: "acctmirror_complete_ledger_shortcut", action: "cancel" });
+	});
+
+	test("does not queue raw missing assets when the recovery backlog is non-actionable", async () => {
+		const createJob = vi.fn();
+		const requestRefresh = vi
+			.fn()
+			.mockResolvedValueOnce(createRefreshResult())
+			.mockRejectedValue(
+				new AccountMirrorRefreshError(
+					409,
+					"account_mirror_not_eligible",
+					"Account mirror chatgpt/default is delayed: minimum-interval.",
+					{
+						provider: "chatgpt",
+						runtimeProfileId: "default",
+						reason: "minimum-interval",
+						eligibleAt: "2026-09-01T16:10:00.000Z",
+					},
+				),
+			);
+		const readMaterializationBacklog = vi.fn(async () => ({
+			retrievableMissing: 0,
+			unknownOrDeferred: 0,
+		}));
+		const registry = createAccountMirrorStatusRegistry({
+			config,
+			now: () => new Date("2026-09-01T16:00:00.000Z"),
+			initialState: {
+				"chatgpt:default": {
+					detectedIdentityKey: "ecochran76@gmail.com",
+					metadataCounts: {
+						projects: 1,
+						conversations: 3,
+						artifacts: 3,
+						files: 2,
+						media: 0,
+					},
+					metadataEvidence: {
+						identitySource: "test",
+						projectSampleIds: ["project_1"],
+						conversationSampleIds: ["conversation_1"],
+						assetInventory: {
+							state: "observed",
+							summary: "Raw inventory contains only non-actionable assets.",
+							detailScannedThisPass: { projects: 1, conversations: 3, total: 4 },
+							localMaterialized: { artifacts: 0, files: 0, media: 0 },
+							remoteKnownMissingLocal: { artifacts: 3, files: 2, media: 0 },
+							unknownOrDeferred: { artifacts: 0, files: 0, media: 0 },
+						},
+						truncated: { projects: false, conversations: false, artifacts: false },
+					},
+					backfillLedger: completeBackfillLedger,
+				},
+			},
+		});
+		const service = createAccountMirrorCompletionService({
+			registry,
+			refreshService: { requestRefresh },
+			historyMaterializationService: { createJob },
+			readMaterializationBacklog,
+			now: () => new Date("2026-09-01T16:00:00.000Z"),
+			generateId: () => "acctmirror_non_actionable_backlog",
+			sleep: () => new Promise<void>(() => {}),
+		});
+
+		service.start({
+			provider: "chatgpt",
+			runtimeProfileId: "default",
+			sweepMode: "full_sweep",
+			materializationPolicy: "full_missing_assets",
+		});
+
+		await waitFor(
+			() =>
+				service.read("acctmirror_non_actionable_backlog")?.nextAttemptAt ===
+				"2026-09-01T16:10:00.000Z",
+		);
+		expect(readMaterializationBacklog).toHaveBeenCalled();
+		expect(createJob).not.toHaveBeenCalled();
+		expect(requestRefresh).toHaveBeenCalledTimes(2);
+		service.control({ id: "acctmirror_non_actionable_backlog", action: "cancel" });
 	});
 
 	test("settles complete-ledger materialization before ending a forced pass", async () => {
@@ -3431,6 +3606,95 @@ describe("account mirror completion service", () => {
 				message: "History reconciliation failed to materialize 6 assets.",
 			},
 		});
+	});
+
+	test("continues live follow after a partial-success materialization job", async () => {
+		const initial: AccountMirrorCompletionOperation = {
+			object: "account_mirror_completion",
+			id: "acctmirror_partial_materialization_continue",
+			provider: "chatgpt",
+			runtimeProfileId: "default",
+			mode: "live_follow",
+			sweepMode: "full_sweep",
+			phase: "backfill_history",
+			status: "running",
+			startedAt: "2026-07-31T12:00:00.000Z",
+			completedAt: null,
+			nextAttemptAt: null,
+			maxPasses: null,
+			passCount: 35,
+			lastRefresh: createRefreshResult(),
+			materializationPolicy: "full_missing_assets",
+			materializationAssetKinds: ["all"],
+			materializationMaxItems: 6,
+			materializationRefreshSnapshot: true,
+			materializationForce: false,
+			materializationCursor: {
+				jobId: "hmj_partial_materialization_continue",
+				jobStatus: "running",
+				reused: false,
+				requestedAt: "2026-07-31T12:44:00.000Z",
+				passCount: 35,
+				request: {
+					provider: "chatgpt",
+					runtimeProfile: "default",
+					reconcile: true,
+					refreshSnapshot: true,
+					assetKinds: ["all"],
+					maxItems: 6,
+					force: false,
+				},
+			},
+			materializationOutcome: null,
+			mirrorCompleteness: completeMirror,
+			error: null,
+			lifecycleEvents: [],
+		};
+		const sleep = vi.fn(() => new Promise<void>(() => {}));
+		const service = createAccountMirrorCompletionService({
+			registry: createAccountMirrorStatusRegistry({
+				config,
+				now: () => new Date("2026-07-31T12:45:00.000Z"),
+			}),
+			refreshService: { requestRefresh: vi.fn(async () => createRefreshResult()) },
+			historyMaterializationService: {
+				createJob: vi.fn(),
+				readJob: vi.fn(async () => ({
+					id: "hmj_partial_materialization_continue",
+					status: "failed",
+					completedAt: "2026-07-31T12:44:30.000Z",
+					result: {
+						metrics: { conversations: 4, materialized: 2, skipped: 1, failed: 1 },
+						entries: [
+							{ status: "materialized", checksumSha256: "abc123" },
+							{ status: "materialized", checksumSha256: "def456" },
+							{ status: "failed", reason: "provider call timed out; retry allowed" },
+						],
+						message: "History reconciliation materialized 2 assets from 4 conversations.",
+					},
+				})),
+			},
+			initialOperations: [initial],
+			resumeActiveOperations: true,
+			now: () => new Date("2026-07-31T12:45:00.000Z"),
+			sleep,
+		});
+
+		await waitFor(
+			() => service.read(initial.id)?.status === "blocked" || sleep.mock.calls.length > 0,
+		);
+
+		expect(service.read(initial.id)).toMatchObject({
+			status: "idle_waiting",
+			completedAt: null,
+			error: null,
+			materializationOutcome: {
+				jobStatus: "failed",
+				materialized: 2,
+				failed: 1,
+			},
+		});
+		expect(sleep).toHaveBeenCalledWith(60_000);
 	});
 
 	test("upgrades idle live-follow completion into bounded full-sweep materialization", async () => {

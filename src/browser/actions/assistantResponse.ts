@@ -33,27 +33,163 @@ export interface WaitForAssistantResponseOptions {
     messageId?: string | null;
     turnId?: string | null;
   };
+  onProgress?: (progress: AssistantResponseProgress) => void | Promise<void>;
 }
 
-function isAnswerNowPlaceholderText(normalized: string): boolean {
-  const text = normalized.trim();
-  if (!text) return false;
-  // Learned: "Pro thinking" shows a placeholder turn that contains "Answer now".
-  // That is not the final answer and must be ignored in browser automation.
-  if (text === 'chatgpt said:' || text === 'chatgpt said') return true;
-  if (text.includes('file upload request') && (text.includes('pro thinking') || text.includes('chatgpt said'))) {
-    return true;
+export interface AssistantResponseBoundary {
+  minTurnIndex?: number | null;
+  baselineMessageId?: string | null;
+  baselineTurnId?: string | null;
+  baselineTextFingerprint?: string | null;
+}
+
+export type AssistantResponseBoundaryInput = number | AssistantResponseBoundary | null | undefined;
+
+export interface AssistantResponseProgress {
+  state: 'assistant-text' | 'tool-approval-visible' | 'assistant-turn-no-text' | 'no-assistant-turn';
+  url: string | null;
+  turnCount: number;
+  minTurnIndex: number | null;
+  boundaryState: 'position' | 'stable-identity' | 'stable-text' | 'unresolved' | 'none';
+  assistantTurnIndex: number | null;
+  assistantTextChars: number;
+  assistantMessageId: string | null;
+  assistantTurnId: string | null;
+  assistantTextFingerprint: string | null;
+  stopVisible: boolean;
+  completionVisible: boolean;
+  toolApprovalCardsVisible: number;
+  dialogVisible: boolean;
+}
+
+function normalizeBoundaryText(value: string): string {
+  return value.toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+export function fingerprintAssistantResponseText(value: string | null | undefined): string | null {
+  const normalized = normalizeBoundaryText(value ?? '');
+  if (!normalized) return null;
+  let hash = 2166136261;
+  for (let index = 0; index < normalized.length; index += 1) {
+    hash ^= normalized.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
   }
-  return text.includes('answer now') && (text.includes('pro thinking') || text.includes('chatgpt said'));
+  return `${normalized.length}:${hash >>> 0}`;
+}
+
+function normalizeAssistantResponseBoundary(input: AssistantResponseBoundaryInput): Required<AssistantResponseBoundary> {
+  const source = typeof input === 'number' ? { minTurnIndex: input } : (input ?? {});
+  const minTurnIndex =
+    typeof source.minTurnIndex === 'number' && Number.isFinite(source.minTurnIndex) && source.minTurnIndex >= 0
+      ? Math.floor(source.minTurnIndex)
+      : null;
+  const clean = (value: unknown): string | null =>
+    typeof value === 'string' && value.trim() ? value.trim() : null;
+  return {
+    minTurnIndex,
+    baselineMessageId: clean(source.baselineMessageId),
+    baselineTurnId: clean(source.baselineTurnId),
+    baselineTextFingerprint: clean(source.baselineTextFingerprint),
+  };
+}
+
+function buildResponseBoundaryHelpers(boundaryVariable = 'RESPONSE_BOUNDARY'): string {
+  return `
+    const fingerprintBoundaryText = (value) => {
+      const normalized = String(value || '').toLowerCase().replace(/\\s+/g, ' ').trim();
+      if (!normalized) return null;
+      let hash = 2166136261;
+      for (let index = 0; index < normalized.length; index += 1) {
+        hash ^= normalized.charCodeAt(index);
+        hash = Math.imul(hash, 16777619);
+      }
+      return normalized.length + ':' + (hash >>> 0);
+    };
+    const responseBoundaryState = (snapshot, turnCount) => {
+      if (!snapshot) return null;
+      const boundary = ${boundaryVariable} || {};
+      const minTurnIndex = Number.isFinite(boundary.minTurnIndex) ? boundary.minTurnIndex : null;
+      const turnIndex = Number.isFinite(snapshot.turnIndex) ? snapshot.turnIndex : null;
+      if (minTurnIndex === null) return 'none';
+      if (turnIndex !== null && turnIndex >= minTurnIndex) return 'position';
+      if (!Number.isFinite(turnCount) || turnCount > minTurnIndex) return null;
+      const baselineMessageId = boundary.baselineMessageId || null;
+      const baselineTurnId = boundary.baselineTurnId || null;
+      const messageId = snapshot.messageId || null;
+      const turnId = snapshot.turnId || null;
+      const fingerprint = fingerprintBoundaryText(snapshot.text || '');
+      if (
+        boundary.baselineTextFingerprint &&
+        fingerprint &&
+        fingerprint === boundary.baselineTextFingerprint
+      ) {
+        return null;
+      }
+      if (
+        (baselineMessageId && messageId && baselineMessageId === messageId) ||
+        (baselineTurnId && turnId && baselineTurnId === turnId)
+      ) {
+        return null;
+      }
+      if (
+        (baselineMessageId && messageId && baselineMessageId !== messageId) ||
+        (baselineTurnId && turnId && baselineTurnId !== turnId)
+      ) {
+        return 'stable-identity';
+      }
+      if (!baselineMessageId && !baselineTurnId && boundary.baselineTextFingerprint) {
+        if (fingerprint && fingerprint !== boundary.baselineTextFingerprint) return 'stable-text';
+      }
+      return null;
+    };`;
+}
+
+// This predicate is also injected into renderer expressions through
+// buildAnswerNowPlaceholderPredicateJs, so keep it closure-free.
+export function isAnswerNowPlaceholderText(value: unknown): boolean {
+  let raw = '';
+  if (typeof value === 'string') {
+    raw = value;
+  } else if (value && typeof value === 'object' && 'text' in value) {
+    const candidate = (value as { text?: unknown }).text;
+    if (typeof candidate === 'string') raw = candidate;
+  }
+  const text = raw.toLowerCase().replace(/\s+/g, ' ').trim();
+  if (!text) return false;
+  if (text === 'chatgpt said:' || text === 'chatgpt said') return true;
+  if (text.length > 60) return false;
+  const chromeLabels = ['chatgpt said:', 'chatgpt said', 'file upload request', 'pro thinking', 'answer now'];
+  let rest = text;
+  let sawOwner = false;
+  let sawGate = false;
+  while (rest.length > 0) {
+    let matched = '';
+    for (const label of chromeLabels) {
+      if (label.length > matched.length && rest.startsWith(label)) matched = label;
+    }
+    if (!matched) return false;
+    if (matched === 'answer now' || matched === 'file upload request') sawGate = true;
+    else sawOwner = true;
+    rest = rest.slice(matched.length).replace(/^[\s:.,;|\u00b7\u2022-]+/, '');
+  }
+  return sawGate && sawOwner;
+}
+
+export function buildAnswerNowPlaceholderPredicateJs(functionName: string): string {
+  return `const ${functionName} = ${isAnswerNowPlaceholderText.toString()};`;
 }
 
 export async function waitForAssistantResponse(
   Runtime: ChromeClient['Runtime'],
   timeoutMs: number,
   logger: BrowserLogger,
-  minTurnIndex?: number,
+  responseBoundary?: AssistantResponseBoundaryInput,
   options: WaitForAssistantResponseOptions = {},
-): Promise<{ text: string; html?: string; meta: { turnId?: string | null; messageId?: string | null } }> {
+): Promise<{
+  text: string;
+  html?: string;
+  meta: { turnId?: string | null; messageId?: string | null };
+}> {
   let responseIncomingEmitted = false;
   const waitOptions: WaitForAssistantResponseOptions = {
     ...options,
@@ -72,7 +208,7 @@ export async function waitForAssistantResponse(
   const completed = await pollAssistantCompletion(
     Runtime,
     timeoutMs,
-    minTurnIndex,
+    responseBoundary,
     waitOptions.abortSignal,
     waitOptions,
   );
@@ -87,27 +223,32 @@ export async function waitForAssistantResponse(
 
 export async function readAssistantSnapshot(
   Runtime: ChromeClient['Runtime'],
-  minTurnIndex?: number,
+  responseBoundary?: AssistantResponseBoundaryInput,
 ): Promise<AssistantSnapshot | null> {
   const { result } = await Runtime.evaluate({
-    expression: buildAssistantSnapshotExpression(minTurnIndex),
+    expression: buildAssistantSnapshotExpression(responseBoundary),
     returnByValue: true,
   });
   const value = result?.value;
   if (value && typeof value === 'object') {
-    const snapshot = value as AssistantSnapshot;
-    if (typeof minTurnIndex === 'number' && Number.isFinite(minTurnIndex)) {
-      const turnIndex = typeof snapshot.turnIndex === 'number' ? snapshot.turnIndex : null;
-      if (turnIndex === null) {
-        return snapshot;
-      }
-      if (turnIndex < minTurnIndex) {
-        return null;
-      }
-    }
-    return snapshot;
+    return value as AssistantSnapshot;
   }
   return null;
+}
+
+export async function readAssistantResponseProgress(
+  Runtime: ChromeClient['Runtime'],
+  responseBoundary?: AssistantResponseBoundaryInput,
+): Promise<AssistantResponseProgress | null> {
+  const { result } = await Runtime.evaluate({
+    expression: buildAssistantResponseProgressExpression(responseBoundary),
+    returnByValue: true,
+  });
+  const value = result?.value;
+  if (!value || typeof value !== 'object') {
+    return null;
+  }
+  return value as AssistantResponseProgress;
 }
 
 export async function captureAssistantMarkdown(
@@ -138,12 +279,29 @@ export function buildAssistantExtractorForTest(name: string): string {
   return buildAssistantExtractor(name);
 }
 
+export function buildAssistantSnapshotExpressionForTest(
+  responseBoundary?: AssistantResponseBoundaryInput,
+): string {
+  return buildAssistantSnapshotExpression(responseBoundary);
+}
+
+export function buildAssistantResponseProgressExpressionForTest(
+  responseBoundary?: AssistantResponseBoundaryInput,
+): string {
+  return buildAssistantResponseProgressExpression(responseBoundary);
+}
+
 export function buildConversationDebugExpressionForTest(): string {
   return buildConversationDebugExpression();
 }
 
 export function buildMarkdownFallbackExtractorForTest(minTurnLiteral = '0'): string {
-  return buildMarkdownFallbackExtractor(minTurnLiteral);
+  return buildMarkdownFallbackExtractor(`{
+    minTurnIndex: ${minTurnLiteral},
+    baselineMessageId: null,
+    baselineTurnId: null,
+    baselineTextFingerprint: null
+  }`);
 }
 
 export function getAssistantCompletionWatchdogThresholdsForTest(currentLength: number): {
@@ -154,21 +312,24 @@ export function getAssistantCompletionWatchdogThresholdsForTest(currentLength: n
   return getAssistantCompletionWatchdogThresholds(currentLength);
 }
 
-export function buildCopyExpressionForTest(
-  meta: { messageId?: string | null; turnId?: string | null } = {},
-): string {
+export function buildCopyExpressionForTest(meta: { messageId?: string | null; turnId?: string | null } = {}): string {
   return buildCopyExpression(meta);
 }
 
 async function pollAssistantCompletion(
   Runtime: ChromeClient['Runtime'],
   timeoutMs: number,
-  minTurnIndex?: number,
+  responseBoundary?: AssistantResponseBoundaryInput,
   abortSignal?: AbortSignal,
   options: WaitForAssistantResponseOptions = {},
-): Promise<{ text: string; html?: string; meta: { turnId?: string | null; messageId?: string | null } } | null> {
+): Promise<{
+  text: string;
+  html?: string;
+  meta: { turnId?: string | null; messageId?: string | null };
+} | null> {
   const watchdogDeadline = Date.now() + timeoutMs;
   let previousLength = 0;
+  let previousIdentityAndText = '';
   let stableCycles = 0;
   let lastChangeAt = Date.now();
   let responseIncomingEmitted = false;
@@ -179,13 +340,17 @@ async function pollAssistantCompletion(
     }
     const snapshot = await readFreshAssistantSnapshot(
       Runtime,
-      minTurnIndex,
+      responseBoundary,
       options.baselineAssistant,
     );
     const observedAt = Date.now();
     if (observedAt - lastPassiveProbeAt >= PASSIVE_DOM_PROBE_INTERVAL_MS) {
       lastPassiveProbeAt = observedAt;
       await options.onPassiveDomProbe?.();
+      const progress = await readAssistantResponseProgress(Runtime, responseBoundary).catch(() => null);
+      if (progress) {
+        await options.onProgress?.(progress);
+      }
     }
     const normalized = normalizeAssistantSnapshot(snapshot);
     if (normalized) {
@@ -194,16 +359,18 @@ async function pollAssistantCompletion(
         await options.onResponseIncoming?.();
       }
       const currentLength = normalized.text.length;
-      if (currentLength > previousLength) {
+      const identityAndText = JSON.stringify([normalized.meta, normalized.text]);
+      if (currentLength !== previousLength || identityAndText !== previousIdentityAndText) {
         previousLength = currentLength;
+        previousIdentityAndText = identityAndText;
         stableCycles = 0;
         lastChangeAt = Date.now();
       } else {
         stableCycles += 1;
       }
       const [stopVisible, completionVisible] = await Promise.all([
-        isStopButtonVisible(Runtime),
-        isCompletionVisible(Runtime),
+        isAssistantGenerationActive(Runtime),
+        isCompletionVisible(Runtime, normalized.meta),
       ]);
       const { completionStableTarget, requiredStableCycles, minStableMs } =
         getAssistantCompletionWatchdogThresholds(currentLength);
@@ -216,9 +383,14 @@ async function pollAssistantCompletion(
         if (completionEnough || stableEnough) {
           return normalized;
         }
+      } else {
+        // A paused status-only Pro response is still active, even without Stop.
+        stableCycles = 0;
+        lastChangeAt = Date.now();
       }
     } else {
       previousLength = 0;
+      previousIdentityAndText = '';
       stableCycles = 0;
     }
     await delay(400);
@@ -228,18 +400,24 @@ async function pollAssistantCompletion(
 
 async function readFreshAssistantSnapshot(
   Runtime: ChromeClient['Runtime'],
-  minTurnIndex: number | undefined,
+  responseBoundary: AssistantResponseBoundaryInput,
   baseline: WaitForAssistantResponseOptions['baselineAssistant'],
 ): Promise<AssistantSnapshot | null> {
-  const bounded = await readAssistantSnapshot(Runtime, minTurnIndex);
-  if (bounded || typeof minTurnIndex !== 'number' || !hasAssistantBaseline(baseline)) {
+  const bounded = await readAssistantSnapshot(Runtime, responseBoundary);
+  const minTurnIndex = normalizeAssistantResponseBoundary(responseBoundary).minTurnIndex;
+  if (!hasAssistantBaseline(baseline)) {
     return bounded;
   }
+  const isFresh = (snapshot: AssistantSnapshot | null): snapshot is AssistantSnapshot =>
+    Boolean(snapshot && !matchesAssistantBaseline(snapshot, baseline)
+      && (!(baseline.messageId?.trim()) || snapshot.messageId?.trim()));
+  if (isFresh(bounded)) return bounded;
+  if (minTurnIndex === null) return null;
   // ChatGPT project views can virtualize/recycle turn wrappers. In that state
   // the newest response may have an index lower than the pre-submit node count.
   // Fall back to identity/text freshness rather than accepting any latest turn.
   const latest = await readAssistantSnapshot(Runtime);
-  return latest && !matchesAssistantBaseline(latest, baseline) ? latest : null;
+  return isFresh(latest) ? latest : null;
 }
 
 function hasAssistantBaseline(
@@ -270,15 +448,23 @@ function matchesAssistantBaseline(
   return Boolean(normalize(baseline.text)) && normalize(baseline.text) === normalize(snapshot.text);
 }
 
-async function isStopButtonVisible(Runtime: ChromeClient['Runtime']): Promise<boolean> {
+export async function isAssistantGenerationActive(Runtime: ChromeClient['Runtime']): Promise<boolean> {
   try {
     const { result } = await Runtime.evaluate({
-      expression: `Boolean(document.querySelector('${STOP_BUTTON_SELECTOR}'))`,
+      expression: `Boolean(document.querySelector('${STOP_BUTTON_SELECTOR}, button[aria-label*="Stop"], button[aria-label*="stop"]')) || (() => {
+        return Array.from(document.querySelectorAll('[data-streaming-response-status]')).some((node) => {
+          const rect = node.getBoundingClientRect();
+          const style = window.getComputedStyle(node);
+          return rect.width > 0 && rect.height > 0 && style.display !== 'none'
+            && style.visibility !== 'hidden' && style.opacity !== '0';
+        });
+      })()`,
       returnByValue: true,
     });
-    return Boolean(result?.value);
+    return result?.value !== false;
   } catch {
-    return false;
+    // An unreadable busy probe is not proof of completion.
+    return true;
   }
 }
 
@@ -299,7 +485,10 @@ function getAssistantCompletionWatchdogThresholds(currentLength: number): {
   };
 }
 
-async function isCompletionVisible(Runtime: ChromeClient['Runtime']): Promise<boolean> {
+async function isCompletionVisible(
+  Runtime: ChromeClient['Runtime'],
+  meta: { messageId?: string | null; turnId?: string | null },
+): Promise<boolean> {
   try {
     const { result } = await Runtime.evaluate({
       expression: `(() => {
@@ -317,17 +506,18 @@ async function isCompletionVisible(Runtime: ChromeClient['Runtime']): Promise<bo
           return Boolean(node.querySelector(ASSISTANT_SELECTOR) || node.querySelector('[data-testid*="assistant"]'));
         };
 
-        const turns = Array.from(document.querySelectorAll('${CONVERSATION_TURN_SELECTOR}'));
-        let lastAssistantTurn = null;
-        for (let i = turns.length - 1; i >= 0; i--) {
-          if (isAssistantTurn(turns[i])) {
-            lastAssistantTurn = turns[i];
-            break;
-          }
-        }
-        if (!lastAssistantTurn) {
-          return false;
-        }
+        const hint = ${JSON.stringify(meta)};
+        const exactNodes = hint.messageId
+          ? Array.from(document.querySelectorAll('[data-message-id]')).filter((node) => node.getAttribute('data-message-id') === hint.messageId)
+          : hint.turnId
+            ? Array.from(document.querySelectorAll('[data-turn-id], [data-testid]')).filter((node) => node.getAttribute('data-turn-id') === hint.turnId || node.getAttribute('data-testid') === hint.turnId)
+            : [];
+        if (exactNodes.length !== 1) return false;
+        const identityNode = exactNodes[0];
+        const lastAssistantTurn = identityNode.closest('${CONVERSATION_TURN_SELECTOR}') || identityNode;
+        if (hint.messageId && Array.from(lastAssistantTurn.querySelectorAll('[data-message-id]'))
+          .some((node) => node.getAttribute('data-message-id') !== hint.messageId)) return false;
+        if (!isAssistantTurn(lastAssistantTurn)) return false;
         // Check if the last assistant turn has finished action buttons (copy, thumbs up/down, share)
         if (lastAssistantTurn.querySelector('${FINISHED_ACTIONS_SELECTOR}')) {
           return true;
@@ -344,9 +534,11 @@ async function isCompletionVisible(Runtime: ChromeClient['Runtime']): Promise<bo
   }
 }
 
-function normalizeAssistantSnapshot(
-  snapshot: AssistantSnapshot | null,
-): { text: string; html?: string; meta: { turnId?: string | null; messageId?: string | null } } | null {
+function normalizeAssistantSnapshot(snapshot: AssistantSnapshot | null): {
+  text: string;
+  html?: string;
+  meta: { turnId?: string | null; messageId?: string | null };
+} | null {
   const text = snapshot?.text ? cleanAssistantText(snapshot.text) : '';
   if (!text.trim()) {
     return null;
@@ -368,30 +560,141 @@ function normalizeAssistantSnapshot(
   };
 }
 
-function buildAssistantSnapshotExpression(minTurnIndex?: number): string {
-  const minTurnLiteral =
-    typeof minTurnIndex === 'number' && Number.isFinite(minTurnIndex) && minTurnIndex >= 0
-      ? Math.floor(minTurnIndex)
-      : -1;
+function buildAssistantSnapshotExpression(responseBoundary?: AssistantResponseBoundaryInput): string {
+  const boundary = normalizeAssistantResponseBoundary(responseBoundary);
   return `(() => {
-    const MIN_TURN_INDEX = ${minTurnLiteral};
+    const RESPONSE_BOUNDARY = ${JSON.stringify(boundary)};
+    const MIN_TURN_INDEX = RESPONSE_BOUNDARY.minTurnIndex ?? -1;
+    ${buildResponseBoundaryHelpers()}
     // Learned: the default turn DOM misses project view; keep a fallback extractor.
     ${buildAssistantExtractor('extractAssistantTurn')}
-    const extracted = extractAssistantTurn();
-    const isPlaceholder = (snapshot) => {
-      const normalized = String(snapshot?.text ?? '').toLowerCase().trim();
-      if (normalized === 'chatgpt said:' || normalized === 'chatgpt said') return true;
-      if (normalized.includes('file upload request') && (normalized.includes('pro thinking') || normalized.includes('chatgpt said'))) {
-        return true;
-      }
-      return normalized.includes('answer now') && (normalized.includes('pro thinking') || normalized.includes('chatgpt said'));
-    };
+    const turnCount = document.querySelectorAll(${JSON.stringify(CONVERSATION_TURN_SELECTOR)}).length;
+    const extractedRaw = extractAssistantTurn();
+    const extracted = responseBoundaryState(extractedRaw, turnCount) ? extractedRaw : null;
+    ${buildAnswerNowPlaceholderPredicateJs('isPlaceholder')}
     if (extracted && extracted.text && !isPlaceholder(extracted)) {
       return extracted;
     }
     // Fallback for ChatGPT project view: answers can live outside conversation turns.
-    const fallback = ${buildMarkdownFallbackExtractor('MIN_TURN_INDEX')};
+    const extractFromMarkdownFallback = ${buildMarkdownFallbackExtractor('RESPONSE_BOUNDARY')};
+    const fallback = extractFromMarkdownFallback();
     return fallback ?? extracted;
+  })()`;
+}
+
+function buildAssistantResponseProgressExpression(responseBoundary?: AssistantResponseBoundaryInput): string {
+  const boundary = normalizeAssistantResponseBoundary(responseBoundary);
+  const conversationLiteral = JSON.stringify(CONVERSATION_TURN_SELECTOR);
+  const assistantLiteral = JSON.stringify(ASSISTANT_ROLE_SELECTOR);
+  return `(() => {
+    const RESPONSE_BOUNDARY = ${JSON.stringify(boundary)};
+    const MIN_TURN_INDEX = RESPONSE_BOUNDARY.minTurnIndex ?? -1;
+    ${buildResponseBoundaryHelpers()}
+    const CONVERSATION_SELECTOR = ${conversationLiteral};
+    const ASSISTANT_SELECTOR = ${assistantLiteral};
+    const CONTENT_SELECTOR = '.markdown,[data-message-content],[data-testid*="message"],[data-testid*="assistant"],.prose,[class*="markdown"]';
+    const EXCLUDED_SELECTOR = '[data-testid="tool-approval-card"],[data-testid*="tool-approval"],[data-testid*="composer"],form';
+    const isVisible = (node) => {
+      if (!(node instanceof HTMLElement)) return false;
+      const style = window.getComputedStyle(node);
+      const rect = node.getBoundingClientRect();
+      return style.display !== 'none' && style.visibility !== 'hidden' && Number(style.opacity || '1') > 0 && rect.width > 0 && rect.height > 0;
+    };
+    const isAssistantTurn = (node) => {
+      if (!(node instanceof HTMLElement)) return false;
+      const turnAttr = (node.getAttribute('data-turn') || node.dataset?.turn || '').toLowerCase();
+      if (turnAttr === 'assistant') return true;
+      const role = (node.getAttribute('data-message-author-role') || node.dataset?.messageAuthorRole || '').toLowerCase();
+      if (role === 'assistant') return true;
+      const testId = (node.getAttribute('data-testid') || '').toLowerCase();
+      if (testId.includes('assistant')) return true;
+      return Boolean(node.querySelector(ASSISTANT_SELECTOR) || node.querySelector('[data-testid*="assistant"]'));
+    };
+    const turns = Array.from(document.querySelectorAll(CONVERSATION_SELECTOR));
+    let assistantTurn = null;
+    let assistantTurnIndex = null;
+    let assistantMessageId = null;
+    let assistantTurnId = null;
+    let boundaryState = null;
+    for (let index = turns.length - 1; index >= 0; index -= 1) {
+      const turn = turns[index];
+      if (!isAssistantTurn(turn)) continue;
+      const messageNode = turn.querySelector?.('[data-message-id]');
+      const candidateBoundaryState = responseBoundaryState(
+        {
+          text: '',
+          messageId: turn.getAttribute('data-message-id') || messageNode?.getAttribute?.('data-message-id') || null,
+          turnId: turn.getAttribute('data-testid') || null,
+          turnIndex: index,
+        },
+        turns.length,
+      );
+      if (!candidateBoundaryState) continue;
+      assistantTurn = turn;
+      assistantTurnIndex = index;
+      assistantMessageId = turn.getAttribute('data-message-id') || messageNode?.getAttribute?.('data-message-id') || null;
+      assistantTurnId = turn.getAttribute('data-testid') || null;
+      boundaryState = candidateBoundaryState;
+      break;
+    }
+    const candidates = [];
+    if (assistantTurn) {
+      if (assistantTurn.matches?.(CONTENT_SELECTOR)) candidates.push(assistantTurn);
+      candidates.push(...Array.from(assistantTurn.querySelectorAll(CONTENT_SELECTOR)));
+    }
+    let assistantTextChars = 0;
+    let assistantTextFingerprint = null;
+    for (let index = candidates.length - 1; index >= 0; index -= 1) {
+      const candidate = candidates[index];
+      if (!(candidate instanceof HTMLElement)) continue;
+      if (candidate.matches?.(EXCLUDED_SELECTOR) || candidate.closest?.(EXCLUDED_SELECTOR)) continue;
+      if (candidate.querySelector?.(EXCLUDED_SELECTOR)) continue;
+      const text = String(candidate.innerText || candidate.textContent || '').trim();
+      if (!text) continue;
+      assistantTextChars = text.length;
+      assistantTextFingerprint = fingerprintBoundaryText(text);
+      break;
+    }
+    const toolApprovalCardsVisible = assistantTurn
+      ? Array.from(
+          assistantTurn.querySelectorAll('[data-testid="tool-approval-card"],[data-testid*="tool-approval"]'),
+        ).filter(isVisible).length
+      : 0;
+    const stopVisible = Array.from(document.querySelectorAll('${STOP_BUTTON_SELECTOR}')).some(isVisible);
+    const completionVisible = Boolean(
+      assistantTurn &&
+        (assistantTurn.querySelector('${FINISHED_ACTIONS_SELECTOR}') ||
+          Array.from(assistantTurn.querySelectorAll('.markdown')).some(
+            (node) => String(node.textContent || '').trim() === 'Done',
+          )),
+    );
+    const dialogVisible = Array.from(document.querySelectorAll('[role="dialog"]')).some(isVisible);
+    const state = assistantTextChars > 0
+      ? 'assistant-text'
+      : toolApprovalCardsVisible > 0
+        ? 'tool-approval-visible'
+        : assistantTurn
+          ? 'assistant-turn-no-text'
+          : 'no-assistant-turn';
+    return {
+      state,
+      url:
+        typeof location?.origin === 'string' && typeof location?.pathname === 'string'
+          ? location.origin + location.pathname
+          : null,
+      turnCount: turns.length,
+      minTurnIndex: MIN_TURN_INDEX >= 0 ? MIN_TURN_INDEX : null,
+      boundaryState: boundaryState ?? (MIN_TURN_INDEX >= 0 ? 'unresolved' : 'none'),
+      assistantTurnIndex,
+      assistantTextChars,
+      assistantMessageId,
+      assistantTurnId,
+      assistantTextFingerprint,
+      stopVisible,
+      completionVisible,
+      toolApprovalCardsVisible,
+      dialogVisible,
+    };
   })()`;
 }
 
@@ -444,57 +747,71 @@ function buildAssistantExtractor(functionName: string): string {
       }
       const messageRoot = turn.querySelector(ASSISTANT_SELECTOR) ?? turn;
       expandCollapsibles(messageRoot);
-      const preferred =
-        (messageRoot.matches?.('.markdown') || messageRoot.matches?.('[data-message-content]') ? messageRoot : null) ||
-        messageRoot.querySelector('.markdown') ||
-        messageRoot.querySelector('[data-message-content]') ||
-        messageRoot.querySelector('[data-testid*="message"]') ||
-        messageRoot.querySelector('[data-testid*="assistant"]') ||
-        messageRoot.querySelector('.prose') ||
-        messageRoot.querySelector('[class*="markdown"]');
-      const contentRoot = preferred ?? messageRoot;
-      if (!contentRoot) {
-        continue;
-      }
-      const innerText = contentRoot?.innerText ?? '';
-      const textContent = contentRoot?.textContent ?? '';
-      const text = innerText.trim().length > 0 ? innerText : textContent;
-      const html = contentRoot?.innerHTML ?? '';
-      // ChatGPT commonly nests the rendered Markdown below the nodes that own
-      // stable message/turn identity. Artifact-only answers can have identical
-      // visible text (for example the same three output filenames), so falling
-      // back to text equality here can strand a genuinely new response as
-      // "stale" forever. Resolve identity across the message and enclosing turn.
-      const messageIdentityNode =
-        messageRoot.closest?.('[data-message-id]') ||
-        turn.closest?.('[data-message-id]') ||
-        turn.querySelector?.('[data-message-id]');
-      const turnIdentityNode =
-        messageRoot.closest?.('[data-turn-id], [data-testid^="conversation-turn"]') ||
-        turn.closest?.('[data-turn-id], [data-testid^="conversation-turn"]') ||
-        turn;
-      const messageId =
-        messageRoot.getAttribute('data-message-id') ||
-        messageIdentityNode?.getAttribute('data-message-id') ||
-        null;
-      const turnId =
-        turnIdentityNode?.getAttribute('data-turn-id') ||
-        turnIdentityNode?.getAttribute('data-testid') ||
-        turn.getAttribute('data-turn-id') ||
-        turn.getAttribute('data-testid') ||
-        null;
-      if (text.trim()) {
+      const contentSelectors = [
+        '.markdown',
+        '[data-message-content]',
+        '[data-testid*="message"]',
+        '[data-testid*="assistant"]',
+        '.prose',
+        '[class*="markdown"]',
+      ];
+      const excludedSelector = '[data-testid="tool-approval-card"],[data-testid*="tool-approval"],[data-testid*="composer"],form';
+      const readCandidate = (contentRoot) => {
+        if (!(contentRoot instanceof HTMLElement)) return null;
+        if (contentRoot.matches?.(excludedSelector) || contentRoot.closest?.(excludedSelector)) return null;
+        if (contentRoot.querySelector?.(excludedSelector)) return null;
+        const innerText = contentRoot.innerText ?? '';
+        const textContent = contentRoot.textContent ?? '';
+        const text = innerText.trim().length > 0 ? innerText : textContent;
+        if (!text.trim()) return null;
+        const html = contentRoot.innerHTML ?? '';
+        // Rendered Markdown can sit below the node that owns response identity.
+        // Keep exact-message provenance even for artifact-only replies with repeated text.
+        const messageIdentityNode =
+          contentRoot.closest?.('[data-message-id]') ||
+          messageRoot.closest?.('[data-message-id]') ||
+          turn.closest?.('[data-message-id]') ||
+          turn.querySelector?.('[data-message-id]');
+        const turnIdentityNode =
+          contentRoot.closest?.('[data-turn-id], [data-testid^="conversation-turn"]') ||
+          messageRoot.closest?.('[data-turn-id], [data-testid^="conversation-turn"]') ||
+          turn.closest?.('[data-turn-id], [data-testid^="conversation-turn"]') ||
+          turn;
+        const messageId =
+          contentRoot.getAttribute('data-message-id') ||
+          messageRoot.getAttribute('data-message-id') ||
+          messageIdentityNode?.getAttribute('data-message-id') || null;
+        const turnId =
+          turnIdentityNode?.getAttribute('data-turn-id') ||
+          turnIdentityNode?.getAttribute('data-testid') ||
+          turn.getAttribute('data-turn-id') ||
+          turn.getAttribute('data-testid') ||
+          messageRoot.getAttribute('data-testid') || null;
         return { text, html, messageId, turnId, turnIndex: index };
+      };
+      for (const selector of contentSelectors) {
+        const candidates = [];
+        if (messageRoot.matches?.(selector)) candidates.push(messageRoot);
+        candidates.push(...Array.from(messageRoot.querySelectorAll(selector)));
+        for (let candidateIndex = candidates.length - 1; candidateIndex >= 0; candidateIndex -= 1) {
+          const extracted = readCandidate(candidates[candidateIndex]);
+          if (extracted) return extracted;
+        }
+      }
+      if (!messageRoot.querySelector(excludedSelector)) {
+        const extracted = readCandidate(messageRoot);
+        if (extracted) return extracted;
       }
     }
     return null;
   };`;
 }
 
-function buildMarkdownFallbackExtractor(minTurnLiteral?: string): string {
-  const turnIndexValue = minTurnLiteral ? `(${minTurnLiteral} >= 0 ? ${minTurnLiteral} : null)` : 'null';
+function buildMarkdownFallbackExtractor(boundaryLiteral = '{}'): string {
   return `(() => {
-    const MIN_TURN_INDEX = ${turnIndexValue};
+    const FALLBACK_RESPONSE_BOUNDARY = ${boundaryLiteral};
+    const MIN_TURN_INDEX = FALLBACK_RESPONSE_BOUNDARY?.minTurnIndex ?? null;
+    ${buildResponseBoundaryHelpers('FALLBACK_RESPONSE_BOUNDARY')}
     const roots = [
       document.querySelector('section[data-testid="screen-threadFlyOut"]'),
       document.querySelector('[data-testid="chat-thread"]'),
@@ -506,7 +823,7 @@ function buildMarkdownFallbackExtractor(minTurnLiteral?: string): string {
     const isExcluded = (node) =>
       Boolean(
         node?.closest?.(
-          'nav, aside, [data-testid*="sidebar"], [data-testid*="chat-history"], [data-testid*="composer"], form',
+          'nav, aside, [data-testid*="sidebar"], [data-testid*="chat-history"], [data-testid*="composer"], [data-testid="tool-approval-card"], [data-testid*="tool-approval"], form',
         ),
       );
     const scoreRoot = (node) => {
@@ -535,11 +852,17 @@ function buildMarkdownFallbackExtractor(minTurnLiteral?: string): string {
       const idx = turnNodes.indexOf(turn);
       return idx >= 0 ? idx : null;
     };
-    const isAfterMinTurn = (node) => {
-      if (MIN_TURN_INDEX === null) return true;
-      if (!hasTurns) return true;
+    const readBoundarySnapshot = (node, text) => {
+      const turn = node?.closest?.(CONVERSATION_SELECTOR);
       const idx = resolveTurnIndex(node);
-      return idx !== null && idx >= MIN_TURN_INDEX;
+      const messageNode = node?.closest?.('[data-message-id]') || turn?.querySelector?.('[data-message-id]');
+      const turnNode = node?.closest?.('[data-turn-id], [data-testid^="conversation-turn"]') || turn;
+      return {
+        text,
+        messageId: node?.getAttribute?.('data-message-id') || messageNode?.getAttribute?.('data-message-id') || null,
+        turnId: turnNode?.getAttribute?.('data-turn-id') || turnNode?.getAttribute?.('data-testid') || null,
+        turnIndex: idx,
+      };
     };
     const normalize = (value) => String(value || '').toLowerCase().replace(/\\s+/g, ' ').trim();
     const collectUserText = (scope) => {
@@ -613,13 +936,13 @@ function buildMarkdownFallbackExtractor(minTurnLiteral?: string): string {
     for (let i = candidates.length - 1; i >= 0; i -= 1) {
       const node = candidates[i];
       if (!node) continue;
-      if (!isAfterMinTurn(node)) continue;
       const text = (node.innerText || node.textContent || '').trim();
       if (!text) continue;
       if (isUserEcho(text)) continue;
+      const boundarySnapshot = readBoundarySnapshot(node, text);
+      if (!responseBoundaryState(boundarySnapshot, turnNodes.length)) continue;
       const html = node.innerHTML ?? '';
-      const turnIndex = resolveTurnIndex(node);
-      return { text, html, messageId: null, turnId: null, turnIndex };
+      return { text, html, ...boundarySnapshot };
     }
     return null;
   })`;
@@ -629,6 +952,12 @@ function buildCopyExpression(meta: { messageId?: string | null; turnId?: string 
   return `(() => {
     ${buildClickDispatcher()}
     const BUTTON_SELECTORS = ${JSON.stringify(COPY_BUTTON_SELECTORS)};
+    const CONVERSATION_TURN_SELECTOR_VALUE = '[data-testid^="conversation-turn"], [data-turn-id]';
+    const CONVERSATION_SELECTOR = ${JSON.stringify(CONVERSATION_TURN_SELECTOR)};
+    const ASSISTANT_SELECTOR = '${ASSISTANT_ROLE_SELECTOR}';
+    const isAssistantTurn = (node) => Boolean(node && (
+      node.matches?.(ASSISTANT_SELECTOR) || node.querySelector?.(ASSISTANT_SELECTOR)
+    ));
     const TIMEOUT_MS = 10000;
     const queryButtons = (node) => {
       if (!node) return [];
@@ -638,50 +967,24 @@ function buildCopyExpression(meta: { messageId?: string | null; turnId?: string 
     const locateButton = () => {
       const hint = ${JSON.stringify(meta ?? {})};
       if (hint?.messageId) {
-        const node = document.querySelector('[data-message-id="' + hint.messageId + '"]');
-        const buttons = queryButtons(node);
-        const button = buttons.at(-1) ?? null;
-        if (button) {
-          return button;
-        }
+        const nodes = Array.from(document.querySelectorAll('[data-message-id]')).filter((node) => node.getAttribute('data-message-id') === hint.messageId);
+        if (nodes.length !== 1) return null;
+        const node = nodes[0];
+        const scope = node.closest(CONVERSATION_TURN_SELECTOR_VALUE) || node;
+        if (!isAssistantTurn(scope)) return null;
+        const otherMessages = Array.from(scope.querySelectorAll('[data-message-id]'))
+          .some((candidate) => candidate.getAttribute('data-message-id') !== hint.messageId);
+        if (otherMessages) return null;
+        return queryButtons(scope).at(-1) ?? null;
       }
       if (hint?.turnId) {
-        const node = document.querySelector('[data-testid="' + hint.turnId + '"]');
-        const buttons = queryButtons(node);
-        const button = buttons.at(-1) ?? null;
-        if (button) {
-          return button;
-        }
+        const nodes = Array.from(document.querySelectorAll('[data-turn-id], [data-testid]')).filter((node) => node.getAttribute('data-turn-id') === hint.turnId || node.getAttribute('data-testid') === hint.turnId);
+        if (nodes.length === 1 && new Set(Array.from(nodes[0].querySelectorAll('[data-message-id]'))
+          .map((node) => node.getAttribute('data-message-id'))).size > 1) return null;
+        return nodes.length === 1 && nodes[0].matches?.(CONVERSATION_SELECTOR) && isAssistantTurn(nodes[0])
+          ? queryButtons(nodes[0]).at(-1) ?? null : null;
       }
-      const CONVERSATION_SELECTOR = ${JSON.stringify(CONVERSATION_TURN_SELECTOR)};
-      const ASSISTANT_SELECTOR = '${ASSISTANT_ROLE_SELECTOR}';
-      const isAssistantTurn = (node) => {
-        if (!(node instanceof HTMLElement)) return false;
-        const turnAttr = (node.getAttribute('data-turn') || node.dataset?.turn || '').toLowerCase();
-        if (turnAttr === 'assistant') return true;
-        const role = (node.getAttribute('data-message-author-role') || node.dataset?.messageAuthorRole || '').toLowerCase();
-        if (role === 'assistant') return true;
-        const testId = (node.getAttribute('data-testid') || '').toLowerCase();
-        if (testId.includes('assistant')) return true;
-        return Boolean(node.querySelector(ASSISTANT_SELECTOR) || node.querySelector('[data-testid*="assistant"]'));
-      };
-      const turns = Array.from(document.querySelectorAll(CONVERSATION_SELECTOR));
-      for (let i = turns.length - 1; i >= 0; i -= 1) {
-        const turn = turns[i];
-        if (!isAssistantTurn(turn)) continue;
-        const button = queryButtons(turn)[0] ?? null;
-        if (button) {
-          return button;
-        }
-      }
-      const all = queryButtons(document);
-      for (let i = all.length - 1; i >= 0; i -= 1) {
-        const button = all[i];
-        const turn = button?.closest?.(CONVERSATION_SELECTOR);
-        if (turn && isAssistantTurn(turn)) {
-          return button;
-        }
-      }
+      // Missing identity never grants permission to copy another/latest turn.
       return null;
     };
 
@@ -852,5 +1155,8 @@ function cleanAssistantText(text: string): string {
     if (LANGUAGE_TAGS.has(trimmed)) return false;
     return true;
   });
-  return filtered.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  return filtered
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
 }

@@ -12,6 +12,11 @@ import {
 } from '../../src/browser/pageActions.js';
 import * as attachments from '../../src/browser/actions/attachments.js';
 import * as attachmentDataTransfer from '../../src/browser/actions/attachmentDataTransfer.js';
+import {
+  buildCopyExpressionForTest,
+  buildMarkdownFallbackExtractorForTest,
+  isAssistantGenerationActive,
+} from '../../src/browser/actions/assistantResponse.js';
 import type { ChromeClient } from '../../src/browser/types.js';
 import { BrowserAutomationError } from '../../src/oracle/errors.js';
 
@@ -26,7 +31,7 @@ describe('ensureModelSelection', () => {
     const runtime = {
       evaluate: vi.fn().mockResolvedValue({ result: { value: { status: 'already-selected', label: 'GPT-5.2 Pro' } } }),
     } as unknown as ChromeClient['Runtime'];
-    await expect(ensureModelSelection(runtime, 'GPT-5.2 Pro', logger)).resolves.toBeUndefined();
+    await expect(ensureModelSelection(runtime, 'GPT-5.2 Pro', logger)).resolves.toBe('GPT-5.2 Pro');
     expect(logger).toHaveBeenCalledWith('Model picker: GPT-5.2 Pro');
   });
 
@@ -241,6 +246,133 @@ describe('ensureLoggedIn', () => {
 });
 
 describe('waitForAssistantResponse', () => {
+  test('rejects the baseline even when a recycled wrapper passes the numeric boundary', async () => {
+    let reads = 0;
+    const runtime = {
+      evaluate: vi.fn().mockImplementation(async ({ expression }: { expression: string }) => {
+        if (expression.includes('extractAssistantTurn')) {
+          reads += 1;
+          return { result: { value: {
+            text: reads <= 4 ? 'Historical response' : 'Fresh response',
+            messageId: reads <= 4 ? 'old' : 'new', turnIndex: 20,
+          } } };
+        }
+        return { result: { value: expression.includes('lastAssistantTurn') } };
+      }),
+    } as unknown as ChromeClient['Runtime'];
+    const result = await waitForAssistantResponse(runtime, 2400, logger, 12, {
+      baselineAssistant: { text: 'Historical response', messageId: 'old' },
+    });
+    expect(result.meta.messageId).toBe('new');
+    expect(reads).toBeGreaterThan(4);
+  });
+
+  test('visible Pro streaming status blocks terminal capture without a Stop button', async () => {
+    const runtime = {
+      evaluate: vi.fn().mockImplementation(async ({ expression }: { expression: string }) => {
+        if (expression.includes('extractAssistantTurn')) {
+          return { result: { value: { text: 'Partial response', messageId: 'new', turnIndex: 1 } } };
+        }
+        if (expression.includes('data-streaming-response-status')) {
+          const document = { querySelector: () => null, querySelectorAll: () => [{ getBoundingClientRect: () => ({ width: 100, height: 20 }) }] };
+          const window = { getComputedStyle: () => ({ display: 'block', visibility: 'visible', opacity: '1' }) };
+          return { result: { value: new Function('document', 'window', `return ${expression}`)(document, window) } };
+        }
+        return { result: { value: expression.includes('lastAssistantTurn') } };
+      }),
+    } as unknown as ChromeClient['Runtime'];
+    await expect(waitForAssistantResponse(runtime, 1200, logger)).rejects.toThrow('assistant-response-watchdog-timeout');
+  });
+
+  test('generation probe ignores hidden historical status and fails closed on errors', async () => {
+    const runtime = {
+      evaluate: vi.fn().mockImplementation(async ({ expression }: { expression: string }) => {
+        const document = { querySelector: () => null, querySelectorAll: () => [{ getBoundingClientRect: () => ({ width: 0, height: 0 }) }] };
+        const window = { getComputedStyle: () => ({ display: 'none', visibility: 'hidden', opacity: '0' }) };
+        return { result: { value: new Function('document', 'window', `return ${expression}`)(document, window) } };
+      }),
+    } as unknown as ChromeClient['Runtime'];
+    await expect(isAssistantGenerationActive(runtime)).resolves.toBe(false);
+    vi.mocked(runtime.evaluate).mockRejectedValueOnce(new Error('disconnected'));
+    await expect(isAssistantGenerationActive(runtime)).resolves.toBe(true);
+    vi.mocked(runtime.evaluate).mockResolvedValueOnce({} as never);
+    await expect(isAssistantGenerationActive(runtime)).resolves.toBe(true);
+  });
+
+  test('historical completion controls cannot complete a different current message', async () => {
+    class MessageNode {
+      constructor(readonly id: string) {}
+      getAttribute(name: string) {
+        if (name === 'data-message-id') return this.id;
+        if (name === 'data-message-author-role') return 'assistant';
+        return null;
+      }
+      closest() { return this; }
+      querySelector() { return this.id === 'historical' ? {} : null; }
+      querySelectorAll() { return []; }
+    }
+    const document = { querySelectorAll: () => [new MessageNode('historical'), new MessageNode('current')] };
+    const runtime = {
+      evaluate: vi.fn().mockImplementation(async ({ expression }: { expression: string }) => {
+        if (expression.includes('extractAssistantTurn')) {
+          return { result: { value: { text: 'Current response still settling', messageId: 'current' } } };
+        }
+        if (expression.includes('lastAssistantTurn')) {
+          return { result: { value: new Function('document', 'HTMLElement', `return ${expression}`)(document, MessageNode) } };
+        }
+        return { result: { value: false } };
+      }),
+    } as unknown as ChromeClient['Runtime'];
+    await expect(waitForAssistantResponse(runtime, 1200, logger)).rejects.toThrow('assistant-response-watchdog-timeout');
+  });
+
+  test('copy lookup never falls back from an unresolved exact message to historical buttons', () => {
+    const expression = buildCopyExpressionForTest({ messageId: 'missing-current' });
+    const lookup = `${expression.slice(0, expression.indexOf('    const interceptClipboard'))}return locateButton(); })()`;
+    const querySelectorAll = vi.fn().mockReturnValue([{ getAttribute: () => 'historical' }]);
+    const document = { querySelectorAll };
+    expect(new Function('document', `return ${lookup}`)(document)).toBeNull();
+    expect(querySelectorAll).toHaveBeenCalledTimes(1);
+    expect(querySelectorAll).toHaveBeenCalledWith('[data-message-id]');
+  });
+
+  test('copy lookup rejects a shared wrapper containing a different message', () => {
+    const expression = buildCopyExpressionForTest({ messageId: 'current' });
+    const lookup = `${expression.slice(0, expression.indexOf('    const interceptClipboard'))}return locateButton(); })()`;
+    const scope = {
+      matches: () => true,
+      querySelectorAll: () => [{ getAttribute: () => 'other-message' }],
+    };
+    const document = { querySelectorAll: () => [{ getAttribute: () => 'current', closest: () => scope }] };
+    expect(new Function('document', `return ${lookup}`)(document)).toBeNull();
+  });
+
+  test('project fallback preserves exact message and turn identities from ancestors', () => {
+    const messageNode = { getAttribute: (name: string) => name === 'data-message-id' ? 'current-message' : null };
+    const turnNode = { getAttribute: (name: string) => name === 'data-turn-id' ? 'current-turn' : null };
+    const node = {
+      innerText: 'Current final answer', innerHTML: '<p>Current final answer</p>',
+      closest: (selector: string) => {
+        if (selector === '[data-message-id]') return messageNode;
+        if (selector === '[data-turn-id], [data-testid^="conversation-turn"]') return turnNode;
+        return null;
+      },
+    };
+    const user = { innerText: 'Current user request' };
+    const root = {
+      querySelector: () => null,
+      querySelectorAll: (selector: string) => {
+        if (selector.includes('markdown')) return [node];
+        if (selector.includes('data-message-author-role="user"')) return [user];
+        return [];
+      },
+    };
+    const document = { querySelector: (selector: string) => selector === 'main' ? root : null, querySelectorAll: () => [] };
+    const expression = buildMarkdownFallbackExtractorForTest('null');
+    const result = new Function('document', `return ${expression}()`)(document);
+    expect(result).toMatchObject({ text: 'Current final answer', messageId: 'current-message', turnId: 'current-turn' });
+  });
+
   test('stops immediately when the caller aborts response waiting', async () => {
     const abortController = new AbortController();
     abortController.abort(new Error('durable run cancelled'));
@@ -373,6 +505,9 @@ describe('waitForAssistantResponse', () => {
 
   test('captures a completed response through serialized snapshot evaluations', async () => {
     const evaluate = vi.fn().mockImplementation(async (params: { expression?: string; awaitPromise?: boolean }) => {
+      if (params.expression?.includes('data-streaming-response-status')) {
+        return { result: { value: false } };
+      }
       if (typeof params?.expression === 'string' && params.expression.includes('extractAssistantTurn')) {
         return {
           result: { value: { text: 'Recovered', html: '<p>Recovered</p>', messageId: 'mid', turnId: 'tid' } },

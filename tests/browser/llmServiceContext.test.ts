@@ -52,10 +52,6 @@ class TestContextLlmService extends LlmService {
 		return [];
 	}
 
-	async runPrompt(_input: PromptInput): Promise<PromptResult> {
-		throw new Error("not implemented");
-	}
-
 	async renameConversation(): Promise<void> {}
 
 	async deleteConversation(): Promise<void> {}
@@ -166,7 +162,7 @@ describe("project-scoped conversation context normalization", () => {
 		setAuracallHomeDirOverrideForTest(null);
 	});
 
-	test("runPlannedPrompt preserves desired model and prompt attachments for the provider", async () => {
+	test("runPrompt preserves desired model and prompt attachments for the provider", async () => {
 		const runPrompt = vi.fn(async () => ({
 			answerText: "ok",
 			answerMarkdown: "ok",
@@ -192,7 +188,7 @@ describe("project-scoped conversation context normalization", () => {
 		);
 		const attachments = [{ path: "/tmp/context.txt", name: "context.txt" }] as never;
 
-		await service.runPlannedPrompt({
+		await service.runPrompt({
 			prompt: "Use the attached context.",
 			attachments,
 			desiredModel: "Gemini Pro",

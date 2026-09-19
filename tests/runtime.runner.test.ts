@@ -1504,22 +1504,17 @@ describe('runtime runner', () => {
       note: 'cancelled by host control',
       source: 'operator',
     });
-    const cancelledRecord = await control.persistRun({
+    await control.persistRun({
       runId: 'run_cancel_signal',
       bundle: cancelledBundle,
       expectedRevision: runningRecord.revision,
-    });
-    await control.releaseLease({
-      runId: 'run_cancel_signal',
-      leaseId: cancelledRecord.bundle.leases[0]?.id,
-      releasedAt: '2026-04-08T13:04:00.000Z',
-      releaseReason: 'cancelled',
     });
 
     const executed = await executionPromise;
     expect(observedSignal?.aborted).toBe(true);
     expect(executed.bundle.run.status).toBe('cancelled');
     expect(executed.bundle.steps[0]?.status).toBe('cancelled');
+    expect(executed.bundle.leases[0]?.status).toBe('released');
     expect(executed.bundle.leases[0]?.releaseReason).toBe('cancelled');
   });
 

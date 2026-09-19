@@ -353,6 +353,7 @@ Transitional authoring note:
   - `--browser-chatgpt-mode`
   - `--browser-work-model`
   - `--browser-thinking-time`
+  - `--browser-no-thinking-time` (one-run omission only; it is not persisted)
   - `--browser-composer-tool`
   - `--browser-deep-research-plan-action`
 - those CLI flags are still intentionally classified as supported transitional
@@ -372,6 +373,8 @@ Transitional authoring note:
     default service exists
   - when no concrete default service exists, they remain root-browser-only
     inputs
+  - `--browser-no-thinking-time` remains deliberately CLI-only because it
+    suppresses inherited depth for one execution rather than authoring config
 - active service binding now prefers the service-scoped values when both the
   service-scoped and root-browser copies exist
 - keep `manualLogin` / `manualLoginProfileDir` separate from that precedence:
@@ -423,7 +426,7 @@ Handoff packaging policy:
   globals: {},
 
   llmDefaults: {
-    model: "gpt-5.2-pro",
+    model: "chatgpt:premium",
   },
 
   // Optional global service URL defaults (override per runtime profile)
@@ -524,7 +527,7 @@ Handoff packaging policy:
           projectName: "Aura-Call",
           chatgptMode: "chat",
           workModel: "Research",
-          model: "gpt-5.2-pro",
+          model: "chatgpt:premium",
           thinkingTime: "extended",
           interactiveLogin: false,
           features: {
@@ -787,7 +790,7 @@ Within each file, later CLI flags still override config, and environment variabl
   - `gemini`: `search`, `grounding`, `apps`
 - Headless/headful settings belong to the browser layer; keep using `browser.headless` and `browser.hideWindow` until the rename lands.
 - `browser.hideWindow: true` is now the recommended default for headful browser automation. Aura-Call launches Chrome with `--start-minimized`, suppresses `Page.bringToFront()` on reuse paths, and only auto-hides windows it just launched itself. On WSL/X11, treat this as a no-focus-steal guarantee first and a literal minimized-state guarantee second, because Chrome's DevTools window-bounds API can still report `windowState: normal` while `_NET_ACTIVE_WINDOW` stays unchanged.
-- `services.<service>.thinkingTime` can set a per-service default for ChatGPT GPT-5.6 Sol effort selection (overrides `profiles.<name>.browser.thinkingTime` when set). AuraCall maps `light`, `standard`, `extended`, and `heavy` to the current Light, Medium, High, and Extra High controls. Legacy Thinking/Pro semantic aliases resolve to Sol plus the corresponding effort; use `chatgpt:terra`, `chatgpt:luna`, or `chatgpt:gpt-5.5` for the other current model families.
+- `services.<service>.thinkingTime` can set a per-service ChatGPT effort default (overrides `profiles.<name>.browser.thinkingTime` when set). Prefer durable selectors: `chatgpt:fast`, `chatgpt:reasoning`, `chatgpt:reasoning-high`, `chatgpt:reasoning-max`, `chatgpt:premium`, or `chatgpt:legacy`. GPT-5.2 and Sol/Terra/Luna spellings remain compatibility inputs and explicit provider-family pins.
 - `services.chatgpt.chatgptMode` selects the composer contract and defaults to `chat`. Set it to `work` only when Work is intentional. `services.chatgpt.workModel` is interpreted only by the dedicated Work selector; ordinary `model` and `thinkingTime` remain Chat-mode controls. Runtime-profile service values override global service and transitional root-browser values.
 - `runtimeProfiles.<name>.services.<service>.identity` sets the username/email used for cache identity; auto-scraping is disabled unless `runtimeProfiles.<name>.cache.useDetectedIdentity` is set.
 - `runtimeProfiles.<name>.browser.profilePath` + `profileName` define the source browser profile; `cookiePath` overrides the derived Cookies DB location. `profileName` accepts either the on-disk Chromium directory (for example `Profile 1`) or the friendly UI label.
@@ -885,6 +888,8 @@ Under the hood, pruning removes entire session directories (metadata + logs). Th
 
 ## API timeouts
 
-- `--timeout <seconds|auto>` controls the overall API deadline for a run.
+- `--timeout <seconds|duration|auto>` controls the overall run deadline. Bare
+  numbers are seconds; human-readable units and compounds such as `90s`, `60m`,
+  and `1h30m` are accepted.
 - Defaults: `auto` = 60 m for `gpt-5.1-pro`; non-pro API models use `120s` if you don’t set a value.
 - Heartbeat messages print the live remaining time so you can see when the client-side deadline will fire.

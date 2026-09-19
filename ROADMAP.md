@@ -1,11 +1,653 @@
 # Aura-Call Roadmap
 
+- Open downstream integration reconciliation: [Plan 0360](docs/dev/plans/0360-2026-09-14-upstream-dirty-checkout-reconciliation.md)
+  preserves a fresh 70-path dirty-checkout custody baseline and carries the
+  scheduler, required-document-set, exact-artifact, and assistant-response
+  identity packets onto the staged upstream merge. Focused provider-free checks
+  are green; broad validation, final disposition, commit, installation, and live
+  retained-browser acceptance remain.
+
+- Live-accepted integrated P44: [Plan 0351](docs/dev/plans/0351-2026-09-11-chatgpt-current-latest-selection.md)
+  recognizes ChatGPT's checked `Latest` row during read-only current-model
+  observation. Exact install and one zero-retry LitScout app attempt reached and
+  stopped at the real `approve_search_plan` product gate with no approval,
+  provider, retry, or canonical DB effect.
+  Canonical integration is `a47801d6a`.
+
+- Live-accepted integrated P43: [Plan 0350](docs/dev/plans/0350-2026-09-11-final-live-acceptance.md)
+  proves exact installed parity, unpiped identity, compact `6Pro` one-Send
+  success, and a genuine distinct PDF with zero retries; canonical integration
+  is `a8739e127`.
+
+- Completed-with-terminal-evidence-finding P42: [Plan 0349](docs/dev/plans/0349-2026-09-11-installed-plan0348-live-acceptance.md)
+  passed install parity, but piped identity JSON was truncated before parsing;
+  prompt and artifact budgets remained unspent. Evidence is integrated at
+  `ec538abd5`.
+
+- Integrated P41: [Plan 0348](docs/dev/plans/0348-2026-09-11-chatgpt-compact-option-row-repair.md)
+  reproduces the current compact `6Pro` row's submenu-like attribute shape and
+  repairs terminal option selection provider-free at `c6b839c1e`, integrated
+  at `96ed036b3`.
+
+- Completed-with-terminal-finding P40: [Plan 0347](docs/dev/plans/0347-2026-09-11-installed-plan0346-live-acceptance.md)
+  passed install parity and identity, but the only compact `6Pro` prompt stopped
+  before Send in option selection. The artifact fetch remained unspent, and the
+  terminal receipt is integrated at `f30107bad`.
+
+- Integrated P39: [Plan 0346](docs/dev/plans/0346-2026-09-11-chatgpt-current-live-findings-repair.md)
+  accepts compact `6Pro` semantically while preserving the raw label and
+  requires fresh expected-variant binary proof for Deep Research exports.
+  Published topic `4fd2d1a99` is integrated at `db527e0c9`; one successor
+  installed/live recheck remains.
+
+- Completed-with-terminal-findings P38: [Plan 0345](docs/dev/plans/0345-2026-09-11-installed-plan0344-live-acceptance.md)
+  installed exact Plan 0344 bytes and passed identity. Live acceptance failed:
+  the current `6Pro` label did not match exact `6 Pro` before Send, and the
+  claimed PDF was byte-identical DOCX content. Neither finding was retried.
+
+- Integrated P37: [Plan 0344](docs/dev/plans/0344-2026-09-11-chatgpt-selector-artifact-live-findings.md)
+  repairs P36's explicit `6 Pro` selector timeout and later-variant artifact
+  transfer failures provider-free. Installation and live adoption remain
+  outside the lane.
+
+- Completed-with-terminal-findings P36: [Plan 0343](docs/dev/plans/0343-2026-09-11-installed-plan0342-live-acceptance.md)
+  installed exact published P35 bytes and proved normal identity-smoke exit.
+  Live acceptance was rejected: explicit `6 Pro` selection timed out before
+  Send, and the one artifact fetch again settled Markdown only while DOCX/PDF
+  returned `Promise was collected`. No retries or control effects ran.
+
+- Completed P35: [Plan 0342](docs/dev/plans/0342-2026-09-11-chatgpt-live-findings-provider-free-repair.md)
+  repairs four P34-owned failures provider-free: identity-smoke exit, current
+  `6 Pro` trigger discovery, ordinary Session observed-model persistence, and
+  complete sequential artifact settlement. P08 aggregate status and every
+  installed/live/provider effect remain outside the lane.
+
+- Completed-with-findings P34: [Plan 0341](docs/dev/plans/0341-2026-09-11-installed-plan0340-live-acceptance.md)
+  installed source-identical Plan 0340 bytes and completed the bounded live
+  packet. One current-model attachment turn passed with one Send and zero
+  retries; the recovered conversation was not mutated and its artifacts remain
+  intact. Full acceptance was rejected by API restart churn, CLI exit failure,
+  selector/provenance gaps, and partial fresh artifact materialization.
+
+- Completed P33: [Plan 0340](docs/dev/plans/0340-2026-09-11-chatgpt-deep-research-reliability.md)
+  repairs current `6 Pro` provenance, one-run inherited-depth omission,
+  attachment-aware prompt commitment, post-effect failure reconciliation, and
+  artifact-fetch cleanup provider-free. Implementation and validation are
+  accepted, overlap-reconciled, and integrated provider-free at `30c9d927f`.
+  The recovered
+  September 10 Deep Research conversation is authoritative and may not be
+  retried.
+
+- P16 source reconciliation is provider-free green: current main owns exact
+  ecosystem-mention selection; the reconciled delta removes inherited generic
+  tool routing, preserves current-model submission, and safely clears an
+  unwrapped app mention. The obsolete provider-local response watcher was
+  rejected by the prompt-lifecycle architecture gate; response/live acceptance
+  remains open.
+
+- Completed P32: [Plan 0339](docs/dev/plans/0339-2026-09-09-installed-runtime-and-git-maintenance.md) proves current-main installed-runtime parity and closes the newly eligible P27 worktree while preserving its downstream verification ref and every unfinished lane.
+
+- Completed P31: [Plan 0338](docs/dev/plans/0338-2026-09-06-upload-composer-validation.md) rejects inactive upload composers and retains both explicit and omitted handoff-model coverage; published with 69 passing tests.
+
+- Completed Git maintenance: [Plan 0337](docs/dev/plans/0337-2026-09-06-git-maintenance.md) (P30) removed 11 eligible worktrees; Plan 0339's follow-up closed newly unblocked P27, so three linked worktrees now remain intentionally.
+
+- P29 implementation installed; actual Skill execution unaccepted: [Plan 0336 Skill prompt invocation](docs/dev/plans/0336-2026-09-05-skill-prompt-invocation.md). Exact-ID selection and submission are proven in one tab; the responding model reported the selected resource inaccessible.
+
+- Plan 0334 Skills selection is installed/live accepted: iteration 1/5 verified exact-ID selection and cleanup, no prompt. Merged to main through PR #1 (`697dc668`).
+
+- Installed/live-accepted Plan 0335: [Chat mode preflight](docs/dev/plans/0335-2026-09-05-chat-mode-preflight.md), based on installed P27 source; require mode-control proof before a new prompt.
+
+
 ## P01 | Active Initiatives
 
 ### Current Execution Board
 
-Status: active
-Lane: P01
+Status: P43 final live acceptance integrated; end-to-end recovery accepted
+Lanes: P01-P07, P09-P15, P17, P19-P28, P30-P43 (completed/integrated); P08, P16, P18, P29 (open)
+
+- Completed-with-terminal-evidence installed/live successor:
+  [Plan 0349](docs/dev/plans/0349-2026-09-11-installed-plan0348-live-acceptance.md)
+  failed closed on truncated piped identity JSON. Prompt and artifact fetch were
+  not attempted.
+
+- Integrated provider-free repair:
+  [Plan 0348](docs/dev/plans/0348-2026-09-11-chatgpt-compact-option-row-repair.md)
+  proves terminal classification of the current compact `6Pro` option row.
+
+- Integrated provider-free repair:
+  [Plan 0346](docs/dev/plans/0346-2026-09-11-chatgpt-current-live-findings-repair.md)
+  proves compact premium-label matching and fresh expected-extension plus
+  binary-signature download admission at published checkpoint `40f2cecf9`,
+  integrated at `db527e0c9`. Installation and live proof remain a successor
+  gate.
+
+- Completed-with-terminal-finding installed/live successor:
+  [Plan 0347](docs/dev/plans/0347-2026-09-11-installed-plan0346-live-acceptance.md)
+  passed install and identity. Its only prompt stopped before Send because the
+  live option path still rejected listed `6Pro`; artifact fetch was withheld.
+
+- Completed-with-terminal-findings installed/live adoption:
+  [Plan 0345](docs/dev/plans/0345-2026-09-11-installed-plan0344-live-acceptance.md)
+  P38 spent one install, one identity smoke, one prompt attempt with zero Sends,
+  and one artifact fetch. Identity and installation passed; current label drift
+  and false PDF materialization are terminal. No retry or unrelated runtime
+  control ran. The evidence is integrated at `62b056005`; clean local topic
+  custody is closed with its remote recovery ref retained.
+
+- Integrated provider-free repair:
+  [Plan 0344](docs/dev/plans/0344-2026-09-11-chatgpt-selector-artifact-live-findings.md)
+  P37's deterministic explicit-selector and independent transfer-lifecycle
+  fixtures and fixes merged at `a827fc83a`. No installed/live/provider effect
+  was accepted; adoption remains separately gated. The unexpectedly launched
+  blank managed Chrome tree was terminated under later exact authority, and
+  clean local P37 topic custody is closed with its remote recovery ref retained.
+
+- Completed-with-terminal-findings installed/live adoption:
+  [Plan 0343](docs/dev/plans/0343-2026-09-11-installed-plan0342-live-acceptance.md)
+  P36 spent one install, one identity probe, one effect-capable explicit
+  `chatgpt:premium` attempt with zero Sends, and one read-only recovered-
+  conversation artifact fetch. Identity passed; selector and complete fresh
+  artifact settlement failed terminally. Unrelated controls stayed preserved.
+
+- Completed provider-free repair:
+  [Plan 0342](docs/dev/plans/0342-2026-09-11-chatgpt-live-findings-provider-free-repair.md)
+  P35 has provider-free acceptance for all four P34 foreground findings and is
+  integrated at `d80613c4f`. It does not reopen P34's live effect budget or
+  absorb P08.
+
+- Completed-with-findings installed/live verification:
+  [Plan 0341](docs/dev/plans/0341-2026-09-11-installed-plan0340-live-acceptance.md)
+  P34 installed exact published Plan 0340 main and spent exactly one prompt,
+  one attachment upload, one Send, zero retries, and one read-only artifact
+  fetch. The successful current-model turn does not override the rejected
+  restart, exit, explicit-selector, observed-model, and fresh export findings.
+
+- Completed ChatGPT Deep Research reliability repair:
+  [Plan 0340](docs/dev/plans/0340-2026-09-11-chatgpt-deep-research-reliability.md)
+  P33 starts from current main and treats the completed September 10 provider
+  conversation and recovered artifacts as authoritative. The isolated source
+  packet is accepted and integrated provider-free, retaining exact new-turn
+  and no-duplicate-submit fences. Install and live proof remain separately
+  gated.
+
+- Completed installed-runtime and Git maintenance:
+  [Plan 0339](docs/dev/plans/0339-2026-09-09-installed-runtime-and-git-maintenance.md)
+  P32 binds the installed service to current published `main`, re-audits local
+  branch/worktree custody, and closes P27 after clean-state, ancestry,
+  remote-custody, and process-owner gates pass. It preserves divergent P08/P16,
+  paused P18, open P29, and recovery custody without provider effects.
+
+- Integrated ChatGPT tool and Skill inventory/selection:
+  [Plan 0334](docs/dev/plans/0334-2026-09-05-chatgpt-tool-skill-inventory-selection.md)
+  P27 updates current drawer identities, root-tab discovery, and guarded
+  exact-account/exact-ID Skill selection. All 11 Skills were inventoried;
+  iteration 1/5 selected Codebase Investigator and restored an empty composer.
+  No prompt was submitted and actual Skill execution remains untested.
+  The earlier domain-filter attribution to ChatGPT was unsupported and is
+  superseded by successful installed/live evidence. PR #1 merged at `697dc668`.
+
+- Integrated installed durable-model survey:
+  [docs/dev/plans/0333-2026-09-05-installed-durable-model-survey.md](docs/dev/plans/0333-2026-09-05-installed-durable-model-survey.md)
+  P26 installed source-identical durable-schema bytes and integrated the repair
+  for remaining operational legacy-label defaults. Current tool/upload and
+  horizontal-slider surfaces are directly proven without provider mutation.
+  An older conversation proved the distinct `gpt-5-6-thinking` High/2 surface
+  versus current Pro/4. Exact cleanup left one healthy home and the unchanged
+  project conversation; P26 is closed with no prompt, upload, model selection,
+  retry action, or provider mutation.
+
+- Provider-free accepted durable model schema migration:
+  [docs/dev/plans/0332-2026-09-05-durable-model-schema.md](docs/dev/plans/0332-2026-09-05-durable-model-schema.md)
+  P25 replaces advertised version/codename ChatGPT selectors with capability
+  intents, retains old spellings as aliases, and adds GPT-6 Pro/Astra plus the
+  durable `openai:frontier` API default. Checkpoint `c96a472f` is integrated
+  through `a0361f66`; this lane did not install or operate the retained browser.
+
+- Active ChatGPT composer intelligence-picker repair:
+  [docs/dev/plans/0331-2026-09-03-chatgpt-composer-intelligence-picker.md](docs/dev/plans/0331-2026-09-03-chatgpt-composer-intelligence-picker.md)
+  P24 scopes model selection to the active composer, excludes assistant-turn
+  retry controls, and supports the live five-position horizontal Power slider.
+  Source and installed canaries passed with original Pro state restored. The
+  installed attachment probe also accepts the composer-local unrestricted
+  input without uploading; P24 is closed and integrated through `cd3e6b68`.
+
+- Integrated ChatGPT Skill CRUD:
+  [docs/dev/plans/0329-2026-09-02-chatgpt-skill-crud.md](docs/dev/plans/0329-2026-09-02-chatgpt-skill-crud.md)
+  P22 provides guarded exact-account, exact-ID list/show/create/update/delete.
+  Installed/live acceptance recovered the one authorized Create, updated the
+  same stable ID once with exact v2 hash readback, and deleted it once with
+  fresh complete-inventory absence. No skill invocation or prompt occurred;
+  Chrome/API identities remained stable. P16 remains a separate unfinished
+  developer-app lane and must preserve both CLI blocks when later integrated.
+
+- Active installed long-observation recovery canary:
+  [docs/dev/plans/0328-2026-09-02-installed-long-observation-canary.md](docs/dev/plans/0328-2026-09-02-installed-long-observation-canary.md)
+  P21 is installed/live accepted. Pre-answer expiry remains resumable, exact
+  progress identity overrides a stale synthetic runtime route, and the
+  remedial read-only attach recovered the same 1,800-line turn with zero
+  resend. PID/port, API restart count, and empty operation-lock state remained
+  stable. Skill CRUD may now open as a separate bounded lane.
+
+- Integrated ChatGPT skill lifecycle discovery:
+  [docs/dev/plans/0327-2026-09-02-chatgpt-skill-lifecycle-discovery.md](docs/dev/plans/0327-2026-09-02-chatgpt-skill-lifecycle-discovery.md)
+  P20 corrects label-only capability evidence. After explicit operator transfer
+  of the exact pre-existing `wsl-chrome-3` Chrome, one read-only attempt proved
+  separate skill/plugin routes, stable detail identity, inventory grouping,
+  owner/file/review surfaces, and separate invocation. All skill mutations and
+  invocation remain gated.
+
+- Integrated ChatGPT long-prompt observation recovery:
+  [docs/dev/plans/0326-2026-09-02-chatgpt-long-prompt-observation-recovery.md](docs/dev/plans/0326-2026-09-02-chatgpt-long-prompt-observation-recovery.md)
+  P19 separates observation-lease expiry from provider/model terminal state,
+  preserves exact active-turn evidence for read-only reattachment, and adds a
+  provider-free 15-minute same-conversation recovery guard. Provider-free
+  verification and non-forced main integration are accepted; installed/live
+  proof remains separate. It does not overlap P08's aggregate-status source
+  surface.
+
+- Integrated Git maintenance closeout:
+  [docs/dev/plans/0322-2026-08-29-git-maintenance-closeout.md](docs/dev/plans/0322-2026-08-29-git-maintenance-closeout.md)
+  P15 preserves the unfinished P08 and P14 lanes while removing only exact
+  clean, integrated worktree and branch custody. Final acceptance requires a
+  passing catalog audit and clean local/remote main parity.
+
+- Integrated ChatGPT timeout-unit and turn-control acceptance:
+  [docs/dev/plans/0321-2026-08-28-chatgpt-timeout-unit-and-turn-control-acceptance.md](docs/dev/plans/0321-2026-08-28-chatgpt-timeout-unit-and-turn-control-acceptance.md)
+  P14's strict duration parser, installed-runtime parity, authenticated app
+  inventory, exact same-turn canary, and owned-browser cleanup are accepted.
+  Non-forced `main` integration is complete at `1659bdbb`.
+
+- Integrated ChatGPT terminal-output selection repair:
+  [docs/dev/plans/0320-2026-08-27-chatgpt-terminal-output-selection.md](docs/dev/plans/0320-2026-08-27-chatgpt-terminal-output-selection.md)
+  P13 froze Plan 0319's recovered writing-block versus interruption-banner
+  evidence as a provider-free regression. It changes only the final response
+  representation selector, preserves ordinary substantive-DOM mismatch safety,
+  and proved installed-runtime parity before integration.
+
+- Integrated ChatGPT composer replacement and exact-turn proof:
+  [docs/dev/plans/0319-2026-08-27-chatgpt-composer-replacement.md](docs/dev/plans/0319-2026-08-27-chatgpt-composer-replacement.md)
+  P12 resolved the live-reproduced stale-draft concatenation defect. It replaces
+  user-authored text on the exact focused composer while preserving connected-app
+  pills, then requires exact pre-send and newly committed user-turn equality.
+  Provider-free repair and installation preceded one distinct fresh
+  Frakktal/LitScout experiment. P08 remains isolated and non-overlapping.
+
+- Completed CDP-observed ChatGPT approval recovery:
+  [docs/dev/plans/0318-2026-08-27-cdp-observed-chatgpt-approval-recovery.md](docs/dev/plans/0318-2026-08-27-cdp-observed-chatgpt-approval-recovery.md)
+  P11 instrumented the exact connected-app approval control and directly
+  observes/manipulates it through the real `wsl-chrome-3` DevTools port. It
+  resumes LitScout Project 15 / Session 73 rather than reconnecting OAuth or
+  creating new research state. P11 merged through `af13ca5a`; P08 remains
+  isolated and non-overlapping.
+
+- Completed durable ChatGPT approval acknowledgment repair:
+  [docs/dev/plans/0317-2026-08-27-durable-chatgpt-approval-acknowledgment.md](docs/dev/plans/0317-2026-08-27-durable-chatgpt-approval-acknowledgment.md)
+  P10 is installed and live-accepted. One Sol/High turn completed
+  `auth_session`, exact `Always allow`, and one deliberately nonexistent
+  mutation call without app reconnect, OAuth failure, or canonical write.
+  The overlapping provider-provenance lane and P09 were explicitly reconciled;
+  P10 then merged through `79a57806` without changing P08.
+
+- Completed urgent ChatGPT Project-slug Work-marker repair:
+  [docs/dev/plans/0316-2026-08-25-chatgpt-project-slug-work-marker.md](docs/dev/plans/0316-2026-08-25-chatgpt-project-slug-work-marker.md)
+  P09 owns the exact provider-local route normalization needed when ChatGPT's
+  loaded Project conversation URL includes a human-readable slug but its active
+  sidebar link uses the canonical project-ID-only route. Exact Project ID,
+  conversation ID, active-link, and Work-badge proof remain fail-closed. The
+  slice merged through `79a57806` after explicit reconciliation with
+  `fix/plan0444-provider-provenance` and does not overlap P08's aggregate-status
+  source surface.
+
+- Active aggregate status latency repair:
+  [docs/dev/plans/0315-2026-08-25-aggregate-status-latency.md](docs/dev/plans/0315-2026-08-25-aggregate-status-latency.md)
+  P08 owns a measured server-side repair for aggregate `/status` exceeding the
+  existing default five-second client budget. Three installed baseline probes
+  timed out in 7.2-7.8 seconds. Payload semantics, provider/browser behavior,
+  and live-follow policy remain frozen.
+
+- Completed bounded live-follow recovery:
+  [docs/dev/plans/0314-2026-08-24-bounded-live-follow-recovery.md](docs/dev/plans/0314-2026-08-24-bounded-live-follow-recovery.md)
+  P07 replaces the failed-live-follow zero-retry terminal with explicit
+  one-pass re-arm semantics, then owns current-runtime installation, no more
+  than three diagnosis-driven attempts, and one conditional scheduler resume.
+  Provider-free checkpoint `776556bf` merged through `af17fa89`. One installed
+  controlled pass advanced the retained completion from pass 1 to pass 2,
+  cleared its force ceiling/error, and cleaned exact browser ownership. One
+  scheduler resume then completed a normal `chatgpt/wsl-chrome-3` pass with no
+  backpressure; P07 is closed and live accepted.
+
+- Completed provider-free live-follow predicate and cleanup repair:
+  [docs/dev/plans/0313-2026-08-24-live-follow-predicate-cleanup-repair.md](docs/dev/plans/0313-2026-08-24-live-follow-predicate-cleanup-repair.md)
+  P06 owns the two source defects exposed by Plan 0312: the bounded ChatGPT
+  sidebar readiness timeout must enter its existing recovery path, and an
+  explicitly forced terminal live-follow pass must request managed-browser
+  cleanup. Exact RED/GREEN contracts, the affected tests, the 135-test ChatGPT
+  provider-free gate, typecheck, build, and scoped lint pass. Scheduler remains
+  paused; install, restart, browser/provider work, completion control, and
+  another canary remain excluded. Validated checkpoint `0bab4710` merged
+  through `a8a9f96e`.
+
+- Terminal scheduler-isolated live-follow cooldown canary:
+  [docs/dev/plans/0312-2026-08-24-scheduler-isolated-live-follow-canary.md](docs/dev/plans/0312-2026-08-24-scheduler-isolated-live-follow-canary.md)
+  Scheduler isolation succeeded and prevented fanout. The sole frozen control
+  instead failed at pass 1 on a 587 ms predicate timeout before creating a
+  fresh child, then retained its API-owned browser past the observation bound.
+  Exact orphan cleanup succeeded; scheduler remains paused and no retry ran.
+  Terminal checkpoint `193fd1e8` merged through `f133601e`.
+
+- Terminal installed live-follow cooldown canary:
+  [docs/dev/plans/0311-2026-08-24-installed-live-follow-cooldown-canary.md](docs/dev/plans/0311-2026-08-24-installed-live-follow-cooldown-canary.md)
+  The one install and API restart reached byte-exact current-build parity, but
+  the enabled scheduler created a different `wsl-chrome-3` completion before
+  the frozen manual control. P04 stopped under `C4_hard_stop`: no manual
+  control, retry, scheduler mutation, substitute-target use, or browser cleanup
+  ran. A successor requires explicit scheduler-isolation authority.
+  Terminal checkpoint `725b0433` merged through `0a54b7b5`.
+
+- Completed live-follow cooldown-abort repair:
+  [docs/dev/plans/0310-2026-08-24-live-follow-cooldown-abort-repair.md](docs/dev/plans/0310-2026-08-24-live-follow-cooldown-abort-repair.md)
+  Exact installed evidence proves a 120-second context deadline collides with
+  a 120-second fallback-renavigation cooldown, while history materialization's
+  custom governor sleep drops cancellation and can mutate shared pacing after
+  timeout. Plan 0310 is provider-free accepted and integrated:
+  per-read cancellation prevents late pacing state, and all snapshot/artifact/
+  file reads preserve the acquisition budget after their pacing allowance.
+  Validated checkpoint `c1da8609` merged through `828bb3f8`; installed-runtime
+  adoption and any exact live canary remain separate effect work.
+
+- Completed Oracle-native reliability adaptation campaign:
+  [docs/dev/plans/0309-2026-08-23-oracle-native-reliability-adaptations.md](docs/dev/plans/0309-2026-08-23-oracle-native-reliability-adaptations.md)
+  Oracle remains a non-authoritative research source. Plan 0309 accepts only
+  current AuraCall gaps with explicit tests: strict duration parsing, bounded
+  OpenRouter caching, atomic owner-only session storage, bounded Answer Now
+  placeholder recognition, explicit headless semantics, WSL loopback routing,
+  and unavailable thinking-tier handling. Cookie copying now requires explicit
+  opt-in; the Oracle MCP output-containment patch was not applicable because no
+  AuraCall MCP-controlled path reaches a write sink. Validated checkpoint
+  `b412b0bc` merged through `9c3486ad` with no installed or live effect.
+
+- Completed repository Git true-up and Oracle reference review:
+  [docs/dev/plans/0308-2026-08-22-repository-git-true-up-oracle-reference-review.md](docs/dev/plans/0308-2026-08-22-repository-git-true-up-oracle-reference-review.md)
+  Fresh fetches of `origin` and the Oracle-reference remote prove clean
+  `main == origin/main`, seven clean linked worktrees, 14 merged topic branches,
+  and three non-ancestral local branches. The Git remote named `upstream` points
+  to Oracle, which now serves a different purpose from AuraCall; its 517
+  Oracle-only commits are research input, not synchronization debt. The bounded
+  plan first restores the missing active-lane catalog and adjudicates exact
+  custody. A separate reference review may identify narrow cherry-pick
+  candidates or ideas worth adapting through AuraCall's own architecture.
+  Cleanup and Oracle-derived implementation remain separately gated actions.
+  Execution on `chore/plan0308-repository-true-up` has now published the full
+  custody/Oracle receipt, mapped the runtime-foundation commits, and resolved
+  the selector family by porting only the missing compact model-control
+  semantics. The catalog passed at `14104c21`, and validated feature checkpoint
+  `47d5e330` merged without conflict through `bdb15952`. A subsequent
+  authorized local cleanup removed seven auxiliary worktrees and 17 local
+  cleanup/archival branches. Remote refs and the historical compatibility ref
+  remain; Oracle-derived ideas remain separate future packets.
+
+- Completed installed ChatGPT Work-marker semantic repair:
+  [docs/dev/plans/0299-2026-08-21-chatgpt-work-marker-semantic-repair.md](docs/dev/plans/0299-2026-08-21-chatgpt-work-marker-semantic-repair.md)
+  Read-only live evidence proved ordinary Chat's `High` thinking control shares
+  `[data-animated-slider-trigger=true]`, while established Work is positively
+  marked by the active current-route conversation's exact `Work` badge. The
+  provider-local repair is pushed and installed byte-exact. Separate installed
+  no-prompt probes accept ordinary Chat and enter explicit Work; exact cleanup
+  preserved the authenticated browser.
+
+- Completed ChatGPT tool-approval acknowledgment repair:
+  [docs/dev/plans/0300-2026-08-21-chatgpt-tool-approval-acknowledgment.md](docs/dev/plans/0300-2026-08-21-chatgpt-tool-approval-acknowledgment.md)
+  LitScout Plan 0434 and retained DOM prove sequential approval cards in one
+  assistant turn collapsed to the same turn-prefix fingerprint: the first
+  action succeeded, then AuraCall mistook the next card for the old one. This
+  bounded successor fingerprints the exact current card without weakening
+  paired-action, one-click, ambiguity, manual, or `Answer now` safeguards, then
+  is pushed and installed byte-exact. Its real LitScout acceptance passed Send
+  but exposed a separate profile-lock lifetime defect before tool approval;
+  Plan 0301 owns that successor and Plan 0300 is not reopened.
+
+- Completed ChatGPT post-submit profile-lock repair:
+  [docs/dev/plans/0301-2026-08-21-chatgpt-post-submit-profile-lock.md](docs/dev/plans/0301-2026-08-21-chatgpt-post-submit-profile-lock.md)
+  The Plan-0435 foreground run released its shared managed-profile lock after
+  Send while still waiting for the response and connected-app approval. API
+  account-mirror refresh then acquired the same live Chrome profile and the CLI
+  lost CDP. This bounded successor keeps the existing lock until terminal
+  cleanup. The exact RED/GREEN, `77/77` affected tests, typecheck, lint, build,
+  full provider-free `2,944 passed / 65 skipped`, and current CodeGraph are
+  source-accepted. Pushed `736556d4` is installed byte-exact at
+  `53a9f3ed...c6ea`; API PID 23839 is healthy after the plan's sole restart.
+  A real browser lifecycle run held and terminally released the exact profile
+  operation, and the installed dispatcher blocked the exact account-mirror
+  owner until release. The separate LitScout acceptance live-proved that guard
+  and executed its action once, then exposed a distinct overall-timeout and
+  signal-cleanup defect. Plan 0302 owns terminalization; Plan 0301 is not
+  reopened.
+
+- Closed split-result ChatGPT overall-timeout and signal-cleanup repair:
+  [docs/dev/plans/0302-2026-08-21-chatgpt-overall-timeout-signal-cleanup.md](docs/dev/plans/0302-2026-08-21-chatgpt-overall-timeout-signal-cleanup.md)
+  LitScout Plan 0436 proved the foreground lock remained correct, but AuraCall
+  outlived `--timeout 60m` and normal SIGINT left its exact session, model,
+  managed Chrome, and browser-operation state nonterminal. This bounded
+  successor repaired one overall deadline plus one awaited, idempotent
+  terminal-cleanup seam and safely reconciled only the exact residue. Source,
+  installed byte parity, deterministic probes, and real 900-second cleanup are
+  accepted. The one no-write LitScout call executed exactly once, but AuraCall
+  returned no terminal assistant answer; Plan 0302 closes without integration
+  and Plan 0303 owns that distinct post-tool response failure.
+
+- Closed split-result ChatGPT post-tool terminal-response repair:
+  [docs/dev/plans/0303-2026-08-21-chatgpt-post-tool-terminal-response.md](docs/dev/plans/0303-2026-08-21-chatgpt-post-tool-terminal-response.md)
+  Plan 0302 live-proved safe timeout cleanup but the exact read-only LitScout
+  tool request was followed by no captured terminal assistant answer. This
+  source-first successor preserves the one-call/zero-write evidence, builds
+  deterministic post-tool fixtures, and adds bounded passive terminal-state
+  evidence without accepting tool or approval text as an answer. Pushed source
+  `28da74e5` is accepted: focused `10/10`, affected `1,030/1,030`, serial full
+  provider-free `2,952/2,952`, typecheck, lint, build, and current CodeGraph
+  pass. One idle-boundary install and one API restart are byte-exact and healthy;
+  corrected installed positive/no-answer fixtures pass. The distinct live
+  prompt made exactly one read-only LitScout call and terminalized cleanly, but
+  returned no answer. Its diagnostic proved an absolute turn floor of 15 while
+  ChatGPT later mounted only 12 virtualized turn nodes. Plan 0304 owns that
+  stable-boundary defect; Plan 0303 closes without integration.
+
+- Closed split-result ChatGPT virtualized turn-boundary repair:
+  [docs/dev/plans/0304-2026-08-21-chatgpt-virtualized-turn-boundary.md](docs/dev/plans/0304-2026-08-21-chatgpt-virtualized-turn-boundary.md)
+  Plan 0303 live-proved exactly one LitScout request, zero canonical mutation,
+  exact timeout cleanup, and a durable `12 < 15` boundary classification. This
+  source-first successor replaces count-only eligibility with stable pre-submit
+  assistant identity across DOM shrink/reindex, while keeping positional fast
+  paths and all stale/tool/approval exclusions fail-closed. Pushed source
+  `571514c9` is provider-free accepted: deterministic virtualization `13/13`,
+  focused browser `76/76`, serial full `2,956/2,956`, typecheck, lint, build,
+  CodeGraph, and diff hygiene pass. Installed byte parity and fixtures passed.
+  The one live prompt completed in 26.6 seconds with exactly one LitScout call
+  and clean terminalization, proving the stable boundary, but returned an
+  incorrect `1 keep` against canonical `12 keep`. Plan 0304 closes without
+  integration and Plan 0305 owns terminal representation fidelity.
+
+- Closed split-result ChatGPT terminal-response representation fidelity repair:
+  [docs/dev/plans/0305-2026-08-21-chatgpt-terminal-representation-fidelity.md](docs/dev/plans/0305-2026-08-21-chatgpt-terminal-representation-fidelity.md)
+  Plan 0304 proved tool execution and fresh terminal capture, then exposed a
+  smaller final-DOM/copied-Markdown disagreement that the local path ignores
+  unless the DOM is at least 12 characters longer. This source-first successor
+  now reconciles semantically equivalent formatting while preferring the final
+  stable DOM whenever substantive text differs. Pushed source `149d5bd1` is
+  accepted: focused `124/124`, affected `1,547/1,547`, serial full provider-free
+  `2,965/2,965`, typecheck, scoped lint, build, CodeGraph, planning audit, and
+  diff hygiene pass. Installed byte parity and fixtures pass. The sole live
+  submission failed safe when an account-mirror history-materialization cleanup
+  killed the adopted managed Chrome after its earlier refresh lock released.
+  Canonical LitScout state remained unchanged and no retry ran. Plan 0306 owns
+  the missing shared-operation fence; Plan 0305 closes without integration.
+
+- Closed accepted history-materialization managed-browser ownership repair:
+  [docs/dev/plans/0306-2026-08-21-history-materialization-browser-ownership.md](docs/dev/plans/0306-2026-08-21-history-materialization-browser-ownership.md)
+  Plan 0305 live-proved a false-idle window: account-mirror completion retained
+  provider work after its refresh operation file released, while history
+  materialization cleanup later killed all matching profile PIDs without the
+  shared file-backed browser-operation fence. This source-first successor must
+  serialize provider work and cleanup with foreground use of the exact profile.
+  Pushed product `929aec97` is source-accepted: exact-profile provider work and
+  cleanup now share one durable file-backed operation, busy foreground and
+  stale-recovery paths fail safe, the affected set is `372/372`, and the serial
+  full suite is `2,970/2,970`. Installed parity and the ownership fixture pass.
+  Its sole real browser run completed in 15.2 seconds without Chrome/CDP loss
+  and with exact cleanup. The frozen prompt made no LitScout call because it
+  prohibited the lazy transport-discovery call required to expose
+  `research_continue`; zero retry is preserved and only the readback criterion
+  carries forward.
+
+- Closed accepted LitScout discovery-aware readback acceptance:
+  [docs/dev/plans/0307-2026-08-21-litscout-discovery-aware-readback.md](docs/dev/plans/0307-2026-08-21-litscout-discovery-aware-readback.md)
+  Plan 0306 accepted the actual browser-ownership repair but exposed a narrower
+  gate-contract contradiction. This no-code successor explicitly permits only
+  transport discovery before exactly one read-only `research_continue` call.
+  It authorizes zero install/restart, one distinct submission, zero retries,
+  and requires exact `150 = 12 + 138`, one new LitScout request, zero canonical
+  mutation, and exact terminal cleanup.
+  The sole submission passed in 20.6 seconds: exact `150/12/138`, one LitScout
+  request (`50 -> 51`), unchanged receipts/actions/membership, completed
+  session/model state, and no browser/operation/history residue. The carried
+  AuraCall/LitScout reliability goal is accepted at installed product
+  `929aec97`; the accepted stack fast-forwarded to `main` at `f7e1aa73`.
+
+- Completed reused-browser provider-provenance repair:
+  [docs/dev/plans/0298-2026-08-21-reused-browser-provider-provenance-pid.md](docs/dev/plans/0298-2026-08-21-reused-browser-provider-provenance-pid.md)
+  A local ChatGPT run can reuse the exact live managed browser while its launch
+  handle omits PID, causing provider-session proof to fail despite a matching
+  account and target. The repair recovers only an exact-profile-validated
+  persisted PID; account/target proof and stale rejection remain fail-closed.
+  Pushed product `86ebba3e` is installed byte-exact and the installed resolver
+  recovers live exact-profile PID `58728`.
+
+- Source/install-completed but live-rejected ChatGPT implicit-Chat repair:
+  [docs/dev/plans/0297-2026-08-21-chatgpt-implicit-chat-conversation-mode.md](docs/dev/plans/0297-2026-08-21-chatgpt-implicit-chat-conversation-mode.md)
+  LitScout's enrichment-resume successor reached the exact existing
+  conversation but stopped before Send because that ready route omitted the
+  Chat/Work control. The provider-free repair recognizes only a visible,
+  enabled ChatGPT prompt editor with no explicit mode control and no Work
+  marker as implicit Chat; Work remains explicit and fail-closed. The first
+  installed acceptance exposed a second pre-Send race: the predicate ran before
+  the React composer mounted. The bounded 10-second exact-composer wait is
+  source-green, installed byte-exact, and verified by an installed delayed-mount
+  probe. Plan 0299 supersedes its rejected Work-marker assumption; any LitScout
+  successor remains separately governed.
+
+- Closed installed ChatGPT visible composer-target binding repair:
+  [docs/dev/plans/0296-2026-08-20-chatgpt-visible-composer-target-binding.md](docs/dev/plans/0296-2026-08-20-chatgpt-visible-composer-target-binding.md)
+  The installed upload repair cleared its original gate, but LitScout's sole
+  successor stopped before Send because AuraCall could focus a broad selector
+  candidate and then verify a different exact composer node. This bounded
+  repair makes one visible composer-owned node authoritative across focus,
+  fallback, and pre-Send verification. Any further Experiment 9 attempt remains
+  separately governed. Source and installed runtime are byte-exact at
+  `ddabb138`; the installed target-binding probe passes and the API is healthy.
+
+- Active ChatGPT local-upload surface independence repair:
+  [docs/dev/plans/0295-2026-08-20-chatgpt-local-upload-surface-independence.md](docs/dev/plans/0295-2026-08-20-chatgpt-local-upload-surface-independence.md)
+  LitScout Experiment 9 reached the authenticated workbench but AuraCall
+  stopped before transfer because local-upload readiness incorrectly required
+  the unrelated provider-library row. This bounded repair keeps the exact
+  local action and unrestricted input fail-closed while making library-row
+  metadata optional. No retry is authorized until pushed, installed acceptance
+  returns control to LitScout's fresh successor gate.
+
+- Closed accepted browser-launch runtime-authorization clone repair:
+  [docs/dev/plans/0294-2026-08-20-browser-launch-runtime-authorization-clone.md](docs/dev/plans/0294-2026-08-20-browser-launch-runtime-authorization-clone.md)
+  LitScout Experiment 9 exposed a pre-browser `structuredClone` failure when
+  the immutable launch-plan seam received live provider-session authorization
+  methods. The bounded repair keeps authorization on the runtime config,
+  excludes it only from the immutable launch snapshot, and passed pushed
+  provider-free acceptance plus one installed-runtime convergence. Source and
+  installed hashes match, the exact completion and browser owner survived the
+  restart, and the experiment remains unrun because its retry belongs to
+  LitScout's separate fresh request/activation gate.
+
+- Closed provider-free acceptance-main coverage closure:
+  [docs/dev/plans/0292-2026-08-15-provider-acceptance-main-tests.md](docs/dev/plans/0292-2026-08-15-provider-acceptance-main-tests.md)
+  This bounded successor closed Plan 0291's retained Medium by exercising
+  ChatGPT and Grok provider-main PASS, FAIL, cleanup, and ChatGPT
+  CLI-over-resume behavior through provider-local test adapters. The shared
+  harness remains a mechanics module. The focused packet passes 11/11 plus
+  typecheck, build, scoped lint, help smokes, CodeGraph, plan audit, and diff
+  hygiene.
+
+- Closed accepted sequential architecture deepening campaign:
+  [docs/dev/plans/0291-2026-08-15-architecture-deepening-campaign.md](docs/dev/plans/0291-2026-08-15-architecture-deepening-campaign.md)
+  The operator selected all four architecture-review candidates in order and
+  delegated detailed planning, execution, testing, and one independent audit
+  to an orchestrated subagent workflow. The campaign permits one audit/repair
+  cycle total; only unresolved High-severity findings block completion and all
+  lower-severity unresolved findings become durable notes. Candidate 1,
+  browser launch resolution, is provider-free accepted after one independent
+  High routing defect was repaired and closed-world reverified. Candidate 2,
+  provider prompt execution, is also provider-free accepted after URL-routing
+  and attachment fail-closed defects were repaired and independently
+  reverified. Candidate 3, one materialization attempt, is provider-free
+  accepted with durable receipt-first accounting and fail-closed evidence
+  persistence. Candidate 4 is provider-free accepted: ChatGPT and Grok now
+  share one locally substitutable process/deadline/output/JSON/state/evidence
+  harness while their phases, assertions, guard/retry, and cleanup policies
+  remain provider-local. The sole integrated audit found zero High findings;
+  its retained Medium C4 dynamic-orchestration coverage gap was subsequently
+  closed by Plan 0292. The full provider-free suite passed 2,922 tests, and the
+  campaign remains closed.
+
+- Closed failed-safe two-sequential-approval LitScout live proof:
+  [docs/dev/plans/0289-2026-08-15-chatgpt-two-sequential-litscout-approvals.md](docs/dev/plans/0289-2026-08-15-chatgpt-two-sequential-litscout-approvals.md)
+  The sole prompt reached the first approval, but its trusted pointer sequence
+  did not dismiss the still-enabled surface within the confirmation window.
+  AuraCall failed closed before connector dispatch or a second approval. Zero
+  LitScout effects and exact cleanup passed; a provider-free pre-click
+  settle/fresh-coordinate repair is required before a successor canary.
+
+- Closed provider-free accepted ChatGPT approval settle; live proof inconclusive:
+  [docs/dev/plans/0290-2026-08-15-chatgpt-approval-pre-click-settle.md](docs/dev/plans/0290-2026-08-15-chatgpt-approval-pre-click-settle.md)
+  A provider-free public-seam regression will require a stable exact re-probe
+  and fresh coordinates before one trusted pointer sequence. After the repair
+  is green and pushed, one fresh zero-retry LitScout prompt may prove two
+  sequential `Allow once` actions with zero canonical effects.
+  Repair `d949935d` is pushed after 143/143 affected tests plus typecheck,
+  build, scoped lint, current CodeGraph, and diff hygiene. The sole live prompt
+  confirmed one exact `Allow once` and returned the expected token, but its
+  singular provider trace and absent rendered target evidence did not prove a
+  second call or approval. Zero LitScout effects and exact cleanup passed; no
+  retry ran.
+
+- Closed accepted browser-context liveness repair and LitScout approval proof:
+  [docs/dev/plans/0288-2026-08-15-browser-context-liveness-litscout-approval-proof.md](docs/dev/plans/0288-2026-08-15-browser-context-liveness-litscout-approval-proof.md)
+  Pushed repair `da7961be` removes live provider probes from optional pre-run
+  cache context while preserving the actual browser identity gate. The second
+  bounded source-direct canary logged exact `Allow once`, confirmed approval
+  disappearance, returned the expected LitScout token, and left zero exact
+  target, cancellation, operator-action, or canonical-write rows. Exact tab,
+  lease, service, and browser cleanup passed.
+
+- Closed failed-safe one-shot LitScout `allow-once` live canary:
+  [docs/dev/plans/0287-2026-08-15-litscout-tool-approval-live-canary.md](docs/dev/plans/0287-2026-08-15-litscout-tool-approval-live-canary.md)
+  The sole source-direct run timed out before `runBrowserMode`, prompt
+  submission, approval detection, or connector use. Cleanup passed with the
+  retained API/browser unchanged and every downstream effect zero. CodeGraph
+  localizes the blocker to unbounded pre-run cache identity/feature discovery;
+  the approval handler remains provider-free only.
+
+- Closed accepted provider-free ChatGPT third-party tool approval policy:
+  [docs/dev/plans/0286-2026-08-15-chatgpt-tool-approval-policy.md](docs/dev/plans/0286-2026-08-15-chatgpt-tool-approval-policy.md)
+  AuraCall detects exact paired `Allow once` / `Always allow` pauses during
+  post-submit response waiting and takes only the operator-configured action.
+  Manual remains fail-closed. The 238-test affected gate, typecheck, build,
+  scoped lint, CodeGraph, planning audit, and diff hygiene pass at source
+  candidate `4ce634c5`; live DOM proof remains a separately authorized canary.
+
+- Closed accepted provider-free ChatGPT developer-app exact auth binding repair:
+  [docs/dev/plans/0285-2026-08-14-developer-app-exact-auth-binding.md](docs/dev/plans/0285-2026-08-14-developer-app-exact-auth-binding.md)
+  LitScout governance proved a replacement app inherited `ACTIVE` only because
+  AuraCall joined a retained same-name OAuth link. The bounded source slice
+  removes display-name auth joining and fails closed on missing or ambiguous
+  exact identity. The 221-test affected gate, typecheck, build, lint, and
+  CodeGraph pass at pushed source candidate `0c9110e4`; every install, browser,
+  provider, and canonical effect remained zero.
 
 - Active audit-prefix freshness repair:
   [Plan 0356](docs/dev/plans/0356-2026-09-10-chatgpt-audit-prefix-freshness.md).
@@ -4043,3 +4685,5 @@ See [docs/dev/browser-service-upgrade-backlog.md](docs/dev/browser-service-upgra
   successfully. The first pass advanced four detail conversations with no
   provider guard and handed off to one `idle_waiting` completion under normal
   cadence.
+
+- P18 remains paused: [Plan 0325](docs/dev/plans/0325-2026-09-01-installed-history-materialization-fairness-canary.md), now held on a stable published operational branch; no live allowance was used by maintenance.

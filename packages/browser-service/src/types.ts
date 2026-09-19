@@ -47,6 +47,7 @@ export interface BrowserRuntimeMetadata {
   userDataDir?: string;
   chromeTargetId?: string;
   tabUrl?: string;
+  observedModel?: string | null;
   composerTool?: string | null;
   thinkingTime?: string;
   chatgptProMode?: string;
@@ -140,7 +141,6 @@ export interface BrowserAutomationConfig {
 
 export interface BrowserRunOptions {
   prompt: string;
-  abortSignal?: AbortSignal;
   attachments?: BrowserAttachment[];
   attachmentMode?: 'inline' | 'upload' | 'bundle';
   completionMode?: 'assistant_response' | 'prompt_submitted';
@@ -158,6 +158,8 @@ export interface BrowserRunOptions {
   browserOperationOwnerCommand?: string | null;
   /** Optional hook to persist runtime info (port/url/target) as soon as Chrome is ready. */
   runtimeHintCb?: (hint: BrowserRuntimeMetadata) => void | Promise<void>;
+  /** Cancels the complete browser run, including cleanup and operation-lock release. */
+  abortSignal?: AbortSignal;
 }
 
 export interface BrowserRunResult {
@@ -173,6 +175,7 @@ export interface BrowserRunResult {
   userDataDir?: string;
   chromeTargetId?: string;
   tabUrl?: string;
+  observedModel?: string | null;
   composerTool?: string | null;
   thinkingTime?: string;
   chatgptProMode?: string;

@@ -1,3 +1,7 @@
+> Reconciliation note (2026-09-14): local fixes and lessons are preserved first;
+> independently added upstream entries follow. Repeated dates may describe
+> separate work and are not evidence of current installed behavior.
+
 - 2026-09-10: Structured audits can share long JSON prefixes without being stale.
   Distinct assistant message IDs now suppress only the prefix heuristic; reused
   message/turn IDs, identical text and baseline suffixes remain rejected. Both
@@ -323,6 +327,202 @@
   contract. Keep presentation labels at the UI boundary, but derive every
   accepted or advertised value plus the default from the shared tuple so a
   newly added adapter cannot create silent cross-surface drift.
+
+> Upstream fixes and lessons retained from `origin/main`:
+
+- 2026-09-11: A test suite labeled provider-free is not proof of zero browser
+  effects. After broad or full validation, run a fresh OS process/cwd census.
+  P37's first full suite unexpectedly left managed Chrome at `about:blank` with
+  its cwd in the topic worktree even though focused and affected tests were
+  provider-free. Do not attach, terminate, or remove the owned worktree without
+  separate authority; record the PID, port, browser profile, start time, and
+  exact cleanup gate.
+
+- 2026-09-11: ChatGPT's current animated `6 Pro` option can close the model
+  menu without mounting a checked marker. Explicit selection must remember the
+  exact targeted non-submenu click and may settle only when the menu closes and
+  the composer-scoped trigger independently scores as the requested model. Put
+  the terminal timeout before match/navigation branches so a persistently
+  mounted matching row cannot bypass it. For Deep Research Word/PDF exports,
+  never await a page-owned timer in the same CDP evaluation that opens Export:
+  the iframe transition can collect that Promise. Return synchronously after
+  opening the menu, close the scoped binding, and reacquire a fresh target and
+  execution context before synchronously clicking the exact export option.
+
+- 2026-09-02: Observation-expired reattachment must reconcile runtime identity
+  from the final positive progress readback before any fallback navigation.
+  ChatGPT can expose the real `/c/<id>` location while the last emitted runtime
+  hint still contains a synthetic `WEB:...` route. Accept only a validated
+  `https://chatgpt.com/.../c/<id>` progress URL, replace only the persisted
+  URL/conversation fields, and preserve the exact DevTools target and port.
+  Apply the same reconciliation when reading an already-stranded Session so
+  recovery never navigates to the stale synthetic route.
+
+- 2026-09-02: Keep long-prompt browser retention separate from manual-clear
+  preservation. Observation expiry is resumable with a visible Stop control,
+  no completion/dialog signal, and exact browser plus conversation identity,
+  including before ChatGPT mounts the first assistant node. Once mounted,
+  non-empty assistant text remains positive progress evidence. Persist that
+  Session/model run as running, leave
+  the managed browser open for read-only reattachment, and never pass this
+  condition through the Cloudflare/CAPTCHA error wrapper. Recovery refreshes
+  require stale or interrupted progress, target the same conversation, and use
+  one 15-minute Runtime cooldown.
+
+- 2026-09-02: A browser observer deadline is not a model deadline. LitScout
+  Experiment 51 reached AuraCall's 3,600-second wait with 33,688 assistant-text
+  characters and active-generation evidence, then completed without another
+  Send and was recovered by read-only reattachment. Preserve active generation
+  as resumable, reuse runtime evidence and response-progress instrumentation,
+  and separate renewable observation from terminal model state. A guarded
+  same-conversation refresh may run no more frequently than every 15 minutes
+  when connection liveness is stale; it must never replay the prompt.
+
+- 2026-09-02: ChatGPT skill visibility is not skill lifecycle proof. Existing
+  workbench discovery can report skill labels and existing attachment ZIPs can
+  support development, but mature managed skills need discovery-first,
+  exact-account identity/version readback and separately guarded
+  install/create, update/replacement, enable/disable, uninstall/delete, and
+  invocation semantics. Keep skill CRUD distinct from developer-app CRUD and
+  never infer installation or use from a visible label alone.
+
+- 2026-08-23: Rebuilding browser list options must preserve provenance from the
+  same `LlmService` when the resolved DevTools endpoint is unchanged. The
+  projects CLI intentionally prebuilds options for cache identity, then passes
+  them through `listProjects`, which builds again. Treating explicit host/port
+  as provenance-free dropped the managed browser profile and process ID even
+  though ChatGPT returned the exact expected account. Reuse only an
+  authorization created by the same service authority at the same endpoint;
+  discard foreign-authority or changed-endpoint provenance fail-closed.
+
+- 2026-08-27: A stable ChatGPT approval card after an exact CDP coordinate
+  sequence is not proof that the connector authentication lapsed. Live
+  LitScout receipts showed `auth_session` succeeded while the mutation tool
+  never began, proving the coordinate action missed. Bind the single action to
+  the settled exact DOM control, focus and invoke it inside a CDP user-gesture
+  evaluation, and retain the same identity, ambiguity, paired-label, and
+  one-attempt fences.
+
+- 2026-08-27: Do not classify ChatGPT's third-party tool-consent card as an
+  OAuth authentication lapse. A successful approval can synchronously promote
+  a new exact `tool-approval-card` with identical visible text, so fingerprint
+  comparison alone cannot distinguish replacement from the unchanged clicked
+  card. Assign each mounted exact card a stable page-lifetime WeakMap identity;
+  acknowledge disappearance or a new DOM identity, and retain the one-click
+  fence for the same identity. Never use this identity to broaden paired-label,
+  manual, ambiguity, or `Answer now` safeguards.
+
+- 2026-08-25: ChatGPT can load a Project conversation at
+  `/g/<project-id>-<slug>/c/<conversation-id>` while its visible active sidebar
+  link uses `/g/<project-id>/c/<conversation-id>`. A byte-identical pathname
+  test rejects the genuine active `Work` badge and blocks AuraCall before Send.
+  Canonicalize only this provider-owned route pair: require one visible
+  `data-active` link, the same exact `g-p-...` Project ID, the same exact
+  conversation ID, and a descendant span whose normalized text is exactly
+  `Work`. Different Projects/conversations and generic Work text remain
+  fail-closed. Established Work can also omit its Chat/Work control while still
+  showing the dedicated animated model pill. Work-model confirmation must reuse
+  the exact active-conversation Work proof before accepting that pill; the pill
+  alone is shared with Chat and remains insufficient.
+
+- 2026-08-24: A surviving managed-browser listener proves process ownership,
+  not completion liveness. A completion can fail and release its provider-work
+  lease while its API-owned Chrome remains healthy on the configured DevTools
+  port. Bind terminal monitoring to both the persisted parent/job state and
+  exact process ownership; after proving zero active jobs and released work,
+  classify the retained process as an exact orphan and clean only that PID.
+  Scheduler isolation prevents autonomous fanout but does not repair a
+  sub-second predicate timeout or failed-run cleanup.
+
+- 2026-08-24: Treat an enabled account-mirror scheduler as an active race across
+  user-runtime service restart. A healthy replacement API can immediately
+  create a new completion and own the managed browser before a frozen manual
+  canary control is issued. If acceptance requires one exact preselected
+  completion, the packet must explicitly own scheduler isolation before the
+  restart and re-read completion/browser ownership afterward; otherwise any
+  autonomous substitute completion is a terminal hard stop, not canary proof.
+
+- 2026-08-24: Bind shared browser-interaction admission to the active provider
+  read, not only to a governor-wide lifetime. Race custom deterministic sleeps
+  against that signal and recheck cancellation before publishing timestamps so
+  a timed-out target cannot poison the next target. When pacing happens inside
+  a context read, budget `default acquisition deadline + maximum configured
+  pacing allowance` across every snapshot/artifact/file entry path; equal
+  cooldown and total deadline values make timeout deterministic.
+
+- 2026-08-24: Never configure a provider-read deadline equal to a required
+  interaction cooldown when fallback acquisition occurs inside that deadline.
+  A direct ChatGPT payload miss can enter renavigation pacing with less than
+  the full deadline remaining, making timeout deterministic even though the
+  payload fetch and CDP evaluation are locally bounded. Preserve the abort
+  signal when injecting a custom interaction-governor sleep; otherwise the
+  caller can fail closed while the detached cooldown later mutates shared
+  pacing state and poisons the next target. Provider-free coverage must combine
+  a cooldown longer than the remaining read budget, caller abort, no late
+  governor timestamp advance, and a prompt subsequent admission.
+- 2026-08-23: Archive and account-mirror reads must isolate inaccessible local
+  assets. A stale or unavailable mount (`ENODEV`, `ESTALE`, `EIO`, `EACCES`,
+  or `EPERM`) is evidence that one indexed asset cannot currently be read; it
+  must not abort search or exact catalog-item materialization for unrelated
+  evidence. Record the path and error code on that item, omit its checksum and
+  size, and keep unexpected errors fail-closed.
+
+- 2026-08-21: Treat browser `--timeout` and process signals as one owned,
+  cooperative session lifecycle. A CLI-level SIGINT race or browser-local
+  hard exit can bypass `finally`, strand the managed Chrome/operation lock, and
+  leave session/model metadata falsely `running`. Start one absolute browser
+  deadline before provider execution, propagate its abort signal through lock
+  queueing, launch, DevTools, and response waits, bound terminal cleanup, and
+  persist timeout as `error` versus operator interruption as `cancelled` before
+  the CLI exits. Node signal listeners receive no signal-name argument, so bind
+  one closure per signal rather than recording an undefined reason.
+
+- 2026-08-21: A successful connected-app tool request and clean browser
+  timeout do not prove AuraCall can return the terminal assistant answer.
+  Preserve exact one-call evidence, distinguish provider no-prose from
+  extractor drift, and capture a bounded passive final response-state
+  classification before cleanup. Never promote tool-card text, approval
+  labels, status copy, user text, or stale prior-turn prose into the answer.
+
+- 2026-08-21: Bind ChatGPT tool-approval fingerprints to the exact current
+  `data-testid="tool-approval-card"`, not the first 500 characters of its
+  containing assistant turn. ChatGPT can emit several approval cards in one
+  turn; a successful first action and a newly promoted second action otherwise
+  share the same prefix and are misclassified as one unconfirmed card. Preserve
+  the exact paired `Allow once` / `Always allow` classifier, pre-click settle,
+  one trusted pointer sequence, ambiguity/manual fail-closed behavior, and the
+  unchanged-card one-attempt fence. Provider-free proof must include both the
+  exact-card fingerprint regression and two sequential same-turn cards.
+
+- 2026-08-15: Best-effort browser cache-context enrichment must not be an
+  unbounded prerequisite for a one-shot prompt. `buildBrowserContext()` calls
+  `resolveCacheIdentity()` before `runBrowserMode()`; catching a provider
+  identity or feature-signature rejection does not help when the promise never
+  settles. Give those reads a positive local deadline or skip live detection
+  when a configured identity is sufficient, so the browser operation lock,
+  prompt lifecycle, and their diagnostics can become reachable.
+  The prompt CLI now uses a dedicated non-interactive identity seam that sets
+  `detect=false` and `skipFeatureSignature=true`; live identity enforcement
+  remains in the actual browser-run preflight.
+
+- 2026-08-15: Treat ChatGPT third-party tool approval as an explicit operator
+  policy, never generic auto-consent. Require one visible surface containing
+  the exact paired `Allow once` and `Always allow` actions, select only the
+  configured label through trusted pointer input, and confirm disappearance.
+  Retain the fingerprint fence when confirmation fails, but release it after a
+  confirmed disappearance so a later legitimate call with identical visible
+  text can proceed. Keep `manual` fail-closed and never match `Answer now`.
+  Live validation must use a tool descriptor that actually requires approval:
+  read-only tools may execute without presenting the consent surface. The
+  accepted LitScout canary used one mutation-annotated action against an exact
+  nonexistent target, then proved `Allow once`, disappearance, expected
+  completion, and zero provider-side writes.
+
+- 2026-08-14: Never bind ChatGPT developer-app auth status by display name.
+  Replacement apps can retain the old app's name while receiving a new id, so
+  a same-name fallback can falsely transfer ACTIVE or REAUTH_REQUIRED state.
+  Require exactly one normalized app-id/connector-id match and return null for
+  missing or ambiguous matches.
 
 - 2026-08-14: A whole-operation deadline can release a browser-operation lease
   while leaving its underlying DevTools attachment uncancellable and
@@ -21893,6 +22093,52 @@ browser-stage lifecycle observability, not transcript truncation.
   The managed profile directory remains AuraCall-owned and is passed by exact
   path without copying or conversion.
 
+## 2026-08-15 | Approval coordinates must be fresh at pointer dispatch
+
+- Detecting one exact ChatGPT approval surface does not prove that its first
+  measured button center remains current while the provider finishes laying
+  out the dialog. A trusted pointer sequence can become a no-op even though
+  the same enabled surface remains visible afterward.
+- Before the sole allowed click, wait briefly and re-probe the same exact
+  fingerprint and configured action. Use only the fresh coordinates; changed
+  or ambiguous state must dispatch zero pointer events, while independent
+  disappearance requires no action.
+- Keep the post-click disappearance check and one-attempt fingerprint fence.
+  A settle repair must never become permission for a second click.
+
+## 2026-08-15 | Explicit browser selection must invalidate flattened profile fields
+
+- A resolved top-level `browser` record may contain fields projected from the
+  currently selected browser profile. Reusing that record while explicitly
+  selecting a different AuraCall runtime profile or browser profile can report
+  the new identity yet launch with the old executable, display, managed path,
+  source profile, or port policy.
+- At the deep browser launch plan boundary, distinguish service/request fields
+  from browser-profile-owned fields. When selection identity genuinely changes,
+  discard the stale profile-owned projection before applying the newly selected
+  profile; when intent merely restates the current identity, preserve legitimate
+  advanced overrides.
+- Test the final public plan, not only intermediate profile records. Assert that
+  selection identity, browser profile, managed browser profile, provider
+  binding, and launch policy agree, and retain a same-identity compatibility
+  case beside the changed-identity regression.
+
+## 2026-08-15 | Provider prompt launch and destination must share one URL decision
+
+- Resolving a browser target from method/list options while independently
+  planning a provider prompt from a direct URL can attach to one provider page
+  and dispatch toward another. Resolve the URL precedence once and pass the
+  same value through browser target resolution, destination planning, and the
+  provider adapter.
+- Prompt fields that a provider cannot honor must fail closed before browser
+  connection or mutation. Forwarding attachments into a generic adapter type
+  is insufficient when a concrete provider ignores them; support them
+  explicitly or reject them with a stable provider-specific error.
+- Exercise each real adapter's prompt path provider-free. A shared seam test
+  cannot prove authorization-before-mutation, progress, result projection, or
+  cleanup inside Gemini, Grok, or ChatGPT, and progress events alone do not
+  prove mutation ordering.
+
 ## 2026-08-13 | Bound developer-app inventory at the operation boundary
 
 - Per-stage CDP timeouts are necessary but cannot prove that a composite
@@ -21904,6 +22150,8 @@ browser-stage lifecycle observability, not transcript truncation.
   timeout cannot misreport an ambiguous provider mutation.
 - A regression should use a never-resolving adapter read and close, proving the
   outer promise settles without a browser or provider action.
+
+> Additional local branch fixes and lessons retained during reconciliation:
 
 ## 2026-08-14 | Remote viewing and browser authority are separate contracts
 
@@ -22425,3 +22673,783 @@ browser-stage lifecycle observability, not transcript truncation.
   browser retry passed. The retry reduced 21 sources to one upload, produced
   equivalent DOCX/PDF artifacts, passed independent and Codex release audits,
   and preserved the Agent Browser session, profile, and PID.
+
+> Additional upstream fixes and lessons retained from `origin/main`:
+
+## 2026-08-15 | Materialization accounting must follow an accepted attempt receipt
+
+- Advancing selected counts, target budgets, asset budgets, or provider-guard
+  control directly after a provider callback couples reconciliation policy to
+  refresh, verification, and persistence ordering. A provider result is not an
+  accepted attempt until its selected target and metrics are verified and all
+  required Account Mirror evidence writes complete.
+- Carry one immutable selected handoff through refresh and every provider pass,
+  reuse one exact work context within that attempt, and return one receipt that
+  owns phase projection plus accounting. Outer reconciliation consumes only
+  that receipt; verification or evidence failure must publish neither a result
+  nor a receipt.
+- Preserve global eligibility and candidate-funnel policy outside the attempt.
+  This keeps eligible, selected, and materialized meanings distinct while the
+  attempt remains the single locality for provider-work acceptance.
+
+## 2026-08-15 | Acceptance process mechanics belong behind one local harness
+
+- ChatGPT and Grok acceptance runs had independently accumulated the same
+  synchronous child-process setup, timeout and buffer policy, output joining,
+  exit interpretation, and JSON diagnostics. ChatGPT also carried compatible
+  version-1 resume/checkpoint and final-evidence mechanics.
+- Keep those stable mechanics behind one locally substitutable
+  `browserAcceptanceHarness`, with injected process, filesystem, and clock
+  dependencies for provider-free tests. Preserve exact command, error, and
+  output behavior.
+- Do not turn the harness into a provider workflow engine. Phase declarations,
+  commands, assertions, retry/guard rules, provider cleanup decisions, CLI
+  presentation, and summary fields stay in the ChatGPT and Grok scripts; do not
+  invent Grok state or resume behavior merely because the shared harness can
+  support optional state.
+
+## 2026-08-15 | Executable acceptance scripts must be import-safe test modules
+
+- A provider-main test that imports an executable script can trigger its
+  top-level `main()` before the test reaches an injected seam. Guard direct
+  execution by exact script-path identity before adding dynamic imports.
+- Keep the injected main adapter provider-local. Replace provider execution and
+  cleanup commands in tests while exercising real argument resolution,
+  checkpoint/final evidence ordering, PASS/FAIL presentation, and cleanup
+  policy; do not promote those concerns into the shared mechanics harness.
+- Make import safety part of the focused contract. A red tracer that starts a
+  real provider command is a test-isolation failure: stop, verify exact owned
+  processes/local state, and issue no further provider command without explicit
+  authority.
+
+## 2026-08-20 | Chrome basic password-store cannot suppress PAM keyring prompts
+
+- A visible keyring modal alongside browser automation does not prove a managed
+  browser profile ignored `--password-store=basic`. Attribute the prompt from
+  process flags and system logs before reseeding or closing authenticated
+  browsers.
+- Linux account maintenance can invoke `pam_gnome_keyring` independently. In
+  this incident, recurring RDP route-user `chpasswd` calls caused the modal
+  while all browser roots had both basic-password-store flags.
+- Privileged route-user maintenance must select a non-PAM password-encryption
+  path and publish that capability as part of helper readiness. Byte-compatible
+  helper retention is unsafe when the missing semantic capability is precisely
+  what prevents an interactive prompt.
+- Disposable test browsers must be identified by exact PID and user-data
+  directory. Close only `/tmp/auracall-vitest-*` owners; preserve authenticated
+  `~/.auracall/browser-profiles/...` roots and verify their provider-session
+  authority separately from Google or Chrome account identity.
+- A stopped but enabled timer is not a durable quarantine when another runtime
+  component can regenerate its unit symlinks. Until the privileged helper is
+  upgraded, mask the exact timer and verify `LoadState=masked` plus
+  `ActiveState=inactive`; unmask and re-enable it only after helper capability
+  readback passes.
+
+## 2026-08-20 | Durable job failure and completion failure are different decisions
+
+- A durable materialization job can correctly remain `failed` when any selected
+  retryable transfer fails, even though the same receipt proves other selected
+  assets materialized. That job status preserves operator-visible failure
+  evidence; it does not by itself prove the whole completion attempt failed.
+- Completion policy must consume the receipt counts. Block when a failed job
+  has zero verified materializations or no usable result; preserve positive
+  materialization evidence and continue through the normal live-follow quiet
+  window when the result is partial success.
+- Keep both contracts independently tested: the history-materialization module
+  still marks mixed transfer results failed, while the completion module
+  distinguishes partial success from all-failed before changing lifecycle
+  state.
+
+## 2026-08-20 | Immutable launch plans must exclude live authorization capabilities
+
+- `ProviderSessionAuthorization` carries authority methods and an optional
+  proof callback. It is live runtime capability state, not serializable browser
+  launch policy; passing it to `structuredClone` fails before Chrome opens.
+- Keep authorization on the runtime browser config used by provider identity
+  gates. Remove only that optional field before cloning and freezing the launch
+  snapshot so the planner cannot freeze, duplicate, or weaken the live proof
+  channel.
+- Regress this at the public launch-plan seam with a real authorization object,
+  and prove both snapshot exclusion and continued callability of the original
+  authority.
+
+## 2026-08-20 | Local uploads must not depend on provider-library inventory
+
+- ChatGPT's `Add photos & files` local action and `Add from library` provider
+  drawer are independent workbench capabilities. Requiring both before local
+  upload creates a false-negative readiness gate when only the library row is
+  absent.
+- Keep the local-upload resolver fail-closed on its own exact action and one
+  unrestricted, multiple `#upload-files` input. Treat the exact library row as
+  optional observational metadata because no local transfer consumes it.
+- Regress the distinction through the resolver's public test seam and retain
+  negative coverage for missing local actions and restricted inputs.
+- 2026-08-20: Prompt insertion and verification must share one exact visible
+  composer target. A selector list that focuses its first broad textarea but
+  verifies only `#prompt-textarea` can fail after valid attachment setup and
+  app selection, or worse, insert into an unrelated field. Enumerate matches,
+  reject hidden/disabled/non-composer candidates, prefer current exact inputs,
+  and carry the selected node identity through fallback and pre-Send checks.
+
+- 2026-08-21: An established ChatGPT conversation can expose a ready
+  `#prompt-textarea` while omitting both known Chat/Work controls. Treat only a
+  visible, enabled, exact ChatGPT prompt editor with no visible Work slider
+  marker and no explicit mode controls as implicit Chat. Never infer Work from
+  composer readiness; an explicit Work request remains fail-closed.
+- 2026-08-21: Conversation navigation can complete before ChatGPT mounts the
+  prompt editor. When implicit Chat is the only admissible mode, poll only the
+  exact enabled ChatGPT composer for a bounded 10 seconds and stop early on a
+  visible Work marker; do not weaken the selector or infer Work.
+- 2026-08-21: A reused managed-browser handle may omit PID even while the exact
+  profile retains a live PID and DevTools target. For provider-session proof,
+  recover that persisted PID only after validating it against the exact managed
+  profile; never relax the account dimensions or target binding.
+- 2026-08-21: `[data-animated-slider-trigger=true]` is not a Work-mode marker;
+  ordinary Chat uses it for the visible thinking-level control such as `High`.
+  Require live-observed Work-specific semantics and test Chat-with-High before
+  treating any selector as a mode discriminator.
+- 2026-08-21: Established ChatGPT Work conversations expose a positive mode
+  proof outside the shared slider: the visible active conversation link whose
+  resolved `href` pathname equals `location.pathname` contains a descendant
+  `span` with exact normalized text `Work`. Use that proof to accept explicit
+  Work and reject implicit Chat. If it is absent, keep explicit Work fail-
+  closed; do not substitute model labels, thinking depth, or stale rail rows.
+- 2026-08-21: A ChatGPT Send is not the end of the managed-profile operation.
+  Response polling, connected-app approval, deep-research plan handling, and
+  final answer extraction still own the same CDP target. Keep the existing
+  profile-wide browser operation until terminal cleanup so account-mirror
+  refresh or another same-profile owner cannot disconnect active foreground
+  work; browser retention policy remains independent of lock lifetime.
+- 2026-08-21: A pre-submit conversation-turn count is only a positional hint,
+  not a stable response identity. ChatGPT may virtualize or reindex the DOM
+  after a connected-app call. Carry the last assistant message ID, turn ID, and
+  bounded text fingerprint across every response-reader seam; accept a changed
+  stable identity only when positional bounds are invalid, and reject matching
+  baseline text even if its DOM identity changed.
+
+## 2026-08-23 | Reconcile stale branches by semantics, not commit count
+
+- Two non-ancestral branches can report multiple patch-unique commits while
+  carrying the same functional change plus different plan-history commits.
+  Compare stable patches and current behavior before treating each commit as
+  missing product work.
+- Split stale mixed patches by current semantics. Here, later mainline work
+  already covered compact thinking-time controls, while compact and
+  aria-label-backed model controls were still absent. Port only the missing
+  slice into the current architecture and current tests.
+- Preserve the old refs until cleanup is explicitly authorized. A successful
+  semantic port establishes an archival disposition; it does not itself grant
+  branch or worktree deletion authority.
+
+## 2026-08-23 | Duration tokens and credential-indexed caches need explicit bounds
+
+- A global duration regex can skip arbitrary text between otherwise valid
+  tokens. Require each match to begin exactly where the previous match ended;
+  checking only the final regex index does not reject prefixes or internal
+  gaps.
+- TTL alone does not bound a map when each credential creates a distinct cache
+  key. Remove expired entries and enforce a deterministic maximum population
+  after insertion so short-lived or rotated API keys cannot accumulate for the
+  life of the process.
+- Regress both boundaries directly: malformed token gaps must return the
+  caller's fallback, and inserting key 21 into a 20-entry cache must evict the
+  oldest key.
+
+## 2026-08-23 | Session identity and artifact privacy must be filesystem-enforced
+
+- Checking whether a slug exists and creating its directory later is a TOCTOU
+  race. Reserve the final directory atomically with non-recursive `mkdir` and
+  retry only exact `EEXIST` collisions.
+- Session prompts, attached context, metadata, and model output are sensitive.
+  Create directories/files as `0700/0600`, and explicitly repair modes because
+  create-time modes do not tighten an existing entry.
+- Migrations must use `lstat` and skip symlinks so permission hardening never
+  crosses the session-storage boundary. Same-directory owner-only replacement
+  also avoids partially written JSON and replaces a target symlink rather than
+  following it.
+
+## 2026-08-23 | Treat disabled browser choices as state, not failed clicks
+
+- A visible selector row can be present but unavailable. Detect disabled state
+  before selected state or click dispatch using `aria-disabled`, Radix
+  `data-disabled`, disabled `data-state`, and native disabled attributes.
+- Strict explicit selection must fail closed with a typed browser-automation
+  error. A best-effort caller may preserve the current selection, but it must
+  say which requested tier was unavailable and include a bounded row-owned
+  reason when the page exposes one.
+- Keep provider chrome classifiers narrow. Matching `Answer now` anywhere in a
+  substantial response discards valid content; consume only exact short known
+  placeholder labels and retain the existing prohibition on clicking the gate.
+
+## 2026-08-23 | Preserve operator intent at browser routing boundaries
+
+- Boolean CLI resolution must distinguish an explicit `true` from an unset
+  value when downstream launch defaults own the latter. Discarding
+  `--browser-headless` makes a documented operator request ineffective.
+- On WSL, a resolver-derived `127.x` nameserver is local to the WSL network
+  namespace and should route to `127.0.0.1`; never rewrite an explicit operator
+  host override or a genuine non-loopback resolver address.
+
+## 2026-08-23 | Copying a credential is still a source-session effect
+
+- A managed browser can rotate copied provider tokens and invalidate the
+  interactive source session even when automation never writes the source
+  cookie database. Make source browser profile cookie copying a positive
+  operator opt-in; reuse managed browser profile state by default.
+- Treat an explicit bootstrap path or interactive setup choice as affirmative
+  one-time bootstrap intent. Do not silently derive that intent from an
+  auto-discovered source cookie path.
+- Before porting an upstream path-containment patch, prove that caller input
+  reaches a write sink. A validated but unused `outputDir` field has contract
+  debt, but no symlink escape until a writer consumes it.
+- 2026-08-24: A bounded readiness probe can intentionally time out before its
+  recovery action. Give the probe a unique description and catch only its own
+  generated deadline error at the provider boundary; do not weaken the shared
+  CDP predicate deadline or swallow unrelated transport failures.
+- 2026-08-24: Cleanup policy must model explicit terminal intent, not only
+  bounded mode and provider. A live-follow `run-one-pass` force ceiling is a
+  terminal pass for browser ownership even though the subscription remains
+  indefinite. Regress both the forced cleanup request and ordinary indefinite
+  retention.
+- 2026-08-24: A terminal `failed` state must not erase explicit bounded retry
+  authority. Let `run_one_pass` re-arm blocked or failed live follow for one
+  pass-count ceiling, while completed/cancelled live follow and all bounded
+  completions remain terminal. Put diagnosis/remediation and total-attempt
+  bounds in the operating packet instead of encoding a global zero-retry rule.
+- 2026-08-25: Treat a successful forced live-follow pass and its completion-owned
+  materialization as one acceptance chain. Do not resume the scheduler merely
+  when pass count advances: wait for materialization to settle, the force
+  ceiling and error to clear, the provider-work lease to release, and exact
+  managed-browser ownership to clean.
+- 2026-08-25: Service liveness and aggregate status latency are separate. Bind
+  recovery proof to a fresh PID, zero restart loop, byte-identical installed
+  code, responsive narrow control endpoints, and an explicit aggregate-status
+  budget; record a too-short default client timeout as performance debt rather
+  than silently treating systemd `active` as API health.
+# 2026-08-27 — Preserve copied ChatGPT answer over terminal interruption chrome
+
+- Symptom: a completed 23,210-character copied writing block was discarded
+  because both captured response text and final DOM exposed only `Connection
+  interrupted. Waiting for the complete answer`.
+- Cause: `reconcileAssistantRepresentations` treated every eligible substantive
+  stable-DOM mismatch as authored content, even when the DOM value was exact
+  provider status chrome.
+- Repair: prefer copied markdown for both output representations only when the
+  captured and final-DOM texts independently match the exact normalized
+  interruption status, the copy is longer, and the copy is not itself status.
+  Ordinary substantive DOM mismatches remain authoritative.
+- Regression: `tests/browser/reattachHelpers.test.ts` freezes the 55-versus-
+  23,210 character incident at the production selector seam.
+
+## 2026-08-29 | Refresh the local integration target before lane ancestry audit
+
+- A stale local `main` made already integrated branches appear ambiguous even
+  when the auditor loaded its catalog from `origin/main`.
+- Fast-forward the local target ref after fetch before interpreting integration
+  findings. The catalog source ref and the target ancestry ref are separate
+  inputs; refreshing only the former is insufficient.
+- Delete worktree and branch custody only after exact cleanliness, ancestry or
+  prior semantic-equivalence, remote-tip, and process-working-directory proof.
+
+## 2026-08-29 | Bind live browser acceptance to exact owned-process cleanup
+
+- A read-only developer-app inventory may retain the managed browser for a
+  following canary, so command completion alone does not prove browser cleanup.
+- Record the exact browser PID and DevTools port launched by the authorized
+  operation, reuse only that known owner for the bounded follow-up, then close
+  that exact PID and prove both process and listening-port absence.
+- Keep scheduler ownership separate: foreground work may defer a scheduled
+  pass, but acceptance cleanup must not pause, resume, cancel, or claim custody
+  over that separately governed work.
+
+## 2026-08-28 | Parse the complete timeout token before accepting it
+
+- `Number.parseFloat("60m")` returns `60`, so a human-readable one-hour timeout
+  silently became one minute; the same parser accepted arbitrary suffixes.
+- Parse bare numeric values as seconds, otherwise consume the complete ordered
+  duration expression with explicit `ms`, `s`, `m`, or `h` units. Reject any
+  gap or suffix rather than accepting a numeric prefix.
+- Keep the production CLI parser under a focused regression for `60m`,
+  `1h30m`, numeric seconds, `auto`, and malformed partial tokens.
+## 2026-09-01 | Synthetic skips must not pin bounded materialization
+
+- A stable catalog order plus retryable `no-materializable-*` results can make
+  the same front conversations consume every bounded pass without reaching
+  later rows. Keep those conversations retryable, but order zero-asset retry
+  receipts by never-attempted and then least-recently attempted within the
+  exact provider, AuraCall runtime profile, browser profile, identity, and
+  asset-kind lane.
+- Transfer budget is asset evidence, not result-entry count. Synthetic
+  no-materializable, known-files-excluded, and unsupported placeholders have no
+  concrete provider/local asset identity and must consume zero transfer slots;
+  the separate target budget still bounds provider conversation reads.
+- Raw `remoteKnownMissingLocal` includes duplicate, unsupported metadata-only,
+  static false-positive, retrieval-failed, and terminal rows. Full-retrieval
+  live follow should consult the recovery planner and queue materialization only
+  when retrievable assets or unknown/deferred detail work remain.
+- 2026-09-02: A ChatGPT feature-signature `skills[]` label is discovery
+  evidence, not lifecycle evidence. Report its availability and invocation as
+  unknown until an exact-account readback supplies stable identity and explicit
+  installed/enabled/version/selection state. Never borrow developer-app CRUD
+  semantics merely because the UI labels both surfaces as apps or skills.
+- 2026-09-02: Operator transfer of a pre-existing managed-browser process grants
+  bounded operational authority; it does not justify rewriting durable job
+  owner/lease fields or claiming shutdown ownership. Reattach through the exact
+  AuraCall resolver, preserve the process, and record that distinction. The
+  current ChatGPT skill detail contract supplies a stable 32-hex `skill_id`,
+  owner display, file-tree inventory, and review state, while invocation remains
+  a separate `Try in chat` action and version/enabled state remain unobserved.
+- 2026-09-02: Treat ChatGPT Skill CRUD as an exact-ID, content-addressed
+  lifecycle rather than a display-name action. Require exact account and
+  complete inventory before every mutation, bind create/update to fresh
+  `SKILL.md` hashes, make update optimistic on the prior hash, and prove delete
+  by fresh absence. An uncertain dispatched outcome is a terminal manual-review
+  state, never retry authority.
+- 2026-09-02: Do not derive ChatGPT Skill inventory completeness from visible
+  root-card anchors: current cards are role buttons and omit stable IDs from the
+  DOM. Capture both authenticated installed and created inventory responses,
+  require both payload arrays, and reconcile overlap by exact ID with
+  created-by-me precedence before authorizing any mutation.
+- 2026-09-02: A trusted pointer can synchronously open a React menu while the
+  rerender discards a window-scoped click-listener receipt. For a provider
+  control whose click dispatch is already trusted, accept the exact visible
+  menu postcondition as activation proof; never proceed from dispatch alone.
+- 2026-09-02: CodeMirror's `.cm-content.textContent` can concatenate visual
+  lines without newline separators. Hash and verify editor content by joining
+  ordered `.cm-line` text, preserving non-empty raw whitespace until canonical
+  hashing. After any prepared mutation pointer dispatch, missing click receipt
+  means postcondition observation or `outcome-unknown`, never a retryable error.
+- 2026-09-02: ChatGPT Skill Create may persist successfully at
+  `/skills/editor/<stable-id>` instead of redirecting to
+  `/skills?skill_id=<stable-id>`. Recognize both only with exact 32-hex identity;
+  navigate editor routes to the root before inventory capture. An older client
+  that reports unknown after this exact save remains subject to its no-retry
+  hard stop even when later read-only evidence recovers the artifact.
+- 2026-09-02: ChatGPT exposes different Skill action menus on the saved editor
+  and root collection cards. Treat the editor route as the exact-ID update
+  surface; before Delete, bind the requested ID and display name through a
+  fresh complete created-inventory response, require exactly one matching card
+  inside the `Created by me` section, then use trusted menu and confirmation
+  presses. A delete postcondition must reject both the query-detail and editor
+  URL forms for the target ID; checking only `skill_id` makes an editor URL a
+  false success.
+- 2026-09-02: For exact ChatGPT Skill source hashing, prefer the persisted
+  `/skills/editor/<stable-id>` surface over query-detail extraction. The editor
+  binds the ID in the route and exposes name, description, and ordered
+  CodeMirror lines in one surface; normalize and hash those lines directly.
+  Keep collection/review ownership sourced from the separate complete
+  inventory responses rather than inferring it from the editor.
+- 2026-09-02: Browser expressions generated inside TypeScript template strings
+  need a double-escaped newline delimiter. A source-level `join('\\n')` can
+  become a literal newline inside the emitted JavaScript string and fail at
+  runtime even though TypeScript, build, and lint pass. Export the expression
+  builder and execute it in a regression with representative CodeMirror lines.
+- 2026-09-02: ChatGPT's current `Created by me` Skill-card `Delete` action is
+  immediately destructive; it does not open a second confirmation dialog.
+  Treat the exact menu item press as the single mutation boundary, disable any
+  attempt to restore the now-deleted editor URL immediately, and determine the
+  outcome from a fresh complete authenticated inventory. If the exact ID is
+  still present or inventory is incomplete, return `outcome-unknown` and never
+  retry the action.
+- 2026-09-02: Provider-native ChatGPT handoff submission must acquire the same
+  managed-browser-profile operation key as ordinary browser execution. Direct
+  `ChatgptService.runPrompt()` use does not inherit the lease from
+  `runBrowserMode()`. For a handoff with no existing target conversation, use
+  the explicit `retain-new` lifecycle so selection cannot borrow an unrelated
+  generic root tab and the submitted tab remains available for commit evidence.
+- 2026-09-02: A ChatGPT handoff target can carry a provider-native project URL
+  whose path includes a human-readable slug while also carrying the bare project
+  ID. Do not overwrite that exact URL with the generated legacy
+  `/g/{projectId}/project` route: current ChatGPT can redirect that route to home,
+  leaving a populated composer unable to commit. Treat only references containing
+  `/c/<id>` as existing conversations; project-root references require the fresh
+  retained-tab lifecycle. Provider-native execution must use `recover-live` for
+  each approved stage on a fresh packet, because packet-adapter completion is
+  deliberately terminal and cannot be promoted later.
+- 2026-09-02: ChatGPT renders uploaded-file cards inside the committed user-turn
+  container before the authored prompt. Exclude exact file-tile presentation
+  groups when reading committed text; otherwise strict prompt equality reports a
+  false negative even after ChatGPT creates the project conversation and begins
+  its response. Keep the equality contract after presentation-only filtering so
+  unrelated retained text cannot satisfy commit verification.
+- 2026-09-03: ChatGPT's assistant-turn `Switch model` action is a retry surface,
+  not the active composer model picker. Bind model-trigger discovery to the
+  visible composer containing `#prompt-textarea` and reject all turn-local
+  controls. The current composer Power control is an aria-hidden five-position
+  slider whose live option order is Instant, Medium, High, Extra High, Pro;
+  dispatch to the corresponding tick and verify `aria-valuenow` before claiming
+  selection. Preserve the unrestricted upload input only when prompt, input,
+  and exact `Add files and more` trigger share the active composer.
+## 2026-09-05 | Keep internal model intent independent of provider generations
+
+- Failure mode: semantic ChatGPT selectors and defaults encoded GPT-5.2 or
+  GPT-5.6 product names, so every provider rollout leaked into saved agents,
+  discovery catalogs, examples, and branching logic.
+- Durable fix: publish capability-oriented selectors and resolve them through a
+  provider schema carrying a stable canonical ID, current UI label, API bridge,
+  and optional effort. Keep old provider names only as accepted aliases or
+  explicit pins.
+- Regression rule: discovery must not advertise provider versions/codenames as
+  semantic IDs; compatibility inputs must still resolve and validate.
+
+# 2026-09-05 — Durable selectors must cover operational help and smoke defaults
+
+- Symptom: model discovery advertised only durable capability selectors, but
+  `handoff prepare --help` and current operational smoke scripts still taught
+  GPT-5.2/pro-extended inputs.
+- Cause: the first schema migration audited resolver/catalog surfaces but did
+  not include executable help and smoke defaults in its advertised-label cone.
+- Fix: use `chatgpt:fast`, `chatgpt:reasoning`,
+  `chatgpt:reasoning-high`, and `openai:frontier` in current operator-facing
+  and operational code; retain versioned strings only as compatibility inputs,
+  provider API IDs, and provider DOM matchers.
+- Guard: the CLI subprocess test now requires `chatgpt:reasoning-high` in
+  handoff help and rejects `chatgpt:pro-extended`.
+
+## 2026-09-05 | Separate provider labels, capability IDs, and selection semantics
+
+- Failure mode: current ChatGPT drawer labels changed and added Shopping while
+  capability discovery could attach a retained project chat instead of the root
+  composer; Skill inventory had stable IDs but no bounded selection contract.
+- Durable fix: publish semantic capability IDs with provider labels as aliases,
+  force discovery through the configured root URL, and model Skill detail
+  selection separately from prompt invocation.
+- Guard: file-source rows stay `composer_attachment`, tool selection resolves
+  durable IDs, and Skill selection requires exact account, complete inventory,
+  exact 32-hex ID, explicit confirmation, empty-composer proof, and cleanup.
+- Regression rule: a successful `Try in chat` click never proves Skill
+  invocation; failure to observe selection or cleanup is `outcome-unknown` and
+  must not be retried.
+
+## 2026-09-05 | Bind ChatGPT selection and proof to current workbench structure
+
+- Failure mode: an exact-account preflight qualified the healthy ChatGPT root,
+  but the later Skills phase opened generic DevTools and navigated the first
+  retained page. Separately, the current drawer dropped `tabindex` from its
+  `.__menu-item` rows and selected Shopping as a non-plugin inline pill.
+- Durable fix: obtain the Skills CDP client through the same qualified
+  prompt-workbench target used by the provider adapter; recognize current
+  popover rows independent of `tabindex`; detect any exact-scored
+  `data-inline-selection-pill`; and define an empty composer as no user text
+  after selection pills/cursor sentinels are removed from a clone.
+- Cleanup rule: remove composer state only when exactly one expected Skill pill
+  is present and no user-authored text or second pill exists. Otherwise refuse
+  cleanup and return `outcome-unknown`.
+- Regression rule: identity on one tab does not authorize navigation on another,
+  reload does not prove inline-pill cleanup, and a dispatched selection is never
+  retry authority when exact selection or cleanup proof is missing.
+- Background-tab geometry is not workbench absence. Before rejecting a retained
+  ChatGPT root for a zero-sized composer, foreground that exact CDP target and
+  then measure it. A true greeting-only root still lacks `#prompt-textarea` and
+  remains ineligible.
+
+## 2026-09-05 | Distinguish ChatGPT Skill provider prefill from user text
+
+- Failure mode: current `Try in chat` routes the exact Skill into the home
+  composer and seeds a provider-authored example prompt. The empty-text-only
+  proof rejected that safe non-submitting state after the single live click.
+- Durable fix: require the source composer to have zero user text and zero
+  selection pills before any navigation, then accept post-click text only when
+  it exactly equals the decoded current `prompt` parameter and the exact Skill
+  marker or route is present.
+- Guard: arbitrary or mismatched composer text remains untrusted, final route
+  restoration must prove zero text/zero pills, and an unaccepted dispatched
+  click is terminal `outcome-unknown` with no retry.
+
+## 2026-09-05 | Qualify ChatGPT composers by durable provider semantics
+
+- Failure mode: current ChatGPT home pages replaced the prompt editor ID with a
+  named textarea, so an actually visible empty workbench was classified as
+  absent and the Skill lane appeared browser-blocked.
+- Durable fix: exact root qualification and Skill preflight/proof/cleanup accept
+  either `#prompt-textarea` or `textarea[name="prompt-textarea"]`, matching the
+  existing provider input contract without broadening to arbitrary textareas.
+- Regression rule: a missing legacy editor ID does not prove a missing composer;
+  require one of the exact provider selectors plus visible geometry and preserve
+  all empty-composer, identity, cleanup, and no-submit gates.
+
+## 2026-09-05 | Keep ChatGPT drawer inventory and selection proof structurally aligned
+
+- Failure mode: the selection path accepted current no-tabindex drawer rows,
+  while capability discovery still filtered them out; selected-pill proof also
+  assumed pills lived inside the prompt editor instead of the composer form.
+- Durable fix: share the exact current drawer-row shape across discovery paths,
+  scope inline selection pills to the active composer form, and qualify local
+  uploads against either exact ChatGPT prompt-editor shape.
+- Regression rule: inventory and selection must recognize the same current row
+  family, and pill proof must never search the whole page or require an editor
+  containment relationship the provider no longer renders.
+
+## 2026-09-05 | Merge reduced ChatGPT auth responses with exact bootstrap identity
+
+- Failure mode: `/api/auth/session` returned a non-null user ID/name but omitted
+  email and account qualifiers, so identity discovery returned early and exact
+  account authorization failed before Skill inventory.
+- Durable fix: project only user/account fields from the exact logged-in
+  `script#client-bootstrap[type="application/json"]` and use them solely to fill
+  missing endpoint fields. Never return token-bearing bootstrap properties.
+- Regression rule: a partial non-null endpoint response must not suppress the
+  bootstrap identity fallback; logged-out, missing, or malformed bootstrap data
+  remains untrusted.
+
+## 2026-09-05 | Root composer is not Chat-mode evidence
+
+- ChatGPT can expose an editable root composer before Chat/Work controls. The prior fallback inferred Chat and bypassed sticky Work. Wait up to ten seconds for root controls; fail closed if absent. Only established conversation routes retain the control-less compatibility path. Regression tests cover late controls and permanently absent controls.
+
+## 2026-09-05 | Skills blank-tab readiness
+
+A qualified new tab can still be about:blank at CDP attachment. Skills must await the root composer before capturing its original route and pristine state; otherwise both cleanup routing and preflight evidence describe the blank page.
+
+## 2026-09-05 | Skills visible-composer proof
+
+Skills queries must not use the first matching composer: ChatGPT keeps a hidden named fallback textarea before the visible contenteditable editor. Shared pristine, selection, readiness, and cleanup lookup now requires exactly one visible editor. The previous expression returned null on the captured two-editor case. This fixes the probe; prior Skill activation remains unverified.
+
+## 2026-09-05 | Skill selection accepted on visible-editor repair
+
+- The installed unique-visible-composer probes now verify exact Skill selection, exact provider-prefilled example text, and empty-composer cleanup on the real account. One of five authorized iterations was used. This proves selection, not execution.
+
+## 2026-09-05 | Mutation audit recognizes delegated guarded tools
+
+- The explicit raw-CDP allowlist includes a tool whose mutation is delegated to a guarded helper. Direct-navigation detections must be a subset of the allowlist, and every listed script must retain its guard. This replaces the stale equality expectation without allowing unlisted navigation or unguarded listed tools. Both guard suites pass, six tests.
+
+## 2026-09-05 | Selection cleanup is not invocation continuity
+
+The installed `skills select` command verifies selection and then clears it.
+A later ordinary prompt naming the Skill does not preserve that selection.
+The one execution smoke returned `Skill status: Not loaded` despite complete
+inventory and working Chat. Keep selection and execution acceptance separate;
+an exact-ID select-and-submit path must prove the Skill in the actual prompt
+composer before sending. A transient activity label was insufficient and the
+final answer contradicted it. Receipt: `docs/dev/notes/2026-09-05-plan0334-skill-execution-smoke.json`.
+
+## 2026-09-05 | Skill selection reaches the send boundary
+
+`skills run` holds the existing profile operation lock and one CDP connection through selection, insertion, submission, and response capture. Its pre-send guard rechecks exact account and a visible Skill marker; route parameters alone cannot authorize Send. Uncertain submission preserves the tab without cleanup navigation or retry. `skills select` still restores its original empty composer.
+
+## 2026-09-05 | Committed Skill mentions are presentation, not user prompt text
+
+ChatGPT commits a native Skill mention before the user text. Prompt equality must exclude `[data-inline-selection-pill]`, as it already excludes attachment/action presentation, without excluding ordinary text. Response capture must use the pre-submit boundary rather than a committed turn count that may include an already-finished answer. The real canary was recovered with the repaired readers and no prompt retry. Selected Skill identity alone still does not prove the provider loaded its instructions.
+
+## 2026-09-06 | Preserve Git custody before closing stale worktrees
+
+- A clean index does not prove a directory is disposable: check ignored files, exact integrated ancestry, remote custody, and current process cwd owners immediately before removal.
+- Preserve reviewed-but-unaccepted edits on a named remote WIP branch and verify file hashes before restoring the original clean branch. Keep paused operational plans on stable branch tips so moving-main checkpoint drift does not recur.
+
+## 2026-09-06 | Hidden composer forms are not upload authority
+
+- A mounted file input plus any same-form editor and attachment trigger could
+  authorize local upload despite all controls being hidden. Inventory all
+  candidate forms, require one visible composer and trigger, and require the
+  input to belong to that composer. Respect explicit popover ownership and
+  reject ambiguous popovers; the file input itself may remain hidden.
+- Select a visible editor from all candidates so a hidden fallback textarea
+  cannot mask the usable editor. Test the production inventory expression,
+  not a hand-supplied composerLocal flag.
+- Preserve omitted and explicit-model handoff cases together. Validation must
+  use frozen-lockfile dependencies: stale shared OpenAI 6.15.0 dependencies
+  produced unrelated errors against current source requiring 7.10.0.
+
+## 2026-09-09 | Installed canaries must not inherit an adjacent stale checkout
+
+- Failure mode: a live connected-app canary used `pnpm tsx bin/auracall.ts`
+  from an unrelated branch that predated the durable model-selector migration,
+  then failed before submission on retired picker label `gpt-5.2-pro`.
+- Durable rule: installed/runtime/live acceptance uses the installed `auracall`
+  launcher and records its resolved model target. Repo-local `pnpm tsx` is only
+  source-development evidence and must bind the intended branch/commit.
+- Remaining cleanup: replace stale operator-facing versioned examples without
+  removing compatibility aliases, provider API IDs, historical evidence, or
+  DOM matchers. See
+  `docs/dev/notes/2026-09-09-installed-cli-required-for-live-canaries.md`.
+
+## 2026-09-09 | Private developer apps require ecosystem-mention selection
+
+- Verification: the installed resolver accepted `chatgpt:reasoning` and chose
+  `gpt-5.6-sol`, clearing the earlier stale-source selector failure.
+- Remaining failure: installed `apps test --submit` routed the private LitScout
+  app name through `ensureChatgptComposerTool`, whose generic top-level menu has
+  no private developer-app row, and stopped before Send.
+- Durable guard: treat that submitting helper as ineligible for private apps
+  until it uses exact composer `@mention` selection and verifies the ecosystem
+  pill/plugin ID. Inventory-only app commands remain valid. README, testing
+  guidance, and the ChatGPT browser skill now carry the same operator rule.
+
+## 2026-09-09 | Operator examples use durable selectors and the installed launcher
+
+- Primary configuration and bundled-skill examples should advertise semantic
+  selectors such as `chatgpt:premium` for the current GPT-6 Pro lane, not
+  retained versioned compatibility inputs.
+- A bundled skill that can launch browser work must use the installed
+  `auracall` command so its live behavior cannot inherit a stale checkout or a
+  separately distributed upstream CLI. Preserve versioned strings where they
+  are API identifiers, compatibility tests, historical receipts, or DOM
+  matchers.
+
+## 2026-09-09 | Developer-app submit must carry identity into the prompt path
+
+- Root cause: `selectForTest` used the ecosystem mention picker, but
+  `submitTest` bypassed it by assigning the private app name to generic
+  `composerTool`; the generic selector stopped on static top-level tools.
+- Fix: carry the app label plus accepted plugin/app IDs in the provider prompt,
+  select through `@mention` on the same fresh prompt connection, and require one
+  matching ecosystem pill with zero document-reference pills before Send.
+- Evidence correction: `chatgpt:reasoning` resolved internally to
+  `gpt-5.6-sol`, but the post-stop composer displayed `5.6 Instant`; do not
+  call the actor model selected without live UI proof. Developer-app tests
+  deliberately preserve the current Chat model.
+- 2026-09-09: Installed-runtime currency needs artifact and service proof, not
+  version equality alone. AuraCall can retain the same package version while
+  source advances, and install metadata records a source path rather than a
+  commit. Bind the supported installer to a clean published source SHA, compare
+  the complete built and installed `dist` inventories, then read back the
+  configured endpoint, service PID/restart count, and scheduler/completion
+  posture. For Git cleanup, re-run clean/untracked/ignored, ancestry,
+  local-remote, lane-state, and process-cwd gates immediately before removal;
+  an earlier process interlock may clear, while a clean divergent lane still
+  requires reconciliation rather than closure.
+- 2026-09-09: During long-lived branch reconciliation, architecture guards
+  outrank locally green feature tests. P16's provider-local response watcher
+  passed its focused tests but duplicated the shared prompt lifecycle and
+  failed `llmServicePromptStructure.test.ts`; remove the incompatible feature,
+  record its acceptance criterion as open, and retain only independently
+  proven app-selection and cleanup behavior.
+
+## 2026-09-11 | Preserve observed browser effects across prompt and rate-limit ambiguity
+
+- A committed ChatGPT user turn may include attachment and tool presentation
+  text even when the authored prompt is intact. Accept that shape only when a
+  new latest turn, prompt containment, cleared composer, conversation URL, and
+  assistant/stop activity all agree; retain exact equality as the simpler path.
+- Track send state as `pre_effect`, `unknown`, or `effect_observed`. Once an
+  effect is observed, a later rate-limit surface is reconciliation-required:
+  do not auto-retry and do not overwrite the outcome with a new cooldown.
+- Keep requested semantic/API model identity separate from the picker label
+  actually observed at runtime. For a CLI command that has completed browser
+  file work and printed its result, use the established force-exit boundary so
+  transient automation handles cannot keep the shell open.
+- Do not prove page-side attachment-chrome classification with a hand-supplied
+  boolean alone. Execute the exact injected classifier in provider-free tests,
+  normalize provider labels case-insensitively, and retain arbitrary-extra,
+  altered-body, and duplicate-prompt negatives.
+
+## 2026-09-11 | Installed live acceptance must separate effect success from lifecycle and provenance
+
+- A correct picker label is not sufficient when the live trigger surface has
+  changed. Explicit `6 Pro` selection stopped pre-effect even though the open
+  menu contained `6 Pro`; current-model preservation can prove the prompt path
+  but cannot substitute for explicit-selection acceptance.
+- Verify provider-observed model provenance in the actual persisted installed
+  session, not only in provider-free propagation tests. A successful turn may
+  retain requested/desired identity while silently omitting `observedModel`.
+- Treat complete JSON output and process exit as separate acceptance facts.
+  Identity smoke proved exact account and browser ownership but retained a
+  process until the bounded caller interrupted only that invocation.
+- Avoid broad aggregate status as a routine health probe while its projection
+  can exceed the API heap. Use narrow authenticated model/completion endpoints
+  for current-state proof; the aggregate-memory repair remains P08-owned.
+- Artifact-fetch process cleanup and artifact coverage are independent. The
+  command exited normally while two export entries failed with `Promise was
+  collected`; preserve already recovered files and never retry a protected
+  provider conversation merely to improve a fresh materialization count.
+
+## 2026-09-11 | One-shot probes and sequential CDP transfers need explicit lifecycle boundaries
+
+- A complete identity report does not prove command completion. After the
+  browser-operation lock has released and the final report is printed, end the
+  one-shot CLI process explicitly; the managed Chrome process is external and
+  remains persistent.
+- `--browser-model-strategy current` is read-only observation, not picker
+  omission. Open the picker, preserve the checked option, and persist its label
+  separately from the requested model. Admit ChatGPT's animated trigger only
+  when its visible composer-scoped label names an explicit model family such as
+  `6 Pro`; reject Power/effort labels.
+- Await each artifact transfer through success/error recording, then close its
+  scoped provider session before the next artifact. Reusing a navigated CDP
+  execution context can otherwise surface `Promise was collected` on later
+  exports even when the first export succeeded.
+
+## 2026-09-11 | Provider-free selector and transfer fixtures are not installed-live acceptance
+
+- A provider-free current-trigger fixture can pass while the installed
+  explicit `select` path still times out before Send. Persist the desired model,
+  mode, error stage, null conversation/output, and zero-Send counter; never
+  substitute `current` after the explicit selector gate fails.
+- Sequential per-artifact session cleanup can pass injected fixtures while a
+  protected live fetch still materializes only its first variant and reports
+  `Promise was collected` for later exports. Treat fresh manifest coverage as
+  the acceptance surface independently of retained historical files and normal
+  command exit, and preserve the one-fetch/no-retry boundary.
+
+## 2026-09-11 | Normalize compact model labels and prove export bytes before admission
+
+- Provider model labels can remove whitespace at alpha/numeric boundaries.
+  Normalize only those boundaries for semantic matching, keep the raw observed
+  label in run evidence, and retain negative coverage for lookalikes such as
+  `6Power`, generic `Pro`, and effort controls.
+- A stable file in a shared artifact directory is not proof of the export just
+  requested. Snapshot the directory before the click, admit only a fresh file
+  with the requested extension, and validate the binary signature (`%PDF-` for
+  PDF or ZIP for DOCX) before returning a materialized result.
+- Preserve retained and wrong-variant files. Surface a wrong-variant-only result
+  as an explicit artifact error so it cannot increment `materializedCount`.
+
+## 2026-09-11 | Model-family classification outranks submenu-like row attributes
+
+- A current ChatGPT model row may carry `aria-expanded` even when clicking it is
+  the terminal model selection. Do not classify every row with that attribute
+  as navigation; first classify the normalized row as a known model family.
+- Keep explicit `Model ...` rows and unclassified submenu/test-id rows on the
+  recursive navigation path. A live-shaped fixture must include the provider's
+  submenu-like attribute so a simplified row cannot falsely prove acceptance.
+## 2026-09-11 | Current-model observation must classify provider aliases
+
+- A checked provider alias such as `Latest` is still a current-model identity,
+  even when it does not expose a numbered model label. Dropping it from the
+  observed inventory can misreport a read-only `current` strategy as a failed
+  explicit model request.
+- Classify only the exact alias (visible label or test id), preserve its raw
+  observed label, and prove that the checked row settles without an option-row
+  click. Keep lookalikes and unknown submenu rows on existing guarded paths.
+
+## 2026-09-14 | Rejected reservations and incomplete document sets fail safely
+
+- A rejected scheduler claim or execution gate must release its planned slot to future candidates only. Otherwise recoverable work may be starved under a drain cap, or an already skipped row may be counted retroactively.
+- An explicit multi-file artifact contract must require every exact local filename, reject malformed file sets before provider submission, and never use the legacy single-file correction path for a partial package. Focused source tests passed; installed and live behavior remain unverified.
+
+## 2026-09-15 | Artifact download authority requires one fresh exact control
+
+- A matching URI cannot override a contradictory filename, and an old button index cannot outrank a unique exact filename when stable turn/message ownership exists. Duplicate exact controls remain ambiguous and fail closed.
+- Give every control click a fresh download directory. Do not accept a completed file while a partial download exists, choose among multiple files, or fetch a global captured anchor as a substitute for the clicked control.
+- Browser-added collision or timestamp suffixes may be canonicalized only with exact response/control identity, valid filename structure, an exclusive destination, and verified byte equality. Preserve the original downloaded file for diagnosis.
+
+## 2026-09-19 | Response completion requires exact turn identity and ordering
+
+- A numeric turn boundary is not sufficient when the provider recycles DOM
+  wrappers. Terminal response, copy, refresh, and reattach paths must preserve
+  the exact assistant message identity.
+- Same-text output is fresh only when the assistant identity changed and the
+  candidate is proven to follow the exact newly submitted user message. A
+  visible streaming marker still blocks completion even when no Stop button is
+  present; uncertainty in the generation probe fails closed.
+- Custody snapshots are point-in-time evidence. Re-check path counts and archive
+  bytes before claiming an original dirty checkout remains unchanged, and take
+  a new private snapshot when later work has legitimately advanced it.
+
+## 2026-09-19 | Finalizers must return the post-finally persisted record
+
+- Returning a stored record from inside `try` or `catch` evaluates that value
+  before `finally` releases the execution lease. Disk state can be correct while
+  the caller receives a stale active lease with no release reason.
+- Make finalization single-shot: stop cancellation and heartbeat observers,
+  release the lease, and return the exact resulting stored record. A cancellation
+  regression must let the runner perform its own release so this ordering is
+  deterministic rather than dependent on an external release race.
+
+## 2026-09-19 | A Pro model label is not Pro-intelligence proof
+
+- ChatGPT exposes model family and intelligence as separate controls. A generic
+  pill containing `Pro` can name the model while the Power slider remains below
+  Pro, so text matching must never satisfy the final intelligence invariant.
+- Put a fail-closed selector after composer hydration and immediately before
+  Send. For the required state, accept only slider value 4 after readback; keep
+  the caller's model strategy unchanged.

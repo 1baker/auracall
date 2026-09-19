@@ -261,6 +261,24 @@ export async function executeStoredExecutionRunOnce(
     control,
     controller: executionAbortController,
   });
+  let finalizationPromise: Promise<ExecutionRunStoredRecord> | null = null;
+  const finalizeExecution = (): Promise<ExecutionRunStoredRecord> => {
+    finalizationPromise ??= (async () => {
+      await cancellationWatcher.stop();
+      await leaseHeartbeat.stop();
+      const releasedRecord = await releaseExecutionRunLeaseIfStillActive({
+        control,
+        currentRecord: finalRecord ?? currentRecord,
+        runId: options.runId,
+        leaseId,
+        releasedAt: now(),
+        releaseReason,
+      });
+      finalRecord = releasedRecord;
+      return releasedRecord;
+    })();
+    return finalizationPromise;
+  };
 
   try {
     const startedAt = now();
@@ -288,7 +306,7 @@ export async function executeStoredExecutionRunOnce(
       currentRecord = await store.writeRecord(cancelledBundle, { expectedRevision: currentRecord.revision });
       releaseReason = 'cancelled';
       finalRecord = currentRecord;
-      return finalRecord;
+      return await finalizeExecution();
     }
     if (escalationBehavior?.action === 'fail') {
       releaseReason = 'failed';
@@ -308,7 +326,7 @@ export async function executeStoredExecutionRunOnce(
       });
       currentRecord = await store.writeRecord(failedBundle, { expectedRevision: currentRecord.revision });
       finalRecord = currentRecord;
-      return finalRecord;
+      return await finalizeExecution();
     }
     const result = await options.executeStep?.({
       record: currentRecord,
@@ -345,7 +363,7 @@ export async function executeStoredExecutionRunOnce(
     if (currentRecord.bundle.run.status === 'cancelled' || requireStep(currentRecord.bundle, stepId).status === 'cancelled') {
       releaseReason = 'cancelled';
       finalRecord = currentRecord;
-      return finalRecord;
+      return await finalizeExecution();
     }
 
     const resolvedLocalActionOutcome = await resolveLocalActionRequests({
@@ -407,7 +425,7 @@ export async function executeStoredExecutionRunOnce(
       });
       currentRecord = await store.writeRecord(failedBundle, { expectedRevision: currentRecord.revision });
       finalRecord = currentRecord;
-      return finalRecord;
+      return await finalizeExecution();
     }
     const succeededBundle = succeedExecutionRunStep({
       bundle: currentRecord.bundle,
@@ -427,7 +445,7 @@ export async function executeStoredExecutionRunOnce(
     if (currentRecord.bundle.run.status === 'cancelled' || requireStep(currentRecord.bundle, stepId).status === 'cancelled') {
       releaseReason = 'cancelled';
       finalRecord = currentRecord;
-      return finalRecord;
+      return await finalizeExecution();
     }
     releaseReason = 'failed';
     const failedAt = now();
@@ -458,16 +476,7 @@ export async function executeStoredExecutionRunOnce(
     currentRecord = await store.writeRecord(failedBundle, { expectedRevision: currentRecord.revision });
     finalRecord = currentRecord;
   } finally {
-    await cancellationWatcher.stop();
-    await leaseHeartbeat.stop();
-    finalRecord = await releaseExecutionRunLeaseIfStillActive({
-      control,
-      currentRecord: finalRecord ?? currentRecord,
-      runId: options.runId,
-      leaseId,
-      releasedAt: now(),
-      releaseReason,
-    });
+    finalRecord = await finalizeExecution();
   }
 
   if (!finalRecord) {

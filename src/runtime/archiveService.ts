@@ -1,4 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
+import { constants as fsConstants } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import type { FileRef } from "../browser/providers/domain.js";
@@ -1445,12 +1446,18 @@ async function enrichFileMetadata(items: RunArchiveItem[]): Promise<RunArchiveIt
 				item.localPath ??
 				cachedConversationAsset?.localPath ??
 				(await findExistingMaterializedArchiveFile(item));
-			const liveChecksumSha256 = await calculateFileSha256(discoveredLocalPath);
+			const localFile = await inspectArchiveLocalFile(discoveredLocalPath);
+			const liveChecksumSha256 = localFile.checksumSha256;
 			const checksumSha256 =
 				liveChecksumSha256 ?? readRecordString(item.metadata, ["checksumSha256"]);
-			const pathExists = discoveredLocalPath ? await fileExists(discoveredLocalPath) : null;
+			const pathExists = localFile.pathExists;
 			const unavailableEvidence: Record<string, unknown> | null =
-				pathExists === false
+				localFile.unavailableErrorCode
+					? buildUnavailableLocalFileEvidence(
+							discoveredLocalPath ?? "",
+							localFile.unavailableErrorCode,
+						)
+					: pathExists === false
 					? buildMissingLocalFileEvidence(item, discoveredLocalPath ?? "")
 					: !discoveredLocalPath
 						? cachedConversationEvidence?.unavailable
@@ -1458,7 +1465,7 @@ async function enrichFileMetadata(items: RunArchiveItem[]): Promise<RunArchiveIt
 							: buildGeneratedArtifactUnavailableEvidence(item)
 						: null;
 			const fileAvailable = pathExists ?? (unavailableEvidence ? false : null);
-			const liveFileSizeBytes = await readFileSize(discoveredLocalPath);
+			const liveFileSizeBytes = localFile.fileSizeBytes;
 			const fileSizeBytes =
 				liveFileSizeBytes ?? readRecordNumber(item.metadata, ["fileSizeBytes", "size"]);
 			const cacheKey = checksumSha256
@@ -1531,6 +1538,8 @@ function clearRefreshOwnedUnavailableMetadata(
 	const normalized = { ...metadata };
 	delete normalized.unavailableReason;
 	delete normalized.missingLocalPath;
+	delete normalized.unavailableLocalPath;
+	delete normalized.unavailableErrorCode;
 
 	if (
 		isRecord(normalized.materialization) &&
@@ -1570,6 +1579,17 @@ function buildMissingLocalFileEvidence(
 			: "local-file-missing",
 		missingLocalPath: localPath,
 	};
+}
+
+function buildUnavailableLocalFileEvidence(
+  localPath: string,
+  errorCode: string,
+): Record<string, unknown> {
+  return {
+    unavailableReason: 'local-file-unavailable',
+    unavailableLocalPath: localPath,
+    unavailableErrorCode: errorCode,
+  };
 }
 
 function readUnavailableEvidenceReason(evidence: Record<string, unknown>): string {
@@ -1651,6 +1671,57 @@ function normalizeArchiveComparableString(value: unknown): string | null {
 	return normalized.length > 0 ? normalized : null;
 }
 
+async function inspectArchiveLocalFile(localPath: string | null): Promise<{
+	checksumSha256: string | null;
+	pathExists: boolean | null;
+	fileSizeBytes: number | null;
+	unavailableErrorCode: string | null;
+}> {
+	if (!localPath) {
+		return {
+			checksumSha256: null,
+			pathExists: null,
+			fileSizeBytes: null,
+			unavailableErrorCode: null,
+		};
+	}
+	try {
+		const checksumSha256 = await calculateFileSha256(localPath);
+		const pathExists = await fileExists(localPath);
+		const fileSizeBytes = pathExists ? await readFileSize(localPath) : null;
+		if (!pathExists) fileChecksumCache.delete(localPath);
+		return { checksumSha256, pathExists, fileSizeBytes, unavailableErrorCode: null };
+	} catch (error) {
+		if (isMissingFileError(error)) {
+			fileChecksumCache.delete(localPath);
+			return {
+				checksumSha256: null,
+				pathExists: false,
+				fileSizeBytes: null,
+				unavailableErrorCode: null,
+			};
+		}
+		const unavailableErrorCode = readUnavailableArchiveAssetErrorCode(error);
+		if (!unavailableErrorCode) throw error;
+		fileChecksumCache.delete(localPath);
+		return {
+			checksumSha256: null,
+			pathExists: false,
+			fileSizeBytes: null,
+			unavailableErrorCode,
+		};
+	}
+}
+
+function readUnavailableArchiveAssetErrorCode(error: unknown): string | null {
+	if (!(error instanceof Error) || !("code" in error) || typeof error.code !== "string") {
+		return null;
+	}
+	return ["ENODEV", "ESTALE", "EIO", "EACCES", "EPERM"].includes(error.code)
+		? error.code
+		: null;
+}
+
 async function calculateFileSha256(localPath: string | null): Promise<string | null> {
 	if (!localPath) return null;
 	let stats: Awaited<ReturnType<typeof fs.stat>>;
@@ -1695,7 +1766,7 @@ async function calculateFileSha256(localPath: string | null): Promise<string | n
 
 async function fileExists(localPath: string): Promise<boolean> {
 	try {
-		await fs.access(localPath);
+		await fs.access(localPath, fsConstants.R_OK);
 		return true;
 	} catch (error) {
 		if (isMissingFileError(error)) return false;

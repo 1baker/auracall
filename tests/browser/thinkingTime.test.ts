@@ -1,9 +1,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  ThinkingTierUnavailableError,
   buildThinkingTimeExpressionForTest,
+  ensureThinkingTime,
+  ensureThinkingTimeIfAvailable,
   evaluateChatgptProModeGate,
   formatChatgptProModeGateError,
   isChatgptProModelTarget,
+  resolveChatgptPowerSliderTarget,
   resolveChatgptProModeFromThinkingTime,
 } from '../../src/browser/actions/thinkingTime.js';
 
@@ -56,7 +60,10 @@ function installFixtureDocument(query: (selector: string) => FixtureElement[]): 
     ['PointerEvent', FixtureMouseEvent],
     ['getComputedStyle', () => ({ visibility: 'visible', display: 'block' })],
   ]));
-  vi.stubGlobal('document', { querySelectorAll: query });
+  vi.stubGlobal('document', {
+    querySelector: (selector: string) => query(selector)[0] ?? null,
+    querySelectorAll: query,
+  });
 }
 
 afterEach(() => {
@@ -94,10 +101,31 @@ describe('browser thinking-time selection expression', () => {
     expect(expression).toContain("getAttribute('aria-expanded')");
     expect(expression).toContain('clientX');
     expect(expression).toContain('clientY');
+    expect(expression).toContain('composer-model-picker-slider-simple-view');
+    expect(expression).toContain('composer-intelligence-picker-content');
+    expect(expression).toContain('TARGET_SLIDER_VALUE');
+    expect(expression).toContain("endsWith('_Tick')");
+    expect(expression).toContain("getAttribute('aria-valuenow')");
+  });
+
+  it('requires Power-slider proof for Pro instead of trusting a Pro model pill', () => {
+    const expression = buildThinkingTimeExpressionForTest('pro');
+    expect(expression).toContain('const REQUIRE_POWER_PROOF = TARGET_SLIDER_VALUE === 4');
+    expect(expression).toContain('if (REQUIRE_POWER_PROOF) return null');
+    expect(expression).toContain('if (!REQUIRE_POWER_PROOF && TARGET_LEVELS.some');
+    expect(expression).toContain("resolve({ status: 'option-not-found' })");
+  });
+
+  it('maps AuraCall effort levels onto the live five-position Power slider', () => {
+    expect(resolveChatgptPowerSliderTarget('light')).toEqual({ value: 0, label: 'Instant' });
+    expect(resolveChatgptPowerSliderTarget('standard')).toEqual({ value: 1, label: 'Medium' });
+    expect(resolveChatgptPowerSliderTarget('extended')).toEqual({ value: 2, label: 'High' });
+    expect(resolveChatgptPowerSliderTarget('heavy')).toEqual({ value: 3, label: 'Extra High' });
+    expect(resolveChatgptPowerSliderTarget('pro')).toEqual({ value: 4, label: 'Pro' });
   });
 
   it('targets the requested thinking time level', () => {
-    const levels = ['light', 'standard', 'extended', 'heavy'] as const;
+    const levels = ['light', 'standard', 'extended', 'heavy', 'pro'] as const;
     for (const level of levels) {
       const expression = buildThinkingTimeExpressionForTest(level);
       expect(() => new Function(`return ${expression}`)).not.toThrow();
@@ -108,8 +136,10 @@ describe('browser thinking-time selection expression', () => {
         expect(expression).toContain('"heavy","extra high","pro extended","extended"');
       } else if (level === 'standard') {
         expect(expression).toContain('"standard","medium"');
-      } else {
+      } else if (level === 'extended') {
         expect(expression).toContain('"pro extended","extended","high"');
+      } else {
+        expect(expression).toContain('"pro"');
       }
     }
   });
@@ -219,6 +249,98 @@ describe('browser thinking-time selection expression', () => {
 
     await expect(resultPromise).resolves.toEqual({ status: 'switched', label: 'Extended' });
     expect(levelMenuOpen).toBe(true);
+  });
+
+  it('reports an unavailable tier without clicking its disabled row', async () => {
+    vi.useFakeTimers();
+    const chip = new FixtureElement('Thinking', { 'aria-haspopup': 'menu' });
+    const extended = new FixtureElement('Extended', {
+      role: 'menuitemradio',
+      'aria-disabled': 'true',
+      title: 'Limit reached until tomorrow.',
+    });
+    const levelMenu = new FixtureElement('Standard Extended', { role: 'menu' });
+    levelMenu.queryAll = (selector) => selector.includes('[role="menuitemradio"]') ? [extended] : [];
+    let menuOpen = false;
+    let clicks = 0;
+    chip.onClick = () => {
+      menuOpen = true;
+    };
+    extended.onClick = () => {
+      clicks += 1;
+    };
+
+    installFixtureDocument((selector) => {
+      if (selector.includes('button.__composer-pill, .__composer-pill-composite button')) return [chip];
+      if (
+        selector === '[data-testid="composer-footer-actions"] button[aria-haspopup="menu"]' ||
+        selector === 'button.__composer-pill[aria-haspopup="menu"]' ||
+        selector === '.__composer-pill-composite button[aria-haspopup="menu"]'
+      ) return [chip];
+      if (selector.includes('[role="dialog"]')) return [];
+      if (selector.includes('[role="menu"]') && selector.includes('[role="group"]')) {
+        return menuOpen ? [levelMenu] : [];
+      }
+      if (selector.includes('[role="menuitem"]')) return menuOpen ? [extended] : [];
+      return [];
+    });
+
+    const resultPromise = new Function(
+      `return ${buildThinkingTimeExpressionForTest('extended')}`,
+    )() as Promise<unknown>;
+    await vi.advanceTimersByTimeAsync(11_000);
+
+    await expect(resultPromise).resolves.toEqual({
+      status: 'option-disabled',
+      label: 'Extended',
+      notice: 'Limit reached until tomorrow.',
+    });
+    expect(clicks).toBe(0);
+  });
+});
+
+describe('unavailable thinking-time tiers', () => {
+  it('fails closed with a typed browser automation error for strict selection', async () => {
+    const runtime = {
+      evaluate: vi.fn().mockResolvedValue({
+        result: {
+          value: {
+            status: 'option-disabled',
+            label: 'Extended',
+            notice: 'Limit reached until tomorrow.',
+          },
+        },
+      }),
+    };
+    const logger = vi.fn();
+    Object.assign(logger, { verbose: false });
+
+    await expect(ensureThinkingTime(runtime as never, 'extended', logger as never)).rejects.toMatchObject({
+      name: 'ThinkingTierUnavailableError',
+      category: 'browser-automation',
+      requestedLevel: 'extended',
+      optionLabel: 'Extended',
+      notice: 'Limit reached until tomorrow.',
+      details: { stage: 'thinking-tier-unavailable' },
+    });
+    await expect(ensureThinkingTime(runtime as never, 'extended', logger as never)).rejects.toBeInstanceOf(
+      ThinkingTierUnavailableError,
+    );
+  });
+
+  it('keeps the current effort and reports false for best-effort selection', async () => {
+    const runtime = {
+      evaluate: vi.fn().mockResolvedValue({
+        result: { value: { status: 'option-disabled', label: 'Extended', notice: null } },
+      }),
+    };
+    const logger = vi.fn();
+    Object.assign(logger, { verbose: false });
+
+    await expect(ensureThinkingTimeIfAvailable(runtime as never, 'extended', logger as never)).resolves.toBe(false);
+    expect(logger).toHaveBeenCalledWith(
+      'Thinking time: Extended is unavailable on this account (no reason given); keeping the effort already selected in ChatGPT.',
+    );
   });
 });
 

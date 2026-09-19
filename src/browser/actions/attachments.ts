@@ -360,11 +360,10 @@ export async function uploadAttachmentFile(
       );
     }
     preferredInputSelector = workbenchSurface.inputSelector;
-    logger(
-      workbenchSurface.libraryLabel
-        ? `ChatGPT attachment surface ready: ${workbenchSurface.localFileLabel}; ${workbenchSurface.libraryLabel} is a separate library drawer`
-        : `ChatGPT attachment surface ready: ${workbenchSurface.localFileLabel}; no provider library row is currently exposed`,
-    );
+    const libraryStatus = workbenchSurface.libraryLabel
+      ? `; ${workbenchSurface.libraryLabel} is a separate library drawer`
+      : '; separate library drawer is not present and is not required for local upload';
+    logger(`ChatGPT attachment surface ready: ${workbenchSurface.localFileLabel}${libraryStatus}`);
   }
 
   const documentNode = await dom.getDocument();

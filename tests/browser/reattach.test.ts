@@ -30,7 +30,14 @@ function resolveReattachTestConfig(config: BrowserSessionConfig): ResolvedBrowse
 }
 
 describe('resumeBrowserSession', () => {
-  test('selects target and captures markdown via stubs', async () => {
+  test.each([
+    [{ messageId: 'm1', turnId: 'conversation-turn-1' }, 'm1'],
+    [{ messageId: '  m1  ' }, 'm1'],
+    [{ turnId: 'conversation-turn-1' }, null],
+    [{ messageId: 42 }, null],
+    [{ messageId: '   ' }, null],
+    [null, null],
+  ])('selects target and preserves only captured message identity (%j)', async (meta, expectedId) => {
     const runtime = {
       chromePort: 51559,
       chromeHost: '127.0.0.1',
@@ -62,7 +69,7 @@ describe('resumeBrowserSession', () => {
     const waitForAssistantResponse = vi.fn(async () => ({
       text: 'Hello PATH plan',
       html: '',
-      meta: { messageId: 'm1', turnId: 'conversation-turn-1' },
+      meta,
     }));
     const captureAssistantMarkdown = vi.fn(async () => 'markdown response');
     const logger = vi.fn() as BrowserLogger;
@@ -76,6 +83,7 @@ describe('resumeBrowserSession', () => {
     );
 
     expect(result.answerMarkdown).toBe('markdown response');
+    expect(result.answerMessageId).toBe(expectedId);
     expect(waitForAssistantResponse).toHaveBeenCalled();
     expect(captureAssistantMarkdown).toHaveBeenCalled();
   });
@@ -414,6 +422,7 @@ describe('resumeBrowserSession', () => {
     );
 
     expect(result.answerText).toBe('Recovered after retry');
+    expect(result.answerMessageId).toBe('m1');
     expect(connect).toHaveBeenCalledTimes(2);
     expect(logger).toHaveBeenCalledWith(
       expect.stringContaining(

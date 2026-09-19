@@ -1945,7 +1945,16 @@ export function createExecutionServiceHost(
 				expiredLeaseRunIds,
 				executionPriority,
 			);
-			const actionableExecutionPlan = createActionableExecutionPlan(candidates, maxRuns);
+			let actionableExecutionPlan = createActionableExecutionPlan(candidates, maxRuns);
+			const replaceRejectedReservation = (runId: string) => {
+				// Only future candidates can consume this unused slot: the loop must
+				// not reserve a previously skipped row that it cannot revisit.
+				const nextIndex = candidates.findIndex((candidate) => candidate.runId === runId) + 1;
+				actionableExecutionPlan = createActionableExecutionPlan(
+					candidates.slice(nextIndex),
+					maxRuns - executedCount,
+				);
+			};
 
 			for (const candidate of candidates) {
 				if (!candidate.inspection) {
@@ -2034,6 +2043,7 @@ export function createExecutionServiceHost(
 						},
 					);
 					if (!localClaim?.selected) {
+						replaceRejectedReservation(currentRecord.runId);
 						drained.push({
 							runId: currentRecord.runId,
 							result: "skipped",
@@ -2054,6 +2064,7 @@ export function createExecutionServiceHost(
 						affinity: createRunAffinity(inspection),
 					});
 					if (!localLeaseReadiness.ready) {
+						replaceRejectedReservation(currentRecord.runId);
 						drained.push({
 							runId: currentRecord.runId,
 							result: "skipped",
@@ -2073,6 +2084,7 @@ export function createExecutionServiceHost(
 							inspection = repaired;
 						}
 					} else {
+						replaceRejectedReservation(currentRecord.runId);
 						drained.push({
 							runId: currentRecord.runId,
 							result: "skipped",
@@ -2084,6 +2096,7 @@ export function createExecutionServiceHost(
 				}
 
 				if (inspection.dispatchPlan.runningStepIds.length > 0) {
+					replaceRejectedReservation(currentRecord.runId);
 					drained.push({
 						runId: currentRecord.runId,
 						result: "skipped",
@@ -2094,6 +2107,7 @@ export function createExecutionServiceHost(
 				}
 
 				if (!inspection.dispatchPlan.nextRunnableStepId) {
+					replaceRejectedReservation(currentRecord.runId);
 					drained.push({
 						runId: currentRecord.runId,
 						result: "skipped",
@@ -2106,6 +2120,7 @@ export function createExecutionServiceHost(
 				if (executionGate) {
 					const gate = await executionGate(currentRecord);
 					if (!gate.allowed) {
+						replaceRejectedReservation(currentRecord.runId);
 						drained.push({
 							runId: currentRecord.runId,
 							result: "skipped",
