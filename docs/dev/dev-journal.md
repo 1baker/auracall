@@ -51110,6 +51110,16 @@ Chat repair integrated. Inventory complete at 11. Blank-tab readiness fix instal
   the same profile under an exclusive stock-browser owner and says to wait;
   wake `wake_20260919_145207_3999` will re-check without duplicating the lane.
 
+### Installed-state correction
+
+- A later exact readback found the active installed `thinkingTime.js` and
+  `index.js` byte-identical to the saved rollback and found zero installed
+  `ensureRequiredChatgptProIntelligence` symbols. The earlier installation
+  statement is historical, not current-state proof.
+- Source tests remain valid, but Plan 0361 now requires a patch built against
+  the exact installed baseline before browser proof. The full integration build
+  has large unrelated deltas and was deliberately not copied into the runtime.
+
 ## 2026-09-19 | Plan 0360 overlap and 70-path disposition reconciled
 
 - User confirmed Agent ModelLabs/Homelab owns prompt policy. Plan 0361's

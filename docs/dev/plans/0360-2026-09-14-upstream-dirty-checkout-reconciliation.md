@@ -81,9 +81,10 @@ browser run, or publication is part of Plan 0360.
   accepted dependency. Plan 0360 owns integration around that invariant and
   does not weaken, duplicate, or claim its live proof.
 - No live/provider validation, full integration installation, or ChatGPT Pro
-  relevance audit has been claimed. Plan 0361 separately installed only its
-  narrow three-file runtime patch; a retained-browser Send/readback remains
-  pending Agent Browser authority.
+  relevance audit has been claimed. Post-closeout readback disproved Plan
+  0361's earlier installed-patch claim: the active installed modules match the
+  rollback baseline and contain no guard. An exact-baseline installation and a
+  retained-browser Send/readback remain pending Agent Browser authority.
 
 ## Successor boundary
 

@@ -117,6 +117,9 @@ and release reconciliation around that invariant. The Plan 0361 additions in
 edits in `src/browser/index.ts` and `src/browser/providers/chatgptAdapter.ts`
 compose with, rather than replace, the selectively carried behavior above.
 
-Live proof remains separate: the installed narrow prompt guard has source and
-installed parity, but one retained-browser Send and post-Send slider readback
-are still pending a safe Agent Browser access plan.
+Live proof remains separate. A final installed-runtime readback found zero guard
+symbols and showed the active modules matching the rollback baseline, so the
+prompt guard is source-verified but not currently installed. The full
+integration build is not a safe substitute for an exact-baseline patch. Plan
+0361 therefore still needs installation plus one retained-browser Send and
+post-Send slider readback through a safe Agent Browser access plan.

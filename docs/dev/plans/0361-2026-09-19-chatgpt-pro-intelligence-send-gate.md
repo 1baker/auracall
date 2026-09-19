@@ -2,8 +2,9 @@
 
 State: OPEN
 
-Current status: PARTIAL — source and installed runtime verified; live
-retained-browser proof is pending a safe Agent Browser route.
+Current status: PARTIAL — source and provider-free behavior are verified, but
+current installed-runtime readback does not contain the guard. Installation and
+live retained-browser proof are both pending.
 
 ## Goal
 
@@ -24,6 +25,16 @@ slider cannot be found, set, or verified, fail closed before Send.
 - Installed-module import and digest checks.
 - One retained-browser prompt proving `Required prompt intelligence: Pro`, a
   successful Send, and slider value 4 after submission.
+
+## Current installed blocker
+
+A post-reconciliation readback found zero installed
+`ensureRequiredChatgptProIntelligence` symbols. The installed `thinkingTime.js`
+and `index.js` hashes match the saved rollback bytes, so the earlier narrow
+installation claim is no longer current. The full integration build differs
+substantially from that older installed runtime and must not be copied over it
+as a three-file patch. Prepare and verify an exact-baseline surgical patch or a
+separately authorized full installation before any live Send.
 
 ## Current live blocker
 
