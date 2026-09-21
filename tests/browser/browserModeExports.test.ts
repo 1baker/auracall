@@ -7,6 +7,7 @@ import {
   formatChatgptBlockingSurfaceErrorForTest,
   logChatgptUnexpectedStateForTest,
   resolveBrowserRuntimeEntryContextForTest,
+  resolveBrowserDispatchBrokerUrl,
   acquireBrowserExecutionOperationForTest,
   releaseBrowserExecutionOperationAfterPreflightFailureForTest,
   resolveBrokerHeadlessForTest,
@@ -14,8 +15,12 @@ import {
   shouldPreserveBrowserOnErrorForTest,
   shouldKeepManagedChatgptBrowserOpenForTest,
   shouldTreatChatgptAssistantResponseAsStaleForTest,
+  canRefreshChatgptAssistantSnapshot,
+  buildChatgptSubmittedUserBoundaryExpression,
+  buildChatgptSubmittedUserIdentityExpression,
   resolveManagedBrowserLaunchContextForTest,
   extractParseableJsonObjectTextForTest,
+  createRemoteChatgptConnectionLossErrorForTest,
 } from '../../src/browser/index.js';
 import { BrowserAutomationError } from '../../src/oracle/errors.js';
 import { setAuracallHomeDirOverrideForTest } from '../../src/auracallHome.js';
@@ -28,6 +33,63 @@ import { createFileBackedBrowserOperationDispatcher } from '../../packages/brows
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+
+test('identical output requires distinct identities and proven submitted-user ordering', () => {
+  const sameFiles = 'final-thought.docx\nfinal-thought.pdf\nfinal-thought-artifacts.zip';
+  const input = { baselineText: sameFiles, answerText: sameFiles,
+    baselineMessageId: 'r1-assistant', answerMessageId: 'r2-assistant' };
+  expect(shouldTreatChatgptAssistantResponseAsStaleForTest(input)).toBe(true);
+  expect(shouldTreatChatgptAssistantResponseAsStaleForTest({ ...input, answerAfterSubmittedUser: false })).toBe(true);
+  expect(shouldTreatChatgptAssistantResponseAsStaleForTest({ ...input, answerAfterSubmittedUser: true })).toBe(false);
+  expect(shouldTreatChatgptAssistantResponseAsStaleForTest({ ...input, answerMessageId: 'r1-assistant', answerAfterSubmittedUser: true })).toBe(true);
+  expect(shouldTreatChatgptAssistantResponseAsStaleForTest({ ...input, answerMessageId: null, answerAfterSubmittedUser: true })).toBe(true);
+});
+
+test('submitted-user DOM boundary rejects older, disconnected and superseded answers', () => {
+  const constants = Object.fromEntries([['DOCUMENT_POSITION_DISCONNECTED', 1], ['DOCUMENT_POSITION_FOLLOWING', 4]]);
+  const makeNode = (id: string, role: string, position = 4) => ({
+    getAttribute: (name: string) => name === 'data-message-id' ? id : name === 'data-message-author-role' ? role : null,
+    querySelector: () => null,
+    compareDocumentPosition: () => position,
+  });
+  const evaluate = (nodes: ReturnType<typeof makeNode>[]) => new Function('document', 'Node',
+    `return ${buildChatgptSubmittedUserBoundaryExpression('r2-user', 'r2-assistant')}`)(
+      { querySelectorAll: () => nodes }, constants);
+  const answer = makeNode('r2-assistant', 'assistant');
+  expect(evaluate([makeNode('r1-assistant', 'assistant'), makeNode('r2-user', 'user'), answer])).toBe(true);
+  expect(evaluate([answer, makeNode('r2-user', 'user', 2)])).toBe(false);
+  expect(evaluate([makeNode('r2-user', 'user', 5), answer])).toBe(false);
+  expect(evaluate([makeNode('r2-user', 'user'), answer, makeNode('r3-user', 'user')])).toBe(false);
+  expect(evaluate([makeNode('r2-user', 'user'), answer, answer])).toBe(false);
+});
+
+test('submitted-user identity requires a new ID and complete prompt despite trailing attachment controls', () => {
+  const proof = { previousUserId: 'prior-user', prompt: 'Complete synthetic request nonce-123' };
+  const evaluate = (id: string, text: string) => new Function('document',
+    `return ${buildChatgptSubmittedUserIdentityExpression(proof)}`)({ querySelectorAll: () => [{
+      getAttribute: (name: string) => name === 'data-message-id' ? id : name === 'data-message-author-role' ? 'user' : null,
+      querySelector: () => null, innerText: text,
+    }] });
+  expect(evaluate('submitted-user', 'source.md\nComplete synthetic request nonce-123')).toBe('submitted-user');
+  expect(evaluate('prior-user', proof.prompt)).toBeNull();
+  expect(evaluate('submitted-user', 'Different request nonce-123')).toBeNull();
+  expect(evaluate('submitted-user', `${proof.prompt}\nTask input artifacts: - file:source.md\nShow more`)).toBe('submitted-user');
+  expect(evaluate('submitted-user', `${proof.prompt}\nShow more`)).toBe('submitted-user');
+  expect(evaluate('submitted-user', 'Complete synthetic request\nTask input artifacts: - file:source.md\nShow more')).toBeNull();
+});
+
+test('final DOM refresh stays bound to the verified fresh assistant identity', () => {
+  expect(canRefreshChatgptAssistantSnapshot({
+    answerMessageId: 'new', snapshotMessageId: 'new', baselineMessageId: 'old',
+  })).toBe(true);
+  for (const [answerMessageId, snapshotMessageId] of [
+    ['new', 'old'], ['new', undefined], [undefined, 'new'], ['old', 'old'],
+  ]) {
+    expect(canRefreshChatgptAssistantSnapshot({
+      answerMessageId, snapshotMessageId, baselineMessageId: 'old',
+    })).toBe(false);
+  }
+});
 
 type JsonValue = null | boolean | number | string | JsonValue[] | JsonObject;
 type JsonObject = { [key: string]: JsonValue };
@@ -49,6 +111,26 @@ function resolvedBrowserConfig(config: BrowserAutomationConfig) {
 }
 
 describe('browserMode exports', () => {
+
+  test('classifies fresh-project connection loss as non-retryable outcome uncertainty', () => {
+    const cause = new Error('WebSocket connection closed');
+    const runtime = { chromeHost: '127.0.0.1', chromePort: 9222, chromeTargetId: 'retained-target' };
+    const freshProject = createRemoteChatgptConnectionLossErrorForTest(
+      'g-p-11111111111111111111111111111111', runtime, cause,
+    );
+    expect(freshProject).toMatchObject({
+      details: {
+        code: 'chatgpt_new_conversation_outcome_unknown',
+        projectId: 'g-p-11111111111111111111111111111111',
+        phase: 'after', retryable: false, stage: 'connection-lost', runtime,
+      },
+      cause,
+    });
+    expect(createRemoteChatgptConnectionLossErrorForTest(null, runtime, cause)).toMatchObject({
+      details: { stage: 'connection-lost', runtime }, cause,
+    });
+  });
+
   test('re-exports runBrowserMode and constants', () => {
     expect(typeof runBrowserMode).toBe('function');
     expect(typeof CHATGPT_URL).toBe('string');
@@ -160,6 +242,25 @@ describe('browserMode exports', () => {
       items: [{ n: 1 }],
     });
     expect(extractParseableJsonObjectTextForTest('{"title":"unfinished"')).toBeNull();
+  });
+
+  test('explicit new project conversation bypasses ambient old-chat URL without changing legacy routing', () => {
+    const previous = process.env.AURACALL_AGENT_BROWSER_URL_CHATGPT;
+    const project = 'g-p-0123456789abcdef0123456789abcdef';
+    const root = `https://chatgpt.com/g/${project}/project`;
+    const old = `https://chatgpt.com/g/${project}/c/01234567-89ab-cdef-0123-456789abcdef`;
+    process.env.AURACALL_AGENT_BROWSER_URL_CHATGPT = old;
+    try {
+      expect(resolveBrowserDispatchBrokerUrl('chatgpt', root, project)).toBe(root);
+      expect(resolveBrowserDispatchBrokerUrl('chatgpt', root)).toBe(old);
+      expect(resolveBrowserDispatchBrokerUrl('chatgpt', 'https://chatgpt.com/c/explicit-chat')).toBe('https://chatgpt.com/c/explicit-chat');
+      expect(() => resolveBrowserDispatchBrokerUrl('chatgpt', old, project)).toThrow('exact project-root');
+      expect(() => resolveBrowserDispatchBrokerUrl('grok', root, project)).toThrow('exact project-root');
+      expect(() => resolveBrowserDispatchBrokerUrl('chatgpt', root, 'g-p-ffffffffffffffffffffffffffffffff')).toThrow('exact project-root');
+    } finally {
+      if (previous === undefined) delete process.env.AURACALL_AGENT_BROWSER_URL_CHATGPT;
+      else process.env.AURACALL_AGENT_BROWSER_URL_CHATGPT = previous;
+    }
   });
 
   test('builds ChatGPT project dispatch probes that accept UUID project routes', () => {

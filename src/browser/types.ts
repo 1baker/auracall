@@ -1,6 +1,7 @@
 import type * as BaseTypes from '../../packages/browser-service/src/types.js';
 import type { ProviderSessionAuthorization } from './providers/providerSessionAuthority.js';
-import type { AgentBrowserHost } from './service/agentBrowserBridge.js';
+import type { AgentBrowserHost, AgentBrowserBridgeDependencies } from './service/agentBrowserBridge.js';
+import type { BrokerCdpBinding } from '../../packages/browser-service/src/brokerCdpClient.js';
 
 export type {
   ChromeClient,
@@ -46,6 +47,7 @@ type LlmBrowserFields = {
   target?: 'chatgpt' | 'gemini' | 'grok';
   auracallProfileName?: string | null;
   projectId?: string | null;
+  chatgptNewConversationProjectId?: string | null;
   conversationId?: string | null;
   geminiUrl?: string | null;
   grokUrl?: string | null;
@@ -62,6 +64,8 @@ type LlmBrowserFields = {
 };
 
 export type BrowserRuntimeMetadata = BaseTypes.BrowserRuntimeMetadata & {
+  agentBrowserTransport?: 'native';
+  agentBrowserBinding?: BrokerCdpBinding;
   browserAuthority?: 'agent-browser' | 'compatibility-fallback' | 'explicit-off';
   agentBrowserAcquisitionDecision?: string;
   agentBrowserAcquisitionEvidence?: 'broker_inventory' | 'planned_request_legacy' | 'service_response';
@@ -93,6 +97,10 @@ export type BrowserRuntimeMetadata = BaseTypes.BrowserRuntimeMetadata & {
   chatgptDeepResearchModifyPlanLabel?: string | null;
   chatgptDeepResearchModifyPlanVisible?: boolean;
   chatgptDeepResearchReviewEvidence?: Record<string, unknown> | null;
+  chatgptNewConversationFreshProjectId?: string;
+  chatgptNewConversationFreshUrl?: string;
+  chatgptNewConversationFreshMessageCount?: 0;
+  chatgptNewConversationFreshPromptReady?: true;
 };
 
 type BrowserBlockingProfileAction =
@@ -110,6 +118,8 @@ export type BrowserAutomationConfig = Omit<BaseTypes.BrowserAutomationConfig, 'b
   };
 
 export type BrowserRunOptions = Omit<BaseTypes.BrowserRunOptions, 'config' | 'runtimeHintCb'> & {
+  /** Trusted runtime dependency; never serialized into browser config/evidence. */
+  nativeBrokerTransport?: AgentBrowserBridgeDependencies['nativeTransport'];
   config?: BrowserAutomationConfig;
   runtimeHintCb?: (hint: BrowserRuntimeMetadata) => void | Promise<void>;
   runtimeEvidenceCb?: (evidence: BrowserRuntimeEvidence) => void | Promise<void>;

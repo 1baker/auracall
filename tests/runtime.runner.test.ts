@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { setAuracallHomeDirOverrideForTest } from '../src/auracallHome.js';
-import { createExecutionRuntimeControl } from '../src/runtime/control.js';
+import { createExecutionRuntimeControl, reconcileFailedBrowserRecovery } from '../src/runtime/control.js';
 import { createExecutionResponsesService } from '../src/runtime/responsesService.js';
 import {
   createExecutionRun,
@@ -89,6 +89,42 @@ describe('runtime runner', () => {
   afterEach(async () => {
     setAuracallHomeDirOverrideForTest(null);
     await Promise.all(cleanup.splice(0).map((entry) => fs.rm(entry, { recursive: true, force: true })));
+  });
+
+  it('reconciles one failed browser recovery with revision and replay guards', async () => {
+    const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), 'auracall-recovery-requeue-'));
+    cleanup.push(homeDir);
+    setAuracallHomeDirOverrideForTest(homeDir);
+    const control = createExecutionRuntimeControl();
+    const bundle = createDirectBundle('failed-recovery');
+    bundle.run.status = 'failed';
+    const step = bundle.steps[0]!;
+    step.status = 'failed';
+    step.failure = { code: 'runner_execution_failed', ownerStepId: step.id, details: null,
+      message: `Recovered ChatGPT browser-backed run ${bundle.run.id} could not reattach to the submitted tab; refusing to replay the prompt: missing target` };
+    bundle.events.push(createExecutionRunEvent({ id: 'recovered', runId: bundle.run.id,
+      type: 'note-added', stepId: step.id, createdAt: '2026-09-11T15:00:00Z',
+      note: 'recovered stranded running step for host replay' }));
+    const original = await control.createRun(bundle);
+    const input = { runId: bundle.run.id, expectedRevision: original.revision, at: '2026-09-11T15:01:00Z' };
+    await expect(reconcileFailedBrowserRecovery(control, { ...input, expectedRevision: 999 })).rejects.toThrow('revision');
+    const requeued = await reconcileFailedBrowserRecovery(control, input);
+    expect(requeued.bundle.steps[0]?.input.structuredData?.recoveryOnly).toBe(true);
+    expect(requeued.bundle.steps[0]?.status).toBe('runnable');
+    expect(requeued.bundle.run.status).toBe('running');
+    expect(requeued.bundle.events).toEqual(expect.arrayContaining(original.bundle.events));
+    expect(requeued.bundle.events.at(-1)?.payload?.previousFailure).toEqual(step.failure);
+    await expect(reconcileFailedBrowserRecovery(control, { ...input, expectedRevision: requeued.revision })).rejects.toThrow('not eligible');
+    await expect(reconcileFailedBrowserRecovery(control, input)).rejects.toThrow('revision');
+    const failedAgain = structuredClone(requeued.bundle);
+    failedAgain.run.status = 'failed';
+    failedAgain.steps[0]!.status = 'failed';
+    failedAgain.steps[0]!.failure = step.failure;
+    const savedAgain = await control.persistRun({ runId: input.runId,
+      expectedRevision: requeued.revision, bundle: failedAgain });
+    await expect(reconcileFailedBrowserRecovery(control, {
+      ...input, expectedRevision: savedAgain.revision,
+    })).rejects.toThrow('not eligible');
   });
 
   it('executes one stored direct run to completion through the bounded local runner', async () => {
@@ -1520,7 +1556,10 @@ describe('runtime runner', () => {
     expect(observedSignal?.aborted).toBe(true);
     expect(executed.bundle.run.status).toBe('cancelled');
     expect(executed.bundle.steps[0]?.status).toBe('cancelled');
-    expect(executed.bundle.leases[0]?.releaseReason).toBe('cancelled');
+    // The runner may return its cancellation snapshot before the separately
+    // awaited control.releaseLease write. Check that write in durable state.
+    const durable = await control.readRun('run_cancel_signal');
+    expect(durable?.bundle.leases[0]?.releaseReason).toBe('cancelled');
   });
 
   it('persists and resolves local action requests emitted from step output', async () => {

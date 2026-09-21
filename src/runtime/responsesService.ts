@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import {
 	createTaskRunSpecRecordStore,
@@ -59,13 +59,25 @@ export interface ExecutionResponsesServiceDeps {
 }
 
 export interface ExecutionResponsesService {
-	createResponse(request: ExecutionRequest): Promise<ExecutionResponse>;
+	createResponse(
+		request: ExecutionRequest,
+		options?: ExecutionResponseCreateOptions,
+	): Promise<ExecutionResponse>;
 	readResponse(responseId: string): Promise<ExecutionResponse | null>;
 	cancelResponse?(
 		responseId: string,
 		note?: string | null,
 	): Promise<ExecutionServiceHostCancelActionResult>;
 	retryResponse?(input: ExecutionResponseRetryInput): Promise<ExecutionResponseRetryResult>;
+}
+
+export interface ExecutionResponseCreateOptions {
+	idempotencyKey?: string | null;
+}
+
+interface ExecutionResponseCreateIdempotencyLineage {
+	keyHash: string;
+	requestFingerprint: string;
 }
 
 export interface ExecutionResponseRetryLineage {
@@ -145,10 +157,40 @@ export function createExecutionResponsesService(
 	};
 
 	return {
-		async createResponse(requestInput) {
+		async createResponse(requestInput, options = {}) {
 			const request = createExecutionRequest(requestInput);
-			const responseId = generateResponseId();
-			return createResponseWithId(responseId, request);
+			const idempotencyKey = options.idempotencyKey?.trim() || null;
+			if (!idempotencyKey) {
+				return createResponseWithId(generateResponseId(), request);
+			}
+			if (idempotencyKey.length > 200) {
+				throw new Error("Response create idempotency key exceeds 200 characters.");
+			}
+			const lineage: ExecutionResponseCreateIdempotencyLineage = {
+				keyHash: hashResponseCreateValue(idempotencyKey),
+				requestFingerprint: hashResponseCreateValue(stableJson(request)),
+			};
+			const responseId = `resp_idem_${lineage.keyHash.slice(0, 32)}`;
+			const idempotentRequest = createExecutionRequest({
+				...request,
+				metadata: {
+					...(request.metadata ?? {}),
+					auracallCreateIdempotency: lineage,
+				},
+			});
+			const existing = await control.readRun(responseId);
+			if (existing) {
+				assertCreateResponseIdempotencyLineage(existing, lineage);
+				return createExecutionResponseForStoredRecord(existing.bundle, taskRunSpecStore);
+			}
+			try {
+				return await createResponseWithId(responseId, idempotentRequest);
+			} catch (error) {
+				const raced = await control.readRun(responseId);
+				if (!raced) throw error;
+				assertCreateResponseIdempotencyLineage(raced, lineage);
+				return createExecutionResponseForStoredRecord(raced.bundle, taskRunSpecStore);
+			}
 		},
 
 		async readResponse(responseId) {
@@ -215,6 +257,40 @@ export function createExecutionResponsesService(
 			}
 		},
 	};
+}
+
+function hashResponseCreateValue(value: string): string {
+	return createHash("sha256").update(value).digest("hex");
+}
+
+function stableJson(value: unknown): string {
+	if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
+	if (value && typeof value === "object") {
+		const entries = Object.entries(value as Record<string, unknown>)
+			.filter(([, item]) => item !== undefined)
+			.sort(([left], [right]) => left.localeCompare(right));
+		return `{${entries.map(([key, item]) => `${JSON.stringify(key)}:${stableJson(item)}`).join(",")}}`;
+	}
+	return JSON.stringify(value) ?? "null";
+}
+
+function assertCreateResponseIdempotencyLineage(
+	record: ExecutionRunStoredRecord,
+	expected: ExecutionResponseCreateIdempotencyLineage,
+): void {
+	const metadata = createExecutionRequestFromRecord(record).metadata;
+	const lineage = isObject(metadata?.auracallCreateIdempotency)
+		? metadata.auracallCreateIdempotency
+		: null;
+	if (
+		!lineage ||
+		lineage.keyHash !== expected.keyHash ||
+		lineage.requestFingerprint !== expected.requestFingerprint
+	) {
+		throw new Error(
+			"Response create idempotency key already identifies a different durable request.",
+		);
+	}
 }
 
 function assertRetryResponseLineage(

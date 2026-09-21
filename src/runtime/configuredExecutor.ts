@@ -19,12 +19,18 @@ import {
 import { runBrowserMode } from '../browser/index.js';
 import { resumeBrowserSession } from '../browser/reattach.js';
 import { waitForAssistantResponse } from '../browser/actions/assistantResponse.js';
+import { BrowserAutomationError } from '../oracle/errors.js';
+import { CHATGPT_CONVERSATION_CAPACITY_CODE } from '../browser/providers/chatgptConversationCapacity.js';
+import { assertChatgptNewConversationUrl } from '../browser/providers/chatgptNewConversation.js';
 import {
+  AGENT_BROWSER_CLEANUP_UNVERIFIED,
+  captureAgentBrowserNativeResponse,
   reattachAgentBrowserBrokerTab,
   withAgentBrowserBrokerCleanup,
   type AgentBrowserBridgeResult,
   type AgentBrowserHost,
 } from '../browser/service/agentBrowserBridge.js';
+import { createConfiguredNativeBrokerAuthority } from '../browser/service/configuredNativeBrokerAuthority.js';
 import type {
   BrowserAttachment,
   BrowserPassiveObservation,
@@ -58,7 +64,7 @@ import {
 
 type MutableRecord = Record<string, unknown>;
 
-const BROWSER_INLINE_PROMPT_CHAR_BUDGET = 60_000;
+export const BROWSER_INLINE_PROMPT_CHAR_BUDGET = 60_000;
 const BROWSER_ATTACHMENT_BUNDLE_THRESHOLD = 10;
 const BROWSER_ATTACHMENT_BUNDLE_MAX_BYTES = 20 * 1024 * 1024;
 const BROWSER_ATTACHMENT_BUNDLE_DISPLAY_PATH = 'auracall-upload-bundle.md';
@@ -81,6 +87,7 @@ const BROWSER_ATTACHMENT_BUNDLE_TEXT_EXTENSIONS = new Set([
 ]);
 
 export interface CreateConfiguredStoredStepExecutorDeps {
+  nativeBrokerTransport?: BrowserRunOptions['nativeBrokerTransport'];
   runBrowserModeImpl?: (options: BrowserRunOptions) => Promise<Awaited<ReturnType<typeof runBrowserMode>>>;
   runGeminiBrowserModeImpl?: (options: BrowserRunOptions) => Promise<Awaited<ReturnType<typeof runBrowserMode>>>;
   runGeminiNativePromptImpl?: (input: ConfiguredGeminiNativePromptInput) => Promise<BrowserRunResult>;
@@ -170,6 +177,7 @@ function readLatestRuntimeEvidenceForStep(
   const stepId = context.step.id;
   const events = [...(context.record.bundle.events ?? [])].reverse();
   let bestEvidence: MutableRecord | null = null;
+  let nativeEvidence: MutableRecord | null = null;
   let bestScore = -1;
   for (const event of events) {
     if (event.stepId && event.stepId !== stepId) {
@@ -183,6 +191,17 @@ function readLatestRuntimeEvidenceForStep(
     }
     const evidenceService = asNonEmptyString(details.service);
     if (evidenceService && evidenceService !== service) {
+      continue;
+    }
+    // Native provenance is immutable for this step. Never let richer legacy
+    // host/port hints outrank it, even when the native hint predates submission.
+    if (details.agentBrowserTransport != null || details.agentBrowserBinding != null) {
+      if (details.agentBrowserTransport !== 'native' || !isRecord(details.agentBrowserBinding)) {
+        throw new Error('Inconsistent native broker evidence; refusing raw Chrome recovery or prompt replay');
+      }
+      // Newest native receipt wins even over richer legacy endpoint evidence.
+      // Incomplete native provenance is rejected by recovery, never downgraded.
+      nativeEvidence ??= runtimeEvidence;
       continue;
     }
     const chromeTargetId = asNonEmptyString(details.chromeTargetId);
@@ -205,7 +224,7 @@ function readLatestRuntimeEvidenceForStep(
       bestEvidence = runtimeEvidence;
     }
   }
-  return bestEvidence;
+  return nativeEvidence ?? bestEvidence;
 }
 
 function isSubmittedChatgptRuntimeEvidence(evidence: MutableRecord, details: MutableRecord): boolean {
@@ -216,6 +235,7 @@ function isSubmittedChatgptRuntimeEvidence(evidence: MutableRecord, details: Mut
   const state = asNonEmptyString(evidence.state);
   const evidenceRef = asNonEmptyString(evidence.evidenceRef);
   return (
+		evidenceRef === 'chatgpt-prompt-send-intent' ||
     evidenceRef === 'chatgpt-prompt-dispatched' ||
     evidenceRef === 'chatgpt-prompt-submitted' ||
     evidenceRef === 'chatgpt-passive-dom-probe' ||
@@ -247,7 +267,21 @@ function buildBrowserRuntimeMetadataFromEvidence(input: {
     asNonEmptyString(details.conversationId) ??
     extractChatgptConversationIdFromUrl(tabUrl ?? null) ??
     undefined;
+  const bindingKeys = ['attachmentId', 'browserId', 'profileId', 'sessionName', 'targetId', 'generation'] as const;
+  const storedBinding = isRecord(details.agentBrowserBinding) ? details.agentBrowserBinding : null;
+  if ((details.agentBrowserBinding != null && details.agentBrowserTransport !== 'native')
+    || (details.agentBrowserTransport != null && details.agentBrowserTransport !== 'native')) {
+    throw new Error('Persisted broker transport identity is inconsistent; refusing raw Chrome recovery');
+  }
+  if (details.agentBrowserTransport === 'native' && (!storedBinding
+    || !bindingKeys.every(key => typeof storedBinding[key] === 'string' && String(storedBinding[key]).trim()))) {
+    throw new Error('Persisted native broker binding is incomplete; refusing raw Chrome recovery');
+  }
   return {
+    agentBrowserTransport: details.agentBrowserTransport === 'native' ? 'native' : undefined,
+    agentBrowserBinding: details.agentBrowserTransport === 'native'
+      ? Object.fromEntries(bindingKeys.map(key => [key, storedBinding?.[key]])) as BrowserRuntimeMetadata['agentBrowserBinding']
+      : undefined,
     auracallProfileName: input.runtimeProfileId,
     selectedAgentId: input.agentId,
     chromePort: asFiniteNumber(details.chromePort) ?? undefined,
@@ -300,6 +334,7 @@ function createBrowserRunResultFromReattach(input: {
     tookMs: 0,
     answerTokens: Math.max(1, Math.ceil(answerMarkdown.length / 4)),
     answerChars: answerText.length,
+    answerMessageId: input.result.answerMessageId ?? null,
     chromePid: undefined,
     chromePort: input.runtime.chromePort,
     chromeHost: input.runtime.chromeHost,
@@ -330,6 +365,16 @@ function buildBrowserResponseArtifactInstruction(
   service: 'chatgpt' | 'gemini' | 'grok',
 ): string | null {
   if (!shouldMaterializeBrowserResponseArtifacts(metadata)) return null;
+  const requiredNames = readRequiredBrowserResponseArtifactFileNames(metadata);
+  if (hasRequiredArtifactFileSet(metadata)) {
+    return [
+      `Create every required downloadable file, with these exact local filenames: ${requiredNames.join(', ')}.`,
+      'Do not substitute inline prose, a ZIP archive, or one file for the complete required set.',
+      ...(service === 'chatgpt' ? requiredNames.map(name =>
+        `Write /mnt/data/${path.basename(name)} and include [${path.basename(name)}](sandbox:/mnt/data/${path.basename(name)}).`) : []),
+      'Do not report the package ready until every required file exists and can be downloaded.',
+    ].join(' ');
+  }
   const fileName = readRequiredBrowserResponseArtifactFileName(metadata);
   const target = fileName ? ` named exactly ${fileName}` : '';
   const fileBaseName = fileName ? path.basename(fileName) : null;
@@ -355,7 +400,26 @@ function shouldMaterializeBrowserResponseArtifacts(metadata: unknown): boolean {
   const outputContract = isRecord(metadata.outputContract) ? metadata.outputContract : null;
   if (!outputContract) return false;
   const mode = asNonEmptyString(outputContract.mode)?.toLowerCase() ?? '';
-  return mode.includes('artifact') || asNonEmptyString(outputContract.artifactFileName) !== null;
+  return mode.includes('artifact') || readRequiredBrowserResponseArtifactFileNames(metadata).length > 0;
+}
+
+function hasRequiredArtifactFileSet(metadata: unknown): boolean {
+  return isRecord(metadata) && isRecord(metadata.outputContract) &&
+    metadata.outputContract.artifactFileNames !== undefined;
+}
+
+function readRequiredBrowserResponseArtifactFileNames(metadata: unknown): string[] {
+  const single = readRequiredBrowserResponseArtifactFileName(metadata);
+  if (!hasRequiredArtifactFileSet(metadata)) return single ? [single] : [];
+  const names = (metadata as MutableRecord).outputContract as MutableRecord;
+  const raw = names.artifactFileNames;
+  if (!Array.isArray(raw) || raw.length === 0 || raw.length > 32 ||
+      raw.some(name => typeof name !== 'string' || !name.trim() ||
+        name.trim() === '.' || name.trim() === '..' || /[\\\x00-\x1f]/.test(name) ||
+        path.basename(name.trim()) !== name.trim())) {
+    throw new Error('outputContract.artifactFileNames must contain 1 to 32 nonempty local filenames');
+  }
+  return [...new Set([...(single ? [single] : []), ...raw.map(name => (name as string).trim())])];
 }
 
 function readRequiredBrowserResponseArtifactFileName(metadata: unknown): string | null {
@@ -393,17 +457,15 @@ function assertRequiredBrowserResponseArtifactMaterialized(input: {
   notes: string[];
   answerText: string;
 }): void {
-  const requiredFileName = readRequiredBrowserResponseArtifactFileName(input.metadata);
-  if (!requiredFileName && !shouldMaterializeBrowserResponseArtifacts(input.metadata)) {
+  const requiredFileNames = readRequiredBrowserResponseArtifactFileNames(input.metadata);
+  if (!requiredFileNames.length && !shouldMaterializeBrowserResponseArtifacts(input.metadata)) {
     return;
   }
-  const hasRequiredArtifact = requiredFileName
-    ? input.artifacts.some((artifact) => artifactMatchesRequiredFileName(artifact, requiredFileName) && artifactIsMaterializedFile(artifact))
-    : input.artifacts.some((artifact) => artifactIsMaterializedFile(artifact));
+  const hasRequiredArtifact = hasRequiredBrowserResponseArtifactMaterialized(input);
   if (hasRequiredArtifact) {
     return;
   }
-  const expected = requiredFileName ?? 'a browser response artifact';
+  const expected = requiredFileNames.length ? requiredFileNames.join(', ') : 'a browser response artifact';
   const materializationNote = input.notes.find((note) => note.includes('browser response artifact materialization'));
   const answerPreview = input.answerText.replace(/\s+/g, ' ').trim().slice(0, 240);
   throw new Error(
@@ -417,6 +479,11 @@ function hasRequiredBrowserResponseArtifactMaterialized(input: {
   metadata: unknown;
   artifacts: TeamRunArtifactRef[];
 }): boolean {
+  if (hasRequiredArtifactFileSet(input.metadata)) {
+    const names = readRequiredBrowserResponseArtifactFileNames(input.metadata);
+    return names.every(name => input.artifacts.some(artifact => artifactIsMaterializedFile(artifact) &&
+      normalizeArtifactName(path.basename(artifact.path!)) === normalizeArtifactName(path.basename(name))));
+  }
   const requiredFileName = readRequiredBrowserResponseArtifactFileName(input.metadata);
   if (!requiredFileName && !shouldMaterializeBrowserResponseArtifacts(input.metadata)) {
     return true;
@@ -430,6 +497,8 @@ function buildRequiredArtifactCorrectionPrompt(input: {
   metadata: unknown;
   previousAnswerText: string;
 }): string | null {
+  // Never repair an explicit package with the legacy single-file prompt.
+  if (hasRequiredArtifactFileSet(input.metadata)) return null;
   const requiredFileName = readRequiredBrowserResponseArtifactFileName(input.metadata);
   if (!requiredFileName) {
     return null;
@@ -583,8 +652,8 @@ export async function materializeBrowserResponseArtifacts(
   };
 }
 
-function buildBrowserPromptWithRequestInstructions(
-  context: ExecuteStoredRunStepContext,
+export function buildBrowserPromptWithRequestInstructions(
+  context: Pick<ExecuteStoredRunStepContext, 'step'>,
   prompt: string,
   service: 'chatgpt' | 'gemini' | 'grok',
 ): string {
@@ -1227,7 +1296,14 @@ export function createConfiguredStoredStepExecutor(
       asAgentBrowserHost(runtimeServiceConfig?.browserHost) ??
       asAgentBrowserHost(globalServiceConfig?.browserHost) ??
       null;
+    const newConversationProjectId = requestAuracall?.chatgptNewConversationProjectId ?? null;
+    if (newConversationProjectId !== null && (service !== 'chatgpt'
+      || typeof newConversationProjectId !== 'string' || !/^g-p-[a-f0-9]{32}$/.test(newConversationProjectId)
+      || requestAuracall?.chatgptConversationUrl != null)) {
+      throw new Error('Invalid or conflicting explicit ChatGPT new project conversation request.');
+    }
     const projectId =
+      newConversationProjectId ??
       asNonEmptyString(agentConfig?.projectId) ??
       asNonEmptyString(runtimeServiceConfig?.projectId) ??
       asNonEmptyString(globalServiceConfig?.projectId) ??
@@ -1318,6 +1394,8 @@ export function createConfiguredStoredStepExecutor(
         | 'agentBrowserAcquisitionDecision'
         | 'agentBrowserAcquisitionEvidence'
         | 'agentBrowserBridgeMode'
+        | 'agentBrowserTransport'
+        | 'agentBrowserBinding'
         | 'agentBrowserBaseUrl'
         | 'agentBrowserBrowserId'
         | 'agentBrowserBrowserHost'
@@ -1346,6 +1424,8 @@ export function createConfiguredStoredStepExecutor(
       agentBrowserAcquisitionDecision: runtime?.agentBrowserAcquisitionDecision ?? null,
       agentBrowserAcquisitionEvidence: runtime?.agentBrowserAcquisitionEvidence ?? null,
       agentBrowserBridgeMode: runtime?.agentBrowserBridgeMode ?? null,
+      agentBrowserTransport: runtime?.agentBrowserTransport ?? null,
+      agentBrowserBinding: runtime?.agentBrowserBinding ?? null,
       agentBrowserBaseUrl: runtime?.agentBrowserBaseUrl ?? null,
       agentBrowserBrowserId: runtime?.agentBrowserBrowserId ?? null,
       agentBrowserBrowserHost: runtime?.agentBrowserBrowserHost ?? null,
@@ -1443,7 +1523,17 @@ export function createConfiguredStoredStepExecutor(
       }
     };
 
+    const nativeBrokerTransport = deps.nativeBrokerTransport ?? (
+      service === 'chatgpt' && process.env.AURACALL_AGENT_BROWSER_BRIDGE?.trim().toLowerCase() === 'required'
+        ? createConfiguredNativeBrokerAuthority({
+            sessionName: process.env.AURACALL_AGENT_BROWSER_SESSION?.trim() || 'chatgpt-pro',
+            runId: context.record.runId,
+            agentName: context.step.agentId,
+          })
+        : undefined
+    );
     const browserRunOptions: BrowserRunOptions = {
+      nativeBrokerTransport,
       prompt: promptTransport.prompt,
       abortSignal: context.abortSignal,
       attachments: promptTransport.attachments,
@@ -1455,6 +1545,7 @@ export function createConfiguredStoredStepExecutor(
         agentBrowserHost,
         projectId,
         conversationId: null,
+        chatgptNewConversationProjectId: newConversationProjectId,
         url: service === 'chatgpt' ? (targetUrl ?? undefined) : undefined,
         chatgptUrl: service === 'chatgpt' ? (targetUrl ?? undefined) : undefined,
         geminiUrl: service === 'gemini' ? (targetUrl ?? undefined) : undefined,
@@ -1530,6 +1621,8 @@ export function createConfiguredStoredStepExecutor(
             agentBrowserAcquisitionDecision: hint.agentBrowserAcquisitionDecision ?? null,
             agentBrowserAcquisitionEvidence: hint.agentBrowserAcquisitionEvidence ?? null,
             agentBrowserBridgeMode: hint.agentBrowserBridgeMode ?? null,
+            agentBrowserTransport: hint.agentBrowserTransport ?? null,
+            agentBrowserBinding: hint.agentBrowserBinding ?? null,
             agentBrowserBaseUrl: hint.agentBrowserBaseUrl ?? null,
             agentBrowserBrowserId: hint.agentBrowserBrowserId ?? null,
             agentBrowserBrowserHost: hint.agentBrowserBrowserHost ?? null,
@@ -1592,6 +1685,9 @@ export function createConfiguredStoredStepExecutor(
         : null;
     const runOrResumeBrowserStep = async (): Promise<Awaited<ReturnType<typeof runBrowserMode>>> => {
       if (!recoveredRuntimeEvidence) {
+        if (context.step.input.structuredData?.recoveryOnly === true) {
+          throw new Error('Recovery-only run has no submitted browser evidence; refusing prompt replay');
+        }
         return runBrowserStep(browserRunOptions);
       }
       let recoveredRuntime = buildBrowserRuntimeMetadataFromEvidence({
@@ -1601,6 +1697,51 @@ export function createConfiguredStoredStepExecutor(
         manualLoginProfileDir,
         agentId: context.step.agentId,
       });
+      if (recoveredRuntime.agentBrowserTransport === 'native' || nativeBrokerTransport) {
+        if (recoveredRuntime.agentBrowserTransport !== 'native' || !nativeBrokerTransport
+          || typeof context.runtimeEvidence?.heartbeat !== 'function'
+          || !recoveredRuntime.agentBrowserBinding || !recoveredRuntime.agentBrowserBaseUrl
+          || !recoveredRuntime.agentBrowserBrowserId || !recoveredRuntime.agentBrowserProfileId
+          || !recoveredRuntime.agentBrowserSessionName || !recoveredRuntime.agentBrowserServiceTabHandle
+          || !recoveredRuntime.tabUrl || !isSubmittedChatgptRuntimeEvidence(recoveredRuntimeEvidence,
+            isRecord(recoveredRuntimeEvidence.details) ? recoveredRuntimeEvidence.details : {})) {
+          throw new BrowserAutomationError('Native broker reconciliation requires complete committed identity and configured authority; refusing raw Chrome recovery or prompt replay', {
+            code: 'agent_browser_native_reconciliation_required', retryable: false, phase: 'after',
+          });
+        }
+        const bridge = await (deps.reattachAgentBrowserBrokerTabImpl ?? reattachAgentBrowserBrokerTab)({
+          originalNativeBinding: recoveredRuntime.agentBrowserBinding,
+          abortSignal: context.abortSignal,
+          baseUrl: recoveredRuntime.agentBrowserBaseUrl,
+          browserId: recoveredRuntime.agentBrowserBrowserId,
+          browserHost: recoveredRuntime.agentBrowserRequestedHost ?? agentBrowserHost,
+          profileId: recoveredRuntime.agentBrowserProfileId,
+          serviceTabHandle: recoveredRuntime.agentBrowserServiceTabHandle,
+          sessionName: recoveredRuntime.agentBrowserSessionName,
+          url: recoveredRuntime.tabUrl,
+          serviceName: 'AuraCall', agentName: context.step.agentId, taskName: 'chatgpt-native-restart-recovery',
+          logger: deps.logger,
+        }, { nativeTransport: nativeBrokerTransport });
+        const response = await captureAgentBrowserNativeResponse(bridge, {
+          prompt: promptTransport.prompt, url: recoveredRuntime.tabUrl, providerSessionAuthorization,
+          abortSignal: context.abortSignal,
+          onAcquired: async acquired => {
+            recoveredRuntime = { ...recoveredRuntime,
+              chromeHost: undefined, chromePort: undefined,
+              agentBrowserBinding: acquired.brokerSession?.binding,
+              agentBrowserBaseUrl: acquired.baseUrl,
+              agentBrowserProcessId: acquired.browserProcessId,
+              agentBrowserServiceTabHandle: acquired.serviceTabHandle,
+            };
+            await heartbeatRuntimeEvidence({ observedAt: new Date().toISOString(), state: 'thinking',
+              source: 'browser-service', evidenceRef: 'chatgpt-native-recovery-acquired', confidence: 'high',
+              details: buildBrowserRuntimeEvidenceDetails(recoveredRuntime) });
+          },
+        });
+        return createBrowserRunResultFromReattach({ runtime: recoveredRuntime, result: {
+          answerText: response.answerText, answerMarkdown: response.answerText, answerMessageId: response.answerMessageId,
+        } });
+      }
       try {
         let recoveredBridge: AgentBrowserBridgeResult | null = null;
         const hasBrokerEvidence = Boolean(
@@ -1621,6 +1762,8 @@ export function createConfiguredStoredStepExecutor(
           }
           const reattachBroker = deps.reattachAgentBrowserBrokerTabImpl ?? reattachAgentBrowserBrokerTab;
           recoveredBridge = await reattachBroker({
+            providerSessionAuthorization,
+            recoveryPrompt: promptTransport.prompt,
             baseUrl: recoveredRuntime.agentBrowserBaseUrl,
             browserId: recoveredRuntime.agentBrowserBrowserId,
             browserHost: recoveredRuntime.agentBrowserRequestedHost ?? agentBrowserHost,
@@ -1695,8 +1838,13 @@ export function createConfiguredStoredStepExecutor(
           });
         };
         await heartbeatRecoveredRuntimeEvidence('thinking', 'chatgpt-reattach-existing-tab', 'medium');
-        const performReattach = () =>
-          resumeBrowserSessionImpl(
+        const performReattach = () => recoveredBridge?.recoveredResponse
+          ? Promise.resolve({
+              answerText: recoveredBridge.recoveredResponse.answerText,
+              answerMarkdown: recoveredBridge.recoveredResponse.answerText,
+              answerMessageId: recoveredBridge.recoveredResponse.answerMessageId,
+            })
+          : resumeBrowserSessionImpl(
             recoveredRuntime as Parameters<typeof resumeBrowserSession>[0],
             browserRunOptions.config as Parameters<typeof resumeBrowserSession>[1],
             browserRunOptions.log as Parameters<typeof resumeBrowserSession>[2],
@@ -1724,6 +1872,11 @@ export function createConfiguredStoredStepExecutor(
           runtime: recoveredRuntime,
         });
       } catch (error) {
+        // Preserve terminal classifications for the controller. Neither exhausted
+        // conversation capacity nor unverified cleanup permits prompt replay.
+        if (error instanceof BrowserAutomationError
+          && (error.details?.code === CHATGPT_CONVERSATION_CAPACITY_CODE
+            || error.details?.code === AGENT_BROWSER_CLEANUP_UNVERIFIED)) throw error;
         const message = error instanceof Error ? error.message : String(error);
         throw new Error(
           `Recovered ChatGPT browser-backed run ${context.record.runId} could not reattach to the submitted tab; refusing to replay the prompt: ${message}`,
@@ -1733,6 +1886,7 @@ export function createConfiguredStoredStepExecutor(
       }
     };
     let browserResult = await runOrResumeBrowserStep();
+    if (newConversationProjectId) assertChatgptNewConversationUrl(browserResult.tabUrl, newConversationProjectId);
     let responseArtifacts: TeamRunArtifactRef[] = [];
     let responseArtifactNotes: string[] = [];
     const structuredMetadata = context.step.input.structuredData?.metadata;
@@ -1792,6 +1946,10 @@ export function createConfiguredStoredStepExecutor(
     }
     if (
       service === 'chatgpt' &&
+      // Recovery is readback-only: a download failure is not permission to
+      // replace the original answer with a new provider submission.
+      !recoveredRuntimeEvidence &&
+      !newConversationProjectId &&
       asNonEmptyString(browserResult.answerMessageId) &&
       shouldMaterializeBrowserResponseArtifacts(structuredMetadata) &&
       !hasRequiredBrowserResponseArtifactMaterialized({

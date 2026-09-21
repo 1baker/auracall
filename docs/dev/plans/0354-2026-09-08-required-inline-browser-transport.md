@@ -12,8 +12,8 @@ browser ownership; this slice does not claim full workflow completion.
 
 ## Current State
 
-The source executor now supports explicit required-inline transport; the active
-installed executor still applies unconditional prompt spillover. Runtime logs
+The source and installed executor now support explicit required-inline transport.
+The initial document request ran before the repair. Its runtime logs
 confirm a 160804-byte request attachment and a 211-character composer prompt
 for the in-flight document run. Source attachments uploaded and Send completed;
 the same response is still being observed. Its frozen inputs remain unchanged.
@@ -54,6 +54,19 @@ existing request. A local source fix alone cannot close this plan.
 Close only after source and installed behavior prove the required-inline
 contract. DOCX/PDF acceptance, independent relevance audit, writer evidence
 return, and semantic drift accuracy remain full-goal gates outside this slice.
+
+## Installed Checkpoint
+
+- Compiled with `tsc -p tsconfig.build.json`; installed only the changed executor
+  module with its exact old bytes backed up. New SHA-256 is
+  `a5fc455495f357434672d4cc24cf3b969b197703e440cb9fedb0a17b72c27783`.
+- Restarted the idle API only. Runtime health passed; retained browser PIDs and
+  target IDs were unchanged. Old queued jobs remain blocked by unchanged
+  unavailable runtime profiles.
+- A new independent document audit carries explicit inline-required policy and
+  sent 56,689 inline composer characters plus DOCX/PDF attachments. It is still
+  in progress and below the automatic threshold; above-threshold live proof
+  and document release remain open.
 
 ## Source Validation Checkpoint
 

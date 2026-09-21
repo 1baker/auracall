@@ -7,6 +7,24 @@
 Status: active
 Lane: P01
 
+- Active conversation-capacity recovery:
+  [Plan 0359](docs/dev/plans/0359-2026-09-11-conversation-capacity-recovery.md).
+  Current state: exact live assistant reports maximum conversation length;
+  no artifacts exist. Provider failure detection and same-project continuation
+  are being repaired without replaying the original request.
+
+- Closed required document-set acceptance:
+  [Plan 0358](docs/dev/plans/0358-2026-09-11-required-document-set.md).
+  Current state: installed filename-set checks passed normal-runner C with
+  both required files and verified source text. Test B remains failed acceptance.
+  Full proposal quality, routing and recovery acceptance remain separate.
+
+- Active drain admission starvation repair:
+  [Plan 0357](docs/dev/plans/0357-2026-09-11-drain-admission-starvation.md).
+  Current state: scheduler fix installed; 124 focused tests pass. Original
+  request advanced to a no-replay terminal failure on missing retained target.
+  Recovered files verify locally; automatic reconciliation remains open.
+
 - Active audit-prefix freshness repair:
   [Plan 0356](docs/dev/plans/0356-2026-09-10-chatgpt-audit-prefix-freshness.md).
   Current state: source predicate and fallback readers fixed; 23 focused tests

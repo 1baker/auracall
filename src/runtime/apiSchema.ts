@@ -50,7 +50,11 @@ export const ExecutionRequestExtensionHintsSchema: z.ZodType<ExecutionRequestExt
   composerTool: z.string().nullable().optional(),
   deepResearchPlanAction: z.enum(['start', 'edit']).nullable().optional(),
   chatgptConversationUrl: z.string().nullable().optional(),
+  chatgptNewConversationProjectId: z.string().regex(/^g-p-[a-f0-9]{32}$/).nullable().optional(),
   browserHost: ExecutionBrowserHostSchema.nullable().optional(),
+}).refine(value => !(value.chatgptNewConversationProjectId && value.chatgptConversationUrl != null), {
+  message: 'New ChatGPT project conversation and existing conversation URL are mutually exclusive.',
+  path: ['chatgptNewConversationProjectId'],
 });
 
 export const ExecutionRequestInputMessageSchema: z.ZodType<ExecutionRequestInputMessage> = z.object({

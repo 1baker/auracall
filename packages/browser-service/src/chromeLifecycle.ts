@@ -5,6 +5,7 @@ import path from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import CDP from 'chrome-remote-interface';
+import { createBrokerCdpClient, type BrokerCdpConnection, type BrokerCdpSession } from './brokerCdpClient.js';
 import { Launcher, type LaunchedChrome } from 'chrome-launcher';
 import type { BrowserLogger, ResolvedBrowserConfig, ChromeClient } from './types.js';
 import { cleanupStaleProfileState, readDevToolsPort, readChromePid, writeDevToolsActivePort } from './profileState.js';
@@ -862,7 +863,9 @@ export async function resolveUserDataBaseDir(chromePath?: string | null): Promis
 }
 
 export async function connectToChromeTarget(options: {
-  port: number;
+  port?: number;
+  brokerConnection?: BrokerCdpConnection;
+  brokerSession?: BrokerCdpSession;
   host?: string;
   target?: string;
   logger?: BrowserLogger;
@@ -871,6 +874,20 @@ export async function connectToChromeTarget(options: {
 }): Promise<ChromeClient> {
   const logger = options.logger ?? (() => undefined);
   options.abortSignal?.throwIfAborted();
+  if (options.brokerSession) {
+    if (options.brokerConnection) throw new Error('broker_connection_ambiguous');
+    if (options.target && options.target !== options.brokerSession.binding.targetId) {
+      throw new Error('broker_connection_target_mismatch');
+    }
+    return options.brokerSession.connect({ abortSignal: options.abortSignal });
+  }
+  if (options.brokerConnection) {
+    if (options.target && options.target !== options.brokerConnection.binding.targetId) {
+      throw new Error('broker_connection_target_mismatch');
+    }
+    return createBrokerCdpClient(options.brokerConnection, { abortSignal: options.abortSignal });
+  }
+  if (!options.port) throw new Error('Missing DevTools port or broker connection.');
   const endpoint = await resolveChromeEndpoint(options.host, options.port, logger);
   let disposed = false;
   const disposeEndpoint = async () => {

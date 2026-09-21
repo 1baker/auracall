@@ -75,6 +75,42 @@ describe('runtime responses service', () => {
     });
   });
 
+  it('reuses one durable response for repeated and concurrent idempotent creates', async () => {
+    const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), 'auracall-runtime-responses-'));
+    cleanup.push(homeDir);
+    setAuracallHomeDirOverrideForTest(homeDir);
+    let executions = 0;
+    const service = createExecutionResponsesService({
+      now: () => new Date('2026-09-20T20:00:00.000Z'),
+      executeStoredRunStep: async () => {
+        executions += 1;
+        return undefined;
+      },
+    });
+    const request: ExecutionRequest = {
+      model: 'gpt-5.2',
+      input: 'Create exactly once.',
+      metadata: { workflow: 'codex-pro-guard' },
+      auracall: { runtimeProfile: 'default', service: 'chatgpt' },
+    };
+
+    const [first, raced] = await Promise.all([
+      service.createResponse(request, { idempotencyKey: 'codex-submit-one' }),
+      service.createResponse(request, { idempotencyKey: 'codex-submit-one' }),
+    ]);
+    const repeated = await service.createResponse(request, {
+      idempotencyKey: 'codex-submit-one',
+    });
+
+    expect(first.id).toMatch(/^resp_idem_[a-f0-9]{32}$/);
+    expect(raced.id).toBe(first.id);
+    expect(repeated.id).toBe(first.id);
+    expect(executions).toBe(1);
+    await expect(service.createResponse({ ...request, input: 'Different request.' }, {
+      idempotencyKey: 'codex-submit-one',
+    })).rejects.toThrow('different durable request');
+  });
+
   it('returns failed response state when the bounded runner callback throws', async () => {
     const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), 'auracall-runtime-responses-'));
     cleanup.push(homeDir);

@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
+import { observeFailedResponse, RecoveryObservationBodySchema, RecoveryObservationBusyError } from "../runtime/responseRecoveryObservation.js";
 import { createReadStream } from "node:fs";
 import fs from "node:fs/promises";
 import http from "node:http";
@@ -912,6 +913,14 @@ interface HttpStatusResponse {
 	};
 	compatibility: {
 		openai: true;
+		supportsChatgptNewConversationProjectId: true;
+		responseCreateIdempotency: {
+			version: "sha256-v1";
+			header: "Idempotency-Key";
+			maxKeyLength: 200;
+		};
+		recoveryObservation: true;
+		newProjectRecoveryObservation: true;
 		chatCompletions: boolean;
 		streaming: boolean;
 		auth: boolean;
@@ -1073,6 +1082,7 @@ export async function createResponsesHttpServer(
 ): Promise<ResponsesHttpServerInstance> {
 	const logger = options.logger ?? (() => {});
 	const control = deps.control ?? createExecutionRuntimeControl();
+	let recoveryObservationActive = false;
 	const runnersControl = deps.runnersControl ?? createExecutionRunnerControl();
 	const now = deps.now ?? (() => new Date());
 	const boundHost = options.host ?? "127.0.0.1";
@@ -1711,6 +1721,12 @@ export async function createResponsesHttpServer(
 			if (closed) {
 				return;
 			}
+			if (recoveryObservationActive) {
+				// Preserve cadence and pending work without queuing a browser run
+				// behind the read-only observation's idle check.
+				scheduleBackgroundDrain(backgroundDrainIntervalMs);
+				return;
+			}
 			await drainThroughServerHost({
 				candidateStatuses: ["planned", "running"],
 				updatedSince: new Date(now().getTime() - BACKGROUND_DRAIN_RECENT_WINDOW_MS).toISOString(),
@@ -1846,6 +1862,10 @@ export async function createResponsesHttpServer(
 						type: "authentication_error",
 					},
 				} satisfies HttpErrorPayload);
+				return;
+			}
+			if (recoveryObservationActive && req.method === 'POST' && !url.pathname.endsWith('/recovery-observation')) {
+				sendJson(res, 409, { error: { type: 'recovery_observation_busy', message: 'A read-only recovery observation is active; retry after it finishes' } });
 				return;
 			}
 
@@ -3965,7 +3985,9 @@ export async function createResponsesHttpServer(
 						} satisfies HttpErrorPayload);
 						return;
 					}
-					const createdResponse = await responsesService.createResponse(request);
+					const createdResponse = await responsesService.createResponse(request, {
+						idempotencyKey: readResponseCreateIdempotencyKey(req.headers),
+					});
 					const drain = drainThroughServerHost({
 						runId: createdResponse.id,
 						maxRuns: 1,
@@ -4038,7 +4060,9 @@ export async function createResponsesHttpServer(
 						} satisfies HttpErrorPayload);
 						return;
 					}
-					const createdResponse = await responsesService.createResponse(request);
+					const createdResponse = await responsesService.createResponse(request, {
+						idempotencyKey: readResponseCreateIdempotencyKey(req.headers),
+					});
 					if (backgroundDrainIntervalMs > 0) {
 						reserveForegroundAuraCallDrain();
 						drainThroughServerHost({
@@ -4310,6 +4334,25 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
+			const recoveryObservationMatch = /^\/v1\/responses\/(resp_[a-zA-Z0-9_-]+)\/recovery-observation$/.exec(url.pathname);
+			if (req.method === 'POST' && recoveryObservationMatch) {
+				const denied = authorizeOperatorConfigAccess(apiAuthContext);
+				if (denied) { sendJson(res, 403, { error: { type: 'permission_error', message: denied } }); return; }
+				RecoveryObservationBodySchema.parse(JSON.parse(await readRequestBody(req) || '{}'));
+				if (recoveryObservationActive || foregroundAuraCallWorkCount > 0 || foregroundAuraCallDrainReservations > 0
+					|| backgroundDrainState.state === 'scheduled' || backgroundDrainState.state === 'running') {
+					sendJson(res, 409, { error: { type: 'recovery_observation_busy', message: 'Foreground work, a queued/running drain, or a recovery observation is already active' } }); return;
+				}
+				recoveryObservationActive = true;
+				const endObservationWork = beginForegroundAuraCallWork();
+				try {
+					const observation = await observeFailedResponse({ responseId: recoveryObservationMatch[1]!, config: resolvedUserConfig ?? {}, control });
+					sendJson(res, 200, observation);
+				} catch (error) {
+					sendJson(res, 409, { error: { type: error instanceof RecoveryObservationBusyError ? 'recovery_observation_busy' : 'recovery_observation_unavailable', message: error instanceof Error ? error.message : String(error) } });
+				} finally { recoveryObservationActive = false; endObservationWork(); }
+				return;
+			}
 			const responseId = matchResponseRoute(url.pathname);
 			if (responseId && matchesHttpRoute("responsesGetTemplate", req.method, url.pathname)) {
 				let response: Awaited<ReturnType<typeof responsesService.readResponse>>;
@@ -5374,6 +5417,14 @@ function createHttpStatusResponse(input: {
 		},
 		compatibility: {
 			openai: true,
+			supportsChatgptNewConversationProjectId: true,
+			responseCreateIdempotency: {
+				version: "sha256-v1",
+				header: "Idempotency-Key",
+				maxKeyLength: 200,
+			},
+			recoveryObservation: true,
+			newProjectRecoveryObservation: true,
 			chatCompletions: true,
 			streaming: true,
 			auth: input.auth.required,
@@ -10847,6 +10898,16 @@ function extractExecutionRequestHintsFromHeaders(
 function readSingleHeader(value: string | string[] | undefined): string | null {
 	if (Array.isArray(value)) return value[0] ?? null;
 	return typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
+}
+
+function readResponseCreateIdempotencyKey(headers: http.IncomingHttpHeaders): string | null {
+	const value = readSingleHeader(headers["idempotency-key"]);
+	if (value && value.length > 200) {
+		throw new HttpInvalidRequestError(
+			"Response create Idempotency-Key must not exceed 200 characters.",
+		);
+	}
+	return value;
 }
 
 function asResolvedUserConfig(

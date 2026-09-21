@@ -1,5 +1,140 @@
 # Testing quickstart
 
+- Native transport crash/lost-reply fixture:
+  `tests/fixtures/native-broker-cross-process.mjs` now creates a disposable client,
+  fsyncs its binding receipt, verifies SIGKILL termination, and starts a distinct
+  recovery process. An isolated proxy discards an acknowledged detach reply;
+  native confirmation from a fresh connector must not duplicate the CDP detach.
+  Run the native checkout's isolated `test_broker_cross_process_auracall_native_authority`
+  test with `AURACALL_NATIVE_BROKER_FIXTURE` set to the absolute fixture path and
+  the ignored-test opt-in. Build AuraCall first. This uses the actual native worker
+  and synthetic Chrome peer, not a live provider or full stored-response crash.
+
+- New-project trusted observation: primary passed120 focused TS tests across
+  six recovery/broker suites,203 Python controller/supervisor tests and full
+  production build. Worker additionally passed capability HTTP/auth check and
+  production no-emit typecheck. Full test-inclusive typecheck still reports
+  four pre-existing composer mock typing errors; no full-typecheck claim.
+  Installed source/dist/13hash parity and capability readback passed; actual
+  controller observation remains a separate live gate.
+
+- Uncertain submitted-tab cleanup: primary passed56 tests across broker,
+  new-project route, retained routing and no-correction suites plus full build.
+  Typed uncertainty retains the tab and recovery identity even on detach
+  failure; ordinary/pre-submit/lookalike errors and success still clean up.
+  Source validation does not prove a future live uncertain-submission recovery.
+
+- Project composer hydration: primary passed54 tests across composer mode,
+  browser exports and retained routing; full build and complete installed
+  parity/13record hashes passed. Missing-control checks are bounded; uncertain
+  selection or menu activation is not repeated; explicit controlsAbsent proof
+  is required. Installed live UI validation is separate.
+
+- First-writer retained routing: primary passed196 Python controller/supervisor/
+  rollover tests and72 TS tests across newProjectRetainedRouting,
+  agentBrowserBridge, runtime.newProjectConversation, chatgptNewConversation and
+  runtime.responseRecoveryObservation. Full build and installed dist/record
+  parity passed. Source worker separately passed70 bridge/routing/export tests
+  and full typecheck. Live continuation remains a separate gate in Plan0359.
+
+- Superseding installed recovery acceptance: primary passed 177 Python tests,
+  88 focused TS tests, two HTTP auth/concurrency/timer tests and full build/typecheck.
+  Normal supervisor recovered the real failed right response without API history
+  mutation or a second bridge transit. Source review then correctly rejected
+  missing required reference links and dispatched local repair; final document
+  and broader workflow acceptance remain unproven.
+
+- Trusted failed-response recovery: primary passed 175 controller/supervisor
+  Python tests, 84 runtime/broker/binding tests, the selected HTTP authentication,
+  strict-body and concurrent admission test, full typecheck and build. The real
+  stored request reconstructs the independently verified wire hash. Installed
+  dist and all twelve record hashes match; real supervisor recovery pending.
+
+- Historical response recovery: four binding/rendered-user/streaming/same-target
+  suites passed 34 tests on 2026-09-11, plus full build. Tests distinguish a
+  proven later-user streaming marker from target activity, missing ownership,
+  global controls, disconnected DOM and duplicate identities. Installation
+  and browser verification must be recorded separately in Plan 0359.
+  Superseding result: six suites passed 70 tests; installed helper, full dist
+  and record parity passed. Delegated exact old-answer binding and fresh account
+  assertion passed live; primary inspected receipt and independently verified
+  unchanged failed-run hash. No full controller recovery claim.
+
+- Timestamped exact downloads: 235 adapter/control/download/required-file tests
+  passed independently, including valid-date aliases, invalid date/time,
+  wrong stem/extension/owner, multiple suffixes, and preserved source/copy bytes.
+  The boundary does not alter global filename comparison or executor-required
+  names. Full build and installed parity passed; current live acceptance is
+  recorded in Plan 0359, not inferred from the test count.
+
+- Rendered-user recovery: the rendered-user, exact binding, streaming, and
+  same-target recovery suites passed 32 tests independently on 2026-09-11.
+  The DOM fixture covers attachment/toggle exclusion, fenced-before-inline
+  code reconstruction, changed code rejection, ambiguous root rejection, and
+  plain-user fallback. Expected prompt equality and response identity checks
+  are unchanged. Full build and installed helper parity passed; live download
+  verification must still pass separately.
+
+- Exact artifact selection: `chatgptArtifactControlsExact` and
+  `chatgptArtifactDownloadBinding` passed 27 tests, independently rerun by primary
+  on 2026-09-11; full build and complete installed dist parity passed. Coverage
+  includes ZIP/DOCX prefix confusion, reordered controls, exact owner binding,
+  ambiguity rejection, and unchanged strict download checks. Live production
+  materialization remains unverified: no-launch preflight found no retained
+  default browser. The recovered guide passed separate Pro and Codex reviews,
+  which establishes document acceptance, not autonomous file retrieval.
+
+- Conversation-capacity detection: focused `chatgptConversationCapacity`,
+  `pageActions`, `recoveryConversationCapacity`, `recoveryNoCorrection`, and
+  `recoveredProofPropagation` suites passed 55 tests with one pre-existing skip
+  on 2026-09-11. The exact fresh assistant warning and in-turn provider action
+  are required; historical/user quotes cannot trigger the failure. Installed
+  hashes match the full source build. A recovered typed capacity exception
+  preserves `failure.details.code`; actual fresh-chat continuation remains open
+  under Plan 0359.
+
+- 2026-09-11 15:29 UTC superseding installed download result: support for the
+  non-dialog artifact preview panel passed 181 artifact tests plus 40 recovery
+  tests and full build. Installed readback downloaded the original DOCX and PDF
+  with exact reviewed hashes, without altering the failed response record.
+  Evidence and digests are in the dev journal. Normal-runner completion and
+  the joined autonomous workflow remain separate, unproven acceptance gates.
+
+- 2026-09-11 recovery proof installation: 233 focused tests across ten suites
+  and full build passed independently. Installed broker recovery verified the
+  configured identity on the exact original-response target. Live materialization
+  found two controls but downloaded zero files; both failed with
+  `ChatGPT exact artifact control produced no verified browser download.`
+  The original failed API record remained byte-identical; retained-browser
+  verification passed. This is not successful end-to-end document recovery.
+
+- Recovery response identity: `pnpm vitest run tests/browser/reattach.test.ts tests/runtime.configuredExecutor.test.ts`.
+  Regression assertions first failed at both the browser return and executor
+  conversion. Both layers now preserve the captured assistant message ID;
+  turn-only, missing, blank and non-string metadata stay unbound. Source-only
+  validation does not prove restored-target reconciliation.
+
+- Queue admission recovery: `pnpm vitest run tests/runtime.serviceHost.test.ts`
+  passed 81 tests on 2026-09-11. Installed validation claimed the original
+  stranded document request, which then correctly failed on a missing old
+  broker target without replay. Cross-target document recovery remains unproven.
+
+- Drain admission fairness: `pnpm exec vitest run tests/runtime.serviceHost.test.ts tests/runtime.configuredExecutor.test.ts tests/runtime.projection.test.ts --maxWorkers 1`.
+  Covers affinity/gate-rejected reservations, recovery progress under a cap,
+  and future-candidate replacement after immediate/deferred starts. This is
+  provider-free; original-response artifact recovery still needs live proof.
+
+- 2026-09-11 installed text-connectivity proof: preinstall response
+  `resp_b7c424366b154997a27d8c6c3eb44a1c` and postinstall response
+  `resp_2e976dc9d5214060b7bf4bed7b2670a7` both completed with their distinct
+  exact nonce answers. User runtime 0.1.1 was installed from the built checkout;
+  installed `dist/` byte-matches the source build. This verifies retained-browser
+  text round trips, not document artifacts or broader autonomous workflows.
+
+- Download-boundary regression: `pnpm exec vitest run tests/browser/chatgptArtifactDownloadBinding.test.ts tests/browser/chatgptAdapter.test.ts --maxWorkers 1`. Checks mismatched extensions/stems, partial/multiple downloads, and hidden or wrong-name library viewers. Same-response live acceptance additionally requires all standalone documents to byte-match ZIP members and contain the current request content; filename tests alone cannot distinguish same-named historical files.
+
+- Exact-response document capture: `pnpm exec vitest run tests/browser/browserModeExports.test.ts tests/browser/pageActions.test.ts --maxWorkers 1` checks freshness and message boundaries, including identical download-label replies. Provider-free checks are not live recovery proof. A recovery acceptance test must retrieve from the original nonce-bound assistant, validate complete DOCX/PDF content and digests, reject earlier same-name artifacts, preserve any original API failure, and avoid submitting the prompt again.
+
 - Required-inline configured browser transport is provider-free:
   `pnpm exec vitest run tests/runtime.configuredExecutor.test.ts tests/runtime.responsesService.test.ts --maxWorkers 1`.
   It proves policy persistence, exact prompt preservation around the 60,000

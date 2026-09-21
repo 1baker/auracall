@@ -10,8 +10,10 @@ import {
 } from "../../packages/browser-service/src/service/operationDispatcher.js";
 import { getAuracallHomeDir } from "../auracallHome.js";
 import { BrowserAutomationError } from "../oracle/errors.js";
+import { assertChatgptNewConversationDispatch, isChatgptNewConversationRoute } from "./providers/chatgptNewConversation.js";
 import { formatElapsed } from "../oracle/format.js";
 import type { ThinkingTimeLevel } from "../oracle/types.js";
+import { isAssistantGenerationActive, verifiedAssistantMessageId } from "./actions/assistantResponse.js";
 import { resolveAssistantMinTurnIndex } from "./actions/assistantTurnBoundary.js";
 import {
 	ensureChatgptComposerMode,
@@ -38,6 +40,7 @@ import { uploadAttachmentViaDataTransfer } from "./actions/remoteFileTransfer.js
 import {
 	type ChatgptProMode,
 	type ChatgptProModeGate,
+	ensureRequiredChatgptProIntelligence,
 	ensureThinkingTime,
 	evaluateChatgptProModeGate,
 	formatChatgptProModeGateError,
@@ -76,7 +79,6 @@ import {
 	wasChromeLaunchedByAuracall,
 } from "./chromeLifecycle.js";
 import { resolveBrowserConfig } from "./config.js";
-import { verifiedAssistantMessageId } from "./actions/assistantResponse.js";
 import {
 	CHATGPT_URL,
 	CONVERSATION_TURN_SELECTOR,
@@ -96,6 +98,8 @@ import {
 	clearComposerAttachments,
 	clearPromptComposer,
 	ensureChatgptComposerTool,
+	assertExactRemoteTargetUrl,
+	sameChatgptConversationUrl,
 	ensureLoggedIn,
 	ensureModelSelection,
 	ensureNotBlocked,
@@ -147,6 +151,7 @@ import {
 	acquireAgentBrowserBrokerTab,
 	resolveAgentBrowserBridgeMode,
 	resolveAgentBrowserBrokerProfile,
+	resolveAgentBrowserBrokerTarget,
 	resolveAgentBrowserBrokerUrl,
 	withAgentBrowserBrokerCleanup,
 } from "./service/agentBrowserBridge.js";
@@ -552,6 +557,23 @@ export async function resolveBrowserRuntimeEntryContextForTest(options: {
 	return resolveBrowserRuntimeEntryContext(options);
 }
 
+export function resolveBrowserDispatchBrokerUrl(
+	target: "chatgpt" | "grok",
+	url: string,
+	newConversationProjectId?: string | null,
+): string {
+	if (newConversationProjectId) {
+		if (target !== "chatgpt" || !isChatgptNewConversationRoute(url, newConversationProjectId, "before")) {
+			throw new BrowserAutomationError("Explicit new conversation requires its exact project-root dispatch URL.", {
+				code: "chatgpt_new_conversation_precondition_failed", retryable: false,
+			});
+		}
+		// This request-scoped destination must not inherit an ambient old-chat URL.
+		return url;
+	}
+	return resolveAgentBrowserBrokerUrl(target, url);
+}
+
 async function readChatgptIdentityForProMode(
 	Runtime: ChromeClient["Runtime"],
 ): Promise<ProviderUserIdentity | null> {
@@ -941,6 +963,7 @@ function shouldTreatChatgptAssistantResponseAsStale(options: {
 	answerText?: string | null;
 	answerMessageId?: string | null;
 	answerTurnId?: string | null;
+	answerAfterSubmittedUser?: boolean;
 }): boolean {
 	const normalizeForComparison = (text: string): string =>
 		text.toLowerCase().replace(/\s+/g, " ").trim();
@@ -973,8 +996,11 @@ function shouldTreatChatgptAssistantResponseAsStale(options: {
 	return (
 		sameMessageId ||
 		sameTurnId ||
-		normalizedAnswer === baselineNormalized ||
-		(!distinctMessageIds && baselinePrefix.length > 0 && normalizedAnswer.startsWith(baselinePrefix)) ||
+		(normalizedAnswer === baselineNormalized &&
+			!(distinctMessageIds && options.answerAfterSubmittedUser === true)) ||
+		(!distinctMessageIds &&
+			baselinePrefix.length > 0 &&
+			normalizedAnswer.startsWith(baselinePrefix)) ||
 		endsWithBaseline
 	);
 }
@@ -986,8 +1012,99 @@ export function shouldTreatChatgptAssistantResponseAsStaleForTest(options: {
 	answerText?: string | null;
 	answerMessageId?: string | null;
 	answerTurnId?: string | null;
+	answerAfterSubmittedUser?: boolean;
 }): boolean {
 	return shouldTreatChatgptAssistantResponseAsStale(options);
+}
+
+export function buildChatgptSubmittedUserBoundaryExpression(
+	submittedUserId: string,
+	answerMessageId: string,
+): string {
+	return `(() => {
+    const userId = ${JSON.stringify(submittedUserId)};
+    const answerId = ${JSON.stringify(answerMessageId)};
+    if (!userId || !answerId || userId === answerId) return false;
+    const messages = Array.from(document.querySelectorAll('[data-message-id]'));
+    const users = messages.filter((node) => node.getAttribute('data-message-author-role') === 'user'
+      || node.querySelector('[data-message-author-role="user"]'));
+    const userMatches = users.filter((node) => node.getAttribute('data-message-id') === userId);
+    const answers = messages.filter((node) => node.getAttribute('data-message-id') === answerId
+      && (node.getAttribute('data-message-author-role') === 'assistant'
+        || node.querySelector('[data-message-author-role="assistant"]')));
+    if (userMatches.length !== 1 || answers.length !== 1
+      || users.at(-1) !== userMatches[0]) return false;
+    const position = userMatches[0].compareDocumentPosition(answers[0]);
+    return (position & Node.DOCUMENT_POSITION_DISCONNECTED) === 0
+      && (position & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
+  })()`;
+}
+
+async function readSubmittedUserBoundary(
+	Runtime: ChromeClient["Runtime"],
+	submittedUserId: string | null,
+	answerMessageId?: string | null,
+): Promise<boolean> {
+	if (!submittedUserId || !answerMessageId) return false;
+	try {
+		const { result } = await Runtime.evaluate({
+			expression: buildChatgptSubmittedUserBoundaryExpression(submittedUserId, answerMessageId),
+			returnByValue: true,
+		});
+		return result?.value === true;
+	} catch {
+		return false;
+	}
+}
+
+export function buildChatgptSubmittedUserIdentityExpression(
+	proof?: { previousUserId: string | null; prompt: string },
+): string {
+	return `(() => {
+        const proof = ${JSON.stringify(proof ?? null)};
+        const users = Array.from(document.querySelectorAll('[data-message-id]')).filter((node) =>
+          node.getAttribute('data-message-author-role') === 'user'
+          || node.querySelector('[data-message-author-role="user"]'));
+        const node = users.at(-1);
+        const id = node?.getAttribute('data-message-id');
+        if (!id || users.filter((entry) => entry.getAttribute('data-message-id') === id).length !== 1) return null;
+        if (proof) {
+          const normalize = (value) => String(value || '').replace(/\\s+/g, ' ').trim();
+          const text = normalize(node.innerText || node.textContent);
+          const prompt = normalize(proof.prompt);
+          // Attachment summaries and Show more controls can follow the complete prompt.
+          // Match the entire normalized prompt, never a prefix or nonce alone.
+          if (!proof.previousUserId || id === proof.previousUserId || !prompt || !text.includes(prompt)) return null;
+        }
+        return id;
+      })()`;
+}
+
+async function readLatestSubmittedUserId(
+	Runtime: ChromeClient["Runtime"],
+	proof?: { previousUserId: string | null; prompt: string },
+): Promise<string | null> {
+	try {
+		const { result } = await Runtime.evaluate({
+			expression: buildChatgptSubmittedUserIdentityExpression(proof),
+			returnByValue: true,
+		});
+		return typeof result?.value === "string" && result.value.trim() ? result.value : null;
+	} catch {
+		return null;
+	}
+}
+
+export function canRefreshChatgptAssistantSnapshot(options: {
+	answerMessageId?: string | null;
+	snapshotMessageId?: string | null;
+	baselineMessageId?: string | null;
+}): boolean {
+	const current = options.answerMessageId?.trim();
+	const snapshot = options.snapshotMessageId?.trim();
+	return Boolean(
+		current && snapshot && current === snapshot && snapshot !== options.baselineMessageId?.trim(),
+	);
 }
 
 function resolveChatgptBrowserGuardProfileName(
@@ -1602,7 +1719,19 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 		);
 	}
 
-	const bridgeMode = resolveAgentBrowserBridgeMode();
+	const configuredBridgeMode = resolveAgentBrowserBridgeMode();
+	if (options.nativeBrokerTransport && (configuredBridgeMode === "off" || target === "gemini")) {
+		throw new Error("Explicit native broker transport requires a supported broker provider and enabled bridge.");
+	}
+	if (config.chatgptNewConversationProjectId && (target !== "chatgpt"
+		|| !/^g-p-[a-f0-9]{32}$/.test(config.chatgptNewConversationProjectId)
+		|| config.projectId !== config.chatgptNewConversationProjectId || config.conversationId
+		|| configuredBridgeMode === "off")) {
+		throw new BrowserAutomationError("Explicit new ChatGPT project conversation requires matching project and agent-browser authority.", {
+			code: "chatgpt_new_conversation_precondition_failed", retryable: false,
+		});
+	}
+	const bridgeMode = config.chatgptNewConversationProjectId ? "required" : configuredBridgeMode;
 	if (
 		config.agentBrowserHost &&
 		bridgeMode === "off" &&
@@ -1613,20 +1742,33 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 		);
 	}
 	if (bridgeMode !== "off" && (target === "chatgpt" || target === "grok")) {
-		const brokerUrl = resolveAgentBrowserBrokerUrl(target, config.url);
+		const brokerUrl = resolveBrowserDispatchBrokerUrl(target, config.url, config.chatgptNewConversationProjectId);
 		const bridge = await acquireAgentBrowserBrokerTab({
 			abortSignal: options.abortSignal,
 			browserHost: config.agentBrowserHost,
 			logger,
 			mode: bridgeMode,
 			profileId: resolveAgentBrowserBrokerProfile(target),
+			// A fresh project conversation must acquire a new tab. An ambient
+			// configured target identifies an old conversation and is not authority
+			// for this request.
+			targetId: config.chatgptNewConversationProjectId
+				? null
+				: resolveAgentBrowserBrokerTarget(target),
 			targetServiceId: target,
 			url: brokerUrl,
-		});
-		if (bridgeMode === "required" && (!bridge?.chromeHost || !bridge.chromePort)) {
+		}, { nativeTransport: options.nativeBrokerTransport });
+		if (!bridge && (bridgeMode === "required" || options.nativeBrokerTransport)) {
 			throw new Error("agent-browser required mode returned no policy-gated CDP endpoint");
 		}
-		if (bridge?.chromeHost && bridge.chromePort) {
+		if (bridge) {
+			return withAgentBrowserBrokerCleanup(bridge, async () => {
+			if (options.nativeBrokerTransport && (bridge.brokerTransport !== "native" || !bridge.brokerSession)) {
+				throw new Error("Explicit native broker transport returned no native attachment; refusing raw Chrome fallback.");
+			}
+			if (!bridge.brokerSession && (!bridge.chromeHost || !bridge.chromePort)) {
+				throw new Error("agent-browser returned no usable exact attachment");
+			}
 			const brokerConfig = {
 				...config,
 				headless: resolveBrokerHeadless(config.headless, bridge.browserHost),
@@ -1634,7 +1776,8 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 				chatgptUrl: target === "chatgpt" ? brokerUrl : config.chatgptUrl,
 				grokUrl: target === "grok" ? brokerUrl : config.grokUrl,
 				keepBrowser: true,
-				remoteChrome: { host: bridge.chromeHost, port: bridge.chromePort },
+				remoteChrome: bridge.brokerTransport === "native" ? undefined
+					: bridge.chromeHost && bridge.chromePort ? { host: bridge.chromeHost, port: bridge.chromePort } : undefined,
 			};
 			const bridgedOptions = withAgentBrowserRuntimeHints(options, bridge, bridgeMode);
 			await emitBrowserAuthorityRuntimeHint(
@@ -1642,10 +1785,7 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 				{ browserAuthority: "agent-browser", bridgeMode },
 				logger,
 			);
-			return withAgentBrowserBrokerCleanup(
-				bridge,
-				() =>
-					withBrowserExecutionOperation(brokerConfig, target, logger, () =>
+			return withBrowserExecutionOperation(brokerConfig, target, logger, () =>
 						target === "grok"
 							? runRemoteGrokBrowserMode(
 									promptText,
@@ -1663,11 +1803,12 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 									bridgedOptions,
 									bridge,
 								),
-					),
+					);
+			},
 				{
 					onCleanupError: (error) =>
 						logger(
-							`agent-browser detach cleanup failed after a completed provider operation; preserving the provider result: ${error instanceof Error ? error.message : String(error)}`,
+							`agent-browser cleanup failed after a completed provider operation; withholding the result pending reconciliation: ${error instanceof Error ? error.message : String(error)}`,
 						),
 				},
 			);
@@ -2456,6 +2597,7 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 					"before submit",
 				);
 			}
+			const previousUserId = await readLatestSubmittedUserId(Runtime);
 			const baselineSnapshot = await readAssistantSnapshot(Runtime).catch(() => null);
 			const baselineAssistantText =
 				typeof baselineSnapshot?.text === "string" ? baselineSnapshot.text.trim() : "";
@@ -2512,6 +2654,9 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 			let baselineTurns = await readConversationTurnCount(Runtime, logger);
 			// Learned: return baselineTurns so assistant polling can ignore earlier content.
 			const sendAttachmentNames = attachmentWaitTimedOut ? [] : attachmentNames;
+			if (config.chatgptNewConversationProjectId) {
+				await assertChatgptNewConversationDispatch(Runtime, config.chatgptNewConversationProjectId, "before");
+			}
 			const committedTurns = await submitPrompt(
 				{
 					runtime: Runtime,
@@ -2519,6 +2664,8 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 					attachmentNames: sendAttachmentNames,
 					baselineTurns: baselineTurns ?? undefined,
 					inputTimeoutMs: config.inputTimeoutMs ?? undefined,
+					beforeSend: () =>
+						raceWithDisconnect(ensureRequiredChatgptProIntelligence(Runtime, logger)),
 					onPromptDispatched: async () => {
 						promptDispatchedAt = Date.now();
 						await releaseBrowserOperationLock("ChatGPT prompt dispatch");
@@ -2533,7 +2680,11 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 				prompt,
 				logger,
 			);
+			if (config.chatgptNewConversationProjectId) {
+				lastUrl = await assertChatgptNewConversationDispatch(Runtime, config.chatgptNewConversationProjectId, "after");
+			}
 			baselineTurns = resolveAssistantMinTurnIndex(baselineTurns, committedTurns);
+			const submittedUserId = await readLatestSubmittedUserId(Runtime, { previousUserId, prompt });
 			if (config.projectId) {
 				await assertChatgptProjectDispatchContext(
 					Runtime,
@@ -2569,6 +2720,7 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 			scheduleConversationHint("post-submit", config.timeoutMs ?? 120_000);
 			return {
 				baselineTurns,
+				submittedUserId,
 				baselineAssistantText,
 				baselineAssistantMessageId,
 				baselineAssistantTurnId,
@@ -2576,12 +2728,14 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 		};
 
 		let baselineTurns: number | null = null;
+		let submittedUserId: string | null = null;
 		let baselineAssistantText: string | null = null;
 		let baselineAssistantMessageId: string | null = null;
 		let baselineAssistantTurnId: string | null = null;
 		try {
 			const submission = await raceWithDisconnect(submitOnce(promptText, attachments));
 			baselineTurns = submission.baselineTurns;
+			submittedUserId = submission.submittedUserId;
 			baselineAssistantText = submission.baselineAssistantText;
 			baselineAssistantMessageId = submission.baselineAssistantMessageId || null;
 			baselineAssistantTurnId = submission.baselineAssistantTurnId || null;
@@ -2589,7 +2743,7 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 			const isPromptTooLarge =
 				error instanceof BrowserAutomationError &&
 				(error.details as { code?: string } | undefined)?.code === "prompt-too-large";
-			if (fallbackSubmission && isPromptTooLarge) {
+			if (fallbackSubmission && isPromptTooLarge && !config.chatgptNewConversationProjectId) {
 				// Learned: when prompts truncate, retry with file uploads so the UI receives the full content.
 				logger("[browser] Inline prompt too large; retrying with file uploads.");
 				await raceWithDisconnect(clearPromptComposer(Runtime, logger));
@@ -2598,6 +2752,7 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 					submitOnce(fallbackSubmission.prompt, fallbackSubmission.attachments),
 				);
 				baselineTurns = submission.baselineTurns;
+				submittedUserId = submission.submittedUserId;
 				baselineAssistantText = submission.baselineAssistantText;
 				baselineAssistantMessageId = submission.baselineAssistantMessageId || null;
 				baselineAssistantTurnId = submission.baselineAssistantTurnId || null;
@@ -2733,6 +2888,7 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 			html?: string;
 			meta: { turnId?: string | null; messageId?: string | null };
 		} | null> => {
+			if (await isAssistantGenerationActive(Runtime)) return null;
 			const snapshots = await Promise.all([
 				readAssistantSnapshot(Runtime, baselineTurns ?? undefined).catch(() => null),
 				readAssistantSnapshot(Runtime).catch(() => null),
@@ -2744,7 +2900,7 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 			} | null = null;
 			for (const snapshot of snapshots) {
 				const text = typeof snapshot?.text === "string" ? snapshot.text.trim() : "";
-				if (!text) continue;
+				if (!text || !snapshot?.messageId) continue;
 				const isBaseline = shouldTreatChatgptAssistantResponseAsStale({
 					baselineText: baselineNormalized,
 					baselineMessageId: baselineAssistantMessageId,
@@ -2752,6 +2908,7 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 					answerText: text,
 					answerMessageId: snapshot?.messageId,
 					answerTurnId: snapshot?.turnId,
+					answerAfterSubmittedUser: await readSubmittedUserBoundary(Runtime, submittedUserId, snapshot?.messageId),
 				});
 				if (isBaseline) continue;
 				const candidate = {
@@ -2789,7 +2946,8 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 		await stopThinkingMonitor?.();
 		stopThinkingMonitor = null;
 		cancelConversationHint = true;
-		const preResponseConversationHint = conversationHintInFlight as unknown as Promise<boolean> | null;
+		const preResponseConversationHint =
+			conversationHintInFlight as unknown as Promise<boolean> | null;
 		if (preResponseConversationHint) {
 			await preResponseConversationHint.catch(() => false);
 		}
@@ -2846,6 +3004,7 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 				answerText: answer.text,
 				answerMessageId: answer.meta?.messageId ?? null,
 				answerTurnId: answer.meta?.turnId ?? null,
+				answerAfterSubmittedUser: await readSubmittedUserBoundary(Runtime, submittedUserId, answer.meta?.messageId),
 			});
 			if (isBaseline) {
 				logger("Detected stale assistant response; waiting for new response...");
@@ -2923,7 +3082,15 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 			() => null,
 		);
 		const finalText = typeof finalSnapshot?.text === "string" ? finalSnapshot.text.trim() : "";
-		if (finalText && finalText !== promptText.trim()) {
+		if (
+			finalText &&
+			finalText !== promptText.trim() &&
+			canRefreshChatgptAssistantSnapshot({
+				answerMessageId: answer.meta?.messageId,
+				snapshotMessageId: finalSnapshot?.messageId,
+				baselineMessageId: baselineAssistantMessageId,
+			})
+		) {
 			const trimmedMarkdown = answerMarkdown.trim();
 			const finalIsEcho = promptEchoMatcher ? promptEchoMatcher.isEcho(finalText) : false;
 			const lengthDelta = finalText.length - trimmedMarkdown.length;
@@ -2936,6 +3103,8 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 				logger("Refreshed assistant response via final DOM snapshot");
 				answerText = finalText;
 				answerMarkdown = finalText;
+				answer = { ...answer, text: finalText, html: finalSnapshot?.html ?? answer.html };
+				answerHtml = answer.html ?? "";
 			}
 		}
 
@@ -2964,7 +3133,11 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 				);
 				const text = typeof snapshot?.text === "string" ? snapshot.text.trim() : "";
 				const isStillEcho = !text || Boolean(promptEchoMatcher?.isEcho(text));
-				if (!isStillEcho) {
+				if (!isStillEcho && canRefreshChatgptAssistantSnapshot({
+					answerMessageId: answer.meta?.messageId,
+					snapshotMessageId: snapshot?.messageId,
+					baselineMessageId: baselineAssistantMessageId,
+				}) && !(await isAssistantGenerationActive(Runtime))) {
 					if (!bestText || text.length > bestText.length) {
 						bestText = text;
 						stableCount = 0;
@@ -2981,6 +3154,7 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 				logger("Recovered assistant response after detecting prompt echo");
 				answerText = bestText;
 				answerMarkdown = bestText;
+				answer = { ...answer, text: bestText };
 			}
 		}
 		const minAnswerChars = 16;
@@ -2993,7 +3167,11 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 					() => null,
 				);
 				const text = typeof snapshot?.text === "string" ? snapshot.text.trim() : "";
-				if (text && text.length > bestText.length) {
+				if (text && text.length > bestText.length && canRefreshChatgptAssistantSnapshot({
+					answerMessageId: answer.meta?.messageId,
+					snapshotMessageId: snapshot?.messageId,
+					baselineMessageId: baselineAssistantMessageId,
+				}) && !(await isAssistantGenerationActive(Runtime))) {
 					bestText = text;
 					stableCycles = 0;
 				} else {
@@ -3008,6 +3186,7 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 				logger("Refreshed short assistant response from latest DOM snapshot");
 				answerText = bestText;
 				answerMarkdown = bestText;
+				answer = { ...answer, text: bestText };
 			}
 		}
 		if (promptRequestsJsonObject(promptText)) {
@@ -3190,8 +3369,13 @@ function withAgentBrowserRuntimeHints(
 	bridge: AgentBrowserBridgeResult,
 	bridgeMode: AgentBrowserBridgeMode,
 ): BrowserRunOptions {
-	const withBridgeProvenance = (hint: BrowserRuntimeMetadata): BrowserRuntimeMetadata => ({
+	const withBridgeProvenance = (hint: BrowserRuntimeMetadata): BrowserRuntimeMetadata => {
+		const target = options.nativeBrokerTransport?.currentTargetSnapshot?.();
+		return ({
 		...hint,
+		conversationId: target?.conversationId ?? hint.conversationId,
+		agentBrowserTransport: bridge.brokerTransport,
+		agentBrowserBinding: bridge.brokerSession?.binding,
 		browserAuthority: "agent-browser",
 		agentBrowserAcquisitionDecision: bridge.acquisitionDecision,
 		agentBrowserAcquisitionEvidence: bridge.acquisitionEvidence,
@@ -3203,12 +3387,13 @@ function withAgentBrowserRuntimeHints(
 		agentBrowserExactUrlTargetCount: bridge.exactUrlTargetCount,
 		agentBrowserProcessId: bridge.browserProcessId,
 		agentBrowserProfileId: bridge.profileId,
-		agentBrowserRequestedUrl: bridge.requestedUrl,
+		agentBrowserRequestedUrl: target?.url ?? bridge.requestedUrl,
 		agentBrowserRequestedHost: options.config?.agentBrowserHost ?? undefined,
-		agentBrowserServiceTabHandle: bridge.serviceTabHandle,
+		agentBrowserServiceTabHandle: target?.serviceTabHandle ?? bridge.serviceTabHandle,
 		agentBrowserSessionName: bridge.sessionName,
 		agentBrowserTabReconciliation: bridge.tabReconciliation,
 	});
+	};
 	return {
 		...options,
 		runtimeHintCb: async (hint) => options.runtimeHintCb?.(withBridgeProvenance(hint)),
@@ -3346,6 +3531,35 @@ async function _assertNavigatedToHttp(
 	});
 }
 
+async function connectProviderRemoteTarget(
+	bridge: AgentBrowserBridgeResult | null,
+	config: ReturnType<typeof resolveBrowserConfig>,
+	url: string,
+	logger: BrowserLogger,
+	abortSignal?: AbortSignal,
+) {
+	const remote = config.remoteChrome;
+	if (bridge) {
+		const targetId = bridge.serviceTabHandle.targetId;
+		if (typeof targetId !== "string" || !targetId) throw new Error("Broker attachment is missing its exact target");
+		if (bridge.brokerTransport === "native" || bridge.brokerSession) {
+			if (bridge.brokerTransport !== "native" || !bridge.brokerSession) throw new Error("Native broker session is incomplete");
+			return { client: await connectToChromeTarget({ brokerSession: bridge.brokerSession,
+				target: targetId, logger, abortSignal }), targetId, host: undefined, port: undefined, dispose: undefined };
+		}
+		if (!remote) throw new Error("Broker legacy endpoint missing");
+		return { client: await connectToChromeTarget({ host: remote.host, port: remote.port,
+			target: targetId, logger, abortSignal }), targetId, host: remote.host, port: remote.port, dispose: undefined };
+	}
+	if (!remote) throw new Error("Remote Chrome configuration missing");
+	return connectToRemoteChrome(remote.host, remote.port, logger, url, {
+		compatibleHosts: resolveCompatibleHostsForUrl(url),
+		serviceTabLimit: config.serviceTabLimit ?? undefined,
+		blankTabLimit: config.blankTabLimit ?? undefined,
+		collapseDisposableWindows: config.collapseDisposableWindows,
+	});
+}
+
 async function runRemoteBrowserMode(
 	promptText: string,
 	attachments: BrowserAttachment[],
@@ -3355,14 +3569,15 @@ async function runRemoteBrowserMode(
 	agentBrowserBridge: AgentBrowserBridgeResult | null = null,
 ): Promise<BrowserRunResult> {
 	const remoteChromeConfig = config.remoteChrome;
-	if (!remoteChromeConfig) {
+	if (!remoteChromeConfig && !agentBrowserBridge?.brokerSession) {
 		throw new Error(
 			"Remote Chrome configuration missing. Pass --remote-chrome <host:port> to use this mode.",
 		);
 	}
-	const { host, port } = remoteChromeConfig;
+	const host = agentBrowserBridge?.brokerTransport === "native" ? undefined : remoteChromeConfig?.host;
+	const port = agentBrowserBridge?.brokerTransport === "native" ? undefined : remoteChromeConfig?.port;
 	await enforceChatgptBrowserRateLimitGuard(config, logger, config.manualLoginProfileDir ?? null);
-	logger(`Connecting to remote Chrome at ${host}:${port}`);
+	logger(agentBrowserBridge?.brokerTransport === "native" ? "Connecting through the exact native broker attachment" : `Connecting to remote Chrome at ${host}:${port}`);
 
 	let client: ChromeClient | null = null;
 	let remoteTargetId: string | null = null;
@@ -3383,29 +3598,38 @@ async function runRemoteBrowserMode(
 	let chatgptDeepResearchModifyPlanLabel: string | null = null;
 	let chatgptDeepResearchModifyPlanVisible: boolean | null = null;
 	let chatgptDeepResearchReviewEvidence: Record<string, unknown> | null = null;
+	let chatgptNewConversationFreshProof: {
+		projectId: string; url: string; messageCount: 0; promptReady: true;
+	} | null = null;
+	const currentRuntimeMetadata = (): BrowserRuntimeMetadata => ({
+		selectedAgentId: config.selectedAgentId ?? null,
+		chromePort: connectedPort,
+		chromeHost: connectedHost,
+		chromeTargetId: remoteTargetId ?? undefined,
+		tabUrl: lastUrl,
+		conversationId: lastUrl ? extractConversationIdFromUrl(lastUrl) : undefined,
+		controllerPid: process.pid,
+		thinkingTime: selectedThinkingTime ?? undefined,
+		chatgptProMode: selectedChatgptProMode ?? undefined,
+		chatgptAccountLevel: selectedChatgptAccountLevel ?? undefined,
+		chatgptAccountPlanType: selectedChatgptAccountPlanType ?? undefined,
+		chatgptAccountStructure: selectedChatgptAccountStructure ?? undefined,
+		chatgptDeepResearchStage: chatgptDeepResearchStage ?? undefined,
+		chatgptDeepResearchPlanAction: chatgptDeepResearchPlanAction ?? undefined,
+		chatgptDeepResearchStartMethod: chatgptDeepResearchStartMethod ?? undefined,
+		chatgptDeepResearchStartLabel: chatgptDeepResearchStartLabel ?? undefined,
+		chatgptDeepResearchModifyPlanLabel: chatgptDeepResearchModifyPlanLabel ?? undefined,
+		chatgptDeepResearchModifyPlanVisible: chatgptDeepResearchModifyPlanVisible ?? undefined,
+		chatgptDeepResearchReviewEvidence: chatgptDeepResearchReviewEvidence ?? undefined,
+		chatgptNewConversationFreshProjectId: chatgptNewConversationFreshProof?.projectId,
+		chatgptNewConversationFreshUrl: chatgptNewConversationFreshProof?.url,
+		chatgptNewConversationFreshMessageCount: chatgptNewConversationFreshProof?.messageCount,
+		chatgptNewConversationFreshPromptReady: chatgptNewConversationFreshProof?.promptReady,
+	});
 	const emitRuntimeHint = async () => {
 		if (!runtimeHintCb) return;
 		try {
-			await runtimeHintCb({
-				selectedAgentId: config.selectedAgentId ?? null,
-				chromePort: connectedPort,
-				chromeHost: connectedHost,
-				chromeTargetId: remoteTargetId ?? undefined,
-				tabUrl: lastUrl,
-				controllerPid: process.pid,
-				thinkingTime: selectedThinkingTime ?? undefined,
-				chatgptProMode: selectedChatgptProMode ?? undefined,
-				chatgptAccountLevel: selectedChatgptAccountLevel ?? undefined,
-				chatgptAccountPlanType: selectedChatgptAccountPlanType ?? undefined,
-				chatgptAccountStructure: selectedChatgptAccountStructure ?? undefined,
-				chatgptDeepResearchStage: chatgptDeepResearchStage ?? undefined,
-				chatgptDeepResearchPlanAction: chatgptDeepResearchPlanAction ?? undefined,
-				chatgptDeepResearchStartMethod: chatgptDeepResearchStartMethod ?? undefined,
-				chatgptDeepResearchStartLabel: chatgptDeepResearchStartLabel ?? undefined,
-				chatgptDeepResearchModifyPlanLabel: chatgptDeepResearchModifyPlanLabel ?? undefined,
-				chatgptDeepResearchModifyPlanVisible: chatgptDeepResearchModifyPlanVisible ?? undefined,
-				chatgptDeepResearchReviewEvidence: chatgptDeepResearchReviewEvidence ?? undefined,
-			});
+			await runtimeHintCb(currentRuntimeMetadata());
 		} catch (error) {
 			const message = error instanceof Error ? error.message : String(error);
 			logger(`Failed to persist runtime hint: ${message}`);
@@ -3417,40 +3641,32 @@ async function runRemoteBrowserMode(
 	let answerHtml = "";
 	let selectedComposerTool: string | null = null;
 	let connectionClosedUnexpectedly = false;
+	let connectionLossReason: string | null = null;
 	let stopThinkingMonitor: (() => Promise<void>) | null = null;
 	let removeDialogHandler: (() => void) | null = null;
 	let runtimeForGuard: ChromeClient["Runtime"] | null = null;
+	let promptSendIntentPersisted = false;
 	const passiveObservations: BrowserPassiveObservation[] = [];
+	const persistPromptBoundary = async (evidenceRef: string, confidence: BrowserPassiveObservation["confidence"]) => {
+		if (evidenceRef === "chatgpt-prompt-send-intent") promptSendIntentPersisted = true;
+		if (!options.runtimeEvidenceCb) return;
+		const observation = recordBrowserPassiveObservation(passiveObservations, {
+			state: "thinking", source: "browser-service", evidenceRef, confidence,
+		});
+		await options.runtimeEvidenceCb({ observation, runtime: currentRuntimeMetadata() });
+	};
 
 	try {
-		const retainedTargetId =
-			typeof agentBrowserBridge?.serviceTabHandle.targetId === "string"
-				? agentBrowserBridge.serviceTabHandle.targetId
-				: null;
-		const connection = retainedTargetId
-			? await connectToChromeTarget({ host, port, target: retainedTargetId, logger }).then(
-					(retainedClient) => ({
-						client: retainedClient,
-						targetId: retainedTargetId,
-						host,
-						port,
-						dispose: undefined,
-					}),
-				)
-			: await connectToRemoteChrome(host, port, logger, config.url, {
-					compatibleHosts: resolveCompatibleHostsForUrl(config.url),
-					serviceTabLimit: config.serviceTabLimit ?? undefined,
-					blankTabLimit: config.blankTabLimit ?? undefined,
-					collapseDisposableWindows: config.collapseDisposableWindows,
-				});
+		const connection = await connectProviderRemoteTarget(agentBrowserBridge, config, config.url, logger, options.abortSignal);
 		client = connection.client;
 		remoteTargetId = connection.targetId ?? null;
 		connectedHost = connection.host;
 		connectedPort = connection.port;
 		disposeRemoteTransport = connection.dispose ?? null;
 		await emitRuntimeHint();
-		const markConnectionLost = () => {
+		const markConnectionLost = (cause?: unknown) => {
 			connectionClosedUnexpectedly = true;
+			connectionLossReason = cause instanceof Error ? cause.message : null;
 		};
 		client.on("disconnect", markConnectionLost);
 		const { Network, Page, Runtime, Input, DOM } = client;
@@ -3462,11 +3678,31 @@ async function runRemoteBrowserMode(
 		}
 		await Promise.all(domainEnablers);
 		removeDialogHandler = installJavaScriptDialogAutoDismissal(Page, logger);
+		const selectedUrl = agentBrowserBridge && typeof agentBrowserBridge.serviceTabHandle.url === "string"
+				? agentBrowserBridge.serviceTabHandle.url
+				: agentBrowserBridge?.requestedUrl;
+		if (agentBrowserBridge) {
+			if (!selectedUrl) {
+				throw new BrowserAutomationError("agent-browser attachment is missing the selected target URL; refusing to compose or submit.", {
+					code: "agent_browser_exact_target_url_missing",
+					stage: "execute-browser",
+					retryable: false,
+				});
+			}
+			await assertExactRemoteTargetUrl(Runtime, selectedUrl, "before-navigation");
+		}
 
 		// Skip cookie sync for remote Chrome - it already has cookies
 		logger("Skipping cookie sync for remote Chrome (using existing session)");
 
-		await navigateToChatGPT(Page, Runtime, config.url, logger);
+		if (!selectedUrl || !sameChatgptConversationUrl(selectedUrl, config.url)) {
+			await navigateToChatGPT(Page, Runtime, config.url, logger);
+		} else {
+			logger("Retained ChatGPT target already has the requested conversation identity; skipping alias-only navigation");
+		}
+		if (agentBrowserBridge) {
+			await assertExactRemoteTargetUrl(Runtime, config.url, "after-navigation");
+		}
 		await ensureNotBlocked(Runtime, config.headless, logger);
 		await ensureNoManualClearBlockingPage(Runtime, logger, {
 			action: "ChatGPT remote prompt preparation",
@@ -3644,6 +3880,7 @@ async function runRemoteBrowserMode(
 					"remote before submit",
 				);
 			}
+			const previousUserId = await readLatestSubmittedUserId(Runtime);
 			const baselineSnapshot = await readAssistantSnapshot(Runtime).catch(() => null);
 			const baselineAssistantText =
 				typeof baselineSnapshot?.text === "string" ? baselineSnapshot.text.trim() : "";
@@ -3676,6 +3913,13 @@ async function runRemoteBrowserMode(
 				logger("All attachments uploaded");
 			}
 			let baselineTurns = await readConversationTurnCount(Runtime, logger);
+			if (config.chatgptNewConversationProjectId) {
+				const freshUrl = await assertChatgptNewConversationDispatch(Runtime, config.chatgptNewConversationProjectId, "before");
+				chatgptNewConversationFreshProof = { projectId: config.chatgptNewConversationProjectId,
+					url: freshUrl, messageCount: 0, promptReady: true };
+				logger(`ChatGPT fresh-conversation pre-send verified: project=${config.chatgptNewConversationProjectId} route=project messageCount=0 promptReady=true`);
+				await persistPromptBoundary("chatgpt-new-conversation-fresh-pre-send", "high");
+			}
 			const committedTurns = await submitPrompt(
 				{
 					runtime: Runtime,
@@ -3683,11 +3927,40 @@ async function runRemoteBrowserMode(
 					attachmentNames,
 					baselineTurns: baselineTurns ?? undefined,
 					inputTimeoutMs: config.inputTimeoutMs ?? undefined,
+					requireSendButton: Boolean(config.chatgptNewConversationProjectId),
+					beforeSend: async () => {
+						await ensureRequiredChatgptProIntelligence(Runtime, logger);
+						await persistPromptBoundary("chatgpt-prompt-send-intent", "high");
+					},
+					onPromptDispatched: async () => {
+						const synchronizedTarget = config.chatgptNewConversationProjectId
+							? await options.nativeBrokerTransport?.synchronizeTargetAfterMutation?.(
+								options.abortSignal ?? new AbortController().signal,
+							)
+							: null;
+						const observedUrl = synchronizedTarget?.url ?? await Runtime.evaluate({
+							expression: "location.href", returnByValue: true,
+						}).then(({ result }) => typeof result?.value === "string" ? result.value : null)
+							.catch(() => null);
+						if (observedUrl && config.chatgptNewConversationProjectId
+							&& isChatgptNewConversationRoute(observedUrl, config.chatgptNewConversationProjectId, "after")) {
+							lastUrl = observedUrl;
+							options.nativeBrokerTransport?.bindObservedTargetUrl?.(observedUrl);
+						}
+						await persistPromptBoundary("chatgpt-prompt-dispatched", "high");
+					},
 				},
 				prompt,
 				logger,
 			);
+			if (config.chatgptNewConversationProjectId) {
+				lastUrl = await assertChatgptNewConversationDispatch(Runtime, config.chatgptNewConversationProjectId, "after");
+				options.nativeBrokerTransport?.bindObservedTargetUrl?.(lastUrl);
+			}
+			await persistPromptBoundary("chatgpt-prompt-submitted", "high");
+			await emitRuntimeHint();
 			baselineTurns = resolveAssistantMinTurnIndex(baselineTurns, committedTurns);
+			const submittedUserId = await readLatestSubmittedUserId(Runtime, { previousUserId, prompt });
 			if (config.projectId) {
 				await assertChatgptProjectDispatchContext(
 					Runtime,
@@ -3702,6 +3975,7 @@ async function runRemoteBrowserMode(
 			return {
 				baselineTurns,
 				baselineAssistantText,
+				submittedUserId,
 				baselineAssistantMessageId,
 				baselineAssistantTurnId,
 			};
@@ -3709,19 +3983,21 @@ async function runRemoteBrowserMode(
 
 		let baselineTurns: number | null = null;
 		let baselineAssistantText: string | null = null;
+		let submittedUserId: string | null = null;
 		let baselineAssistantMessageId: string | null = null;
 		let baselineAssistantTurnId: string | null = null;
 		try {
 			const submission = await submitOnce(promptText, attachments);
 			baselineTurns = submission.baselineTurns;
 			baselineAssistantText = submission.baselineAssistantText;
+			submittedUserId = submission.submittedUserId;
 			baselineAssistantMessageId = submission.baselineAssistantMessageId || null;
 			baselineAssistantTurnId = submission.baselineAssistantTurnId || null;
 		} catch (error) {
 			const isPromptTooLarge =
 				error instanceof BrowserAutomationError &&
 				(error.details as { code?: string } | undefined)?.code === "prompt-too-large";
-			if (options.fallbackSubmission && isPromptTooLarge) {
+			if (options.fallbackSubmission && isPromptTooLarge && !config.chatgptNewConversationProjectId) {
 				logger("[browser] Inline prompt too large; retrying with file uploads.");
 				await clearPromptComposer(Runtime, logger);
 				await ensurePromptReady(Runtime, config.inputTimeoutMs, logger);
@@ -3731,6 +4007,7 @@ async function runRemoteBrowserMode(
 				);
 				baselineTurns = submission.baselineTurns;
 				baselineAssistantText = submission.baselineAssistantText;
+				submittedUserId = submission.submittedUserId;
 				baselineAssistantMessageId = submission.baselineAssistantMessageId || null;
 				baselineAssistantTurnId = submission.baselineAssistantTurnId || null;
 			} else {
@@ -3849,6 +4126,7 @@ async function runRemoteBrowserMode(
 			html?: string;
 			meta: { turnId?: string | null; messageId?: string | null };
 		} | null> => {
+			if (await isAssistantGenerationActive(Runtime)) return null;
 			const snapshots = await Promise.all([
 				readAssistantSnapshot(Runtime, baselineTurns ?? undefined).catch(() => null),
 				readAssistantSnapshot(Runtime).catch(() => null),
@@ -3860,7 +4138,7 @@ async function runRemoteBrowserMode(
 			} | null = null;
 			for (const snapshot of snapshots) {
 				const text = typeof snapshot?.text === "string" ? snapshot.text.trim() : "";
-				if (!text) continue;
+				if (!text || !snapshot?.messageId) continue;
 				const isBaseline = shouldTreatChatgptAssistantResponseAsStale({
 					baselineText: baselineNormalized,
 					baselineMessageId: baselineAssistantMessageId,
@@ -3868,6 +4146,7 @@ async function runRemoteBrowserMode(
 					answerText: text,
 					answerMessageId: snapshot?.messageId,
 					answerTurnId: snapshot?.turnId,
+					answerAfterSubmittedUser: await readSubmittedUserBoundary(Runtime, submittedUserId, snapshot?.messageId),
 				});
 				if (isBaseline) continue;
 				const candidate = {
@@ -3944,6 +4223,7 @@ async function runRemoteBrowserMode(
 				answerText: answer.text,
 				answerMessageId: answer.meta?.messageId ?? null,
 				answerTurnId: answer.meta?.turnId ?? null,
+				answerAfterSubmittedUser: await readSubmittedUserBoundary(Runtime, submittedUserId, answer.meta?.messageId),
 			});
 			if (isBaseline) {
 				logger("Detected stale assistant response; waiting for new response...");
@@ -4021,6 +4301,11 @@ async function runRemoteBrowserMode(
 		const finalText = typeof finalSnapshot?.text === "string" ? finalSnapshot.text.trim() : "";
 		if (
 			finalText &&
+			canRefreshChatgptAssistantSnapshot({
+				answerMessageId: answer.meta?.messageId,
+				snapshotMessageId: finalSnapshot?.messageId,
+				baselineMessageId: baselineAssistantMessageId,
+			}) &&
 			finalText !== answerMarkdown.trim() &&
 			finalText !== promptText.trim() &&
 			finalText.length >= answerMarkdown.trim().length
@@ -4028,6 +4313,8 @@ async function runRemoteBrowserMode(
 			logger("Refreshed assistant response via final DOM snapshot");
 			answerText = finalText;
 			answerMarkdown = finalText;
+			answer = { ...answer, text: finalText, html: finalSnapshot?.html ?? answer.html };
+			answerHtml = answer.html ?? "";
 		}
 
 		// Detect prompt echo using normalized comparison (whitespace-insensitive).
@@ -4056,7 +4343,11 @@ async function runRemoteBrowserMode(
 				);
 				const text = typeof snapshot?.text === "string" ? snapshot.text.trim() : "";
 				const isStillEcho = !text || Boolean(promptEchoMatcher?.isEcho(text));
-				if (!isStillEcho) {
+				if (!isStillEcho && canRefreshChatgptAssistantSnapshot({
+					answerMessageId: answer.meta?.messageId,
+					snapshotMessageId: snapshot?.messageId,
+					baselineMessageId: baselineAssistantMessageId,
+				}) && !(await isAssistantGenerationActive(Runtime))) {
 					if (!bestText || text.length > bestText.length) {
 						bestText = text;
 						stableCount = 0;
@@ -4073,6 +4364,7 @@ async function runRemoteBrowserMode(
 				logger("Recovered assistant response after detecting prompt echo");
 				answerText = bestText;
 				answerMarkdown = bestText;
+				answer = { ...answer, text: bestText };
 			}
 		}
 		recordBrowserPassiveObservation(passiveObservations, {
@@ -4139,20 +4431,30 @@ async function runRemoteBrowserMode(
 			if ((config.debug || process.env.CHATGPT_DEVTOOLS_TRACE === "1") && guardedError.stack) {
 				logger(guardedError.stack);
 			}
+			if (config.chatgptNewConversationProjectId && promptSendIntentPersisted) {
+				throw new BrowserAutomationError(
+					"ChatGPT new-project dispatch outcome could not be verified; refusing replay.",
+					{
+						code: "chatgpt_new_conversation_outcome_unknown",
+						projectId: config.chatgptNewConversationProjectId,
+						phase: "after", retryable: false, stage: "submission-outcome-unknown",
+						runtime: currentRuntimeMetadata(),
+					},
+					guardedError,
+				);
+			}
 			throw guardedError;
 		}
 
-		throw new BrowserAutomationError(
-			"Remote Chrome connection lost before Aura-Call finished.",
+		throw createRemoteChatgptConnectionLossError(
+			config.chatgptNewConversationProjectId,
 			{
-				stage: "connection-lost",
-				runtime: {
-					chromeHost: connectedHost,
-					chromePort: connectedPort,
-					chromeTargetId: remoteTargetId ?? undefined,
-					tabUrl: lastUrl,
-					controllerPid: process.pid,
-				},
+				chromeHost: connectedHost,
+				chromePort: connectedPort,
+				chromeTargetId: remoteTargetId ?? undefined,
+				tabUrl: lastUrl,
+				controllerPid: process.pid,
+				connectionLossReason: connectionLossReason ?? undefined,
 			},
 			guardedError,
 		);
@@ -4167,7 +4469,7 @@ async function runRemoteBrowserMode(
 		removeDialogHandler?.();
 		if (agentBrowserBridge) {
 			logger("agent-browser owns the retained ChatGPT tab; leaving it open for broker reuse.");
-		} else {
+		} else if (connectedPort && connectedHost) {
 			await closeRemoteChromeTarget(
 				connectedHost,
 				connectedPort,
@@ -4192,13 +4494,14 @@ async function runRemoteGrokBrowserMode(
 ): Promise<BrowserRunResult> {
 	const passiveObservations: BrowserPassiveObservation[] = [];
 	const remoteChromeConfig = config.remoteChrome;
-	if (!remoteChromeConfig) {
+	if (!remoteChromeConfig && !agentBrowserBridge?.brokerSession) {
 		throw new Error(
 			"Remote Chrome configuration missing. Pass --remote-chrome <host:port> to use this mode.",
 		);
 	}
-	const { host, port } = remoteChromeConfig;
-	logger(`Connecting to remote Chrome at ${host}:${port}`);
+	const host = agentBrowserBridge?.brokerTransport === "native" ? undefined : remoteChromeConfig?.host;
+	const port = agentBrowserBridge?.brokerTransport === "native" ? undefined : remoteChromeConfig?.port;
+	logger(agentBrowserBridge?.brokerTransport === "native" ? "Connecting through the exact native broker attachment" : `Connecting to remote Chrome at ${host}:${port}`);
 
 	let client: ChromeClient | null = null;
 	let remoteTargetId: string | null = null;
@@ -4234,26 +4537,7 @@ async function runRemoteGrokBrowserMode(
 				? resolveGrokConversationUrl(config.conversationId, config.projectId)
 				: resolveGrokProjectUrl(config.projectId);
 		}
-		const retainedTargetId =
-			typeof agentBrowserBridge?.serviceTabHandle.targetId === "string"
-				? agentBrowserBridge.serviceTabHandle.targetId
-				: null;
-		const connection = retainedTargetId
-			? await connectToChromeTarget({ host, port, target: retainedTargetId, logger }).then(
-					(retainedClient) => ({
-						client: retainedClient,
-						targetId: retainedTargetId,
-						host,
-						port,
-						dispose: undefined,
-					}),
-				)
-			: await connectToRemoteChrome(host, port, logger, grokTargetUrl, {
-					compatibleHosts: resolveCompatibleHostsForUrl(grokTargetUrl),
-					serviceTabLimit: config.serviceTabLimit ?? undefined,
-					blankTabLimit: config.blankTabLimit ?? undefined,
-					collapseDisposableWindows: config.collapseDisposableWindows,
-				});
+		const connection = await connectProviderRemoteTarget(agentBrowserBridge, config, grokTargetUrl, logger, options.abortSignal);
 		client = connection.client;
 		remoteTargetId = connection.targetId ?? null;
 		connectedHost = connection.host;
@@ -4413,7 +4697,7 @@ async function runRemoteGrokBrowserMode(
 		}
 		if (agentBrowserBridge) {
 			logger("agent-browser owns the retained Grok tab; leaving it open for broker reuse.");
-		} else {
+		} else if (connectedPort && connectedHost) {
 			await closeRemoteChromeTarget(
 				connectedHost,
 				connectedPort,
@@ -4456,6 +4740,44 @@ function isWebSocketClosureError(error: Error): boolean {
 		message.includes("websocket error") ||
 		message.includes("target closed")
 	);
+}
+
+function createRemoteChatgptConnectionLossError(
+	chatgptNewConversationProjectId: string | null | undefined,
+	runtime: Record<string, unknown>,
+	cause: Error,
+): BrowserAutomationError {
+	if (chatgptNewConversationProjectId) {
+		// A new-project route can change only after Send. Once the transport drops,
+		// neither an absent route change nor a missing commit receipt can prove that
+		// the user turn was not accepted. Preserve the exact broker tab for read-only
+		// recovery instead of releasing it or allowing a retry to replay the prompt.
+		return new BrowserAutomationError(
+			"Remote Chrome connection lost after a new-project dispatch may have occurred; refusing replay.",
+			{
+				code: "chatgpt_new_conversation_outcome_unknown",
+				projectId: chatgptNewConversationProjectId,
+				phase: "after",
+				retryable: false,
+				stage: "connection-lost",
+				runtime,
+			},
+			cause,
+		);
+	}
+	return new BrowserAutomationError(
+		"Remote Chrome connection lost before Aura-Call finished.",
+		{ stage: "connection-lost", runtime },
+		cause,
+	);
+}
+
+export function createRemoteChatgptConnectionLossErrorForTest(
+	chatgptNewConversationProjectId: string | null | undefined,
+	runtime: Record<string, unknown>,
+	cause: Error,
+): BrowserAutomationError {
+	return createRemoteChatgptConnectionLossError(chatgptNewConversationProjectId, runtime, cause);
 }
 
 function shouldApplyThinkingTime(desiredModel: string | null | undefined): boolean {

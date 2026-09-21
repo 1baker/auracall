@@ -1,5 +1,7 @@
 import path from "node:path";
 import { describe, expect, test, vi } from "vitest";
+import { BrowserAutomationError } from "../../src/oracle/errors.js";
+import { createProviderSessionAuthorization } from "../../src/browser/providers/providerSessionAuthority.js";
 import {
 	acquireAgentBrowserBrokerTab,
 	detachAgentBrowserBrokerTab,
@@ -18,6 +20,72 @@ function jsonResponse(body: unknown): Response {
 }
 
 describe("agent-browser bridge", () => {
+	test("preserves both operation and detach failures in the terminal error", async () => {
+		const bridge = { baseUrl: "http://127.0.0.1:47777", browserId: "session:retained",
+			profileId: "chatgpt-pro", sessionName: "retained", detachRequired: true,
+			serviceTabHandle: { targetId: "original-target", valid: true } };
+		const fetch = vi.fn(async () => { throw new Error("detach endpoint unavailable"); });
+		await expect(withAgentBrowserBrokerCleanup(bridge, async () => {
+			throw new Error("target binding rejected");
+		}, { fetch: fetch as typeof globalThis.fetch })).rejects.toMatchObject({
+			name: "BrowserAutomationError",
+			message: expect.stringContaining("target binding rejected"),
+			details: {
+				code: "agent_browser_operation_and_cleanup_failed",
+				detachError: expect.stringContaining("detach endpoint unavailable"),
+			},
+		});
+	});
+	test.each([undefined, null, false, 0, ""])("does not publish success for a falsy operation rejection: %s", async (failure) => {
+		const fetch = vi.fn(async () => jsonResponse({ success: true, data: { detached: true } }));
+		const bridge = { baseUrl: "http://127.0.0.1:47777", browserId: "session:retained",
+			profileId: "chatgpt-pro", sessionName: "retained", detachRequired: true,
+			serviceTabHandle: { targetId: "original-target", valid: true } };
+		await expect(withAgentBrowserBrokerCleanup(bridge, async () => { throw failure; },
+			{ fetch: fetch as typeof globalThis.fetch })).rejects.toBe(failure);
+		expect(fetch).toHaveBeenCalledOnce();
+	});
+
+	test.each(["unknown", "unknown-connection-loss", "unknown-detach-failed", "before", "retryable", "lookalike", "ordinary", "success"])(
+		"cleanup preserves only typed after-submit uncertainty: %s", async (kind) => {
+			const uncertain = kind.startsWith("unknown");
+			const requests: string[] = [];
+			const fetch = vi.fn(async (_url: unknown, init?: RequestInit) => {
+				const action = JSON.parse(String(init?.body)).action;
+				requests.push(action);
+				if (kind === "unknown-detach-failed") throw new Error("detach unavailable");
+				return jsonResponse({ success: true, data: { detached: true, released: true } });
+			});
+			const bridge = {
+				baseUrl: "http://127.0.0.1:47777", browserId: "session:chatgpt",
+				browserProcessId: 123, profileId: "chatgpt-pro", sessionName: "chatgpt",
+				canonicalTargetId: "target-1", requestedUrl: "https://chatgpt.com/g/test/project",
+				detachRequired: true, releaseRequired: true,
+				serviceTabHandle: { targetId: "target-1", valid: true },
+			};
+			const details = { code: "chatgpt_new_conversation_outcome_unknown",
+				phase: kind === "before" ? "before" : "after", retryable: kind === "retryable",
+				...(kind === "unknown-connection-loss" ? { stage: "connection-lost" } : {}) };
+			const error = kind === "lookalike" ? Object.assign(new Error("unknown"), { details })
+				: kind === "ordinary" ? new Error("ordinary") : new BrowserAutomationError("unknown", details);
+			const result = withAgentBrowserBrokerCleanup(bridge, async () => {
+				if (kind !== "success") throw error;
+				return "done";
+			}, { fetch: fetch as never });
+			if (kind === "success") await expect(result).resolves.toBe("done");
+			else if (uncertain) await expect(result).rejects.toMatchObject({
+				details: { ...details, retainedBrowserRecovery: {
+					browserId: bridge.browserId, browserProcessId: 123,
+					profileId: bridge.profileId, sessionName: bridge.sessionName,
+					targetId: "target-1", serviceTabHandle: bridge.serviceTabHandle,
+					conversationRouteVerified: false, tabReleaseSuppressed: true,
+				}, ...(kind === "unknown-detach-failed" ? { cleanupFailed: true } : {}) },
+			});
+			else await expect(result).rejects.toBe(error);
+			if (kind !== "unknown-detach-failed") await detachAgentBrowserBrokerTab(bridge, { fetch: fetch as never });
+			expect(requests).toEqual(uncertain ? ["cdp_detach"] : ["cdp_detach", "tab_handle_release"]);
+		});
+
 	test("defaults bridge selection to auto and preserves explicit overrides", () => {
 		expect(resolveAgentBrowserBridgeMode(undefined)).toBe("auto");
 		expect(resolveAgentBrowserBridgeMode("required")).toBe("required");
@@ -209,6 +277,277 @@ describe("agent-browser bridge", () => {
 			taskName: "chatgpt-restart-recovery",
 			serviceTabHandle: handle,
 		});
+	});
+
+	test("uses the configured exact target when two retained tabs share the conversation URL", async () => {
+		const url = "https://chatgpt.com/c/existing";
+		const selected = {
+			browserId: "session:dashboard-service-backend",
+			profileId: "chatgpt-pro",
+			sessionName: "dashboard-service-backend",
+			targetId: "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+			url,
+			valid: true,
+		};
+		const sibling = { ...selected, targetId: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" };
+		const requests: Array<Record<string, unknown>> = [];
+		const fetch = vi.fn(async (requestUrl: string | URL | Request, init?: RequestInit) => {
+			const value = String(requestUrl);
+			if (value.endsWith("/api/service/browsers")) {
+				return jsonResponse({ success: true, data: { browsers: [{
+					browserBuild: "stock_chrome",
+					health: "ready",
+					id: selected.browserId,
+					pid: 657110,
+					profileId: selected.profileId,
+					tabHandles: [sibling, selected],
+				}] } });
+			}
+			if (value.includes("/api/service/access-plan?")) {
+				return jsonResponse({ success: true, data: {
+					selectedProfile: { id: selected.profileId },
+					decision: {
+						launchPosture: { browserBuild: "stock_chrome" },
+						profileReuse: { recommendedAction: "reuse_existing_browser" },
+						serviceRequest: { available: true, request: { action: "tab_new", url } },
+					},
+				} });
+			}
+			const request = JSON.parse(String(init?.body)) as Record<string, unknown>;
+			requests.push(request);
+			expect(request.action).toBe("cdp_attach");
+			return jsonResponse({ success: true, data: {
+				browserWebSocketUrl: "ws://127.0.0.1:42233/devtools/browser/exact",
+				detachRequired: true,
+			} });
+		});
+
+		const result = await acquireAgentBrowserBrokerTab({
+			mode: "required",
+			profileId: selected.profileId,
+			targetId: selected.targetId,
+			targetServiceId: "chatgpt",
+			url,
+		}, {
+			fetch: fetch as never,
+			listStreamFiles: async () => ["/runtime/dashboard-service-backend.stream"],
+			readStreamFile: async () => "47777\n",
+		});
+
+		expect(result?.serviceTabHandle).toEqual(selected);
+		expect(result?.canonicalTargetId).toBe(selected.targetId);
+		expect(requests.map((request) => request.action)).toEqual(["cdp_attach"]);
+	});
+
+	test("fails before tab creation when the configured exact target is unavailable", async () => {
+		const url = "https://chatgpt.com/c/existing";
+		const fetch = vi.fn(async (requestUrl: string | URL | Request) => {
+			const value = String(requestUrl);
+			if (value.endsWith("/api/service/browsers")) {
+				return jsonResponse({ success: true, data: { browsers: [{
+					browserBuild: "stock_chrome", health: "ready",
+					id: "session:dashboard-service-backend", pid: 657110,
+					profileId: "chatgpt-pro", tabHandles: [],
+				}] } });
+			}
+			if (value.includes("/api/service/access-plan?")) {
+				return jsonResponse({ success: true, data: {
+					selectedProfile: { id: "chatgpt-pro" },
+					decision: {
+						launchPosture: { browserBuild: "stock_chrome" },
+						profileReuse: { recommendedAction: "reuse_existing_browser" },
+						serviceRequest: { available: true, request: { action: "tab_new", url } },
+					},
+				} });
+			}
+			throw new Error("tab creation must not run for a configured exact target");
+		});
+
+		await expect(acquireAgentBrowserBrokerTab({
+			mode: "required", profileId: "chatgpt-pro",
+			targetId: "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+			targetServiceId: "chatgpt", url,
+		}, {
+			fetch: fetch as never,
+			listStreamFiles: async () => ["/runtime/dashboard-service-backend.stream"],
+			readStreamFile: async () => "47777\n",
+		})).rejects.toThrow("requires exactly one ready exact retained handle; found 0");
+	});
+
+	test("uses a unique explicit project conversation when the ambient configured target is stale", async () => {
+		const url = "https://chatgpt.com/g/g-p-11111111111111111111111111111111-workshop/c/11111111-1111-1111-1111-111111111111";
+		const handle = { browserId: "session:chatgpt-pro", profileId: "chatgpt-pro",
+			sessionName: "chatgpt-pro", targetId: "CURRENT-CONVERSATION-TARGET", url, valid: true };
+		const requests: Array<Record<string, unknown>> = [];
+		const fetch = vi.fn(async (requestUrl: string | URL | Request, init?: RequestInit) => {
+			const value = String(requestUrl);
+			if (value.endsWith("/api/service/browsers")) return jsonResponse({ success: true, data: { browsers: [{
+				browserBuild: "stock_chrome", health: "ready", id: handle.browserId, pid: 2696783,
+				profileId: handle.profileId, tabHandles: [handle],
+			}] } });
+			if (value.includes("/api/service/access-plan?")) return jsonResponse({ success: true, data: {
+				selectedProfile: { id: handle.profileId }, decision: {
+					launchPosture: { browserBuild: "stock_chrome" },
+					profileReuse: { recommendedAction: "reuse_existing_browser" },
+					serviceRequest: { available: true, request: { action: "tab_new", url } },
+				},
+			} });
+			const request = JSON.parse(String(init?.body)) as Record<string, unknown>;
+			requests.push(request);
+			return jsonResponse({ success: true, data: {
+				browserWebSocketUrl: "ws://127.0.0.1:42233/devtools/browser/exact", detachRequired: true,
+			} });
+		});
+		const result = await acquireAgentBrowserBrokerTab({ mode: "required", profileId: handle.profileId,
+			targetId: "STALE-AMBIENT-TARGET", targetServiceId: "chatgpt", url }, {
+			fetch: fetch as never, listStreamFiles: async () => ["/runtime/chatgpt-pro.stream"],
+			readStreamFile: async () => "47777\n",
+		});
+		expect(result?.canonicalTargetId).toBe(handle.targetId);
+		expect(result?.serviceTabHandle).toEqual(handle);
+		expect(requests).toEqual([expect.objectContaining({ action: "cdp_attach", serviceTabHandle: handle })]);
+	});
+
+	test("opens an explicit project conversation through Agent Browser when its ambient target and live handle are gone", async () => {
+		const url = "https://chatgpt.com/g/g-p-11111111111111111111111111111111-workshop/c/11111111-1111-1111-1111-111111111111";
+		const handle = { browserId: "session:chatgpt-pro", profileId: "chatgpt-pro",
+			sessionName: "chatgpt-pro", targetId: "REOPENED-CONVERSATION-TARGET", url, valid: true };
+		const requests: Array<Record<string, unknown>> = [];
+		let opened = false;
+		const fetch = vi.fn(async (requestUrl: string | URL | Request, init?: RequestInit) => {
+			const value = String(requestUrl);
+			if (value.endsWith("/api/service/browsers")) return jsonResponse({ success: true, data: { browsers: [{
+				browserBuild: "stock_chrome", health: "ready", id: handle.browserId, pid: 2696783,
+				profileId: handle.profileId, tabHandles: opened ? [handle] : [],
+			}] } });
+			if (value.includes("/api/service/access-plan?")) return jsonResponse({ success: true, data: {
+				selectedProfile: { id: handle.profileId }, decision: {
+					launchPosture: { browserBuild: "stock_chrome" },
+					profileReuse: { recommendedAction: "reuse_existing_browser" },
+					serviceRequest: { available: true, request: { action: "tab_new", url,
+						browserId: handle.browserId, sessionName: handle.sessionName } },
+				},
+			} });
+			const request = JSON.parse(String(init?.body)) as Record<string, unknown>;
+			requests.push(request);
+			if (request.action === "tab_new") {
+				opened = true;
+				return jsonResponse({ success: true, data: { serviceTabHandle: handle,
+					sharedAcquisition: { mode: "tab_new", action: "opened_new_tab", tabOpened: true } } });
+			}
+			return jsonResponse({ success: true, data: {
+				browserWebSocketUrl: "ws://127.0.0.1:42233/devtools/browser/exact", detachRequired: true,
+			} });
+		});
+		const result = await acquireAgentBrowserBrokerTab({ mode: "required", profileId: handle.profileId,
+			targetId: "STALE-AMBIENT-TARGET", targetServiceId: "chatgpt", url }, {
+			fetch: fetch as never, listStreamFiles: async () => ["/runtime/chatgpt-pro.stream"],
+			readStreamFile: async () => "47777\n",
+		});
+		expect(result?.canonicalTargetId).toBe(handle.targetId);
+		expect(requests.map(request => request.action)).toEqual(["tab_new", "cdp_attach"]);
+		expect(requests[0]).toMatchObject({ action: "tab_new", url, browserId: handle.browserId,
+			sessionName: handle.sessionName });
+	});
+
+	test.each([true, false])("binds a restored target before attaching (matching=%s)", async (matching) => {
+		const handle = { browserId: 'session:recovery', profileId: 'chatgpt-pro',
+			sessionName: 'recovery', targetId: 'new-target', url: 'https://chatgpt.com/c/recovery', valid: true };
+		const actions: string[] = [];
+		const fetch = vi.fn(async (url: unknown, init?: RequestInit) => {
+			if (String(url).endsWith('/api/service/browsers')) return jsonResponse({ success: true,
+				data: { browsers: [{ id: handle.browserId, profileId: handle.profileId, health: 'ready',
+					pid: 123, host: 'remote_headed', tabHandles: [handle] }] } });
+			const request = JSON.parse(String(init?.body));
+			actions.push(request.action);
+			if (request.action === 'evaluate') return jsonResponse({ success: true, data: { result: {
+				url: handle.url, generating: false, messages: [
+					{ role: 'user', id: 'original-user', text: matching ? 'Full original prompt' : 'Different prompt' },
+					{ role: 'assistant', id: 'original-answer', text: 'Original answer' },
+				],
+			} } });
+			if (request.action === 'cdp_attach') return jsonResponse({ success: true,
+				data: { browserWebSocketUrl: 'ws://127.0.0.1:49505/devtools/browser/recovery' } });
+			throw new Error('Unexpected browser action');
+		});
+		const result = reattachAgentBrowserBrokerTab({
+			browserId: handle.browserId, profileId: handle.profileId, sessionName: handle.sessionName,
+			serviceTabHandle: { ...handle, targetId: 'lost-target' }, url: handle.url,
+			recoveryPrompt: 'Full original prompt', browserHost: 'remote_headed',
+		}, { fetch: fetch as never, listStreamFiles: async () => ['/runtime/default.stream'],
+			readStreamFile: async () => '47777\n' });
+		if (matching) {
+			expect(await result).toMatchObject({ canonicalTargetId: 'new-target', recoveredResponse: {
+				userMessageId: 'original-user', answerMessageId: 'original-answer', answerText: 'Original answer',
+			} });
+			expect(actions).toEqual(['evaluate', 'cdp_attach']);
+		} else {
+			await expect(result).rejects.toThrow('not uniquely bound');
+			expect(actions).toEqual(['evaluate']);
+		}
+	});
+
+	test("reopens only the exact saved conversation for read-only recovery after its task tab was released", async () => {
+		const url = "https://chatgpt.com/g/g-p-11111111111111111111111111111111-workshop/c/11111111-1111-1111-1111-111111111111";
+		const closed = { browserId: "session:chatgpt-pro", profileId: "chatgpt-pro",
+			sessionName: "chatgpt-pro", targetId: "CLOSED-ORIGINAL-TARGET", url,
+			valid: false, staleReason: "tab_closed" };
+		const reopened = { ...closed, targetId: "READ-ONLY-OBSERVATION-TARGET", valid: true, staleReason: undefined };
+		const actions: string[] = [];
+		let opened = false;
+		const fetch = vi.fn(async (requestUrl: string | URL | Request, init?: RequestInit) => {
+			const value = String(requestUrl);
+			if (value.endsWith("/api/service/browsers")) return jsonResponse({ success: true, data: { browsers: [{
+				browserBuild: "stock_chrome", health: "ready", host: "remote_headed", pid: 2696783,
+				id: closed.browserId, profileId: closed.profileId, tabHandles: opened ? [closed, reopened] : [closed],
+			}] } });
+			if (value.includes("/api/service/access-plan?")) return jsonResponse({ success: true, data: {
+				selectedProfile: { id: closed.profileId }, decision: {
+					launchPosture: { browserBuild: "stock_chrome" },
+					profileReuse: { recommendedAction: "reuse_existing_browser" },
+					serviceRequest: { available: true, request: { action: "tab_new", url,
+						browserId: closed.browserId, sessionName: closed.sessionName,
+						params: { browserHost: "remote_headed" } } },
+				},
+			} });
+			const request = JSON.parse(String(init?.body)) as Record<string, any>;
+			actions.push(String(request.action));
+			if (request.action === "tab_new") {
+				opened = true;
+				return jsonResponse({ success: true, data: { serviceTabHandle: reopened,
+					sharedAcquisition: { mode: "tab_new", action: "opened_new_tab", tabOpened: true } } });
+			}
+			if (request.action === "cdp_attach") return jsonResponse({ success: true, data: {
+				browserWebSocketUrl: "ws://127.0.0.1:42233/devtools/browser/recovery", detachRequired: true,
+			} });
+			if (request.action === "evaluate" && String(request.expression).includes("data-message-author-role")) {
+				return jsonResponse({ success: true, data: { result: { url, generating: false, messages: [
+					{ role: "user", id: "u1", text: "Full original prompt" },
+					{ role: "assistant", id: "a1", text: "Recovered exact answer" },
+				] } } });
+			}
+			if (request.action === "evaluate") return jsonResponse({ success: true, data: {
+				result: { user: { email: "expected@example.com" } },
+			} });
+			if (request.action === "cdp_detach") return jsonResponse({ success: true, data: { detached: true } });
+			if (request.action === "tab_handle_release") return jsonResponse({ success: true, data: { released: true } });
+			throw new Error(`Unexpected browser action: ${String(request.action)}`);
+		});
+		const authorization = createProviderSessionAuthorization({ profiles: { default: { services: {
+			chatgpt: { identity: { email: "expected@example.com" } },
+		} } } }, { providerId: "chatgpt", auracallRuntimeProfile: "default",
+			browserProfile: "chatgpt-pro", managedBrowserProfile: null });
+		const result = await reattachAgentBrowserBrokerTab({ observationOnly: true,
+			browserId: closed.browserId, profileId: closed.profileId, sessionName: closed.sessionName,
+			serviceTabHandle: closed, url, recoveryPrompt: "Full original prompt",
+			providerSessionAuthorization: authorization, expectedBrowserProcessId: 2696783,
+			browserHost: "remote_headed" }, { fetch: fetch as never,
+			listStreamFiles: async () => ["/runtime/chatgpt-pro.stream"], readStreamFile: async () => "47777\n" });
+		expect(result).toMatchObject({ browserProcessId: 2696783,
+			canonicalTargetId: reopened.targetId, recoveredResponse: {
+				userMessageId: "u1", answerMessageId: "a1", answerText: "Recovered exact answer",
+			} });
+		expect(actions).toEqual(["tab_new", "cdp_attach", "evaluate", "evaluate", "cdp_detach", "tab_handle_release"]);
 	});
 
 	test("fails restart recovery closed when the retained broker target is gone", async () => {
@@ -763,7 +1102,7 @@ describe("agent-browser bridge", () => {
 		});
 	});
 
-	test("requires and proves an explicit headless browser host before attach", async () => {
+	test("non-destructive no-live-browser fixture delegates launch to Agent Browser and persists returned identity before attach", async () => {
 		const requestedUrl = "https://chatgpt.com/c/headless-contract";
 		const handle = {
 			browserId: "session:auracall-headless",
@@ -821,7 +1160,8 @@ describe("agent-browser bridge", () => {
 				tabOpened = true;
 				return jsonResponse({
 					success: true,
-					data: { serviceTabHandle: handle, tabAcquisitionDecision: "opened_new_tab" },
+					data: { serviceTabHandle: handle,
+						sharedAcquisition: { mode: "tab_new", action: "opened_new_tab", tabOpened: true } },
 				});
 			}
 			return jsonResponse({
@@ -851,9 +1191,14 @@ describe("agent-browser bridge", () => {
 		expect(new URL(plannedUrl).searchParams.get("browserHost")).toBe("local_headless");
 		expect(new URL(plannedUrl).searchParams.get("targetServiceId")).toBe("chatgpt");
 		expect(result).toMatchObject({
+			acquisitionDecision: "opened_new_tab",
+			browserProcessId: 41235,
 			browserHost: "local_headless",
 			browserId: handle.browserId,
+			canonicalTargetId: handle.targetId,
 			profileId: handle.profileId,
+			serviceTabHandle: handle,
+			sessionName: handle.sessionName,
 		});
 	});
 
@@ -1626,7 +1971,7 @@ describe("agent-browser bridge", () => {
 		expect(requests[0]).toMatchObject({ action: "cdp_detach" });
 	});
 
-	test("preserves a completed provider result after detach failure and allows reconciliation", async () => {
+	test.each([false, true])("withholds a completed result until detach is verified (observer throws: %s)", async (observerThrows) => {
 		const fetch = vi
 			.fn()
 			.mockResolvedValueOnce(jsonResponse({ success: true, data: { detached: false } }))
@@ -1640,13 +1985,20 @@ describe("agent-browser bridge", () => {
 			detachState: "attached" as const,
 			serviceTabHandle: { targetId: "target-1", valid: true },
 		};
-		const onCleanupError = vi.fn();
+		const onCleanupError = vi.fn<(error: unknown) => void>(() => {
+			if (observerThrows) throw new Error("diagnostic observer failed");
+		});
+		const action = vi.fn(async () => "done");
 		await expect(
-			withAgentBrowserBrokerCleanup(bridge, async () => "done", {
+			withAgentBrowserBrokerCleanup(bridge, action, {
 				fetch: fetch as never,
 				onCleanupError,
 			}),
-		).resolves.toBe("done");
+		).rejects.toMatchObject({
+			name: "BrowserAutomationError",
+			details: { code: "agent_browser_cleanup_unverified", phase: "after",
+				retryable: false, providerOperationCompleted: true },
+		});
 		expect(onCleanupError).toHaveBeenCalledTimes(1);
 		expect(String(onCleanupError.mock.calls[0]?.[0])).toContain("detach was not verified");
 		await expect(
@@ -1654,5 +2006,6 @@ describe("agent-browser bridge", () => {
 		).resolves.toBeUndefined();
 		expect(fetch).toHaveBeenCalledTimes(2);
 		expect(bridge.detachState).toBe("detached");
+		expect(action).toHaveBeenCalledOnce();
 	});
 });

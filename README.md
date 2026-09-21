@@ -14,6 +14,23 @@ Aura-Call bundles your prompt and files so another AI can answer with real conte
 
 ## Quick start
 
+Historical ChatGPT recovery remains bound to the exact original prompt and one
+following assistant. A visible status marker in a later turn does not block
+that answer only when its later request ownership is uniquely proven. Global
+Stop controls or unknown ownership still block recovery. Installed exact-answer
+binding, fresh account verification and a normal controller result-recovery
+transition passed under Plan 0359. Recovery never authorizes replaying a failed
+request or rewriting its history; document acceptance remains separate.
+
+An installed operator-only `POST /v1/responses/:id/recovery-observation` accepts
+an empty JSON object and reads a failed direct ChatGPT browser answer without
+attaching, navigating, replaying or changing run history. `/status` advertises
+`compatibility.recoveryObservation`. It requires exact saved inline transport,
+an idle runtime, retained browser ownership and fresh account verification.
+Unsupported transport, missing provenance or ambiguous answers fail closed.
+The Codex controller records a separate recovery receipt and applies normal
+verdict checks; a service observation alone is not workflow completion.
+
 Primary local install: `pnpm run install:user-runtime` builds the current
 checkout into `~/.auracall/user-runtime` and writes user-owned wrappers under
 `~/.local/bin`; see `docs/user-scoped-runtime.md`.

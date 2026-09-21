@@ -11,12 +11,25 @@ import {
 	heartbeatExecutionRunLease,
 	releaseExecutionRunLease,
 } from "./lease.js";
-import { resumeExecutionRunAfterHumanEscalation } from "./runner.js";
+import { resumeExecutionRunAfterHumanEscalation, requeueFailedBrowserRecovery } from "./runner.js";
 import {
 	createExecutionRunRecordStore,
 	type ExecutionRunRecordStore,
 	type ExecutionRunStoredRecord,
 } from "./store.js";
+
+/** Requeue one failed recovery with optimistic concurrency; never marks success. */
+export async function reconcileFailedBrowserRecovery(
+  control: ExecutionRuntimeControlContract,
+  input: { runId: string; expectedRevision: number; at: string },
+): Promise<ExecutionRunStoredRecord> {
+  const record = await control.readRun(input.runId);
+  if (!record || record.revision !== input.expectedRevision) {
+    throw new Error('Recovery reconciliation revision changed or run is missing');
+  }
+  const bundle = requeueFailedBrowserRecovery(record.bundle, input.at);
+  return control.persistRun({ runId: input.runId, expectedRevision: input.expectedRevision, bundle });
+}
 
 export function inspectExecutionRunStoredRecord(
 	record: ExecutionRunStoredRecord,

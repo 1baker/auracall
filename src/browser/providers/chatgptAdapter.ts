@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { constants as fsConstants } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import CDP from "chrome-remote-interface";
@@ -2560,21 +2561,6 @@ function inferChatgptBinaryContentType(buffer: Buffer, url: string): string | nu
 	if (/\.gif$/.test(pathname)) return "image/gif";
 	if (/\.webp$/.test(pathname)) return "image/webp";
 	return null;
-}
-
-function extractFilenameFromContentDisposition(value: string | null | undefined): string | null {
-	const text = String(value ?? "").trim();
-	if (!text) return null;
-	const utf8Match = text.match(/filename\*\s*=\s*UTF-8''([^;]+)/i);
-	if (utf8Match?.[1]) {
-		try {
-			return sanitizeChatgptArtifactFileName(decodeURIComponent(utf8Match[1]));
-		} catch {
-			return sanitizeChatgptArtifactFileName(utf8Match[1]);
-		}
-	}
-	const plainMatch = text.match(/filename\s*=\s*"?([^";]+)"?/i);
-	return plainMatch?.[1] ? sanitizeChatgptArtifactFileName(plainMatch[1]) : null;
 }
 
 function extractFilenameFromArtifactUri(uri: string | null | undefined): string | null {
@@ -6972,7 +6958,10 @@ async function scrapeChatgptProjects(
           url: location.href,
         });
       }
-      for (const link of Array.from(document.querySelectorAll('a[href*="/project"]'))) {
+      // Project rail links can point directly at a recent conversation instead
+      // of the project landing page. Parse every /g/ link and let parseProjectId
+      // reject unrelated routes.
+      for (const link of Array.from(document.querySelectorAll('a[href*="/g/"]'))) {
         const href = link.getAttribute('href') || '';
         const projectId = parseProjectId(href);
         if (!projectId) continue;
@@ -6986,11 +6975,17 @@ async function scrapeChatgptProjects(
     })()`,
 		returnByValue: true,
 	});
-	let probes = (result?.value ?? []) as ChatgptProjectLinkProbe[];
-	if (probes.length === 0 && options.disableClickFallback !== true) {
-		probes = await scrapeChatgptProjectsFromSidebarButtons(client);
-	}
-	return probes.map((project) => ({
+	const linkProbes = (result?.value ?? []) as ChatgptProjectLinkProbe[];
+	// Expanded project rows expose recent-conversation anchors. Those anchors
+	// are useful for the project id, but their text is the conversation title,
+	// not the project name. Always reconcile them with the authoritative project
+	// option buttons instead of treating any visible /g/ link as a complete
+	// catalog. Button probes win on duplicate ids.
+	const buttonProbes = await scrapeChatgptProjectsFromSidebarButtons(client);
+	const probesById = new Map<string, ChatgptProjectLinkProbe>();
+	for (const project of linkProbes) probesById.set(project.id, project);
+	for (const project of buttonProbes) probesById.set(project.id, project);
+	return Array.from(probesById.values()).map((project) => ({
 		id: project.id,
 		name: project.name,
 		provider: "chatgpt",
@@ -7004,7 +6999,6 @@ async function scrapeChatgptProjectsFromSidebarButtons(
 	const { result } = await client.Runtime.evaluate({
 		expression: `(async () => {
       const normalize = (value) => String(value || '').replace(/\\s+/g, ' ').trim();
-      const titleEditPrefix = ${JSON.stringify(CHATGPT_PROJECT_TITLE_EDIT_PREFIX)};
       const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
       const parseProjectId = (href) => {
         try {
@@ -7030,34 +7024,71 @@ async function scrapeChatgptProjectsFromSidebarButtons(
       };
       const findOptionButtons = () =>
         Array.from(document.querySelectorAll('button[aria-label^="Open project options for "]'));
+      // Pinned projects render before the ordinary Projects section. Wait for
+      // the combined option-button inventory to settle so a fast scrape does
+      // not mistake the initial pinned subset for the complete catalog.
+      let previousProjectRowCount = -1;
+      let stableProjectRowReads = 0;
+      for (let attempt = 0; attempt < 24; attempt += 1) {
+        await sleep(125);
+        const count = findOptionButtons().length;
+        if (count === previousProjectRowCount && count > 0) {
+          stableProjectRowReads += 1;
+        } else {
+          stableProjectRowReads = 0;
+          previousProjectRowCount = count;
+        }
+        if (attempt >= 15 && stableProjectRowReads >= 3) break;
+      }
       const projectNames = Array.from(new Set(findOptionButtons()
         .map((button) => normalize(button.getAttribute('aria-label')).replace(/^Open project options for\\s+/i, ''))
         .filter(Boolean)));
+      // Expand every row in one pass. Expanding and polling rows serially can
+      // exceed the CLI's 90-second operation budget on a populated sidebar,
+      // while ChatGPT safely supports multiple project rows being open.
+      for (const name of projectNames.slice(0, 50)) {
+        const optionButton = findOptionButtons().find((button) =>
+          normalize(button.getAttribute('aria-label')) === \`Open project options for \${name}\`
+        );
+        const rowRoot = optionButton?.closest('[class~="group/project-unfurl-row"]');
+        const target = rowRoot?.querySelector('[role="button"][data-sidebar-item="true"]');
+        if (target instanceof HTMLElement && target.getAttribute('aria-expanded') !== 'true') {
+          dispatchClick(target);
+        }
+      }
+      // Wait for all expandable rows to expose at least one project link, or
+      // stop after a bounded settle window and return the rows that did.
+      for (let attempt = 0; attempt < 60; attempt += 1) {
+        await sleep(100);
+        const readyCount = projectNames.slice(0, 50).filter((name) => {
+          const optionButton = findOptionButtons().find((button) =>
+            normalize(button.getAttribute('aria-label')) === \`Open project options for \${name}\`
+          );
+          const rowRoot = optionButton?.closest('[class~="group/project-unfurl-row"]');
+          return Array.from(rowRoot?.parentElement?.querySelectorAll('a[href*="/g/"]') || [])
+            .some((link) => Boolean(parseProjectId(link.getAttribute('href') || '')));
+        }).length;
+        if (readyCount >= Math.min(projectNames.length, 50)) break;
+      }
       const projects = new Map();
       for (const name of projectNames.slice(0, 50)) {
         const optionButton = findOptionButtons().find((button) =>
           normalize(button.getAttribute('aria-label')) === \`Open project options for \${name}\`
         );
-        const rowRoot = optionButton?.closest('[class*="project-unfurl-row"]');
-        const target =
-          rowRoot?.querySelector('button[aria-label="Open project home"]') ??
-          rowRoot?.querySelector('[role="button"][data-sidebar-item="true"]');
-        if (!dispatchClick(target)) continue;
-        let projectId = null;
-        for (let attempt = 0; attempt < 50; attempt += 1) {
-          await sleep(100);
-          projectId = parseProjectId(location.href);
-          if (projectId) break;
-        }
+        // Match the exact row class token. A substring selector also matches
+        // trailing controls with group-hover/project-unfurl-row utility classes.
+        const rowRoot = optionButton?.closest('[class~="group/project-unfurl-row"]');
+        const projectLink = Array.from(rowRoot?.parentElement?.querySelectorAll('a[href*="/g/"]') || [])
+          .find((link) => parseProjectId(link.getAttribute('href') || ''));
+        const href = projectLink?.getAttribute('href') || '';
+        const projectId = parseProjectId(href);
+        const projectUrl = href ? new URL(href, location.origin).toString() : null;
         if (!projectId) continue;
-        const titleButton = Array.from(document.querySelectorAll('button,[role="button"]'))
-          .find((node) => String(node.getAttribute('aria-label') || '').toLowerCase().startsWith(titleEditPrefix));
-        const currentName = normalize(titleButton?.textContent || name || document.title.replace(/^ChatGPT\\s*-\\s*/i, '') || projectId);
         if (!projects.has(projectId)) {
           projects.set(projectId, {
             id: projectId,
-            name: currentName || name || projectId,
-            url: location.href,
+            name: name || projectId,
+            url: projectUrl,
           });
         }
       }
@@ -11679,6 +11710,54 @@ async function tagChatgptSpreadsheetCardDownloadButtonWithClient(
 	return await tagChatgptArtifactButtonWithClient(client, artifact, { spreadsheetCard: true });
 }
 
+export function buildChatgptArtifactViewerActionExpression(
+	action: "close" | "closed" | "download",
+	title = "",
+): string {
+	return `(() => {
+      const action = ${JSON.stringify(action)};
+      const title = ${JSON.stringify(title)};
+      const visible = (node) => node instanceof HTMLElement
+        && !node.closest('[aria-hidden="true"], [inert]')
+        && node.getBoundingClientRect().width > 0 && node.getBoundingClientRect().height > 0
+        && getComputedStyle(node).visibility !== 'hidden';
+      // Embedded previews have no dialog role; exclude enclosing dialogs so
+      // one preview cannot be counted twice when toggled into full screen.
+      const dialogs = Array.from(document.querySelectorAll('[data-testid="artifact-preview-surface-shell"], [role="dialog"]:not(:has([data-testid="artifact-preview-surface-shell"]))'))
+        .filter(d => visible(d) && d.querySelector('[data-testid="library-artifact-viewer-breadcrumb"]'));
+      if (action === 'closed') return {ok: dialogs.length === 0};
+      if (action === 'close' && dialogs.length === 0) return {ok:true};
+      if (dialogs.length !== 1) return {ok:false};
+      const dialog = dialogs[0];
+      if (action === 'download') {
+        const name = dialog.querySelector('[data-testid="library-artifact-viewer-breadcrumb"] [data-file-name-full-text]')?.getAttribute('data-file-name-full-text');
+        const label = dialog.getAttribute('aria-label');
+        if (name !== title || (label !== null && label !== title)) return {ok:false};
+      }
+      const controls = Array.from(dialog.querySelectorAll('button')).filter(b => visible(b) && !b.disabled && b.getAttribute('aria-disabled') !== 'true'
+        && (action === 'close' ? /^(Close|Exit full screen)$/i : /^Download(?: file)?$/i)
+          .test(b.getAttribute('aria-label') || b.innerText.trim()));
+      if (controls.length !== 1) return {ok:false};
+      controls[0].click();
+      return {ok:true};
+    })()`;
+}
+
+async function closeChatgptArtifactViewerWithClient(client: ChromeClient): Promise<void> {
+	const result = await client.Runtime.evaluate({
+		expression: buildChatgptArtifactViewerActionExpression("close"),
+		returnByValue: true,
+	});
+	if (result.result?.value?.ok !== true)
+		throw new Error("Cannot establish a closed artifact viewer boundary.");
+	const closed = await waitForPredicate(
+		client.Runtime,
+		`(${buildChatgptArtifactViewerActionExpression("closed")}).ok`,
+		{ timeoutMs: 3000, description: "artifact viewer closed before exact control click" },
+	);
+	if (!closed.ok) throw new Error("Artifact viewer did not close before exact control click.");
+}
+
 async function clickChatgptViewerDownloadButtonWithClient(
 	client: ChromeClient,
 	options?: BrowserProviderListOptions,
@@ -11780,6 +11859,18 @@ async function waitForSingleChatgptDownloadedFile(
 	let stableCount = 0;
 	while (Date.now() < deadline) {
 		const entries = await fs.readdir(destDir, { withFileTypes: true }).catch(() => []);
+		if (
+			entries.some(
+				(entry) =>
+					entry.isFile() && (entry.name.endsWith(".crdownload") || entry.name.endsWith(".tmp")),
+			)
+		) {
+			lastPath = null;
+			lastSize = -1;
+			stableCount = 0;
+			await sleep(250);
+			continue;
+		}
 		const completed = entries
 			.filter(
 				(entry) =>
@@ -11801,7 +11892,7 @@ async function waitForSingleChatgptDownloadedFile(
 					lastSize = stat.size;
 					stableCount = 0;
 				}
-				if (stableCount >= 1) return candidatePath;
+				if (stableCount >= 4 && stat.size > 0) return candidatePath;
 			}
 		}
 		await sleep(250);
@@ -11814,6 +11905,8 @@ type ChatgptFileNameIdentityDecision =
 	| "collisionSuffixMatch"
 	| "extensionMismatch"
 	| "stemMismatch";
+
+export const waitForSingleChatgptDownloadedFileForTest = waitForSingleChatgptDownloadedFile;
 
 function classifyChatgptFileNameIdentity(
 	actualName: string,
@@ -11838,8 +11931,70 @@ async function fileRefFromChatgptDownloadedArtifact(
 	downloadedPath: string,
 	metadata: Record<string, unknown>,
 ): Promise<FileRef> {
-	const stat = await fs.stat(downloadedPath);
-	const name = path.basename(downloadedPath);
+	const stat = await fs.lstat(downloadedPath);
+	if (!stat.isFile()) throw new Error("ChatGPT artifact download is not a regular file.");
+	let localPath = downloadedPath;
+	let name = path.basename(downloadedPath);
+	const expectedName = extractFilenameFromArtifactUri(artifact.uri) || artifact.title;
+	// DOM-control URIs end in an index, not a filename.
+	const targetName = artifact.uri?.startsWith("chatgpt://download-button/")
+		? artifact.title
+		: expectedName;
+	const identity = classifyChatgptFileNameIdentity(name, targetName);
+	const extension = path.extname(targetName);
+	const targetStem = targetName.slice(0, targetName.length - extension.length);
+	const actualStem = name.slice(0, name.length - path.extname(name).length);
+	const timestampSuffix = /\((\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})\)$/.exec(actualStem);
+	let validTimestampSuffix = false;
+	if (timestampSuffix && Number(timestampSuffix[1]) > 0) {
+		const [, year, month, day, hour, minute, second] = timestampSuffix;
+		const iso = `${year}-${month}-${day}T${hour}:${minute}:${second}.000Z`;
+		const date = new Date(iso);
+		validTimestampSuffix = Number.isFinite(date.getTime()) && date.toISOString() === iso
+			&& actualStem.slice(0, timestampSuffix.index) === targetStem
+			&& path.extname(name) === extension;
+	}
+	if (identity !== "exactMatch" && identity !== "collisionSuffixMatch" && !validTimestampSuffix) {
+		throw new Error("ChatGPT artifact download filename does not match the selected control.");
+	}
+	let canonicalization: Record<string, unknown> = {};
+	if (identity === "collisionSuffixMatch" || validTimestampSuffix) {
+		// Only an exact response/control-bound numeric collision or observed
+		// timestamp alias may gain the canonical name. No timestamp origin is
+		// inferred; the executor's required-file path check remains strict.
+		const control = /^chatgpt:\/\/download-button\/([^/]+)\/(\d+)$/.exec(artifact.uri ?? "");
+		const messageId = artifact.messageId?.trim();
+		const controlOwner = String(artifact.metadata?.turnId || messageId || "");
+		const asymmetricStem = validTimestampSuffix
+			? actualStem.slice(0, timestampSuffix!.index)
+			: actualStem.replace(/ ?\([1-9]\d*\)$/, "");
+		if (!control || !messageId || control[1] !== encodeURIComponent(controlOwner)
+			|| artifact.id !== `download-dom:${control[1]}:${control[2]}`
+			|| !targetName || targetName === "." || targetName === ".." || /[\\/\x00-\x1f]/.test(targetName)
+			|| asymmetricStem === actualStem || asymmetricStem !== targetStem
+			|| path.extname(name) !== extension) {
+			throw new Error("ChatGPT collision filename lacks exact response/control provenance.");
+		}
+		const sourceBytes = await fs.readFile(downloadedPath);
+		const checksumSha256 = createHash("sha256").update(sourceBytes).digest("hex");
+		const canonicalDir = await fs.mkdtemp(path.join(path.dirname(downloadedPath), "canonical-"));
+		localPath = path.join(canonicalDir, targetName);
+		await fs.copyFile(downloadedPath, localPath, fsConstants.COPYFILE_EXCL);
+		const copiedChecksum = createHash("sha256").update(await fs.readFile(localPath)).digest("hex");
+		if (copiedChecksum !== checksumSha256) throw new Error("ChatGPT collision copy bytes changed during materialization.");
+		canonicalization = {
+			filenameCanonicalization: validTimestampSuffix
+				? "exact-response-control-timestamp-suffix"
+				: "exact-response-control-browser-collision",
+			originalDownloadedPath: downloadedPath,
+			originalDownloadedName: name,
+			canonicalFileName: targetName,
+			boundMessageId: messageId,
+			boundArtifactId: artifact.id,
+			checksumSha256,
+		};
+		name = targetName;
+	}
 	return {
 		id: artifact.id,
 		name,
@@ -11848,15 +12003,18 @@ async function fileRefFromChatgptDownloadedArtifact(
 		size: stat.size,
 		mimeType: inferMimeTypeFromArtifactName(name),
 		remoteUrl: artifact.uri,
-		localPath: downloadedPath,
+		localPath,
 		metadata: {
 			artifactKind: artifact.kind,
 			artifactTitle: artifact.title,
 			...metadata,
 			...(artifact.metadata ?? {}),
+			...canonicalization,
 		},
 	};
 }
+
+export const fileRefFromChatgptDownloadedArtifactForTest = fileRefFromChatgptDownloadedArtifact;
 
 async function materializeChatgptDeepResearchExportWithClient(
 	artifact: ConversationArtifact,
@@ -12110,7 +12268,11 @@ async function materializeChatgptConversationArtifactWithClient(
 					typeof artifact.uri === "string" &&
 					artifact.uri.trim().toLowerCase().startsWith("sandbox:"))
 			) {
-				await configureChatgptDownloadBehaviorWithClient(client, destDir, options);
+				// A fresh attempt directory cannot adopt a cached file from a previous
+				// control or retry. Retain failed attempts for diagnosis, never overwrite.
+				const attemptDir = await fs.mkdtemp(path.join(destDir, "download-attempt-"));
+				await configureChatgptDownloadBehaviorWithClient(client, attemptDir, options);
+				await closeChatgptArtifactViewerWithClient(client);
 				let tagged = await tagChatgptDownloadButtonWithClient(client, artifact);
 				if (
 					!tagged &&
@@ -12153,26 +12315,21 @@ async function materializeChatgptConversationArtifactWithClient(
 					timeoutMs: 1500,
 					pollMs: 100,
 				});
-				let remoteUrl = normalizeUiText(capture.href);
-				let downloadName = normalizeUiText(capture.downloadName);
-				if (!remoteUrl && !downloadName) {
-					const clickedViewerDownload = await clickChatgptViewerDownloadButtonWithClient(
-						client,
-						options,
-					);
-					if (clickedViewerDownload) {
-						const viewerCapture = await waitForDownloadCapture(client.Runtime, {
-							stateKey: CHATGPT_DOWNLOAD_CAPTURE_STATE_KEY,
-							timeoutMs: 3_000,
-							pollMs: 100,
-						});
-						remoteUrl = normalizeUiText(viewerCapture.href);
-						downloadName = normalizeUiText(viewerCapture.downloadName);
-					}
-				}
+				const remoteUrl = normalizeUiText(capture.href);
+				const downloadName = normalizeUiText(capture.downloadName);
+				// Only a newly opened, exact-name library dialog can supply the
+				// secondary Download control. Hidden/background viewers are excluded.
+				await waitForPredicate(
+					client.Runtime,
+					`((result) => result.ok ? result : null)(${buildChatgptArtifactViewerActionExpression("download", artifact.title)})`,
+					{ timeoutMs: 10000, description: "new exact artifact viewer download ready" },
+				);
+				// No global viewer fallback: an already-open viewer can belong to a
+				// different response. Absence of an anchor capture is not evidence that
+				// the selected control failed to start a native browser download.
 				recordBrowserScrapeDownloadAttempt(options);
-				const downloadedPath = await waitForChatgptDownloadedFile(
-					destDir,
+				const downloadedPath = await waitForSingleChatgptDownloadedFile(
+					attemptDir,
 					CHATGPT_ARTIFACT_BROWSER_DOWNLOAD_TIMEOUT_MS,
 				);
 				if (downloadedPath) {
@@ -12183,43 +12340,10 @@ async function materializeChatgptConversationArtifactWithClient(
 						capturedDownloadName: downloadName || undefined,
 					});
 				}
-				if (!remoteUrl) {
-					recordBrowserScrapeDownloadFailure(options);
-					return null;
-				}
+				// A global anchor capture alone is not bound to this exact control.
+				// Do not fetch it as a substitute for a verified browser download.
 				recordBrowserScrapeDownloadFailure(options);
-				const { buffer, contentType, contentDisposition } = await fetchChatgptBinaryWithClient(
-					client,
-					remoteUrl,
-					options,
-				);
-				const fallbackBaseName =
-					extractFilenameFromContentDisposition(contentDisposition) ||
-					extractFilenameFromArtifactUri(artifact.uri) ||
-					downloadName ||
-					artifact.title;
-				const fileName = ensureChatgptArtifactExtension(
-					fallbackBaseName,
-					contentTypeToExtension(contentType),
-				);
-				const destPath = path.join(destDir, fileName);
-				await fs.writeFile(destPath, buffer);
-				return {
-					id: artifact.id,
-					name: fileName,
-					provider: "chatgpt",
-					source: "conversation",
-					size: buffer.byteLength,
-					mimeType: contentType ?? inferMimeTypeFromArtifactName(fileName),
-					remoteUrl,
-					localPath: destPath,
-					metadata: {
-						artifactKind: artifact.kind,
-						artifactTitle: artifact.title,
-						materialization: "captured-anchor-fetch",
-						...(artifact.metadata ?? {}),
-					},
-				};
+				throw new Error("ChatGPT exact artifact control produced no verified browser download.");
 			}
 			if (
 				artifact.kind === "spreadsheet" &&
@@ -12388,15 +12512,21 @@ export function createChatgptAdapter(): Pick<
 				);
 				const { client } = connection;
 				try {
-					if (currentOptions?.disableProjectClickFallback === true) {
-						return await scrapeChatgptProjects(client, { disableClickFallback: true });
-					}
 					await assertChatgptExpectedIdentity(client, currentOptions);
-					await navigateToChatgptUrl(client, CHATGPT_HOME_URL);
 					await dismissCreateProjectDialogIfOpen(client.Runtime, {
 						strict: true,
 						source: "list-projects",
 					});
+					if (currentOptions?.disableProjectClickFallback === true) {
+						// Account-mirror inventory deliberately forbids the project-row click
+						// fallback. The current ChatGPT rail can start collapsed, though, and
+						// its project anchors are not present until that rail is opened. Open
+						// only the disposable inventory tab's rail, then retain the passive
+						// anchor scrape and its no-project-navigation boundary.
+						await ensureChatgptSidebarOpen(client);
+						return await scrapeChatgptProjects(client, { disableClickFallback: true });
+					}
+					await navigateToChatgptUrl(client, CHATGPT_HOME_URL);
 					await ensureChatgptSidebarOpen(client);
 					return await scrapeChatgptProjects(client);
 				} finally {

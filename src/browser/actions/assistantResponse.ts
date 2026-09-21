@@ -9,6 +9,7 @@ import { buildConversationDebugExpression, logDomFailure } from '../domDebug.js'
 import type { BrowserLogger, ChromeClient } from '../types.js';
 import { delay } from '../utils.js';
 import { buildClickDispatcher } from './domEvents.js';
+import { assertChatgptConversationCapacityAvailable } from '../providers/chatgptConversationCapacity.js';
 
 const ASSISTANT_POLL_TIMEOUT_ERROR = 'assistant-response-watchdog-timeout';
 const PASSIVE_DOM_PROBE_INTERVAL_MS = 5_000;
@@ -169,6 +170,7 @@ async function pollAssistantCompletion(
 ): Promise<{ text: string; html?: string; meta: { turnId?: string | null; messageId?: string | null } } | null> {
   const watchdogDeadline = Date.now() + timeoutMs;
   let previousLength = 0;
+  let previousIdentityAndText = '';
   let stableCycles = 0;
   let lastChangeAt = Date.now();
   let responseIncomingEmitted = false;
@@ -189,21 +191,24 @@ async function pollAssistantCompletion(
     }
     const normalized = normalizeAssistantSnapshot(snapshot);
     if (normalized) {
+      await assertChatgptConversationCapacityAvailable(Runtime, normalized);
       if (!responseIncomingEmitted) {
         responseIncomingEmitted = true;
         await options.onResponseIncoming?.();
       }
       const currentLength = normalized.text.length;
-      if (currentLength > previousLength) {
+      const identityAndText = JSON.stringify([normalized.meta, normalized.text]);
+      if (currentLength !== previousLength || identityAndText !== previousIdentityAndText) {
         previousLength = currentLength;
+        previousIdentityAndText = identityAndText;
         stableCycles = 0;
         lastChangeAt = Date.now();
       } else {
         stableCycles += 1;
       }
       const [stopVisible, completionVisible] = await Promise.all([
-        isStopButtonVisible(Runtime),
-        isCompletionVisible(Runtime),
+        isAssistantGenerationActive(Runtime),
+        isCompletionVisible(Runtime, normalized.meta),
       ]);
       const { completionStableTarget, requiredStableCycles, minStableMs } =
         getAssistantCompletionWatchdogThresholds(currentLength);
@@ -216,9 +221,14 @@ async function pollAssistantCompletion(
         if (completionEnough || stableEnough) {
           return normalized;
         }
+      } else {
+        // A paused status-only Pro response is still active, even without Stop.
+        stableCycles = 0;
+        lastChangeAt = Date.now();
       }
     } else {
       previousLength = 0;
+      previousIdentityAndText = '';
       stableCycles = 0;
     }
     await delay(400);
@@ -232,14 +242,19 @@ async function readFreshAssistantSnapshot(
   baseline: WaitForAssistantResponseOptions['baselineAssistant'],
 ): Promise<AssistantSnapshot | null> {
   const bounded = await readAssistantSnapshot(Runtime, minTurnIndex);
-  if (bounded || typeof minTurnIndex !== 'number' || !hasAssistantBaseline(baseline)) {
+  if (!hasAssistantBaseline(baseline)) {
     return bounded;
   }
+  const isFresh = (snapshot: AssistantSnapshot | null): snapshot is AssistantSnapshot =>
+    Boolean(snapshot && !matchesAssistantBaseline(snapshot, baseline)
+      && (!(baseline.messageId?.trim()) || snapshot.messageId?.trim()));
+  if (isFresh(bounded)) return bounded;
+  if (typeof minTurnIndex !== 'number') return null;
   // ChatGPT project views can virtualize/recycle turn wrappers. In that state
   // the newest response may have an index lower than the pre-submit node count.
   // Fall back to identity/text freshness rather than accepting any latest turn.
   const latest = await readAssistantSnapshot(Runtime);
-  return latest && !matchesAssistantBaseline(latest, baseline) ? latest : null;
+  return isFresh(latest) ? latest : null;
 }
 
 function hasAssistantBaseline(
@@ -270,15 +285,24 @@ function matchesAssistantBaseline(
   return Boolean(normalize(baseline.text)) && normalize(baseline.text) === normalize(snapshot.text);
 }
 
-async function isStopButtonVisible(Runtime: ChromeClient['Runtime']): Promise<boolean> {
+export async function isAssistantGenerationActive(Runtime: ChromeClient['Runtime']): Promise<boolean> {
   try {
     const { result } = await Runtime.evaluate({
-      expression: `Boolean(document.querySelector('${STOP_BUTTON_SELECTOR}'))`,
+      expression: `Boolean(document.querySelector('${STOP_BUTTON_SELECTOR}, button[aria-label*="Stop"], button[aria-label*="stop"]')) || (() => {
+        // Streaming status replaces the Stop control in some Pro layouts.
+        return Array.from(document.querySelectorAll('[data-streaming-response-status]')).some((node) => {
+          const rect = node.getBoundingClientRect();
+          const style = window.getComputedStyle(node);
+          return rect.width > 0 && rect.height > 0 && style.display !== 'none'
+            && style.visibility !== 'hidden' && style.opacity !== '0';
+        });
+      })()`,
       returnByValue: true,
     });
-    return Boolean(result?.value);
+    return result?.value !== false;
   } catch {
-    return false;
+    // An unreadable busy probe is not proof of completion.
+    return true;
   }
 }
 
@@ -299,7 +323,10 @@ function getAssistantCompletionWatchdogThresholds(currentLength: number): {
   };
 }
 
-async function isCompletionVisible(Runtime: ChromeClient['Runtime']): Promise<boolean> {
+async function isCompletionVisible(
+  Runtime: ChromeClient['Runtime'],
+  meta: { messageId?: string | null; turnId?: string | null },
+): Promise<boolean> {
   try {
     const { result } = await Runtime.evaluate({
       expression: `(() => {
@@ -317,15 +344,18 @@ async function isCompletionVisible(Runtime: ChromeClient['Runtime']): Promise<bo
           return Boolean(node.querySelector(ASSISTANT_SELECTOR) || node.querySelector('[data-testid*="assistant"]'));
         };
 
-        const turns = Array.from(document.querySelectorAll('${CONVERSATION_TURN_SELECTOR}'));
-        let lastAssistantTurn = null;
-        for (let i = turns.length - 1; i >= 0; i--) {
-          if (isAssistantTurn(turns[i])) {
-            lastAssistantTurn = turns[i];
-            break;
-          }
-        }
-        if (!lastAssistantTurn) {
+        const hint = ${JSON.stringify(meta)};
+        const exactNodes = hint.messageId
+          ? Array.from(document.querySelectorAll('[data-message-id]')).filter((node) => node.getAttribute('data-message-id') === hint.messageId)
+          : hint.turnId
+            ? Array.from(document.querySelectorAll('[data-turn-id], [data-testid]')).filter((node) => node.getAttribute('data-turn-id') === hint.turnId || node.getAttribute('data-testid') === hint.turnId)
+            : [];
+        if (exactNodes.length !== 1) return false;
+        const identityNode = exactNodes[0];
+        const lastAssistantTurn = identityNode.closest('${CONVERSATION_TURN_SELECTOR}') || identityNode;
+        if (hint.messageId && Array.from(lastAssistantTurn.querySelectorAll('[data-message-id]'))
+          .some((node) => node.getAttribute('data-message-id') !== hint.messageId)) return false;
+        if (!isAssistantTurn(lastAssistantTurn)) {
           return false;
         }
         // Check if the last assistant turn has finished action buttons (copy, thumbs up/down, share)
@@ -619,7 +649,12 @@ function buildMarkdownFallbackExtractor(minTurnLiteral?: string): string {
       if (isUserEcho(text)) continue;
       const html = node.innerHTML ?? '';
       const turnIndex = resolveTurnIndex(node);
-      return { text, html, messageId: null, turnId: null, turnIndex };
+      const messageNode = node.closest('[data-message-id]');
+      const turnNode = node.closest('[data-turn-id], [data-testid^="conversation-turn"]');
+      return { text, html,
+        messageId: messageNode?.getAttribute('data-message-id') || null,
+        turnId: turnNode?.getAttribute('data-turn-id') || turnNode?.getAttribute('data-testid') || null,
+        turnIndex };
     }
     return null;
   })`;
@@ -629,6 +664,12 @@ function buildCopyExpression(meta: { messageId?: string | null; turnId?: string 
   return `(() => {
     ${buildClickDispatcher()}
     const BUTTON_SELECTORS = ${JSON.stringify(COPY_BUTTON_SELECTORS)};
+    const CONVERSATION_TURN_SELECTOR_VALUE = '[data-testid^="conversation-turn"], [data-turn-id]';
+    const CONVERSATION_SELECTOR = ${JSON.stringify(CONVERSATION_TURN_SELECTOR)};
+    const ASSISTANT_SELECTOR = '${ASSISTANT_ROLE_SELECTOR}';
+    const isAssistantTurn = (node) => Boolean(node && (
+      node.matches?.(ASSISTANT_SELECTOR) || node.querySelector?.(ASSISTANT_SELECTOR)
+    ));
     const TIMEOUT_MS = 10000;
     const queryButtons = (node) => {
       if (!node) return [];
@@ -638,50 +679,24 @@ function buildCopyExpression(meta: { messageId?: string | null; turnId?: string 
     const locateButton = () => {
       const hint = ${JSON.stringify(meta ?? {})};
       if (hint?.messageId) {
-        const node = document.querySelector('[data-message-id="' + hint.messageId + '"]');
-        const buttons = queryButtons(node);
-        const button = buttons.at(-1) ?? null;
-        if (button) {
-          return button;
-        }
+        const nodes = Array.from(document.querySelectorAll('[data-message-id]')).filter((node) => node.getAttribute('data-message-id') === hint.messageId);
+        if (nodes.length !== 1) return null;
+        const node = nodes[0];
+        const scope = node.closest(CONVERSATION_TURN_SELECTOR_VALUE) || node;
+        if (!isAssistantTurn(scope)) return null;
+        const otherMessages = Array.from(scope.querySelectorAll('[data-message-id]'))
+          .some((candidate) => candidate.getAttribute('data-message-id') !== hint.messageId);
+        if (otherMessages) return null;
+        return queryButtons(scope).at(-1) ?? null;
       }
       if (hint?.turnId) {
-        const node = document.querySelector('[data-testid="' + hint.turnId + '"]');
-        const buttons = queryButtons(node);
-        const button = buttons.at(-1) ?? null;
-        if (button) {
-          return button;
-        }
+        const nodes = Array.from(document.querySelectorAll('[data-turn-id], [data-testid]')).filter((node) => node.getAttribute('data-turn-id') === hint.turnId || node.getAttribute('data-testid') === hint.turnId);
+        if (nodes.length === 1 && new Set(Array.from(nodes[0].querySelectorAll('[data-message-id]'))
+          .map((node) => node.getAttribute('data-message-id'))).size > 1) return null;
+        return nodes.length === 1 && nodes[0].matches?.(CONVERSATION_SELECTOR) && isAssistantTurn(nodes[0])
+          ? queryButtons(nodes[0]).at(-1) ?? null : null;
       }
-      const CONVERSATION_SELECTOR = ${JSON.stringify(CONVERSATION_TURN_SELECTOR)};
-      const ASSISTANT_SELECTOR = '${ASSISTANT_ROLE_SELECTOR}';
-      const isAssistantTurn = (node) => {
-        if (!(node instanceof HTMLElement)) return false;
-        const turnAttr = (node.getAttribute('data-turn') || node.dataset?.turn || '').toLowerCase();
-        if (turnAttr === 'assistant') return true;
-        const role = (node.getAttribute('data-message-author-role') || node.dataset?.messageAuthorRole || '').toLowerCase();
-        if (role === 'assistant') return true;
-        const testId = (node.getAttribute('data-testid') || '').toLowerCase();
-        if (testId.includes('assistant')) return true;
-        return Boolean(node.querySelector(ASSISTANT_SELECTOR) || node.querySelector('[data-testid*="assistant"]'));
-      };
-      const turns = Array.from(document.querySelectorAll(CONVERSATION_SELECTOR));
-      for (let i = turns.length - 1; i >= 0; i -= 1) {
-        const turn = turns[i];
-        if (!isAssistantTurn(turn)) continue;
-        const button = queryButtons(turn)[0] ?? null;
-        if (button) {
-          return button;
-        }
-      }
-      const all = queryButtons(document);
-      for (let i = all.length - 1; i >= 0; i -= 1) {
-        const button = all[i];
-        const turn = button?.closest?.(CONVERSATION_SELECTOR);
-        if (turn && isAssistantTurn(turn)) {
-          return button;
-        }
-      }
+      // Missing identity never grants permission to copy another/latest turn.
       return null;
     };
 

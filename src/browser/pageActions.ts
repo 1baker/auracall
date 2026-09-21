@@ -1,5 +1,7 @@
 export {
   navigateToChatGPT,
+  assertExactRemoteTargetUrl,
+  sameChatgptConversationUrl,
   navigateToPromptReadyWithFallback,
   ensureNotBlocked,
   ensureLoggedIn,

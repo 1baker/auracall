@@ -96,7 +96,9 @@ export async function submitPrompt(
     attachmentNames?: string[];
     baselineTurns?: number | null;
     inputTimeoutMs?: number | null;
+		requireSendButton?: boolean;
     onPromptDispatched?: () => void | Promise<void>;
+    beforeSend?: () => void | Promise<void>;
   },
   prompt: string,
   logger: BrowserLogger,
@@ -104,6 +106,7 @@ export async function submitPrompt(
   const { runtime, input } = deps;
 
   await waitForDomReady(runtime, logger, deps.inputTimeoutMs ?? undefined);
+	await waitForConversationIdle(runtime, Math.max(8_000, deps.inputTimeoutMs ?? 0));
   const encodedPrompt = JSON.stringify(prompt);
   const focusResult = await runtime.evaluate({
     expression: `(() => {
@@ -302,9 +305,24 @@ export async function submitPrompt(
     });
   }
 
-  await waitForComposerReadyToSubmit(runtime, Math.max(8_000, deps.inputTimeoutMs ?? 0));
-  const clicked = await attemptSendButton(runtime, logger, deps?.attachmentNames);
+  await waitForComposerReadyToSubmit(
+		runtime,
+		Math.max(8_000, deps.inputTimeoutMs ?? 0),
+		deps.requireSendButton === true,
+	);
+  await deps.beforeSend?.();
+  const clicked = await attemptSendButton(
+		runtime,
+		logger,
+		deps?.attachmentNames,
+		deps.requireSendButton === true,
+	);
   if (!clicked) {
+		if (deps.requireSendButton) {
+			throw new BrowserAutomationError('ChatGPT send button was not available; refusing ambiguous Enter submission.', {
+				stage: 'submit-prompt', code: 'send-button-unavailable',
+			});
+		}
     await input.dispatchKeyEvent({
       type: 'keyDown',
       ...ENTER_KEY_EVENT,
@@ -420,6 +438,7 @@ async function attemptSendButton(
   Runtime: ChromeClient['Runtime'],
   _logger?: BrowserLogger,
   _attachmentNames?: string[],
+	waitWhenMissing = false,
 ): Promise<boolean> {
   const script = `(() => {
     ${buildClickDispatcher()}
@@ -452,7 +471,7 @@ async function attemptSendButton(
     if (result.value === 'clicked') {
       return true;
     }
-    if (result.value === 'missing') {
+    if (result.value === 'missing' && !waitWhenMissing) {
       break;
     }
     await delay(100);
@@ -463,6 +482,7 @@ async function attemptSendButton(
 async function waitForComposerReadyToSubmit(
   Runtime: ChromeClient['Runtime'],
   timeoutMs = 10_000,
+	requireSendButton = false,
 ): Promise<void> {
   const sendSelectorsLiteral = JSON.stringify(SEND_BUTTON_SELECTORS);
   const stopSelectorLiteral = JSON.stringify(STOP_BUTTON_SELECTOR);
@@ -478,7 +498,7 @@ async function waitForComposerReadyToSubmit(
           if (button) break;
         }
         if (!stopVisible && !button) {
-          return { ready: true };
+          return { ready: ${!requireSendButton} };
         }
         if (!button) {
           return { ready: false };
@@ -503,6 +523,32 @@ async function waitForComposerReadyToSubmit(
     }
     await delay(100);
   }
+	throw new BrowserAutomationError('ChatGPT composer did not become ready before submission; refusing to dispatch.', {
+		stage: 'submit-prompt',
+		code: 'composer-not-ready',
+		timeoutMs,
+	});
+}
+
+async function waitForConversationIdle(
+	Runtime: ChromeClient['Runtime'],
+	timeoutMs = 10_000,
+): Promise<void> {
+	const stopSelectorLiteral = JSON.stringify(STOP_BUTTON_SELECTOR);
+	const deadline = Date.now() + timeoutMs;
+	while (Date.now() < deadline) {
+		const { result } = await Runtime.evaluate({
+			expression: `!document.querySelector(${stopSelectorLiteral})`,
+			returnByValue: true,
+		});
+		if (result?.value === true) return;
+		await delay(100);
+	}
+	throw new BrowserAutomationError('ChatGPT conversation remained busy; refusing to alter or submit the composer.', {
+		stage: 'submit-prompt',
+		code: 'conversation-busy',
+		timeoutMs,
+	});
 }
 
 async function verifyPromptCommitted(
@@ -615,9 +661,7 @@ async function verifyPromptCommitted(
     };
   })()`;
 
-  while (Date.now() < deadline) {
-    const { result } = await Runtime.evaluate({ expression: script, returnByValue: true });
-    const info = result.value as {
+  type PromptCommitInfo = {
       userMatched?: boolean;
       prefixMatched?: boolean;
       lastMatched?: boolean;
@@ -628,28 +672,48 @@ async function verifyPromptCommitted(
       inConversation?: boolean;
       turnsCount?: number;
       baseline?: number;
-    };
-    const turnsCount = (result.value as { turnsCount?: number } | undefined)?.turnsCount;
+  };
+  const isCommitted = (info: PromptCommitInfo | undefined): boolean => {
     const matchesPrompt = Boolean(info?.lastMatched || info?.userMatched || info?.prefixMatched);
     const baselineUnknown = typeof info?.baseline === 'number' ? info.baseline < 0 : baselineLiteral < 0;
     if (matchesPrompt && (baselineUnknown || info?.hasNewTurn)) {
-      return typeof turnsCount === 'number' && Number.isFinite(turnsCount) ? turnsCount : null;
+      return true;
     }
+    // A stop control can appear for a locally optimistic submission that the
+    // server never persists.  Requiring a turn-count increase keeps that state
+    // uncertain instead of promoting it to a committed request and leaving an
+    // orphaned generation after the page is restored.
     const fallbackCommit =
       info?.composerCleared &&
       Boolean(info?.hasNewTurn) &&
-      ((info?.stopVisible ?? false) || info?.assistantVisible || info?.inConversation);
-    if (fallbackCommit) {
-      return typeof turnsCount === 'number' && Number.isFinite(turnsCount) ? turnsCount : null;
+      Boolean(info?.assistantVisible || info?.stopVisible || info?.inConversation);
+    return Boolean(fallbackCommit);
+  };
+  const committedTurnCount = (info: PromptCommitInfo | undefined): number | null => {
+    const turnsCount = info?.turnsCount;
+    return typeof turnsCount === 'number' && Number.isFinite(turnsCount) ? turnsCount : null;
+  };
+
+  while (Date.now() < deadline) {
+    const { result } = await Runtime.evaluate({ expression: script, returnByValue: true });
+    const info = result.value as PromptCommitInfo | undefined;
+    if (isCommitted(info)) {
+      return committedTurnCount(info);
     }
     await delay(100);
   }
+  // The success signal can arrive during the final delay. Sample once more and
+  // apply the same acceptance predicate before turning that evidence into a
+  // timeout diagnostic.
+  const finalInfo = await Runtime.evaluate({ expression: script, returnByValue: true })
+    .then((res) => res?.result?.value as PromptCommitInfo | undefined)
+    .catch(() => undefined);
+  if (isCommitted(finalInfo)) {
+    return committedTurnCount(finalInfo);
+  }
   if (logger) {
     logger(
-      `Prompt commit check failed; latest state: ${await Runtime.evaluate({
-        expression: script,
-        returnByValue: true,
-      }).then((res) => JSON.stringify(res?.result?.value)).catch(() => 'unavailable')}`,
+      `Prompt commit check failed; latest state: ${finalInfo === undefined ? 'unavailable' : JSON.stringify(finalInfo)}`,
     );
     await logDomFailure(Runtime, logger, 'prompt-commit');
   }
@@ -669,4 +733,5 @@ export const promptComposerTestHooks = {
   waitForPromptInComposer,
   verifyPromptCommitted,
   waitForComposerReadyToSubmit,
+	waitForConversationIdle,
 };

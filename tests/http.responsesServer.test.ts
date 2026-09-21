@@ -1044,6 +1044,54 @@ describe("http responses adapter", () => {
 		}
 	});
 
+	it("reuses the same response when an idempotent create is repeated after response loss", async () => {
+		const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-http-idempotent-"));
+		cleanup.push(homeDir);
+		setAuracallHomeDirOverrideForTest(homeDir);
+		let executions = 0;
+		const server = await createResponsesHttpServer(
+			{ host: "127.0.0.1", port: 0 },
+			{
+				now: () => new Date("2026-09-20T20:00:00.000Z"),
+				executeStoredRunStep: async () => {
+					executions += 1;
+					return undefined;
+				},
+			},
+		);
+		const body = JSON.stringify({
+			model: "gpt-5.2",
+			input: "Create exactly once.",
+			metadata: { workflow: "codex-pro-guard" },
+			auracall: { runtimeProfile: "default", service: "chatgpt" },
+		});
+		const create = () => fetch(`http://127.0.0.1:${server.port}/v1/responses`, {
+			method: "POST",
+			headers: { "Content-Type": "application/json", "Idempotency-Key": "codex-submit-http-one" },
+			body,
+		});
+
+		try {
+			const first = await create();
+			const repeated = await create();
+			expect(first.status).toBe(200);
+			expect(repeated.status).toBe(200);
+			const firstPayload = await first.json() as { id: string };
+			const repeatedPayload = await repeated.json() as { id: string };
+			expect(firstPayload.id).toMatch(/^resp_idem_[a-f0-9]{32}$/);
+			expect(repeatedPayload.id).toBe(firstPayload.id);
+			expect(executions).toBe(1);
+			const conflict = await fetch(`http://127.0.0.1:${server.port}/v1/responses`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json", "Idempotency-Key": "codex-submit-http-one" },
+				body: body.replace("Create exactly once.", "Different request."),
+			});
+			expect(conflict.status).toBeGreaterThanOrEqual(400);
+		} finally {
+			await server.close();
+		}
+	});
+
 	it("accepts direct response attachments and stores them as uploadable step artifacts", async () => {
 		const homeDir = await fs.mkdtemp(
 			path.join(os.tmpdir(), "auracall-http-responses-attachments-"),
@@ -2717,6 +2765,7 @@ describe("http responses adapter", () => {
 				},
 				compatibility: {
 					openai: true,
+					supportsChatgptNewConversationProjectId: true,
 					chatCompletions: true,
 					streaming: true,
 					auth: false,
@@ -23277,6 +23326,96 @@ describe("http responses adapter", () => {
 			unblockExecution();
 			await server.close();
 		}
+	});
+
+	it("defers background drain timers during recovery observation and resumes without dropping work", async () => {
+		const control = createExecutionRuntimeControl();
+		let entered = () => {};
+		let release = () => {};
+		let releaseDrain = () => {};
+		const enteredPromise = new Promise<void>(resolve => { entered = resolve; });
+		const held = new Promise<void>(resolve => { release = resolve; });
+		const heldDrain = new Promise<void>(resolve => { releaseDrain = resolve; });
+		control.listRuns = async () => { entered(); await held; return []; };
+		let drains = 0;
+		let holdDrain = false;
+		const server = await createResponsesHttpServer({ host: '127.0.0.1', port: 0, backgroundDrainIntervalMs: 25 }, {
+			control,
+			executionHost: {
+				registerLocalRunner: async () => null,
+				heartbeatLocalRunner: async () => null,
+				markLocalRunnerStale: async () => null,
+				waitForDrainQueue: async () => {},
+				drainRunsUntilIdleQueued: async (input: { onStart?: () => void }) => {
+					drains++; input.onStart?.();
+					if (holdDrain) await heldDrain;
+					return {};
+				},
+			} as never,
+		});
+		try {
+			await delay(40);
+			const endpoint = `http://127.0.0.1:${server.port}/v1/responses/resp_missing/recovery-observation`;
+			const observing = fetch(endpoint, { method: 'POST', body: '{}' });
+			await enteredPromise;
+			const before = drains;
+			await delay(90);
+			expect(drains).toBe(before);
+			holdDrain = true;
+			release();
+			expect((await observing).status).toBe(409);
+			await delay(60);
+			expect(drains).toBeGreaterThan(before);
+			const busy = await fetch(endpoint, { method: 'POST', body: '{}' });
+			expect(busy.status).toBe(409);
+			expect(await busy.json()).toMatchObject({ error: { type: 'recovery_observation_busy' } });
+		} finally { release(); releaseDrain(); await server.close(); }
+	});
+
+	it("protects recovery observations and rejects caller supplied answers", async () => {
+		const control = createExecutionRuntimeControl();
+		let hold = false;
+		let executing = false;
+		let release = () => {};
+		let entered = () => {};
+		const barrier = new Promise<void>(resolve => { release = resolve; });
+		const started = new Promise<void>(resolve => { entered = resolve; });
+		const originalList = control.listRuns.bind(control);
+		control.listRuns = async input => {
+			if (executing) return [{ bundle: { run: { status: 'running' } } }] as never;
+			if (hold && input?.statuses?.includes('planned')) { entered(); await barrier; return []; }
+			return originalList(input);
+		};
+		const server = await createResponsesHttpServer({ host: '127.0.0.1', port: 0 }, { control, config: {
+			api: { auth: { required: true, keys: [
+				{ id: 'operator', secret: 'recovery-operator' },
+				{ id: 'scoped', secret: 'recovery-scoped', services: ['chatgpt'] },
+			] } },
+		} });
+		try {
+			const endpoint = `http://127.0.0.1:${server.port}/v1/responses/resp_missing/recovery-observation`;
+			expect((await fetch(endpoint, { method: 'POST', body: '{}' })).status).toBe(401);
+			expect((await fetch(endpoint, { method: 'POST', headers: { authorization: 'Bearer recovery-scoped' }, body: '{}' })).status).toBe(403);
+			expect((await fetch(endpoint, { method: 'POST', headers: { authorization: 'Bearer recovery-operator' }, body: '{"answer_text":"forged"}' })).status).toBe(400);
+			expect((await fetch(endpoint, { method: 'POST', headers: { authorization: 'Bearer recovery-operator' }, body: '{}' })).status).toBe(409);
+			const status = await (await fetch(`http://127.0.0.1:${server.port}/status`)).json() as any;
+			expect(status.compatibility.recoveryObservation).toBe(true);
+			expect(status.compatibility.newProjectRecoveryObservation).toBe(true);
+			executing = true;
+			const busyRuntime = await fetch(endpoint, { method: 'POST', headers: { authorization: 'Bearer recovery-operator' }, body: '{}' });
+			expect(busyRuntime.status).toBe(409);
+			expect(await busyRuntime.json()).toMatchObject({ error: { type: 'recovery_observation_busy' } });
+			executing = false;
+			hold = true;
+			const observing = fetch(endpoint, { method: 'POST', headers: { authorization: 'Bearer recovery-operator' }, body: '{}' });
+			await started;
+			expect((await fetch(endpoint, { method: 'POST', headers: { authorization: 'Bearer recovery-operator' }, body: '{}' })).status).toBe(409);
+			const submission = await fetch(`http://127.0.0.1:${server.port}/v1/responses`, { method: 'POST', headers: { authorization: 'Bearer recovery-operator' }, body: '{}' });
+			expect(submission.status).toBe(409);
+			expect(await submission.json()).toMatchObject({ error: { type: 'recovery_observation_busy' } });
+			release();
+			expect((await observing).status).toBe(409);
+		} finally { release(); await server.close(); }
 	});
 
 	it("requires configured API keys for protected v1 routes", async () => {

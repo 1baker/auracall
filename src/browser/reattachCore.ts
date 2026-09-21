@@ -43,6 +43,14 @@ export interface ReattachDeps {
 export interface ReattachResult {
   answerText: string;
   answerMarkdown: string;
+  /** Identity of the captured assistant response, never the conversation or target. */
+  answerMessageId?: string | null;
+}
+
+function capturedAnswerMessageId(meta: unknown): string | null {
+  if (!meta || typeof meta !== 'object' || Array.isArray(meta)) return null;
+  const messageId = (meta as { messageId?: unknown }).messageId;
+  return typeof messageId === 'string' && messageId.trim() ? messageId.trim() : null;
 }
 
 export type ReattachFailureKind = 'target-missing' | 'wrong-browser-profile' | 'stale-target' | 'ambiguous';
@@ -199,6 +207,9 @@ export async function resumeBrowserSessionCore(
   deps: ReattachDeps = {} as ReattachDeps,
   runtimeDeps?: ReattachRuntimeDeps,
 ): Promise<ReattachResult> {
+  if (runtime.agentBrowserTransport === 'native' || runtime.agentBrowserBinding) {
+    throw new Error('Native broker recovery requires exact reacquisition and original-attachment reconciliation; raw Chrome recovery is forbidden');
+  }
   if (!deps.helpers) {
     throw new Error('Reattach helpers are required.');
   }
@@ -333,7 +344,11 @@ export async function resumeBrowserSessionCore(
       }
     }
 
-    return { answerText: aligned.answerText, answerMarkdown: aligned.answerMarkdown };
+    return {
+      answerText: aligned.answerText,
+      answerMarkdown: aligned.answerMarkdown,
+      answerMessageId: capturedAnswerMessageId(recovered.meta),
+    };
   } catch (error) {
     const classified = describeReattachFailure(error);
     const message = error instanceof Error ? error.message : String(error);
@@ -501,7 +516,11 @@ async function resumeBrowserSessionViaNewChrome(
     );
   }
 
-  return { answerText: aligned.answerText, answerMarkdown: aligned.answerMarkdown };
+  return {
+    answerText: aligned.answerText,
+    answerMarkdown: aligned.answerMarkdown,
+    answerMessageId: capturedAnswerMessageId(recovered.meta),
+  };
 }
 
 function classifyMissingReattachTarget(

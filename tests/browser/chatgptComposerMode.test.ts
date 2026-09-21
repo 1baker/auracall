@@ -56,9 +56,46 @@ function installFixtureDocument(query: (selector: string) => FixtureElement[]): 
 	vi.stubGlobal("document", { querySelectorAll: query });
 }
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => { vi.unstubAllGlobals(); vi.useRealTimers(); });
 
 describe("ChatGPT composer mode", () => {
+	it("waits for project mode controls to hydrate without repeating uncertain selection", async () => {
+		vi.useFakeTimers();
+		const evaluate = vi.fn()
+			.mockResolvedValueOnce({ result: { value: { status: "mode-not-found", availableModes: [], controlsAbsent: true } } })
+			.mockResolvedValue({ result: { value: { status: "already-selected", mode: "chat" } } });
+		const pending = ensureChatgptComposerMode({ evaluate } as never, "chat", vi.fn<(message: string) => void>());
+		await vi.advanceTimersByTimeAsync(100);
+		await pending;
+		expect(evaluate).toHaveBeenCalledTimes(2);
+	});
+
+	it("bounds missing-control hydration checks and fails when they never appear", async () => {
+		vi.useFakeTimers();
+		const evaluate = vi.fn().mockResolvedValue({ result: { value: { status: "mode-not-found", availableModes: [], controlsAbsent: true } } });
+		const pending = expect(ensureChatgptComposerMode({ evaluate } as never, "chat", vi.fn<(message: string) => void>())).rejects.toThrow("Chat mode control");
+		await vi.advanceTimersByTimeAsync(5_000);
+		await pending;
+		expect(evaluate).toHaveBeenCalledTimes(51);
+	});
+
+	it("does not retry an uncertain selection", async () => {
+		const evaluate = vi.fn().mockResolvedValue({ result: { value: { status: "selection-not-confirmed", mode: "chat" } } });
+		await expect(ensureChatgptComposerMode({ evaluate } as never, "chat", vi.fn<(message: string) => void>())).rejects.toThrow("did not remain selected");
+		expect(evaluate).toHaveBeenCalledOnce();
+	});
+
+	it("does not repeat a menu activation when no menu items were recognized", async () => {
+		const evaluate = vi.fn().mockResolvedValue({ result: { value: { status: "mode-not-found", availableModes: [] } } });
+		await expect(ensureChatgptComposerMode({ evaluate } as never, "work", vi.fn<(message: string) => void>())).rejects.toThrow("Work mode control");
+		expect(evaluate).toHaveBeenCalledOnce();
+	});
+
+	it("marks only a no-controls DOM observation as safe to repeat", async () => {
+		installFixtureDocument(() => []);
+		const result = await new Function(`return ${buildChatgptComposerModeExpressionForTest("chat")}`)();
+		expect(result).toEqual({ status: "mode-not-found", availableModes: [], controlsAbsent: true });
+	});
 	it("targets exact Chat and Work radios and verifies Radix selected state", () => {
 		const expression = buildChatgptComposerModeExpressionForTest("chat");
 

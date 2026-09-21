@@ -73,6 +73,61 @@ export async function navigateToChatGPT(
   }
 }
 
+function normalizedNavigationUrl(value: string): string | null {
+  try {
+    const url = new URL(value);
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
+    const pathname = url.pathname === '/' ? '/' : url.pathname.replace(/\/+$/, '');
+    return `${url.origin}${pathname}${url.search}`;
+  } catch {
+    return null;
+  }
+}
+
+/** ChatGPT project display slugs are aliases; stable project and conversation IDs are identity. */
+export function sameChatgptConversationUrl(actual: string, expected: string): boolean {
+  const identity = (value: string): string | null => {
+    try {
+      const url = new URL(value);
+      if (url.origin !== 'https://chatgpt.com' || url.username || url.password || url.search || url.hash) return null;
+      const match = /^\/g\/(g-p-[a-f0-9]{32})(?:-[a-z0-9-]+)?\/c\/([a-f0-9-]+)\/?$/i.exec(url.pathname);
+      return match ? `${match[1].toLowerCase()}/${match[2].toLowerCase()}` : null;
+    } catch {
+      return null;
+    }
+  };
+  const expectedIdentity = identity(expected);
+  return expectedIdentity !== null && identity(actual) === expectedIdentity;
+}
+
+/**
+ * Proves that commands are executing in the retained target selected by
+ * agent-browser. This must run before a prompt can be composed or submitted.
+ */
+export async function assertExactRemoteTargetUrl(
+  Runtime: ChromeClient['Runtime'],
+  expectedUrl: string,
+  phase: 'before-navigation' | 'after-navigation',
+): Promise<void> {
+  const result = await Runtime.evaluate({
+    expression: 'typeof location === "object" && location.href ? location.href : ""',
+    returnByValue: true,
+  });
+  const actualUrl = typeof result?.result?.value === 'string' ? result.result.value : '';
+  const expected = normalizedNavigationUrl(expectedUrl);
+  const actual = normalizedNavigationUrl(actualUrl);
+  if (!expected || !actual || (expected !== actual && !sameChatgptConversationUrl(actualUrl, expectedUrl))) {
+    throw new BrowserAutomationError('Retained browser target URL did not match the exact agent-browser selection; refusing to compose or submit.', {
+      code: 'agent_browser_exact_target_url_mismatch',
+      stage: 'execute-browser',
+      phase,
+      retryable: false,
+      expectedUrl,
+      actualUrl: actualUrl || null,
+    });
+  }
+}
+
 export interface PromptReadyNavigationOptions {
   url: string;
   fallbackUrl?: string;

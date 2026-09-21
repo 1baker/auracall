@@ -432,15 +432,11 @@ export function createChatgptAccountMirrorMetadataCollector(
 			const honorRequestedProjectConversationsPhase =
 				requestedPhase === "project-conversations" &&
 				(input.sweepMode ?? "steady_follow") !== "full_sweep";
-			const skipSteadyFollowProjectDiscovery = shouldSkipSteadyFollowProjectDiscovery(input);
-
 			const projects = honorRequestedDetailPhase
 				? { items: [] as Project[], truncated: false }
-				: skipSteadyFollowProjectDiscovery
-					? await readSkippedCollectorProjects(input)
-					: await runCollectorDiagnosticStage(input, "project-index", () =>
-							readCollectorProjects(input, client, listOptions, pacer),
-						);
+				: await runCollectorDiagnosticStage(input, "project-index", () =>
+						readCollectorProjects(input, client, listOptions, pacer),
+					);
 			throwIfCollectionAborted(input.abortSignal);
 			const conversationBudget = Math.max(0, Math.floor(input.limits.maxConversationRowsPerCycle));
 			const conversationBudgets = allocateConversationReadBudgets(
@@ -551,7 +547,7 @@ export function createChatgptAccountMirrorMetadataCollector(
 				projectsLength: projects.items.length,
 				resetCursorForFreshnessFrontier: !honorRequestedDetailPhase,
 			});
-			const projectIndexRead = !honorRequestedDetailPhase && !skipSteadyFollowProjectDiscovery;
+			const projectIndexRead = !honorRequestedDetailPhase;
 			const chatgptAccountLibraryRead =
 				input.provider === "chatgpt" &&
 				!honorRequestedDetailPhase &&
@@ -1144,20 +1140,6 @@ function resolveRequestedCollectorPhase(
 	return input.requestedPhase ?? null;
 }
 
-function shouldSkipSteadyFollowProjectDiscovery(
-	input: AccountMirrorMetadataCollectorInput,
-): boolean {
-	if (input.provider !== "chatgpt") return false;
-	if ((input.sweepMode ?? "steady_follow") !== "steady_follow") return false;
-	if (input.requestedPhase === "projects" || input.requestedPhase === "project-conversations") {
-		return false;
-	}
-	const previousEvidence = input.previousEvidence;
-	if (!previousEvidence) return false;
-	if (previousEvidence.truncated.projects === true) return false;
-	return (previousEvidence.projectSampleIds?.length ?? 0) === 0;
-}
-
 function capDetailReadsForActiveInteractionBudget(input: {
 	maxDetailReads: number;
 	maxBrowserInteractionsPerMinute: number;
@@ -1187,18 +1169,6 @@ function createProviderInteractionBudgetYieldCause(): NonNullable<
 		kind: "provider-interaction-budget",
 		operationClass: "account-mirror",
 	};
-}
-
-async function readSkippedCollectorProjects(
-	input: AccountMirrorMetadataCollectorInput,
-): Promise<{ items: Project[]; truncated: boolean }> {
-	await reportCollectorProgress(input, { phase: "projects", event: "started" });
-	await reportCollectorProgress(input, {
-		phase: "projects",
-		event: "completed",
-		projectsObserved: 0,
-	});
-	return { items: [], truncated: false };
 }
 
 async function readCollectorProjects(

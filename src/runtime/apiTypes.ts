@@ -35,6 +35,7 @@ export interface ExecutionRequestExtensionHints {
   composerTool?: string | null;
   deepResearchPlanAction?: 'start' | 'edit' | null;
   chatgptConversationUrl?: string | null;
+  chatgptNewConversationProjectId?: string | null;
   browserHost?: ExecutionBrowserHost | null;
 }
 

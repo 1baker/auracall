@@ -6,7 +6,7 @@ export type ChatgptComposerMode = "chat" | "work";
 
 type ComposerModeOutcome =
 	| { status: "already-selected" | "default-chat" | "switched"; mode: ChatgptComposerMode }
-	| { status: "mode-not-found"; availableModes: string[] }
+	| { status: "mode-not-found"; availableModes: string[]; controlsAbsent?: boolean }
 	| { status: "selection-not-confirmed"; mode: ChatgptComposerMode };
 
 export type ChatgptModelSelectionPlan =
@@ -29,12 +29,21 @@ export async function ensureChatgptComposerMode(
 	desiredMode: ChatgptComposerMode,
 	logger: BrowserLogger,
 ): Promise<void> {
-	const outcome = await Runtime.evaluate({
-		expression: buildChatgptComposerModeExpression(desiredMode),
-		awaitPromise: true,
-		returnByValue: true,
-	});
-	const result = outcome.result?.value as ComposerModeOutcome | null | undefined;
+	const deadline = Date.now() + 5_000;
+	let result: ComposerModeOutcome | null | undefined;
+	while (true) {
+		const outcome = await Runtime.evaluate({
+			expression: buildChatgptComposerModeExpression(desiredMode),
+			awaitPromise: true,
+			returnByValue: true,
+		});
+		result = outcome.result?.value as ComposerModeOutcome | null | undefined;
+		// Project pages can report readyState=complete before their composer and
+		// mode controls hydrate. Only repeat a no-controls observation: never
+		// repeat an uncertain click/selection or an explicitly unavailable mode.
+		if (result?.status !== "mode-not-found" || result.controlsAbsent !== true || result.availableModes.length > 0 || Date.now() >= deadline) break;
+		await new Promise((resolve) => setTimeout(resolve, Math.min(100, deadline - Date.now())));
+	}
 	const label = desiredMode === "chat" ? "Chat" : "Work";
 	if (result?.status === "already-selected") {
 		logger(`ChatGPT mode: ${label} (already selected)`);
@@ -132,6 +141,7 @@ function buildChatgptComposerModeExpression(desiredMode: ChatgptComposerMode): s
     if (!trigger || !dispatchClickSequence(trigger.node)) {
       return {
         status: 'mode-not-found',
+        controlsAbsent: !trigger && radios.length === 0 && modeTriggers.length === 0,
         availableModes: [...radios, ...modeTriggers]
           .map(({ node }) => String(node.textContent ?? '').trim()).filter(Boolean),
       };

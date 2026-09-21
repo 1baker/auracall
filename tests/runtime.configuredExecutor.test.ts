@@ -1558,13 +1558,19 @@ describe('configured stored-step executor', () => {
     ).toBeNull();
   });
 
-  it('reattaches recovered stranded ChatGPT steps to the submitted tab instead of replaying the prompt', async () => {
+  it.each([
+		['after durable intent before dispatch', 'chatgpt-prompt-send-intent'],
+		['after physical send with lost acknowledgement', 'chatgpt-prompt-send-intent'],
+		['after visible commit before canonical persistence', 'chatgpt-prompt-dispatched'],
+		['after the submitted checkpoint', 'chatgpt-prompt-submitted'],
+	] as const)('fault injection %s: restart observes the original bound tab and never replays the prompt', async (_window, evidenceRef) => {
     const runBrowserModeImpl = vi.fn(async () => {
       throw new Error('prompt replay should not run');
     });
     const resumeBrowserSessionImpl = vi.fn(async () => ({
       answerText: 'AURACALL_REATTACHED_OK',
       answerMarkdown: 'AURACALL_REATTACHED_OK',
+      answerMessageId: 'recovered-assistant-message',
     }));
     const runtimeEvidenceHeartbeat = vi.fn(async () => undefined);
     const brokerHandle = {
@@ -1640,7 +1646,7 @@ describe('configured stored-step executor', () => {
                   observedAt: '2026-04-15T21:35:00.000Z',
                   state: 'thinking',
                   source: 'browser-service',
-                  evidenceRef: 'chatgpt-passive-dom-probe',
+                  evidenceRef,
                   confidence: 'low',
                   details: {
                     service: 'chatgpt',
@@ -1767,10 +1773,34 @@ describe('configured stored-step executor', () => {
       conversationId: 'recovered-chat',
       tabUrl: 'https://chatgpt.com/c/recovered-chat',
       chromeTargetId: 'target-restart',
+      answerMessageId: 'recovered-assistant-message',
       runtimeProfileId: 'default',
       browserProfileId: 'default',
       agentId: 'chatgpt-recovered-agent',
     });
+  });
+
+  it('never submits a recovery-only request when saved browser evidence is missing', async () => {
+    const runBrowserModeImpl = vi.fn();
+    const resumeBrowserSessionImpl = vi.fn();
+    const execute = createConfiguredStoredStepExecutor({ runtimeProfiles: {
+      default: { engine: 'browser', defaultService: 'chatgpt', browserProfile: 'default',
+        services: { chatgpt: { manualLoginProfileDir: '/tmp/recovery-only-profile' } } },
+    } }, { runBrowserModeImpl, resumeBrowserSessionImpl });
+    await expect(execute!({
+      record: { runId: 'recovery-only', revision: 2, bundle: {
+        run: { id: 'recovery-only', initialInputs: {} }, events: [{
+          stepId: 'recovery-only:step:1', type: 'note-added',
+          note: 'recovered stranded running step for host replay',
+        }],
+      } } as never,
+      step: { id: 'recovery-only:step:1', agentId: 'recovery-agent', service: 'chatgpt',
+        runtimeProfileId: 'default', browserProfileId: 'default', input: {
+          prompt: 'Original request', artifacts: [], notes: [], structuredData: { recoveryOnly: true },
+        } } as never,
+    })).rejects.toThrow('refusing prompt replay');
+    expect(runBrowserModeImpl).not.toHaveBeenCalled();
+    expect(resumeBrowserSessionImpl).not.toHaveBeenCalled();
   });
 
   it('replays recovered ChatGPT steps when only pre-submit project evidence was recorded', async () => {

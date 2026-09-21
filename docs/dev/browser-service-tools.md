@@ -1,5 +1,91 @@
 # Browser Service Tools
 
+Broker result publication requires verified cleanup. A completed operation with
+unverified detach or tab release rejects as `agent_browser_cleanup_unverified`
+(`phase: after`, `retryable: false`, `providerOperationCompleted: true`). This
+classification is preserved during stored-run recovery. A diagnostic callback is
+not reconciliation. Do not rerun the provider prompt; reconcile the exact original
+attachment and recover the existing answer under the usual ownership checks.
+
+The explicit `AgentBrowserBridgeDependencies.nativeTransport` handoff supports
+initial and recovery acquisition. Supply trusted native socket/token configuration
+and existing attach/per-operation task-context callbacks; nothing is discovered
+or approved automatically. The bridge requests native mode through action params,
+checks binding and canonical handle, and returns `brokerSession` without a raw
+Chrome endpoint. `connectToChromeTarget({ brokerSession })` consumes it once.
+Initial transport admission requests an Agent Browser `cdp_attach` authority step
+with the exact current URL on both the plan and retained handle. Omitting that step
+URL fails before provider input; AuraCall must not weaken or retry the binding.
+When `AURACALL_AGENT_BROWSER_TARGET_<PROVIDER>` pins a retained target, AuraCall
+filters same-URL inventory by that target before acquisition. A missing or
+build-incompatible pin fails before `tab_new`; it is not permission to create a
+replacement tab on a transferred-custody session.
+The owner can close before connection without starting polling; client and outer
+bridge close share one verified detach. Unknown acquisition identity remains
+unreconciled and cannot use legacy HTTP detach as proof. This is explicit internal
+wiring, not default provider activation or a new CLI configuration recipe.
+
+`BrowserRunOptions.nativeBrokerTransport` and the configured executor's matching
+dependency now route ChatGPT/Grok through that native session. Configuration stays
+outside serializable browser settings; runtime evidence stores only the transport
+marker and six-field attachment binding, never the socket token or callbacks.
+Post-acquisition validation, runtime hints and operation admission are inside the
+shared cleanup scope. Explicit native selection cannot fall back to raw Chrome.
+Stored native recovery now requires complete submitted identity, explicit native
+configuration and a durable runtime-evidence writer. Missing prerequisites fail
+with `agent_browser_native_reconciliation_required`. The newest native receipt
+takes precedence over richer legacy endpoint hints; inconsistent evidence rejects.
+Direct reattach also rejects native evidence before discovery or browser reopening.
+The internal reattach helper now accepts `originalNativeBinding` for a surviving
+daemon: it requires one ready exact retained target on the saved service route,
+unchanged URL/ownership fields, verifies the original native detach, then requests
+one fresh attachment. Unknown/failed detach stops before attach authorization;
+an already-detached native receipt may be confirmed idempotently by the daemon.
+It cannot use legacy observation, target replacement or raw cleanup.
+`captureAgentBrowserNativeResponse` owns cleanup while persisting the new binding,
+checking the configured account, reading the original prompt-bound answer, and
+checking the account again. Only native Runtime.evaluate is used; missing,
+exceptional, oversized, streaming, wrong-URL or ambiguous observations reject.
+Cancellation reaches both acquisition and capture; cleanup remains independent.
+Publication requires verified detach. The configured executor uses this path for
+stranded native runs, never raw resume or prompt submission. This is explicit
+source wiring, not default activation. Daemon-loss/unknown attachment recovery,
+mid-reacquisition process death and automatic transient scheduling remain unproven.
+Provider fixtures stop before prompt submission; approved mutation/file authority
+and actual native crash recovery remain required before activation.
+
+`connectToChromeTarget` can accept an explicit `brokerConnection` instead of a
+Chrome port. This staged CRI-compatible facade consumes an already acquired exact
+attachment; it does not acquire custody or implement the native transport.
+Selecting it forbids raw discovery/fallback. Each event poll carries a unique
+`requestId`; replies must echo it and the exact binding before listeners receive
+any events. Empty polls also need fresh identities. Timeout, missing identity or
+stale replies seal the client without replay, while exact detach remains available.
+The caller's `abortSignal` also seals pending operations and suppresses late
+command/event delivery. The enclosing owner must still await `client.close()`;
+cleanup uses its own bounded signal and repeated closes retain the same verified
+result or failure. Cancellation does not authorize retry or release ownership
+without a verified detach. An already-aborted connection starts no event polling.
+The native recovery checkout now implements task-aware event admission and bounded
+publication. Providers still need configured, approved task context for each
+command and poll before selecting the native handoff.
+The explicit `createNativeBrokerTransport` connector now sends the native wire
+protocol over one authenticated Unix socket per operation. Configuration must
+provide the exact acquisition binding, socket path and token; it does not discover
+credentials, launch a daemon, or choose another lane. Its required task-context
+callback supplies an existing ordered authority and step for both commands and
+event polls, never a default grant. The configured authority maps event polls to
+single-use `broker_events` steps with a read-only consequence ceiling. It issues
+those ordered steps in bounded 100-step batches and the client backs off 100 ms
+after an empty poll, avoiding one confirmation and ledger file pair per tight-loop
+poll while preserving a unique authorized step for every published event batch.
+Aborts, EOF, malformed/oversized packets and identity mismatches do not reconnect
+or resend. Cleanup bypasses task-context acquisition but still requires the native
+broker's exact detach authority. Socket fixtures are not native-worker or live
+browser proof; providers select this connector only through the explicit dependency.
+Polling never grants or renews task permission. Browser-global download and descendant-target paths
+remain migration work; do not use this client as proof of complete integration.
+
 This doc captures the reusable browser-service helpers and the patterns we want to
 follow when automating UI flows. The goal is to keep Grok-specific hacks minimal
 and push general strategies into browser-service so new service adapters are
@@ -19,6 +105,37 @@ same AuraCall runtime profile and managed browser profile that the real product
 path would use.
 
 ## Agent-browser hidden RDP ownership lane
+
+The ID-only failed-response observation can recover a typed after-submit
+new-project request from existing retained conversation tabs. It reconstructs
+the original dependency-free inline wire including saved task artifact labels,
+checks unchanged browser/profile/session/process authority, and accepts one
+complete exact prompt/assistant pair after fresh account verification. It never
+launches, navigates, acquires, releases, downloads or submits. The status flag
+`newProjectRecoveryObservation` distinguishes this path from older recovery.
+Unavailable/ambiguous tabs, active generation or unverifiable transport fail
+closed; the failed run record is not rewritten.
+
+If a new-project request reports typed after-submit outcome uncertainty, broker
+cleanup detaches its transport but preserves the task tab for exact-response
+recovery. Failure details retain the broker identity and explicitly mark the
+conversation route unverified. A detach failure must not erase that typed
+failure. This neither accepts the response nor authorizes replay; ordinary
+errors and successful task-tab cleanup retain their existing behavior.
+
+For a new ChatGPT conversation in an existing project, AuraCall must reuse the
+retained browser, not launch another profile lane. The bridge derives display,
+view-stream and control-input settings from uniquely matching ready inventory
+before requesting an access plan. Omitted settings must not silently select a
+different display mode. Explicit conflicting settings, ambiguous inventory,
+changed process identity or a plan that does not authorize reuse fail closed.
+The final tab request carries the plan's validated browser/session route hints;
+`allowDuplicateProfileLane` is not a recovery mechanism.
+
+Project-page document readiness is not composer readiness. ChatGPT mode
+selection waits at most five seconds when no mode controls are yet available.
+An explicit missing requested mode, malformed observation or uncertain selection
+is not retried. This is a UI-readiness wait, never a provider-request retry.
 
 `browserProfiles.<id>.agentBrowserRdp.enabled=true` moves process/display
 ownership to agent-browser while AuraCall retains the exact managed browser
@@ -707,3 +824,12 @@ Shared DevTools attachment is owned by
 
 - `pnpm tsx scripts/verify-grok-context-get.ts <conversationId> [projectId]`
   - Fetches conversation context through the Grok adapter path and prints message count.
+## Broker attachment endpoint failures
+
+AuraCall's legacy broker connector consumes only plain WebSocket browser endpoints
+with an explicit port and no embedded credentials, query or fragment. TLS and
+opaque capability paths require a separate transport implementation; they must
+not be reduced silently to host/port discovery. Invalid endpoints trigger matching
+attachment cleanup. If cleanup fails, retain AgentBrowserAttachmentCleanupError's
+exact bridge handle for reconciliation; do not release the target or replay the
+provider request. This does not enable raw CDP on custody-protected browser modes.

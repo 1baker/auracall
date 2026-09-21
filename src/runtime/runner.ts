@@ -672,6 +672,31 @@ function addMillisecondsToIsoTimestamp(timestamp: string, milliseconds: number):
   return new Date(parsed + milliseconds).toISOString();
 }
 
+export function requeueFailedBrowserRecovery(bundle: ExecutionRunRecordBundle, at: string): ExecutionRunRecordBundle {
+  const step = bundle.steps[0];
+  const marker = 'requeued failed browser recovery without prompt replay';
+  if (bundle.run.status !== 'failed' || bundle.run.sourceKind !== 'direct' || bundle.steps.length !== 1 ||
+      !step || step.status !== 'failed' || step.service !== 'chatgpt' ||
+      step.failure?.code !== 'runner_execution_failed' ||
+      !step.failure.message.startsWith(`Recovered ChatGPT browser-backed run ${bundle.run.id} could not reattach to the submitted tab; refusing to replay the prompt:`) ||
+      bundle.leases.some(lease => lease.status === 'active') ||
+      bundle.events.some(event => event.note === marker) ||
+      !bundle.events.some(event => event.stepId === step.id && event.note === 'recovered stranded running step for host replay')) {
+    throw new Error('Run is not eligible for one bounded recovery-only reconciliation');
+  }
+  return applyBundleMutation({
+    bundle, updatedAt: at, runStatus: 'running', sharedStateStatus: 'active',
+    event: createExecutionRunEvent({
+      id: `${bundle.run.id}:event:recovery-only-requeue:${at}`, runId: bundle.run.id,
+      stepId: step.id, type: 'note-added', createdAt: at, note: marker,
+      payload: { previousFailure: step.failure, recoveryOnly: true },
+    }),
+    stepUpdater: candidate => ({ ...candidate, status: 'runnable', startedAt: null,
+      completedAt: null, failure: null, input: { ...candidate.input,
+        structuredData: { ...candidate.input.structuredData, recoveryOnly: true } } }),
+  });
+}
+
 export function recoverStrandedRunningExecutionRun(input: {
   record: ExecutionRunStoredRecord;
   now?: () => string;

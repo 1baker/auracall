@@ -9,6 +9,19 @@ Terminology for this runbook:
 - AuraCall runtime profile: the top-level `profiles.<name>` entry selected by `--profile`
 
 ## Key behavior
+
+- For a required multi-file response, set `metadata.outputContract.artifactFileNames`
+  to the exact local filenames, for example `['proposal.docx', 'proposal.pdf']`.
+  The configured executor requires every named file to be materialized; a link,
+  unrelated PDF, duplicate path, or only one document cannot satisfy the set.
+  The list accepts 1–32 nonempty local filenames, not directory paths or control
+  characters. If the legacy `artifactFileName` is also present, it remains
+  required. Incomplete sets fail rather than invoking the legacy single-file
+  correction prompt. Existing single-file requests retain their wire instructions.
+  This verifies package presence, not document accuracy, sponsor compliance, or
+  permission to submit a proposal. Plan 0358 is installed and a bounded live
+  DOCX/PDF explicit-set round trip passed; broader proposal acceptance is separate.
+
 - WSL Chrome is the most reliable path; Windows Chrome/Brave from WSL often fails due to DevTools binding and profile locks.
 - Oracle defaults to the Windows host IP for DevTools on WSL; override to localhost for WSL Chrome with `AURACALL_BROWSER_REMOTE_DEBUG_HOST=127.0.0.1`.
 - AuraCall now defaults browser `DISPLAY` to `:0.0` on WSL unless you set `browser.display`, `AURACALL_BROWSER_DISPLAY`, or explicitly target Windows-hosted Chrome.
@@ -186,12 +199,53 @@ separate provider-library drawer. Missing or ambiguous rows fail closed.
     AuraCall fails closed instead of launching a second Chrome on a dynamic
     port. Inspect or close only the exact owned process before retrying.
 - **AuraCall restarts during a required-mode broker response**:
+  - The installed downloader recognizes both embedded artifact preview panels
+    and full-screen dialogs. It closes the prior viewer, selects the exact
+    response control and filename, and accepts only a fresh verified download.
+    Installed original DOCX/PDF readback passed on 2026-09-11; this does not
+    retroactively mark an interrupted API response as completed.
+  - Broker recovery now obtains fresh configured-account verification on the
+    exact retained target before attachment. Missing, conflicting, or truncated
+    identity and missing browser PID fail closed. Successful identity verification
+    does not establish successful artifact download. If exact controls yield no
+    verified browser download, preserve the failed receipt and diagnose retrieval;
+    never submit an artifact-correction prompt from a recovered response.
+  - An already failed single-step direct ChatGPT recovery can be requeued once
+    with local runtime control `reconcileFailedBrowserRecovery(control,
+    { runId, expectedRevision, at })`. It requires the original recovery failure
+    and event, rejects active leases and stale revisions, preserves failure
+    history, and marks the step recovery-only. The normal runner must complete
+    capture and materialization; this operation never marks a run successful.
+  - Recovery preserves the captured assistant message ID through the returned
+    browser result. Artifact capture uses that identity, never a conversation
+    ID or target ID as a substitute. Missing response identity still prevents
+    response-bound artifact materialization.
   - Keep polling the same durable response id. AuraCall recovers the submitted
     step by re-authorizing its saved agent-browser `serviceTabHandle`; it does
     not resubmit the prompt or launch another Chrome process.
-  - If the saved broker identity is incomplete or its exact retained target is
-    gone, recovery fails closed. Inspect agent-browser service browser/tab state
-    instead of enabling raw CDP discovery.
+  - If the old target is gone, recovery can inspect one restored target in the
+    same broker browser, profile and session. It must match the full original
+    request to one user message and one following identified assistant response.
+    Active generation, duplicate requests, ambiguous targets and missing IDs
+    fail closed. No prompt is replayed. This function-level path was verified
+    live on 2026-09-11; reconciliation of an already failed API run is still pending.
+  - Exact original-request/answer binding also applies when the physical target
+    survives. A matching tab is not permission to return its latest answer.
+    The same-target guard is regression-tested and present in the
+    2026-09-11 15:28:26 UTC installation.
+  - Artifact-correction prompts apply only to fresh execution. During recovery,
+    missing downloads or provider-session proof must report the retrieval error,
+    never submit a replacement file-generation prompt. The 2026-09-11 guard is
+    regression-tested and present in the 15:11:57 UTC installed runtime;
+    autonomous original-file recovery remains a separate live acceptance check.
+  - Incomplete saved broker identity still fails closed. Inspect agent-browser
+    service state instead of enabling raw CDP discovery.
+  - Recovery must recheck the configured ChatGPT account using the retained
+    target's current auth-session identity. Browser/profile selection alone is
+    not provider-session proof. The proof is passed to artifact materialization;
+    wrong, missing or truncated identity observations fail before attachment.
+    This preflight repair is present in the 2026-09-11 15:20:22 UTC installation;
+    live original-file materialization remains a separate acceptance check.
 - **Default `auto` browser routing**:
   - A healthy agent-browser service is attempted first for ChatGPT and Grok.
     If no broker route accepts an access plan, AuraCall logs the pre-authority
@@ -206,6 +260,19 @@ separate provider-library drawer. Missing or ambiguous rows fail closed.
   - Keep the login window open, sign in, then rerun. The profile is reused on subsequent runs.
 - **Need a clean profile**:
   - Remove the relevant managed profile under `~/.auracall/browser-profiles/<auracallProfile>/<service>` and repeat the login step.
+
+## Explicit new conversation compatibility
+
+Before sending `auracall.chatgptNewConversationProjectId`, require the running
+API's `GET /status` response to contain
+`compatibility.supportsChatgptNewConversationProjectId: true`. Missing, false,
+or non-boolean values mean the client must not send this mode: older schemas
+may silently discard unknown request fields and use a configured conversation.
+This flag reports protocol support, not browser readiness or live acceptance.
+The mode requires an existing exact `g-p-` plus 32 lowercase hex project ID and
+is mutually exclusive with `auracall.chatgptConversationUrl`. After completion,
+use the verified returned conversation URL for normal broker reacquisition;
+task-created tab handles may already have been released by normal cleanup.
 
 ## Optional helper aliases
 Add to `~/.zshrc`:

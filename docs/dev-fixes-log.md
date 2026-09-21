@@ -1,3 +1,238 @@
+- 2026-09-13: Creating another connector object did not prove process restart.
+  The native cross-process fixture now verifies a real SIGKILL after fsynced
+  binding evidence and starts a distinct recovery client. It also loses an
+  acknowledged detach reply and confirms cleanup from a fresh connector; native
+  counters verify no duplicate command or detach. This is transport proof with
+  a synthetic Chrome peer, not end-to-end ChatGPT crash recovery.
+
+- 2026-09-13: Stored native recovery now captures the existing answer through the
+  exact native session and shared verified cleanup. Persist the replacement
+  binding before reads; require a real writer, not optional no-op heartbeat.
+  Forward cancellation to acquisition and capture. Account-before/after, exact
+  URL and original prompt binding prevent unrelated response publication. Newest
+  native evidence outranks legacy endpoints. Source/socket tests pass; default
+  activation and real crash/transient acceptance are not established.
+
+- 2026-09-13: Native internal reattach now accepts an original binding to reconcile
+  before reacquisition. Match the saved route and ready retained identity first,
+  then require verified native detach before one new attach. Never substitute
+  legacy handle-only cleanup, old attachment ID, changed URL or a replacement
+  target. Eight new fixtures passed; full stored-response recovery remains gated
+  pending broker-scoped capture and executor wiring.
+
+- 2026-09-13: Native provider selection now uses a trusted nonserializable runtime
+  dependency and persists the transport marker plus complete attachment binding.
+  All post-acquisition work shares verified cleanup. Native recovery is gated
+  until original-attachment reconciliation exists. Do not choose recovery solely
+  by rich Chrome host/port hints: older legacy evidence could erase newer native
+  provenance. Scan all relevant evidence before scoring, including partial hints;
+  native/inconsistent evidence prevents raw recovery or prompt replay. Thirteen
+  suites passed (250 tests); live provider completion remains unproven.
+
+- 2026-09-13: Explicit native acquisition now consumes an opaque broker receipt,
+  not a Chrome endpoint, for both initial and recovery paths. A lazy session owns
+  cleanup before polling/admission and shares sticky detach with its client.
+  Wrong binding remains unreconciled without legacy cleanup; wrong canonical
+  receipt with a known matching binding is detached exactly. Auto/off cannot
+  silently downgrade explicit native selection. Supplied authority is bounded
+  and cancellable, never generated. Thirty-two synthetic acquisition/socket tests
+  passed; provider defaults and live acquisition are not activated by this patch.
+
+- 2026-09-13: Broker cleanup previously returned a completed provider result even
+  after detach failed, and an observer exception could replace cleanup identity.
+  Unverified cleanup now rejects with a preserved after-operation/non-retryable
+  classification. Executor tests cover both initial and recovered results: no
+  artifact materialization, no prompt replay, one exact detach attempt. Explicit
+  cleanup reconciliation does not rerun the provider operation. Falsy operation
+  rejections no longer become successful undefined results.
+
+- 2026-09-13: Explicit broker clients previously ignored run cancellation after
+  connection. The shared connection helper now forwards the signal; cancellation
+  aborts command/event waits and prevents late publication or replay. Cleanup is
+  still owner-awaited with an independent signal, exactly one detach and sticky
+  failure. Two lifecycle regressions reproduced the bug before the fix; additional
+  tests cover pre-aborted construction and listener removal on normal close.
+
+- 2026-09-13: Required-mode broker attachment now has an exact-URL ordered issuance
+  path without raising the read-only ceiling or permitting raw CDP/lifecycle
+  reuse. Both existing confirmation gates remain active. The new test exposed a
+  normal-thread stack overflow: execute_command now heap-owns its large dispatcher
+  frame while retaining its async interface. The normal-stack test passes.
+
+- 2026-09-13: Confirmed native acquisition no longer captures temporarily removed
+  worker policy. Original settings are retained under the exact approved command
+  ID, and later broker operations still obey confirmation requirements and policy
+  denials. Required-mode lifecycle issuance and provider activation remain separate.
+
+- 2026-09-13: Cross-process native enforcement is now tested rather than inferred
+  from matching fixture replies. A fresh connector must still fail replay at the
+  native journal; exhausted ordered authority cannot publish more events, while
+  exact cleanup remains possible. Scope is synthetic Chrome, not live provider
+  operation. Startup CDP traffic is excluded from connector dispatch counters.
+
+- 2026-09-13: The explicit native connector uses independent authenticated Unix
+  sockets rather than the retrying CLI transport. It never resends after EOF or
+  timeout, rejects outer/inner identity drift before returning data, bounds reply
+  framing, suppresses untrusted response errors, and preserves exact cleanup when
+  task authorization fails. Fifteen socket fixtures passed; native-worker and
+  provider integration remain separate acceptance gates.
+
+- 2026-09-13: Broker event replies must match the unique request ID as well as
+  binding and cursor. A healthy same-target reply from an earlier empty poll is
+  not evidence for the current read. Missing IDs and late timeout responses
+  fail closed before listener publication, with no replay and one exact detach.
+  Twenty client tests pass; native connector task-context wiring remains staged.
+
+- 2026-09-13: Experimental native broker acquisition now reserves capacity before
+  attach, binds the real custody owner and canonical service handle, recomputes
+  access-plan reuse, and rejects mismatched rendered URLs. Cancellation after
+  attach dispatch keeps owner-managed exact cleanup; unknown completion fails
+  closed. Confirmed acquisition cannot capture temporarily suppressed policy.
+  Synthetic worker tests pass; client/events/crash recovery remain open gates.
+
+- 2026-09-13: Staged native broker authority now serializes task-ledger writers
+  with an OS session lock, retains publication authority through output, rejects
+  expired/revoked task results and prevents reload script injection from using
+  navigation-only approval. Browserless handoff no longer seals future registry
+  access. Authenticated internal route rejects raw endpoints and unknown handles.
+  Isolated regressions pass; production acquisition/events/provider integration
+  remain explicit gates, with no installed-runtime or live-browser change.
+
+- 2026-09-12: Invalid broker attachment endpoints previously threw before the
+  outer run received its cleanup handle. Both initial and recovery attachment now
+  detach on endpoint validation failure, independently of the run abort signal.
+  AgentBrowserAttachmentCleanupError preserves both errors and the exact bridge
+  handle when cleanup is uncertain; newly opened targets are not released then.
+  The legacy connector rejects endpoint features it cannot preserve and never
+  echoes a rejected endpoint credential in parser errors.
+
+- 2026-09-12: Fix six test-only TypeScript errors: explicitly type four composer
+  logger mocks and use optional access for two recovery-fixture event payloads.
+  No production behavior or recovery assertions changed. The installed broker's
+  missing ownership attestation remains a separate integration prerequisite;
+  an idle jobs snapshot must not bypass it.
+
+- 2026-09-12: Recover after-submit failures through a fresh trusted observation,
+  not a fabricated old completion event. Exact wire reconstruction must include
+  runner artifact context and respect inline_required. More than ten attachments
+  can add a bundle prefix; reject that unsupported transport until durable
+  transport metadata supports reconstruction. The existing four-attachment live
+  request is unaffected. Failed execution history remains immutable.
+
+- 2026-09-12: The remote run's leave-tab-open finally block was followed by
+  outer broker cleanup releasing a newly created tab even after an uncertain
+  submission. Preserve the tab for the exact typed after-submit uncertainty,
+  detach transport, and retain recovery identity in the top-level typed error
+  even if detach fails. Never infer a safe retry from a closed tab or missing
+  output. Exact prompt recovery must include runner-added task artifact context.
+
+- 2026-09-11: A project page reported document.readyState complete before its
+  composer/mode controls appeared. One retained diagnostic reload reproduced
+  missing controls followed by selected Chat about one second later. Bound
+  missing-control rechecks to five seconds; do not repeat uncertain selections
+  or explicitly unavailable modes. Primary passed52 relevant tests and full
+  build; paired installed helper/record parity passed. Provider retry remains
+  a separate evidence and reconciliation decision.
+
+- 2026-09-11: Same-project writer creation omitted display posture, causing the
+  access plan to default to private_virtual_display while the retained browser
+  used shared_display. The returned unbound tab_new then hit duplicate-lane
+  protection before dispatch. Derive full posture from unique ready inventory,
+  obtain fresh reuse authority and recheck process/session before tab creation.
+  Preserve explicit constraints and never override wait/duplicate protection.
+  Primary passed 72 focused TS tests and full build; paired installed record and
+  full dist parity verified with rollback. Live continuation is tracked in0359.
+
+- 2026-09-11: A later assistant turn's visible streaming-status strip can block
+  recovery of an earlier exact answer. Preserve the global generation signal,
+  but require explicit marker ownership and unique later-user identity before
+  permitting historical binding. Unknown ownership, global Stop controls and
+  selected-turn activity still fail closed. Source tests/build pass; installed
+  verification is separate (Plan 0359).
+
+- 2026-09-11: Exact production downloads can have timestamped native filenames
+  despite canonical control labels. Canonicalize only valid calendar suffixes
+  with exact case-sensitive stem/extension and response/control provenance at
+  the artifact-copy boundary. Keep originals and verify copy hashes; do not
+  normalize globally or infer who added the suffix. Live downloaded DOCX/PDF
+  bytes matched ZIP members before this fix. The repair passed 235 primary
+  tests and full build, and is installed with rollback and verified record
+  hashes. Re-read final-build hashes rather than trusting earlier compile output.
+
+- 2026-09-11: Recovery prompt snapshots must read the actual user-content root,
+  not attachment tiles or expansion controls. ChatGPT renders code as DOM CODE
+  and PRE/CODE elements; reconstruct their markers on a detached clone before
+  exact normalized comparison. Never strip markup from the expected prompt or
+  accept a prefix as identity. Live passive reconstruction matched all 19,159
+  normalized characters; 32 regression tests and the full build passed. The
+  one-file helper is installed with full rollback and record/hash parity.
+  Download success remains a separate live requirement.
+
+- 2026-09-11: Exact artifact controls must match the full filename including
+  extension within stable message/turn ownership. A stem-prefix match selected
+  the ZIP for the requested DOCX after controls reordered. Unique exact matches
+  may survive reordering; ambiguous matches fail closed. Installed selector,
+  27 independently rerun focused tests, full build, full dist parity and nine
+  installation-record hashes passed. Live verification stopped before download
+  because the retained browser was absent; no autonomous-download success claim.
+
+- 2026-09-11: Browser collision names such as final-thought-artifacts(5).zip can
+  break strict required-file acceptance despite successful exact-response download.
+  Canonicalize only a proven response/control-bound collision into a unique private
+  directory and verify copied bytes; retain the original filename/path and hash.
+  Do not accept arbitrary titles or strip suffixes in the executor. Plan 0359's
+  original information ZIP was recovered without rewriting its failed API history.
+
+- 2026-09-11: Explicit new-conversation clients must check the running API's
+  strict boolean capability before sending the new field. Older schemas can
+  strip unknown fields and silently reuse a configured conversation. Plan 0359
+  installs the capability and client guard together with rollback. Its first
+  live request failed the before-submit root/composer guard, so live rollover
+  remains unverified; preserve the failed response instead of retrying blindly.
+
+- 2026-09-11: A fresh ChatGPT assistant can return a maximum-conversation-length
+  warning without any output artifact. Inspect the exact response before
+  classifying an apparent download wait. Plan 0359 is repairing terminal
+  detection and same-project continuation; no installed fix is claimed yet.
+
+- 2026-09-11: ChatGPT may canonicalize a project conversation URL by removing
+  its display slug. Recovery may recognize this alias only with the same HTTPS
+  origin and exact stable project/conversation IDs; prompt equality and unique
+  original user/assistant binding remain mandatory. Source regression verified;
+  installed adoption pending.
+
+- 2026-09-11: Generic artifact mode can accept one file when a caller needs a
+  package. The additive `artifactFileNames` contract requires each local filename
+  and rejects malformed sets before submission. Explicit sets do not use the
+  legacy single-file corrective prompt. Plan 0358 is source-only; content QA
+  and installed normal-runner acceptance remain separate.
+
+- 2026-09-11: Recovered answers need fresh provider-session proof before file
+  materialization. Pass the executor's original authorization through exact
+  broker reattachment, observe auth-session identity without navigating, and
+  verify against the configured expectation with current process/target IDs.
+  Missing PID or missing, conflicting or truncated identity fails closed before
+  attachment. Five regressions and installed build parity are verified; live
+  file recovery is a separate requirement.
+
+- 2026-09-11: Recovery must not fall through to artifact-correction submission.
+  A missing named file after reattachment previously invoked a new prompt;
+  the executor now limits that correction branch to fresh execution. The
+  dedicated regression failed before the guard and passes after it. Preserve
+  the required-file failure and obtain genuine provider-session proof rather
+  than replacing the original answer. Source verified; independent installed
+  parity confirmed for the 2026-09-11 15:11:57 UTC runtime publication.
+
+- 2026-09-11: Rejected scheduler reservations must yield to future candidates
+  without consuming execution capacity. Otherwise old unavailable-profile jobs
+  can starve recoverable work indefinitely. Never reserve already-visited rows
+  during replacement, and count deferred starts against the cap. Plan 0357
+  remains source-only pending installed original-document recovery.
+
+- 2026-09-11: Linux Chrome may expose one space-joined process title in procfs. Agent-browser now verifies this strict form with independent executable, listener and profile-lock evidence; a profile mismatch diagnostic was not a login failure. AuraCall completed a fresh retained-target nonce round trip after that repair. Runtime upgrades retain a backup and must be followed by a distinct installed-copy response test.
+
+- 2026-09-10: Retained Pro can show a streaming-response status without a Stop button. Check both, reject stale bounded snapshots, retain exact fallback identity, and scope completion/copy/final refresh to the same fresh message. A historical answer is not completion evidence. The original failed document response is preserved without replay; autonomous end-to-end acceptance is still unproven.
+
 - 2026-09-10: Structured audits can share long JSON prefixes without being stale.
   Distinct assistant message IDs now suppress only the prefix heuristic; reused
   message/turn IDs, identical text and baseline suffixes remain rejected. Both
@@ -22425,3 +22660,144 @@ browser-stage lifecycle observability, not transcript truncation.
   browser retry passed. The retry reduced 21 sources to one upload, produced
   equivalent DOCX/PDF artifacts, passed independent and Codex release audits,
   and preserved the Agent Browser session, profile, and PID.
+- 2026-09-10: Repeated document download labels can legitimately be identical across replies. Accept identical text only with a distinct assistant ID and proof that it follows the exact newly submitted, latest user message. Recovery must bind the download to that assistant and verify document content, not filenames; preserve terminal API failure separately and never replay a prompt merely to recover files.
+- 2026-09-10: Native artifact downloads need not trigger an anchor interceptor. Do not interpret an empty capture as permission to click a page-global viewer Download button. Use a newly opened exact-name visible library dialog, fresh attempt directories, pending-download quiescence, singleton/filename checks, and downstream full-content checks. Do not adopt cached files or follow unbound captured URLs.
+- 2026-09-11: Reattach captured assistant identity was lost at both the browser
+  return and configured-executor conversion. Preserve the recovered message ID
+  through both layers so response-bound artifact retrieval can work. Missing,
+  malformed or turn-only metadata is not message identity. Two red regressions
+  became green; restored-target reconciliation remains separately unproven.
+- 2026-09-11: File-only ChatGPT answers can consist of artifact buttons. Removing
+  all buttons from recovery snapshots erases the answer. Remove expansion
+  controls from user messages while retaining assistant file labels. Installed
+  recovery now binds the full original prompt and exact assistant ID on a
+  restored broker-owned target without replay; failed-run API reconciliation
+  remains a separate incomplete step.
+- 2026-09-11: Requeueing a failed browser recovery must preserve failure history,
+  use optimistic revision checks and forbid fresh prompt submission. Installed
+  reconciliation now does this once. Live normal-runner recovery exposed a
+  separate missing provider-session proof at artifact materialization; exact
+  request/answer matching alone does not satisfy that account/session gate.
+- 2026-09-11: Installed recovery now passes fresh provider-session verification
+  on the exact broker target without prompt replay. Live readback progressed to
+  the existing download gate, which rejected both expected document controls
+  because no verified browser download appeared. Keep identity verification,
+  response binding, and successful file transfer as separate acceptance claims.
+- 2026-09-11: ChatGPT artifact previews can be panels with no dialog role or
+  aria-label. Restricting download/close controls to dialogs silently misses
+  those panels. Select the exact preview shell or a non-enclosing legacy
+  dialog, require the exact breadcrumb filename, and reject ambiguity. A new
+  regression failed before the fix; installed original DOCX/PDF downloads
+  subsequently matched independently reviewed hashes without prompt replay.
+- 2026-09-13: Stage an explicitly injected broker CDP facade at the shared
+  connection seam. Bind commands, events and detach to immutable attachment
+  identity; reject event gaps/overflow before partial delivery; preserve dialog
+  event concurrency and sticky detach failure. Timeouts never replay commands.
+  123 focused/widened tests pass. Native admission and provider selection remain
+  unimplemented; client checks are not custody authority or live integration proof.
+- 2026-09-13: Native broker-core review caught cancellation and detach races.
+  Cancelling a command now seals its attachment; queued page commands recheck
+  sealing inside the CDP writer lock before dispatch. Dedicated-session replies
+  require exact session identity, including browser-level detach acknowledgment.
+  These are staged agent-browser recovery-source changes, not live AuraCall wiring.
+- 2026-09-13: A generic CDP method name cannot establish command authority.
+  Native broker admission now receives immutable request identity, parameters,
+  task context and a fresh exact-session target observation. A typed permit
+  finalizes and guards publication; duplicate admission precedes task-budget
+  reservation. Production shared custody and daemon dispatch are still gates.
+- 2026-09-13: Shared browser custody must retain the actual lock, not copied
+  metadata. The native recovery worker now owns a revocable original-lease
+  container; active permits retain it and stale weak handles do not. Close and
+  handoff drain admitted permits before mutation, preserving browser state on
+  cancellation/timeout. Synthetic kernel-lease integration tests passed.
+- 2026-09-19: A null `displayIsolation` field on a ready retained local-headed
+  browser is not missing broker authority when its exact session and one ready
+  view/control stream are present. Preserve it as null, omit the optional
+  access-plan query parameter, and require the same null value at post-plan
+  inventory recheck. Do not synthesize a display-isolation label or relax the
+  singleton browser/session/stream checks.
+- 2026-09-19: A required new-project native CDP connection loss is an unknown
+  post-dispatch outcome until durable dispatch evidence proves otherwise. It
+  must preserve the exact newly opened target and carry typed recovery identity;
+  generic connection-loss cleanup that closes the target destroys the only
+  safe recovery evidence and must not authorize replay.
+- 2026-09-19: Route required fresh-project remote connection loss through that
+  typed after-submit outcome-unknown contract. Its exact project/runtime data
+  causes broker cleanup to detach but preserve the target; an ordinary remote
+  connection loss remains generic. Regression covers no target release after
+  one detach, while failed-response observation remains read-only and never
+  resubmits the prompt.
+# 2026-09-20 - Native broker attach authority must carry the exact URL
+
+- Symptom: an Agent Browser-backed AuraCall response failed before provider
+  input with `Task authority broker attach requires the exact current url`.
+- Cause: AuraCall requested the correct `cdp_attach` action and lifecycle
+  ceiling but omitted `steps[0].url`, even though the enclosing request and
+  retained service-tab handle both carried the exact URL.
+- Fix: emit the exact current URL on `cdp_attach` only, keep ordinary command
+  steps unchanged, and assert both behaviors in the native-authority test.
+- Safety: the browser broker remains fail-closed on navigation or target drift;
+  this change supplies required binding evidence and does not add fallback,
+  replay, discovery, or raw CDP authority.
+- Follow-up: after URL admission passed, the live run exposed two retained tabs
+  with the same canonical conversation URL. AuraCall ignored the configured
+  exact target and fell through to `tab_new`, which transferred custody correctly
+  rejected. Broker acquisition now filters by the configured provider target and
+  fails before tab creation when that target is missing or build-incompatible.
+- Follow-up: exact-target selection then exposed `broker_connection_not_open`.
+  The native event pump had no task context, while Agent Browser intentionally
+  requires a fresh `broker_events` authority step before every event packet.
+  Native transport now obtains task context for commands and event reads, the
+  configured authority emits read-only `broker_events`, and detach remains the
+  only operation that bypasses task-context issuance.
+- Live follow-up showed that an authority envelope alone is insufficient: the
+  native broker also requires the non-empty service identity in the task
+  packet. Configured authority now returns the same bounded task/service/agent
+  labels used when issuing each step, preventing a confirmed authority from
+  being rejected as an incomplete event packet.
+- A later live pass completed attach, events, diagnostics and evaluation, then
+  found one last taxonomy mismatch: AuraCall classified special
+  `Runtime.evaluate` expressions as `url` or `title`, while the native broker
+  classifies the CDP method itself as `evaluate`. The configured adapter now
+  mirrors the broker taxonomy exactly; read-only intent does not weaken the
+  script-execution ceiling of a JavaScript evaluation surface.
+- The first run to reach submission exposed two final reliability issues. A
+  long-running existing ChatGPT answer left the conversation busy, but the
+  readiness waiter timed out silently and still attempted Send/Enter; it now
+  fails closed before composer mutation and again before dispatch. Also, empty
+  event polling created hundreds of authority files per minute. Event permits
+  are now issued as bounded ordered 100-step batches and empty polls back off
+  to 100 ms, retaining one-time steps while sharply reducing confirmation and
+  filesystem churn.
+
+# 2026-09-20 - Retained broker navigation and prompt-commit proof
+
+- Native broker commands now map `Page.navigate` and `Page.reload` to their
+  existing navigation actions and consequence ceiling. Navigation authority
+  carries the exact destination URL end to end; the broker supplies that URL
+  to task-authority validation before CDP dispatch.
+- Project display slugs are not conversation identity. When the retained URL
+  and requested URL have the same exact ChatGPT project and conversation IDs,
+  AuraCall skips alias-only navigation and its post-navigation check accepts
+  only that same stable identity.
+- A virtualized project conversation may replace rendered turns instead of
+  increasing their count. After the final pre-send idle check, a cleared
+  composer plus a newly visible Stop control on the already-bound conversation
+  is sufficient commit evidence; a Stop control outside a conversation remains
+  insufficient.
+- Pro-guard submissions now include and durably retain a separate
+  `metadata.codexSubmission.token`, enabling the existing read-only recovery
+  endpoint to correlate a future failed response without replaying its prompt.
+
+# 2026-09-20 - Prefer exact retained target during new-project recovery
+
+- A successful new-project send can change the original retained target from
+  the project landing URL to the canonical conversation before navigation
+  acknowledgement returns. The saved target ID remains the strongest recovery
+  authority even when many older conversations exist in the same project.
+- Observation now follows that exact target first after revalidating browser,
+  process, profile, session, host, project, and canonical URL. It scans at most
+  eight sibling conversations only when the exact target did not transition.
+- This prevents unrelated accumulated tabs from blocking safe read-only
+  recovery while preserving fail-closed behavior for missing, changed,
+  streaming, duplicate-user, account-mismatched, or record-mutated evidence.

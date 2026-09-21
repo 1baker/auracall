@@ -1,3 +1,908 @@
+## 2026-09-13 | Native read authority remains a real blocker
+
+Confirmed the real ordered issuer rejects evaluate/ScriptExecution, which native
+recovery account/snapshot reads currently require. One isolated rejection test
+passed. Synthetic task callbacks did not prove this permission. Next requires a
+reviewed approval-bound read capability, not generic script enablement. No code,
+live permission, installation or browser state changed.
+
+## 2026-09-13 | Process-level native transport failure tests
+
+Replaced simulated connector restart with a real killed fixture client, fsynced
+binding receipt and distinct recovery process. Dropped an acknowledged detach
+reply through an isolated proxy and verified a fresh connector confirms cleanup
+without another native CDP detach. Actual-worker fixture passed; 104 focused
+tests, typecheck/build and syntax check passed. Biome excludes this .mjs fixture.
+This proves transport behavior, not full provider crash recovery. No live action,
+native source change, install or GitHub write. Next: combine executor recovery
+and HTTP reacquisition with actual native process-failure/authority evidence.
+
+## 2026-09-13 | Capture recovered answers through native authority
+
+Wired stranded native runs to exact reconciliation/acquisition and native response
+capture. Require durable binding persistence before reading, account verification
+before/after, exact rendered URL and original prompt binding, plus verified detach
+before publication. Accepted/fixed review findings on cancellation propagation and
+missing evidence writer; primary's positive executor fixture returns the existing
+answer with no prompt or raw resume. Primary passed 309 tests across eighteen
+suites and typecheck; strict changed-test lint passes, existing source debt remains.
+CodeGraph traced callers and was synced. No install, live browser action or GitHub
+write. Next is actual native crash/transient acceptance and approved task delivery.
+
+## 2026-09-13 | Reconcile saved native attachment before replacement
+
+Internal reattach can now verify old native cleanup before one fresh attachment
+on the exact retained target. Unknown cleanup and changed URL/binding/ownership
+fail before reacquisition; old attachment ID cannot masquerade as fresh. Primary
+passed 258 tests across thirteen suites and full typecheck; strict changed-test
+lint passed, eleven existing bridge source warnings remain. CodeGraph guided
+AuraCall callers; unindexed native source was read directly. Runtime capture is
+still gated and no live prompt, install, restart or GitHub write occurred. Next:
+broker-scoped response capture and native executor recovery integration.
+
+## 2026-09-13 | Native provider routing, no raw recovery downgrade
+
+Wired the trusted native dependency through executor and ChatGPT/Grok runners.
+Cleanup now covers all post-acquisition work, including runtime hints/admission.
+Persisted evidence retains native identity, not credentials. Native recovery is
+explicitly gated until original-attachment reconciliation exists. Accepted the
+source review's mixed-evidence downgrade finding: inspect all relevant evidence
+before legacy scoring; partial native hints also block replay. Primary passed
+250 tests across thirteen suites, full typecheck/build and strict new-test lint.
+Existing source lint and plan audit findings remain; exact receipts are in RUNBOOK.
+CodeGraph guided callers and was synced. No install, prompt, retained-browser
+input or GitHub write. Next is exact native recovery, not live activation.
+
+## 2026-09-13 | Explicit native acquisition and lazy cleanup owner
+
+Initial/recovery bridge acquisition accepts trusted native configuration and
+supplied attach authority. Native HTTP forwards brokerTransport/expectedUrl through
+params; its relay is send-once (source inspection, no native file edits). Opaque
+binding/canonical receipt validation returns a lazy session with no raw endpoint.
+The shared connection helper consumes it; client and outer scope share sticky
+verified detach, even before admission. Unknown identity never uses legacy cleanup.
+Primary passed 238 tests across eleven suites including 32 new real-socket cases,
+full typecheck/build, strict new-test lint and diff check. Bridge source lint still
+has eleven existing non-null warnings outside this patch; package source is excluded
+by Biome. Source-only closed-world review found no blocking regression. Provider
+option plumbing, full approved task delivery, native cross-process acquisition and
+crash reconciliation remain next. No install, prompt, browser input or GitHub write.
+
+## 2026-09-13 | Cleanup failure blocks completed-result publication
+
+CodeGraph caller tracing found the outer cleanup wrapper still returned success
+after failed detach. Fixed that accepted requirement before native provider
+activation: terminal cleanup classification survives recovery, callback exceptions
+remain causes, and falsy operation rejections are preserved. Updated the misleading
+caller log. Primary reproduced two failures before the patch, then passed 178 tests
+across ten suites and full typecheck. Changed-test strict lint passes; wider source
+lint reports two existing regex errors and twelve existing non-null warnings, all
+outside the changed lines. Independent closed-world review found no blocking
+regression; review was source-only, all validation was primary-run. No install,
+prompt, retained-browser input or GitHub write. Next is native acquisition and
+shared cleanup ownership; live provider readiness remains unproven.
+
+## 2026-09-13 | Broker run cancellation reaches the connection
+
+Tracing the next provider-wiring slice with CodeGraph exposed a concrete gap:
+the explicit broker branch ignored cancellation after construction. Fixed in
+brokerCdpClient/chromeLifecycle; no provider activation or raw fallback added.
+Primary reproduced both new lifecycle cases failing before the fix, then passed
+166 tests across nine suites, full typecheck and strict changed-test lint.
+Cancellation seals delivery but leaves exact cleanup independently awaitable;
+detach failure remains sticky. Provider acquisition and shared cleanup ownership
+remain next, with crash reconciliation and live acceptance still open.
+
+## 2026-09-13 | Required-mode exact attach and stack regression
+
+Native issuance now permits only exact-current-URL broker attach as the lifecycle
+exception, with v2 issuance and separate confirmation. Other lifecycle/script
+grants remain denied. Required-mode execution through both confirmations and a
+subsequent approved command passes; missing authority still fails and detach
+remains available. This exposed and fixed a large async dispatcher stack frame.
+Normal-stack and cross-process tests pass. Full isolated native suite: 2169 passed,
+75 ignored, zero failures. Build, Clippy, format and diff checks passed; existing
+three audit errors remain. Provider/live operation remains unproven. No runtime replacement.
+
+## 2026-09-13 | Confirmed acquisition prerequisite fixed
+
+Native confirmed attach now preserves original policy/confirmation settings in a
+private command-bound snapshot. Later operations still require their own authority
+and obey explicit denials. Confirmation/denial can traverse the custody gate but
+retain existing target checks and inner action validation. Primary broker 63 and
+confirmation 17 tests passed, plus the cross-process connector test. Required
+lifecycle issuance and provider configuration remain next. No install or prompt.
+
+## 2026-09-13 | Cross-process native authority verified
+
+The built connector now passes a separate-process test against the actual Rust
+daemon handler, registry and ordered ledger, with synthetic Chrome only. Native
+enforcement rejected replay from a fresh connector and exhausted authority;
+cleanup detached once and preserved the browser. Primary cross-process test and
+61 native broker tests passed. Required lifecycle/provider configuration and live
+verification remain open. No runtime replacement or prompt. See both RUNBOOKs.
+
+## 2026-09-13 | Send-once native connector
+
+Implemented the explicit Unix daemon connector with supplied binding/token/path,
+one socket per operation, bounded framing and matching outer/inner identities.
+Existing task context is required for commands/events; detach does not request
+new task permission. Abort-before-authorization cannot later open a socket, and
+timeout-after-dispatch never resends. Primary: 156 tests across nine suites,
+typecheck/build and changed-test lint passed. Reviewed source only, no blocking
+finding. Next: actual native-worker cross-process proof, not another fake endpoint.
+No runtime replacement, browser input, provider submission or GitHub write.
+
+## 2026-09-13 | Broker event request identity
+
+AuraCall's explicit broker client now binds every event poll and reply to a new
+request ID. Empty polls keep their cursor but do not reuse an identity. Stale,
+missing or timed-out replies cannot notify listeners or restart polling; exact
+idempotent detach remains available. Primary passed 141 tests across eight
+broker/recovery suites, full typecheck/build and strict changed-test lint.
+The next gate is a send-once native connector carrying approved task context;
+no default selection, live input, installation or GitHub write. Plan 0359 is OPEN.
+
+## 2026-09-13 | Worker-owned broker acquisition
+
+Experimental native worker acquisition now verifies exact stored/live target and
+access-plan reuse, returns an opaque binding, and keeps cancellation cleanup with
+the original owner. Capacity is reserved before attachment; uncertain acquisition
+blocks lifecycle success. Six synthetic worker tests passed; broader broker 53
+and handoff 49 passed, with overlapping filters and three ignored handoff tests.
+Confirmed acquisition is explicitly denied pending safe original-policy capture.
+AuraCall client selection/events and installed operation remain incomplete. No
+runtime replacement, browser input, prompt or GitHub write. Plan 0359 stays OPEN.
+
+## 2026-09-13 | Native broker authority and concurrent route staging
+
+Recovery agent-browser now compiles the original-custody authority adapter and
+authenticated concurrent registry route. Central task-ledger locking protects
+budgets across workers/adapters/processes. Publication rechecks expiry/revocation;
+reload script injection is denied. Primary isolated broker/task/handoff filters
+passed 43/31/49 tests respectively, with overlap and three ignored handoff tests.
+Production acquisition, task-aware events and AuraCall routing are not enabled.
+No install, restart, live input, provider prompt or GitHub write. See Plan 0359 and
+the recovery checkout RUNBOOK for remaining gates and source-bound evidence.
+
+## 2026-09-12 | Broker endpoint admission and cleanup continuity
+
+CodeGraph traced broker acquisition and restart reattachment. Both parsed an
+attachment's address before returning cleanup ownership, leaking the attachment
+when parsing failed. Added shared validation/cleanup and typed reconciliation
+evidence, moved initial process-identity validation before attach, and prevented
+new-target release after uncertain detach. The legacy host/port connector cannot
+preserve TLS or opaque capability endpoints; these are now explicit failures,
+not silent host/port reinterpretation. No guarded proxy support is claimed.
+New brokerAttachmentAdmission coverage exercises initial/recovery failure,
+credential-safe errors, cancellation, detach uncertainty and release ordering.
+Existing dirty semantics preserved; no runtime install/restart/browser input,
+provider submission or GitHub write. Delegation not spawned: this bounded fix
+shares one source surface with tightly coupled fixture tests; primary performed
+implementation and validation. Broader transport architecture remains open.
+
+## 2026-09-12 | Idle broker snapshot and recovery proof source gap
+
+At 2026-09-13 01:48 UTC, the installed broker jobs resource contained 158
+succeeded and 42 failed jobs, no nonterminal or unknown jobs. Retained-browser
+requirement verified without launch. No attribution of the image generator's
+implementation was established. No live browser input or runtime replacement.
+Source review located the missing controlPlaneAttestation implementation in the
+separate dirty recovery worktree, not main/startup. It is not a release-ready
+transplant; verified transfer/fresh-owner custody and legacy-state behavior need
+review before integration. The exact response downloads remain unverified.
+Six test-only typing errors were corrected; focused five-suite run passed 138
+tests, full typecheck and build passed. Targeted strict lint exposed existing
+recovery-fixture warnings; plan audit reported three violations (raw API route
+at responsesServer.ts:4328 and two canonical-header violations in Plan 0357).
+These are not a green lint/audit or installed-runtime acceptance claim.
+
+## 2026-09-12 | Verified wait for exact document writer
+
+At01:43UTC primary confirmed supervisor1274543/tool88326 live and polling the
+sameee075325... request; API remains in_progress, document_in_progress with
+zero accepted artifacts and no audit yet. Browser worker's one passive snapshot
+at01:40:08UTC confirmed active generation on B3EDD for user992a7d64..., no final
+assistant/artifact controls or blocking dialog. Model label was unavailable;
+do not claim a fresh frontend Pro-mode verification from that snapshot.
+Primary reviewed immutable prompt/candidate/method notes under writing-coach
+criteria and verified Previews raw health and local PDF-rendering imports.
+Default research search returned unrelated code, not usable method evidence;
+the case's reviewed local primary-method records remain the evidence boundary.
+No new request, browser action, runtime change or completion claim. Continue
+the existing driver, then inspect/render returned files and relevance audit.
+
+## 2026-09-12 | Trusted new-project information recovery
+
+Continuation: collector1266215 terminal0 verified both requested URLs at
+01:32:21UTC with HTTP200/no redirects, preserving raw content hashes and access
+limitations; evidence-ready accepted. Independent source reviewer1274549
+terminal0 approved the current candidate and updated sources. Supervisor1274543
+(tool88326 until-stop) sent new evidence-continuationee075325... to the same
+6aa4a4bb conversation; source bundle2e55725e... . Current API state in_progress,
+no failure. Final document retrieval/audit/release are not yet verified.
+
+Superseding installed/live result: finalv2 observationhelperSHA30635102637f674403b08c9fadfd752902e837028203b841b2344c0308e3a956,
+bridge7b6429df..., serverd4cdbb7a...; full parity/13hashes with same prepatch
+rollbackpair. Final122TS/204Python/fullbuild pass. Accepted reviewer bundle-prefix
+finding is rejected fail-closed above10attachments; actual four-attachment
+request is unaffected. Normal supervisor step accepted fresh observation at
+01:30:33UTC with no provider submission/APIhistorymutation. Primary checked
+five snapshot hashes plus unchanged original record and request/source digests.
+State document_needs_information, bridge1. Regular collector1266215 was then
+launched for the two requested URL checks; completion remains unverified.
+
+Primary implemented live-observation routing in existing information recovery
+and supervisor, canonical cache/original-record/request/assistant/source binding,
+installed capability gating and three non-busy observation bound. Independent
+controller review found no blockers. Worker live_recovery_verify implemented
+ID-only backend same-project inventory observation, exact runner wire and fresh
+account proof without browser mutations. Actual saved wire reproduces SHA3588f865...
+for124533characters; no stored completion event is manufactured.
+Primary203Python/120TS/fullbuild passed. Worker capability HTTP and production
+typecheck passed; test-inclusive tsc retains four prior composer mock errors.
+Installed full dist/13record hashes match; rollback pair:
+/home/bak3r/.auracall/new-project-observation-rollback-20260912-LvkrGT.
+API1245278 reports newProjectRecoveryObservation true and idle/selected0;
+browser505779 remains intact. Actual observation is next, not yet accepted.
+Cached-artifact continuation does not prove autonomous uncached download.
+
+## 2026-09-12 | Preserve uncertain submitted writer tabs
+
+Installed result: source build and full installed dist match; all13 installation
+hashes verified. Bridge SHA15a73474cdb51e92dd3ca132af01546bd54126f95eac795c4d3a6427db5a8d63.
+Rollback pair: /home/bak3r/.auracall/uncertain-tab-rollback-20260912-YWJJJl.
+API was idle/selected0, stopped to MainPID0, restarted1197594 healthy/idle;
+retained browser505779 remained alive. Installed function smoke with simulated
+broker passed; no new live uncertain-submission test or provider POST.
+Recovered ZIP991bytes SHA292bacb506dc94a6460b9bb8d54157fa69d5aa623439fcc97086423a3c9d4299
+contains only information-request.json. Primary independently verified bytes,
+both state digests, two URL questions and unchanged failed API record. Exact
+binding and fresh account proof are delegated evidence in
+unknown-writer-artifact-recovery-20260912-011300.json under the fullcase.
+Remaining boundary: existing document-information-recover requires an original
+response-complete artifact event absent from this after-submit failure. Do not
+fabricate that event or force state. A provenance-preserving recovery transition
+is needed before normal evidence reply and final document production.
+
+Primary confirmed resp_17768899f98d4f628e02a5c140968038 failed after dispatch;
+normal controller poll preserved document_creation_failed. Worker
+live_recovery_verify refreshed one existing diagnostic project tab, found the
+new conversation, and proved full prompt equality after reconstructing the
+runner-added artifact context. ZIP readback remains in progress; no replay.
+Worker conversation_capacity_detection traced outer broker tab release and
+reviewed the narrow fix. Primary accepted its detach-failure finding and kept
+the enriched typed failure top-level; no broader recovery gates were relaxed.
+Primary passed56 tests across four suites and full build. Paired installation
+is pending until the active read-only artifact helper completes. This is
+blocker reduction, not completed document or proposal autonomy.
+
+## 2026-09-12 | Audited composer-failure migration
+
+Primary added a bounded second distinct-class correction without resetting the
+prior broker reconciliation. Independent review found an executed-build binding
+gap; primary accepted and fixed it by pinning the exact audited response, actual
+stored record bytes and installation record, validating request correlation and
+rejecting other executions or detached copies. Closed-world re-review found no
+remaining blocker. Primary passed199Python tests and py_compile.
+Exact c538c29... migration succeeded with no provider POST; both failure records
+and source/bridge lineage remain unchanged. One normal writer continuation is
+delegated. No general future legacy-build recovery or completed writing claim.
+
+## 2026-09-11 | First-writer retained-route failure
+
+23:57 UTC installed helper live verification passed: no controls on first
+evaluation, already-selected Chat on second, no mode clicks or prompts. Primary
+read the worker's receipt and verified both failed API records unchanged. This
+closes the reproduced hydration defect, not the full writer exchange. Current
+API1046977 is healthyidle; browser505779 and diagnostic project tab survive.
+
+23:56 UTC final hydration helper v2 installed after54primary tests and full
+build. Primary review tightened retries to explicit controlsAbsent=true so an
+empty menu after activation cannot cause another click. Thirteen installation
+hashes and full dist parity pass; rollback retains pre-hydration dist/record at
+`/home/bak3r/.auracall/composer-hydration-rollback-20260911-sTkjBd`.
+API stop was clean MainPID0/inactive; diagnostic live verification is delegated
+without prompt submission. Failed c538c29... record digest is
+7035e0d515fe4b98a42a1626d7e5b312ec1d25f171cacc5f7ac0d6f23ab829ff.
+
+23:49 UTC superseding live result: continuation c538c29... opened a task tab in
+retained505779 at the exact project root, proving the installed route fix.
+Then composer-mode detection failed. Primary recorded the exact terminal outcome
+through normal poll. Diagnostic same-browser tab remains open for read-only UI
+inspection; no new conversation or message was sent by that diagnostic worker.
+The consumed pre-submit reconciliation bound is not reset. Final writer evidence
+exchange, documents and broader autonomy remain unverified.
+
+23:48 UTC: source worker completed bounded bridge/test fix (70 tests and full
+typecheck reported); primary independently ran72 tests across five relevant
+suites and full build, reviewed diff and dispatch fixtures, then installed the
+sole changed compiled bridge file plus matching installation record. Full dist
+parity and12record hashes pass. Rollback retains full previous dist/record at
+`/home/bak3r/.auracall/retained-route-rollback-20260911-5fGB1D`.
+API stopped cleanly MainPID0/inactive, restarted healthyidle as1012360; browser
+505779 preserved. Exact legacy predispatch reconciliation passed without POST;
+original failed recordSHA55e755252d4770941581e09ed3e48308122b11fdcb5c0d79a823b1e649760100
+is unchanged. One normal writer continuation is delegated, not yet accepted.
+
+The independent source re-review completed exit0 and approved eleven sources;
+normal controller preparation preserved the original objective and one bridge
+transit. First writer resp_ca76e46d2ef444ccb5f61ae5950d3863 was accepted once,
+then failed on tab_new duplicate-profile-lane rejection. Primary polled the
+exact response and recorded document_creation_failed without retry. Plan0359
+tracks the route-hint fix, precreation evidence and paired installation; final
+document acceptance and full proposal/routing autonomy remain open.
+
+## 2026-09-11 | Trusted failed-response controller recovery
+
+Source-review worker915528 finished exit0 with a valid rejection: reference
+links required by the immutable prompt were absent. Primary read the rejection
+and started normal local source-repair worker920735. The reviewer also required
+excluding obsolete attempts/operational diagnostics from the next selected
+handoff, preserving all files. Final fresh-URL evidence and document acceptance
+remain open; no writer prompt has been sent.
+
+23:23 UTC superseding installed acceptance: 177 Python, 88 focused TS, two HTTP
+tests, full typecheck/build and twelve installed hashes passed. Corrective
+rollback is recovery-idle-rollback-20260911-zlo9TF. Primary found and adjudicated
+two blocking defects before retry: unleased pending records counted as execution,
+and timer drain could start during observation. Both are repaired and tested.
+Busy now waits on the same ID; rejected observation history is retained.
+Agent live_recovery_verify executed exactly one supervisor step, which advanced
+the real fullcase to awaiting_document_creation. Primary inspected the result,
+candidate and unchanged original API hash. Normal source-review worker915528
+is running; no writer prompt has been sent. Fullcase document acceptance and
+broader proposal/routing autonomy remain open.
+
+Primary added Python pro-recover-result and supervisor routing. It requires
+the accepted checkpoint, exact source/review/init-result lineage, one transit,
+the installed observation capability and a fresh ID-only trusted response.
+Failed provider status is preserved with separate result_recovery provenance;
+normal and recovered output use one shared verdict/feedback gate. Unresolved
+failed submissions cannot be replayed. 173 Python tests passed at initial
+checkpoint; final rerun pending. Agent conversation_capacity_detection owns
+the API/observation implementation. Agent live_recovery_verify returned no
+blocking controller findings and verified actual fullcase lineage read-only;
+primary independently verified that lineage before live execution. No current
+provider submission or controller recovery was performed yet.
+
+## 2026-09-11 | Turn-scoped recovery generation
+
+23:03 UTC: agent `/root/live_recovery_verify` completed installed exact-binding
+and fresh supported account checks, with no mutations. Primary inspected the
+receipt and rehashed the original record; before/after identity is preserved.
+Accepted live evidence closes this narrow blocker. Controller result-recovery
+remains unimplemented; do not directly adopt the saved answer or rewrite status.
+
+23:02 UTC: installed paired helper/record after 70 primary tests and full build.
+Complete dist parity and all ten recorded hashes verified before restart.
+Rollback: `/home/bak3r/.auracall/turn-scope-rollback-20260911-IrpwmX`.
+Idle API stop timed out, but MainPID=0 was confirmed before copying. New API
+815877 is healthy/idle; retained browser 505779 survived. Exact readback pending.
+
+Primary implemented a narrow historical recovery fix: visible status markers
+may be ignored only when all have unique later user ownership. Unscoped global
+controls and incomplete/ambiguous target responses still block. Primary ran
+34 focused tests and full build successfully. Installation/readback pending;
+live evidence preflight and closed-world patch review delegated to existing
+agent `/root/live_recovery_verify`; no prompt or API history mutation allowed.
+
+## 2026-09-11 | Rendered user prompt recovery
+
+22:15 UTC: installed timestamp-alias repair after the production path downloaded
+correct standalone bytes but rejected their timestamped names. Primary compared
+both files to ZIP members, passed 235 tests and the full build, and verified
+full dist parity plus ten installed hashes. An outdated intermediate hash in
+the record was caught and corrected before live verification. API is healthy
+PID 621996; retained browser 505779 remains unchanged. One exact-response
+production retry is pending with no new prompt or regeneration.
+
+22:07 UTC: primary installed the one-file rendered snapshot repair with prior
+dist/record rollback and ten verified installed hashes. All 32 focused tests,
+full build and complete installed dist parity passed. API idle stop/copy/start
+completed; retained browser PID 505779 survived. The prior exact materializer
+attempt failed before downloads because rendered user content differed from
+the raw stored prompt. Passive detached-clone reconstruction matched all 19,159
+normalized characters without changing the expected prompt. One post-patch
+same-browser client-tab verification is authorized; no Pro submission/replay.
+
+## 2026-09-11 | Exact artifact selector installation
+
+21:50 UTC superseding live result: one supported same-profile restore selected
+the correct Linux Chrome and reopened the existing conversation, but PID 479722
+exited after about 57 seconds, before the verification script existed. The
+installed reattachment check then failed safely; materializer/download counts
+are zero. Primary verified the broker exit event and absent process. No second
+launch or prompt replay. All 200 adapter/control/download tests now passed
+independently; runtime lifetime, not selector behavior, is the immediate open
+diagnostic. The OS/process termination cause is not yet established.
+
+21:44 UTC: primary installed the one-file exact-control selector patch with full
+rollback and installation-record provenance. Full build, 27 focused tests,
+complete installed dist parity, and nine recorded hashes passed. API is healthy
+after a completed stop/copy/start sequence. The guide's saved relevance audit
+passed; structured Codex review now accepts the recovered document package.
+Worker `/root/live_recovery_verify` found no retained default browser at fresh
+preflight and performed no download or replacement. Browser disappearance is
+the immediate diagnostic task. Full autonomy and proposal readiness remain open.
+
+## 2026-09-11 | Conversation capacity diagnosis
+
+20:39 UTC: Plan 0359 same-project continuation installed with rollback and full
+compiled parity. API capability is present; controller rejects older installs
+before retry-state changes or POST. Primary ran 8 rollover, 76 supervisor,
+89 workflow and 16 provider/runtime tests plus full build. One continuation
+resp_19c3ea2011914cdaaa024df85a158dc8 failed before-submit route/composer checking.
+Original cancelled attempt and retained browser remain preserved. No replay;
+read-only diagnosis is next. Full evidence/file acceptance remains pending.
+
+Plan 0359 opens after exact live assistant
+fcd46939-a202-4fc3-b915-5a1e766fb642 returned the maximum-conversation-length
+warning for response resp_125d899a28a44ac29fbbd957f3f45a48. Generation stopped,
+no ZIP exists, and the API remained running. Do not call this a download error.
+Provider detection/tests and controller continuation are separate bounded units.
+The original run is preserved, with no replay, new chat, or browser replacement.
+
+20:13 UTC detector and narrow recovery-error propagation are installed. Primary
+verified 49 provider/action tests plus six recovery tests, full build, complete
+built/installed dist parity, and recorded file hashes. API is healthy/idle;
+browser PID35051 remains unchanged. Original run is cancelled with its exact
+capacity evidence preserved. Live predicate readback and same-project rollover
+remain pending; do not infer full recovery from the installed helper fixture.
+
+## 2026-09-11 | Document recovery scheduler starvation
+
+Joined autonomy reviewing-pass diagnosis: response
+resp_55daff582b1344e5b514c442a298fc23 failed19:25:55Z after runtime recovery;
+the initiating pass had completed. The restored-target error also covers zero
+candidates, so it is not proof of duplicate tabs. Primary no-launch access plan
+found no reusable browser and retained status failed retained_daemon_missing.
+Independent worker /root/restart_evidence observed broader user-service boot
+and absent old Chrome342216; initiating restart cause remains unproved.
+While diagnosing, a concurrent actor opened the same profile (Chrome35051).
+Primary refreshed access plan: active default-session lease, wait_for_profile_lease,
+no compatible reusable lane. No replacement, replay or source repair attempted.
+Detailed case receipt: runtime/handshake-live-tests/full-joined-autonomy-20260911/
+thoughts/full-joined-autonomy-20260911/restart-failure-diagnosis.md under the
+codex-research workspace. Next: respect current lease, then revalidate retained
+authority and recover only the exact original answer if available.
+
+19:16 UTC Plan 0358 CLOSED at its bounded document-set acceptance: C normal
+runner response resp_8118eb98d7f94073bf89804c9466719f completed19:10:25.177Z
+with both exact local filenames and no helper recovery. Primary verified ZIP
+integrity, exact normalized source text in DOCX/PDF, and one PDF page. Worker
+verified both artifact owners equal answer0ef0f213-8617-48a2-a1cb-af4e9296030f
+and retained browser remained verified. Review:
+https://previews.bwkuehl.com/s/4856534a6c53. Real Codex document client
+bin/dual_hemisphere_thought now sends explicit DOCX/PDF/ZIP required filenames;
+test failed before the change and all87controller tests pass after. Full goal
+remains active: three-file proposal flow, evidence readiness, large inline
+transport, independent relevance/quality audit, project routing and failure
+recovery are not proved by this small synthetic transfer.
+
+19:03 UTC retained profile restored through agent-browser's supported
+`install workstation prepare-retained-browser` route, not AuraCall launch.
+Worker verified the old process absent and no conflicting live profile owner;
+generic service preflight had a Windows executable mismatch. The workstation
+route selected installed managed Linux Chrome153.0.8010.36 and rotated only the
+exact stale requirement. Reported ready_and_pinned19:02:35, session/profile
+chatgpt-pro, target4DED51312C85F09289C5D643C5CA5757, PID342216,
+DevTools44389, same Workshop conversation and expected account match.
+Primary independently observed new Chrome processes; exact browser/account
+proof is delegated evidence. C remains create-once with both filenames required.
+
+URL-alias installation verified after continuation: installation timestamp
+17:21:55.711Z, complete dist parity, installed positive/negative ID-binding
+checks pass. Full build and 90 focused tests passed before installation.
+Installed recoveryResponseBinding.js SHA256
+2b8fde21166a1738b8cab9adbfdc03b5d54528904ff9897b27dd8d69441a83ce.
+Rollback: `/home/bak3r/.auracall/url-alias-rollback-20260911-uGMzYY`.
+Current API PID577 is active/healthy/idle with zero selected runs. Prepared C
+has both exact filenames in outputContract.artifactFileNames and no response
+ID. Fresh worker access plan found no compatible retained browser; C was not
+submitted. Same-profile restoration must be owned by agent-browser with no
+conflicting live owner, not an implicit AuraCall launch or alternate lane.
+
+17:20 UTC B PDF separately recovered through installed materializer, one actual
+download attempt succeeded after fresh identity and exact original answer
+binding. Primary independently verified DOCX ZIP integrity, identical normalized
+source text in both files, and one PDF page. DOCX 37556 bytes SHA256
+23ba1172d1cb108508705476ad7a05f6d79645df32c6f402d239a3ba854d52b0;
+PDF 36020 bytes SHA256
+c9488bc4fa0ccfab276f7417decf52187feca033a238908e0bb5a57999aca394.
+Both originals and verification limits published together at
+https://previews.bwkuehl.com/s/f34a061ccb36. Original API record unchanged;
+normal-runner B remains failed acceptance. Earlier PDF failure did not
+reproduce, so no historical root-cause claim. Worker retained recovery receipt
+and separate original-failure manifest in document-roundtrip-b-20260911-af1X2p.
+URL-alias source repair passes 34 focused tests and typecheck; not installed.
+
+17:18 UTC exact B PDF diagnosis uncovered provider URL canonicalization:
+the display slug disappeared while stable project and conversation IDs stayed
+unchanged. Literal URL equality blocked recovery before any transfer. Source
+binder now recognizes only HTTPS chatgpt.com project-conversation aliases with
+both stable IDs exact; altered host, scheme, project, conversation, credentials,
+query or fragment remain rejected. Positive regression failed before the fix;
+eight negative URL fixtures remain strict. Source-only, not installed.
+The subsequent standalone helper's missing-provenance error was a harness
+authority-object mismatch, not a verified production defect. Worker corrected
+it to the normal materializer's service authority while retaining freshly
+verified process/target proof. No PDF download had been attempted at that point.
+
+17:15 UTC Plan 0358 installed: complete production build passed; only
+configuredExecutor.js differed from the prior installed dist. Staged compiled
+and installed compiled executor checks both rejected DOCX-only and accepted
+the complete pair with stub materialization, one submission per case. These
+are installed-code checks, not a live explicit-set browser test. Full dist
+parity verified; executor SHA256
+6fae3a0e99ab4ec844a652226b513e199e26ac64d1911e94c89e4a5571f12d48.
+Installation record timestamp 17:13:52.230Z; API PID414477 active/idle with zero
+selected runs. Retained Chrome PID49015 remains live. Prior API was stopped
+only after idle/zero selection and B terminal verification. Complete rollback:
+`/home/bak3r/.auracall/document-set-rollback-20260911-ihCbaC` (runtime, wrappers,
+service unit). Staged package remains in document-set-stage-20260911-jOVSss.
+No B replay or history rewrite; exact PDF retrieval diagnosis continues.
+
+17:11 UTC fresh B acceptance FAILED despite stored run status succeeded at
+17:06:00.041Z. Primary inspected the current record and manifest: two artifacts
+discovered, only DOCX materialized (37556 bytes); PDF has no local path and
+reports `ChatGPT exact artifact control produced no verified browser download.`
+This directly reproduces the generic artifact-mode false-completion gap that
+Plan 0358 addresses. Do not relabel it successful end-to-end verification.
+Worker's bounded passive observation found the B marker in user
+7a2cd319-2d95-44da-a640-bd149d50e1c2 and assistant
+c886b844-847d-41dd-8507-28e311c1d37a. Primary source inspection additionally found
+remote browser execution accumulates passive observations without forwarding
+them to runtimeEvidenceCb, unlike the local path. This explains absent live
+progress evidence; no pre-submit stall was established. Next: diagnose exact
+PDF transfer failure, install complete-set gating safely, and retain B history.
+
+15:42 UTC Plan 0358 source checks: explicit required filename sets now gate
+all-file presence, reject invalid names before provider execution, and suppress
+legacy singular correction for package requests. Dedicated 17-case suite and
+typecheck passed; broader focused rerun passed all 56 tests. Diff hygiene passed
+and CodeGraph was refreshed. No live runtime publication
+while fresh normal-runner B owns the retained browser lane. Its heartbeat is
+not treated as provider submission or document completion.
+
+15:30 UTC original bytes verified: artifact-fetch manifest generated15:29:18.624Z
+reports two materialized files from fresh download-attempt directories. Primary
+independently ran verify_documents.py against those new cache paths, not the
+earlier manual copies: exact source/DOCX/PDF text matches, one table, one PDF
+page, DOCX SHA6f9987079fbd8c2914ee8acd583f6351cee3308b7c836c02747b80c53c00746a,
+PDF SHA9bf4a4351070f21147daac4b94f6790fa902bdeff76f44d655702fb3dbb2c075.
+Both equal the reviewed originals. Readback PID312358 was still live after
+materialization; cleanup completion and normal API reconciliation are separate,
+not assumed. Same-target/identity/transfer focused follow-up47tests passed.
+
+15:29 UTC installed transfer proof: the preview-panel fix plus same-target
+binding guard passed 221 targeted tests and full build. Complete installed
+dist matches; API PID 312521 is active. Rollback is
+`~/.auracall/runtime-backup-20260911-gINihV` (runtime, wrappers, service unit).
+Installed chatgptAdapter.js SHA256:
+2c6a2bff943352fefe3d452cb329a3c7ac88ec7b94ca15e50878e8ec916b7369.
+The installed readback script verified fresh identity, original user/assistant
+binding and both native browser downloads in new per-attempt directories.
+DOCX: 37915 bytes, SHA256
+6f9987079fbd8c2914ee8acd583f6351cee3308b7c836c02747b80c53c00746a.
+PDF: 44688 bytes, SHA256
+9bf4a4351070f21147daac4b94f6790fa902bdeff76f44d655702fb3dbb2c075.
+Both match the independently reviewed originals. The failed API record stayed
+byte-identical; no prompt was replayed. This is installed materializer proof,
+not normal-runner completion or full autonomous acceptance. Existing review
+session remains https://previews.bwkuehl.com/s/00ad57d07936.
+The standalone helper retained a Node process after printing the successful
+verification; primary stopped only exact helper PID 312358 after checking its
+argv. Do not claim clean helper-process exit from the file proof. Browser and
+API processes were not stopped by that cleanup.
+
+15:29 UTC installed parity: concurrent publication included the same-target
+binding guard and preview-panel downloader repair. Complete local/installed
+dist comparison matches; bridge SHA256
+bd5341dd19273d74ace4ab13fc771c0eed69a6dd35a44273b3df7c4daa2733bc.
+Installation timestamp 15:28:26.114Z, API PID312521 start15:28:45 UTC.
+Original readback PID312358 is confirmed live; primary did not start another.
+This supersedes source-only status of same-target guard below.
+
+15:28 UTC readback audit: primary verified the current artifact-fetch manifest
+reports two expected controls and zero files, both with the exact-control/no
+verified-download error. Apparent owner discrepancy was rejected after reading
+cached context: artifact.messageId is original assistant 356ab0e8..., while
+e2ffa6ed... in artifact IDs/URIs is metadata.turnId, not assistant identity.
+Independent passive no-launch snapshot at 15:27:37Z found no visible viewer
+dialogs or breadcrumbs. It does not establish a selector mismatch. Do not
+regenerate documents or rerun blindly; next live diagnosis must capture the
+exact control-click/download result. No competing browser action was performed.
+
+15:27 UTC transfer repair in progress: live inspection found the original DOCX
+opens `[data-testid="artifact-preview-surface-shell"]` without a dialog role
+or aria-label. The downloader selected only dialogs, so it never pressed the
+visible panel's Download control. Added a regression that failed before the
+fix; support exact-name preview panels and legacy dialogs, excluding enclosing
+dialogs to avoid double counting. Preserve hidden/ambiguous/wrong-name rejection.
+181 artifact tests pass; full build and installed readback follow. This workflow
+owns the bounded readback of the original synthetic files; do not replay it.
+
+15:25 UTC same-target binding repair: original-response matching was restricted
+to replacement-target recovery. A surviving target returned no bound response,
+allowing legacy latest-answer resume despite the full recovery prompt. Two
+new tests reproduced missing binding and mismatch acceptance. Moved the same
+read-only snapshot/binder after target/PID validation so it runs for unchanged
+and restored targets. Later unrelated messages do not replace the original
+answer; mismatch fails before attachment. Primary ran 92 focused tests and
+typecheck successfully. This additional guard is source-only pending installed
+verification; do not replay the original prompt.
+
+Provider-proof propagation acceptance: independent agent added only
+tests/runtime.recoveredProofPropagation.test.ts. Primary inspected it and
+independently ran the test successfully. It uses the real authority assertion
+in the broker stub and proves the exact proof object/current PID/target and
+original assistant identity reach the materializer; neither normal submission
+nor legacy resume runs. Combined focused coverage is 220 tests. Live browser
+materialization and durable failed-run reconciliation are not asserted.
+
+15:24 UTC readback result: installed broker reattachment
+freshly verified configured account identity (`match`) on retained PID 49015,
+target 1BB31F884C8B5637EFB0666EB95C116A, and bound the original synthetic
+user/assistant pair. The bounded script
+`~/.auracall/document-smoke-20260911-Nx4cU8/verify-installed-artifact-readback.mjs`
+completed with zero materialized files. Its 15:23:32 UTC artifact-fetch manifest
+contains the two expected document controls, both with the exact error
+`ChatGPT exact artifact control produced no verified browser download.`
+The original record remained byte-for-byte unchanged, and retained-browser-status
+passed afterward. Live provider-session verification is proven; successful
+artifact retrieval and normal API completion are not. Do not submit/requeue
+the original request. Investigate the existing exact-control download path next.
+This workflow independently passed 233 tests and full build, and retained a
+second rollback at `~/.auracall/runtime-backup-20260911-q07TFB`. Concurrent
+publication was observed; current live dist matches the same tested build.
+
+15:20 UTC installation: primary completed the provider-proof repair with five
+identity cases (including missing PID), 219 focused tests, typecheck and full
+build. Independent closed-world review found no blocking regression. Isolated
+package /home/bak3r/.auracall/provider-proof-stage-20260911-NMZLvc and live
+installation both match the complete build. Backup of prior runtime, wrappers
+and API unit: /home/bak3r/.auracall/provider-proof-rollback-20260911-YmtBtq.
+Stopped only idle AuraCall API, installed at 15:20:22.957Z, restarted PID272932
+at 15:20:24 UTC. No retained browser lifecycle action or new prompt occurred.
+Live original-file materialization is still unverified; do not claim completion
+from the installed proof primitive or its unit tests.
+
+15:16 UTC provider-proof repair: the installed 15:12:20 recovery failure
+confirmed that original-answer binding succeeded but materialization had no
+provider-session proof. Primary now passes the executor's existing authorization
+into broker reattachment, validates live PID, reads identity through the exact
+retained handle, and runs the existing configured-identity verifier before CDP
+attachment. No identity is inferred from the browser profile. Four new tests
+failed before remediation and pass for matching, mismatched, missing and
+truncated observations; 88 focused tests and typecheck pass. Source-only pending
+review/installation. Existing materializer proof requirements remain unchanged.
+
+15:12 UTC update: concurrent runtime publication included the no-replay guard.
+Independent complete dist comparison matches; configuredExecutor.js SHA256 is
+ac2b3545719c2341bee8c7705f5aee5be9c97be0c1e0063e5dd166b62d7bc2f8.
+Installation record is 15:11:57.364Z; API PID 235015 started 15:12:14 UTC.
+This supersedes the source-only status below, without claiming a live executor
+artifact-recovery pass. Primary did not perform the concurrent publication.
+
+15:10 UTC no-replay regression: a recovered answer with a named required file
+and a materialization failure entered the normal artifact-correction branch
+and submitted another prompt. A new isolated executor test failed with
+UNEXPECTED_PROVIDER_SUBMISSION before remediation. Restrict correction to fresh
+execution, never recovered runtime evidence; recovered missing files still fail
+the existing artifact requirement. All 118 executor/recovery/service-host tests
+and typecheck pass. New guard is source-only and must be included in the next
+installed reconciliation slice. Do not replay the terminal original request.
+
+Separate code-path finding: recovered bound-answer shortcut does not run the
+normal provider-session preflight, while artifact materialization requires its
+successful proof. Keep that requirement; obtain a fresh authority-verified
+identity on the retained target before claiming autonomous file recovery. No
+proof is fabricated or borrowed from the interrupted browser process.
+
+15:06 UTC independent packaging verification: full build passed; nine focused
+suites passed 266 tests with one skipped. Installed into isolated staging at
+/home/bak3r/.auracall/recovery-stage-20260911-keIJO9; staged CLI reports 0.1.1
+and its complete dist matches the tested build. A concurrent workflow installed
+the live prefix at 15:05:23.969Z; independent recursive comparison also found
+no live dist differences. The API service is active with PID 201323 and start
+time 15:05:37 UTC. This continuation did not replace the live runtime or restart
+the service. Package parity and process startup do not establish successful
+original-response recovery; exact browser answer/file reconciliation remains
+unverified. The original failed receipt must remain unchanged.
+
+Recovery snapshot follow-up: independently reproduced a completion regression
+in the concurrently added request/answer-binding path. Visible streaming status
+without a Stop button returned false for generation activity. Added dedicated
+DOM-expression regressions and matched the existing assistant-reader status
+visibility checks. 106 focused tests pass. Existing reattach/message-ID work
+was preserved; no browser control, prompt submission or runtime install occurred.
+
+Plan 0357: reproduced two older ineligible runnable requests reserving the
+single background-drain slot ahead of the recoverable document smoke.
+Source now replaces rejected reservations using future candidates only and
+remaining capacity, preserving affinity and execution gates. Primary ran 124
+passing focused tests. Read-only independent review identified a cap-two
+visited-row regression, then accepted its remediation with immediate/deferred
+fixtures. No installation, live drain, browser replacement or duplicate prompt
+was performed. Source validation does not establish installed recovery.
+
+## 2026-09-11 | Retained recovery lost build proof before smoke
+
+Durable reconciliation installed: added a revision-checked, single-attempt
+local control operation for failed direct single-step ChatGPT recovery. It
+preserves prior failure in an appended event, refuses active leases and marks
+the step recovery-only. Missing saved evidence cannot fall back to submission.
+149 runtime tests and full build passed. A cancellation test checked an earlier
+runner snapshot for a later external lease write; it now verifies that write
+in durable state while retaining cancellation/abort assertions.
+Backup: /home/bak3r/.auracall/runtime-backup-20260911-lhh7RG.
+
+Original response revision 44 was requeued as revision 45 through the installed
+control operation. The normal runner recovered the exact response but artifact
+materialization failed because providerSessionAuthorization.proof is missing
+in the recovery path. Failure history and released lease are retained; no prompt
+was replayed. Do not bypass this proof or reset the bounded retry marker. Next
+is provider-session verification on the exact recovered broker target, followed
+by an explicitly scoped recovery strategy for the now-failed materialization.
+
+Installed restored-target verification: source snapshot initially rejected the
+real file-only answer because assistant filenames are buttons. Preserve those
+labels while removing user expansion controls; the added regression passes.
+Primary reviewed the concurrent streaming guard/test as aligned with this scope;
+107 focused tests and full build passed. Installed dist matches the reviewed
+build. Backup: /home/bak3r/.auracall/runtime-backup-20260911-Um4IAE.
+
+Installed verify-installed-recovery.mjs in the existing synthetic smoke folder
+read the original failed record without modifying it and called the installed
+broker recovery function. It recovered user a3a64772-6c26-4dda-8d03-e01e5caba5ae
+and assistant 356ab0e8-f695-4deb-85b1-d9aac3c78f6b on restored target
+1BB31F884C8B5637EFB0666EB95C116A, with the two expected filenames. Broker cleanup
+completed; no prompt replay, browser launch or API completion mutation occurred.
+Recovery module SHA256:
+698f41181f10a7a34227b59d4784e493a869e7d5ddd8efe34dfacaa43e0f2ce4.
+Next is a supported durable failed-run reconciliation path. This function-level
+live proof does not establish a completed API run or full autonomous workflow.
+
+Restored-target source continuation: broker recovery now accepts the full
+original prompt as a prerequisite for a read-only same-browser/profile/session
+replacement-target check. It requires one exact request and adjacent assistant
+identity before attachment; the executor uses that bound answer directly.
+Tests cover ambiguous messages, duplicate prompts, mismatch-before-attach and
+matching recovery. Concurrent edits appeared in the snapshot's streaming check
+and recoveryResponseStreaming.test.ts; preserved and included in validation,
+but not authored by this continuation. No recovery installation or live replay
+was performed. Reconcile source ownership before installation.
+
+Response-identity continuation: source inspection found reattachCore discarded
+the captured assistant message ID, and configuredExecutor discarded it again
+when constructing BrowserRunResult. Added failing assertions at both layers,
+then preserved the recovered response metadata through both return paths and
+the executor conversion. 58 focused tests and build type-check passed. Unknown,
+blank, non-string and turn-only metadata remain null; no identity is invented.
+This prerequisite is source-only. The API failure history is unchanged and
+restored-target request/answer matching remains the next acceptance gap.
+
+14:50 UTC continuation: primary validated and installed the existing Plan 0357
+queue-admission patch, preserving all pre-existing source edits. 81 service-host
+tests, two focused executor recovery tests and full build passed. Installed dist
+matches the build; only serviceHost.js changed versus the previous installation.
+Backup: /home/bak3r/.auracall/runtime-backup-20260911-2CYkzX.
+API PID 128671 is active. The original stranded smoke was automatically claimed
+and reached terminal failure because its old exact broker target is gone.
+The failure explicitly refuses prompt replay; its lease was released. This
+proves installed queue progress, not successful autonomous document recovery.
+Next is exact request/answer reconciliation across broker target recovery.
+
+Document smoke continuation: submitted exactly one synthetic one-page DOCX/PDF
+request, resp_dde12ed7885d4ada94e7861ad3d041b9, marker ACDOC-20260911-A.
+Source and request settings are retained in
+/home/bak3r/.auracall/document-smoke-20260911-Nx4cU8. Artifact-mode metadata
+requests materialization without enabling filename-triggered corrective
+resubmission. Acceptance requires exact current-response files, preserved
+source content, readable one-page rendering, and retained browser continuity.
+Poll the original response ID; do not replay the prompt.
+
+Continuation outcome: the runtime interruption left this run running with an
+expired lease and no verified artifacts. The recovered browser lane is not
+permission to replay. At 14:38 UTC a no-launch plan selected chatgpt-pro but
+read manual-seeding readiness from auracall-chatgpt. Agent-browser has a
+source-only regression-tested readiness-selection repair; no auth state was
+cleared and no browser was replaced by this continuation.
+
+Delegation receipt: autonomy_checkpoint_map completed a read-only controller
+and acceptance map. Primary accepts the reported entry points as navigation
+evidence, not fresh live verification. The existing document supervisor and
+live_joined_writer_research.py harness cover the joined writer/research path;
+historical joined artifacts cannot prove full intake-to-release autonomy.
+The next live action remains recovery of the original smoke, followed by the
+existing acceptance harness once browser access and lane availability are proved.
+
+14:46 UTC recovery: agent-browser readiness repair is installed with strict
+doctor success and unchanged Chrome PID 49015/Workshop target. Exact original
+user message a3a64772-6c26-4dda-8d03-e01e5caba5ae contains the synthetic source;
+assistant message 356ab0e8-f695-4deb-85b1-d9aac3c78f6b contains the requested
+DOCX/PDF. Downloaded both via broker from that response without prompt replay.
+Local verifier passed exact substantive source equality, table structure and
+one-page PDF; primary inspected the rendered PDF. The DOCX-derived Previews
+PDF is available for separate pagination verification. Artifact review session:
+https://previews.bwkuehl.com/s/00ad57d07936
+DOCX SHA256: 6f9987079fbd8c2914ee8acd583f6351cee3308b7c836c02747b80c53c00746a
+PDF SHA256: 9bf4a4351070f21147daac4b94f6790fa902bdeff76f44d655702fb3dbb2c075
+API response remains in_progress with an expired lease. This is recovered
+artifact proof, not automatic restart reconciliation or full autonomy proof.
+Next substantive gap: reconcile the original response into the existing runtime
+through a supported evidence-bound recovery path, preserving no-replay safety.
+
+- Follow-up no-launch access plan found no compatible live service browser,
+  while exact Linux Chrome PID 86450 remained running with the fresh profile.
+  The previously accepted authentication observation is historical and expired.
+- Exact target 26CEEEB18546D8AB6CD529E81436C6C6 remained visible to the daemon.
+  tab_handle_refresh with reject_only rejected its missing service record;
+  reuse_compatible returned exact_handle_still_valid without launching Chrome.
+- The next queued snapshot failed with retained stock_chrome versus unknown
+  build proof. Subsequent state inspection again found no default session
+  record. This is incomplete retained-state recovery, not a proven loss of
+  login or a successful AuraCall handshake. Investigate the writer/reconciliation
+  path before changing labels, restarting Chrome, or sending a prompt.
+- AuraCall API status reported ok=true and an active local runner. No response
+  was created, no installation ran, and no browser was closed. User-scoped
+  runtime-service installation remains gated on a successful source round trip
+  and must be followed by an installed-copy smoke.
+
+## 2026-09-11 | Fresh Linux route and installation acceptance
+
+- User authorized fresh-profile routing repair and requested installation of
+  AuraCall once it works. Installation acceptance requires an actual broker
+  prompt/answer round trip, followed by installation and an installed-copy
+  smoke. No AuraCall installation was performed in this slice.
+- Added task-scoped agent-browser registry records for Linux Chrome
+  153.0.8010.36 and profile auracall-fresh-chatgpt-20260910. Task name is
+  auracall-fresh-chatgpt-handshake; other preference bindings remain unchanged.
+  No-launch preflight reports validated_binding_applied and selects the exact
+  Linux executable. Launch evidence is explicitly historical, not auth proof.
+- Post-seeding service request opened ChatGPT and returned retained target
+  26CEEEB18546D8AB6CD529E81436C6C6 in session default. Primary checked PID 86450
+  executable and exact user-data-directory argument. Queued snapshot showed
+  signed-in Pro account controls, composer, and 6 Pro selector. Recorded bounded
+  freshness expiring 2026-09-11T11:44:00Z; revalidate before subsequent use.
+- Browser readback now works. No prompt was submitted. Next: bind AuraCall to
+  this exact retained handle, verify its effect-authority gates, then run one
+  text-only round trip. Do not treat this as document-workflow completion.
+
+## 2026-09-10 | Reset to the minimum AuraCall outcome
+
+- User narrowed the active objective to one prompt through the Agent Browser
+  retained ChatGPT session and one returned answer. Pause pipe transport,
+  browser-runtime upgrade/restart, Graphiti integration, deployment and cleanup.
+  Preserve all existing dirty source and recovery-worktree history.
+- Read-only installed API status on port 18095 reports ready transport and no
+  foreground request. This is not a new provider round-trip acceptance.
+- Saved run resp_6a3a6424274346c897acc55e7bd69b86 completed at
+  2026-09-10T22:33:11Z with 66 answer characters, an assistant message identity,
+  and retained target 3DDDE3A7210A0249DD650CA6674C0BB1. The preceding successful
+  run is resp_b0681dd6a8a04a2eac4451b78e1402cf. These are historical records,
+  not proof of current page readiness or validated document contents.
+- Recent failed records identify stale assistant capture and missing exact
+  assistant identity during required-artifact collection, not an API outage.
+- Primary validation: 29 broker tests and 71 response-capture/export tests pass;
+  one test skipped. Built and installed bridge JS SHA256 both equal
+  527e4abae5bc59d491f569d6645b9adb5fb72dc630ecf8dbb82c71e6cd0d5c2a.
+  No build, install, service restart, provider submission or GitHub write.
+- CodeGraph index is up to date with an older-engine advisory. Used graph
+  navigation and direct reads for runtime evidence. No index rebuild.
+- Next acceptance is a short text-only nonce round trip on the same authorized
+  retained route, with no document requirements or orchestration review chain.
+  Existing browser effect-authority gates remain in force; this scope reset
+  neither bypasses them nor resumes the paused runtime migration implicitly.
+
+## 2026-09-10 | Retained Pro completion and final snapshot identity
+
+- A fresh synthetic document run failed while the browser still exposed a streaming-response status. Historical assistant text was selected; the exact-message artifact gate correctly refused retrieval.
+- Apply baseline freshness to bounded and fallback snapshots, retain fallback message identity, recognize streaming status as active generation, and scope completion/copy to the captured message. Final, echo and short-answer refreshes must preserve that same nonbaseline identity.
+- This is a bounded response-capture repair, not proof of autonomous proposal delivery. Preserve the original failed response and active provider turn; do not retry it. Terminal-response readback reconciliation remains a separate missing capability.
+- Source verification and installed-runtime activation evidence are tracked in the local integrated-workflow checkpoint; do not infer live success from unit tests.
+
 ## 2026-09-10 | Plan 0356 audit-prefix freshness
 
 - Revalidated 23 focused tests, typecheck, full lint, production build, and
@@ -48167,3 +49072,243 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
 - Agent Browser retained the same `auracall-chatgpt-bridge-v3` session,
   `auracall-chatgpt-live` profile, and PID `294633`; no duplicate browser lane
   was launched and no retained tab was closed.
+## 2026-09-10 | Identical file labels and exact-response recovery
+
+- The second live synthetic run produced new documents but the same three download labels as the first. Text equality incorrectly marked its distinct assistant response stale.
+- Permit identical text only with distinct assistant identity and DOM proof that it follows the uniquely identified latest submitted user message. Retain stale-ID and baseline-suffix rejection; a filename is never artifact provenance.
+- A local recovery controller recovered that exact failed response through the retained Agent Browser handle without prompt replay. It verified the request nonce, ZIP digest, exact members, and complete matching DOCX/PDF content; previous-run content failed the second request's check. The supervisor now invokes this recovery on failure and preserves the original API failure in a separate receipt.
+- This proves recovery for the bounded synthetic workflow, not generalized proposal autonomy or a fresh normal-path API completion. Runtime activation and live evidence are recorded in the integrated-workflow checkpoint.
+## 2026-09-10 | Exact file-control and viewer download binding
+
+- r3 completed at the API but collected ZIP/DOCX/ZIP for DOCX/PDF/ZIP controls. The content gate correctly rejected the mixed outputs. Native downloads did not populate the anchor interceptor; its timeout led to a global viewer Download search, while cached/late files were accepted without filename validation.
+- Each normal artifact transfer now uses a fresh attempt directory, singleton completed-file detection that waits for partial downloads and stable bytes, and exact/collision filename validation. Unbound captured-anchor fetch is removed.
+- Before activation, close only the identifiable library artifact dialog. A secondary Download must belong to one newly opened, visible library dialog whose accessible name and full breadcrumb filename both equal the selected artifact. Wait for the control to become ready; never use hidden/background viewer controls.
+- Main verified the existing r3 response without prompt replay: standalone DOCX and PDF byte-match their ZIP members, complete content/nonce match, and one-page ordered DOCX/PDF equality passes. Initial canary exposed delayed PDF viewer readiness; fixed with bounded readiness polling. 180 focused tests pass, plus typecheck/lint. This is repaired readback proof, not a fresh unattended round-trip pass.
+- Independent read-only review by `/root/roundtrip_harness` confirmed the unbound viewer/cache risks and identified the pending-download guard; main implemented and tested it. Browser-global download behavior is not a universal concurrency ownership guarantee; retain the complete content/provenance gates.
+## 2026-09-11 | Retained proof repaired; connectivity request in progress
+
+Agent-browser's live profile mismatch was a Linux Chrome space-joined argv
+parsing defect. Strict fallback now also verifies the profile SingletonLock
+against the exact PID, rejects ambiguous titles, and rechecks failed proofs.
+Installed agent-browser SHA256 is
+9cce482622c3633921d8447a2a0ce6de7b544209c25a8b28c5d704303fd80198.
+Strict installed doctor passed and retained PID 569667 now has applied
+verified_installed_chrome_runtime_attach proof. No duplicate browser launched.
+
+AuraCall focused tests: 107 passed, one skipped across broker, capture,
+exports and artifact-download binding. One authorized connectivity request
+was accepted: resp_b7c424366b154997a27d8c6c3eb44a1c, nonce
+AURACALL_READY_20260911_1416. Poll this ID; do not resubmit. Initial unauthenticated
+HTTP attempt returned 401 and created no response; configured local API key
+was used normally without logging it. This request completed and returned
+the exact nonce as assistant output.
+
+Built source, verified no live runtime leases, and backed up the previous
+runtime, wrappers and service unit to
+/home/bak3r/.auracall/runtime-backup-20260911-AgYTU6. Installed via the supported
+user-runtime script with the already-verified build and refreshed the API unit.
+Installed 0.1.1 reports API ok=true; the entire installed dist tree byte-matches
+the source build. Broker JS SHA256 is
+527e4abae5bc59d491f569d6645b9adb5fb72dc630ecf8dbb82c71e6cd0d5c2a and response
+capture JS SHA256 is
+08f8a148ca151b7fac63667fb135ab420a9e92f09a5dd73c76e80149e5cc4f71.
+The postinstall smoke is resp_2e976dc9d5214060b7bf4bed7b2670a7 with distinct
+nonce AURACALL_INSTALLED_READY_20260911_1421. This request completed and its
+assistant output exactly matched that distinct nonce. Installed-copy text
+connectivity acceptance passes. No document/autonomy acceptance is implied
+by these short connectivity tests.
+# 2026-09-12 | Exact completed-document transfer diagnosis
+
+Primary inspected authoritative response ee075325b6e04890a8a7e7914058caec,
+its three artifact records and the 01:44:20 fetch manifest. DOCX/PDF controls
+were discovered but their transfers failed; only ZIP has a local path.
+The controller's earlier literal brief-label false rejection is fixed with
+205 passing tests; re-poll exposed the independent-download gate without
+resubmitting. Existing worker /root/live_recovery_verify confirmed idle exact
+assistant controls through no-launch retained authority and owns one bounded
+recovery attempt. Generic display labels may not match exact preview filenames;
+this hypothesis is not yet a verified source fix. Preserve API history and
+do not relabel a transfer failure as a need to regenerate scientific content.
+# 2026-09-12 | Transfer failures preserve finished content
+
+Primary changed the root controller/supervisor to tag missing local artifacts
+as artifact_transfer_incomplete for the exact completed response, routing to
+provider recovery rather than prose revision. Conflicting bytes still fail
+validation. 206 tests passed; re-poll of actual ee075... and next_step inspection
+confirmed recovery routing without POST. No installed AuraCall code changed.
+Worker live_recovery_verify stopped before clicks: supported diagnostics lacked
+controlPlaneAttestation, required by current browser skill. Primary read its
+standalone-download-diagnostic-20260912.json receipt. Generic labels observed,
+viewer mismatch not live-proven. Worker now owns bounded read-only attestation
+diagnosis, not runtime replacement. Final downloads/audit/release remain open.
+## 2026-09-13 | Local-only broker client implementation
+
+Follow-on native work is staged in agent-browser-recovery-20260910:
+broker_attachment.rs, cdp/client.rs and native/mod.rs. The internal transport has
+dedicated-session ownership, durable admission, event separation and verified
+detach. No native ingress or AuraCall selection is enabled. Local reviewer traced
+the fast-lane requirements and confirmed two concurrency fixes after primary
+implementation. See Plan 0359 and the recovery worktree RUNBOOK for remaining
+authority/reconciliation gates and final native validation. No prompt or install.
+
+Implemented brokerCdpClient.ts and the explicit connectToChromeTarget opt-in;
+added brokerCdpClient tests and raw-fallback exclusion in devToolsConnection.
+Primary ran 123 tests across eight shared connection/broker/recovery suites,
+typecheck, build, targeted strict test lint and diff check. Biome excludes the
+package source directory. Plan audit still reports the three previously recorded
+violations. Reviewer /root/broker_transport_contract performed source-only closed
+world review: no blocking critical regressions; accepted for this staged slice,
+not evidence of native custody or provider integration. Fixed two test typing
+errors and separated the dialog test deadline from the intentional timeout case.
+Next: native durable admission/event transport, all provider factories and
+downloads/descendants, then controlled runtime integration. Existing dirty work
+and retained browser preserved; no install/restart, prompt or GitHub write.
+## 2026-09-13 | Broker authority contract blocker and repair
+
+Native daemon integration inspection found that method-only authority lacks full
+command/task scope and outcome accounting. Recovery broker_attachment.rs now has
+mandatory request-aware async admission, exact-session URL observations and a
+typed publication permit. Durable duplicate rejection occurs before reservation;
+primary broker filter passed 22 tests. Local reviewer confirmed the narrow repair
+after one ordering fix. Real shared custody/revocation remains unimplemented, so
+no production adapter, daemon fast lane or AuraCall wiring was enabled. Retained
+browser and dirty worktrees unchanged apart from scoped source/docs edits.
+## 2026-09-13 | Original custody lifetime now shared safely
+
+Recovery agent-browser source now wraps committed transfer custody in a sole
+revocation owner; weak handles issue permits holding the original kernel lease.
+Primary integrated close/handoff draining and tested actual lock lifetime,
+cancellation before mutation, binding and snapshot drift. Broker filter 30 passed;
+handoff filter 48 passed/3 ignored, with 3 overlapping tests. Delegated worker
+implemented broker_custody.rs; primary inspected and validated it plus actions.rs
+integration, followed by bounded source-only review. The ownership prerequisite
+is materially advanced; production BrokerAuthority, ingress and AuraCall wiring
+remain unfinished. No runtime or browser mutation, prompt or GitHub write.
+
+## 2026-09-19 | Durable ChatGPT Pro pre-send gate
+
+A live forced-transition test exposed that a prior installed-only patch was
+removed by the normal user-runtime refresh. The Pro gate is now implemented in
+the canonical AuraCall source: both ChatGPT submission paths invoke a final
+pre-send guard, and the guard requires the five-position Power slider to prove
+value 4 before Send or Enter can run. Focused tests passed 20/20, including a
+guard-rejection case with zero Enter events; typecheck and build passed. A fresh
+install and a second ordinary refresh produced byte-identical installed/source
+hashes. On the exact retained ChatGPT target, the installed runtime transitioned
+Medium to Pro, logged the required-intelligence proof, then clicked Send and
+committed the bounded verification marker. No duplicate browser or tab launched.
+
+## 2026-09-19 | Fresh-project retained posture normalization
+
+The fresh-project broker correctly refused to submit when the live retained
+`chatgpt-pro` browser had an ambiguous display posture. Inspection showed one
+ready session and one ready `cdp_screencast`/`cdp_input` stream, but a null
+`displayIsolation` inventory value. The bridge now treats null as an explicit
+unisolated posture: it does not invent an access-plan value, still binds the
+same browser/session/stream, and rejects changed or non-null post-plan state.
+The failed response `resp_d9587639f51e419582bfac938ca8f5cb` ended before Send.
+Focused routing and bridge tests passed; install and one bounded fresh-project
+live proof are next. No retry or additional prompt has occurred.
+
+The installed live proof created the fresh exact Workshop target through the
+native broker but failed with `connection-lost` before a durable dispatch or
+completion record. The retained browser PID 657110 stayed ready, while cleanup
+closed the fresh target after its URL converged to a new Workshop conversation.
+No response text or prompt-commit evidence exists, so the response is treated
+as unknown and will not be replayed. The next repair must preserve this target
+and persist typed new-project uncertainty before recovery attempts reattach.
+
+## 2026-09-19 | Required fresh-project connection-loss preservation
+
+Implemented the missing classification: remote ChatGPT CDP loss in
+new-project-required mode now produces the existing typed after-submit,
+non-retryable outcome-unknown error with exact project identity and runtime
+target evidence. Broker cleanup consequently detaches once but preserves the
+tab for read-only recovery; ordinary remote losses retain their generic error.
+Focused browser/bridge/recovery tests passed 116 assertions. No ChatGPT prompt,
+browser mutation, GitHub write, or attempt to recreate the already-closed live
+target occurred. Widened regression subsequently passed 196 assertions, but
+deployment stopped safely: the installed user runtime is controlled by a
+different checkout that lacks the fresh-project/cleanup contract. Next:
+reconcile that active runtime lane, then install and prove parity without a
+prompt.
+# 2026-09-20 - Restore exact native broker attach admission
+
+- Current focus: restore the autonomous AuraCall-to-Agent Browser path after
+  retained-browser custody recovery without replaying a failed provider run.
+- Progress: traced failed response
+  `resp_5bb3f48766cf43fbb4c651891a24f1a6` to an authority plan whose
+  `cdp_attach` step omitted the required exact URL. Updated the source contract,
+  regression test, and browser-service documentation.
+- Verification pending: focused test, build, user-runtime installation parity,
+  retained-browser identity check, and a fresh create-once Pro guard round.
+- Blocker: none in source; installed runtime still needs the verified build.
+- First live remediation advanced through attach-plan confirmation, then failed
+  closed because duplicate same-URL retained tabs caused AuraCall to request
+  `tab_new` on a transferred-custody session. The configured exact provider
+  target now disambiguates inventory and forbids that fallback.
+- The next create-once run selected the pinned target and acquired the expected
+  binding, then its event pump was rejected because AuraCall omitted the event
+  task-authority context. The connector and configured authority now carry an
+  explicit read-only `broker_events` step for each poll. Five focused suites
+  pass 131 tests and the full production build passes; install parity and a new
+  create-once verification remain pending.
+- The create-once verification confirmed event authority issuance but the
+  broker rejected its packet before admission because the returned context
+  omitted `serviceName`. The authority provider now returns its exact bounded
+  task/service/agent labels with the envelope and ordered step.
+- The next live run proved those packets through repeated completed ledgers and
+  stopped at a final `location.href` call: AuraCall issued action `url`, but the
+  native broker admits all `Runtime.evaluate` calls as `evaluate`. The adapter
+  now follows the broker's method-level taxonomy and retains the stricter
+  script-execution consequence ceiling.
+- The next run reached the live composer. Read-only post-failure inspection
+  showed its nonce absent while `Stop answering` was active for an older turn;
+  the readiness waiter had timed out without throwing and attempted dispatch
+  into a busy conversation. Submission now rejects busy state before touching
+  the composer and rejects a final non-ready state before Send or Enter.
+  Separately, ordered event contexts are now provisioned in 100-step batches
+  with a 100 ms empty-poll backoff to prevent per-poll confirmation churn.
+
+## 2026-09-20 | Retained ChatGPT native-broker round-trip repair
+
+- Current focus: prove the local AuraCall to Agent Browser to retained ChatGPT
+  Pro path without a public tunnel or an additional MCP transport.
+- Repaired installed-runtime drift, exact session/target projection, passive
+  event polling, count- and byte-bounded event pagination, and secret-free
+  disconnect diagnostics. Agent Browser publication preserves the exact
+  retained Chrome PID, profile, target, conversation, and CDP endpoint.
+- Live diagnostics isolated missing `Page.navigate` and `Page.reload`
+  authority mappings. AuraCall now requests the existing navigation ceiling,
+  binds navigation to the requested URL, and Agent Browser validates that same
+  URL before dispatch.
+- A slug/no-slug alias navigation caused a confirmation race despite stable
+  project and conversation IDs. Retained runs now skip that alias-only
+  navigation and still reject any host, project, or conversation identity
+  change.
+- The latest live guard submitted one fresh nonce-bound request and reached
+  active Pro generation. Its post-send check failed because the virtualized
+  project conversation did not increase the rendered turn count even though
+  the composer cleared and a fresh Stop control appeared. That exact state is
+  now accepted only on the already-bound conversation after the pre-send idle
+  gate. The guard also persists a correlation token for read-only recovery of
+  future uncertain submissions.
+- Verification: 98 focused AuraCall tests pass with one existing skip, full
+  TypeScript checking and production build pass, the guard skill's 12 tests
+  pass, and Agent Browser's focused native broker regression passes. Final
+  create-once response completion remains the live acceptance gate.
+
+## 2026-09-20 | Exact-target new-project recovery
+
+- A live create-once request submitted successfully in the retained Workshop
+  project and preserved its exact broker target, but recovery rejected the
+  result because eleven older project conversations exceeded the bounded
+  sibling-inventory scan.
+- Recovery now prefers the saved original target when authoritative broker
+  inventory shows that same target has transitioned from the project landing
+  route to a canonical conversation in the requested project. A bounded scan
+  remains the fallback only when that exact target did not transition.
+- This is observation-only: it does not navigate, submit, close tabs, or infer
+  identity from recency. Focused recovery tests pass 44 assertions and the
+  TypeScript check passes. Installed recovery and the existing failed response
+  remain the next live acceptance step.

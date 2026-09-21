@@ -1,5 +1,537 @@
 # RUNBOOK
 
+## 2026-09-13 | Confirmed native recovery-read permission blocker
+
+Inspected actual native admission rather than treating synthetic task callbacks
+as permission proof. `cli/src/native/broker_authority.rs` maps Runtime.evaluate
+and Runtime.callFunctionOn to evaluate. `policy.rs` classifies evaluate as
+ScriptExecution; `task_authority.rs` issuance rejects consequences above Navigation
+except exact cdp_attach. The resulting envelope also retains a ReadOnly ceiling.
+Primary reran the isolated
+broker_attach_issuance_does_not_enable_other_lifecycle_or_url_changes test: one
+passed, explicitly asserting evaluate issuance is rejected. No production code
+change, native permission expansion, browser access, prompt, install or restart.
+
+This changes the next action: combined native capture cannot pass merely by wiring
+the existing issuer. It needs an approval-bound capability for the exact account
+and response reads, with arbitrary script execution still disabled. Treat this as
+an intentional authority boundary, not a transport defect or permission to relax
+the ceiling. CodeGraph checked AuraCall index health; native source was read
+directly. Prior fixture-only response-capture claims remain partial.
+
+## 2026-09-13 | Real client kill and lost native detach reply
+
+Changed only the runtime fixture tests/fixtures/native-broker-cross-process.mjs
+plus evidence docs. It no longer equates a second connector object with a process
+restart. Parent saves and fsyncs the committed binding, kills its own disposable
+child with SIGKILL, verifies terminal signal, and launches a distinct recovery
+process from the saved binding. Credentials remain on stdin, not files or argv.
+Child process waits and output are bounded; only fixture-owned children, sockets
+and temporary evidence are cleaned up.
+
+The recovery child also routes its first detach through an isolated Unix proxy.
+The proxy receives the actual worker's successful detach receipt and closes the
+client stream without forwarding it. AuraCall reports unknown outcome; a fresh
+connector confirms exact cleanup. The unchanged native test asserts exactly one
+Runtime.enable, two admitted/completed task actions, one Target.detachFromTarget,
+no Browser.close and retained fixture-browser identity. Replay and exhausted task
+authority remain rejected by Rust, not merely by a connector-local cache.
+
+Primary passed the opt-in isolated native cross-process test twice (initial kill
+case, then kill plus lost-reply case), 104 focused tests across native acquisition,
+broker client/transport, runtime native routing and cleanup publication, full
+typecheck/build and node syntax check. Biome excludes the .mjs fixture, so its
+lint attempt processed zero files and is not lint coverage. No Rust source edit.
+CodeGraph skill was used for index/entry-point discovery and synced; native source
+was read directly because that checkout is unindexed. No live browser, prompt,
+installation, restart or GitHub write. Dirty work preserved.
+
+Fixture SHA-256:
+b2d5e23a3770bccc7bc6256de4edee9080dcf2102b14ac53684c7aa630a7b2a5.
+The peer is synthetic Chrome and the committed operation is Runtime.enable, not
+a ChatGPT Send. Full executor recovery across process death/HTTP reacquisition,
+mid-acquisition uncertainty and approved response authority remain unproven.
+After rebuilding, primary reran the final native failure fixture successfully.
+Diff check passed. Plan audit retains exactly the prior three errors: raw route
+regex at responsesServer.ts:4328 and Plan 0357 Status/missing State headers.
+
+## 2026-09-13 | Native stored response capture without raw resume
+
+Implemented captureAgentBrowserNativeResponse in
+src/browser/service/agentBrowserBridge.ts and wired native stranded-run execution
+in src/runtime/configuredExecutor.ts. The shared cleanup scope covers mandatory
+binding persistence, native connect, account-before/snapshot/account-after and
+response binding. Exceptions, oversized results, wrong URL/prompt/account,
+streaming, cancellation and detach failure cannot publish. No raw CDP discovery,
+legacy evaluate, browser input or prompt replay is used. Newest native evidence
+overrides legacy host/port scoring; malformed evidence still rejects.
+
+Independent source review found two blocking wiring omissions: cancellation was
+not forwarded, and optional heartbeat could silently skip persistence. Primary
+accepted/fixed both and added executor regressions for cancelled recovery, absent
+writer and writer failure. These tests prove no commands on persistence failure,
+and no acquisition when already cancelled or no writer exists. The positive
+executor fixture returns the existing answer after old detach, one fresh attach,
+new binding persistence, native observations and one verified new detach.
+
+Primary passed 309 tests across eighteen suites: nativeBrokerAcquisition (55),
+brokerCdpClient (22), nativeBrokerTransport (15), devToolsConnection (5),
+agentBrowserBridge (44), brokerAttachmentAdmission (20), cleanupPublication (2),
+configuredExecutor (37), reattach (22), browserModeExports (28),
+newProjectRetainedRouting (11), runtime.nativeBrokerRouting (10),
+nativeBrokerProviderRouting (2), recoveryProviderSession (5),
+recoveryResponseBinding (25), recoveryResponseStreaming (4), recoveryNoCorrection
+(1), recoveredProofPropagation (1). Full typecheck and strict changed-test lint
+passed. Broader source lint retains two existing control-character regex errors
+and twelve existing non-null warnings. CodeGraph traced callers and was synced.
+These tests use synthetic HTTP/daemon responses over real sockets, not a killed
+native process or a live provider. No install, prompt, browser restart/input,
+GitHub write or native source edit. Dirty work preserved; Plan 0359 stays OPEN.
+
+SHA-256: agentBrowserBridge.ts
+0401aba179d8541fa04299f9e83ffb4415c0f693f19c1e2cd1a077907af4de0b;
+configuredExecutor.ts
+8d39cdad49febe10bcdc525b93818bfb17b99aefda0fa624205da49444a80db0;
+nativeBrokerAcquisition.test.ts
+b5c5a1687e419db261fd112973f873ac5110534c75218cbbf82a2e1b856a1700.
+Next: actual native crash/transient recovery acceptance and approved command
+authority delivery; mid-reacquisition process death/default activation remain open.
+Full build and diff check passed. Plan audit retains the same three errors:
+responsesServer.ts:4328 raw route regex and Plan 0357 Status/missing State.
+
+## 2026-09-13 | Original native detach before reacquisition
+
+Added optional originalNativeBinding to internal reattach in
+src/browser/service/agentBrowserBridge.ts. It requires one ready matching retained
+target on the saved route with exact URL and ownership fields, then confirms the
+saved six-field attachment's detach through the authenticated native transport.
+No event polling, page command or legacy detach is used for reconciliation.
+Unknown cleanup stops before attach authorization; a fresh receipt must not reuse
+the old attachment ID. The native daemon's existing sticky detach was source-read;
+daemon disappearance/uncertain attach is not reconciled by this helper.
+
+Primary passed 258 tests across thirteen suites (same provider/broker/runtime
+selection as the prior entry; nativeBrokerAcquisition now has 40 cases). Eight new
+cases prove detach-before-attach ordering, exact cleanup of both bindings, terminal
+detach failure, four binding identity drifts, wrong URL and old receipt rejection.
+These are synthetic HTTP/daemon fixtures over real Unix sockets, not full native
+crash or response-capture proof. Typecheck and strict changed-test lint passed;
+source lint retains eleven existing non-null warnings. CodeGraph callers guided
+the AuraCall changes and the index was synced. Native checkout was unindexed,
+so direct source reads were used; no native files changed. Stored-response recovery
+remains gated until broker-scoped capture is integrated. No live browser actions,
+install, prompt, restart, GitHub write or dirty-worktree cleanup.
+
+SHA-256: agentBrowserBridge.ts
+a978e6b577b5e6987d5163f5e48fedbd2e73e002392684a4bd886fec57507ef0;
+nativeBrokerAcquisition.test.ts
+b3361d1def63eca236914bdfbf3800fea5736cacd77d7aac010c5d209abd743e.
+Full build and diff check passed. Plan audit retains exactly the three prior
+findings (raw responsesServer route regex and Plan 0357 Status/missing State).
+Primary also reran the opt-in isolated native cross-process authority test using
+the newly built AuraCall connector: one passed with the real native worker and a
+synthetic Chrome peer. It covers the existing idempotent detach transport, not the
+new HTTP recovery acquisition sequence or full provider response capture.
+Independent closed-world source review reported no blocking finding in this slice;
+no delegated tests or live actions were performed. Primary owns the validation.
+
+## 2026-09-13 | Native provider routing and recovery downgrade prevention
+
+Changed src/browser/{types,index,reattachCore}.ts and
+src/runtime/configuredExecutor.ts. An explicit trusted dependency selects the
+native session for ChatGPT/Grok without serializing credentials or inventing a
+Chrome endpoint. Post-acquisition validation/hints/admission share outer cleanup.
+Runtime evidence preserves transport and six binding fields. Stored/transient
+native recovery and direct raw reattach fail closed until original-attachment
+reconciliation exists; they do not replay prompts or publish partial results.
+
+Independent source review identified one blocking downgrade: legacy host/port
+evidence could outrank native evidence after restart. Primary accepted and fixed
+it by checking all relevant step evidence before scoring, including pre-submit
+hints. Three mixed-evidence regressions verify both event orders and partial hints.
+Review was source-only; all validation below was independently run by primary.
+
+Primary passed 250 tests across thirteen suites: nativeBrokerAcquisition (32),
+brokerCdpClient (22), nativeBrokerTransport (15), devToolsConnection (5),
+agentBrowserBridge (44), brokerAttachmentAdmission (20), cleanupPublication (2),
+configuredExecutor (37), reattach (22), browserModeExports (28),
+newProjectRetainedRouting (11), nativeBrokerProviderRouting (2), and
+runtime.nativeBrokerRouting (10). Provider fixtures exercise the real runner but
+stop on domain initialization before Send. They prove no raw CDP calls, exact
+single detach and no credential evidence, not complete provider success.
+Full typecheck/build and strict new-test lint passed after correcting fixture
+typing. Wider targeted lint retains two existing control-character regex errors
+at configuredExecutor.ts:411 and one existing non-null warning at :478. Plan audit
+retains three errors: responsesServer.ts:4328 raw API route regex; Plan 0357 uses
+Status and lacks State. No suppressions. CodeGraph caller tracing guided the patch
+and the index was synced. No native source edit, install, live browser action,
+prompt or GitHub write. Dirty work preserved. Plan 0359 remains OPEN.
+
+SHA-256: configuredExecutor.ts
+41e72ee2eb310eafd257c24e4bea0886207103bc7e17388b8738451fbe097a6d;
+nativeBrokerProviderRouting.test.ts
+66b27b98728a61d63e3088bd88ad5922aff5c95a0972572a7959efd729b73aca;
+runtime.nativeBrokerRouting.test.ts
+ba139313ef2968230e76b11b31ff51393d44fa0e79ea540c743df4ac8a0d5bdd.
+Next: original native attachment reconciliation and exact recovery before any
+activation; default configuration and full approved command authority also remain.
+
+## 2026-09-13 | Native receipt handoff and shared cleanup ownership
+
+Implemented explicit native configuration in initial/recovery bridge acquisition.
+The request carries supplied ordered attach authority and native action params;
+the receipt must match selected browser/profile/session/target and canonical URL.
+No raw endpoint parsing or fallback. A lazy brokerCdpSession owns the attachment
+before admission and starts polling only when connectToChromeTarget consumes it.
+Client close and outer cleanup share one verified sticky detach. Unknown identity
+remains unreconciled; known binding with invalid receipt is cleaned up exactly.
+Cancellation cannot dispatch late authorization, and cleanup stays independent.
+
+Primary passed 238 tests across eleven suites: nativeBrokerAcquisition (32),
+brokerCdpClient (22), nativeBrokerTransport (15), devToolsConnection (5),
+agentBrowserBridge (44), brokerAttachmentAdmission (20), cleanupPublication (2),
+configuredExecutor (37), reattach (22), browserModeExports (28), and
+newProjectRetainedRouting (11). The new test uses real Unix sockets with synthetic
+HTTP and daemon responses, not a live broker/Chrome. Native HTTP action parameter
+forwarding and send-once relay were inspected directly in the unindexed recovery
+checkout; CodeGraph guided AuraCall callers and was synced. No native source edit.
+
+Full typecheck/build, strict new-test lint and diff check passed. Bridge source
+lint retains eleven existing non-null warnings outside the patch; Biome excludes
+package source. Independent closed-world review found no blocking regression;
+review was source-only, primary ran validation. Plan audit exited 1 with the same
+three existing errors: responsesServer.ts:4328 raw route regex and Plan 0357's
+Status/missing State headers. No audit suppression or unrelated worktree cleanup.
+
+SHA-256: brokerCdpClient.ts
+115e67a0100157cc31dad36dfff792916fe5e44cb1778f14243bd1d899908fa8;
+chromeLifecycle.ts
+10e4454c231f0bb18c4e152afe65b56b1a306ffa7216646cc53e7d8d10fc37e5;
+agentBrowserBridge.ts
+5bf46fb1b4016ba15fb733199d049f4714ba9aa06b4955e89bc59a472c010d21;
+nativeBrokerAcquisition.test.ts
+0d291cc90586073f8dc2d8c50dbded3a31cf22826277d1240c9fe7812e06c172.
+
+No install, retained-browser input, prompt or GitHub write. Plan 0359 remains OPEN.
+Next: provider option plumbing and approved command task delivery, then actual
+cross-process acquisition/crash reconciliation. Live readiness remains unproven.
+
+## 2026-09-13 | Completed results require verified broker cleanup
+
+Fixed `src/browser/service/agentBrowserBridge.ts` so cleanup failure after a
+completed operation rejects with `agent_browser_cleanup_unverified`, phase after,
+retryable false and providerOperationCompleted true. Observer exceptions remain
+in the cause chain rather than replacing this classification. Falsy operation
+errors also reject. `src/runtime/configuredExecutor.ts` preserves the terminal
+classification during recovery; `src/browser/index.ts` no longer logs that it is
+publishing the result after cleanup failure. No provider acquisition change.
+
+Primary first reproduced two failures (successful return / observer masking).
+Then passed 178 tests across ten suites: browser-service brokerCdpClient,
+nativeBrokerTransport, devToolsConnection; browser agentBrowserBridge,
+brokerAttachmentAdmission, browserModeExports; runtime configuredExecutor,
+cleanupPublication, recoveryNoCorrection and recoveryConversationCapacity.
+The new runtime fixture exercises real executor and cleanup code with a synthetic
+bridge API: initial operation executes once; recovered operation sends no prompt;
+both attempt one exact detach, preserve its failure and never call the artifact
+materializer. Separate cleanup reconciliation never re-executes the action.
+
+Full typecheck and changed-test strict lint passed. Wider targeted source lint
+failed on two existing control-character regex findings at configuredExecutor:388
+and twelve existing non-null assertions, outside this patch. No suppression added.
+Source-only independent closed-world review found no blocking regression; primary
+ran all validation. Full build and git diff --check passed. Plan audit exited 1
+with the same three existing errors: responsesServer.ts:4328 route regex and
+Plan 0357 Status/missing State headers. CodeGraph synced the changed source/tests.
+SHA-256: agentBrowserBridge.ts
+4b93b2adfea90d24a4ec4950c657439cd23a8da0fd2ea83801fcd53a2ec3bd86;
+configuredExecutor.ts
+c44d5f51b903ca846a89655115ed479f8a94855ec115a81ece7e4c1aae374bef;
+browser/index.ts
+52eddfd5f3fbbbc54e16a71fbff4f9ae9658c46ea3f02a82e954ee8a19edcf8f;
+agentBrowserBridge.test.ts
+fb64991a6d5d8856c60b77fc1e03be789d77764dd22e95308fee1897e233a919;
+runtime.cleanupPublication.test.ts
+a1c870eb32ea8655e5ea24eff4a82d03336a1431948217b39b1eed388b0b0076.
+
+No installed changes, browser input, prompt or GitHub write. Plan 0359 stays OPEN:
+native acquisition/config selection, shared cleanup ownership, crash reconciliation
+and live provider acceptance remain required. Source tests are not live proof.
+
+## 2026-09-13 | Broker caller cancellation regression
+
+Bounded connection-wiring prerequisite: forwarded caller cancellation from
+connectToChromeTarget into brokerCdpClient. Pending commands and event waits abort,
+late replies cannot publish, and later commands fail closed. The enclosing owner
+still awaits close using an independent cleanup signal; parallel/repeated closes
+perform one exact detach and preserve failure. Normal close removes the listener;
+pre-aborted construction starts no transport operation. No authority is minted.
+
+Primary reproduced two failing lifecycle cases before the fix. Afterwards, nine
+suites passed 166 tests: brokerCdpClient, nativeBrokerTransport,
+devToolsConnection, agentBrowserBridge, brokerAttachmentAdmission, reattach,
+browserModeExports, newProjectRetainedRouting and recoveryProviderSession.
+Full typecheck and strict lint of both changed test files passed. Package source
+is excluded from Biome coverage. CodeGraph synced four changed files.
+Full build and git diff --check passed. Plan audit exited 1 with the same three
+existing errors: responsesServer.ts:4328 raw route regex, and Plan 0357's Status
+header/missing State header. No audit suppression or unrelated correction.
+Source SHA-256: brokerCdpClient.ts
+842c28b4baca7082a487ee0be41ce1667c0e1ecd5d1a8da53e67ca7c546ed20e;
+chromeLifecycle.ts
+d8842ee674d627f86978ea0908c0229a1e02cd753fd93a8f40842f6900e2484a.
+Test SHA-256: brokerCdpClient.test.ts
+918847c315c5193a59c111a577668368623ed3d12445ad9c8e1f710ff08e2e86;
+devToolsConnection.test.ts
+4684b0cea18b913b69f1c99556b8bd2cc61404c14ed7657887a46975a518ea94.
+
+No install, retained-browser input, prompt, restart or GitHub write. This is not
+provider activation or seamless live operation; Plan 0359 remains OPEN. Next is
+exact native acquisition/configuration and shared owner-awaited cleanup wiring.
+
+## 2026-09-13 | Required-mode native acquisition verified
+
+Native ordered issuance permits exact-current-URL broker attach, still behind
+separate confirmation and the unchanged read-only ceiling. V2 issuance, broker
+mode and exact target/URLs are required; broader lifecycle/script grants remain
+excluded. The real required-mode workflow passes both confirmations, executes
+one approved later command, rejects missing authority/replay and detaches once.
+
+That test exposed a normal-stack overflow. Heap-owning the native dispatcher frame
+fixed it without changing execute_command's public async API or permanent stack
+settings. Primary ran the full isolated Rust suite: 2169 passed, 75 ignored, zero
+failures; explicit cross-process test also passed. Native build, strict Clippy,
+format and both diff checks passed. Same three pre-existing plan-audit errors.
+CodeGraph skill used with native direct-read fallback. Review was source-only;
+primary ran validation. Native RUNBOOK holds source hashes and exact evidence.
+
+No TypeScript source changed, no runtime replacement or retained-browser input,
+and no provider prompt/GitHub write. Next: provider acquisition/configuration and
+approved per-command authority delivery; durable crash reconciliation and live
+operation remain unproven. Plan 0359 stays OPEN.
+
+## 2026-09-13 | Actual native worker cross-process proof
+
+Added tests/fixtures/native-broker-cross-process.mjs, invoked only by the native
+recovery checkout's explicit ignored test. It imports the built connector and
+receives fixture-owned binding/authority over stdin, with no discovery or launch.
+The Rust test serves the production authenticated handler and checks real ledger
+outcomes plus actual synthetic-peer method counts. One command, one event, native
+replay/exhaustion rejection and one detach across two requests passed. Only the
+Chrome peer is simulated; this is stronger than a fake daemon but not live proof.
+
+Primary validation: cross-process test passed; 61 native broker tests passed,
+cross-process test ignored in that filter and run explicitly; native build,
+strict Clippy, format and both diff checks passed. Node syntax check passed.
+Biome excludes the fixture; no new TS source changed or fresh TS-suite claim.
+Plan audit retains three errors: responsesServer.ts:4328 route regex and Plan
+0357 Status/missing State. Read-only reviewer confirmed test scope and no
+production bypass; primary ran tests. CodeGraph skill used and index synced.
+
+Built connector SHA-256:
+88a3e2b483ed0509051d60c2972e01285816e875bfe066c85f50ba589f3203bd;
+fixture SHA-256:
+de6556e7b9eb12470acf04bbc2ed83a6ad72dad503474521cfb897104c98c0fa.
+Native RUNBOOK records reproducer and native source hashes. No install, live
+Chrome operation, provider prompt or GitHub write. Next: authority-aware native
+acquisition and provider configuration; required lifecycle issuance remains open.
+
+## 2026-09-13 | Send-once Unix native broker connector
+
+Added nativeBrokerTransport.ts and its socket fixture suite. The connector accepts
+explicit acquisition binding/path/token, requires supplied ordered task context,
+opens one socket per operation and sends exactly once. It checks both response
+identities and binding, bounds newline framing and emits fixed errors instead of
+daemon content. Cleanup is independent of task-context acquisition. It does not
+discover credentials, launch/restart a process, or fall back to Chrome endpoints.
+
+Primary validation: 15 connector socket tests, 156 tests total across the same
+eight suites as the prior checkpoint plus nativeBrokerTransport; full typecheck,
+full build and strict new-test lint passed. Biome excludes browser-service source.
+Tests cover auth serialization, no duplicate IDs, seven invalid reply classes,
+abort/late authorization, missing task context, timeout after dispatch, binding
+drift, request snapshot isolation, fragmented framing and dialog concurrency with
+one facade detach. These are real sockets with a simulated daemon, not native
+custody or live-browser proof. CodeGraph skill used and index synchronized.
+
+Delegated closed-world source review reported no blocker; primary ran all tests
+and retained final judgment. No runtime replacement, provider prompt or GitHub
+write. Next: actual native-worker cross-process proof with its real task ledger,
+then acquisition/provider wiring. Plan 0359 remains OPEN.
+
+Source SHA-256: nativeBrokerTransport.ts
+006511d5cf7edaa8073f5dcc5f7e1514c1f3d57e2399c685a1fc8adee3a655ea;
+nativeBrokerTransport.test.ts
+7b313e702536c746043cea57fa7d432d6843a2cbd829942f0b59f472e9a634b5.
+
+## 2026-09-13 | Event identity contract aligned with native broker
+
+Every explicit-client event poll now carries a fresh request ID; batch publication
+requires an exact matching ID. New regressions cover stale replies after empty
+polls, missing legacy IDs, and late timeout responses with no replay. Exact detach
+continues to preserve the original binding and runs once. Native task authorization
+is not synthesized by this client; send-once connector integration remains next.
+
+Primary validation: 141 tests in eight suites (brokerCdpClient, devToolsConnection,
+brokerAttachmentAdmission, agentBrowserBridge, recoveryProviderSession,
+sameTargetRecoveryBinding, recoveryResponseBinding, browserModeExports), full
+typecheck, full build, strict lint of changed brokerCdpClient test and diff check.
+Biome excludes packages/browser-service, so no source-lint coverage is claimed.
+CodeGraph skill used: synced index and inspected callers; no additional caller
+needed changing. Read-only Graphiti retrieval returned no relevant implementation
+evidence. No delegated implementation or review in this slice.
+
+Source SHA-256: brokerCdpClient.ts
+5bbb2ea6886379604acee53c475b4648b3e324740061ec70dca465d243ca30e4;
+brokerCdpClient.test.ts
+726260c6b2568a79adfcd5367f622598d0443956aa55c60f4bb93ba0fd9ff6d3.
+No install/restart, browser input, provider prompt, GitHub write or unrelated
+cleanup. Plan 0359 remains open; native connector and provider wiring are not live.
+
+## 2026-09-13 | Broker client staged, not installed
+
+The shared connection helper now accepts an explicit bound broker transport.
+It skips raw Chrome discovery, validates attachment/generation on replies and
+event batches, delivers events while commands are pending, never retries an
+uncertain command, and requires one matching browser-preserving detach receipt.
+Native transport/admission and provider/download/iframe migration are not wired;
+this opt-in client is not an operational recovery fix yet. No browser action,
+runtime replacement or ChatGPT submission occurred. Primary validation: 123 tests
+across eight suites, full typecheck/build, strict lint of both changed test files,
+and diff check. Repository Biome excludes packages/browser-service; do not infer
+source lint coverage from the test lint pass. Plan audit retains the same three
+pre-existing violations listed below. Local source-only review found no blocking
+critical regression within the explicitly staged client contract.
+
+## 2026-09-12 | Endpoint-admission cleanup verified in source
+
+Both broker acquisition paths now reconcile an attachment when endpoint
+validation fails before the outer run gets its cleanup handle. Cancellation does
+not suppress cleanup; uncertain detach retains a typed exact-handle error and
+prevents new-tab release. Legacy host/port transport rejects unsupported endpoint
+semantics rather than stripping TLS/capability credentials. Guarded transport is
+still unimplemented; no runtime install/restart or live browser action occurred.
+Primary: 103 tests across six broker/recovery/executor suites passed, full
+typecheck/build and diff check passed. New brokerAttachmentAdmission test strict
+lint passed; bridge strict lint reports 11 existing non-null-assertion warnings.
+Plan audit remains failing with three violations: raw response API route regex
+at responsesServer.ts:4328 and two Plan 0357 canonical-state-header errors.
+
+## 2026-09-12 | Recovery ownership prerequisite
+
+No-launch jobs snapshot at 2026-09-13 01:48 UTC is idle; retained-browser
+requirement passes. Idle is not attach authority. Installed/main agent-browser
+lacks controlPlaneAttestation; a separate dirty recovery worktree contains a
+candidate, not an approved installed implementation. Preserve the browser and
+image generation; do not restart unchanged main, bypass ownership proof, replay
+the request or click recovery downloads. See Plan 0359's superseding checkpoint.
+
+## Turn 512 | 2026-09-11
+
+- Superseding live checkpoint, 22:22 UTC: installed timestamp canonicalization
+  passed one production materializer call against the existing completed
+  response `resp_8e3df0f9e6a84131b47f19d568ed304a`: discovered=3,
+  materialized=3, canonical DOCX/PDF/ZIP present. Exact user/assistant and fresh
+  account proof passed. Original downloads equal canonical copies, DOCX/PDF
+  equal reviewed ZIP members, and the original API record hash is unchanged.
+  Primary independently verified the bytes. Receipt:
+  `/home/bak3r/codex-research/runtime/handshake-live-tests/thoughts/writer-envelope-recovery-20260911/installed-materializer-success-20260911-222013.json`.
+- Awaited helper cleanup completed, then broker release closed only the owned
+  client tab at 22:21:47 UTC with browser/session preserved. No provider prompt,
+  browser replacement, or API-history mutation. Earlier immediate binding
+  preflight failed before any materializer call; same-tab continuation passed
+  exact equality. Installed retrieval is verified; fresh normal-runner and full
+  autonomous proposal acceptance remain separate, unproven requirements.
+
+- Plan 0359: diagnosed exact recovery rejection from rendered user-code markup
+  and surrounding attachment/toggle labels. Passive scoped reconstruction
+  matched all 19,159 normalized prompt characters; expected prompt untouched.
+- Worker `/root/conversation_capacity_detection` repaired the snapshot helper;
+  primary reviewed the code and independently passed 32 focused tests, full
+  build and full installed dist parity. One compiled file installed with ten
+  verified recorded hashes and rollback of the prior dist/record. API idle stop
+  completed before copy; restarted healthy PID 583517, browser 505779 preserved.
+- Progress classification: blocker_reduction. No prompt replay or altered API
+  history. `/root/live_recovery_verify` runs one post-patch production retrieval
+  in a broker-owned client tab, preserving the original pinned tab. Result is
+  pending; do not equate passive equality or tests with download completion.
+- Separate agent-browser Plan 0131 preserves background exit-status evidence:
+  source-only, three Rust tests, formatting and Clippy passed independently.
+  The causes of the earlier browser exits remain unproven. Larger proposal
+  source-readiness and project-routing acceptance remain open.
+
+## Turn 511 | 2026-09-11
+
+- Terminal live checkpoint: one broker-owned same-profile restore succeeded,
+  then the restored browser exited at 21:47:45Z, before the materializer test
+  script was created. Exact-target checking failed closed; zero materializer
+  invocations/downloads/submissions. No second restore. Root cause of process
+  termination remains unproven; next unit diagnoses retained-browser lifetime.
+- Wider primary regression run: all 200 adapter/control/download tests passed.
+  Plan audit still reports the two pre-existing Plan 0357 State-header errors;
+  those unrelated dirty plan contents were preserved.
+- Plan 0359: source-only exact artifact selector to installed, rollback-backed
+  runtime. Primary verified 27 targeted tests, full build, complete dist parity,
+  nine recorded hashes, completed service stop before copy, and healthy restart
+  with zero active foreground requests. Previous patch record and full dist are
+  retained in `~/.auracall/exact-control-rollback-20260911-VU949d`.
+- Saved relevance audit passed; Codex accepted the controlled operator guide
+  against the immutable prompt and reviewed source. Manual recovery remains
+  explicit; neither normal-runner downloads nor full synthesis is proven.
+- Progress classification: blocker_reduction. Acceptance state: incomplete.
+  Delegated exact production retrieval to `/root/live_recovery_verify`; fresh
+  no-launch preflight found retained browser/session missing, so no materializer
+  ran. Next action: diagnose browser loss, then recover through supported broker
+  ownership before testing installed exact-control retrieval. No prompt replay.
+
+## Turn 510 | 2026-09-11
+
+- Plan 0359 explicit same-project continuation and installed capability check
+  published with rollback and full built/installed parity. Primary verified
+  8 rollover, 76 supervisor, 89 workflow and 16 focused browser/runtime tests.
+- One request resp_19c3ea2011914cdaaa024df85a158dc8 failed before-submit checking.
+  Live API environment pinned the old conversation; broker resolution overrode
+  explicit project roots. The strict guard prevented sending into that chat.
+- Narrow new-mode precedence fix is now installed; 28 browser-mode tests,
+  full build, installation-record hashes, and installed no-provider routing
+  regression passed. Original cancelled and new failed histories preserved.
+- Next: reconcile the proven before-submit failure without relaxing unknown
+  submission safeguards; then test real evidence request and final file return.
+
+## Turn 509 | 2026-09-11
+
+- Plan 0358 adds explicit required document sets, rejects malformed filenames
+  before submission, and prevents the legacy single-file correction prompt
+  from being used for an incomplete package. Source-only pending installation.
+- Fresh normal-runner test B is create-once, poll-only under response
+  `resp_9b7d8615f26f4b23a697d1f823178cdd`. At 15:40 UTC it remained running;
+  heartbeat activity did not prove provider submission. No API restart or
+  duplicate browser request was used for this slice.
+
+## Turn 508 | 2026-09-11
+
+- Verified the scheduler-only installed dist delta and complete prior runtime
+  backup. API PID 128671 runs the installed package. No additional install was
+  needed in this turn.
+- Original document run advanced to terminal failed at 14:50:15 UTC because
+  no exact retained target could be found; recovery refused prompt replay.
+- Independently checked recovered DOCX/PDF source equality against the stored
+  request, marker, content hashes, DOCX table, PDF pagination and rendering.
+  Added a verification note to the existing artifact preview session. This is
+  recovered-file proof, not successful automated API completion.
+
+## Turn 507 | 2026-09-11
+
+- Reservation replacement now uses future candidates and remaining capacity.
+  Independent reviewer stranded_recovery_audit found a cap-two visited-row
+  regression; primary fixed it and added immediate/deferred fixtures. Reviewer
+  accepted the remediation; primary ran 124 passing tests and targeted Biome.
+  Installation and original-document retrieval remain open.
+
+- Opened Plan 0357: current recovery is starved behind older runnable requests
+  whose runtime profiles the local runner cannot serve. Investigating bounded
+  reservation replacement; no live drain, duplicate prompt or restart issued.
+
 ## Turn 506 | 2026-09-10
 
 - Plan 0356 source validation is green: 23 focused tests, typecheck, full lint,
@@ -20385,3 +20917,175 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
   accepted the source review and ran validation itself. The companion document
   client requests required-inline on future creation/audit submissions, with
   65 focused Python tests passing. Source is staged; live transport remains open.
+
+## Turn 448 | 2026-09-11
+
+- Opened [Plan 0359](docs/dev/plans/0359-2026-09-11-conversation-capacity-recovery.md)
+  after an exact fresh assistant warning proved the Workshop conversation full.
+  Original response `resp_125d899a28a44ac29fbbd957f3f45a48` remains preserved;
+  no artifacts were produced and no prompt was replayed.
+- State transition: apparent generation/download wait to verified provider
+  capacity failure. Acceptance state: incomplete. Progress classification:
+  blocker_reduction through exact response evidence. Main owns controller and
+  integration; `/root/conversation_capacity_detection` owns narrow provider
+  detection/tests; `/root/live_recovery_verify` owns read-only live evidence.
+- Next action: detect the current-turn terminal warning, preserve the original
+  run, then verify bounded same-project continuation through broker authority.
+  No browser replacement, unrelated project creation, or submission bypass.
+
+## Turn 449 | 2026-09-11
+
+- Plan 0359: repaired historical recovery blocked by later-turn generation.
+  Exact prompt/answer binding stays strict; all active status owners must be
+  unique later users, and global/unknown activity still blocks.
+- Primary passed 70 focused tests, full build, diff hygiene, installed dist
+  parity and all ten installation-record hashes. Retained browser 505779
+  survived API timeout/terminal stop and restart as healthy idle PID815877.
+- Rollback retains prior dist and record in turn-scope-rollback-20260911-IrpwmX.
+  Agent `/root/live_recovery_verify` found no blocking source regression and
+  confirmed idle browser authority; primary accepted this closed-world review.
+  Installed exact-answer readback remains pending. No new prompt/history edit.
+- Superseding live result: installed exact historical binding and fresh account
+  proof passed. Primary inspected worker receipt and independently verified
+  unchanged original API record hash. Binding defect closed; trusted controller
+  recovery transition remains the next acceptance requirement, not manual adoption.
+
+## Turn 450 | 2026-09-11
+
+- Plan0359 trusted failed-result recovery implemented in the API and Python
+  controller/supervisor. Primary passed 177 Python, 88 TS, two HTTP tests,
+  full build/typecheck, full installed parity and twelve recorded hashes.
+- First live attempt safely rejected an overly broad pending-work idle check.
+  Preserved that attempt; fixed actual executing/leased-work detection and a
+  timer admission race. Busy waits on the same response rather than replaying.
+- Delegated one normal supervisor step to live_recovery_verify: real right
+  result accepted, fullcase awaiting_document_creation, original failed record
+  unchanged, one bridge transit. Primary independently read/hash-verified proof.
+- API908043 healthy; retained browser505779 unchanged. Normal Codex source
+  reviewer915528 dispatched. Final writer exchange/documents/audit still pending.
+
+## Turn 451 | 2026-09-11
+
+- Source re-review finished exit0, eleven files approved. Root controller added
+  first-writer phase preparation and passed 182 tests. Normal first POST
+  resp_ca76e46d2ef444ccb5f61ae5950d3863 failed at broker pre-dispatch protection;
+  primary observed terminal failure without retry or API-record mutation.
+- Independent worker reproduced exact query mismatch: omitted display posture
+  defaults private_virtual_display, incompatible with retained shared_display.
+  Source fixer owns deriving inventory-backed posture and validated reuse hints.
+- Primary added exact legacy rejection reconciliation and passed 196 Python
+  tests. No actual reconciliation until repaired installation is verified.
+  One-reconciliation bound and original failed checkpoint remain intact.
+
+- Superseding result: paired route fix installed with72primary TS tests/build;
+  exact predispatch reconciliation succeeded. One continuation c538c29... opened
+  a tab in retained505779, then failed mode detection. No blind retry.
+- One diagnostic reload reproduced controls hydrating after document readiness.
+  Narrow controlsAbsent-only wait passed54tests/build, paired installation,
+  13hashes/fullparity and installed live verification with zero clicks/prompts.
+  Original failed records are unchanged. Further controller recovery and actual
+  final document/evidence/audit acceptance remain open.
+
+## Turn 452 | 2026-09-12
+
+- Progress classification: blocker_reduction. Latest writer177688... reached
+  an uncertain after-submit result; original API failure and controller state
+  remain unchanged, with no retry or reconciliation.
+- Independent browser lane found new conversation6aa4a4bb... and exact full
+  user prompt including authoritative runner artifact context. Following
+  assistant requests the expected two URL checks; materialization pending.
+- Independent code lane traced outer broker cleanup closing the task tab.
+  Primary fixed exact typed uncertainty to retain it while detaching transport;
+  accepted review finding preserves typed identity even if detach fails.
+- Primary56tests/fullbuild pass. Installed publication waits for active
+  read-only helper. Final documents, evidence round trip and audit remain open.
+
+- Superseding: helper completed exact ZIP download; primary verified ZIP/request
+  digests and unchanged API failure. Paired cleanup fix installed with rollback,
+  full dist/13hash parity, API1197594 healthyidle and retained505779 preserved.
+  Installed function smoke uses a simulated broker, not a new provider request.
+- Next: add a provenance-preserving recovery transition for the observed
+  after-submit response. Existing recovery expects a completed artifact event
+  absent in the original run. Do not fabricate history or bypass that gate.
+
+## Turn 453 | 2026-09-12
+
+- Progress classification: outcome_progress. Existing trusted service and normal
+  controller now recover exact typed after-submit writer information without
+  fabricating an old completion event or resending the prompt.
+- Primary122TS/204Python/fullbuild passed. Independent controller/service review
+  accepted exact provenance and identified unsupported bundle-prefix transport;
+  primary rejects >10attachments instead of guessing. Existing four-file request
+  reconstructed exactly. Worker capability HTTP/production typecheck passed;
+  test-inclusive typecheck retains four pre-existing composer mock errors.
+- Paired installation finalv2 with rollback/fullparity/13hashes; API1259940 and
+  retained505779 verified. Normal observation177688... advanced to
+  document_needs_information; primary checked allfiveevidence hashes and unchanged
+  record1dd443..., requestf9c081be..., source00da66dc..., original2ad02e92...,
+  bridge1. Browser worker live_recovery_verify50773 exit75 expectedmax1boundary.
+- Next regular collector1266215 is live for the two freshURL questions. Final
+  documents/relevance audit, uncached autonomous downloads and fullproposal/
+  project-routing acceptance remain open; no full autonomy claim.
+
+- Superseding continuation: collector1266215 and separate source reviewer1274549
+  both terminal0. Both fresh URLs HTTP200/no redirects with recorded times and
+  reviewed limitations; evidence-ready/source gate accepted. New sourcebundle
+  2e55725e... sent in evidence-continuation responseee075325... on same6aa4a4bb.
+  Supervisor1274543/tool88326 remains live until-stop polling15sec. Exact API
+  run in_progress/no failure; do not start another supervisor or resubmit.
+
+## Turn 454 | 2026-09-12
+
+- Classification: verified_wait. Exact writeree075325... remains running;
+  supervisor1274543/tool88326 is live and polling it. Current state still has
+  zero accepted artifacts and no relevance audit.
+- Passive browser snapshot01:40:08UTC showed active generation for992a7d64...
+  on retainedB3EDD, without final controls or a blocking dialog. Pro indicator
+  unavailable; no new model-verification claim.
+- Primary reviewed the immutable500-700word teaching-brief contract and local
+  method evidence, and confirmed Previews health plus local rendering modules.
+  No resubmission or runtime/browser mutation. Next: continue existingdriver,
+  verify actualDOCX/PDF/ZIP and separate audit, then one previewsession.
+
+## 2026-09-19 | Fresh-project broker connection loss
+
+A remote CDP disconnect during a required fresh-project turn is terminal,
+non-retryable outcome uncertainty rather than generic cleanup. AuraCall keeps
+the exact agent-browser target for read-only recovery, executes one broker
+detach, and suppresses target release. Do not resend the original prompt. The
+previous `resp_6b11b45fbfe346fd9b9c44354cece515` target was already closed by
+the old generic cleanup and cannot be reconstructed; use this behavior only
+for future, separately approved tests after installed no-prompt parity. The
+currently active runtime is a divergent checkout without this new-project
+contract, so it must be reconciled before this source behavior is deployed.
+
+## Turn 455 | 2026-09-12
+
+- Progress: completed writeree075325... returned the ZIP with finished DOCX/PDF.
+  Fixed the controller's false requirement for the literal word brief;
+  205 Python tests passed. Re-poll of the same response exposed missing
+  standalone downloads. No writer replay or release.
+
+## Turn 456 | 2026-09-12
+
+- Progress: primary traced the missing downloads to the saved fetch manifest:
+  three response-owned controls discovered, DOCX/PDF transfers failed, ZIP
+  materialized. The executor already attempts all eligible response artifacts;
+  ZIP-only selection was ruled out. Retain cross-package hash verification.
+- Existing browser worker /root/live_recovery_verify owns one exact-response
+  no-launch recovery cycle. Primary passed33 download-binding tests and found
+  the generic Download DOCX/PDF labels are passed as exact viewer titles.
+  Live preview-name mismatch remains a hypothesis until observed. No installed
+  fix, final relevance audit, or full autonomy is claimed.
+
+## Turn 457 | 2026-09-12
+
+- Progress: implemented typed missing-download evidence and exact-response
+  recovery routing in root controller/supervisor. 206 tests pass. Re-poll of
+  actual ee075... confirms review_provider_failure with explicit no-rewrite,
+  no-resubmit and preserved package-digest boundary. No AuraCall install change.
+- Worker /root/live_recovery_verify returned blocked-before-input receipt:
+  diagnostics omitted required controlPlaneAttestation. Primary inspected it;
+  no clicks/downloads/prompts. Follow-up bounded read-only diagnosis checks
+  supported attestation availability. Full proposal/routing and final artifact
+  audit goals remain open; this is not an end-to-end completion claim.

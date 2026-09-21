@@ -1331,7 +1331,7 @@ describe("ChatGPT account mirror metadata collector", () => {
 		]);
 	});
 
-	test("skips zero-project and account-library reads for fresh ChatGPT steady-follow", async () => {
+	test("rechecks an empty project index while skipping account-library reads for fresh ChatGPT steady-follow", async () => {
 		const calls: string[] = [];
 		const conversations = [
 			{
@@ -1360,7 +1360,8 @@ describe("ChatGPT account mirror metadata collector", () => {
 				source: "auth-session",
 			})),
 			listProjects: vi.fn(async () => {
-				throw new Error("projects should not be read");
+				calls.push("listProjects");
+				return [];
 			}),
 			listConversations: vi.fn(async () => {
 				calls.push("listConversations");
@@ -1441,8 +1442,8 @@ describe("ChatGPT account mirror metadata collector", () => {
 			},
 		});
 
-		expect(calls).toEqual(["listConversations"]);
-		expect(client.listProjects).not.toHaveBeenCalled();
+		expect(calls).toEqual(["listProjects", "listConversations"]);
+		expect(client.listProjects).toHaveBeenCalledTimes(1);
 		expect(client.listAccountFiles).not.toHaveBeenCalled();
 		expect(client.listConversationFiles).not.toHaveBeenCalled();
 		expect(client.getConversationContext).not.toHaveBeenCalled();
@@ -1455,13 +1456,13 @@ describe("ChatGPT account mirror metadata collector", () => {
 			classification: "active_dominant",
 			active: {
 				identityReads: 1,
-				projectIndexReads: 0,
+				projectIndexReads: 1,
 				rootRailReads: 1,
 				projectConversationReads: 0,
 				chatLoads: 0,
 				accountLibraryReads: 0,
 				downloads: 0,
-				total: 2,
+				total: 3,
 			},
 		});
 	});

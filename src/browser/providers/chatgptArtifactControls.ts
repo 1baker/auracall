@@ -74,17 +74,9 @@ export function resolveChatgptArtifactControlCandidate(
 		String(value ?? "")
 			.replace(/\s+/g, " ")
 			.trim();
-	const titleKey = (value: unknown) => normalize(value).toLowerCase().replace(/\s+/g, "");
 	const titleMatches = (candidateTitle: unknown, expectedTitle: unknown) => {
 		const expectedNormalized = normalize(expectedTitle).toLowerCase();
-		if (!expectedNormalized) return true;
-		const candidateNormalized = normalize(candidateTitle).toLowerCase();
-		if (candidateNormalized === expectedNormalized) return true;
-		const candidateKey = titleKey(candidateNormalized);
-		const expectedKey = titleKey(expectedNormalized);
-		if (candidateKey === expectedKey) return true;
-		const expectedStem = expectedKey.replace(/\.[^.]+$/, "");
-		return expectedStem.length > 3 && candidateKey.startsWith(expectedStem);
+		return Boolean(expectedNormalized) && normalize(candidateTitle).toLowerCase() === expectedNormalized;
 	};
 	const expectedTitle = normalize(expected.title).toLowerCase();
 	const expectedUri = normalize(expected.uri).toLowerCase();
@@ -92,19 +84,19 @@ export function resolveChatgptArtifactControlCandidate(
 	const expectedTurnId = normalize(expected.turnId);
 	const expectedMessageId = normalize(expected.messageId);
 
+	const matches: ChatgptArtifactControlCandidate[] = [];
 	for (const candidate of candidates) {
 		const candidateTitle = normalize(candidate.title).toLowerCase();
 		const candidateHref = normalize(candidate.href).toLowerCase();
 		const titleMatch =
 			Boolean(candidateTitle) &&
-			(!expectedTitle ||
-				titleMatches(candidateTitle, expectedTitle) ||
+			(titleMatches(candidateTitle, expectedTitle) ||
 				Boolean(expectedUriFileName && titleMatches(candidateTitle, expectedUriFileName)));
 		const uriMatch = Boolean(expectedUri && candidateHref && candidateHref === expectedUri);
-		if (!titleMatch && !uriMatch) continue;
+		// A matching href must not override a contradictory filename label.
+		if (!titleMatch && !(uriMatch && (!candidateTitle || (!expectedTitle && !expectedUriFileName)))) continue;
 		if (expectedTurnId && normalize(candidate.turnId) !== expectedTurnId) continue;
 		if (
-			!expectedTurnId &&
 			expectedMessageId &&
 			normalize(candidate.messageId) !== expectedMessageId &&
 			normalize(candidate.turnId) !== expectedMessageId
@@ -117,11 +109,14 @@ export function resolveChatgptArtifactControlCandidate(
 			candidate.messageIndex !== expected.messageIndex
 		)
 			continue;
-		if (typeof expected.buttonIndex === "number" && candidate.buttonIndex !== expected.buttonIndex)
+		// Ordinals can change when ChatGPT rerenders. With stable turn/message
+		// ownership, the unique exact full filename is authority, not old position.
+		if (!expectedTurnId && !expectedMessageId
+			&& typeof expected.buttonIndex === "number" && candidate.buttonIndex !== expected.buttonIndex)
 			continue;
-		return candidate;
+		matches.push(candidate);
 	}
-	return null;
+	return matches.length === 1 ? matches[0]! : null;
 }
 
 function isDomDownloadControl(artifact: ConversationArtifact): boolean {
