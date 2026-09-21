@@ -49326,3 +49326,40 @@ wrapper imports `resolveChatgptDestination`. Exact mirrored project records
 configured Proposal and SABER agents; a normal agent clears project routing.
 All three resolver outcomes were read back locally. No retained browser was
 launched and no provider prompt was submitted.
+
+## 2026-09-21 | Repeatable Codex browser round-trip smoke
+
+- Added `pnpm run smoke:codex-browser-roundtrip` as the narrow live acceptance
+  command for Codex -> AuraCall -> Agent Browser -> retained ChatGPT -> durable
+  AuraCall readback -> Codex.
+- The command selects the single retained browser whose immutable build proof
+  identifies the physical `chatgpt-pro` profile, requires its service projection
+  to agree, then requires the no-launch access plan to reuse that exact browser
+  and session while rejecting duplicate-process authority.
+- It submits one unpredictable nonce through the normal-chat agent, polls only
+  its returned response ID, and requires exact assistant output plus matching
+  runtime, target, retained browser, canonical conversation evidence, and an
+  unchanged physical browser identity after completion.
+- Source validation: strict script lint and TypeScript checking pass. The first
+  post-change live execution created durable response
+  `resp_a2caad4cc4494a718f3bb5c0b47583aa` and then failed before provider
+  submission. Agent Browser correctly refused AuraCall's attempted launch
+  because retained Chrome PID `2696783` already owns the physical
+  `chatgpt-pro` profile.
+- The failure exposed a custody projection mismatch: Agent Browser's retained
+  service row and handles currently say `default`, while its applied immutable
+  browser-build proof says `chatgpt-pro`. The smoke preflight can prove and pin
+  that exact process, but AuraCall's own acquisition still plans against the
+  physical profile and sees no compatible retained service row. No duplicate
+  browser was launched and the failed response was read back without replay.
+- End-to-end acceptance therefore remains blocked on repairing the retained
+  service projection at the Agent Browser ownership boundary and rerunning one
+  fresh nonce through this command.
+- After diagnosing the failed response, the smoke was tightened to reject this
+  service-profile/physical-profile mismatch before response creation. A bounded
+  rerun stopped at that exact preflight with no second response ID, provider
+  submission, browser launch, or browser mutation.
+- Resolution: after the Agent Browser proof-bound custody repair, fresh response
+  `resp_1beaf76d8f074816962b7117116980b5` completed with exact nonce readback.
+  Its retained Chrome process identity remained unchanged, and AuraCall received
+  the provider result from Agent Browser's returned target handle.

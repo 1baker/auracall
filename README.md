@@ -247,6 +247,12 @@ auracall api status --expect-dashboard-session-ready
 # Repository/CI end-to-end proof uses isolated state and synthetic keys:
 pnpm run smoke:dashboard-session-readiness
 
+# Live Codex-to-retained-ChatGPT round trip. This submits one nonce-bound prompt,
+# polls only its durable response id, and verifies Agent Browser custody plus the
+# exact returned nonce. It pins and rechecks the physical retained browser and
+# refuses duplicate-browser routing.
+pnpm run smoke:codex-browser-roundtrip
+
 # Explicitly allow a non-loopback bind only when you mean it
 auracall api serve --host 0.0.0.0 --listen-public --port 8080
 

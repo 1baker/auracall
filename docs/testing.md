@@ -131,6 +131,22 @@
   installed `dist/` byte-matches the source build. This verifies retained-browser
   text round trips, not document artifacts or broader autonomous workflows.
 
+- Repeatable live Codex/browser round trip: `pnpm run smoke:codex-browser-roundtrip`
+  reads the local private API environment without printing its key, requires an
+  ready retained browser whose immutable build proof identifies the physical
+  `chatgpt-pro` profile. Its service projection must identify the same profile;
+  a mismatch fails before response creation. The no-launch Agent Browser access
+  plan must then reuse that exact browser and session with duplicate processes
+  forbidden.
+  It submits one random nonce through `agent:normal-chatgpt`, polls only the
+  returned response ID, requires exact assistant nonce equality, checks required
+  Agent Browser bridge evidence, and independently confirms that the reported
+  target converged to a canonical ChatGPT conversation under the same retained
+  browser. It then rechecks the browser PID, process-start token, CDP endpoint,
+  executable, and session so replacement cannot pass unnoticed. The default
+  deadline is 240 seconds; use `--timeout-ms`, `--poll-interval-ms`, or
+  `--tab-convergence-ms` only for a reviewed bounded override.
+
 - Download-boundary regression: `pnpm exec vitest run tests/browser/chatgptArtifactDownloadBinding.test.ts tests/browser/chatgptAdapter.test.ts --maxWorkers 1`. Checks mismatched extensions/stems, partial/multiple downloads, and hidden or wrong-name library viewers. Same-response live acceptance additionally requires all standalone documents to byte-match ZIP members and contain the current request content; filename tests alone cannot distinguish same-named historical files.
 
 - Exact-response document capture: `pnpm exec vitest run tests/browser/browserModeExports.test.ts tests/browser/pageActions.test.ts --maxWorkers 1` checks freshness and message boundaries, including identical download-label replies. Provider-free checks are not live recovery proof. A recovery acceptance test must retrieve from the original nonce-bound assistant, validate complete DOCX/PDF content and digests, reject earlier same-name artifacts, preserve any original API failure, and avoid submitting the prompt again.

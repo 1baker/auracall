@@ -22814,3 +22814,34 @@ browser-stage lifecycle observability, not transcript truncation.
 - Verification: 62 focused routing/config assertions, typecheck, production
   build, CodeGraph sync, and diff hygiene passed. Browser installation and a
   live routing matrix are separate acceptance gates.
+
+# 2026-09-21 - Bind the Codex browser smoke to durable response readback
+
+- A successful provider turn is not a complete Codex integration proof until
+  the caller reads the same durable response ID and validates the returned
+  assistant content.
+- `smoke:codex-browser-roundtrip` selects the single retained browser whose
+  immutable process proof identifies the physical `chatgpt-pro` profile,
+  requires the no-launch access plan to reuse that exact browser and session,
+  forbids a duplicate profile lane, submits one fresh nonce, and polls without
+  replay.
+- Passing requires the exact nonce, Agent Browser authority, target, browser,
+  session, canonical ChatGPT conversation, and unchanged physical process
+  identity before and after the response.
+- The smoke reads the private local API key only from the configured env file
+  and never prints it. Failure retains the response ID in the error path when
+  one was created, allowing read-only diagnosis instead of prompt replay.
+- The first live run proved the failure path: response
+  `resp_a2caad4cc4494a718f3bb5c0b47583aa` retained its nonce metadata and failed
+  before provider submission because AuraCall planned a new `chatgpt-pro`
+  browser while Agent Browser held the same physical profile under a retained
+  service row projected as `default`. No duplicate process or replay occurred.
+- Terminal errors now surface the durable execution failure code and message
+  instead of reporting the top-level nullable `error` field as `undefined`.
+- The preflight now rejects a service-profile/physical-profile mismatch before
+  response creation, preventing repeat submissions while that custody gap is
+  unresolved.
+- Resolution verification: Agent Browser repaired the proof-bound browser,
+  session, and tab-handle projection without replacing retained Chrome. A fresh
+  response, `resp_1beaf76d8f074816962b7117116980b5`, completed through the
+  retained browser and returned its exact nonce on 2026-09-21.
