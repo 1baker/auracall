@@ -15,6 +15,12 @@ three unrelated pre-existing findings. No source installation, browser launch,
 provider input, or GitHub action occurred. Configure reviewed agent bindings
 before a separately authorized installed retained-browser routing smoke.
 
+Follow-up: installed the committed user runtime into
+`/home/bak3r/.auracall/user-runtime` and verified the local wrapper imports the
+resolver. Reviewed cache identities configured `proposal-chatgpt` for Proposals,
+`saber-chatgpt` for SABER, and `normal-chatgpt` for root ChatGPT. Local resolver
+readback selected the expected routes; no browser was launched or prompted.
+
 ## 2026-09-13 | Confirmed native recovery-read permission blocker
 
 Inspected actual native admission rather than treating synthetic task callbacks

@@ -49320,3 +49320,9 @@ ambient project routing for explicit normal-new or existing-conversation work.
 62 focused assertions, typecheck, build, CodeGraph sync, and diff hygiene pass.
 The repository plan audit retains three unrelated findings. Installation and a
 separately authorized live routing matrix remain outside this source slice.
+
+Follow-up: the committed package is installed at the user runtime and its local
+wrapper imports `resolveChatgptDestination`. Exact mirrored project records
+configured Proposal and SABER agents; a normal agent clears project routing.
+All three resolver outcomes were read back locally. No retained browser was
+launched and no provider prompt was submitted.

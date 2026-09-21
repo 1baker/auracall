@@ -55,8 +55,8 @@ verification.
 ## Execution Receipt C02
 
 - state_transition: active -> complete
-- acceptance_state: source acceptance criteria verified; installation and live
-  browser submission remain intentionally outside this slice.
+- acceptance_state: source and user-runtime installation verified; live browser
+  submission remains intentionally outside this slice.
 - progress_classification: verified_completion
 - implementation: `chatgptDestination` is now a typed request/agent setting
   with explicit `normal_new`, `new_project_conversation`, and
@@ -64,7 +64,9 @@ verification.
   normal/new and existing routes clear inherited project bindings; legacy URL
   and project behavior is retained unchanged.
 - verification: 62 focused tests across four suites, TypeScript no-emit check,
-  production build, CodeGraph sync/current status, and diff hygiene passed.
+  production build, CodeGraph sync/current status, diff hygiene, and an
+  installed-runtime import of the resolver passed. Three reviewed local agents
+  resolve to Proposals, SABER, and normal ChatGPT routes respectively.
 - material_blockers: repository plan audit retains three pre-existing findings
   in an unrelated HTTP route and Plan 0357; this plan added none.
 - next_action_or_stop_reason: configure reviewed Proposal/SABER agent bindings
