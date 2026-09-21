@@ -11,6 +11,39 @@ it('preserves the explicit request hint and rejects invalid or ambiguous destina
     expect(() => createExecutionRequest({ model: 'test', input: 'test', auracall: { chatgptNewConversationProjectId: id } })).toThrow();
   }
   expect(() => createExecutionRequest({ model: 'test', input: 'test', auracall: { chatgptNewConversationProjectId: project, chatgptConversationUrl: conversation } })).toThrow();
+  expect(() => createExecutionRequest({ model: 'test', input: 'test', auracall: { chatgptDestination: 'normal_new', chatgptNewConversationProjectId: project } })).toThrow();
+  expect(() => createExecutionRequest({ model: 'test', input: 'test', auracall: { chatgptDestination: 'existing_conversation' } })).toThrow();
+});
+
+it.each([
+  ['normal_new', { chatgptDestination: 'normal_new' }, { projectId: null, conversationId: null, chatgptNewConversationProjectId: null, url: 'https://chatgpt.com/' }],
+  ['new_project_conversation', { chatgptDestination: 'new_project_conversation', chatgptNewConversationProjectId: project }, { projectId: project, conversationId: null, chatgptNewConversationProjectId: project, url: `https://chatgpt.com/g/${project}/project` }],
+  ['existing_conversation', { chatgptDestination: 'existing_conversation', chatgptConversationUrl: conversation }, { projectId: null, conversationId: null, chatgptNewConversationProjectId: null, url: conversation }],
+] as const)('resolves explicit ChatGPT destination mode before browser acquisition: %s', async (_name, auracall, expected) => {
+  const runBrowserModeImpl = vi.fn(async () => ({ answerText: 'Ready', answerMarkdown: 'Ready', answerMessageId: 'assistant-1', tookMs: 1, answerTokens: 1, answerChars: 5, tabUrl: conversation }));
+  const execute = createConfiguredStoredStepExecutor({ runtimeProfiles: { default: {
+    engine: 'browser', defaultService: 'chatgpt', browserProfile: 'default',
+    services: { chatgpt: { projectId: 'g-p-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', manualLoginProfileDir: '/tmp/destination-test' } },
+  } } }, { runBrowserModeImpl });
+  if (!execute) throw new Error('Configured executor was not created.');
+  await execute({
+    record: { runId: 'destination-test', revision: 1, bundle: { run: { id: 'destination-test', initialInputs: { auracall } }, events: [] } } as never,
+    step: { id: 'step-1', agentId: 'test', runtimeProfileId: 'default', service: 'chatgpt', input: { prompt: 'Write the document', artifacts: [], notes: [], structuredData: {} } } as never,
+  });
+  expect(runBrowserModeImpl).toHaveBeenCalledWith(expect.objectContaining({ config: expect.objectContaining(expected) }));
+});
+
+it('uses a policy-selected agent destination without inspecting prompt content', async () => {
+  const runBrowserModeImpl = vi.fn(async () => ({ answerText: 'Ready', answerMarkdown: 'Ready', answerMessageId: 'assistant-1', tookMs: 1, answerTokens: 1, answerChars: 5, tabUrl: conversation }));
+  const execute = createConfiguredStoredStepExecutor({ runtimeProfiles: { default: { engine: 'browser', defaultService: 'chatgpt', services: { chatgpt: { manualLoginProfileDir: '/tmp/agent-destination-test' } } } }, agents: {
+    proposal: { runtimeProfile: 'default', service: 'chatgpt', projectId: project, chatgptDestination: 'new_project_conversation' },
+  } }, { runBrowserModeImpl });
+  if (!execute) throw new Error('Configured executor was not created.');
+  await execute({
+    record: { runId: 'agent-destination-test', revision: 1, bundle: { run: { id: 'agent-destination-test' }, events: [] } } as never,
+    step: { id: 'step-1', agentId: 'proposal', runtimeProfileId: 'default', service: 'chatgpt', input: { prompt: 'Unrelated words must not change destination.', artifacts: [], notes: [], structuredData: {} } } as never,
+  });
+  expect(runBrowserModeImpl).toHaveBeenCalledWith(expect.objectContaining({ config: expect.objectContaining({ projectId: project, chatgptNewConversationProjectId: project, url: `https://chatgpt.com/g/${project}/project` }) }));
 });
 
 it.each(['valid', 'wrong-project', 'missing-url', 'missing-artifact', 'conflict'] as const)('routes new chat once and verifies the returned destination: %s', async (kind) => {

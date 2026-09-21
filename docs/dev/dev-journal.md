@@ -49312,3 +49312,11 @@ prompt.
   identity from recency. Focused recovery tests pass 44 assertions and the
   TypeScript check passes. Installed recovery and the existing failed response
   remain the next live acceptance step.
+## 2026-09-21 | Policy-governed ChatGPT destination routing
+
+Plan 0360 closed source acceptance. The typed resolver preserves the prompt,
+accepts only policy-selected agent/request destination intent, and clears
+ambient project routing for explicit normal-new or existing-conversation work.
+62 focused assertions, typecheck, build, CodeGraph sync, and diff hygiene pass.
+The repository plan audit retains three unrelated findings. Installation and a
+separately authorized live routing matrix remain outside this source slice.

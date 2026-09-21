@@ -424,6 +424,7 @@ export const AgentConfigSchema = z.object({
   service: z.enum(['chatgpt', 'gemini', 'grok']).optional(),
   model: z.string().optional(),
   modelSelector: z.string().optional(),
+  chatgptDestination: z.enum(['existing_conversation', 'new_project_conversation', 'normal_new']).optional(),
   projectId: z.string().optional(),
   projectName: z.string().optional(),
   projectBinding: z

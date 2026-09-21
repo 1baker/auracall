@@ -1,5 +1,20 @@
 # RUNBOOK
 
+## 2026-09-21 | Policy-governed ChatGPT destination routing
+
+Plan 0360 added a typed destination resolver before retained-browser
+acquisition. A policy-selected agent or explicit request may choose normal new
+chat, a new conversation in an exact project, or an existing conversation.
+The resolver deliberately receives no prompt text, so ModelLabs and AuraCall do
+not classify or rewrite prompts to select Proposal, SABER, Workshop, or general
+chat. Agent Browser remains the lifecycle and exact-target authority.
+
+Focused routing/config tests (62 assertions), no-emit typecheck, production
+build, CodeGraph sync, and diff hygiene passed. The plan-library audit retains
+three unrelated pre-existing findings. No source installation, browser launch,
+provider input, or GitHub action occurred. Configure reviewed agent bindings
+before a separately authorized installed retained-browser routing smoke.
+
 ## 2026-09-13 | Confirmed native recovery-read permission blocker
 
 Inspected actual native admission rather than treating synthetic task callbacks

@@ -14,6 +14,7 @@ import type {
 import { ExecutionRunRecordBundleSchema } from './schema.js';
 
 export const ExecutionTransportSchema = z.enum(['api', 'browser', 'auto']);
+export const ChatgptDestinationModeSchema = z.enum(['existing_conversation', 'new_project_conversation', 'normal_new']);
 
 export const ExecutionBrowserHostSchema = z.enum([
   'local_headless',
@@ -49,12 +50,27 @@ export const ExecutionRequestExtensionHintsSchema: z.ZodType<ExecutionRequestExt
   outputContract: z.string().nullable().optional(),
   composerTool: z.string().nullable().optional(),
   deepResearchPlanAction: z.enum(['start', 'edit']).nullable().optional(),
+  chatgptDestination: ChatgptDestinationModeSchema.nullable().optional(),
   chatgptConversationUrl: z.string().nullable().optional(),
   chatgptNewConversationProjectId: z.string().regex(/^g-p-[a-f0-9]{32}$/).nullable().optional(),
   browserHost: ExecutionBrowserHostSchema.nullable().optional(),
-}).refine(value => !(value.chatgptNewConversationProjectId && value.chatgptConversationUrl != null), {
-  message: 'New ChatGPT project conversation and existing conversation URL are mutually exclusive.',
-  path: ['chatgptNewConversationProjectId'],
+}).superRefine((value, context) => {
+  if (value.chatgptNewConversationProjectId && value.chatgptConversationUrl != null) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'New ChatGPT project conversation and existing conversation URL are mutually exclusive.',
+      path: ['chatgptNewConversationProjectId'],
+    });
+  }
+  if (value.chatgptDestination === 'existing_conversation' && value.chatgptConversationUrl == null) {
+    context.addIssue({ code: z.ZodIssueCode.custom, message: 'Existing ChatGPT destination requires an exact conversation URL.', path: ['chatgptConversationUrl'] });
+  }
+  if (value.chatgptDestination === 'new_project_conversation' && !value.chatgptNewConversationProjectId) {
+    context.addIssue({ code: z.ZodIssueCode.custom, message: 'New ChatGPT project destination requires a project id.', path: ['chatgptNewConversationProjectId'] });
+  }
+  if (value.chatgptDestination === 'normal_new' && (value.chatgptConversationUrl != null || value.chatgptNewConversationProjectId != null)) {
+    context.addIssue({ code: z.ZodIssueCode.custom, message: 'Normal new ChatGPT destination cannot include a project or conversation target.', path: ['chatgptDestination'] });
+  }
 });
 
 export const ExecutionRequestInputMessageSchema: z.ZodType<ExecutionRequestInputMessage> = z.object({

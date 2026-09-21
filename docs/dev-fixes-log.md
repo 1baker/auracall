@@ -22801,3 +22801,16 @@ browser-stage lifecycle observability, not transcript truncation.
 - This prevents unrelated accumulated tabs from blocking safe read-only
   recovery while preserving fail-closed behavior for missing, changed,
   streaming, duplicate-user, account-mismatched, or record-mutated evidence.
+
+# 2026-09-21 - Keep destination policy separate from prompt content
+
+- Symptom: project selection risked falling back to whichever ChatGPT project
+  was configured or visible, making Workshop appear to be a universal route.
+- Fix: add one typed destination resolver above browser acquisition with only
+  `normal_new`, `new_project_conversation`, and `existing_conversation` modes.
+  Policy-selected agent bindings or explicit request metadata supply the mode;
+  prompt content is not an input. Explicit normal/new and existing routes clear
+  inherited project bindings, while legacy URL/project behavior remains intact.
+- Verification: 62 focused routing/config assertions, typecheck, production
+  build, CodeGraph sync, and diff hygiene passed. Browser installation and a
+  live routing matrix are separate acceptance gates.

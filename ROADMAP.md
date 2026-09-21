@@ -7,6 +7,12 @@
 Status: active
 Lane: P01
 
+- Closed policy-governed ChatGPT destination routing:
+  [Plan 0360](docs/dev/plans/0360-2026-09-21-policy-governed-chatgpt-destination-routing.md).
+  Current state: typed resolver and compatibility tests pass. Runtime agent
+  bindings and a separately authorized installed routing smoke remain next;
+  this source slice did not submit a browser prompt.
+
 - Active conversation-capacity recovery:
   [Plan 0359](docs/dev/plans/0359-2026-09-11-conversation-capacity-recovery.md).
   Current state: exact live assistant reports maximum conversation length;

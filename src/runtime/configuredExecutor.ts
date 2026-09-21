@@ -40,7 +40,7 @@ import type {
   BrowserRuntimeMetadata,
   CookieParam,
 } from '../browser/types.js';
-import { resolveChatgptProjectUrl } from '../browser/providers/chatgptAdapter.js';
+import { resolveChatgptDestination } from './chatgptDestination.js';
 import {
   createProviderSessionAuthority,
   type ProviderSessionAuthorization,
@@ -1296,31 +1296,22 @@ export function createConfiguredStoredStepExecutor(
       asAgentBrowserHost(runtimeServiceConfig?.browserHost) ??
       asAgentBrowserHost(globalServiceConfig?.browserHost) ??
       null;
-    const newConversationProjectId = requestAuracall?.chatgptNewConversationProjectId ?? null;
-    if (newConversationProjectId !== null && (service !== 'chatgpt'
-      || typeof newConversationProjectId !== 'string' || !/^g-p-[a-f0-9]{32}$/.test(newConversationProjectId)
-      || requestAuracall?.chatgptConversationUrl != null)) {
-      throw new Error('Invalid or conflicting explicit ChatGPT new project conversation request.');
-    }
-    const projectId =
-      newConversationProjectId ??
-      asNonEmptyString(agentConfig?.projectId) ??
-      asNonEmptyString(runtimeServiceConfig?.projectId) ??
-      asNonEmptyString(globalServiceConfig?.projectId) ??
-      null;
+    const chatgptDestination = service === 'chatgpt'
+      ? resolveChatgptDestination({ request: requestAuracall, agent: agentConfig, runtimeService: runtimeServiceConfig, globalService: globalServiceConfig })
+      : null;
+    const newConversationProjectId = chatgptDestination?.newConversationProjectId ?? null;
+    const projectId = chatgptDestination
+      ? chatgptDestination.projectId
+      : asNonEmptyString(agentConfig?.projectId) ??
+        asNonEmptyString(runtimeServiceConfig?.projectId) ??
+        asNonEmptyString(globalServiceConfig?.projectId) ?? null;
     const configuredServiceUrl =
       asNonEmptyString(runtimeServiceConfig?.url) ??
       asNonEmptyString(globalServiceConfig?.url) ??
       null;
-    const requestedChatgptConversationUrl =
-      service === 'chatgpt'
-        ? asNonEmptyString(requestAuracall?.chatgptConversationUrl)
-        : null;
-    const targetUrl =
-      requestedChatgptConversationUrl ??
-      (service === 'chatgpt' && projectId
-        ? resolveChatgptProjectUrl(projectId)
-        : configuredServiceUrl);
+    const targetUrl = service === 'chatgpt'
+      ? chatgptDestination?.targetUrl ?? configuredServiceUrl
+      : configuredServiceUrl;
     const manualLoginProfileDir =
       asNonEmptyString(runtimeServiceConfig?.manualLoginProfileDir) ??
       asNonEmptyString(runtimeBrowserConfig?.manualLoginProfileDir) ??
@@ -1544,7 +1535,7 @@ export function createConfiguredStoredStepExecutor(
         target: service,
         agentBrowserHost,
         projectId,
-        conversationId: null,
+        conversationId: chatgptDestination?.conversationId ?? null,
         chatgptNewConversationProjectId: newConversationProjectId,
         url: service === 'chatgpt' ? (targetUrl ?? undefined) : undefined,
         chatgptUrl: service === 'chatgpt' ? (targetUrl ?? undefined) : undefined,

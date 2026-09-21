@@ -752,6 +752,11 @@ Within each file, later CLI flags still override config, and environment variabl
 - Migration note:
   - If you already use `projectId`/`projectName` in profile service blocks, you can keep that path and avoid URL pinning entirely.
   - URL pinning is most useful when you want a literal target route (for example, a specific non-project chat folder URL) instead of config-driven project resolution.
+- A policy-selected ChatGPT agent may set `chatgptDestination` to exactly one of:
+  - `normal_new`: start a normal unprojected chat and clear inherited project routing.
+  - `new_project_conversation`: start a fresh chat in that agent's exact `projectId`.
+  - `existing_conversation`: continue that agent's configured `conversationId`.
+  AuraCall does not classify or rewrite prompt text to choose this value. The caller or its policy layer selects the agent; Agent Browser still owns the retained browser and verifies the exact resulting route.
 - `services.<service>.interactiveLogin` can set a global login mode default; `runtimeProfiles.<name>.services.<service>.interactiveLogin` overrides it per runtime profile (legacy `manualLogin` still works).
 - Current browser-mode default posture is still managed-profile interactive
   login:

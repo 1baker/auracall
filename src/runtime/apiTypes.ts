@@ -1,6 +1,7 @@
 import type { ExecutionRunRecordBundle } from './types.js';
 
 export type ExecutionTransport = 'api' | 'browser' | 'auto';
+export type ChatgptDestinationMode = 'existing_conversation' | 'new_project_conversation' | 'normal_new';
 
 export type ExecutionBrowserHost =
   | 'local_headless'
@@ -34,6 +35,7 @@ export interface ExecutionRequestExtensionHints {
   outputContract?: string | null;
   composerTool?: string | null;
   deepResearchPlanAction?: 'start' | 'edit' | null;
+  chatgptDestination?: ChatgptDestinationMode | null;
   chatgptConversationUrl?: string | null;
   chatgptNewConversationProjectId?: string | null;
   browserHost?: ExecutionBrowserHost | null;
