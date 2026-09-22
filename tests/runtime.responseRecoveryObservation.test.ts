@@ -179,7 +179,7 @@ describe('after-submit new-project observation', () => {
     if (kind === 'missing-pid') delete details.agentBrowserProcessId;
     expect(() => reconstructRecoveryWire(record)).toThrow();
   });
-  it.each(['valid', 'unconstrained-host', 'many-siblings', 'missing', 'ambiguous', 'duplicate-user', 'changed-answer', 'streaming', 'wrong-account', 'changed-pid', 'wrong-host', 'wrong-session', 'truncated', 'changed-record'] as const)('observes %s without mutation', async kind => {
+  it.each(['valid', 'proof-pid', 'unconstrained-host', 'many-siblings', 'missing', 'ambiguous', 'duplicate-user', 'changed-answer', 'streaming', 'wrong-account', 'changed-pid', 'wrong-host', 'wrong-session', 'truncated', 'changed-record'] as const)('observes %s without mutation', async kind => {
     const record = projectFixture();
     if (kind === 'unconstrained-host') {
       delete (record.bundle.run.initialInputs.auracall as any).browserHost;
@@ -192,7 +192,10 @@ describe('after-submit new-project observation', () => {
     const fetch = vi.fn(async (resource: unknown, init?: RequestInit) => {
       let data: unknown;
       if (String(resource).endsWith('/api/service/browsers')) data = { browsers: [{ id: handle.browserId, profileId: handle.profileId,
-        health: 'ready', host: kind === 'wrong-host' ? 'local_headed' : 'remote_headed', pid: kind === 'changed-pid' ? 1235 : 1234,
+        health: 'ready', host: kind === 'wrong-host' ? 'local_headed' : 'remote_headed', pid: kind === 'proof-pid' ? null : kind === 'changed-pid' ? 1235 : 1234,
+        cdpEndpoint: 'ws://127.0.0.1:45521/devtools/browser/fixture', browserBuild: 'stock_chrome',
+        browserBuildProof: kind === 'proof-pid' ? { applied: true, browserPid: 1234,
+          cdpEndpoint: 'ws://127.0.0.1:45521/devtools/browser/fixture', profileId: handle.profileId, browserBuild: 'stock_chrome' } : null,
         tabHandles: [{ ...handle, sessionName: kind === 'wrong-session' ? 'other' : handle.sessionName }, second,
           ...(kind === 'many-siblings' ? Array.from({ length: 9 }, (_, index) => ({ ...second,
             targetId: `sibling-${index}`, url: second.url.replace('22222222-2222-2222-2222-222222222222',
@@ -218,7 +221,7 @@ describe('after-submit new-project observation', () => {
       readRecordBytes: async () => ++reads > 1 && kind === 'changed-record' ? Buffer.from(original.toString() + ' ') : original,
       observeProject: input => observeAgentBrowserProjectResponse(input, { fetch: fetch as never, listStreamFiles: async () => [] }),
     });
-    if (kind === 'valid' || kind === 'unconstrained-host' || kind === 'many-siblings' || kind === 'ambiguous') {
+    if (kind === 'valid' || kind === 'proof-pid' || kind === 'unconstrained-host' || kind === 'many-siblings' || kind === 'ambiguous') {
       expect(await result).toMatchObject({ observation_kind: 'after_submit_new_project', project_id: projectId,
         conversation_url: url, user_message_id: 'u1', assistant_message_id: 'a1', account_verdict: 'match',
         original_record_digest: createHash('sha256').update(original).digest('hex'), prompt_submitted: false, original_run_modified: false });

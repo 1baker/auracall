@@ -6,7 +6,7 @@ import { createNativeBrokerTransport, type NativeBrokerTransportOptions } from "
 import { BrowserAutomationError } from "../../oracle/errors.js";
 import { buildChatgptAuthSessionIdentityExpression, normalizeChatgptAuthSessionIdentity } from "../providers/chatgptAdapter.js";
 import { assertProviderSessionAuthorization, type ProviderSessionAuthorization } from "../providers/providerSessionAuthority.js";
-import { bindRecoveredResponse, RECOVERY_RESPONSE_SNAPSHOT, type RecoveryResponseBinding } from "./recoveryResponseBinding.js";
+import { bindRecoveredResponse, RECOVERY_RESPONSE_API_SNAPSHOT, RECOVERY_RESPONSE_SNAPSHOT, RecoveryResponseBindingError, type RecoveryResponseBinding } from "./recoveryResponseBinding.js";
 
 const DEFAULT_TIMEOUT_MS = 5_000;
 const DEFAULT_BROKER_INVENTORY_CONVERGENCE_TIMEOUT_MS = 15_000;
@@ -127,6 +127,37 @@ function verifiedBrowserProcessId(browser: BrowserRecord): number {
 		return proven;
 	}
 	throw new Error("agent-browser retained tab has no live browser process identity");
+}
+
+function optionalVerifiedBrowserProcessId(browser: BrowserRecord): number | null {
+	try {
+		return verifiedBrowserProcessId(browser);
+	} catch {
+		return null;
+	}
+}
+
+function selectRetainedViewStream(
+	browser: BrowserRecord,
+	input: Pick<AgentBrowserBrokerInput, "viewStreamProvider" | "controlInputProvider">,
+): { provider: string; controlInput: string } | null {
+	const streams = (browser.viewStreams ?? []).flatMap((stream) =>
+		typeof stream.provider === "string" && typeof stream.controlInput === "string"
+			? [{ provider: stream.provider, controlInput: stream.controlInput }]
+			: [],
+	);
+	const requested = streams.filter(
+		(stream) =>
+			(!input.viewStreamProvider || stream.provider === input.viewStreamProvider) &&
+			(!input.controlInputProvider || stream.controlInput === input.controlInputProvider),
+	);
+	if (requested.length === 1) return requested[0];
+	if (input.viewStreamProvider || input.controlInputProvider) return null;
+	if (streams.length === 1) return streams[0];
+	const standard = streams.filter(
+		(stream) => stream.provider === "cdp_screencast" && stream.controlInput === "cdp_input",
+	);
+	return standard.length === 1 ? standard[0] : null;
 }
 
 type JsonResponse = {
@@ -852,15 +883,40 @@ export async function reattachAgentBrowserBrokerTab(
 	const browserProcessId = verifiedBrowserProcessId(candidate.browser);
 	// A surviving physical target does not establish which answer belongs to this run.
 	if (input.recoveryPrompt && input.url) {
-		const observation = await requestJson(fetchImpl, route.baseUrl, '/api/service/request', {
-			method: 'POST', headers: { 'content-type': 'application/json' },
-			body: JSON.stringify({ action: 'evaluate', ...labels, runtimeProfile: input.profileId,
-				browserId: input.browserId, sessionName: input.sessionName,
-				serviceTabHandle: candidate.handle, expression: RECOVERY_RESPONSE_SNAPSHOT,
-				timeoutMs: 10000, maxReturnBytes: 1000000, returnByValue: true }),
-		}, input.abortSignal, 15000);
-		if (observation.data?.resultTruncated === true) throw new Error('Recovery snapshot was truncated');
-		recoveredResponse = bindRecoveredResponse(observation.data?.result, input.recoveryPrompt, input.url);
+		for (let attempt = 0; attempt < 41; attempt += 1) {
+			const observation = await requestJson(fetchImpl, route.baseUrl, '/api/service/request', {
+				method: 'POST', headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({ action: 'evaluate', ...labels, runtimeProfile: input.profileId,
+					browserId: input.browserId, sessionName: input.sessionName,
+					serviceTabHandle: candidate.handle, expression: RECOVERY_RESPONSE_SNAPSHOT,
+					timeoutMs: 10000, maxReturnBytes: 1000000, returnByValue: true }),
+			}, input.abortSignal, 15000);
+			if (observation.data?.resultTruncated === true) throw new Error('Recovery snapshot was truncated');
+			try {
+				recoveredResponse = bindRecoveredResponse(observation.data?.result, input.recoveryPrompt, input.url);
+				break;
+			} catch (error) {
+				const virtualizedUser = error instanceof RecoveryResponseBindingError
+					&& error.reason.startsWith('prompt_matches_0_') && error.reason.endsWith('_users_0');
+				if (virtualizedUser) {
+					const apiObservation = await requestJson(fetchImpl, route.baseUrl, '/api/service/request', {
+						method: 'POST', headers: { 'content-type': 'application/json' },
+						body: JSON.stringify({ action: 'evaluate', ...labels, runtimeProfile: input.profileId,
+							browserId: input.browserId, sessionName: input.sessionName,
+							serviceTabHandle: candidate.handle, expression: RECOVERY_RESPONSE_API_SNAPSHOT,
+							awaitPromise: true, timeoutMs: 10000, maxReturnBytes: 1000000, returnByValue: true }),
+					}, input.abortSignal, 15000);
+					if (apiObservation.data?.resultTruncated === true) throw new Error('Recovery API snapshot was truncated');
+					recoveredResponse = bindRecoveredResponse(apiObservation.data?.result, input.recoveryPrompt, input.url);
+					break;
+				}
+				const awaitingHydration = error instanceof RecoveryResponseBindingError
+					&& error.reason.startsWith('prompt_matches_0_') && error.reason.endsWith('_users_none');
+				if (!awaitingHydration || attempt === 40) throw error;
+				await new Promise(resolve => setTimeout(resolve, 250));
+				input.abortSignal?.throwIfAborted();
+			}
+		}
 	}
 	if (input.providerSessionAuthorization) {
 		const observation = await requestJson(fetchImpl, route.baseUrl, '/api/service/request', {
@@ -1047,15 +1103,37 @@ export async function observeAgentBrowserProjectResponse(
    }
  }
  const candidates = new Map<string, { baseUrl: string; handle: Record<string, unknown>; url: string }>();
+ const closedOriginalTargets = new Map<string, { baseUrl: string; url: string }>();
  const originalTargetId = String(input.serviceTabHandle.targetId ?? '');
  let originalTarget: { baseUrl: string; handle: Record<string, unknown>; url: string } | null = null;
  for (const route of routes) for (const browser of route.browsers) {
    if (browser.id !== input.browserId || browser.profileId !== input.profileId) continue;
-   if (browser.health !== 'ready' || browser.pid !== input.expectedBrowserProcessId
+   let observedBrowserProcessId: number;
+   try {
+     observedBrowserProcessId = verifiedBrowserProcessId(browser);
+   } catch {
+     throw new Error('Project response browser authority changed');
+   }
+   if (browser.health !== 'ready' || observedBrowserProcessId !== input.expectedBrowserProcessId
        || (input.browserHost && browser.host !== input.browserHost)) {
      throw new Error('Project response browser authority changed');
    }
    for (const handle of browser.tabHandles ?? []) {
+     if (handle.targetId === originalTargetId && handle.valid === false && handle.staleReason === 'tab_closed'
+         && handle.browserId === input.browserId && handle.profileId === input.profileId
+         && handle.sessionName === input.sessionName) {
+       try {
+         const closedUrl = new URL(String(handle.url));
+         const closedMatch = /^\/g\/(g-p-[a-f0-9]{32})(?:-[a-z0-9-]+)?\/c\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.exec(closedUrl.pathname);
+         if (closedUrl.origin === 'https://chatgpt.com' && !closedUrl.username && !closedUrl.password
+             && !closedUrl.search && !closedUrl.hash && closedMatch?.[1] === input.projectId) {
+           const existing = closedOriginalTargets.get(closedUrl.href);
+           if (!existing || route.baseUrl === input.baseUrl) closedOriginalTargets.set(closedUrl.href, { baseUrl: route.baseUrl, url: closedUrl.href });
+         }
+       } catch {
+         // A malformed stale URL is not recovery authority.
+       }
+     }
      if (handle.valid !== true || handle.browserId !== input.browserId || handle.profileId !== input.profileId
          || handle.sessionName !== input.sessionName || typeof handle.targetId !== 'string' || !handle.targetId) continue;
      let url: URL;
@@ -1081,6 +1159,10 @@ export async function observeAgentBrowserProjectResponse(
  // the bounded inventory scan when the original target did not become a
  // canonical conversation.
  const observationCandidates = originalTarget ? [originalTarget] : Array.from(candidates.values());
+ if (!observationCandidates.length && closedOriginalTargets.size === 1) {
+   const closed = Array.from(closedOriginalTargets.values())[0]!;
+   return reattachAgentBrowserBrokerTab({ ...input, baseUrl: closed.baseUrl, url: closed.url }, dependencies);
+ }
  if (!observationCandidates.length || observationCandidates.length > 8) throw new Error('Project response candidate inventory is absent or exceeds observation bound');
  const normalize = (value: string) => value.replace(/\s+/gu, ' ').trim();
  const matches: Array<{ baseUrl: string; handle: Record<string, unknown>; url: string; binding: RecoveryResponseBinding }> = [];
@@ -1174,23 +1256,23 @@ export async function acquireAgentBrowserBrokerTab(
 			try {
 				let retainedPosture: { browserId: string; sessionName: string; pid: number; browserHost: string; displayIsolation: string | null; viewStreamProvider: string; controlInputProvider: string } | null = null;
 				if (newProjectComposer) {
-					const retained = route.browsers.filter(browser => profileId && browser.profileId === profileId
-						&& browser.health === 'ready' && browser.id && Number.isInteger(browser.pid) && Number(browser.pid) > 0
-						&& (!input.browserHost || browser.host === input.browserHost));
+					const retained = route.browsers.flatMap(browser => {
+						const pid = optionalVerifiedBrowserProcessId(browser);
+						return profileId && browser.profileId === profileId && browser.health === 'ready' && browser.id && pid
+							&& (!input.browserHost || browser.host === input.browserHost) ? [{ browser, pid }] : [];
+					});
 					if (retained.length > 1) throw new Error('New project conversation retained browser authority is ambiguous');
 					if (retained.length === 1) {
-						const browser = retained[0]!;
+						const { browser, pid } = retained[0]!;
 						const sessions = new Set((browser.tabHandles ?? []).filter(handle => handle.valid === true
 							&& handle.browserId === browser.id && handle.profileId === profileId && typeof handle.sessionName === 'string'
 							&& handle.sessionName.trim()).map(handle => String(handle.sessionName)));
-						const streams = new Map((browser.viewStreams ?? []).filter(stream => stream.provider && stream.controlInput)
-							.map(stream => [JSON.stringify([stream.provider, stream.controlInput]), stream]));
-						if (sessions.size !== 1 || streams.size !== 1 || !browser.host) {
+						const stream = selectRetainedViewStream(browser, input);
+						if (sessions.size !== 1 || !stream || !browser.host) {
 							throw new Error('New project conversation retained session or display posture is missing or ambiguous');
 						}
-						const stream = [...streams.values()][0]!;
-						retainedPosture = { browserId: browser.id!, sessionName: [...sessions][0]!, pid: browser.pid!, browserHost: browser.host,
-							displayIsolation: browser.displayIsolation ?? null, viewStreamProvider: stream.provider!, controlInputProvider: stream.controlInput! };
+						retainedPosture = { browserId: browser.id!, sessionName: [...sessions][0]!, pid, browserHost: browser.host,
+							displayIsolation: browser.displayIsolation ?? null, viewStreamProvider: stream.provider, controlInputProvider: stream.controlInput };
 						for (const key of ['viewStreamProvider', 'controlInputProvider', 'displayIsolation'] as const) {
 							if (input[key] !== undefined && input[key] !== retainedPosture[key]) throw new Error('Explicit browser posture conflicts with retained browser');
 						}
@@ -1336,7 +1418,7 @@ export async function acquireAgentBrowserBrokerTab(
 						const current = await requestJson(fetchImpl, route.baseUrl, '/api/service/browsers', { method: 'GET' }, input.abortSignal);
 						const matching = ((current.data?.browsers ?? []) as BrowserRecord[]).filter(browser =>
 							browser.id === selectedBrowserId && browser.profileId === selectedProfileId && browser.health === 'ready'
-							&& browser.pid === retainedPosture.pid && browser.host === retainedPosture.browserHost
+							&& optionalVerifiedBrowserProcessId(browser) === retainedPosture.pid && browser.host === retainedPosture.browserHost
 							&& (browser.displayIsolation ?? null) === retainedPosture.displayIsolation
 							&& browser.viewStreams?.some(stream => stream.provider === retainedPosture.viewStreamProvider && stream.controlInput === retainedPosture.controlInputProvider)
 							&& (!input.browserHost || browser.host === input.browserHost)

@@ -5,6 +5,7 @@ import { createProviderSessionAuthorization } from "../../src/browser/providers/
 import {
 	acquireAgentBrowserBrokerTab,
 	detachAgentBrowserBrokerTab,
+	observeAgentBrowserProjectResponse,
 	reattachAgentBrowserBrokerTab,
 	resolveAgentBrowserBridgeMode,
 	resolveAgentBrowserBrokerUrl,
@@ -487,7 +488,7 @@ describe("agent-browser bridge", () => {
 		}
 	});
 
-	test("reopens only the exact saved conversation for read-only recovery after its task tab was released", async () => {
+	test("observes a new-project answer by reopening only its exact released conversation", async () => {
 		const url = "https://chatgpt.com/g/g-p-11111111111111111111111111111111-workshop/c/11111111-1111-1111-1111-111111111111";
 		const closed = { browserId: "session:chatgpt-pro", profileId: "chatgpt-pro",
 			sessionName: "chatgpt-pro", targetId: "CLOSED-ORIGINAL-TARGET", url,
@@ -495,6 +496,7 @@ describe("agent-browser bridge", () => {
 		const reopened = { ...closed, targetId: "READ-ONLY-OBSERVATION-TARGET", valid: true, staleReason: undefined };
 		const actions: string[] = [];
 		let opened = false;
+		let responseSnapshots = 0;
 		const fetch = vi.fn(async (requestUrl: string | URL | Request, init?: RequestInit) => {
 			const value = String(requestUrl);
 			if (value.endsWith("/api/service/browsers")) return jsonResponse({ success: true, data: { browsers: [{
@@ -521,6 +523,10 @@ describe("agent-browser bridge", () => {
 				browserWebSocketUrl: "ws://127.0.0.1:42233/devtools/browser/recovery", detachRequired: true,
 			} });
 			if (request.action === "evaluate" && String(request.expression).includes("data-message-author-role")) {
+				responseSnapshots += 1;
+				if (responseSnapshots === 1) return jsonResponse({ success: true, data: { result: {
+					url, generating: false, messages: [],
+				} } });
 				return jsonResponse({ success: true, data: { result: { url, generating: false, messages: [
 					{ role: "user", id: "u1", text: "Full original prompt" },
 					{ role: "assistant", id: "a1", text: "Recovered exact answer" },
@@ -537,7 +543,7 @@ describe("agent-browser bridge", () => {
 			chatgpt: { identity: { email: "expected@example.com" } },
 		} } } }, { providerId: "chatgpt", auracallRuntimeProfile: "default",
 			browserProfile: "chatgpt-pro", managedBrowserProfile: null });
-		const result = await reattachAgentBrowserBrokerTab({ observationOnly: true,
+		const result = await observeAgentBrowserProjectResponse({ observationOnly: true, projectId: "g-p-11111111111111111111111111111111",
 			browserId: closed.browserId, profileId: closed.profileId, sessionName: closed.sessionName,
 			serviceTabHandle: closed, url, recoveryPrompt: "Full original prompt",
 			providerSessionAuthorization: authorization, expectedBrowserProcessId: 2696783,
@@ -547,7 +553,7 @@ describe("agent-browser bridge", () => {
 			canonicalTargetId: reopened.targetId, recoveredResponse: {
 				userMessageId: "u1", answerMessageId: "a1", answerText: "Recovered exact answer",
 			} });
-		expect(actions).toEqual(["tab_new", "cdp_attach", "evaluate", "evaluate", "cdp_detach", "tab_handle_release"]);
+		expect(actions).toEqual(["tab_new", "cdp_attach", "evaluate", "evaluate", "evaluate", "cdp_detach", "tab_handle_release"]);
 	});
 
 	test("fails restart recovery closed when the retained broker target is gone", async () => {
@@ -1100,6 +1106,65 @@ describe("agent-browser bridge", () => {
 			action: "tab_handle_release",
 			serviceTabHandle: { targetId: "target-1" },
 		});
+	});
+
+	test("reuses a proof-identified retained browser with simultaneous CDP and RDP streams for a new project conversation", async () => {
+		const projectUrl = "https://chatgpt.com/g/g-p-11111111111111111111111111111111/project";
+		const browserId = "session:auracall-chatgpt";
+		const sessionName = "auracall-chatgpt";
+		const cdpEndpoint = "ws://127.0.0.1:45521/devtools/browser/proof-runtime";
+		const existingHandle = { browserId, profileId: "chatgpt-pro", sessionName,
+			targetId: "existing-target", url: "https://chatgpt.com/c/existing", valid: true };
+		const projectHandle = { ...existingHandle, targetId: "project-target", url: projectUrl };
+		const requests: Array<Record<string, unknown>> = [];
+		let opened = false;
+		const browser = () => ({
+			browserBuild: "stock_chrome", browserBuildProof: { applied: true, browserBuild: "stock_chrome",
+				browserPid: 2696783, cdpEndpoint, profileId: "chatgpt-pro" },
+			cdpEndpoint, health: "ready", host: "attached_existing", id: browserId, pid: null,
+			profileId: "chatgpt-pro", tabHandles: opened ? [existingHandle, projectHandle] : [existingHandle],
+			viewStreams: [
+				{ provider: "cdp_screencast", controlInput: "cdp_input" },
+				{ provider: "rdp_gateway", controlInput: "manual_attached_desktop" },
+			],
+		});
+		const fetch = vi.fn(async (requestUrl: string | URL | Request, init?: RequestInit) => {
+			const value = String(requestUrl);
+			if (value.endsWith("/api/service/browsers")) {
+				return jsonResponse({ success: true, data: { browsers: [browser()] } });
+			}
+			if (value.includes("/api/service/access-plan?")) {
+				expect(value).toContain("browserHost=attached_existing");
+				expect(value).toContain("viewStreamProvider=cdp_screencast");
+				return jsonResponse({ success: true, data: { selectedProfile: { id: "chatgpt-pro" }, decision: {
+					launchPosture: { browserBuild: "stock_chrome" },
+					profileReuse: { recommendedAction: "reuse_existing_browser", reusableBrowserId: browserId,
+						reusableSessionName: sessionName },
+					serviceRequest: { available: true, request: { action: "tab_new", browserId, sessionName,
+						url: projectUrl, params: { browserHost: "attached_existing", headless: false,
+							viewStreamProvider: "cdp_screencast", controlInputProvider: "cdp_input" } } },
+				} } });
+			}
+			const request = JSON.parse(String(init?.body)) as Record<string, unknown>;
+			requests.push(request);
+			if (request.action === "tab_new") {
+				opened = true;
+				return jsonResponse({ success: true, data: { serviceTabHandle: projectHandle,
+					sharedAcquisition: { mode: "tab_new", action: "opened_new_tab", tabOpened: true } } });
+			}
+			return jsonResponse({ success: true, data: {
+				browserWebSocketUrl: "ws://127.0.0.1:45521/devtools/browser/proof-runtime", detachRequired: true,
+			} });
+		});
+
+		const result = await acquireAgentBrowserBrokerTab({ mode: "required", profileId: "chatgpt-pro",
+			targetServiceId: "chatgpt", url: projectUrl }, { fetch: fetch as never,
+			listStreamFiles: async () => ["/runtime/auracall-chatgpt.stream"],
+			readStreamFile: async () => "47777\n" });
+
+		expect(result).toMatchObject({ browserId, browserProcessId: 2696783,
+			canonicalTargetId: projectHandle.targetId, serviceTabHandle: projectHandle });
+		expect(requests.map(request => request.action)).toEqual(["tab_new", "view_focus", "cdp_attach"]);
 	});
 
 	test("non-destructive no-live-browser fixture delegates launch to Agent Browser and persists returned identity before attach", async () => {

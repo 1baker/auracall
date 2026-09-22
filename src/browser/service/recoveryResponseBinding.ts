@@ -4,6 +4,12 @@ export interface RecoveryResponseBinding {
   answerText: string;
 }
 
+export class RecoveryResponseBindingError extends Error {
+  constructor(readonly reason: string) {
+    super(`Recovered response is not uniquely bound to the original request (${reason})`);
+  }
+}
+
 /** Read-only snapshot: no clicks, navigation, prompt submission or cookies. */
 export const RECOVERY_RESPONSE_SNAPSHOT = `(() => {
   const nodes = Array.from(document.querySelectorAll('[data-message-author-role]'));
@@ -14,7 +20,7 @@ export const RECOVERY_RESPONSE_SNAPSHOT = `(() => {
     const userContent = role === 'user'
       ? clone.querySelectorAll('[data-testid="collapsible-user-message-content"]') : [];
     if (userContent.length > 1) throw new Error('Recovery user content is ambiguous');
-    if (userContent.length === 1) {
+    if (userContent.length === 1 && (userContent[0].textContent || '').trim()) {
       // Attachment tiles and expansion chrome live outside this exact root.
       // Reconstruct rendered code on the detached clone, never the live DOM or
       // expected prompt. Language labels are literal CODE text, not inferred.
@@ -61,6 +67,41 @@ export const RECOVERY_RESPONSE_SNAPSHOT = `(() => {
     messages };
 })()`;
 
+/** Read the same exact conversation through ChatGPT's authenticated read API when long-message DOM is virtualized. */
+export const RECOVERY_RESPONSE_API_SNAPSHOT = `(async () => {
+  const conversationId = location.pathname.split('/c/').at(-1);
+  if (!conversationId || !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(conversationId)) {
+    throw new Error('Recovery conversation identity is missing');
+  }
+  const sessionResponse = await fetch('/api/auth/session', { credentials: 'include', headers: { accept: 'application/json' } });
+  if (!sessionResponse.ok) throw new Error('Recovery session authority is unavailable');
+  const session = await sessionResponse.json();
+  if (typeof session?.accessToken !== 'string' || !session.accessToken || typeof session?.account?.id !== 'string' || !session.account.id) {
+    throw new Error('Recovery session authority is incomplete');
+  }
+  const response = await fetch('/backend-api/conversations/' + conversationId + '?include_has_versions=true&num_turns=10', {
+    credentials: 'include', headers: { accept: 'application/json', authorization: 'Bearer ' + session.accessToken,
+      'chatgpt-account-id': session.account.id },
+  });
+  if (!response.ok) throw new Error('Recovery conversation read failed');
+  const data = await response.json();
+  if (data?.conversation_id !== conversationId || !Array.isArray(data?.messages) || data.messages.length > 200) {
+    throw new Error('Recovery conversation response is inconsistent');
+  }
+  const messages = data.messages.flatMap(message => {
+    const role = message?.author?.role;
+    const parts = message?.content?.parts;
+    if ((role !== 'user' && role !== 'assistant') || !Array.isArray(parts) || parts.some(part => typeof part !== 'string')) return [];
+    if (role === 'assistant' && (message.status !== 'finished_successfully' || message.end_turn !== true)) return [];
+    const text = parts.join('\\n');
+    return typeof message.id === 'string' && message.id && text.trim() ? [{ role, id: message.id, text }] : [];
+  });
+  const current = data.messages.find(message => message?.id === data.current_node);
+  const generating = !(current?.author?.role === 'assistant' && current?.status === 'finished_successfully' && current?.end_turn === true);
+  return { url: location.href, snapshotSource: 'authenticated_conversation_api_v1', generating,
+    generationScope: { version: 1, unscoped: false, owners: [] }, messages };
+})()`;
+
 /** Project display slugs are not identity; both stable IDs must remain exact. */
 function sameRecoveryConversationUrl(actual: unknown, expected: string): boolean {
   if (actual === expected) return true;
@@ -77,46 +118,84 @@ function sameRecoveryConversationUrl(actual: unknown, expected: string): boolean
   return expectedIdentity !== null && identity(actual) === expectedIdentity;
 }
 
+/** Match the exact text ChatGPT renders after removing Markdown presentation syntax. */
+function renderedPromptText(text: string): string {
+  return text.split(/\r?\n/u).map(line => line
+    .replace(/^\s{0,3}#{1,6}\s+/u, '')
+    .replace(/^\s*[-+*]\s+/u, '')
+    .replace(/^\s*\d+[.)]\s+/u, '')
+  ).join('\n')
+    .replace(/\*\*([^*\n]+)\*\*/gu, '$1')
+    .replace(/__([^_\n]+)__/gu, '$1')
+    .replace(/~~([^~\n]+)~~/gu, '$1');
+}
+
+/**
+ * ChatGPT's authenticated conversation API serializes pasted Markdown as one
+ * line, escapes presentation punctuation, and expands bare HTTPS URLs into
+ * self-labelled Markdown links. Invert only those lossless rewrites, and only
+ * when the expected wire contains no literal backslash (which would make an
+ * escaped character ambiguous).
+ */
+function authenticatedApiPromptText(text: string, expected: string): string {
+  if (expected.includes('\\')) return text;
+  return text
+    .replace(/\[(https:\/\/[^\]\s]+)\]\(\1\)/gu, '$1')
+    .replace(/\\([*`:])/gu, '$1');
+}
+
 /** Exact normalized prompt equality is required; prefixes and URLs are not proof. */
 export function bindRecoveredResponse(
   snapshot: unknown,
   expectedPrompt: string,
   expectedUrl: string,
 ): RecoveryResponseBinding {
-  const fail = (): never => { throw new Error('Recovered response is not uniquely bound to the original request'); };
-  if (!snapshot || typeof snapshot !== 'object' || Array.isArray(snapshot)) return fail();
+  const fail = (reason: string): never => { throw new RecoveryResponseBindingError(reason); };
+  if (!snapshot || typeof snapshot !== 'object' || Array.isArray(snapshot)) return fail('snapshot_shape');
   const value = snapshot as Record<string, unknown>;
   if (!sameRecoveryConversationUrl(value.url, expectedUrl) ||
-      typeof value.generating !== 'boolean' || !Array.isArray(value.messages)) return fail();
+      typeof value.generating !== 'boolean' || !Array.isArray(value.messages)) return fail('conversation_shape');
   const normalize = (text: string) => text.replace(/\s+/gu, ' ').trim();
   const prompt = normalize(expectedPrompt);
-  if (!prompt || value.messages.length > 200) return fail();
+  const renderedPrompt = normalize(renderedPromptText(expectedPrompt));
+  if (!prompt || value.messages.length > 200) return fail('message_bound');
   const messages = value.messages as Array<Record<string, unknown>>;
-  if (messages.some(message => !message || typeof message !== 'object' || Array.isArray(message))) return fail();
-  const matches = messages.map((message, index) => ({ message, index })).filter(({ message }) =>
-    message.role === 'user' && typeof message.text === 'string' && normalize(message.text) === prompt);
-  if (matches.length !== 1) return fail();
+  if (messages.some(message => !message || typeof message !== 'object' || Array.isArray(message))) return fail('message_shape');
+  const apiSnapshot = value.snapshotSource === 'authenticated_conversation_api_v1';
+  const matches = messages.map((message, index) => ({ message, index })).filter(({ message }) => {
+    if (message.role !== 'user' || typeof message.text !== 'string') return false;
+    const observed = normalize(message.text);
+    const candidates = apiSnapshot
+      ? [observed, normalize(authenticatedApiPromptText(message.text, expectedPrompt))]
+      : [observed];
+    return candidates.some(candidate => [prompt, renderedPrompt].includes(candidate));
+  });
+  if (matches.length !== 1) {
+    const userLengths = messages.filter(message => message.role === 'user' && typeof message.text === 'string')
+      .map(message => normalize(String(message.text)).length).join('_') || 'none';
+    return fail(`prompt_matches_${matches.length}_expected_${prompt.length}_rendered_${renderedPrompt.length}_users_${userLengths}`);
+  }
   const { message: user, index } = matches[0]!;
   const following = messages.slice(index + 1);
   const nextUser = following.findIndex(message => message.role === 'user');
   const answers = (nextUser < 0 ? following : following.slice(0, nextUser))
     .filter(message => message.role === 'assistant');
-  if (answers.length !== 1) return fail();
+  if (answers.length !== 1) return fail(`assistant_answers_${answers.length}`);
   const answer = answers[0]!;
   if (typeof user.id !== 'string' || !user.id.trim() || typeof answer.id !== 'string' || !answer.id.trim() ||
-      user.id === answer.id || typeof answer.text !== 'string' || !answer.text.trim()) return fail();
+      user.id === answer.id || typeof answer.text !== 'string' || !answer.text.trim()) return fail('message_identity');
   if (messages.filter(message => message.id === user.id).length !== 1 ||
-      messages.filter(message => message.id === answer.id).length !== 1) return fail();
+      messages.filter(message => message.id === answer.id).length !== 1) return fail('duplicate_message_identity');
   if (value.generating) {
     const scope = value.generationScope as Record<string, unknown> | undefined;
     if (!scope || scope.version !== 1 || scope.unscoped !== false ||
-        !Array.isArray(scope.owners) || scope.owners.length === 0) return fail();
+        !Array.isArray(scope.owners) || scope.owners.length === 0) return fail('generation_scope');
     for (const owner of scope.owners) {
-      if (typeof owner !== 'string' || !owner.trim()) return fail();
+      if (typeof owner !== 'string' || !owner.trim()) return fail('generation_owner');
       const occurrences = messages.map((message, position) => ({ message, position }))
         .filter(({ message }) => message.id === owner);
       if (occurrences.length !== 1 || occurrences[0]!.message.role !== 'user' ||
-          occurrences[0]!.position <= messages.indexOf(answer)) return fail();
+          occurrences[0]!.position <= messages.indexOf(answer)) return fail('generation_order');
     }
   }
   return { userMessageId: user.id, answerMessageId: answer.id, answerText: answer.text };
