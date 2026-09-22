@@ -7,6 +7,14 @@
 Status: active
 Lane: P01
 
+- Closed retained-browser proof acquisition repair:
+  [Plan 0362](docs/dev/plans/0362-2026-09-22-retained-browser-proof-acquisition.md).
+  Current state: installed behavior is functionally verified by two completed
+  nonce-bound retained-browser responses, 140 focused AuraCall tests and 18
+  guard tests. The core source is published in personal commit `aecf12f9`.
+  Independent artifact review remains recorded at 82 because its submitted
+  evidence predated that immutable source commit; no third provider run was made.
+
 - Closed policy-governed ChatGPT destination routing:
   [Plan 0360](docs/dev/plans/0360-2026-09-21-policy-governed-chatgpt-destination-routing.md).
   Current state: typed resolver and compatibility tests pass. Runtime agent

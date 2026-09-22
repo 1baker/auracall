@@ -1,5 +1,29 @@
 # RUNBOOK
 
+## 2026-09-22 | Retained attached-browser proof acquisition
+
+Plan 0362 fixes new-project acquisition when an attached-existing Agent Browser
+record has `pid: null`, a matching verified build-proof PID, and simultaneous
+CDP plus RDP streams. AuraCall now accepts only verified process proof, selects
+an explicit/sole stream or the unique standard CDP pair, and revalidates the
+same process/session/host/display/stream before tab creation. Unknown proof,
+ambiguous streams and process drift fail before a tab request.
+
+The Pro guard now preserves generic pre-submit failure summaries and calls the
+recovery endpoint only for an exact project conversation or typed after-submit
+new-project uncertainty. Re-polling the original failure returned its real
+`runner_execution_failed` message with no recovery call.
+
+Verification: 140 focused AuraCall tests and 18 guard tests passed, as did
+typecheck, production build and skill validation. Built/installed bridge hashes
+matched. Two fresh nonce-bound project responses completed through retained
+browser PID 2696783; each temporary target closed afterward while the original
+target and browser remained healthy. The follow-up Pro audit scored 82 and
+requested immutable source/deployment artifacts; no third response is needed.
+The core repair is published in personal commit `aecf12f9`. Its supporting
+proof test and review records were committed separately without absorbing the
+unrelated MCP work that remained in the shared checkout.
+
 ## 2026-09-21 | Policy-governed ChatGPT destination routing
 
 Plan 0360 added a typed destination resolver before retained-browser

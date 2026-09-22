@@ -1,3 +1,18 @@
+## 2026-09-22 | Retained browser proof and honest recovery errors
+
+Live inventory exposed the boundary: the sole healthy `chatgpt-pro` browser had
+no legacy PID but did have matching build proof for PID 2696783, plus both CDP
+and RDP view streams. New-project acquisition now consumes verified proof,
+chooses the unique standard CDP pair when no explicit pair is requested, and
+rechecks all retained identity before opening a tab. The review wrapper no
+longer replaces generic pre-submit failures with a recovery 409. A 140-test
+focused AuraCall set, 18 guard tests, typecheck/build and installed parity passed.
+Two real project responses completed through the retained browser and cleaned up
+only their temporary targets. Independent artifact audit reached 82; immutable
+source for the core repair is now published in personal commit `aecf12f9`, while
+the score remains an honest record of the earlier evidence packet. No third
+review was submitted and unrelated concurrent MCP work was left untouched.
+
 ## 2026-09-13 | Native read authority remains a real blocker
 
 Confirmed the real ordered issuer rejects evaluate/ScriptExecution, which native

@@ -1,3 +1,14 @@
+- 2026-09-22: Attached-existing browsers can legitimately omit the top-level
+  PID while carrying a live PID in build proof, and one browser can expose CDP
+  plus RDP streams simultaneously. Reuse only matching verified proof; prefer an
+  explicitly requested stream, a sole stream, or the unique standard CDP pair,
+  then revalidate the complete posture before tab creation. Generic pre-submit
+  response failures are not recovery candidates: preserve their original code
+  and message instead of masking them with a recovery 409. Two retained-browser
+  responses completed; 140 AuraCall and 18 guard tests passed. A dirty shared
+  checkout was not treated as release attestation; the core repair was later
+  isolated and published in personal commit `aecf12f9`.
+
 - 2026-09-13: Creating another connector object did not prove process restart.
   The native cross-process fixture now verifies a real SIGKILL after fsynced
   binding evidence and starts a distinct recovery client. It also loses an
