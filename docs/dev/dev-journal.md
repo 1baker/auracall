@@ -9,6 +9,9 @@
   proof; persistent owners still fail closed without a second launch.
 - P50 owns issue 29 on `fix/issue-29-child-launch-readiness`; no GitHub assignee
   is set.
+- PR 35 integrated the provider-free repair at `52cf3641494b623c9fdf6ce2ca105e2430e9e231`.
+  Issue 29 remains open and unassigned for separately authorized installed
+  acceptance; the scheduler remains paused.
 
 ## 2026-09-16 | Issue 6 shared developer-app terminal lifecycle
 
