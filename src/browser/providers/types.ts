@@ -1,12 +1,12 @@
 import type { BrowserInteractionGovernor } from "../../../packages/browser-service/src/service/interactionGovernor.js";
 import type { BrowserMutationAuditSink } from "../../../packages/browser-service/src/service/mutationDispatcher.js";
 import type { ConversationArtifact, FileRef, Project, ProjectMemoryMode } from "./domain.js";
-import type { BrowserScrapeTelemetryRecorder } from "./scrapeTelemetry.js";
 import type {
 	ProviderSessionAuthorization,
 	ProviderSessionProof,
 } from "./providerSessionAuthority.js";
 import type { BrowserAttachment } from "../types.js";
+import type { BrowserScrapeTelemetryRecorder } from "./scrapeTelemetry.js";
 
 export type SelectorList = readonly string[];
 
@@ -48,10 +48,11 @@ export interface BrowserProviderListOptions {
 	historySince?: string;
 	allowNavigation?: boolean;
 	preserveActiveTab?: boolean;
-	tabLifecycle?: "retain" | "dispose-new";
+	tabLifecycle?: "retain" | "retain-new" | "dispose-new";
 	downloadVariantLabel?: string | null;
 	discoveryAction?: "grok-imagine-video-mode" | null;
 	includeInstalledApps?: boolean;
+	requirePromptWorkbenchTarget?: boolean;
 	browserService?: import("../service/types.js").BrowserServiceHandle;
 	modelLabel?: string;
 	mutationAudit?: BrowserMutationAuditSink;
@@ -98,6 +99,10 @@ export interface ProviderUserIdentity {
 
 export interface BrowserProviderPromptInput {
 	prompt: string;
+	ecosystemMention?: {
+		label: string;
+		acceptedPluginIds: string[];
+	};
 	attachments?: BrowserAttachment[];
 	capabilityId?: string | null;
 	completionMode?: "assistant_response" | "prompt_submitted";
@@ -105,6 +110,11 @@ export interface BrowserProviderPromptInput {
 	conversationId?: string | null;
 	targetUrl?: string | null;
 	desiredModel?: string | null;
+	modelStrategy?: "select" | "current" | "ignore";
+	thinkingTime?: "light" | "standard" | "extended" | "heavy" | null;
+	chatgptMode?: "chat" | "work" | null;
+	workModel?: string | null;
+	modelSelector?: string | null;
 	timeoutMs?: number | null;
 	onProgress?: (event: BrowserProviderPromptProgressEvent) => Promise<void> | void;
 }
@@ -113,6 +123,27 @@ export interface BrowserProviderPromptResult {
 	text: string;
 	conversationId?: string | null;
 	url?: string | null;
+	tabTargetId?: string | null;
+	devtoolsHost?: string | null;
+	devtoolsPort?: number | null;
+}
+
+export interface BrowserProviderPromptWorkbenchInput {
+	targetUrl?: string | null;
+	desiredModel?: string | null;
+	modelStrategy?: "select" | "current" | "ignore";
+	chatgptMode?: "chat" | "work" | null;
+	workModel?: string | null;
+	inputTimeoutMs?: number | null;
+	onProgress?: (event: BrowserProviderPromptProgressEvent) => Promise<void> | void;
+}
+
+export interface BrowserProviderPromptWorkbenchResult {
+	chatgptMode: "chat" | "work";
+	modelSelectionKind: "chat-model" | "work-model" | "work-current" | "ignore";
+	model: string | null;
+	messages: string[];
+	url: string;
 	tabTargetId?: string | null;
 	devtoolsHost?: string | null;
 	devtoolsPort?: number | null;
@@ -263,6 +294,10 @@ export interface BrowserProvider {
 		conversationId: string,
 		options?: BrowserProviderListOptions,
 	) => Promise<ConversationArtifact[]>;
+	preparePromptWorkbench?: (
+		input: BrowserProviderPromptWorkbenchInput,
+		options?: BrowserProviderListOptions,
+	) => Promise<BrowserProviderPromptWorkbenchResult>;
 	runPrompt?: (
 		input: BrowserProviderPromptInput,
 		options?: BrowserProviderListOptions,

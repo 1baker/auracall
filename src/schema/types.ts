@@ -170,6 +170,7 @@ export const ServiceConfigSchema = z.object({
   composerTool: z.string().optional(),
   deepResearchPlanAction: z.enum(['start', 'edit']).optional(),
   chatgptMode: z.enum(['chat', 'work']).optional(),
+  chatgptToolApproval: z.enum(['manual', 'allow-once', 'always-allow']).optional(),
   workModel: z.string().optional(),
   features: z.record(z.string(), z.unknown()).optional(),
 });
@@ -288,6 +289,7 @@ export const BrowserConfigSchema = z.object({
   
   // Cookies
   cookieNames: z.array(z.string()).optional().or(z.string().optional()), // CLI passes string
+  cookieSync: z.boolean().optional(),
   inlineCookies: z.string().optional(), // JSON or Base64 string
   inlineCookiesFile: z.string().optional(),
   allowCookieErrors: z.boolean().optional(),
@@ -296,6 +298,7 @@ export const BrowserConfigSchema = z.object({
   // Behavior
   modelStrategy: z.enum(['select', 'current', 'ignore']).optional(),
   chatgptMode: z.enum(['chat', 'work']).optional(),
+  chatgptToolApproval: z.enum(['manual', 'allow-once', 'always-allow']).optional(),
   workModel: z.string().optional(),
   thinkingTime: z.enum(['light', 'standard', 'extended', 'heavy']).optional(),
   composerTool: z.string().optional(),
@@ -341,11 +344,13 @@ export const OracleProfileBrowserSchema = z.object({
   deepResearchPlanAction: z.enum(['start', 'edit']).optional(),
   modelStrategy: z.enum(['select', 'current', 'ignore']).optional(),
   chatgptMode: z.enum(['chat', 'work']).optional(),
+  chatgptToolApproval: z.enum(['manual', 'allow-once', 'always-allow']).optional(),
   workModel: z.string().optional(),
   attachments: z.enum(['auto', 'never', 'always']).optional(),
   inlineFiles: z.boolean().optional(),
   bundleFiles: z.boolean().optional(),
   cookieNames: z.array(z.string()).optional().or(z.string().optional()),
+  cookieSync: z.boolean().optional(),
   inlineCookies: z.string().optional(),
   inlineCookiesFile: z.string().optional(),
   allowCookieErrors: z.boolean().optional(),
@@ -529,7 +534,7 @@ export const ConfigSchema = z.object({
   runtimeProfiles: RuntimeProfilesConfigSchema.optional(),
   // Core
   engine: z.enum(['api', 'browser']).optional(),
-  model: z.string().default('gpt-5.2-pro'),
+  model: z.string().default('openai:frontier'),
   prompt: z.string().optional(),
   promptSuffix: z.string().optional(),
   

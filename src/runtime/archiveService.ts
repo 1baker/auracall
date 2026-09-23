@@ -208,6 +208,7 @@ export interface RunArchiveEvidenceResult {
 export interface RunArchiveService {
 	listItems(request?: RunArchiveListRequest): Promise<RunArchiveListResult>;
 	listItemsBatch?(requests: RunArchiveListRequest[]): Promise<RunArchiveListResult[]>;
+	listItemsBatchAvailability?(requests: RunArchiveListRequest[]): Promise<RunArchiveListResult[]>;
 	readItem(id: string): Promise<RunArchiveItemResult | null>;
 	readAsset(id: string): Promise<RunArchiveAssetResult | null>;
 	lookupAsset(request: RunArchiveAssetLookupRequest): Promise<RunArchiveAssetLookupResult>;
@@ -264,10 +265,18 @@ export function createRunArchiveService(deps: RunArchiveServiceDeps = {}): RunAr
 	const fileMetadataRefreshes = new Map<string, Promise<RunArchiveItem[]>>();
 	async function readIndexedItems(
 		scope: (item: RunArchiveItem) => boolean = () => true,
+		refreshMode: "full" | "availability" = "full",
 	): Promise<RunArchiveItem[]> {
 		const index = await indexStore.readIndex();
 		if (index) {
 			const scopedItems = index.items.filter(scope);
+			if (refreshMode === "availability") {
+				return refreshIndexedFileMetadata(scopedItems, {
+					indexStore,
+					updatedAt: now().toISOString(),
+					refreshMode,
+				});
+			}
 			const cacheKey = createHash("sha256")
 				.update(index.updatedAt)
 				.update("\0")
@@ -283,6 +292,7 @@ export function createRunArchiveService(deps: RunArchiveServiceDeps = {}): RunAr
 			const refresh = refreshIndexedFileMetadata(scopedItems, {
 				indexStore,
 				updatedAt: now().toISOString(),
+				refreshMode,
 			})
 				.then((items) => {
 					fileMetadataCache.set(cacheKey, { refreshedAtMs: now().getTime(), items });
@@ -306,6 +316,7 @@ export function createRunArchiveService(deps: RunArchiveServiceDeps = {}): RunAr
 			evidenceStore,
 			indexStore,
 			updatedAt: now().toISOString(),
+			refreshMode,
 		}).then((record) => record.items);
 	}
 	return {
@@ -321,12 +332,26 @@ export function createRunArchiveService(deps: RunArchiveServiceDeps = {}): RunAr
 			);
 		},
 		async listItemsBatch(requests) {
+			if (requests.length === 0) return [];
 			const normalizedRequests = requests.map((request) => ({
 				...request,
 				kind: normalizeKind(request.kind),
 			}));
 			const items = await readIndexedItems((item) =>
 				normalizedRequests.some((request) => matchesStableRequest(item, request)),
+			);
+			const generatedAt = now().toISOString();
+			return requests.map((request) => createRunArchiveListResult(items, request, generatedAt));
+		},
+		async listItemsBatchAvailability(requests) {
+			if (requests.length === 0) return [];
+			const normalizedRequests = requests.map((request) => ({
+				...request,
+				kind: normalizeKind(request.kind),
+			}));
+			const items = await readIndexedItems(
+				(item) => normalizedRequests.some((request) => matchesStableRequest(item, request)),
+				"availability",
 			);
 			const generatedAt = now().toISOString();
 			return requests.map((request) => createRunArchiveListResult(items, request, generatedAt));
@@ -552,8 +577,9 @@ async function backfillIndexItems(input: {
 	evidenceStore: RunArchiveEvidenceStore;
 	indexStore: RunArchiveIndexStore;
 	updatedAt: string;
+	refreshMode?: "full" | "availability";
 }): Promise<RunArchiveIndexRecord> {
-	const items = await collectArchiveItems(input);
+	const items = await collectArchiveItems(input, { includeChecksum: input.refreshMode !== "availability" });
 	return input.indexStore.writeIndex(items, { updatedAt: input.updatedAt });
 }
 
@@ -611,7 +637,7 @@ async function collectArchiveItems(deps: {
 	mediaStore: MediaGenerationRecordStore;
 	historyItemStore?: RunArchiveHistoryItemStore;
 	evidenceStore?: RunArchiveEvidenceStore;
-}): Promise<RunArchiveItem[]> {
+}, options: { includeChecksum?: boolean } = {}): Promise<RunArchiveItem[]> {
 	const [runRecords, batchRecords, mediaRecords, historyItems, evidenceRecords] = await Promise.all(
 		[
 			deps.runStore.listBundles().then((bundles) =>
@@ -637,7 +663,7 @@ async function collectArchiveItems(deps: {
 		...buildMediaArchiveItems(mediaRecords),
 		...historyItems,
 		...evidenceRecords.map(buildEvidenceArchiveItem),
-	]);
+	], options);
 }
 
 async function refreshIndexedFileMetadata(
@@ -645,9 +671,10 @@ async function refreshIndexedFileMetadata(
 	input: {
 		indexStore: RunArchiveIndexStore;
 		updatedAt: string;
+		refreshMode?: "full" | "availability";
 	},
 ): Promise<RunArchiveItem[]> {
-	const refreshed = await enrichFileMetadata(items);
+	const refreshed = await enrichFileMetadata(items, { includeChecksum: input.refreshMode !== "availability" });
 	const changed = refreshed.filter((item, index) => fileMetadataChanged(items[index], item));
 	if (changed.length > 0) {
 		await input.indexStore.upsertItems(changed, {
@@ -1434,7 +1461,7 @@ function itemMatchesQuery(item: RunArchiveItem, query: string): boolean {
 	return haystack.includes(needle);
 }
 
-async function enrichFileMetadata(items: RunArchiveItem[]): Promise<RunArchiveItem[]> {
+async function enrichFileMetadata(items: RunArchiveItem[], options: { includeChecksum?: boolean } = {}): Promise<RunArchiveItem[]> {
 	return Promise.all(
 		items.map(async (item) => {
 			const cachedConversationEvidence = item.localPath
@@ -1445,9 +1472,9 @@ async function enrichFileMetadata(items: RunArchiveItem[]): Promise<RunArchiveIt
 				item.localPath ??
 				cachedConversationAsset?.localPath ??
 				(await findExistingMaterializedArchiveFile(item));
-			const liveChecksumSha256 = await calculateFileSha256(discoveredLocalPath);
+			const liveChecksumSha256 = options.includeChecksum === false ? null : await calculateFileSha256(discoveredLocalPath);
 			const checksumSha256 =
-				liveChecksumSha256 ?? readRecordString(item.metadata, ["checksumSha256"]);
+				liveChecksumSha256 ?? item.checksumSha256 ?? readRecordString(item.metadata, ["checksumSha256"]);
 			const pathExists = discoveredLocalPath ? await fileExists(discoveredLocalPath) : null;
 			const unavailableEvidence: Record<string, unknown> | null =
 				pathExists === false
@@ -1570,6 +1597,17 @@ function buildMissingLocalFileEvidence(
 			: "local-file-missing",
 		missingLocalPath: localPath,
 	};
+}
+
+function buildUnavailableLocalFileEvidence(
+  localPath: string,
+  errorCode: string,
+): Record<string, unknown> {
+  return {
+    unavailableReason: 'local-file-unavailable',
+    unavailableLocalPath: localPath,
+    unavailableErrorCode: errorCode,
+  };
 }
 
 function readUnavailableEvidenceReason(evidence: Record<string, unknown>): string {

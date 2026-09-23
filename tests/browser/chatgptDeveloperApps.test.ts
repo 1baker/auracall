@@ -4,6 +4,7 @@ import {
 	CHATGPT_DEVELOPER_APP_SERVER_URL_SELECTOR,
 	chatgptDeveloperAppSelectionMatchesForTest,
 	classifyChatgptDeveloperAppCreatePostconditionForTest,
+	clearDeveloperAppComposerForTest,
 	createChatgptDeveloperAppBrowserAdapter,
 	deriveChatgptDeveloperAppState,
 	isCompleteChatgptInstalledAppsPayloadForTest,
@@ -34,9 +35,6 @@ describe("deriveChatgptDeveloperAppState", () => {
 				userConfig: {} as never,
 				getUserIdentity,
 				connectDevTools,
-				runPrompt: async () => {
-					throw new Error("should not prompt");
-				},
 			},
 			async () => {
 				throw new Error("should not create a browser");
@@ -69,9 +67,6 @@ describe("deriveChatgptDeveloperAppState", () => {
 				userConfig: {} as never,
 				getUserIdentity: async () => null,
 				connectDevTools,
-				runPrompt: async () => {
-					throw new Error("should not prompt");
-				},
 			},
 			async () => {
 				throw new Error("should not create a browser");
@@ -116,9 +111,6 @@ describe("deriveChatgptDeveloperAppState", () => {
 						} as never,
 						port: 45015,
 					}),
-					runPrompt: async () => {
-						throw new Error("should not prompt");
-					},
 				},
 				async () => {
 					throw new Error("should not create a browser");
@@ -164,9 +156,6 @@ describe("deriveChatgptDeveloperAppState", () => {
 						} as never,
 						port: 45015,
 					}),
-					runPrompt: async () => {
-						throw new Error("should not prompt");
-					},
 				},
 				async () => {
 					throw new Error("should not create a browser");
@@ -191,12 +180,13 @@ describe("deriveChatgptDeveloperAppState", () => {
 		}
 	});
 
-	it("preserves the active model when submitting a developer-app test", async () => {
-		const runPrompt = vi.fn(async () => ({
+	it("preserves the active model and routes submission through the exact app mention", async () => {
+		const runBrowser = vi.fn(async () => ({
+			answerText: "App answer",
 			conversationId: "conversation-1",
-			url: "https://chatgpt.com/c/conversation-1",
+			tabUrl: "https://chatgpt.com/c/conversation-1",
 		}));
-		const createBrowser = vi.fn(async () => ({ runPrompt }));
+		const createBrowser = vi.fn();
 		const adapter = createChatgptDeveloperAppBrowserAdapter(
 			{
 				userConfig: {
@@ -207,30 +197,42 @@ describe("deriveChatgptDeveloperAppState", () => {
 				},
 			} as never,
 			createBrowser as never,
+			{ runBrowser: runBrowser as never, browserOperationOwned: true },
 		);
-
-		await adapter.submitTest(
-			{
-				pluginId: "plugin_asdk_app_litscout",
-				appIds: ["asdk_app_litscout"],
-				name: "LitScout",
-			},
-			"Use only LitScout.",
-		);
-
-		expect(createBrowser).toHaveBeenCalledWith(
+		const app = {
+			pluginId: "plugin_asdk_app_litscout",
+			appIds: ["asdk_app_litscout"],
+			name: "LitScout",
+		};
+		const result = await adapter.submitTest(app, "Use only LitScout.");
+		expect(createBrowser).not.toHaveBeenCalled();
+		expect(runBrowser).toHaveBeenCalledTimes(1);
+		expect(result).toMatchObject({
+			status: "completed",
+			answerText: "App answer",
+			conversationId: "conversation-1",
+			effectState: "effect_observed",
+			retrySafe: false,
+		});
+		expect(runBrowser).toHaveBeenCalledWith(
 			expect.objectContaining({
-				browser: expect.objectContaining({
-					composerTool: "LitScout",
+				prompt: "Use only LitScout.",
+				completionMode: "assistant_response",
+				skipBrowserExecutionOperation: true,
+				config: expect.objectContaining({
+					timeoutMs: 120_000,
 					modelStrategy: "current",
+					composerTool: null,
+					conversationId: null,
+					projectId: null,
+					url: "https://chatgpt.com/",
 				}),
+				ecosystemMention: {
+					label: "LitScout",
+					acceptedPluginIds: ["plugin_asdk_app_litscout", "asdk_app_litscout"],
+				},
 			}),
 		);
-		expect(runPrompt).toHaveBeenCalledWith({
-			prompt: "Use only LitScout.",
-			completionMode: "prompt_submitted",
-			timeoutMs: 120_000,
-		});
 	});
 
 	it("does not claim an OAuth human gate when no app or fresh handoff exists", () => {
@@ -393,6 +395,34 @@ describe("deriveChatgptDeveloperAppState", () => {
 		);
 	});
 
+	it("clears an ecosystem mention that first unwraps into literal composer text", async () => {
+		let clearChecks = 0;
+		const evaluate = vi.fn(async ({ expression }: { expression: string }) => {
+			if (expression.includes("Boolean(document.querySelector")) {
+				return { result: { value: true } };
+			}
+			if (expression.includes("editor.focus()")) {
+				return { result: { value: true } };
+			}
+			if (expression.includes("innerText")) {
+				clearChecks += 1;
+				return { result: { value: clearChecks >= 2 } };
+			}
+			throw new Error(`Unexpected evaluation: ${expression}`);
+		});
+		const dispatchKeyEvent = vi.fn(async () => undefined);
+
+		await clearDeveloperAppComposerForTest({
+			// biome-ignore lint/style/useNamingConvention: CDP protocol domains use canonical capitalized names.
+			Runtime: { evaluate } as never,
+			// biome-ignore lint/style/useNamingConvention: CDP protocol domains use canonical capitalized names.
+			Input: { dispatchKeyEvent } as never,
+		} as never);
+
+		expect(clearChecks).toBe(2);
+		expect(dispatchKeyEvent).toHaveBeenCalledTimes(12);
+	});
+
 	it("maps private user-owned installed metadata and active OAuth link state", () => {
 		const state = deriveChatgptDeveloperAppState({
 			identity: {
@@ -458,6 +488,95 @@ describe("deriveChatgptDeveloperAppState", () => {
 				},
 			],
 		});
+	});
+
+	it("does not transfer auth state from a same-name link with a different app id", () => {
+		const state = deriveChatgptDeveloperAppState({
+			identity: { email: "eric.cochran@soylei.com" },
+			developerMode: true,
+			observedAt: "2026-08-14T12:00:00.000Z",
+			featureSignature: JSON.stringify({
+				inventory_complete: true,
+				installed_apps: [
+					{
+						plugin_id: "plugin_asdk_app_new_litscout",
+						name: "LitScout",
+						app_ids: ["asdk_app_new_litscout"],
+						status: "ENABLED",
+						enabled: true,
+					},
+				],
+				linked_apps: [
+					{
+						connector_id: "asdk_app_old_litscout",
+						name: "LitScout",
+						auth_status: "ACTIVE",
+					},
+				],
+			}),
+		});
+
+		expect(state.apps[0]?.authStatus).toBeNull();
+	});
+
+	it("fails closed when more than one link matches the exact app id", () => {
+		const state = deriveChatgptDeveloperAppState({
+			identity: { email: "eric.cochran@soylei.com" },
+			developerMode: true,
+			observedAt: "2026-08-14T12:00:00.000Z",
+			featureSignature: JSON.stringify({
+				inventory_complete: true,
+				installed_apps: [
+					{
+						plugin_id: "plugin_asdk_app_litscout",
+						name: "LitScout",
+						app_ids: ["asdk_app_litscout"],
+						status: "ENABLED",
+						enabled: true,
+					},
+				],
+				linked_apps: [
+					{
+						connector_id: "asdk_app_litscout",
+						auth_status: "ACTIVE",
+					},
+					{
+						connector_id: "asdk_app_litscout",
+						auth_status: "REAUTH_REQUIRED",
+					},
+				],
+			}),
+		});
+
+		expect(state.apps[0]?.authStatus).toBeNull();
+	});
+
+	it("preserves reauthentication state from one exact app-id match", () => {
+		const state = deriveChatgptDeveloperAppState({
+			identity: { email: "eric.cochran@soylei.com" },
+			developerMode: true,
+			observedAt: "2026-08-14T12:00:00.000Z",
+			featureSignature: JSON.stringify({
+				inventory_complete: true,
+				installed_apps: [
+					{
+						plugin_id: "plugin_asdk_app_litscout",
+						name: "LitScout",
+						app_ids: ["asdk_app_litscout"],
+						status: "ENABLED",
+						enabled: true,
+					},
+				],
+				linked_apps: [
+					{
+						connector_id: "asdk_app_litscout",
+						auth_status: "REAUTH_REQUIRED",
+					},
+				],
+			}),
+		});
+
+		expect(state.apps[0]?.authStatus).toBe("REAUTH_REQUIRED");
 	});
 
 	it("does not treat a missing installed-app response as a complete empty inventory", () => {

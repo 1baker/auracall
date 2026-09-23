@@ -1245,6 +1245,10 @@ export async function createResponsesHttpServer(
 	let historyMaterializationService = deps.historyMaterializationService;
 	let searchProjectionService: SearchProjectionService;
 	let accountMirrorArtifactRecoveryPlanner: AccountMirrorArtifactRecoveryPlanner;
+	let resolveAccountMirrorArtifactRecoveryPlannerReady: () => void = () => {};
+	const accountMirrorArtifactRecoveryPlannerReady = new Promise<void>((resolve) => {
+		resolveAccountMirrorArtifactRecoveryPlannerReady = resolve;
+	});
 	const accountMirrorSchedulerLedger =
 		deps.accountMirrorSchedulerLedger ??
 		createAccountMirrorSchedulerPassLedger({
@@ -1306,6 +1310,20 @@ export async function createResponsesHttpServer(
 				async readJob(id) {
 					return historyMaterializationService ? historyMaterializationService.readJob(id) : null;
 				},
+			},
+			readMaterializationBacklog: async ({ provider, runtimeProfileId }) => {
+				await accountMirrorArtifactRecoveryPlannerReady;
+				const planner = accountMirrorArtifactRecoveryPlanner;
+				const plan = await planner.plan({
+					provider,
+					runtimeProfileId,
+					includeSearchRows: false,
+					limit: 100,
+				});
+				return {
+					retrievableMissing: plan.metrics.retrievableMissingLocal.total,
+					unknownOrDeferred: plan.metrics.unknownOrDeferred.total,
+				};
 			},
 			providerWorkCoordinator: accountMirrorProviderWorkCoordinator,
 			onPersistError: (error, operation) => {
@@ -1633,6 +1651,7 @@ export async function createResponsesHttpServer(
 			historyMaterializationService,
 			now,
 		});
+	resolveAccountMirrorArtifactRecoveryPlannerReady();
 	const reserveForegroundAuraCallDrain = () => {
 		foregroundAuraCallDrainReservations += 1;
 		accountMirrorFollowUpAfterNextDrain = true;
@@ -1994,17 +2013,43 @@ export async function createResponsesHttpServer(
 				const statusResponseLocalClaim = await readLocalClaimSummary({
 					forceFresh: statusQuery.localClaimsMode === "fresh",
 				});
-				const runnerTopology = compactRunnerTopologyForStatus(
-					await host.summarizeRunnerTopology(),
-					statusQuery.runnerTopologyMode,
-				);
-				const accountMirrorStatus = await hydrateAccountMirrorStatusMaterializationEvidence(
-					accountMirrorStatusRegistry.readStatus({
+				const rawAccountMirrorStatus = accountMirrorStatusRegistry.readStatus({
 						provider: statusQuery.accountMirrorProvider,
 						runtimeProfileId: statusQuery.accountMirrorRuntimeProfileId,
-					}),
-					historyMaterializationService,
-					runArchiveService,
+					});
+				const rawScopedAccountMirrorStatus = scopeAccountMirrorStatusForProofScope(
+					rawAccountMirrorStatus,
+					accountMirrorProofScope,
+				);
+				const [
+					rawRunnerTopology,
+					accountMirrorStatus,
+					accountLibraryActiveJobs,
+					accountLibraryBrowserProcessStatus,
+					tenantExecutionLimits,
+					accountMirrorCompletions,
+					preflight,
+				] = await Promise.all([
+					host.summarizeRunnerTopology(),
+					hydrateAccountMirrorStatusMaterializationEvidence(
+						rawAccountMirrorStatus,
+						historyMaterializationService,
+						runArchiveService,
+					),
+					readActiveAccountLibraryMaterializationJobs({ service: historyMaterializationService }),
+					deps.accountMirrorBrowserProcessStatus === undefined
+						? readAccountLibraryBrowserProcessStatus({
+								status: rawScopedAccountMirrorStatus,
+								now,
+							})
+						: Promise.resolve(deps.accountMirrorBrowserProcessStatus),
+					readTenantExecutionLimitsStatus(statusQuery.tenantExecutionLimitsMode === "usage"),
+					createAccountMirrorCompletionStatusSummary(accountMirrorCompletionService, now),
+					readPreflightStatusSummary(preflightRunner),
+				]);
+				const runnerTopology = compactRunnerTopologyForStatus(
+					rawRunnerTopology,
+					statusQuery.runnerTopologyMode,
 				);
 				const statusResponseAccountMirrorStatus = scopeAccountMirrorStatusForProofScope(
 					accountMirrorStatus,
@@ -2014,16 +2059,6 @@ export async function createResponsesHttpServer(
 					status: statusResponseAccountMirrorStatus,
 					service: historyMaterializationService,
 				});
-				const accountLibraryActiveJobs = await readActiveAccountLibraryMaterializationJobs({
-					service: historyMaterializationService,
-				});
-				const accountLibraryBrowserProcessStatus =
-					deps.accountMirrorBrowserProcessStatus === undefined
-						? await readAccountLibraryBrowserProcessStatus({
-								status: statusResponseAccountMirrorStatus,
-								now,
-							})
-						: deps.accountMirrorBrowserProcessStatus;
 				const statusResponse = await createHttpStatusResponse({
 					now,
 					host: boundHost,
@@ -2037,19 +2072,14 @@ export async function createResponsesHttpServer(
 					runnerTopology,
 					runner: runnerState,
 					backgroundDrain: backgroundDrainState,
-					tenantExecutionLimits: await readTenantExecutionLimitsStatus(
-						statusQuery.tenantExecutionLimitsMode === "usage",
-					),
+					tenantExecutionLimits,
 					accountMirrorScheduler: accountMirrorSchedulerState,
 					accountMirrorSchedulerForegroundWork: readForegroundAuraCallWorkStatus(),
 					accountMirrorStatus: statusResponseAccountMirrorStatus,
 					accountMirrorAccountLibraryPreviews: accountLibraryPreviews,
 					accountMirrorAccountLibraryActiveJobs: accountLibraryActiveJobs,
 					accountMirrorBrowserProcessStatus: accountLibraryBrowserProcessStatus,
-					accountMirrorCompletions: await createAccountMirrorCompletionStatusSummary(
-						accountMirrorCompletionService,
-						now,
-					),
+					accountMirrorCompletions,
 					accountMirrorProofScope: createAccountMirrorProofScopeStatus(
 						accountMirrorProofScope,
 						accountMirrorStatus,
@@ -2060,7 +2090,7 @@ export async function createResponsesHttpServer(
 							backgroundDrainIntervalMs,
 						},
 					),
-					preflight: await readPreflightStatusSummary(preflightRunner),
+					preflight,
 					auth: apiAuthStatus,
 				});
 				sendJson(res, 200, statusResponse);
@@ -4334,8 +4364,8 @@ export async function createResponsesHttpServer(
 				return;
 			}
 
-			const recoveryObservationMatch = /^\/v1\/responses\/(resp_[a-zA-Z0-9_-]+)\/recovery-observation$/.exec(url.pathname);
-			if (req.method === 'POST' && recoveryObservationMatch) {
+			const recoveryObservationResponseId = matchHttpRoutePath("responsesRecoveryObservationTemplate", url.pathname)?.response_id;
+			if (recoveryObservationResponseId?.startsWith("resp_") && matchesHttpRoute("responsesRecoveryObservationTemplate", req.method, url.pathname)) {
 				const denied = authorizeOperatorConfigAccess(apiAuthContext);
 				if (denied) { sendJson(res, 403, { error: { type: 'permission_error', message: denied } }); return; }
 				RecoveryObservationBodySchema.parse(JSON.parse(await readRequestBody(req) || '{}'));
@@ -4346,7 +4376,7 @@ export async function createResponsesHttpServer(
 				recoveryObservationActive = true;
 				const endObservationWork = beginForegroundAuraCallWork();
 				try {
-					const observation = await observeFailedResponse({ responseId: recoveryObservationMatch[1]!, config: resolvedUserConfig ?? {}, control });
+					const observation = await observeFailedResponse({ responseId: recoveryObservationResponseId, config: resolvedUserConfig ?? {}, control });
 					sendJson(res, 200, observation);
 				} catch (error) {
 					sendJson(res, 409, { error: { type: error instanceof RecoveryObservationBusyError ? 'recovery_observation_busy' : 'recovery_observation_unavailable', message: error instanceof Error ? error.message : String(error) } });
@@ -6527,6 +6557,11 @@ async function hydrateAccountMirrorStatusMaterializationEvidence(
 	const [archiveResults, jobResults] = await Promise.all([
 		(async () => {
 			if (!runArchiveService) return archiveRequests.map(() => null);
+			if (runArchiveService.listItemsBatchAvailability) {
+				return runArchiveService.listItemsBatchAvailability(archiveRequests).catch(() =>
+					archiveRequests.map(() => null),
+				);
+			}
 			if (runArchiveService.listItemsBatch) {
 				return runArchiveService
 					.listItemsBatch(archiveRequests)
@@ -12169,7 +12204,7 @@ function createOperatorBrowserDashboardHtml(
             <button id="duplicateAgentConfig" type="button">Duplicate Agent</button>
             <button id="archiveAgentConfig" type="button">Archive Agent</button>
           </div>
-          <textarea id="agentConfigJson" rows="10" style="width: 100%;" spellcheck="false" placeholder='{"runtimeProfile":"default","service":"chatgpt","modelSelector":"chatgpt:pro-extended"}'></textarea>
+          <textarea id="agentConfigJson" rows="10" style="width: 100%;" spellcheck="false" placeholder='{"runtimeProfile":"default","service":"chatgpt","modelSelector":"chatgpt:reasoning-high"}'></textarea>
           <div id="agentConfigTable" class="muted" style="margin-top: 10px;">No agent configs loaded.</div>
           <pre id="agentConfigResult">No agent config mutation yet.</pre>
         </div>

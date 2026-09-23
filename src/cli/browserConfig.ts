@@ -5,7 +5,7 @@ import type { ModelName, ThinkingTimeLevel } from '../oracle.js';
 import { CURRENT_OPENAI_PRO_ALIAS } from '../oracle.js';
 import { CHATGPT_URL, DEFAULT_MODEL_STRATEGY, DEFAULT_MODEL_TARGET, isTemporaryChatUrl, normalizeChatgptUrl, parseDuration } from '../browserMode.js';
 import { normalizeBrowserModelStrategy } from '../browser/modelStrategy.js';
-import type { BrowserModelStrategy } from '../browser/types.js';
+import type { BrowserModelStrategy, ChatgptToolApprovalPolicy } from '../browser/types.js';
 import type { CookieParam } from '../browser/types.js';
 import { getAuracallHomeDir } from '../auracallHome.js';
 import { resolveManagedProfileCookieExportPath, resolveManagedProfileDir } from '../browser/profileStore.js';
@@ -38,6 +38,7 @@ export interface BrowserFlagOptions {
   browserTimeout?: string;
   browserInputTimeout?: string;
   browserCookieWait?: string;
+  browserCookieSync?: boolean;
   browserNoCookieSync?: boolean;
   browserInlineCookiesFile?: string;
   browserCookieNames?: string;
@@ -50,7 +51,10 @@ export interface BrowserFlagOptions {
   browserWslChrome?: 'auto' | 'wsl' | 'windows';
   /** Thinking time intensity: 'light', 'standard', 'extended', 'heavy' */
   browserThinkingTime?: ThinkingTimeLevel;
+  /** Omit any inherited thinking-time choice for this browser run. */
+  browserNoThinkingTime?: boolean;
   browserChatgptMode?: 'chat' | 'work';
+  browserChatgptToolApproval?: ChatgptToolApprovalPolicy;
   browserWorkModel?: string;
   browserComposerTool?: string;
   browserDeepResearchPlanAction?: 'start' | 'edit';
@@ -93,6 +97,12 @@ export function normalizeChatGptModelForBrowser(model: ModelName): ModelName {
 }
 
 export async function buildBrowserConfig(options: BrowserFlagOptions): Promise<BrowserSessionConfig> {
+  if (options.browserNoThinkingTime && options.browserThinkingTime) {
+    throw new Error('Use either --browser-no-thinking-time or --browser-thinking-time, not both.');
+  }
+  if (options.browserCookieSync && options.browserNoCookieSync) {
+    throw new Error('--browser-cookie-sync cannot be combined with --browser-no-cookie-sync.');
+  }
   const servicesRegistry = await ensureServicesRegistry();
   const desiredModelOverride = options.browserModelLabel?.trim();
   const normalizedOverride = desiredModelOverride?.toLowerCase() ?? '';
@@ -160,7 +170,7 @@ export async function buildBrowserConfig(options: BrowserFlagOptions): Promise<B
   if (modelStrategy === 'select' && url && isTemporaryChatUrl(url) && /\bpro\b/i.test(desiredModel ?? '')) {
     throw new Error(
       'Temporary Chat mode does not expose Pro models in the ChatGPT model picker. ' +
-        'Remove "temporary-chat=true" from --chatgpt-url (or omit --chatgpt-url), or use a non-Pro model (e.g. --model chatgpt:instant).',
+        'Remove "temporary-chat=true" from --chatgpt-url (or omit --chatgpt-url), or use a non-Pro model (e.g. --model chatgpt:fast).',
     );
   }
 
@@ -190,11 +200,11 @@ export async function buildBrowserConfig(options: BrowserFlagOptions): Promise<B
       ? parseDuration(options.browserInputTimeout, DEFAULT_BROWSER_INPUT_TIMEOUT_MS)
       : undefined,
     cookieSyncWaitMs: options.browserCookieWait ? parseDuration(options.browserCookieWait, 0) : undefined,
-    cookieSync: options.browserNoCookieSync ? false : undefined,
+    cookieSync: options.browserNoCookieSync ? false : options.browserCookieSync ? true : undefined,
     cookieNames,
     inlineCookies: inline?.cookies,
     inlineCookiesSource: inline?.source ?? null,
-    headless: undefined, // disable headless; Cloudflare blocks it
+    headless: options.browserHeadless === true ? true : undefined,
     keepBrowser: options.browserKeepBrowser ? true : undefined,
     manualLogin: options.browserManualLogin === undefined ? undefined : options.browserManualLogin,
     manualLoginProfileDir: managedProfileDir,
@@ -202,13 +212,17 @@ export async function buildBrowserConfig(options: BrowserFlagOptions): Promise<B
     hideWindow: options.browserHideWindow ? true : undefined,
     desiredModel,
     chatgptMode: target === 'chatgpt' ? options.browserChatgptMode ?? 'chat' : undefined,
+    chatgptToolApproval:
+      target === 'chatgpt' ? options.browserChatgptToolApproval ?? 'manual' : undefined,
     workModel: target === 'chatgpt' ? options.browserWorkModel?.trim() || null : null,
     modelStrategy,
     debug: options.verbose ? true : undefined,
     // Allow cookie failures by default so runs can continue without Chrome/Keychain secrets.
     allowCookieErrors: options.browserAllowCookieErrors ?? true,
     remoteChrome,
-    thinkingTime: options.browserThinkingTime ?? chatgptSemanticModelSelection?.thinkingTime,
+    thinkingTime: options.browserNoThinkingTime
+      ? undefined
+      : options.browserThinkingTime ?? chatgptSemanticModelSelection?.thinkingTime,
     composerTool: normalizeComposerTool(options.browserComposerTool),
     deepResearchPlanAction: normalizeDeepResearchPlanAction(options.browserDeepResearchPlanAction),
   };

@@ -9,12 +9,16 @@ modules:
   - graph-backed-memory-usage
   - codegraph-usage
   - planning-discipline
+  - model-selection-and-calibration
   - goal-execution-governance
   - parallel-plan-design
   - roadmap-runbook-governance
+  - work-item-traceability
   - architecture-guardrails
+  - code-testing-discipline
   - documentation-change-control
   - git-worktree-hygiene
+  - active-lane-coordination
   - commit-history-discipline
   - branch-and-integration-strategy
   - commit-and-push-cadence

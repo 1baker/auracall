@@ -100,6 +100,7 @@ describe('profileDoctor', () => {
           target: 'grok',
           chromeProfile: 'Default',
           chromeCookiePath: path.join(sourceUserDataDir, 'Default', 'Network', 'Cookies'),
+          cookieSync: true,
           managedProfileRoot: managedRoot,
           manualLogin: true,
         } as never,
@@ -351,6 +352,7 @@ describe('profileDoctor', () => {
           target: 'grok',
           chromeProfile: 'Default',
           chromeCookiePath: sourceCookiePath,
+          cookieSync: true,
           managedProfileRoot: managedRoot,
           manualLogin: true,
         } as never,
@@ -914,6 +916,8 @@ describe('profileDoctor', () => {
         error: null,
         reason: null,
       },
+      promptWorkbench: null,
+      promptWorkbenchError: null,
       runtime: {
         operation: null,
         browserTools: {

@@ -537,9 +537,13 @@ Current limits:
   `materializationAssetKinds`, `materializationMaxItems`,
   `materializationRefreshSnapshot`, and `materializationForce` in camelCase or
   snake_case. `sweepMode: "full_sweep"` defaults to snapshot refresh plus
-  `full_missing_assets`; each successful refresh pass queues an account-mirror
-  history materialization job and records the latest handoff in
-  `materializationCursor`. `GET /v1/account-mirrors/completions`,
+  `full_missing_assets`; after a successful refresh, the completion consults
+  the recovery planner and queues account-mirror history materialization only
+  for retrievable missing assets or unknown/deferred detail work. Raw
+  missing-local counts made entirely of duplicate, unsupported, static,
+  retrieval-failed, or terminal rows do not reopen materialization. The latest
+  queued handoff is recorded in `materializationCursor`.
+  `GET /v1/account-mirrors/completions`,
   `GET /v1/account-mirrors/completions/{completion_id}`, and
   `POST /v1/account-mirrors/completions/{completion_id}` remain the list,
   status, and pause/resume/cancel surfaces. GET list/status defaults to a
@@ -1218,21 +1222,19 @@ Or via `config.json`:
 
 ## Model aliases
 
-Oracle keeps a stable CLI-facing model set, but some names are aliases for the concrete API model ids it sends:
+AuraCall separates durable internal intent from concrete provider model IDs:
 
+- `openai:frontier` → `gpt-6-astra` (API; current default)
 - `gpt-5.1-pro` → `gpt-5.2-pro` (API)
 - `gpt-5.6-sol` is a concrete OpenAI API model and ChatGPT browser selector
   target for Sol reasoning
-- generic `pro` labels/defaults resolve to `gpt-5.1-pro` first, so operator-facing config does not need to pin a dated concrete Pro id
+- generic `pro` labels resolve to `openai:frontier`; exact GPT-5.x inputs remain version pins
 
 Notes:
-- `gpt-5.1-pro` is a **CLI alias** for “the current Pro API model” — OpenAI’s API uses `gpt-5.2-pro`.
-- In ChatGPT, `chatgpt:sol-medium`, `chatgpt:sol-high`, and
-  `chatgpt:sol-extra-high` target the GPT-5.6 Sol effort lane. The current
-  picker no longer exposes separate Thinking or Pro model families, so legacy
-  `chatgpt:thinking-*`, `chatgpt:pro-*`, and `chatgpt:sol-pro` aliases map to
-  Sol at the corresponding effort. `chatgpt:auto` maps to Terra,
-  `chatgpt:instant` maps to Luna, and `chatgpt:gpt-5.5` selects the legacy row.
+- Use `chatgpt:fast`, `chatgpt:reasoning`, `chatgpt:reasoning-high`,
+  `chatgpt:reasoning-max`, `chatgpt:premium`, and `chatgpt:legacy` in new
+  agent and handoff records. Legacy GPT-5.2, Sol/Terra/Luna, Thinking, and Pro
+  selectors continue to resolve for saved configuration.
 - Browser compatibility labels follow the same current picker: older base GPT
   inputs map to Terra, older Instant inputs map to Luna, and older
   Thinking/Pro inputs map to Sol. These mappings do not change API model ids.

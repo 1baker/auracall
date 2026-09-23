@@ -1331,6 +1331,7 @@ describe('configured stored-step executor', () => {
             initialInputs: {
               auracall: {
                 chatgptMode: 'work',
+                chatgptToolApproval: 'allow-once',
                 workModel: 'Research',
                 composerTool: 'deep-research',
                 deepResearchPlanAction: 'edit',
@@ -1362,6 +1363,7 @@ describe('configured stored-step executor', () => {
           manualLogin: true,
           manualLoginWaitForSession: false,
           chatgptMode: 'work',
+          chatgptToolApproval: 'allow-once',
           workModel: 'Research',
           composerTool: 'deep-research',
           deepResearchPlanAction: 'edit',
@@ -1921,6 +1923,7 @@ describe('configured stored-step executor', () => {
       answerChars: 28,
       tabUrl: 'https://chatgpt.com/c/mock-chatgpt-selector',
       conversationId: 'mock-chatgpt-selector',
+      observedModel: '5.6 Instant',
     }));
 
     const executeStoredRunStep = createConfiguredStoredStepExecutor(
@@ -2002,6 +2005,7 @@ describe('configured stored-step executor', () => {
       projectId: 'proj_semantic',
       configuredUrl: 'https://chatgpt.com/g/proj_semantic/project',
       desiredModel: 'GPT-5.6 Sol',
+      observedModel: '5.6 Instant',
       modelSelector: 'chatgpt:pro-extended',
       thinkingTime: 'extended',
     });

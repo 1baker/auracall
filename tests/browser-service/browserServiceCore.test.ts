@@ -135,6 +135,43 @@ describe('BrowserService core launch port handling', () => {
     expect(launchManualLoginSession).not.toHaveBeenCalled();
   });
 
+  test('waits for an already-starting managed-profile owner to publish its DevTools port', async () => {
+    const stages: string[] = [];
+    processCheckMocks.isDevToolsResponsive.mockResolvedValueOnce(true);
+    const launchManualLoginSession = vi.fn();
+    const resolveManagedProfileOwner = vi
+      .fn()
+      .mockResolvedValueOnce({ host: '127.0.0.1', pid: 36730 })
+      .mockResolvedValueOnce({ host: '127.0.0.1', port: 45011, pid: 36730 });
+    const service = new BrowserService(
+      {
+        ...DEFAULT_BROWSER_CONFIG,
+        manualLoginProfileDir: '/tmp/auracall/wsl-chrome-3/chatgpt',
+        chromeProfile: 'Default',
+        debugPort: 45011,
+        debugPortStrategy: 'fixed',
+      } as ResolvedBrowserConfig,
+      {
+        resolveBrowserListTarget: vi.fn(async () => undefined),
+        resolveManagedProfileOwner,
+        pruneRegistry: vi.fn(async () => {}),
+        launchManualLoginSession,
+      },
+    );
+
+    const target = await service.resolveDevToolsTarget({
+      ensurePort: true,
+      defaultProfileDir: '/tmp/auracall/wsl-chrome-3/chatgpt',
+      launchUrl: 'https://chatgpt.com/',
+      onStage: (stage) => stages.push(stage),
+    });
+
+    expect(target).toEqual({ host: '127.0.0.1', port: 45011, launched: false });
+    expect(stages).toEqual(['browserTargetDiscovery', 'browserManagedProfileOwnerProbe']);
+    expect(resolveManagedProfileOwner).toHaveBeenCalledTimes(2);
+    expect(launchManualLoginSession).not.toHaveBeenCalled();
+  });
+
   test('fails closed when a Chrome process owns the managed browser profile without responsive DevTools', async () => {
     processCheckMocks.isDevToolsResponsive.mockResolvedValueOnce(false);
     const launchManualLoginSession = vi.fn();
@@ -165,6 +202,38 @@ describe('BrowserService core launch port handling', () => {
         launchUrl: 'https://chatgpt.com/',
       }),
     ).rejects.toThrow('already owned by Chrome process 1234');
+    expect(launchManualLoginSession).not.toHaveBeenCalled();
+  });
+
+  test('aborts an in-flight managed-profile owner readiness wait', async () => {
+    const launchManualLoginSession = vi.fn();
+    const service = new BrowserService(
+      {
+        ...DEFAULT_BROWSER_CONFIG,
+        manualLoginProfileDir: '/tmp/auracall/wsl-chrome-3/chatgpt',
+        chromeProfile: 'Default',
+        debugPort: 45011,
+        debugPortStrategy: 'fixed',
+      } as ResolvedBrowserConfig,
+      {
+        resolveBrowserListTarget: vi.fn(async () => undefined),
+        resolveManagedProfileOwner: vi.fn(async () => ({
+          host: '127.0.0.1',
+          pid: 36730,
+        })),
+        pruneRegistry: vi.fn(async () => {}),
+        launchManualLoginSession,
+      },
+    );
+
+    await expect(
+      service.resolveDevToolsTarget({
+        ensurePort: true,
+        defaultProfileDir: '/tmp/auracall/wsl-chrome-3/chatgpt',
+        launchUrl: 'https://chatgpt.com/',
+        abortSignal: AbortSignal.timeout(20),
+      }),
+    ).rejects.toMatchObject({ name: 'AbortError' });
     expect(launchManualLoginSession).not.toHaveBeenCalled();
   });
 
@@ -309,5 +378,37 @@ describe('browser interaction governor', () => {
     await governor.beforeInteraction('conversation-read');
 
     expect(sleeps).toEqual([9_000, 109_000]);
+  });
+
+  test('does not publish late pacing state after a caller aborts admission', async () => {
+    let nowMs = 1_000;
+    let releaseSleep: (() => void) | undefined;
+    const sleep = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          releaseSleep = resolve;
+        }),
+    );
+    const governor = createBrowserInteractionGovernor({
+      maxInteractionsPerMinute: 6,
+      cooldownsByClass: { renavigation: 120_000 },
+      now: () => nowMs,
+      sleep,
+    });
+    await governor.beforeInteraction('renavigation');
+    const abortController = new AbortController();
+    const abortReason = new Error('conversation context deadline expired');
+    const abortedAdmission = governor.beforeInteraction('renavigation', abortController.signal);
+    await Promise.resolve();
+    expect(sleep).toHaveBeenCalledTimes(1);
+
+    abortController.abort(abortReason);
+    await expect(abortedAdmission).rejects.toBe(abortReason);
+    nowMs += 120_000;
+    releaseSleep?.();
+    await Promise.resolve();
+    await governor.beforeInteraction('renavigation');
+
+    expect(sleep).toHaveBeenCalledTimes(1);
   });
 });

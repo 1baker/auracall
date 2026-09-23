@@ -241,7 +241,7 @@ the team only when it does not already exist:
   "teamId": "chatgpt-pro-pool",
   "service": "chatgpt",
   "projectName": "Shared Project",
-  "agentModelSelector": "chatgpt:sol-high",
+  "agentModelSelector": "chatgpt:reasoning-high",
   "members": [
     { "agentId": "chatgpt-pro-a", "runtimeProfile": "wsl-chrome-1" },
     { "agentId": "chatgpt-pro-b", "runtimeProfile": "wsl-chrome-2" }
@@ -333,7 +333,7 @@ When a setup agent can create the project-bound agent and key in one call, use
   "runtimeProfile": "wsl-chrome-3",
   "projectName": "ChE 4470/5470 Seminar Grading",
   "agentId": "pro-extended-chatgpt-soylei-che4470-seminar-grading",
-  "agentModelSelector": "chatgpt:sol-high",
+  "agentModelSelector": "chatgpt:reasoning-high",
   "keyId": "che447-grading-client",
   "envPath": "/home/<you>/.auracall/api.env",
   "clientEnvPath": "/home/<you>/.auracall/clients/che447-grading.env"

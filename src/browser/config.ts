@@ -4,7 +4,6 @@ import type { BrowserAutomationConfig, ResolvedBrowserConfig } from './types.js'
 import { resolveManagedProfileDir, resolveManagedProfileRoot } from './profileStore.js';
 import { isTemporaryChatUrl, normalizeChatgptUrl } from './utils.js';
 import { discoverDefaultBrowserProfile, resolveProfileDirectoryName, type WslChromePreference } from './service/profile.js';
-import { resolveBrowserProfileResolutionFromResolvedConfig } from './service/profileResolution.js';
 import path from 'node:path';
 import {
   inferWindowsLocalAppDataRoot,
@@ -37,7 +36,7 @@ export const DEFAULT_BROWSER_CONFIG: ResolvedBrowserConfig = {
   debugPortStrategy: 'fixed',
   debugPortRange: [45000, 45100],
   inputTimeoutMs: 60_000,
-  cookieSync: true,
+  cookieSync: false,
   cookieNames: null,
   cookieSyncWaitMs: 0,
   inlineCookies: null,
@@ -47,6 +46,7 @@ export const DEFAULT_BROWSER_CONFIG: ResolvedBrowserConfig = {
   hideWindow: false,
   desiredModel: DEFAULT_MODEL_TARGET,
   chatgptMode: 'chat',
+  chatgptToolApproval: 'manual',
   workModel: null,
   modelStrategy: DEFAULT_MODEL_STRATEGY,
   composerTool: null,
@@ -97,15 +97,16 @@ export function resolveBrowserConfig(
     DEFAULT_BROWSER_CONFIG.modelStrategy ??
     DEFAULT_MODEL_STRATEGY;
   const chatgptMode = normalizeChatgptComposerMode(config?.chatgptMode);
+  const chatgptToolApproval = normalizeChatgptToolApprovalPolicy(config?.chatgptToolApproval);
   if (modelStrategy === 'select' && isTemporaryChatUrl(normalizedUrl) && /\bpro\b/i.test(desiredModel)) {
     throw new Error(
       'Temporary Chat mode does not expose Pro models in the ChatGPT model picker. ' +
         'Remove "temporary-chat=true" from your browser URL, or use a non-Pro model label (e.g. "Instant").',
     );
   }
-  const isWindows = process.platform === 'win32';
   const manualLogin = config?.manualLogin ?? DEFAULT_BROWSER_CONFIG.manualLogin;
-  const cookieSyncDefault = isWindows ? false : DEFAULT_BROWSER_CONFIG.cookieSync;
+  const cookieSyncDefault = DEFAULT_BROWSER_CONFIG.cookieSync;
+  const cookieSync = config?.cookieSync ?? cookieSyncDefault;
   const normalizedCookieNames = normalizeCookieNames(config?.cookieNames ?? DEFAULT_BROWSER_CONFIG.cookieNames);
   const normalizedInlineCookies = normalizeInlineCookies(config?.inlineCookies ?? DEFAULT_BROWSER_CONFIG.inlineCookies);
   const wslChromePreference = normalizeWslChromePreference(
@@ -136,7 +137,7 @@ export function resolveBrowserConfig(
   const resolvedBootstrapCookiePath = resolveConfiguredBrowserValue(
     process.env.AURACALL_BROWSER_BOOTSTRAP_COOKIE_PATH ??
       config?.bootstrapCookiePath ??
-      config?.chromeCookiePath ??
+      (cookieSync ? config?.chromeCookiePath ?? resolvedCookiePath : null) ??
       null,
   );
   const managedProfileRoot = resolveEffectiveManagedProfileRoot({
@@ -193,42 +194,12 @@ export function resolveBrowserConfig(
     normalizeBlockingProfileAction(config?.blockingProfileAction) ??
     normalizeBlockingProfileAction(mapProfileConflictAction(config?.profileConflictAction)) ??
     DEFAULT_BROWSER_CONFIG.blockingProfileAction;
-  const launchResolution = resolveBrowserProfileResolutionFromResolvedConfig({
-    auracallProfile: options.auracallProfileName ?? null,
-    browserProfileName: managedProfileName,
-    browser: {
-      ...(config ?? {}),
-      target,
-      chromeProfile: resolvedChromeProfile,
-      chromePath: resolvedChromePath,
-      chromeCookiePath: resolvedCookiePath,
-      bootstrapCookiePath: resolvedBootstrapCookiePath,
-      display: resolvedDisplay,
-      managedProfileRoot,
-      debugPort: debugPortEnv ?? config?.debugPort ?? DEFAULT_BROWSER_CONFIG.debugPort,
-      debugPortStrategy,
-      remoteChrome: normalizedRemoteChrome,
-      headless: config?.headless ?? DEFAULT_BROWSER_CONFIG.headless,
-      hideWindow: config?.hideWindow ?? DEFAULT_BROWSER_CONFIG.hideWindow,
-      keepBrowser: config?.keepBrowser ?? DEFAULT_BROWSER_CONFIG.keepBrowser,
-      manualLogin,
-      manualLoginProfileDir: manualLogin ? resolvedProfileDir : null,
-      wslChromePreference,
-      serviceTabLimit,
-      blankTabLimit,
-      collapseDisposableWindows:
-        config?.collapseDisposableWindows ?? DEFAULT_BROWSER_CONFIG.collapseDisposableWindows,
-      blockingProfileAction,
-    },
-    target,
-  });
-  const launchProfile = launchResolution.launchProfile;
-  const agentBrowserRdpEnabled = launchProfile.agentBrowserRdp?.enabled === true;
+  const agentBrowserRdpEnabled = config?.agentBrowserRdp?.enabled === true;
   return {
     ...DEFAULT_BROWSER_CONFIG,
     ...(config ?? {}),
-    blockingProfileAction: launchProfile.blockingProfileAction ?? blockingProfileAction,
-    managedProfileRoot: launchProfile.managedProfileRoot ?? managedProfileRoot,
+    blockingProfileAction,
+    managedProfileRoot,
     target,
     url: normalizedUrl,
     chatgptUrl:
@@ -236,58 +207,64 @@ export function resolveBrowserConfig(
         ? normalizedUrl
         : config?.chatgptUrl ?? DEFAULT_BROWSER_CONFIG.chatgptUrl,
     timeoutMs: config?.timeoutMs ?? DEFAULT_BROWSER_CONFIG.timeoutMs,
-    debugPort: launchProfile.debugPort ?? debugPortEnv ?? config?.debugPort ?? DEFAULT_BROWSER_CONFIG.debugPort,
-    debugPortStrategy: launchProfile.debugPortStrategy ?? debugPortStrategy,
+    debugPort: debugPortEnv ?? config?.debugPort ?? DEFAULT_BROWSER_CONFIG.debugPort,
+    debugPortStrategy,
     debugPortRange,
     inputTimeoutMs: config?.inputTimeoutMs ?? DEFAULT_BROWSER_CONFIG.inputTimeoutMs,
-    cookieSync: config?.cookieSync ?? cookieSyncDefault,
+    cookieSync,
     cookieNames: normalizedCookieNames,
     cookieSyncWaitMs: config?.cookieSyncWaitMs ?? DEFAULT_BROWSER_CONFIG.cookieSyncWaitMs,
     inlineCookies: normalizedInlineCookies,
     inlineCookiesSource: config?.inlineCookiesSource ?? DEFAULT_BROWSER_CONFIG.inlineCookiesSource,
     headless: agentBrowserRdpEnabled
       ? false
-      : launchProfile.headless ?? config?.headless ?? DEFAULT_BROWSER_CONFIG.headless,
+      : config?.headless ?? DEFAULT_BROWSER_CONFIG.headless,
     keepBrowser: agentBrowserRdpEnabled
       ? true
-      : launchProfile.keepBrowser ?? config?.keepBrowser ?? DEFAULT_BROWSER_CONFIG.keepBrowser,
+      : config?.keepBrowser ?? DEFAULT_BROWSER_CONFIG.keepBrowser,
     hideWindow: agentBrowserRdpEnabled
       ? false
-      : launchProfile.hideWindow ?? config?.hideWindow ?? DEFAULT_BROWSER_CONFIG.hideWindow,
+      : config?.hideWindow ?? DEFAULT_BROWSER_CONFIG.hideWindow,
     desiredModel,
     chatgptMode,
+    chatgptToolApproval,
     workModel: config?.workModel?.trim() || null,
     modelStrategy,
     composerTool,
     deepResearchPlanAction,
-    browserFamily: launchProfile.browserFamily ?? config?.browserFamily ?? null,
-    browserBuild: launchProfile.browserBuild ?? config?.browserBuild ?? null,
-    agentBrowserRdp: launchProfile.agentBrowserRdp ?? config?.agentBrowserRdp ?? null,
-    chromeProfile: launchProfile.chromeProfile ?? resolvedChromeProfile,
-    chromePath: launchProfile.chromePath ?? resolvedChromePath,
-    chromeCookiePath: launchProfile.chromeCookiePath ?? resolvedCookiePath,
-    bootstrapCookiePath: launchProfile.bootstrapCookiePath ?? resolvedBootstrapCookiePath,
-    display: launchProfile.display ?? resolvedDisplay,
+    browserFamily: config?.browserFamily ?? null,
+    browserBuild: config?.browserBuild ?? null,
+    agentBrowserRdp: config?.agentBrowserRdp ?? null,
+    chromeProfile: resolvedChromeProfile,
+    chromePath: resolvedChromePath,
+    chromeCookiePath: resolvedCookiePath,
+    bootstrapCookiePath: resolvedBootstrapCookiePath,
+    display: resolvedDisplay,
     geminiUrl: target === 'gemini' ? normalizedUrl : config?.geminiUrl ?? DEFAULT_BROWSER_CONFIG.geminiUrl,
     grokUrl: config?.grokUrl ?? DEFAULT_BROWSER_CONFIG.grokUrl,
     debug: config?.debug ?? DEFAULT_BROWSER_CONFIG.debug,
     allowCookieErrors: config?.allowCookieErrors ?? envAllowCookieErrors ?? DEFAULT_BROWSER_CONFIG.allowCookieErrors,
     remoteChrome: normalizedRemoteChrome,
     thinkingTime: config?.thinkingTime,
-    manualLogin: launchProfile.manualLogin ?? manualLogin,
-    manualLoginProfileDir:
-      manualLogin ? launchProfile.manualLoginProfileDir ?? resolvedProfileDir : null,
+    manualLogin,
+    manualLoginProfileDir: manualLogin ? resolvedProfileDir : null,
     manualLoginCookieSync: config?.manualLoginCookieSync ?? DEFAULT_BROWSER_CONFIG.manualLoginCookieSync,
     manualLoginWaitForSession:
       config?.manualLoginWaitForSession ?? DEFAULT_BROWSER_CONFIG.manualLoginWaitForSession,
-    wslChromePreference: launchProfile.wslChromePreference ?? wslChromePreference,
-    serviceTabLimit: launchProfile.serviceTabLimit ?? serviceTabLimit,
-    blankTabLimit: launchProfile.blankTabLimit ?? blankTabLimit,
+    wslChromePreference,
+    serviceTabLimit,
+    blankTabLimit,
     collapseDisposableWindows:
-      launchProfile.collapseDisposableWindows ??
       config?.collapseDisposableWindows ??
       DEFAULT_BROWSER_CONFIG.collapseDisposableWindows,
   };
+}
+
+function normalizeChatgptToolApprovalPolicy(
+  value: BrowserAutomationConfig['chatgptToolApproval'],
+): ResolvedBrowserConfig['chatgptToolApproval'] {
+  if (value === 'allow-once' || value === 'always-allow') return value;
+  return 'manual';
 }
 
 function normalizeGenericBrowserUrl(value: string, fallback: string): string {

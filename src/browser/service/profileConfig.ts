@@ -1,4 +1,7 @@
-import { resolveSelectedBrowserProfileResolution } from './profileResolution.js';
+import {
+  resolveSelectedBrowserProfileResolution,
+  type ResolvedBrowserProfileResolution,
+} from './profileResolution.js';
 import { resolveRuntimeSelection } from '../../config/model.js';
 import type { ResolvedUserConfig } from '../../config.js';
 
@@ -102,25 +105,19 @@ export function applyBrowserProfileOverrides(
   } else if (browser.debugPortRange === undefined && devRange !== undefined) {
     browser.debugPortRange = devRange;
   }
-  applyBrowserProfileDefaults(merged, profile, browser, { overrideExisting });
-  applyServiceDefaults(merged, profile, browser, { overrideExisting });
+  applyBrowserProfileDefaults(profile, browser, resolution, { overrideExisting });
+  applyServiceDefaults(merged, profile, browser, resolution, { overrideExisting });
   applyCacheDefaults(browser, resolution.profileFamily.cacheDefaults);
 }
 
 function applyBrowserProfileDefaults(
-  merged: MutableConfig,
   profile: Record<string, unknown>,
   browser: MutableBrowserConfig,
+  resolution: ResolvedBrowserProfileResolution,
   options: { overrideExisting?: boolean } = {},
 ): void {
   const overrideExisting = options.overrideExisting ?? false;
   const profileBrowser = isRecord(profile.browser) ? profile.browser : {};
-  const { resolution } = resolveSelectedBrowserProfileResolution({
-    merged,
-    explicitProfileName: asNonEmptyString(merged.auracallProfile) ?? null,
-    runtimeProfile: profile,
-    browser,
-  });
   const browserProfile = resolution.browserProfile;
 
   if (
@@ -221,6 +218,12 @@ function applyBrowserProfileDefaults(
     browser.composerTool = profileBrowser.composerTool;
   }
   if (
+    (overrideExisting || browser.chatgptToolApproval === undefined) &&
+    profileBrowser.chatgptToolApproval !== undefined
+  ) {
+    browser.chatgptToolApproval = profileBrowser.chatgptToolApproval;
+  }
+  if (
     (overrideExisting || browser.deepResearchPlanAction === undefined) &&
     profileBrowser.deepResearchPlanAction !== undefined
   ) {
@@ -240,6 +243,9 @@ function applyBrowserProfileDefaults(
   }
   if ((overrideExisting || browser.cookieNames === undefined) && profileBrowser.cookieNames !== undefined) {
     browser.cookieNames = profileBrowser.cookieNames;
+  }
+  if ((overrideExisting || browser.cookieSync === undefined) && profileBrowser.cookieSync !== undefined) {
+    browser.cookieSync = profileBrowser.cookieSync;
   }
   if ((overrideExisting || browser.inlineCookies === undefined) && profileBrowser.inlineCookies !== undefined) {
     browser.inlineCookies = profileBrowser.inlineCookies;
@@ -268,15 +274,10 @@ function applyServiceDefaults(
   merged: MutableConfig,
   profile: Record<string, unknown>,
   browser: MutableBrowserConfig,
+  resolution: ResolvedBrowserProfileResolution,
   options: { overrideExisting?: boolean } = {},
 ): void {
   const overrideExisting = options.overrideExisting ?? false;
-  const { resolution } = resolveSelectedBrowserProfileResolution({
-    merged,
-    explicitProfileName: asNonEmptyString(merged.auracallProfile) ?? null,
-    runtimeProfile: profile,
-    browser,
-  });
 
   const currentChatgptUrl = asNonEmptyString(browser.chatgptUrl) ?? null;
   const currentGeminiUrl = asNonEmptyString(browser.geminiUrl) ?? null;
@@ -312,6 +313,7 @@ function applyServiceDefaults(
   const modelStrategy = asNonEmptyString(serviceConfig.modelStrategy);
   const thinkingTime = asNonEmptyString(serviceConfig.thinkingTime);
   const composerTool = asNonEmptyString(serviceConfig.composerTool);
+  const chatgptToolApproval = asNonEmptyString(serviceConfig.chatgptToolApproval);
   const deepResearchPlanAction = asNonEmptyString(serviceConfig.deepResearchPlanAction);
   const manualLogin = typeof serviceConfig.manualLogin === 'boolean' ? serviceConfig.manualLogin : undefined;
   const manualLoginProfileDir = asNonEmptyString(serviceConfig.manualLoginProfileDir);
@@ -339,6 +341,9 @@ function applyServiceDefaults(
   }
   if ((overrideExisting || browser.composerTool === undefined) && composerTool) {
     browser.composerTool = composerTool;
+  }
+  if ((overrideExisting || browser.chatgptToolApproval === undefined) && chatgptToolApproval) {
+    browser.chatgptToolApproval = chatgptToolApproval;
   }
   if ((overrideExisting || browser.deepResearchPlanAction === undefined) && deepResearchPlanAction) {
     browser.deepResearchPlanAction = deepResearchPlanAction;

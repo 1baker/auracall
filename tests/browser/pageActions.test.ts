@@ -33,7 +33,7 @@ describe('ensureModelSelection', () => {
     const runtime = {
       evaluate: vi.fn().mockResolvedValue({ result: { value: { status: 'already-selected', label: 'GPT-5.2 Pro' } } }),
     } as unknown as ChromeClient['Runtime'];
-    await expect(ensureModelSelection(runtime, 'GPT-5.2 Pro', logger)).resolves.toBeUndefined();
+    await expect(ensureModelSelection(runtime, 'GPT-5.2 Pro', logger)).resolves.toBe('GPT-5.2 Pro');
     expect(logger).toHaveBeenCalledWith('Model picker: GPT-5.2 Pro');
   });
 
@@ -399,7 +399,7 @@ describe('waitForAssistantResponse', () => {
       },
     };
     const document = { querySelector: (selector: string) => selector === 'main' ? root : null, querySelectorAll: () => [] };
-    const expression = buildMarkdownFallbackExtractorForTest('12');
+    const expression = buildMarkdownFallbackExtractorForTest('{}');
     const result = new Function('document', `return ${expression}()`)(document);
     expect(result).toMatchObject({ text: 'Current final answer', messageId: 'current-message', turnId: 'current-turn' });
   });

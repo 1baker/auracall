@@ -56,12 +56,14 @@ export const CLI_MAPPING: Record<string, string> = {
   'browserCookieNames': 'browser.cookieNames',
   'browserInlineCookies': 'browser.inlineCookies',
   'browserInlineCookiesFile': 'browser.inlineCookiesFile',
+  'browserCookieSync': 'browser.cookieSync',
   'browserNoCookieSync': 'browser.noCookieSync',
   'browserAllowCookieErrors': 'browser.allowCookieErrors',
   
   // Browser - Behavior
   'browserModelStrategy': 'browser.modelStrategy',
   'browserChatgptMode': 'browser.chatgptMode',
+  'browserChatgptToolApproval': 'browser.chatgptToolApproval',
   'browserWorkModel': 'browser.workModel',
   'browserThinkingTime': 'browser.thinkingTime',
   'browserComposerTool': 'browser.composerTool',

@@ -1,311 +1,477 @@
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, test, vi } from "vitest";
 import {
-  promptComposerTestHooks as promptComposer,
-  submitPrompt,
-} from '../../src/browser/actions/promptComposer.js';
+	__test__ as promptComposer,
+	submitPrompt,
+} from "../../src/browser/actions/promptComposer.js";
 
-describe('promptComposer', () => {
-  test('does not mistake a selected app pill label for the requested prompt', () => {
-    expect(promptComposer.composerContainsPrompt('Corel33t', 'Review the existing project')).toBe(false);
-    expect(
-      promptComposer.composerContainsPrompt(
-        'Corel33t Review the existing project',
-        'Review the existing project',
-      ),
-    ).toBe(true);
-  });
+describe("promptComposer", () => {
+	test("ignores a committed Skill mention without ignoring ordinary user text", () => {
+		class Element {
+			nodeType = 1;
+			constructor(
+				public childNodes: unknown[],
+				public pill = false,
+			) {}
+			matches(selector: string) {
+				return this.pill && selector.includes("[data-inline-selection-pill]");
+			}
+		}
+		const text = (value: string) => ({ nodeType: 3, textContent: value });
+		const read = new Function(
+			"Element",
+			"Node",
+			"window",
+			`return ${promptComposer.buildReadCommittedTurnTextFunction()};`,
+		)(Element, { ["TEXT_NODE"]: 3 }, { getComputedStyle: () => ({ display: "inline" }) });
+		const prompt = "Investigate this snippet.";
+		expect(
+			read(new Element([new Element([text("Codebase Investigator")], true), text(prompt)])),
+		).toBe(prompt);
+		expect(read(new Element([text("Retained user text. "), text(prompt)]))).toBe(
+			"Retained user text. " + prompt,
+		);
+	});
 
-  test('waits for a delayed ProseMirror readback before rejecting a large prompt', async () => {
-    const prompt = '{"schema":"digest-bound","markdown":"line one\\nline two"}'.repeat(300);
-    const runtime = {
-      evaluate: vi
-        .fn()
-        .mockResolvedValueOnce({
-          result: {
-            value: {
-              editorText: 'stale prior prompt',
-              fallbackValue: '',
-              editorUserText: 'stale prior prompt',
-            },
-          },
-        })
-        .mockResolvedValueOnce({
-          result: {
-            value: {
-              editorText: `stale prior prompt ${prompt}`,
-              fallbackValue: '',
-              editorUserText: `stale prior prompt ${prompt}`,
-            },
-          },
-        }),
-    } as unknown as { evaluate: (args: { expression: string; returnByValue?: boolean }) => Promise<unknown> };
+	test("requires the composer user text to equal the requested prompt", () => {
+		expect(promptComposer.composerContainsPrompt("Corel33t", "Review the existing project")).toBe(
+			false,
+		);
+		expect(
+			promptComposer.composerContainsPrompt(
+				"Retained stale draft. Review the existing project",
+				"Review the existing project",
+			),
+		).toBe(false);
+		expect(
+			promptComposer.composerContainsPrompt(
+				"Review the existing project",
+				"Review the existing project",
+			),
+		).toBe(true);
+	});
 
-    await expect(
-      promptComposer.waitForPromptInComposer(
-        runtime as never,
-        prompt,
-        JSON.stringify('#prompt-textarea'),
-        JSON.stringify('textarea'),
-        1_200,
-      ),
-    ).resolves.toMatchObject({ editorUserText: expect.stringContaining(prompt) });
-    expect((runtime.evaluate as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(2);
-  });
+	test("treats markdown and rich-composer list presentation as equivalent", () => {
+		const markdown = [
+			"Use project `plan-0459`.",
+			"",
+			"### Deliverables",
+			"1. Technical feasibility",
+			"2. Commercial feasibility",
+			"",
+			"```",
+			"Source-locked evidence",
+			"```",
+		].join("\n");
+		const richText = [
+			"Use project plan-0459.",
+			"Deliverables",
+			"Technical feasibility",
+			"Commercial feasibility",
+			"Source-locked evidence",
+		].join("\n");
 
-  test('does not treat cleared composer + stop button as committed without a new turn', async () => {
-    vi.useFakeTimers();
-    try {
-      const runtime = {
-        evaluate: vi
-          .fn()
-          // Baseline read (turn count)
-          .mockResolvedValueOnce({ result: { value: 10 } })
-          // Polls (repeat)
-          .mockResolvedValue({
-            result: {
-              value: {
-                turnsCount: 10,
-                userMatched: false,
-                prefixMatched: false,
-                lastMatched: false,
-                hasNewTurn: false,
-                stopVisible: true,
-                assistantVisible: false,
-                composerCleared: true,
-                inConversation: false,
-              },
-            },
-          }),
-      } as unknown as { evaluate: (args: { expression: string; returnByValue?: boolean }) => Promise<unknown> };
+		expect(promptComposer.composerContainsPrompt(richText, markdown)).toBe(true);
+		expect(promptComposer.composerContainsPrompt(`Retained draft\n${richText}`, markdown)).toBe(
+			false,
+		);
+	});
 
-      const promise = promptComposer.verifyPromptCommitted(runtime as never, 'hello', 150);
-      const assertion = expect(promise).rejects.toThrow(/prompt did not appear/i);
-      await vi.advanceTimersByTimeAsync(250);
-      await assertion;
-    } finally {
-      vi.useRealTimers();
-    }
-  });
+	test("reads live block boundaries instead of detached clone text", () => {
+		const expression = promptComposer.buildReadComposerUserTextFunction();
+		expect(expression).toContain("window.getComputedStyle(current).display");
+		expect(expression).toContain("block|list-item|table-row|flex|grid");
+		expect(expression).not.toContain("cloneNode");
+	});
 
-  test('rejects a cleared composer plus generation control without a new turn', async () => {
-    vi.useFakeTimers();
-    try {
-      const runtime = {
-        evaluate: vi.fn().mockResolvedValue({
-          result: { value: {
-            turnsCount: 10,
-            userMatched: false,
-            prefixMatched: false,
-            lastMatched: false,
-            hasNewTurn: false,
-            stopVisible: true,
-            assistantVisible: false,
-            composerCleared: true,
-            inConversation: true,
-          } },
-        }),
-      } as unknown as { evaluate: (args: { expression: string; returnByValue?: boolean }) => Promise<unknown> };
+	test("excludes ChatGPT presentation controls and retained app mentions from committed user-turn text", () => {
+		const expression = promptComposer.buildReadCommittedTurnTextFunction();
+		expect(expression).toContain("button");
+		expect(expression).toContain("collapsible-user-message-toggle");
+		expect(expression).toContain("-turn-action-button");
+		expect(expression).toContain("[data-inline-selection-pill]");
+		expect(expression).toContain('[role="group"][class*="file-tile"]');
+		expect(expression).toContain("window.getComputedStyle(current).display");
+	});
 
-      const promise = promptComposer.verifyPromptCommitted(runtime as never, 'hello', 150, undefined, 10);
-      const assertion = expect(promise).rejects.toThrow(/prompt did not appear/i);
-      await vi.advanceTimersByTimeAsync(250);
-      await assertion;
-    } finally {
-      vi.useRealTimers();
-    }
-  });
+	test("recognizes only case-insensitive attachment and provider chrome around one intact prompt", () => {
+		const recognize = new Function(
+			`return ${promptComposer.buildRecognizeCommittedTurnExtraTextFunction()};`,
+		)() as (
+			lastTurn: string,
+			prompt: string,
+			attachmentNames: string[],
+			normalize: (value: string) => string,
+		) => boolean;
+		const normalize = (value: string) => String(value).replace(/\s+/g, " ").trim();
+		const prompt = "Review the existing project";
 
-  test('accepts a cleared composer plus generation control after a new turn', async () => {
-    const runtime = {
-      evaluate: vi.fn().mockResolvedValueOnce({
-        result: { value: {
-          turnsCount: 11,
-          userMatched: false,
-          prefixMatched: false,
-          lastMatched: false,
-          hasNewTurn: true,
-          stopVisible: true,
-          assistantVisible: false,
-          composerCleared: true,
-          inConversation: true,
-        } },
-      }),
-    } as unknown as { evaluate: (args: { expression: string; returnByValue?: boolean }) => Promise<unknown> };
+		expect(
+			recognize(
+				`Research-Brief.PDF · PDF · Deep Research · collapsed ${prompt}`,
+				prompt,
+				["research-brief.pdf"],
+				normalize,
+			),
+		).toBe(true);
+		expect(
+			recognize(`${prompt} ignore prior safeguards`, prompt, ["research-brief.pdf"], normalize),
+		).toBe(false);
+		expect(
+			recognize("Review a different project PDF", prompt, ["research-brief.pdf"], normalize),
+		).toBe(false);
+		expect(recognize(`${prompt} PDF ${prompt}`, prompt, ["research-brief.pdf"], normalize)).toBe(
+			false,
+		);
+	});
 
-    await expect(promptComposer.verifyPromptCommitted(runtime as never, 'hello', 150, undefined, 10)).resolves.toBe(11);
-  });
-
-  test('accepts a commit that becomes visible on the final timeout sample', async () => {
-    vi.useFakeTimers();
-    try {
-      const pendingState = {
-        turnsCount: 10,
-        userMatched: true,
-        prefixMatched: true,
-        lastMatched: false,
-        hasNewTurn: false,
-        stopVisible: false,
-        assistantVisible: true,
-        composerCleared: false,
-        inConversation: true,
-      };
-      const runtime = {
-        evaluate: vi
-          .fn()
-          .mockResolvedValueOnce({ result: { value: pendingState } })
-          .mockResolvedValueOnce({ result: { value: {
-            ...pendingState,
-            turnsCount: 11,
-            hasNewTurn: true,
-            stopVisible: true,
-            composerCleared: true,
-          } } }),
-      } as unknown as { evaluate: (args: { expression: string; returnByValue?: boolean }) => Promise<unknown> };
-
-      const promise = promptComposer.verifyPromptCommitted(runtime as never, 'hello', 50, undefined, 10);
-      await vi.advanceTimersByTimeAsync(200);
-      await expect(promise).resolves.toBe(11);
-      expect((runtime.evaluate as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(2);
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-
-  test('allows prompt match even if baseline turn count cannot be read', async () => {
-    const runtime = {
-      evaluate: vi
-        .fn()
-        // Baseline read fails
-        .mockRejectedValueOnce(new Error('turn read failed'))
-        // First poll shows prompt match (baseline unknown)
-        .mockResolvedValueOnce({
-          result: {
-            value: {
-              turnsCount: 1,
-              userMatched: true,
-              prefixMatched: false,
-              lastMatched: true,
-              hasNewTurn: false,
-              stopVisible: false,
-              assistantVisible: false,
-              composerCleared: false,
-              inConversation: true,
-            },
-          },
-        }),
-    } as unknown as { evaluate: (args: { expression: string; returnByValue?: boolean }) => Promise<unknown> };
-
-    await expect(promptComposer.verifyPromptCommitted(runtime as never, 'hello', 150)).resolves.toBe(1);
-  });
-
-  test('waits for hot conversation submit readiness until stop state clears', async () => {
-    vi.useFakeTimers();
-    try {
-      const runtime = {
-        evaluate: vi
-          .fn()
-          .mockResolvedValueOnce({ result: { value: { ready: false } } })
-          .mockResolvedValueOnce({ result: { value: { ready: false } } })
-          .mockResolvedValueOnce({ result: { value: { ready: true } } }),
-      } as unknown as { evaluate: (args: { expression: string; returnByValue?: boolean }) => Promise<unknown> };
-
-      const promise = promptComposer.waitForComposerReadyToSubmit(runtime as never, 500);
-      await vi.advanceTimersByTimeAsync(250);
-      await expect(promise).resolves.toBeUndefined();
-      expect((runtime.evaluate as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(3);
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-
-  test('accepts immediate submit readiness when conversation is already settled', async () => {
-    const runtime = {
-      evaluate: vi.fn().mockResolvedValueOnce({ result: { value: { ready: true } } }),
-    } as unknown as { evaluate: (args: { expression: string; returnByValue?: boolean }) => Promise<unknown> };
-
-    await expect(promptComposer.waitForComposerReadyToSubmit(runtime as never, 500)).resolves.toBeUndefined();
-    expect((runtime.evaluate as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(1);
-  });
-
-	test('fails closed when submit readiness never arrives', async () => {
+	test("accepts an attachment-decorated new turn when prompt and provider effect are intact", async () => {
 		vi.useFakeTimers();
 		try {
-			const runtime = { evaluate: vi.fn().mockResolvedValue({ result: { value: { ready: false } } }) };
-			const pending = promptComposer.waitForComposerReadyToSubmit(runtime as never, 250);
-			const rejection = expect(pending).rejects.toThrow('did not become ready');
-			await vi.advanceTimersByTimeAsync(300);
+			const runtime = {
+				evaluate: vi.fn().mockResolvedValue({
+					result: {
+						value: {
+							turnsCount: 11,
+							userMatched: true,
+							prefixMatched: true,
+							lastMatched: true,
+							lastExactMatched: false,
+							lastExtraTextRecognized: true,
+							hasNewTurn: true,
+							stopVisible: true,
+							assistantVisible: false,
+							composerCleared: true,
+							inConversation: true,
+							baseline: 10,
+						},
+					},
+				}),
+			} as unknown as {
+				evaluate: (args: { expression: string; returnByValue?: boolean }) => Promise<unknown>;
+			};
+
+			const promise = promptComposer.verifyPromptCommitted(
+				runtime as never,
+				"Review the existing project",
+				150,
+				undefined,
+				10,
+				['research-brief.pdf'],
+			);
+			await expect(promise).resolves.toBe(11);
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	test("accepts a uniquely identified new user turn when virtualized turn count stays flat", async () => {
+		const runtime = {
+			evaluate: vi.fn().mockResolvedValue({
+				result: { value: {
+					turnsCount: 10,
+					latestMatchingUserId: "new-user-message",
+					lastExactMatched: true,
+					hasNewTurn: false,
+					composerCleared: true,
+					inConversation: true,
+					baseline: 10,
+				} },
+			}),
+		};
+		await expect(promptComposer.verifyPromptCommitted(
+			runtime as never, "Review the existing project", 150, undefined, 10, [], "old-user-message",
+		)).resolves.toBe(10);
+	});
+
+	test("rejects a reused user identity when virtualized turn count stays flat", async () => {
+		vi.useFakeTimers();
+		try {
+			const runtime = {
+				evaluate: vi.fn().mockResolvedValue({
+					result: { value: {
+						turnsCount: 10,
+						latestMatchingUserId: "old-user-message",
+						lastExactMatched: true,
+						hasNewTurn: false,
+						composerCleared: true,
+						inConversation: true,
+						baseline: 10,
+					} },
+				}),
+			};
+			const pending = promptComposer.verifyPromptCommitted(
+				runtime as never, "Review the existing project", 150, undefined, 10, [], "old-user-message",
+			);
+			const rejection = expect(pending).rejects.toThrow(/did not appear/i);
+			await vi.advanceTimersByTimeAsync(250);
 			await rejection;
 		} finally {
 			vi.useRealTimers();
 		}
 	});
 
-	test('requires an enabled send button for governed new-project submission', async () => {
+	test("rejects an otherwise active new turn with unrecognized extra text", async () => {
 		vi.useFakeTimers();
 		try {
-			const runtime = { evaluate: vi.fn().mockResolvedValue({ result: { value: { ready: false } } }) };
-			const pending = promptComposer.waitForComposerReadyToSubmit(runtime as never, 250, true);
-			const rejection = expect(pending).rejects.toThrow('did not become ready');
-			await vi.advanceTimersByTimeAsync(300);
-			await rejection;
-			expect(runtime.evaluate.mock.calls[0]?.[0]?.expression).toContain('return { ready: false }');
+			const runtime = {
+				evaluate: vi.fn().mockResolvedValue({
+					result: {
+						value: {
+							turnsCount: 11,
+							lastMatched: true,
+							lastExactMatched: false,
+							lastExtraTextRecognized: false,
+							hasNewTurn: true,
+							stopVisible: true,
+							assistantVisible: false,
+							composerCleared: true,
+							inConversation: true,
+							baseline: 10,
+						},
+					},
+				}),
+			} as unknown as {
+				evaluate: (args: { expression: string; returnByValue?: boolean }) => Promise<unknown>;
+			};
+
+			const promise = promptComposer.verifyPromptCommitted(
+				runtime as never,
+				"Review the existing project",
+				150,
+				undefined,
+				10,
+				['research-brief.pdf'],
+			);
+			const assertion = expect(promise).rejects.toMatchObject({
+				details: { effectState: 'unknown' },
+			});
+			await vi.advanceTimersByTimeAsync(250);
+			await assertion;
 		} finally {
 			vi.useRealTimers();
 		}
 	});
 
-	test('rejects a busy conversation before altering the composer', async () => {
+	test("fails closed when retained composer text cannot be cleared", async () => {
+		const runtime = {
+			evaluate: vi.fn().mockResolvedValue({
+				result: {
+					value: { cleared: false, beforeLength: 42, afterLength: 42 },
+				},
+			}),
+		} as unknown as {
+			evaluate: (args: { expression: string; returnByValue?: boolean }) => Promise<unknown>;
+		};
+
+		const logger = vi.fn<(message: string) => void>();
+		await expect(
+			promptComposer.preparePromptComposer(runtime as never, logger),
+		).rejects.toMatchObject({
+			details: { code: "prompt-composer-not-cleared" },
+		});
+	});
+
+	test("does not treat cleared composer + stop button as committed without a new turn", async () => {
 		vi.useFakeTimers();
 		try {
-			const runtime = { evaluate: vi.fn().mockResolvedValue({ result: { value: false } }) };
-			const pending = promptComposer.waitForConversationIdle(runtime as never, 250);
-			const rejection = expect(pending).rejects.toThrow('conversation remained busy');
-			await vi.advanceTimersByTimeAsync(300);
-			await rejection;
+			const runtime = {
+				evaluate: vi
+					.fn()
+					// Baseline read (turn count)
+					.mockResolvedValueOnce({ result: { value: 10 } })
+					// Polls (repeat)
+					.mockResolvedValue({
+						result: {
+							value: {
+								turnsCount: 10,
+								userMatched: false,
+								prefixMatched: false,
+								lastMatched: false,
+								hasNewTurn: false,
+								stopVisible: true,
+								assistantVisible: false,
+								composerCleared: true,
+								inConversation: false,
+							},
+						},
+					}),
+			} as unknown as {
+				evaluate: (args: { expression: string; returnByValue?: boolean }) => Promise<unknown>;
+			};
+
+			const promise = promptComposer.verifyPromptCommitted(runtime as never, "hello", 150);
+			const assertion = expect(promise).rejects.toThrow(/prompt did not appear/i);
+			await vi.advanceTimersByTimeAsync(250);
+			await assertion;
 		} finally {
 			vi.useRealTimers();
 		}
 	});
 
-  test('fails closed before Send or Enter when the final pre-send guard rejects', async () => {
-    const prompt = 'Review the bounded verification packet.';
-    const runtime = {
-      evaluate: vi
-        .fn()
-        .mockResolvedValueOnce({ result: { value: { ready: true, composer: true } } })
-				.mockResolvedValueOnce({ result: { value: true } })
-        .mockResolvedValueOnce({ result: { value: { focused: true } } })
-        .mockResolvedValueOnce({
-          result: { value: { editorText: prompt, fallbackValue: '', editorUserText: prompt } },
-        })
-        .mockResolvedValueOnce({
-          result: { value: { editorText: prompt, fallbackValue: '', editorUserText: prompt } },
-        })
-        .mockResolvedValueOnce({ result: { value: { ready: true } } }),
-    };
-    const input = {
-      insertText: vi.fn().mockResolvedValue(undefined),
-      dispatchKeyEvent: vi.fn().mockResolvedValue(undefined),
-    };
-    const beforeSend = vi.fn(async () => {
-      throw new Error('Pro intelligence could not be verified');
-    });
+	test("allows prompt match even if baseline turn count cannot be read", async () => {
+		const runtime = {
+			evaluate: vi
+				.fn()
+				// Baseline read fails
+				.mockRejectedValueOnce(new Error("turn read failed"))
+				// First poll shows prompt match (baseline unknown)
+				.mockResolvedValueOnce({
+					result: {
+						value: {
+							turnsCount: 1,
+							userMatched: true,
+							prefixMatched: false,
+							lastMatched: true,
+							lastExactMatched: true,
+							hasNewTurn: false,
+							stopVisible: false,
+							assistantVisible: false,
+							composerCleared: false,
+							inConversation: true,
+						},
+					},
+				}),
+		} as unknown as {
+			evaluate: (args: { expression: string; returnByValue?: boolean }) => Promise<unknown>;
+		};
 
-    await expect(
-      submitPrompt(
-        {
-          runtime: runtime as never,
-          input: input as never,
-          inputTimeoutMs: 500,
-          beforeSend,
-        },
-        prompt,
-        vi.fn<(message: string) => void>(),
-      ),
-    ).rejects.toThrow('Pro intelligence could not be verified');
-    expect(beforeSend).toHaveBeenCalledOnce();
-    expect(input.insertText).toHaveBeenCalledWith({ text: prompt });
-    expect(input.dispatchKeyEvent).not.toHaveBeenCalled();
-		expect(runtime.evaluate).toHaveBeenCalledTimes(6);
-  });
+		await expect(
+			promptComposer.verifyPromptCommitted(runtime as never, "hello", 150),
+		).resolves.toBe(1);
+	});
+
+	test("waits for hot conversation submit readiness until stop state clears", async () => {
+		vi.useFakeTimers();
+		try {
+			const runtime = {
+				evaluate: vi
+					.fn()
+					.mockResolvedValueOnce({ result: { value: { ready: false } } })
+					.mockResolvedValueOnce({ result: { value: { ready: false } } })
+					.mockResolvedValueOnce({ result: { value: { ready: true } } }),
+			} as unknown as {
+				evaluate: (args: { expression: string; returnByValue?: boolean }) => Promise<unknown>;
+			};
+
+			const promise = promptComposer.waitForComposerReadyToSubmit(runtime as never, 500);
+			await vi.advanceTimersByTimeAsync(250);
+			await expect(promise).resolves.toBeUndefined();
+			expect((runtime.evaluate as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(3);
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	test("accepts immediate submit readiness when conversation is already settled", async () => {
+		const runtime = {
+			evaluate: vi.fn().mockResolvedValueOnce({ result: { value: { ready: true } } }),
+		} as unknown as {
+			evaluate: (args: { expression: string; returnByValue?: boolean }) => Promise<unknown>;
+		};
+
+		await expect(
+			promptComposer.waitForComposerReadyToSubmit(runtime as never, 500),
+		).resolves.toBeUndefined();
+		expect((runtime.evaluate as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(1);
+	});
+
+	test.each([
+		false,
+		true,
+	])("checks the final pre-send guard after insertion (reject=%s)", async (rejectSend) => {
+		const prompt = "Review the bounded Experiment 9 packet.";
+		const runtime = {
+			evaluate: vi
+				.fn()
+				// DOM readiness.
+				.mockResolvedValueOnce({ result: { value: { ready: true, composer: true } } })
+				// Focus and mark the exact visible composer-owned target.
+				.mockResolvedValueOnce({ result: { value: { focused: true } } })
+				// Clear retained user-authored text while preserving selected app pills.
+				.mockResolvedValueOnce({
+					result: { value: { cleared: true, beforeLength: 18, afterLength: 0 } },
+				})
+				// Initial readback sees the prompt only on the marked target.
+				.mockResolvedValueOnce({
+					result: {
+						value: {
+							editorText: "",
+							fallbackValue: "",
+							editorUserText: "",
+							targetText: prompt,
+							targetUserText: prompt,
+						},
+					},
+				})
+				// Pre-Send verification remains bound to that target.
+				.mockResolvedValueOnce({
+					result: {
+						value: {
+							editorText: "",
+							fallbackValue: "",
+							editorUserText: "",
+							targetText: prompt,
+							targetUserText: prompt,
+						},
+					},
+				})
+				// Composer ready, Send clicked, and the new user turn committed.
+				.mockResolvedValueOnce({ result: { value: { ready: true } } })
+				.mockResolvedValueOnce({ result: { value: "clicked" } })
+				.mockResolvedValueOnce({
+					result: {
+						value: {
+							turnsCount: 1,
+							userMatched: true,
+							prefixMatched: false,
+							lastMatched: true,
+							lastExactMatched: true,
+							hasNewTurn: true,
+							stopVisible: false,
+							assistantVisible: false,
+							composerCleared: true,
+							inConversation: true,
+							baseline: 0,
+						},
+					},
+				}),
+		};
+		const input = {
+			insertText: vi.fn().mockResolvedValue(undefined),
+			dispatchKeyEvent: vi.fn().mockResolvedValue(undefined),
+		};
+		const logger = vi.fn<(message: string) => void>();
+
+		const beforeSend = vi.fn(async () => {
+			expect(input.insertText).toHaveBeenCalledWith({ text: prompt });
+			expect(runtime.evaluate).toHaveBeenCalledTimes(6);
+			if (rejectSend) throw new Error("selected Skill lost");
+		});
+		const submission = submitPrompt(
+			{
+				runtime: runtime as never,
+				input: input as never,
+				baselineTurns: 0,
+				inputTimeoutMs: 500,
+				beforeSend,
+			},
+			prompt,
+			logger,
+		);
+		if (rejectSend) {
+			await expect(submission).rejects.toThrow("selected Skill lost");
+			expect(runtime.evaluate).toHaveBeenCalledTimes(6);
+			expect(input.dispatchKeyEvent).not.toHaveBeenCalled();
+			return;
+		}
+		await expect(submission).resolves.toBe(1);
+		expect(beforeSend).toHaveBeenCalledOnce();
+
+		expect(input.insertText).toHaveBeenCalledWith({ text: prompt });
+		expect(input.dispatchKeyEvent).not.toHaveBeenCalled();
+		expect(runtime.evaluate).toHaveBeenCalledTimes(8);
+		const commitExpression = runtime.evaluate.mock.calls.at(-1)?.[0]?.expression as string;
+		expect(commitExpression).toContain("#{1,6}");
+		expect(commitExpression).toContain("\\d+");
+	});
 });

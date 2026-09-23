@@ -110,22 +110,6 @@ Avoid using plain `profile` when the meaning is ambiguous.
 - Windows-specific work:
   - `docs/windows-work.md`
 
-## End-of-turn agent policy
-
-Every end-of-turn update must be compact. Use inline labels instead of
-standalone section headers when the content is short:
-
-`Status + Verification:` changed behavior/files plus command evidence.
-`Plan + Audit:` next acceptance criteria and remaining validation.
-`Risks/Blockers:` only when material blockers exist; include exact unblockers.
-`Best Recommendation (Primary):` final sentence/paragraph; one decisive next
-action with rationale.
-
-Only add `Ranked Alternatives:` before the recommendation when there is genuine
-uncertainty or a material tradeoff. Do not add trailing questions or commentary
-after the recommendation. Omit any closeout label that would only say there are
-no issues; favor useful, actionable information.
-
 ## Policy Loading Contract
 
 - `AGENTS.md` is a routing surface, not a one-time pointer.

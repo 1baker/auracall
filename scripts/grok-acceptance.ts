@@ -1,11 +1,16 @@
 #!/usr/bin/env tsx
 import { randomBytes } from 'node:crypto';
-import { spawnSync } from 'node:child_process';
 import type { Dirent } from 'node:fs';
 import { mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {
+  createBrowserAcceptanceHarness,
+  parseAcceptanceJson as parseJson,
+  type AcceptanceCommandOptions as RunOptions,
+  type AcceptanceCommandResult as RunResult,
+} from './lib/browserAcceptanceHarness.js';
 
 type Project = {
   id: string;
@@ -81,25 +86,16 @@ type BrowserSessionMetadata = {
   createdAt?: unknown;
 };
 
-type RunOptions = {
-  expectFailure?: boolean;
-  timeoutMs?: number;
-};
-
-type RunResult = {
-  stdout: string;
-  stderr: string;
-  combined: string;
-};
-
-type Args = {
+export type GrokAcceptanceArgs = {
   json: boolean;
   keepProjects: boolean;
   profile?: string;
   model: string;
 };
 
-type AcceptanceSummary = {
+type Args = GrokAcceptanceArgs;
+
+export type GrokAcceptanceSummary = {
   ok: boolean;
   profile: string | null;
   model: string;
@@ -117,6 +113,22 @@ type AcceptanceSummary = {
   cloneProjectName: string;
   renamedConversationName: string;
   mediumFileGuard: string | null;
+};
+
+type AcceptanceSummary = GrokAcceptanceSummary;
+
+type GrokAcceptanceCleanupCommand = (
+  args: Args,
+  extra: string[],
+  options?: RunOptions,
+) => RunResult;
+
+export type GrokAcceptanceMainAdapter = {
+  execute?(context: {
+    args: Readonly<Args>;
+    summary: AcceptanceSummary;
+  }): Promise<void>;
+  runCleanupCommand?: GrokAcceptanceCleanupCommand;
 };
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -188,58 +200,13 @@ function randomSuffix(length = 6): string {
   return Array.from(bytes, (value) => alphabet[value % alphabet.length]).join('');
 }
 
-function buildAuracallArgs(args: Args, extra: string[]): string[] {
-  const cliArgs = ['tsx', 'bin/auracall.ts'];
-  if (args.profile) {
-    cliArgs.push('--profile', args.profile);
-  }
-  cliArgs.push(...extra);
-  return cliArgs;
-}
-
 function runAuracall(args: Args, extra: string[], options: RunOptions = {}): RunResult {
-  const cliArgs = buildAuracallArgs(args, extra);
-  const command = ['pnpm', ...cliArgs].join(' ');
-  logStep(`$ ${command}`);
-  const result = spawnSync('pnpm', cliArgs, {
-    cwd: ROOT,
-    encoding: 'utf8',
-    timeout: options.timeoutMs ?? 60_000,
-    maxBuffer: 20 * 1024 * 1024,
-    env: {
-      ...process.env,
-      ORACLE_NO_BANNER: '1',
-      NODE_NO_WARNINGS: '1',
-    },
-  });
-  if (result.error) {
-    throw result.error;
-  }
-  const stdout = result.stdout ?? '';
-  const stderr = result.stderr ?? '';
-  const combined = [stdout, stderr].filter(Boolean).join('\n').trim();
-  if (options.expectFailure) {
-    if (result.status === 0) {
-      throw new Error(`Expected failure but command succeeded: ${command}`);
-    }
-    return { stdout, stderr, combined };
-  }
-  if (result.status !== 0) {
-    throw new Error(`Command failed (${result.status}): ${command}\n${combined}`);
-  }
-  return { stdout, stderr, combined };
-}
-
-function parseJson<T>(label: string, text: string): T {
-  const trimmed = text.trim();
-  if (!trimmed) {
-    throw new Error(`${label} returned empty output.`);
-  }
-  try {
-    return JSON.parse(trimmed) as T;
-  } catch (error) {
-    throw new Error(`${label} did not return valid JSON.\n${trimmed}\n${error instanceof Error ? error.message : String(error)}`);
-  }
+  return createBrowserAcceptanceHarness({
+    rootDir: ROOT,
+    profile: args.profile,
+    commandTimeoutMs: 60_000,
+    log: logStep,
+  }).run(extra, options);
 }
 
 function sleep(ms: number): Promise<void> {
@@ -385,8 +352,17 @@ async function waitForNewConversation(
   throw new Error(`No new conversation appeared before timeout for ${label}.`);
 }
 
-async function main() {
-  const args = parseArgs(process.argv.slice(2));
+export async function runGrokAcceptanceMain(
+  argv: readonly string[] = process.argv.slice(2),
+  adapter: GrokAcceptanceMainAdapter = {},
+): Promise<AcceptanceSummary> {
+  const args = parseArgs([...argv]);
+  const acceptance = createBrowserAcceptanceHarness<AcceptanceSummary>({
+    rootDir: ROOT,
+    profile: args.profile,
+    commandTimeoutMs: 60_000,
+    log: logStep,
+  });
   const suffix = randomSuffix();
   const tempDir = await mkdtemp(path.join(tmpdir(), 'auracall-grok-acceptance-'));
   await writeFixtureFiles(tempDir);
@@ -428,7 +404,10 @@ async function main() {
   try {
     logStep(`Starting acceptance run with suffix ${suffix}`);
 
-    runAuracall(args, ['projects', 'create', projectName, '--target', 'grok']);
+    if (adapter.execute) {
+      await adapter.execute({ args, summary });
+    } else {
+      runAuracall(args, ['projects', 'create', projectName, '--target', 'grok']);
     const { project: createdProject } = await waitForProjectByName(args, projectName, 'projects refresh after create');
     summary.projectId = createdProject.id;
 
@@ -550,7 +529,7 @@ async function main() {
     const mediumFailure = runAuracall(
       args,
       ['projects', 'files', 'add', renamedProject.id, '-f', mediumFilePath, '--target', 'grok'],
-      { expectFailure: true, timeoutMs: 180_000 },
+      { expect: 'failure', timeoutMs: 180_000 },
     );
     assert(
       mediumFailure.combined.includes(EXPECTED_MEDIUM_FILE_ERROR),
@@ -929,35 +908,53 @@ async function main() {
     assert(markdownResult.stdout.includes('```txt'), 'Markdown smoke did not preserve the fenced code block.');
     assert(markdownResult.stdout.includes('beta'), 'Markdown smoke did not include the fenced body.');
 
-    if (!args.keepProjects) {
-      runAuracall(args, ['projects', 'remove', cloneProject.id, '--target', 'grok'], { timeoutMs: 180_000 });
-      runAuracall(args, ['projects', 'remove', renamedProject.id, '--target', 'grok'], { timeoutMs: 180_000 });
+    }
+
+    if (!args.keepProjects && (summary.cloneId || summary.projectId)) {
+      const runCleanupCommand = adapter.runCleanupCommand ?? runAuracall;
+      if (summary.cloneId) {
+        runCleanupCommand(args, ['projects', 'remove', summary.cloneId, '--target', 'grok'], {
+          timeoutMs: 180_000,
+        });
+      }
+      if (summary.projectId) {
+        runCleanupCommand(args, ['projects', 'remove', summary.projectId, '--target', 'grok'], {
+          timeoutMs: 180_000,
+        });
+      }
       const finalProjects = parseJson<Project[]>(
         'projects refresh after cleanup',
-        runAuracall(args, ['projects', '--target', 'grok', '--refresh']).stdout,
+        runCleanupCommand(args, ['projects', '--target', 'grok', '--refresh']).stdout,
       );
       assert(
-        !finalProjects.some((project) => project.id === cloneProject.id || project.id === renamedProject.id),
+        !finalProjects.some(
+          (project) => project.id === summary.cloneId || project.id === summary.projectId,
+        ),
         'Disposable projects still appeared after cleanup.',
       );
     }
-
     summary.ok = true;
+  } catch (error) {
+    console.error(
+      `[grok-acceptance] FAIL: ${error instanceof Error ? error.message : String(error)}`,
+    );
+    throw error;
   } finally {
     await rm(tempDir, { recursive: true, force: true });
   }
 
+  const evidence = await acceptance.finalize(summary);
   if (args.json) {
-    console.log(JSON.stringify(summary, null, 2));
-    return;
+    console.log(evidence.json);
+    return summary;
   }
   logStep('PASS');
-  console.log(JSON.stringify(summary, null, 2));
+  console.log(evidence.json);
+  return summary;
 }
 
-main().catch((error) => {
-  console.error(
-    `[grok-acceptance] FAIL: ${error instanceof Error ? error.message : String(error)}`,
-  );
-  process.exit(1);
-});
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  runGrokAcceptanceMain().catch(() => {
+    process.exit(1);
+  });
+}

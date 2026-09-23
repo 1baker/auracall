@@ -77,7 +77,7 @@ export async function resolveConfig(
   // Handle shorthands
   if (cliOptions.chatgpt) {
     deepSet(cliConfig, 'browser.target', 'chatgpt');
-    if (!cliConfig.model) cliConfig.model = 'chatgpt:instant';
+    if (!cliConfig.model) cliConfig.model = 'chatgpt:fast';
     cliConfig.engine = 'browser';
   }
   if (cliOptions.gemini) {
@@ -112,7 +112,7 @@ export async function resolveConfig(
   const cliModelArg =
     cliConfig.model ||
     effective.model ||
-    (engine === 'browser' ? 'chatgpt:instant' : DEFAULT_MODEL);
+    (engine === 'browser' ? 'chatgpt:fast' : DEFAULT_MODEL);
 
   const semanticChatgptSelection =
     engine === 'browser' ? resolveChatgptSemanticModelSelector(cliModelArg) : null;
@@ -216,6 +216,9 @@ function applyTransitionalCliServiceAliases(merged: MutableConfig, cliOptions: O
   const conversationName = asNonEmptyString((cliOptions as MutableConfig).conversationName);
   const modelStrategy = asNonEmptyString((cliOptions as MutableConfig).browserModelStrategy);
   const chatgptMode = asNonEmptyString((cliOptions as MutableConfig).browserChatgptMode);
+  const chatgptToolApproval = asNonEmptyString(
+    (cliOptions as MutableConfig).browserChatgptToolApproval,
+  );
   const workModel = asNonEmptyString((cliOptions as MutableConfig).browserWorkModel);
   const thinkingTime = asNonEmptyString((cliOptions as MutableConfig).browserThinkingTime);
   const composerTool = asNonEmptyString((cliOptions as MutableConfig).browserComposerTool);
@@ -227,6 +230,7 @@ function applyTransitionalCliServiceAliases(merged: MutableConfig, cliOptions: O
     !conversationName &&
     !modelStrategy &&
     !chatgptMode &&
+    !chatgptToolApproval &&
     !workModel &&
     !thinkingTime &&
     !composerTool &&
@@ -280,6 +284,9 @@ function applyTransitionalCliServiceAliases(merged: MutableConfig, cliOptions: O
   }
   if (chatgptMode) {
     serviceConfig.chatgptMode = chatgptMode;
+  }
+  if (chatgptToolApproval) {
+    serviceConfig.chatgptToolApproval = chatgptToolApproval;
   }
   if (workModel) {
     serviceConfig.workModel = workModel;

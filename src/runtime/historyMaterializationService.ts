@@ -9,6 +9,12 @@ import {
 	createBrowserInteractionGovernor,
 } from "../../packages/browser-service/src/service/interactionGovernor.js";
 import {
+	type BrowserOperationAcquiredResult,
+	type BrowserOperationDispatcher,
+	createFileBackedBrowserOperationDispatcher,
+	formatBrowserOperationBusyResult,
+} from "../../packages/browser-service/src/service/operationDispatcher.js";
+import {
 	type AccountMirrorConversationEvidence,
 	createAccountMirrorPersistence,
 } from "../accountMirror/cachePersistence.js";
@@ -20,6 +26,8 @@ import {
 	createAccountMirrorCatalogService,
 } from "../accountMirror/catalogService.js";
 import { accountMirrorIdentityKeysMatch } from "../accountMirror/tenantBinding.js";
+import { getAuracallHomeDir } from "../auracallHome.js";
+import { DEFAULT_CONVERSATION_CONTEXT_TIMEOUT_MS } from "../browser/llmService/llmService.js";
 import { createLlmService } from "../browser/llmService/providers/index.js";
 import type { ConversationContextReadReceipt } from "../browser/providers/cache.js";
 import type { ConversationArtifact, FileRef, ProviderId } from "../browser/providers/domain.js";
@@ -34,9 +42,9 @@ import {
 	snapshotBrowserScrapeTelemetry,
 } from "../browser/providers/scrapeTelemetry.js";
 import type { BrowserProviderListOptions } from "../browser/providers/types.js";
+import { resolveBrowserLaunchPlan } from "../browser/service/browserLaunchPlan.js";
 import type { BrowserProcessOwnerAttribution } from "../browser/service/browserService.js";
 import { resolveRuntimeProfileUserConfig } from "../browser/service/profileConfig.js";
-import { resolveManagedBrowserLaunchContextFromResolvedConfig } from "../browser/service/profileResolution.js";
 import type { ResolvedUserConfig } from "../config.js";
 import { createBrowserMediaGenerationMaterializer } from "../media/browserExecutor.js";
 import { createMediaGenerationService } from "../media/service.js";
@@ -100,6 +108,7 @@ export interface HistoryMaterializationInteractionPolicy {
 
 export interface HistoryMaterializationProviderWorkContext {
 	interactionGovernor: BrowserInteractionGovernor | null;
+	contextTimeoutMs: number;
 	excludedAssetFamilySignatures?: string[];
 	selectedCatalogAsset?: HistoryMaterializationSelectedCatalogAsset;
 	providerSessionProofSummary?: ProviderSessionProofSummary | null;
@@ -187,6 +196,37 @@ export interface HistoryMaterializationPhases {
 	} | null;
 }
 
+export interface HistoryMaterializationAttemptReceipt {
+	object: "history_materialization_attempt_receipt";
+	version: 1;
+	generatedAt: string;
+	origin:
+		| "direct"
+		| "catalog_item"
+		| "archive_item"
+		| "selected_conversation_id"
+		| "reconciliation_candidate";
+	index: number;
+	target: HistoryMaterializationTarget;
+	budgetBefore: {
+		targetLimit: number | null;
+		targetsConsumed: number;
+		assetsRemaining: number | null;
+	};
+	accounting: {
+		targetConsumed: boolean;
+		assetsAttempted: number;
+		providerGuardObserved: boolean;
+		candidateMaterialized: boolean;
+	};
+	phases: HistoryMaterializationPhases;
+	evidence: {
+		status: "persisted" | "not_required";
+		writes: Array<"snapshot_refresh" | "materialization">;
+	};
+	status: HistoryMaterializationResult["status"];
+}
+
 export interface HistoryMediaGenerationMaterializeInput {
 	mediaGenerationId: string;
 	provider: ProviderId;
@@ -249,12 +289,14 @@ export interface HistoryMaterializationResult {
 	entries: HistoryMaterializationManifestEntry[];
 	archiveItems: RunArchiveItem[];
 	snapshotRefreshes?: HistoryMaterializationSnapshotRefresh[] | null;
+	attempts?: HistoryMaterializationAttemptReceipt[] | null;
 	scrapeTelemetry?: BrowserScrapeTelemetrySnapshot | null;
 	providerSessionProof?: ProviderSessionProofSummary | null;
 	metrics: {
 		conversations: number;
 		eligibleCandidates?: number;
 		selectedCandidates?: number;
+		materializedCandidates?: number;
 		candidateFunnel?: HistoryMaterializationCandidateFunnel;
 		materialized: number;
 		duplicateAliases?: number;
@@ -500,6 +542,13 @@ export interface HistoryMaterializationServiceDeps {
 	schedule?: (work: () => Promise<void>) => void;
 	withForegroundWork?: <T>(work: () => Promise<T>) => Promise<T>;
 	cleanupManagedBrowserAfterProviderWork?: boolean;
+	browserOperationDispatcher?: BrowserOperationDispatcher;
+	browserOperationQueueTimeoutMs?: number;
+	browserOperationQueuePollMs?: number;
+	cleanupManagedBrowser?: (
+		config: ResolvedUserConfig | Record<string, unknown>,
+		request: HistoryMaterializationCreateRequest,
+	) => Promise<void>;
 	materializeConversation?: (
 		target: HistoryMaterializationTarget,
 		request: HistoryMaterializationCreateRequest,
@@ -542,6 +591,269 @@ export interface HistoryMaterializationJobStore {
 	upsertJob(job: HistoryMaterializationJob): Promise<void>;
 }
 
+interface HistoryMaterializationAttempt {
+	jobId: string;
+	request: HistoryMaterializationCreateRequest;
+	candidate: {
+		origin: HistoryMaterializationAttemptReceipt["origin"];
+		index: number;
+		target: HistoryMaterializationTarget;
+		excludedAssetFamilySignatures?: string[];
+		selectedCatalogAsset?: HistoryMaterializationSelectedCatalogAsset;
+	};
+	budgetBefore: HistoryMaterializationAttemptReceipt["budgetBefore"];
+}
+
+interface HistoryMaterializationAttemptOutcome {
+	result: HistoryMaterializationResult;
+	receipt: HistoryMaterializationAttemptReceipt;
+	accounting: HistoryMaterializationAttemptReceipt["accounting"];
+}
+
+interface HistoryMaterializationAttemptExecutor {
+	execute(attempt: HistoryMaterializationAttempt): Promise<HistoryMaterializationAttemptOutcome>;
+}
+
+function createHistoryMaterializationAttemptExecutor(input: {
+	materializeConversation: (
+		target: HistoryMaterializationTarget,
+		request: HistoryMaterializationCreateRequest,
+		jobId: string,
+		context?: HistoryMaterializationProviderWorkContext,
+	) => Promise<HistoryMaterializationResult>;
+	refreshConversationSnapshot: (
+		target: HistoryMaterializationTarget,
+		request: HistoryMaterializationCreateRequest,
+		jobId: string,
+	) => Promise<HistoryMaterializationSnapshotRefresh>;
+	recordConversationEvidence: (
+		target: HistoryMaterializationTarget,
+		evidence: AccountMirrorConversationEvidence,
+	) => Promise<void>;
+	providerWorkContext: (
+		jobId: string,
+		request: HistoryMaterializationCreateRequest,
+	) => HistoryMaterializationProviderWorkContext;
+	now: () => Date;
+}): HistoryMaterializationAttemptExecutor {
+	return {
+		async execute(attempt) {
+			const jobContext = input.providerWorkContext(attempt.jobId, attempt.request);
+			const context: HistoryMaterializationProviderWorkContext = {
+				...jobContext,
+				excludedAssetFamilySignatures: attempt.candidate.excludedAssetFamilySignatures,
+				selectedCatalogAsset: attempt.candidate.selectedCatalogAsset,
+			};
+			const evidenceWrites: HistoryMaterializationAttemptReceipt["evidence"]["writes"] = [];
+			const persistSnapshotEvidence = async (
+				snapshotRefresh: HistoryMaterializationSnapshotRefresh,
+			): Promise<void> => {
+				await input.recordConversationEvidence(
+					attempt.candidate.target,
+					evidenceFromSnapshotRefresh(snapshotRefresh),
+				);
+				evidenceWrites.push("snapshot_refresh");
+			};
+			const persistMaterializationEvidence = async (
+				result: HistoryMaterializationResult,
+			): Promise<void> => {
+				verifyHistoryMaterializationAttemptResult(attempt, result);
+				await input.recordConversationEvidence(
+					attempt.candidate.target,
+					evidenceFromMaterializationResult(result),
+				);
+				evidenceWrites.push("materialization");
+			};
+			const materialize = () =>
+				input.materializeConversation(
+					attempt.candidate.target,
+					attempt.request,
+					attempt.jobId,
+					context,
+				);
+
+			let result: HistoryMaterializationResult;
+			if (!shouldRefreshSnapshot(attempt.request)) {
+				result = await materialize();
+				await persistMaterializationEvidence(result);
+			} else if (
+				shouldUseFileMaterializationAsSnapshotRefresh(attempt.candidate.target, attempt.request)
+			) {
+				const materialization = await materialize();
+				verifyHistoryMaterializationAttemptResult(attempt, materialization);
+				const snapshotRefresh = snapshotRefreshFromFileMaterialization({
+					target: attempt.candidate.target,
+					result: materialization,
+					now: input.now,
+				});
+				await persistSnapshotEvidence(snapshotRefresh);
+				await persistMaterializationEvidence(materialization);
+				result = withSnapshotRefreshPhase(materialization, snapshotRefresh);
+			} else {
+				let initialMaterialization: HistoryMaterializationResult | null = null;
+				if (shouldMaterializeBeforeSnapshotRefresh(attempt.candidate.target, attempt.request)) {
+					initialMaterialization = await materialize();
+					await persistMaterializationEvidence(initialMaterialization);
+					if (
+						initialMaterialization.metrics.materialized > 0 ||
+						shouldReuseCollectorSnapshot(attempt.candidate.target, attempt.request)
+					) {
+						result = initialMaterialization;
+						return projectHistoryMaterializationAttemptOutcome(
+							attempt,
+							result,
+							evidenceWrites,
+							input.now,
+						);
+					}
+				}
+				let snapshotRefresh: HistoryMaterializationSnapshotRefresh;
+				try {
+					snapshotRefresh = await input.refreshConversationSnapshot(
+						attempt.candidate.target,
+						attempt.request,
+						attempt.jobId,
+					);
+				} catch (error) {
+					if (isProviderAuthPreflightError(error) || isProviderHumanVerificationError(error)) {
+						throw error;
+					}
+					snapshotRefresh = failedSnapshotRefresh({
+						target: attempt.candidate.target,
+						error,
+						now: input.now,
+					});
+				}
+				await persistSnapshotEvidence(snapshotRefresh);
+				if (snapshotRefresh.status === "failed") {
+					result = snapshotRefreshFailureResult({
+						request: attempt.request,
+						target: attempt.candidate.target,
+						snapshotRefresh,
+						now: input.now,
+					});
+				} else {
+					const materialization = await materialize();
+					await persistMaterializationEvidence(materialization);
+					result = withSnapshotRefreshPhase(materialization, snapshotRefresh);
+				}
+			}
+			return projectHistoryMaterializationAttemptOutcome(
+				attempt,
+				result,
+				evidenceWrites,
+				input.now,
+			);
+		},
+	};
+}
+
+function projectHistoryMaterializationAttemptOutcome(
+	attempt: HistoryMaterializationAttempt,
+	result: HistoryMaterializationResult,
+	evidenceWrites: HistoryMaterializationAttemptReceipt["evidence"]["writes"],
+	now: () => Date,
+): HistoryMaterializationAttemptOutcome {
+	const accounting: HistoryMaterializationAttemptReceipt["accounting"] = {
+		targetConsumed: consumesReconciliationTargetBudget(result),
+		assetsAttempted: countAttemptedReconciliationAssetBudget(result),
+		providerGuardObserved: historyMaterializationResultHasProviderGuard(result),
+		candidateMaterialized: result.metrics.materialized > 0,
+	};
+	const phases = structuredClone(
+		result.phases ?? {
+			snapshotRefresh: snapshotRefreshesFromResult(result)[0] ?? null,
+			materialization: {
+				status: result.status,
+				generatedAt: result.generatedAt,
+				manifestPaths: [...result.manifestPaths],
+				entries: result.entries.length,
+				archiveItems: result.archiveItems.length,
+				metrics: { ...result.metrics },
+			},
+		},
+	);
+	const receipt = freezeHistoryMaterializationAttemptReceipt({
+		object: "history_materialization_attempt_receipt",
+		version: 1,
+		generatedAt: now().toISOString(),
+		origin: attempt.candidate.origin,
+		index: attempt.candidate.index,
+		target: { ...attempt.candidate.target },
+		budgetBefore: { ...attempt.budgetBefore },
+		accounting,
+		phases,
+		evidence: {
+			status: evidenceWrites.length > 0 ? "persisted" : "not_required",
+			writes: [...evidenceWrites],
+		},
+		status: result.status,
+	});
+	return {
+		result: { ...result, attempts: [receipt] },
+		receipt,
+		accounting,
+	};
+}
+
+function freezeHistoryMaterializationAttemptReceipt(
+	receipt: HistoryMaterializationAttemptReceipt,
+): HistoryMaterializationAttemptReceipt {
+	return deepFreezeHistoryMaterializationAttemptReceiptValue(receipt);
+}
+
+function deepFreezeHistoryMaterializationAttemptReceiptValue<T>(value: T): T {
+	if (!value || typeof value !== "object" || Object.isFrozen(value)) return value;
+	for (const nested of Object.values(value)) {
+		deepFreezeHistoryMaterializationAttemptReceiptValue(nested);
+	}
+	return Object.freeze(value);
+}
+
+function verifyHistoryMaterializationAttemptResult(
+	attempt: HistoryMaterializationAttempt,
+	result: HistoryMaterializationResult,
+): void {
+	if (result.object !== "history_materialization_result") {
+		throw new Error("History materialization attempt returned an invalid result object.");
+	}
+	if (
+		!result.target ||
+		!historyMaterializationTargetsEqual(result.target, attempt.candidate.target)
+	) {
+		throw new Error("History materialization attempt result target did not match selected target.");
+	}
+	for (const metric of ["conversations", "materialized", "skipped", "failed"] as const) {
+		const value = result.metrics[metric];
+		if (!Number.isFinite(value) || value < 0) {
+			throw new Error(
+				`History materialization attempt result metric ${metric} must be finite and nonnegative.`,
+			);
+		}
+	}
+	const maxItems = normalizeMaxItems(attempt.request.maxItems);
+	if (maxItems !== null && result.metrics.materialized > maxItems) {
+		throw new Error(
+			`History materialization attempt result materialized ${result.metrics.materialized} exceeds maxItems ${maxItems}.`,
+		);
+	}
+}
+
+function historyMaterializationTargetsEqual(
+	left: HistoryMaterializationTarget,
+	right: HistoryMaterializationTarget,
+): boolean {
+	return (
+		left.provider === right.provider &&
+		left.runtimeProfile === right.runtimeProfile &&
+		left.browserProfile === right.browserProfile &&
+		left.boundIdentityKey === right.boundIdentityKey &&
+		left.conversationId === right.conversationId &&
+		left.providerConversationUrl === right.providerConversationUrl &&
+		left.projectId === right.projectId
+	);
+}
+
 export function createHistoryMaterializationService(
 	deps: HistoryMaterializationServiceDeps,
 ): HistoryMaterializationService {
@@ -565,6 +877,14 @@ export function createHistoryMaterializationService(
 		});
 	const withForegroundWork = deps.withForegroundWork ?? (async (work) => work());
 	const cleanupBrowserBackedProviderWork = deps.cleanupManagedBrowserAfterProviderWork === true;
+	const browserOperationDispatcher = cleanupBrowserBackedProviderWork
+		? (deps.browserOperationDispatcher ??
+			createFileBackedBrowserOperationDispatcher({
+				lockRoot: path.join(getAuracallHomeDir(), "browser-operations"),
+			}))
+		: null;
+	const cleanupManagedBrowser =
+		deps.cleanupManagedBrowser ?? cleanupHistoryMaterializationManagedBrowser;
 	let queue = Promise.resolve();
 	const scheduledJobIds = new Set<string>();
 	const providerWorkContexts = new Map<string, HistoryMaterializationProviderWorkContext>();
@@ -585,9 +905,16 @@ export function createHistoryMaterializationService(
 							renavigation: policy.renavigationCooldownMs,
 						},
 						now: () => now().getTime(),
-						sleep: (ms) => sleep(ms),
+						...(deps.sleep
+							? {
+									sleep: async (ms: number) => {
+										await deps.sleep?.(ms);
+									},
+								}
+							: {}),
 					})
 				: null,
+			contextTimeoutMs: resolveHistoryMaterializationContextTimeoutMs(request),
 			providerSessionProofSummary: null,
 		};
 		context.onProviderSessionProof = (proof) => {
@@ -604,20 +931,12 @@ export function createHistoryMaterializationService(
 		workContext?: HistoryMaterializationProviderWorkContext,
 	) => {
 		const jobContext = providerWorkContext(jobId, request);
-		const context = workContext
-			? {
-					...workContext,
-					onProviderSessionProof: jobContext.onProviderSessionProof,
-				}
-			: jobContext;
+		const context = workContext ?? jobContext;
+		context.interactionGovernor ??= jobContext.interactionGovernor;
+		context.onProviderSessionProof = jobContext.onProviderSessionProof;
 		return deps.materializeConversation
-			? request.interactionPolicy ||
-				workContext?.excludedAssetFamilySignatures?.length ||
-				workContext?.selectedCatalogAsset
-				? deps.materializeConversation(target, request, jobId, {
-						...context,
-						interactionGovernor: context.interactionGovernor ?? jobContext.interactionGovernor,
-					})
+			? workContext || request.interactionPolicy
+				? deps.materializeConversation(target, request, jobId, context)
 				: deps.materializeConversation(target, request, jobId)
 			: materializeConversationTarget({
 					config: deps.config,
@@ -627,6 +946,7 @@ export function createHistoryMaterializationService(
 					jobId,
 					now,
 					interactionGovernor: context.interactionGovernor,
+					contextTimeoutMs: context.contextTimeoutMs,
 					excludedAssetFamilySignatures: workContext?.excludedAssetFamilySignatures ?? [],
 					selectedCatalogAsset: workContext?.selectedCatalogAsset,
 					onProviderSessionProof: context.onProviderSessionProof,
@@ -649,6 +969,7 @@ export function createHistoryMaterializationService(
 					jobId,
 					now,
 					interactionGovernor: context.interactionGovernor,
+					contextTimeoutMs: context.contextTimeoutMs,
 					onProviderSessionProof: context.onProviderSessionProof,
 				});
 	};
@@ -670,6 +991,13 @@ export function createHistoryMaterializationService(
 				},
 			});
 		});
+	const materializationAttemptExecutor = createHistoryMaterializationAttemptExecutor({
+		materializeConversation,
+		refreshConversationSnapshot,
+		recordConversationEvidence,
+		providerWorkContext,
+		now,
+	});
 	const materializeMediaGeneration =
 		deps.materializeMediaGeneration ??
 		((request) =>
@@ -854,24 +1182,41 @@ export function createHistoryMaterializationService(
 				if (running.request.providerWorkNotBefore) {
 					await waitForProviderWorkBoundary(running.request, now, sleep);
 				}
-				const materializationResult = await withForegroundWork(() =>
-					materializeHistoryRequest({
+				const materializationResult = await withForegroundWork(async () => {
+					const browserOperations = await acquireHistoryMaterializationBrowserOperations({
 						config: deps.config,
 						request: running.request,
 						jobId: running.id,
-						catalogService,
-						runArchiveService,
-						materializeConversation,
-						refreshConversationSnapshot,
-						recordConversationEvidence,
-						materializeMediaGeneration,
-						materializeAccountLibraryFiles,
-						listAccountLibraryFiles,
-						materializeProjectSources,
-						jobStore: store,
-						now,
-					}),
-				);
+						dispatcher: browserOperationDispatcher,
+						queue: true,
+						queueTimeoutMs: deps.browserOperationQueueTimeoutMs,
+						queuePollMs: deps.browserOperationQueuePollMs,
+					});
+					try {
+						return await materializeHistoryRequest({
+							config: deps.config,
+							request: running.request,
+							jobId: running.id,
+							catalogService,
+							runArchiveService,
+							materializeConversation,
+							refreshConversationSnapshot,
+							recordConversationEvidence,
+							materializationAttemptExecutor,
+							materializeMediaGeneration,
+							materializeAccountLibraryFiles,
+							listAccountLibraryFiles,
+							materializeProjectSources,
+							jobStore: store,
+							now,
+						});
+					} finally {
+						if (cleanupBrowserBackedProviderWork) {
+							await cleanupManagedBrowser(deps.config, running.request);
+						}
+						await releaseHistoryMaterializationBrowserOperations(browserOperations);
+					}
+				});
 				const result: HistoryMaterializationResult = {
 					...materializationResult,
 					status: resolveHistoryMaterializationJobResultStatus(materializationResult),
@@ -933,9 +1278,6 @@ export function createHistoryMaterializationService(
 				return withSchedulerDiagnostics(failed);
 			} finally {
 				providerWorkContexts.delete(running.id);
-				if (cleanupBrowserBackedProviderWork) {
-					await cleanupHistoryMaterializationManagedBrowser(deps.config, running.request);
-				}
 			}
 		},
 
@@ -1054,7 +1396,20 @@ export function createHistoryMaterializationService(
 			queue = Promise.resolve();
 		}
 		if (cleanupBrowserBackedProviderWork) {
-			await cleanupHistoryMaterializationManagedBrowser(deps.config, job.request);
+			const browserOperations = await acquireHistoryMaterializationBrowserOperations({
+				config: deps.config,
+				request: job.request,
+				jobId: job.id,
+				dispatcher: browserOperationDispatcher,
+				queue: false,
+			});
+			if (browserOperations) {
+				try {
+					await cleanupManagedBrowser(deps.config, job.request);
+				} finally {
+					await releaseHistoryMaterializationBrowserOperations(browserOperations);
+				}
+			}
 		}
 		return failed;
 	}
@@ -1148,6 +1503,7 @@ async function materializeHistoryRequest(input: {
 		target: HistoryMaterializationTarget,
 		evidence: AccountMirrorConversationEvidence,
 	) => Promise<void>;
+	materializationAttemptExecutor: HistoryMaterializationAttemptExecutor;
 	materializeMediaGeneration: (
 		request: HistoryMediaGenerationMaterializeInput,
 	) => Promise<MediaGenerationResponse>;
@@ -1223,15 +1579,18 @@ async function materializeHistoryRequest(input: {
 					"Run archive item does not have provider conversation evidence for history materialization.",
 			});
 		}
-		return reconcileConversationTarget({
-			target,
-			request,
-			jobId: input.jobId,
-			materializeConversation: input.materializeConversation,
-			refreshConversationSnapshot: input.refreshConversationSnapshot,
-			recordConversationEvidence: input.recordConversationEvidence,
-			now: input.now,
-		});
+		return (
+			await input.materializationAttemptExecutor.execute({
+				jobId: input.jobId,
+				request,
+				candidate: { origin: "archive_item", index: 0, target },
+				budgetBefore: {
+					targetLimit: normalizeMaxItems(request.maxItems),
+					targetsConsumed: 0,
+					assetsRemaining: normalizeMaxItems(request.maxItems),
+				},
+			})
+		).result;
 	}
 	if (request.catalogItemId) {
 		const detail = await input.catalogService.readItem({
@@ -1289,23 +1648,23 @@ async function materializeHistoryRequest(input: {
 					"Selected account mirror catalog asset family is already terminal in local evidence.",
 			});
 		}
-		return reconcileConversationTarget({
-			target,
-			request: scopedRequest,
-			jobId: input.jobId,
-			materializeConversation: input.materializeConversation,
-			...(selectedCatalogAsset
-				? {
-						providerWorkContext: {
-							interactionGovernor: null,
-							selectedCatalogAsset,
-						},
-					}
-				: {}),
-			refreshConversationSnapshot: input.refreshConversationSnapshot,
-			recordConversationEvidence: input.recordConversationEvidence,
-			now: input.now,
-		});
+		return (
+			await input.materializationAttemptExecutor.execute({
+				jobId: input.jobId,
+				request: scopedRequest,
+				candidate: {
+					origin: "catalog_item",
+					index: 0,
+					target,
+					selectedCatalogAsset: selectedCatalogAsset ?? undefined,
+				},
+				budgetBefore: {
+					targetLimit: normalizeMaxItems(scopedRequest.maxItems),
+					targetsConsumed: 0,
+					assetsRemaining: normalizeMaxItems(scopedRequest.maxItems),
+				},
+			})
+		).result;
 	}
 	if (request.conversationId && request.provider) {
 		if (
@@ -1334,25 +1693,29 @@ async function materializeHistoryRequest(input: {
 				message: "Provider conversation asset families are already terminal in local evidence.",
 			});
 		}
-		return reconcileConversationTarget({
-			target: {
-				provider: request.provider,
-				runtimeProfile: request.runtimeProfile ?? null,
-				browserProfile: request.browserProfile ?? null,
-				boundIdentityKey: request.boundIdentityKey ?? null,
-				conversationId: request.conversationId,
-				providerConversationUrl:
-					request.providerConversationUrl ??
-					resolveProviderConversationUrl(request.provider, request.conversationId),
-				projectId: request.projectId ?? null,
-			},
-			request,
-			jobId: input.jobId,
-			materializeConversation: input.materializeConversation,
-			refreshConversationSnapshot: input.refreshConversationSnapshot,
-			recordConversationEvidence: input.recordConversationEvidence,
-			now: input.now,
-		});
+		const target: HistoryMaterializationTarget = {
+			provider: request.provider,
+			runtimeProfile: request.runtimeProfile ?? null,
+			browserProfile: request.browserProfile ?? null,
+			boundIdentityKey: request.boundIdentityKey ?? null,
+			conversationId: request.conversationId,
+			providerConversationUrl:
+				request.providerConversationUrl ??
+				resolveProviderConversationUrl(request.provider, request.conversationId),
+			projectId: request.projectId ?? null,
+		};
+		return (
+			await input.materializationAttemptExecutor.execute({
+				jobId: input.jobId,
+				request,
+				candidate: { origin: "direct", index: 0, target },
+				budgetBefore: {
+					targetLimit: normalizeMaxItems(request.maxItems),
+					targetsConsumed: 0,
+					assetsRemaining: normalizeMaxItems(request.maxItems),
+				},
+			})
+		).result;
 	}
 	throw new HistoryMaterializationError(
 		"Provide conversationId with provider, projectId with provider, conversationIds with provider, catalogItemId, archiveItemId, or reconcile=true.",
@@ -2244,6 +2607,7 @@ async function materializeReconciliation(input: {
 		target: HistoryMaterializationTarget,
 		evidence: AccountMirrorConversationEvidence,
 	) => Promise<void>;
+	materializationAttemptExecutor: HistoryMaterializationAttemptExecutor;
 	materializeMediaGeneration: (
 		request: HistoryMediaGenerationMaterializeInput,
 	) => Promise<MediaGenerationResponse>;
@@ -2264,8 +2628,10 @@ async function materializeReconciliation(input: {
 		limit: catalogLimit,
 	});
 	const results: HistoryMaterializationResult[] = [];
+	const attemptReceipts: HistoryMaterializationAttemptReceipt[] = [];
 	let eligibleCandidates = 0;
 	let selectedCandidates = 0;
+	let materializedCandidates = 0;
 	const candidateFunnel =
 		selectedConversationIds.length === 0 ? createHistoryMaterializationCandidateFunnel() : null;
 	let consumedTargetBudget = 0;
@@ -2303,6 +2669,7 @@ async function materializeReconciliation(input: {
 		}
 	}
 	const attemptedAssetFamilySignatures = new Set<string>();
+	const priorJobs = input.request.force === true ? [] : await input.jobStore.listJobs();
 	if (input.request.force !== true) {
 		const archiveSignatures = await materializedArchiveAssetFamilySignatures({
 			runArchiveService: input.runArchiveService,
@@ -2313,7 +2680,7 @@ async function materializeReconciliation(input: {
 			attemptedAssetFamilySignatures.add(signature);
 		}
 		const terminalVolatileSignatures = await terminalVolatileAssetFamilySignatures({
-			jobStore: input.jobStore,
+			jobs: priorJobs,
 			request: input.request,
 			selectedKinds,
 		});
@@ -2380,23 +2747,27 @@ async function materializeReconciliation(input: {
 				),
 				projectId: input.request.projectId ?? null,
 			};
-			const result = await reconcileConversationTarget({
-				target,
-				request: input.request,
+			const outcome = await input.materializationAttemptExecutor.execute({
 				jobId: input.jobId,
-				materializeConversation: input.materializeConversation,
-				refreshConversationSnapshot: input.refreshConversationSnapshot,
-				recordConversationEvidence: input.recordConversationEvidence,
-				now: input.now,
-				providerWorkContext: {
-					interactionGovernor: null,
+				request: input.request,
+				candidate: {
+					origin: "selected_conversation_id",
+					index: selectedCandidates,
+					target,
 					excludedAssetFamilySignatures,
 				},
+				budgetBefore: {
+					targetLimit: maxTargets,
+					targetsConsumed: consumedTargetBudget,
+					assetsRemaining: remainingAssetBudget,
+				},
 			});
-			results.push(result);
+			results.push(outcome.result);
+			attemptReceipts.push(outcome.receipt);
 			selectedCandidates += 1;
-			if (historyMaterializationResultHasProviderGuard(result)) break;
-			if (consumesReconciliationTargetBudget(result)) {
+			if (outcome.accounting.candidateMaterialized) materializedCandidates += 1;
+			if (outcome.accounting.providerGuardObserved) break;
+			if (outcome.accounting.targetConsumed) {
 				consumedTargetBudget += 1;
 			}
 		}
@@ -2486,18 +2857,36 @@ async function materializeReconciliation(input: {
 		});
 		eligibleCandidates += selectionCandidates.length;
 		if (candidateFunnel) candidateFunnel.eligible += selectionCandidates.length;
-		for (const [candidateIndex, candidate] of selectionCandidates.entries()) {
+		const retryAttemptedAt =
+			input.request.force === true
+				? new Map<string, string>()
+				: await reconciliationRetryAttemptedAtByConversationId({
+						jobs: priorJobs,
+						request: input.request,
+						selectedKinds,
+					});
+		const orderedSelectionCandidates = [...selectionCandidates].sort((left, right) => {
+			const leftAttemptedAt = retryAttemptedAt.get(left.target.conversationId);
+			const rightAttemptedAt = retryAttemptedAt.get(right.target.conversationId);
+			if (!leftAttemptedAt && rightAttemptedAt) return -1;
+			if (leftAttemptedAt && !rightAttemptedAt) return 1;
+			if (leftAttemptedAt && rightAttemptedAt && leftAttemptedAt !== rightAttemptedAt) {
+				return leftAttemptedAt.localeCompare(rightAttemptedAt);
+			}
+			return left.priority - right.priority || left.sequence - right.sequence;
+		});
+		for (const [candidateIndex, candidate] of orderedSelectionCandidates.entries()) {
 			if (consumedTargetBudget >= maxTargets) {
 				if (candidateFunnel) {
 					candidateFunnel.postEligibilityExclusions.targetBudget +=
-						selectionCandidates.length - candidateIndex;
+						orderedSelectionCandidates.length - candidateIndex;
 				}
 				break;
 			}
 			if (remainingAssetBudget <= 0) {
 				if (candidateFunnel) {
 					candidateFunnel.postEligibilityExclusions.assetBudget +=
-						selectionCandidates.length - candidateIndex;
+						orderedSelectionCandidates.length - candidateIndex;
 				}
 				break;
 			}
@@ -2519,36 +2908,39 @@ async function materializeReconciliation(input: {
 			for (const signature of candidate.assetFamilySignatures) {
 				attemptedAssetFamilySignatures.add(signature);
 			}
-			const result = await reconcileConversationTarget({
-				target: candidate.target,
+			const outcome = await input.materializationAttemptExecutor.execute({
+				jobId: input.jobId,
 				request: {
 					...input.request,
 					maxItems: remainingAssetBudget,
 				},
-				jobId: input.jobId,
-				materializeConversation: input.materializeConversation,
-				refreshConversationSnapshot: input.refreshConversationSnapshot,
-				recordConversationEvidence: input.recordConversationEvidence,
-				now: input.now,
-				providerWorkContext: {
-					interactionGovernor: null,
+				candidate: {
+					origin: "reconciliation_candidate",
+					index: selectedCandidates,
+					target: candidate.target,
 					excludedAssetFamilySignatures,
 				},
+				budgetBefore: {
+					targetLimit: maxTargets,
+					targetsConsumed: consumedTargetBudget,
+					assetsRemaining: remainingAssetBudget,
+				},
 			});
-			results.push(result);
+			results.push(outcome.result);
+			attemptReceipts.push(outcome.receipt);
 			selectedCandidates += 1;
+			if (outcome.accounting.candidateMaterialized) materializedCandidates += 1;
 			if (candidateFunnel) candidateFunnel.selected += 1;
-			if (historyMaterializationResultHasProviderGuard(result)) {
+			if (outcome.accounting.providerGuardObserved) {
 				if (candidateFunnel) {
 					candidateFunnel.postEligibilityExclusions.providerGuard +=
-						selectionCandidates.length - candidateIndex - 1;
+						orderedSelectionCandidates.length - candidateIndex - 1;
 				}
 				break;
 			}
 			remainingAssetBudget =
-				decrementRemaining(remainingAssetBudget, countAttemptedReconciliationAssetBudget(result)) ??
-				0;
-			if (consumesReconciliationTargetBudget(result)) {
+				decrementRemaining(remainingAssetBudget, outcome.accounting.assetsAttempted) ?? 0;
+			if (outcome.accounting.targetConsumed) {
 				consumedTargetBudget += 1;
 			}
 		}
@@ -2576,6 +2968,7 @@ async function materializeReconciliation(input: {
 		...summarizeEntries(entries, results.length),
 		eligibleCandidates,
 		selectedCandidates,
+		materializedCandidates,
 		...(candidateFunnel ? { candidateFunnel } : {}),
 	};
 	const status = resolveHistoryMaterializationResultStatus(metrics);
@@ -2589,6 +2982,7 @@ async function materializeReconciliation(input: {
 		entries,
 		archiveItems,
 		snapshotRefreshes,
+		attempts: attemptReceipts,
 		metrics,
 		phases: {
 			snapshotRefresh: snapshotRefreshes.length === 1 ? snapshotRefreshes[0] : null,
@@ -3329,118 +3723,6 @@ function isConversationNotFoundOrUnavailableReason(reason: string | null | undef
 	return typeof reason === "string" && reason.startsWith("conversation-not-found-or-unavailable:");
 }
 
-async function reconcileConversationTarget(input: {
-	target: HistoryMaterializationTarget;
-	request: HistoryMaterializationCreateRequest;
-	jobId: string;
-	materializeConversation: (
-		target: HistoryMaterializationTarget,
-		request: HistoryMaterializationCreateRequest,
-		jobId: string,
-		context?: HistoryMaterializationProviderWorkContext,
-	) => Promise<HistoryMaterializationResult>;
-	providerWorkContext?: HistoryMaterializationProviderWorkContext;
-	refreshConversationSnapshot: (
-		target: HistoryMaterializationTarget,
-		request: HistoryMaterializationCreateRequest,
-		jobId: string,
-	) => Promise<HistoryMaterializationSnapshotRefresh>;
-	recordConversationEvidence: (
-		target: HistoryMaterializationTarget,
-		evidence: AccountMirrorConversationEvidence,
-	) => Promise<void>;
-	now: () => Date;
-}): Promise<HistoryMaterializationResult> {
-	if (!shouldRefreshSnapshot(input.request)) {
-		return input.materializeConversation(
-			input.target,
-			input.request,
-			input.jobId,
-			input.providerWorkContext,
-		);
-	}
-	if (shouldUseFileMaterializationAsSnapshotRefresh(input.target, input.request)) {
-		const materialization = await input.materializeConversation(
-			input.target,
-			input.request,
-			input.jobId,
-			input.providerWorkContext,
-		);
-		const snapshotRefresh = snapshotRefreshFromFileMaterialization({
-			target: input.target,
-			result: materialization,
-			now: input.now,
-		});
-		await input.recordConversationEvidence(
-			input.target,
-			evidenceFromSnapshotRefresh(snapshotRefresh),
-		);
-		await input.recordConversationEvidence(
-			input.target,
-			evidenceFromMaterializationResult(materialization),
-		);
-		return withSnapshotRefreshPhase(materialization, snapshotRefresh);
-	}
-	if (shouldMaterializeBeforeSnapshotRefresh(input.target, input.request)) {
-		const materialization = await input.materializeConversation(
-			input.target,
-			input.request,
-			input.jobId,
-			input.providerWorkContext,
-		);
-		await input.recordConversationEvidence(
-			input.target,
-			evidenceFromMaterializationResult(materialization),
-		);
-		if (materialization.metrics.materialized > 0) {
-			return materialization;
-		}
-		if (shouldReuseCollectorSnapshot(input.target, input.request)) {
-			return materialization;
-		}
-	}
-	let snapshotRefresh: HistoryMaterializationSnapshotRefresh;
-	try {
-		snapshotRefresh = await input.refreshConversationSnapshot(
-			input.target,
-			input.request,
-			input.jobId,
-		);
-	} catch (error) {
-		if (isProviderAuthPreflightError(error) || isProviderHumanVerificationError(error)) {
-			throw error;
-		}
-		snapshotRefresh = failedSnapshotRefresh({
-			target: input.target,
-			error,
-			now: input.now,
-		});
-	}
-	await input.recordConversationEvidence(
-		input.target,
-		evidenceFromSnapshotRefresh(snapshotRefresh),
-	);
-	if (snapshotRefresh.status === "failed") {
-		return snapshotRefreshFailureResult({
-			request: input.request,
-			target: input.target,
-			snapshotRefresh,
-			now: input.now,
-		});
-	}
-	const materialization = await input.materializeConversation(
-		input.target,
-		input.request,
-		input.jobId,
-		input.providerWorkContext,
-	);
-	await input.recordConversationEvidence(
-		input.target,
-		evidenceFromMaterializationResult(materialization),
-	);
-	return withSnapshotRefreshPhase(materialization, snapshotRefresh);
-}
-
 function shouldReuseCollectorSnapshot(
 	target: HistoryMaterializationTarget,
 	request: HistoryMaterializationCreateRequest,
@@ -3517,6 +3799,7 @@ async function refreshConversationSnapshotTarget(input: {
 	jobId?: string | null;
 	now: () => Date;
 	interactionGovernor?: BrowserInteractionGovernor | null;
+	contextTimeoutMs?: number;
 	onProviderSessionProof?: (proof: ProviderSessionProof) => void;
 }): Promise<HistoryMaterializationSnapshotRefresh> {
 	const llmService = createLlmService(
@@ -3550,6 +3833,7 @@ async function refreshConversationSnapshotTarget(input: {
 			projectId: input.target.projectId ?? undefined,
 			refresh: true,
 			allowCacheFallback: false,
+			timeoutMs: input.contextTimeoutMs,
 			listOptions,
 			onReceipt: (receipt) => {
 				contextReadReceipt = receipt;
@@ -3790,6 +4074,7 @@ async function materializeConversationTarget(input: {
 	jobId: string;
 	now: () => Date;
 	interactionGovernor?: BrowserInteractionGovernor | null;
+	contextTimeoutMs?: number;
 	excludedAssetFamilySignatures?: string[];
 	selectedCatalogAsset?: HistoryMaterializationSelectedCatalogAsset;
 	onProviderSessionProof?: (proof: ProviderSessionProof) => void;
@@ -3898,6 +4183,7 @@ async function materializeConversationTarget(input: {
 						{
 							projectId: input.target.projectId ?? undefined,
 							listOptions,
+							contextTimeoutMs: input.contextTimeoutMs,
 							refresh: refreshMaterializationSource,
 							maxItems: remaining,
 							excludeArtifact,
@@ -3947,6 +4233,7 @@ async function materializeConversationTarget(input: {
 					fileFetch = await llmService.materializeConversationFiles(input.target.conversationId, {
 						projectId: input.target.projectId ?? undefined,
 						listOptions,
+						contextTimeoutMs: input.contextTimeoutMs,
 						refresh: refreshMaterializationSource,
 						maxItems: remaining,
 						excludeFile,
@@ -4973,12 +5260,14 @@ async function materializedArchiveAssetFamilySignatures(input: {
 }
 
 async function terminalVolatileAssetFamilySignatures(input: {
-	jobStore: HistoryMaterializationJobStore;
+	jobs?: HistoryMaterializationJob[];
+	jobStore?: HistoryMaterializationJobStore;
 	request: HistoryMaterializationCreateRequest;
 	selectedKinds: HistoryMaterializationAssetKind[];
 }): Promise<string[]> {
 	const signatures = new Set<string>();
-	for (const job of await input.jobStore.listJobs()) {
+	const jobs = input.jobs ?? (await input.jobStore?.listJobs()) ?? [];
+	for (const job of jobs) {
 		if (isActiveStatus(job.status)) continue;
 		if (input.request.provider && job.request.provider !== input.request.provider) continue;
 		if (
@@ -5347,9 +5636,64 @@ function maxKnownCount(values: unknown[]): number {
 
 function countAttemptedReconciliationAssetBudget(result: HistoryMaterializationResult): number {
 	if (isTerminalConversationUnavailableResult(result)) return 0;
-	return result.entries.length > 0
-		? result.entries.length
-		: result.metrics.materialized + result.metrics.failed + result.metrics.skipped;
+	return result.entries.filter((entry) => historyEntryIdentifiesConcreteAsset(entry)).length;
+}
+
+async function reconciliationRetryAttemptedAtByConversationId(input: {
+	jobs: HistoryMaterializationJob[];
+	request: HistoryMaterializationCreateRequest;
+	selectedKinds: HistoryMaterializationAssetKind[];
+}): Promise<Map<string, string>> {
+	const attemptedAt = new Map<string, string>();
+	for (const job of input.jobs) {
+		if (!historyMaterializationJobSharesRetryLane(job, input.request, input.selectedKinds)) {
+			continue;
+		}
+		for (const attempt of job.result?.attempts ?? []) {
+			if (
+				attempt.origin !== "reconciliation_candidate" ||
+				attempt.status !== "skipped" ||
+				attempt.accounting.assetsAttempted !== 0 ||
+				attempt.accounting.candidateMaterialized ||
+				attempt.accounting.providerGuardObserved
+			) {
+				continue;
+			}
+			const previous = attemptedAt.get(attempt.target.conversationId);
+			if (!previous || attempt.generatedAt > previous) {
+				attemptedAt.set(attempt.target.conversationId, attempt.generatedAt);
+			}
+		}
+	}
+	return attemptedAt;
+}
+
+function historyMaterializationJobSharesRetryLane(
+	job: HistoryMaterializationJob,
+	request: HistoryMaterializationCreateRequest,
+	selectedKinds: HistoryMaterializationAssetKind[],
+): boolean {
+	if (job.source.type !== "reconciliation" || isActiveStatus(job.status)) return false;
+	if (job.request.provider !== request.provider) return false;
+	if (job.request.runtimeProfile !== request.runtimeProfile) return false;
+	if (job.request.browserProfile !== request.browserProfile) return false;
+	if (job.request.boundIdentityKey !== request.boundIdentityKey) return false;
+	const jobKinds = normalizeAssetKinds(job.request.assetKinds);
+	return (
+		jobKinds.length === selectedKinds.length &&
+		jobKinds.every((kind) => selectedKinds.includes(kind))
+	);
+}
+
+function historyEntryIdentifiesConcreteAsset(entry: HistoryMaterializationManifestEntry): boolean {
+	return Boolean(
+		entry.providerId ||
+			entry.remoteUrl ||
+			entry.localPath ||
+			entry.materializationMethod ||
+			entry.archiveItemId ||
+			entry.assetRoute,
+	);
 }
 
 function skippedResult(input: {
@@ -5939,6 +6283,27 @@ function normalizeHistoryMaterializationInteractionPolicy(
 	};
 }
 
+function resolveHistoryMaterializationContextTimeoutMs(
+	request: HistoryMaterializationCreateRequest,
+): number {
+	const policy = request.interactionPolicy;
+	if (!policy) return DEFAULT_CONVERSATION_CONTEXT_TIMEOUT_MS;
+	const maxInteractionsPerMinute = normalizeInteractionPolicyCount(
+		policy.maxInteractionsPerMinute,
+		20,
+	);
+	const pacingAllowanceMs = Math.max(
+		Math.ceil(60_000 / maxInteractionsPerMinute),
+		normalizeInteractionPolicyCooldown(policy.conversationReadCooldownMs),
+		normalizeInteractionPolicyCooldown(policy.pageRefreshCooldownMs),
+		normalizeInteractionPolicyCooldown(policy.renavigationCooldownMs),
+	);
+	return Math.min(
+		Number.MAX_SAFE_INTEGER,
+		DEFAULT_CONVERSATION_CONTEXT_TIMEOUT_MS + pacingAllowanceMs,
+	);
+}
+
 function normalizeInteractionPolicyCount(value: unknown, fallback: number): number {
 	return typeof value === "number" && Number.isFinite(value) && value > 0
 		? Math.max(1, Math.floor(value))
@@ -6221,31 +6586,108 @@ function withRuntimeProfileSelection(
 	}) as Record<string, unknown>;
 }
 
-async function cleanupHistoryMaterializationManagedBrowser(
+async function acquireHistoryMaterializationBrowserOperations(input: {
+	config: ResolvedUserConfig | Record<string, unknown>;
+	request: HistoryMaterializationCreateRequest;
+	jobId: string;
+	dispatcher: BrowserOperationDispatcher | null;
+	queue: boolean;
+	queueTimeoutMs?: number;
+	queuePollMs?: number;
+}): Promise<BrowserOperationAcquiredResult[] | null> {
+	if (!input.dispatcher) return [];
+	const target = resolveHistoryMaterializationBrowserOperationTarget(input.config, input.request);
+	if (!target) return [];
+	const acquiredOperations: BrowserOperationAcquiredResult[] = [];
+	try {
+		for (const managedProfileDir of target.managedProfileDirs) {
+			const operationInput = {
+				managedProfileDir,
+				serviceTarget: target.provider,
+				kind: "browser-execution",
+				operationClass: "exclusive-mutating",
+				ownerCommand: input.queue
+					? `history-materialization:${input.jobId}`
+					: `history-materialization-recovery:${input.jobId}`,
+			} as const;
+			const acquired = input.queue
+				? await input.dispatcher.acquireQueued(operationInput, {
+						timeoutMs: normalizeHistoryMaterializationBrowserQueueNumber(
+							input.queueTimeoutMs,
+							10 * 60 * 1000,
+						),
+						pollMs: normalizeHistoryMaterializationBrowserQueueNumber(input.queuePollMs, 1000),
+					})
+				: await input.dispatcher.acquire(operationInput);
+			if (!acquired.acquired) {
+				if (input.queue) {
+					throw new Error(formatBrowserOperationBusyResult(acquired));
+				}
+				await releaseHistoryMaterializationBrowserOperations(acquiredOperations);
+				return null;
+			}
+			acquiredOperations.push(acquired);
+		}
+		return acquiredOperations;
+	} catch (error) {
+		await releaseHistoryMaterializationBrowserOperations(acquiredOperations);
+		throw error;
+	}
+}
+
+async function releaseHistoryMaterializationBrowserOperations(
+	operations: BrowserOperationAcquiredResult[] | null,
+): Promise<void> {
+	if (!operations) return;
+	for (const operation of [...operations].reverse()) {
+		await operation.release();
+	}
+}
+
+function resolveHistoryMaterializationBrowserOperationTarget(
 	config: ResolvedUserConfig | Record<string, unknown>,
 	request: HistoryMaterializationCreateRequest,
-): Promise<void> {
+): { provider: ProviderId; managedProfileDirs: string[] } | null {
 	const provider = normalizeProviderId(request.provider) ?? null;
-	if (!provider) return;
+	if (!provider) return null;
 	const runtimeProfile = request.runtimeProfile ?? null;
-	const runtimeConfig = withRuntimeProfileSelection(config, provider, runtimeProfile);
-	const browserConfig = isRecord(runtimeConfig.browser) ? runtimeConfig.browser : null;
-	const managedProfileDirs = new Set<string>();
 	const browserProfileName = resolveHistoryMaterializationBrowserProfileName(
 		config,
 		runtimeProfile,
 		request.browserProfile ?? null,
 	);
-	const manualLoginProfileDir = readRecordString(browserConfig, ["manualLoginProfileDir"]);
-	if (manualLoginProfileDir) managedProfileDirs.add(path.resolve(manualLoginProfileDir));
-	const launchContext = resolveManagedBrowserLaunchContextFromResolvedConfig({
-		auracallProfile: readRecordString(runtimeConfig, ["auracallProfile"]) ?? runtimeProfile,
-		browserProfileName,
-		browser: browserConfig,
-		target: provider,
+	const launchPlan = resolveBrowserLaunchPlan({
+		source: { kind: "user-config", config: config as ResolvedUserConfig },
+		intent: {
+			provider,
+			runtimeProfileId: runtimeProfile,
+			browserProfileId: browserProfileName,
+		},
 	});
-	managedProfileDirs.add(path.resolve(launchContext.managedProfileDir));
-	for (const managedProfileDir of managedProfileDirs) {
+	const managedProfileDirs = new Set<string>();
+	if (launchPlan.launchPolicy.manualLoginProfileDir) {
+		managedProfileDirs.add(path.resolve(launchPlan.launchPolicy.manualLoginProfileDir));
+	}
+	managedProfileDirs.add(path.resolve(launchPlan.managedBrowserProfile.directory));
+	return { provider, managedProfileDirs: [...managedProfileDirs].sort() };
+}
+
+function normalizeHistoryMaterializationBrowserQueueNumber(
+	value: number | undefined,
+	fallback: number,
+): number {
+	return typeof value === "number" && Number.isFinite(value) && value > 0
+		? Math.trunc(value)
+		: fallback;
+}
+
+async function cleanupHistoryMaterializationManagedBrowser(
+	config: ResolvedUserConfig | Record<string, unknown>,
+	request: HistoryMaterializationCreateRequest,
+): Promise<void> {
+	const target = resolveHistoryMaterializationBrowserOperationTarget(config, request);
+	if (!target) return;
+	for (const managedProfileDir of target.managedProfileDirs) {
 		const primaryPid = await findChromePidUsingUserDataDir(managedProfileDir).catch(() => null);
 		const pids = await findHistoryMaterializationManagedBrowserPids(managedProfileDir);
 		if (primaryPid) pids.add(primaryPid);

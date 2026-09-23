@@ -23,9 +23,17 @@ Terminology for this runbook:
   DOCX/PDF explicit-set round trip passed; broader proposal acceptance is separate.
 
 - WSL Chrome is the most reliable path; Windows Chrome/Brave from WSL often fails due to DevTools binding and profile locks.
-- Oracle defaults to the Windows host IP for DevTools on WSL; override to localhost for WSL Chrome with `AURACALL_BROWSER_REMOTE_DEBUG_HOST=127.0.0.1`.
+- AuraCall uses the resolver-derived Windows host for WSL-to-Windows DevTools
+  routing, but normalizes any resolver-derived `127.x` nameserver to
+  `127.0.0.1` because it is local to the WSL network namespace. An explicit
+  `AURACALL_BROWSER_REMOTE_DEBUG_HOST` remains authoritative and is not
+  rewritten.
 - AuraCall now defaults browser `DISPLAY` to `:0.0` on WSL unless you set `browser.display`, `AURACALL_BROWSER_DISPLAY`, or explicitly target Windows-hosted Chrome.
-- Aura-Call now uses a managed persistent profile under `~/.auracall/browser-profiles/<auracallProfile>/<service>` and bootstraps it from your existing Chrome profile on first use, so you only sign in once.
+- Aura-Call uses a managed persistent profile under
+  `~/.auracall/browser-profiles/<auracallProfile>/<service>`. Sign in once in
+  that managed browser profile. Copying a source browser profile is opt-in via
+  setup/bootstrap controls or `--browser-cookie-sync`, because provider token
+  rotation in the managed profile can invalidate the source browser session.
 - Aura-Call uses `--password-store=basic` and `--use-mock-keychain` for WSL
   Chrome managed-browser launches, including visible auth-mode launches, so
   managed browser profiles do not block behind a Linux desktop keyring prompt.
@@ -170,13 +178,55 @@ oracle --profile wsl-chrome-3 --engine browser \
 If the mode menu or the Work slider's `advanced options -> Model` submenu is
 not present, AuraCall fails closed. It does not reuse Chat picker selectors.
 
+The current Chat composer combines model and effort selection in one
+intelligence picker. AuraCall scopes the trigger to the active composer; an
+older assistant turn's `Switch model` action is a retry menu and is never used
+for composer model selection. The horizontal Power positions are Instant,
+Medium, High, Extra High, and Pro. Existing AuraCall effort levels map to the
+first four positions respectively and verify the selected slider value.
+
 On the current Chat workbench, `Add files and more` opens one searchable
 popover containing both file sources and tools. Use `--browser-composer-tool`
-only for tool/app rows such as `web-search`, `canvas`, or `deep-research`; use
-`--file` for local paths. AuraCall verifies `Add photos & files / Upload from
-computer` and the unrestricted `#upload-files` input without confusing them
-with `Add from library / Browse and search your files`, which is ChatGPT's
-separate provider-library drawer. Missing or ambiguous rows fail closed.
+only for tool/app rows through durable IDs such as
+`chatgpt.commerce.shopping`, `chatgpt.search.web_search`, or
+`chatgpt.research.deep_research`; legacy labels remain aliases. Use
+`--file` for local paths. AuraCall prefers `Add photos & files / Upload from
+computer`; if that text drifts, it accepts the unrestricted `#upload-files`
+input only when the same active composer contains the prompt and the exact
+`Add files and more` trigger. It never substitutes `Add from library / Browse
+and search your files`, which is ChatGPT's provider-library drawer. Missing or
+ambiguous binding still fails closed.
+
+Third-party tools can pause after prompt submission and ask for `Allow once`
+or `Always allow`. AuraCall defaults to `manual`, which detects the pause and
+returns an actionable error without clicking. For unattended runs, select the
+operator preference explicitly:
+
+```bash
+# Approve only the current tool call.
+oracle --profile wsl-chrome-3 --engine browser \
+  --browser-chatgpt-tool-approval allow-once \
+  -p "Use the selected tool, then summarize the result"
+
+# Persist ChatGPT approval for that third-party tool.
+oracle --profile wsl-chrome-3 --engine browser \
+  --browser-chatgpt-tool-approval always-allow \
+  -p "Use the selected tool, then summarize the result"
+```
+
+The detector requires one visible surface containing exactly one of each
+approval action. Before its one trusted pointer sequence, it briefly settles,
+re-probes the same exact surface/action, and uses the fresh button center. A
+changed or ambiguous surface receives no click; one that independently
+disappears needs no action. AuraCall verifies a clicked surface disappears and
+will not click the same surface twice. It never clicks `Answer now`.
+
+Current live proof: the 2026-08-15 `wsl-chrome-3` LitScout canary selected
+`allow-once`, logged exact `Allow once`, verified disappearance, and completed
+with the expected token. A deliberately nonexistent cancellation target kept
+LitScout project, job, cancellation, operator-action, and canonical-write
+effects at zero. The durable receipt is
+`docs/dev/notes/2026-08-15-plan0288-litscout-allow-once-live-proof.json`.
 
 ## Troubleshooting
 - **Chrome opens but the URL never changes**: Oracle is connecting to the wrong DevTools host.
@@ -281,3 +331,7 @@ Add to `~/.zshrc`:
 alias oracle-wsl='AURACALL_BROWSER_REMOTE_DEBUG_HOST=127.0.0.1 oracle'
 alias oracle-login='AURACALL_BROWSER_REMOTE_DEBUG_HOST=127.0.0.1 oracle --target chatgpt login --browser-keep-browser'
 ```
+
+## Chat mode preflight
+
+On new-chat and project landing pages AuraCall waits for explicit Chat/Work controls before accepting the requested mode. A visible composer alone does not prove Chat. Missing controls stop the run before prompting; established conversation routes retain their mode-marker compatibility checks.

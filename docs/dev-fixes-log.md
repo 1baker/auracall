@@ -22139,6 +22139,52 @@ browser-stage lifecycle observability, not transcript truncation.
   The managed profile directory remains AuraCall-owned and is passed by exact
   path without copying or conversion.
 
+## 2026-08-15 | Approval coordinates must be fresh at pointer dispatch
+
+- Detecting one exact ChatGPT approval surface does not prove that its first
+  measured button center remains current while the provider finishes laying
+  out the dialog. A trusted pointer sequence can become a no-op even though
+  the same enabled surface remains visible afterward.
+- Before the sole allowed click, wait briefly and re-probe the same exact
+  fingerprint and configured action. Use only the fresh coordinates; changed
+  or ambiguous state must dispatch zero pointer events, while independent
+  disappearance requires no action.
+- Keep the post-click disappearance check and one-attempt fingerprint fence.
+  A settle repair must never become permission for a second click.
+
+## 2026-08-15 | Explicit browser selection must invalidate flattened profile fields
+
+- A resolved top-level `browser` record may contain fields projected from the
+  currently selected browser profile. Reusing that record while explicitly
+  selecting a different AuraCall runtime profile or browser profile can report
+  the new identity yet launch with the old executable, display, managed path,
+  source profile, or port policy.
+- At the deep browser launch plan boundary, distinguish service/request fields
+  from browser-profile-owned fields. When selection identity genuinely changes,
+  discard the stale profile-owned projection before applying the newly selected
+  profile; when intent merely restates the current identity, preserve legitimate
+  advanced overrides.
+- Test the final public plan, not only intermediate profile records. Assert that
+  selection identity, browser profile, managed browser profile, provider
+  binding, and launch policy agree, and retain a same-identity compatibility
+  case beside the changed-identity regression.
+
+## 2026-08-15 | Provider prompt launch and destination must share one URL decision
+
+- Resolving a browser target from method/list options while independently
+  planning a provider prompt from a direct URL can attach to one provider page
+  and dispatch toward another. Resolve the URL precedence once and pass the
+  same value through browser target resolution, destination planning, and the
+  provider adapter.
+- Prompt fields that a provider cannot honor must fail closed before browser
+  connection or mutation. Forwarding attachments into a generic adapter type
+  is insufficient when a concrete provider ignores them; support them
+  explicitly or reject them with a stable provider-specific error.
+- Exercise each real adapter's prompt path provider-free. A shared seam test
+  cannot prove authorization-before-mutation, progress, result projection, or
+  cleanup inside Gemini, Grok, or ChatGPT, and progress events alone do not
+  prove mutation ordering.
+
 ## 2026-08-13 | Bound developer-app inventory at the operation boundary
 
 - Per-stage CDP timeouts are necessary but cannot prove that a composite

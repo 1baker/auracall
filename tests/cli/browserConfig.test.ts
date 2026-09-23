@@ -27,9 +27,32 @@ describe('buildBrowserConfig', () => {
       hideWindow: undefined,
       desiredModel: 'GPT-5.6 Sol',
       chatgptMode: 'chat',
+      chatgptToolApproval: 'manual',
       debug: undefined,
       allowCookieErrors: true,
     });
+  });
+
+  test('preserves the explicit ChatGPT tool approval preference', async () => {
+    const config = await buildBrowserConfig({
+      model: 'gpt-5.2',
+      browserChatgptToolApproval: 'always-allow',
+    });
+
+    expect(config.chatgptToolApproval).toBe('always-allow');
+  });
+
+  test('requires an explicit opt-in to copy source browser profile cookies', async () => {
+    await expect(buildBrowserConfig({ model: 'gpt-5.2', browserCookieSync: true })).resolves.toMatchObject({
+      cookieSync: true,
+    });
+    await expect(
+      buildBrowserConfig({
+        model: 'gpt-5.2',
+        browserCookieSync: true,
+        browserNoCookieSync: true,
+      }),
+    ).rejects.toThrow(/cannot be combined/i);
   });
 
   test('requires an explicit request to enter Work and keeps its model separate', async () => {
@@ -84,7 +107,12 @@ describe('buildBrowserConfig', () => {
   test('uses semantic ChatGPT selector metadata for desired model and thinking time', async () => {
     const config = await buildBrowserConfig({
       model: 'gpt-5.1-pro',
-      chatgptSemanticModelSelection: { desiredModel: 'GPT-5.6 Sol', thinkingTime: 'extended' },
+      chatgptSemanticModelSelection: {
+        canonicalSelector: 'chatgpt:reasoning-high',
+        desiredModel: 'GPT-5.6 Sol',
+        apiModel: 'gpt-5.6-sol',
+        thinkingTime: 'extended',
+      },
     });
     expect(config.desiredModel).toBe('GPT-5.6 Sol');
     expect(config.thinkingTime).toBe('extended');
@@ -102,10 +130,39 @@ describe('buildBrowserConfig', () => {
     const config = await buildBrowserConfig({
       model: 'gpt-5.1-pro',
       browserThinkingTime: 'standard',
-      chatgptSemanticModelSelection: { desiredModel: 'GPT-5.6 Sol', thinkingTime: 'extended' },
+      chatgptSemanticModelSelection: {
+        canonicalSelector: 'chatgpt:reasoning-high',
+        desiredModel: 'GPT-5.6 Sol',
+        apiModel: 'gpt-5.6-sol',
+        thinkingTime: 'extended',
+      },
     });
     expect(config.desiredModel).toBe('GPT-5.6 Sol');
     expect(config.thinkingTime).toBe('standard');
+  });
+
+  test('can omit inherited semantic selector depth for one browser run', async () => {
+    const config = await buildBrowserConfig({
+      model: 'gpt-5.6-sol',
+      browserNoThinkingTime: true,
+      chatgptSemanticModelSelection: {
+        canonicalSelector: 'chatgpt:reasoning-high',
+        desiredModel: 'GPT-5.6 Sol',
+        apiModel: 'gpt-5.6-sol',
+        thinkingTime: 'extended',
+      },
+    });
+    expect(config.thinkingTime).toBeUndefined();
+  });
+
+  test('rejects conflicting one-run thinking-time controls', async () => {
+    await expect(
+      buildBrowserConfig({
+        model: 'gpt-5.6-sol',
+        browserThinkingTime: 'standard',
+        browserNoThinkingTime: true,
+      }),
+    ).rejects.toThrow(/either --browser-no-thinking-time or --browser-thinking-time/i);
   });
 
   test('honors overrides and converts durations + booleans', async () => {
@@ -138,7 +195,7 @@ describe('buildBrowserConfig', () => {
       inputTimeoutMs: 5_000,
       cookieSyncWaitMs: 4_000,
       cookieSync: false,
-      headless: undefined,
+      headless: true,
       hideWindow: true,
       keepBrowser: true,
       composerTool: 'web-search',

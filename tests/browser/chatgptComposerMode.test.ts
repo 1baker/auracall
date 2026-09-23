@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import {
 	buildChatgptComposerModeExpressionForTest,
 	ensureChatgptComposerMode,
@@ -11,6 +11,7 @@ class FixtureElement extends EventTarget {
 	private readonly attributes = new Map<string, string>();
 	onClick?: () => void;
 	closestResult: FixtureElement | null = null;
+	querySelectorAllResult: FixtureElement[] = [];
 
 	constructor(text: string, attributes: Record<string, string> = {}) {
 		super();
@@ -32,6 +33,10 @@ class FixtureElement extends EventTarget {
 
 	closest(): FixtureElement | null {
 		return this.closestResult;
+	}
+
+	querySelectorAll(): FixtureElement[] {
+		return this.querySelectorAllResult;
 	}
 
 	click(): void {
@@ -221,7 +226,7 @@ describe("ChatGPT composer mode", () => {
 				workModel: null,
 				strategy: "current",
 			}),
-		).toEqual({ kind: "ignore" });
+		).toEqual({ kind: "chat-model", model: "GPT-5.6 Luna", strategy: "current" });
 
 		expect(
 			resolveChatgptModelSelectionPlanForTest({
@@ -302,5 +307,63 @@ describe("ChatGPT composer mode", () => {
 
 		expect(result).toEqual({ status: "switched", label: "GPT-5.6 Terra" });
 		expect(modelTrigger.textContent).toBe("5.6 Terra Light");
+	});
+
+	it("accepts the current Work model on an established slugged Project conversation", async () => {
+		const workBadge = new FixtureElement("Work");
+		const activeConversation = new FixtureElement("Clean Room Proposal ReviewWork", {
+			href: "/g/g-p-6a8bc9d6f0408191bba2b2cbf816e63a/c/6a8be0ba-011c-83ea-96b7-6c3cd3ff3ea4",
+			"data-active": "",
+		});
+		activeConversation.querySelectorAllResult = [workBadge];
+		const sliderMarker = new FixtureElement("");
+		const modelTrigger = new FixtureElement("5.6 SolHigh", { "aria-haspopup": "menu" });
+		sliderMarker.closestResult = modelTrigger;
+		vi.stubGlobal("location", {
+			href: "https://chatgpt.com/g/g-p-6a8bc9d6f0408191bba2b2cbf816e63a-frakktal-t3cp-clean-room-proposal-replay/c/6a8be0ba-011c-83ea-96b7-6c3cd3ff3ea4",
+			pathname:
+				"/g/g-p-6a8bc9d6f0408191bba2b2cbf816e63a-frakktal-t3cp-clean-room-proposal-replay/c/6a8be0ba-011c-83ea-96b7-6c3cd3ff3ea4",
+		});
+		installFixtureDocument((selector) => {
+			if (selector === '[role="radio"], [role="menuitemradio"]') return [];
+			if (selector === 'button[aria-haspopup="menu"]') return [modelTrigger];
+			if (selector === '[data-animated-slider-trigger="true"]') return [sliderMarker];
+			if (selector === "a[href][data-active]") return [activeConversation];
+			return [];
+		});
+
+		const expression = buildChatgptWorkModelSelectionExpressionForTest("GPT-5.6 Sol");
+		const result = await new Function(`return ${expression}`)();
+
+		expect(result).toEqual({ status: "already-selected", label: "5.6 SolHigh" });
+	});
+
+	it("does not use an established Work badge from a different Project for model selection", async () => {
+		const workBadge = new FixtureElement("Work");
+		const activeConversation = new FixtureElement("Wrong ProjectWork", {
+			href: "/g/g-p-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/c/6a8be0ba-011c-83ea-96b7-6c3cd3ff3ea4",
+			"data-active": "",
+		});
+		activeConversation.querySelectorAllResult = [workBadge];
+		const sliderMarker = new FixtureElement("");
+		const modelTrigger = new FixtureElement("5.6 SolHigh", { "aria-haspopup": "menu" });
+		sliderMarker.closestResult = modelTrigger;
+		vi.stubGlobal("location", {
+			href: "https://chatgpt.com/g/g-p-6a8bc9d6f0408191bba2b2cbf816e63a-frakktal-t3cp-clean-room-proposal-replay/c/6a8be0ba-011c-83ea-96b7-6c3cd3ff3ea4",
+			pathname:
+				"/g/g-p-6a8bc9d6f0408191bba2b2cbf816e63a-frakktal-t3cp-clean-room-proposal-replay/c/6a8be0ba-011c-83ea-96b7-6c3cd3ff3ea4",
+		});
+		installFixtureDocument((selector) => {
+			if (selector === '[role="radio"], [role="menuitemradio"]') return [];
+			if (selector === 'button[aria-haspopup="menu"]') return [modelTrigger];
+			if (selector === '[data-animated-slider-trigger="true"]') return [sliderMarker];
+			if (selector === "a[href][data-active]") return [activeConversation];
+			return [];
+		});
+
+		const expression = buildChatgptWorkModelSelectionExpressionForTest("GPT-5.6 Sol");
+		const result = await new Function(`return ${expression}`)();
+
+		expect(result).toEqual({ status: "trigger-not-found" });
 	});
 });

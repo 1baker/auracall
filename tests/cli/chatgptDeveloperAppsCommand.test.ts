@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
 	type ChatgptDeveloperAppAdapter,
 	executeChatgptDeveloperAppOperation,
+	formatChatgptDeveloperAppOperationResult,
 	runChatgptDeveloperAppOperationForCli,
 } from "../../src/cli/chatgptDeveloperAppsCommand.js";
 
@@ -49,6 +50,41 @@ function createAdapter(
 }
 
 describe("executeChatgptDeveloperAppOperation", () => {
+	it.each([
+		"completed",
+		"failed",
+	] as const)("exposes terminal %s evidence in JSON and text without resubmission", async (status) => {
+		const submitTest = vi.fn(async () => ({
+			status,
+			message: "terminal receipt",
+			answerText: status === "completed" ? "App answer" : undefined,
+			conversationId: "conversation",
+			terminalUrl: "https://chatgpt.com/c/conversation",
+			currentUrl: "https://chatgpt.com/c/conversation",
+			effectState: "effect_observed" as const,
+			retrySafe: false,
+		}));
+		const result = await executeChatgptDeveloperAppOperation(
+			{
+				action: "test",
+				app: "Corel33t",
+				submit: true,
+				prompt: "Use app",
+				expectedAccount: "eric.cochran@soylei.com",
+				confirmed: true,
+			},
+			createAdapter({ submitTest }),
+		);
+		expect(JSON.parse(JSON.stringify(result))).toMatchObject({
+			status,
+			outcome: { conversationId: "conversation", effectState: "effect_observed", retrySafe: false },
+		});
+		const formatted = formatChatgptDeveloperAppOperationResult(result);
+		expect(formatted).toContain("Conversation: conversation");
+		expect(formatted).toContain("Provider effect: effect_observed; retry safe: no");
+		if (status === "completed") expect(formatted).toContain("Answer: App answer");
+		expect(submitTest).toHaveBeenCalledTimes(1);
+	});
 	it("bounds a stalled list operation and closes its adapter", async () => {
 		const close = vi.fn(async () => undefined);
 		const readState = vi.fn(() => new Promise<never>(() => undefined));

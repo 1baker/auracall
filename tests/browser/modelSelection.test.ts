@@ -1,9 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   buildModelMatchersLiteralForTest,
   buildModelSelectionExpressionForTest,
   chooseModelPickerNavigationActionForTest,
   scoreModelPickerOptionForTest,
+  isModelPickerTriggerCandidateForTest,
 } from '../../src/browser/actions/modelSelection.js';
 
 const expectContains = (arr: string[], value: string) => {
@@ -15,8 +16,194 @@ describe('browser model selection matchers', () => {
     const expression = buildModelSelectionExpressionForTest('gpt-5.2-pro');
     expect(expression).toContain('[data-testid=\\"model-switcher-dropdown-button\\"]');
     expect(expression).toContain('button.__composer-pill');
-    expect(expression).toContain('button[aria-label=\\"Switch model\\"]');
+    expect(expression).not.toContain('button[aria-label=\\"Switch model\\"]');
+    expect(expression).toContain(`closest('form, [data-testid*="composer"]')`);
+    expect(expression).toContain(`closest('[data-testid^="conversation-turn"]')`);
     expect(expression).toContain('button[aria-label*=\\"Model\\"]');
+  });
+
+  it('admits the current animated 6 Pro model trigger without admitting Power controls', () => {
+    expect(isModelPickerTriggerCandidateForTest({
+      selector: '[data-animated-slider-trigger="true"]',
+      text: '6 Pro',
+      ariaLabel: '6 Pro, Pro, 5 of 5',
+      visible: true,
+      inComposer: true,
+      inAssistantTurn: false,
+    })).toBe(true);
+    expect(isModelPickerTriggerCandidateForTest({
+      selector: '[data-animated-slider-trigger="true"]',
+      text: '6Pro',
+      ariaLabel: '6Pro, Pro, 5 of 5',
+      visible: true,
+      inComposer: true,
+      inAssistantTurn: false,
+    })).toBe(true);
+    for (const label of ['Power', '6Power', 'High, 3 of 5', 'Pro, 5 of 5']) {
+      expect(isModelPickerTriggerCandidateForTest({
+        selector: '[data-animated-slider-trigger="true"]',
+        text: label,
+        ariaLabel: label,
+        visible: true,
+        inComposer: true,
+        inAssistantTurn: false,
+      })).toBe(false);
+    }
+    expect(isModelPickerTriggerCandidateForTest({
+      selector: '[data-animated-slider-trigger="true"]',
+      text: '6 Pro',
+      ariaLabel: '6 Pro, Pro, 5 of 5',
+      visible: false,
+      inComposer: true,
+      inAssistantTurn: false,
+    })).toBe(false);
+  });
+
+  it.each([
+    { desiredModel: '6 Pro', selectedLabel: '6 Pro' },
+    { desiredModel: 'gpt-5.6-sol', selectedLabel: 'Latest' },
+  ])('opens the model trigger and reads the checked $selectedLabel current model', async ({
+    desiredModel,
+    selectedLabel,
+  }) => {
+		vi.useFakeTimers();
+    class FixtureElement extends EventTarget {
+      textContent: string;
+      children: FixtureElement[] = [];
+      classList = { contains: () => false };
+      attributes = new Map<string, string>();
+      closestHandler: (selector: string) => FixtureElement | null = () => null;
+      queryAllHandler: (selector: string) => FixtureElement[] = () => [];
+
+      constructor(text = '', attributes: Record<string, string> = {}) {
+        super();
+        this.textContent = text;
+        for (const [name, value] of Object.entries(attributes)) this.attributes.set(name, value);
+      }
+
+      getAttribute(name: string) { return this.attributes.get(name) ?? null; }
+      hasAttribute(name: string) { return this.attributes.has(name); }
+      getBoundingClientRect() { return { left: 0, top: 0, width: 100, height: 30 }; }
+      closest(selector: string) { return this.closestHandler(selector); }
+      querySelectorAll(selector: string) { return this.queryAllHandler(selector); }
+      querySelector() { return null; }
+    }
+
+    const prompt = new FixtureElement();
+    const composer = new FixtureElement();
+    const trigger = new FixtureElement('6Pro', {
+      'aria-label': '6Pro, Pro, 5 of 5',
+      'data-animated-slider-trigger': 'true',
+    });
+    const selected = new FixtureElement(selectedLabel, {
+      'aria-checked': 'true',
+      role: 'menuitemradio',
+    });
+    const menu = new FixtureElement();
+    prompt.closestHandler = () => composer;
+    composer.queryAllHandler = (selector) => selector.includes('data-animated-slider-trigger') ? [trigger] : [];
+    menu.queryAllHandler = () => [selected];
+    let triggerClicks = 0;
+    trigger.addEventListener('click', () => { triggerClicks += 1; });
+
+    vi.stubGlobal('Element', FixtureElement);
+    vi.stubGlobal('HTMLElement', FixtureElement);
+    vi.stubGlobal('MouseEvent', Event);
+    vi.stubGlobal('window', {
+      getComputedStyle: () => ({ display: 'block', visibility: 'visible' }),
+    });
+    vi.stubGlobal('document', {
+      querySelector: (selector: string) => selector.includes('#prompt-textarea') ? prompt : menu,
+      querySelectorAll: (selector: string) => selector.includes('[role="menu"]') ? [menu] : [],
+    });
+
+    try {
+			const pending = new Function(
+        `return ${buildModelSelectionExpressionForTest(desiredModel, 'current')}`,
+      )();
+			await vi.advanceTimersByTimeAsync(25_000);
+			const result = await pending;
+      expect(result).toEqual({ status: 'already-selected', label: selectedLabel });
+      expect(triggerClicks).toBe(1);
+    } finally {
+			vi.useRealTimers();
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('settles explicit select after clicking the current unmarked 6 Pro row', async () => {
+    vi.useFakeTimers();
+    class FixtureElement extends EventTarget {
+      textContent: string;
+      children: FixtureElement[] = [];
+      classList = { contains: () => false };
+      attributes = new Map<string, string>();
+      closestHandler: (selector: string) => FixtureElement | null = () => null;
+      queryAllHandler: (selector: string) => FixtureElement[] = () => [];
+
+      constructor(text = '', attributes: Record<string, string> = {}) {
+        super();
+        this.textContent = text;
+        for (const [name, value] of Object.entries(attributes)) this.attributes.set(name, value);
+      }
+
+      getAttribute(name: string) { return this.attributes.get(name) ?? null; }
+      hasAttribute(name: string) { return this.attributes.has(name); }
+      getBoundingClientRect() { return { left: 0, top: 0, width: 100, height: 30 }; }
+      closest(selector: string) { return this.closestHandler(selector); }
+      querySelectorAll(selector: string) { return this.queryAllHandler(selector); }
+      querySelector() { return null; }
+    }
+
+    const prompt = new FixtureElement();
+    const composer = new FixtureElement();
+    const trigger = new FixtureElement('6Pro', {
+      'aria-label': '6Pro, Pro, 5 of 5',
+      'data-animated-slider-trigger': 'true',
+    });
+    const option = new FixtureElement('6Pro', {
+      role: 'menuitem',
+      'aria-expanded': 'false',
+    });
+    const menu = new FixtureElement();
+    let menuOpen = false;
+    let optionClicks = 0;
+    prompt.closestHandler = () => composer;
+    composer.queryAllHandler = (selector) => selector.includes('data-animated-slider-trigger') ? [trigger] : [];
+    menu.queryAllHandler = () => [option];
+    trigger.addEventListener('click', () => { menuOpen = true; });
+    option.addEventListener('click', () => {
+      optionClicks += 1;
+      menuOpen = false;
+    });
+
+    vi.stubGlobal('Element', FixtureElement);
+    vi.stubGlobal('HTMLElement', FixtureElement);
+    vi.stubGlobal('MouseEvent', Event);
+    vi.stubGlobal('window', {
+      getComputedStyle: () => ({ display: 'block', visibility: 'visible' }),
+    });
+    vi.stubGlobal('document', {
+      querySelector: (selector: string) => {
+        if (selector.includes('#prompt-textarea')) return prompt;
+        if (selector.includes('[role="menu"]')) return menuOpen ? menu : null;
+        return null;
+      },
+      querySelectorAll: (selector: string) =>
+        selector.includes('[role="menu"]') && menuOpen ? [menu] : [],
+    });
+
+    try {
+      const pending = new Function(
+        `return ${buildModelSelectionExpressionForTest('6 Pro', 'select')}`,
+      )();
+      await vi.advanceTimersByTimeAsync(25_000);
+      await expect(pending).resolves.toEqual({ status: 'switched-best-effort', label: '6Pro' });
+      expect(optionClicks).toBe(1);
+    } finally {
+      vi.useRealTimers();
+      vi.unstubAllGlobals();
+    }
   });
 
   it('waits for the current model picker to mount before failing closed', () => {
@@ -88,6 +275,7 @@ describe('browser model selection matchers', () => {
   });
 
   it.each([
+    ['Latest', 'instant'],
     ['GPT-5.6 Sol', 'sol'],
     ['GPT-5.6 Terra', 'terra'],
     ['GPT-5.6 Luna', 'luna'],
@@ -106,6 +294,17 @@ describe('browser model selection matchers', () => {
   it('plans the provider-free compact to advanced to model submenu path', () => {
     expect(
       chooseModelPickerNavigationActionForTest([
+        {
+          text: 'Advanced',
+          ariaLabel: 'Show advanced options',
+          role: 'menuitem',
+          expanded: 'false',
+        },
+      ]),
+    ).toEqual({ kind: 'open-advanced', index: 0 });
+
+    expect(
+      chooseModelPickerNavigationActionForTest([
         { text: 'Power', role: 'menuitem', expanded: null },
         { text: 'Show advanced options', role: 'menuitem', expanded: 'false' },
       ]),
@@ -114,8 +313,13 @@ describe('browser model selection matchers', () => {
     expect(
       chooseModelPickerNavigationActionForTest([
         { text: 'Show compact options', role: 'menuitem', expanded: 'true' },
-        { text: 'Model GPT-5.6 Sol', role: 'menuitem', expanded: 'false' },
-        { text: 'Effort Light', role: 'menuitem', expanded: 'false' },
+        {
+          text: 'ModelGPT-5.6 Sol',
+          ariaLabel: 'Model GPT-5.6 Sol',
+          role: 'menuitem',
+          expanded: 'false',
+        },
+        { text: 'EffortLight', role: 'menuitem', expanded: 'false' },
       ]),
     ).toEqual({ kind: 'open-model', index: 1 });
 

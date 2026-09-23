@@ -376,6 +376,7 @@ async function attachNativeBrokerSession(
 		}
 		owned.brokerSession = createBrokerCdpSession({ binding,
 			transport: createNativeBrokerTransport({ ...nativeConfiguration, binding }),
+			pollTimeoutMs: 45_000,
 			onEvent: nativeConfiguration.onBrokerEvent });
 		const handle = data?.serviceTabHandle as Record<string, unknown> | undefined;
 		if (data?.attached !== true || data.controlPlaneMode !== "broker" || data.transportAction !== "__broker_transport"

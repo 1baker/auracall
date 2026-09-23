@@ -6,30 +6,56 @@ import {
   resolveChatgptSemanticModelSelector,
   resolveGeminiSemanticModelSelector,
   resolveGrokSemanticModelSelector,
+  SEMANTIC_MODEL_SELECTORS,
 } from '../../src/config/modelSelector.js';
 
 describe('semantic model selectors', () => {
+  it('publishes capability-oriented ChatGPT selectors without provider versions or codenames', () => {
+    expect(
+      SEMANTIC_MODEL_SELECTORS.filter((entry) => entry.service === 'chatgpt').map((entry) => entry.id),
+    ).toEqual([
+      'chatgpt:fast',
+      'chatgpt:reasoning',
+      'chatgpt:reasoning-high',
+      'chatgpt:reasoning-max',
+      'chatgpt:premium',
+      'chatgpt:legacy',
+    ]);
+  });
+
   it.each([
-    ['chatgpt:premium', { desiredModel: '6 Pro' }],
-    ['chatgpt:gpt-6-astra', { desiredModel: '6 Pro' }],
-    ['astra', { desiredModel: '6 Pro' }],
-    ['chatgpt:auto', { desiredModel: 'GPT-5.6 Terra' }],
-    ['chatgpt:terra', { desiredModel: 'GPT-5.6 Terra' }],
-    ['chatgpt:gpt-5.6-terra', { desiredModel: 'GPT-5.6 Terra' }],
-    ['chatgpt:instant', { desiredModel: 'GPT-5.6 Luna' }],
-    ['chatgpt:luna', { desiredModel: 'GPT-5.6 Luna' }],
-    ['chatgpt:gpt-5.6-luna', { desiredModel: 'GPT-5.6 Luna' }],
-    ['chatgpt:thinking-standard', { desiredModel: 'GPT-5.6 Sol', thinkingTime: 'standard' }],
-    ['chatgpt:thinking-extended', { desiredModel: 'GPT-5.6 Sol', thinkingTime: 'extended' }],
-    ['chatgpt:sol', { desiredModel: 'GPT-5.6 Sol', thinkingTime: 'standard' }],
-    ['chatgpt:sol-medium', { desiredModel: 'GPT-5.6 Sol', thinkingTime: 'standard' }],
-    ['chatgpt:sol-high', { desiredModel: 'GPT-5.6 Sol', thinkingTime: 'extended' }],
-    ['chatgpt:sol-extra-high', { desiredModel: 'GPT-5.6 Sol', thinkingTime: 'heavy' }],
-    ['chatgpt:pro-standard', { desiredModel: 'GPT-5.6 Sol', thinkingTime: 'standard' }],
-    ['chatgpt:pro-extended', { desiredModel: 'GPT-5.6 Sol', thinkingTime: 'extended' }],
-    ['chatgpt:sol-pro', { desiredModel: 'GPT-5.6 Sol', thinkingTime: 'heavy' }],
-    ['chatgpt:gpt-5.5', { desiredModel: 'GPT-5.5' }],
-  ])('resolves %s to current ChatGPT browser controls', (selector, expected) => {
+    ['chatgpt:fast', { canonicalSelector: 'chatgpt:fast', desiredModel: 'GPT-5.6 Sol', thinkingTime: 'light', apiModel: 'gpt-5.6-sol' }],
+    ['chatgpt:reasoning', { canonicalSelector: 'chatgpt:reasoning', desiredModel: 'GPT-5.6 Sol', thinkingTime: 'standard', apiModel: 'gpt-5.6-sol' }],
+    ['chatgpt:reasoning-high', { canonicalSelector: 'chatgpt:reasoning-high', desiredModel: 'GPT-5.6 Sol', thinkingTime: 'extended', apiModel: 'gpt-5.6-sol' }],
+    ['chatgpt:reasoning-max', { canonicalSelector: 'chatgpt:reasoning-max', desiredModel: 'GPT-5.6 Sol', thinkingTime: 'heavy', apiModel: 'gpt-5.6-sol' }],
+    ['chatgpt:premium', { canonicalSelector: 'chatgpt:premium', desiredModel: '6 Pro', apiModel: 'gpt-6-astra' }],
+    ['chatgpt:legacy', { canonicalSelector: 'chatgpt:legacy', desiredModel: 'GPT-5.5', apiModel: 'gpt-5.2-instant' }],
+  ])('resolves canonical selector %s through the current provider schema', (selector, expected) => {
+    expect(resolveChatgptSemanticModelSelector(selector)).toEqual(expected);
+  });
+
+  it.each([
+    ['chatgpt:auto', 'chatgpt:fast'],
+    ['chatgpt:instant', 'chatgpt:fast'],
+    ['chatgpt:thinking-standard', 'chatgpt:reasoning'],
+    ['chatgpt:thinking-extended', 'chatgpt:reasoning-high'],
+    ['chatgpt:pro', 'chatgpt:reasoning'],
+    ['chatgpt:pro-extended', 'chatgpt:reasoning-high'],
+    ['chatgpt:sol', 'chatgpt:reasoning'],
+    ['chatgpt:sol-high', 'chatgpt:reasoning-high'],
+    ['chatgpt:sol-extra-high', 'chatgpt:reasoning-max'],
+    ['chatgpt:gpt-5.2-thinking', 'chatgpt:reasoning'],
+    ['chatgpt:gpt-5.2-pro', 'chatgpt:reasoning'],
+    ['chatgpt:gpt-5.5', 'chatgpt:legacy'],
+  ])('keeps legacy selector %s as an alias for %s', (selector, canonicalSelector) => {
+    expect(resolveChatgptSemanticModelSelector(selector)?.canonicalSelector).toBe(canonicalSelector);
+  });
+
+  it.each([
+    ['chatgpt:terra', { canonicalSelector: 'chatgpt:fast', desiredModel: 'GPT-5.6 Terra', apiModel: 'gpt-5.2-instant' }],
+    ['chatgpt:luna', { canonicalSelector: 'chatgpt:fast', desiredModel: 'GPT-5.6 Luna', apiModel: 'gpt-5.2-instant' }],
+    ['chatgpt:gpt-5.6-sol', { canonicalSelector: 'chatgpt:reasoning', desiredModel: 'GPT-5.6 Sol', thinkingTime: 'standard', apiModel: 'gpt-5.6-sol' }],
+  ])('preserves explicit provider-family target %s', (selector, expected) => {
     expect(resolveChatgptSemanticModelSelector(selector)).toEqual(expected);
   });
 
@@ -42,33 +68,24 @@ describe('semantic model selectors', () => {
   it.each([
     ['grok:auto', { desiredModel: 'Auto' }],
     ['grok:instant', { desiredModel: 'Fast' }],
-    ['grok:fast', { desiredModel: 'Fast' }],
     ['grok:thinking', { desiredModel: 'Expert' }],
-    ['grok:expert', { desiredModel: 'Expert' }],
-  ])('resolves %s to current Grok picker controls', (selector, expected) => {
+  ])('resolves %s to Grok picker controls', (selector, expected) => {
     expect(resolveGrokSemanticModelSelector(selector)).toEqual(expected);
-  });
-
-  it('detects Grok selector typos separately from absent selectors', () => {
-    expect(isGrokSemanticModelSelector('grok:heavy')).toBe(true);
-    expect(resolveGrokSemanticModelSelector('grok:heavy')).toBeNull();
-    expect(isGrokSemanticModelSelector('gemini:thinking')).toBe(false);
   });
 
   it.each([
     ['gemini:auto', { desiredModel: 'Gemini Flash' }],
-    ['gemini:flash', { desiredModel: 'Gemini Flash' }],
     ['gemini:instant', { desiredModel: 'Gemini Flash-Lite' }],
-    ['gemini:flash-lite', { desiredModel: 'Gemini Flash-Lite' }],
     ['gemini:thinking', { desiredModel: 'Gemini Pro' }],
-    ['gemini:pro', { desiredModel: 'Gemini Pro' }],
-  ])('resolves %s to current Gemini picker controls', (selector, expected) => {
+  ])('resolves %s to Gemini picker controls', (selector, expected) => {
     expect(resolveGeminiSemanticModelSelector(selector)).toEqual(expected);
   });
 
-  it('detects Gemini selector typos separately from absent selectors', () => {
+  it('rejects unsupported Gemini and Grok selectors without confusing services', () => {
+    expect(isGrokSemanticModelSelector('grok:heavy')).toBe(true);
+    expect(resolveGrokSemanticModelSelector('grok:heavy')).toBeNull();
     expect(isGeminiSemanticModelSelector('gemini:ultra')).toBe(true);
     expect(resolveGeminiSemanticModelSelector('gemini:ultra')).toBeNull();
-    expect(isGeminiSemanticModelSelector('chatgpt:sol')).toBe(false);
+    expect(isGeminiSemanticModelSelector('chatgpt:reasoning')).toBe(false);
   });
 });

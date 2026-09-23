@@ -14,6 +14,42 @@ const baseRunOptions: RunOracleOptions = {
 const baseConfig: BrowserSessionConfig = { selectedAgentId: 'analyst' };
 
 describe('runBrowserSessionExecution', () => {
+  test('propagates browser cancellation without wrapping the typed abort reason', async () => {
+    const controller = new AbortController();
+    const reason = new Error('overall browser timeout');
+    const executeBrowser = vi.fn(async (options) => {
+      expect(options.abortSignal).toBe(controller.signal);
+      controller.abort(reason);
+      throw reason;
+    });
+
+    await expect(
+      runBrowserSessionExecution(
+        {
+          runOptions: baseRunOptions,
+          browserConfig: baseConfig,
+          cwd: '/repo',
+          log: vi.fn(),
+          abortSignal: controller.signal,
+        },
+        {
+          assemblePrompt: async () => ({
+            markdown: 'prompt',
+            composerText: 'prompt',
+            estimatedInputTokens: 1,
+            attachments: [],
+            inlineFileCount: 0,
+            tokenEstimateIncludesInlineFiles: false,
+            attachmentsPolicy: 'auto',
+            attachmentMode: 'inline',
+            fallback: null,
+          }),
+          executeBrowser,
+        },
+      ),
+    ).rejects.toBe(reason);
+  });
+
   test('injects provider-session authorization only at the browser execution boundary', async () => {
     const log = vi.fn();
     const authority = createProviderSessionAuthority({
@@ -94,6 +130,7 @@ describe('runBrowserSessionExecution', () => {
         tookMs: 1000,
         answerTokens: 12,
         answerChars: 20,
+		observedModel: '6 Pro',
       };
     });
     const result = await runBrowserSessionExecution(
@@ -120,7 +157,7 @@ describe('runBrowserSessionExecution', () => {
       },
     );
     expect(result.usage).toEqual({ inputTokens: 42, outputTokens: 12, reasoningTokens: 0, totalTokens: 54 });
-    expect(result.runtime).toMatchObject({ chromePid: undefined });
+    expect(result.runtime).toMatchObject({ chromePid: undefined, observedModel: '6 Pro' });
     expect(persistRuntimeHint).toHaveBeenCalledWith(
       expect.objectContaining({
         selectedAgentId: 'analyst',

@@ -225,6 +225,17 @@
   This is provider-free and proves an unacknowledged `Runtime.evaluate` cannot
   outlive the caller's outer polling budget even without a separate inner bound.
 
+- ChatGPT sidebar timeout recovery regression:
+  `pnpm vitest run tests/browser/chatgptAdapter.test.ts -t "ChatGPT sidebar readiness recovery"`.
+  The named first readiness timeout enters the existing sidebar opener, while
+  unrelated CDP failures remain visible; shared predicate semantics are not
+  relaxed.
+
+- Forced live-follow cleanup regression:
+  `pnpm vitest run tests/accountMirror/completionService.test.ts -t "forces one live-follow pass|defaults to live follow"`.
+  This proves an explicit one-pass ceiling requests managed-browser cleanup and
+  ordinary indefinite live follow retains its existing ownership policy.
+
 - Unit/type tests: `pnpm test` (Vitest) and `pnpm run check` (typecheck).
 - Durable configured-browser cancellation is provider-free:
   `pnpm exec vitest run tests/runtime.runner.test.ts tests/runtime.configuredExecutor.test.ts tests/browser/pageActions.test.ts --maxWorkers 1`.
@@ -318,6 +329,15 @@
 - ChatGPT Chat/Work composer boundary:
   - normal browser runs default to Chat; Work requires
     `--browser-chatgpt-mode work`
+  - an established conversation with no rendered mode control may qualify as
+    Chat only when its exact visible, enabled ChatGPT prompt editor is present
+    and the active current-route conversation has no exact `Work` badge
+  - `[data-animated-slider-trigger=true]` is model/thinking UI, not a mode
+    discriminator; ordinary Chat may expose it with text such as `High`
+  - established Work requires positive proof from the visible active
+    conversation link whose `href` matches `location.pathname` and whose
+    descendant `span` has exact normalized text `Work`; otherwise an explicit
+    Work request remains fail-closed
   - a named Work model requires `--browser-work-model` and must use Work's
     dedicated nested slider, never the Chat picker
   - run the provider-free contract suite before any authorized live canary:
@@ -333,11 +353,84 @@
   - use the repo-local
     [`auracall-chatgpt-browser` skill](../.agents/skills/auracall-chatgpt-browser/SKILL.md)
     for selector boundaries, live-effect gates, and cleanup evidence
+- ChatGPT third-party tool approval policy:
+  - `manual` is the fail-closed default; `allow-once` and `always-allow` are
+    explicit operator choices
+  - run the provider-free action and propagation gate before any live canary:
+    `pnpm vitest run tests/browser/chatgptToolApproval.test.ts tests/browser/config.test.ts tests/browser/profileConfig.test.ts tests/browser/profileResolution.test.ts tests/cli/browserConfig.test.ts tests/runtime.configuredExecutor.test.ts tests/schema/chatgptMode.test.ts tests/schema/resolver.test.ts`
+  - provider-free fixtures must prove exact paired actions, stable pre-click
+    re-probe plus exact DOM-bound activation, zero-action changed/ambiguous handling,
+    exact `tool-approval-card` fingerprinting, stable page-lifetime DOM identity,
+    disappearance or distinct-card replacement verification even when the
+    replacement has identical visible text, two sequential cards in one
+    assistant turn, one-attempt fencing for an unchanged DOM card, and `Answer
+    now` exclusion
+  - ChatGPT app-security consent is a separate exact surface: require the
+    `Allow ChatGPT to use <app>?` heading, visible `Suspicious Instruction`
+    warning, and exactly one `Allow` action in the same dialog. Generic
+    single-Allow dialogs remain unmatched; manual mode exposes the surface,
+    allow-once may activate it, and always-allow fails closed rather than
+    downgrading persistent consent
+  - foreground ChatGPT lock lifetime must cover response wait, tool approval,
+    and final answer extraction, not only prompt dispatch. Run
+    `pnpm vitest run tests/browser/browserModeExports.test.ts tests/browser-service/operationDispatcher.test.ts tests/accountMirror/refreshService.test.ts tests/browser/chatgptToolApproval.test.ts`;
+    it must prove a same-profile account-mirror owner is rejected while the
+    foreground operation is active and admitted only after terminal release
+  - prompt startup must not perform live identity or feature detection merely
+    to enrich optional browser-context cache metadata; run
+    `pnpm vitest run tests/browser/browserContextIdentity.test.ts tests/browser/llmServiceIdentity.test.ts`
+    to prove configured identity resolves even when live probes never settle
+  - the 2026-08-15 `wsl-chrome-3`/LitScout canary live-proved exact
+    `allow-once`, disappearance confirmation, expected response completion,
+    zero `always-allow`/`Answer now` clicks, and zero LitScout writes; see
+    `docs/dev/notes/2026-08-15-plan0288-litscout-allow-once-live-proof.json`
+  - Plan 0290 provider-free-proved sequential-handler readiness and fresh
+    coordinates, but its sole two-call live prompt exposed only one confirmed
+    approval and a singular provider trace; do not cite its expected token as
+    two-call proof. See
+    `docs/dev/notes/2026-08-15-plan0290-approval-settle-live-inconclusive.json`
+- ChatGPT Skill lifecycle:
+  - provider-free contract tests:
+    `pnpm vitest run tests/browser/chatgptSkills.test.ts tests/cli/chatgptSkillsCommand.test.ts tests/cli/chatgptDeveloperAppsCommand.test.ts`
+  - pair with `tests/browser/chatgptComposerTool.test.ts` and
+    `tests/browser/chatgptAdapter.test.ts` when current drawer rows, selected
+    composer pills, or local-upload qualification changes; current rows need
+    not carry `tabindex`, and pill proof stays scoped to the composer form
+  - read-only inventory smoke:
+    `pnpm tsx bin/auracall.ts --profile <runtime> skills list --expected-account <email> --json`
+  - bounded non-submitting selection smoke:
+    `pnpm tsx bin/auracall.ts --profile <runtime> skills select <32-hex-id> --expected-account <email> --yes --json`
+    requires exact-ID inventory binding plus a pill-free empty source composer,
+    qualifies either the current `textarea[name="prompt-textarea"]` or legacy
+    `#prompt-textarea` provider shape,
+    observes either an empty selected composer or only the provider-authored
+    prompt that exactly matches the decoded current `prompt` parameter, restores
+    the original route, and observes that the selection and prompt are cleared
+  - `skills run` is a provider-free negative contract in Chat mode: user-added
+    Skills are not available there, so both exported execution paths must fail
+    before inventory reads, browser launch, or Send; Work-mode testing is
+    deferred
+  - `list` and `show` require the exact expected account; all mutations also
+    require `--yes`, a complete inventory, and an exact 32-hex ID after create
+  - identity preflight merges missing fields from the exact logged-in
+    `script#client-bootstrap[type="application/json"]` projection when
+    `/api/auth/session` is reduced; tests must prove token-bearing bootstrap
+    fields never leave that projection
+  - `update` requires the exact prior `SKILL.md` SHA-256 reported by `show`;
+    stale or unavailable content fails before dispatch
+  - source loading accepts only a regular `SKILL.md` or directory containing
+    one, rejects symbolic links, normalizes line endings, and caps content at
+    1 MiB
+  - an `outcome-unknown` select, create, update, or delete is a hard stop and must not
+    be retried; retain the visible provider surface for operator inspection
+  - do not use Skill mutation commands as routine live tests. One authorized
+    canary must bind the returned ID and hashes, perform at most one create,
+    one update, and one delete, and finish with fresh absence proof
 - ChatGPT developer-app lifecycle:
   - provider-free contract tests:
     `pnpm vitest run tests/browser-service/devToolsConnection.test.ts tests/browser-service/browserServiceCore.test.ts tests/browser/chatgptDeveloperApps.test.ts tests/cli/chatgptDeveloperAppsCommand.test.ts`
   - read-only installed smoke:
-    `pnpm tsx bin/auracall.ts --profile <runtime> apps --target chatgpt list --json`
+    `auracall --profile <runtime> apps --target chatgpt list --json`
   - `apps list` has a 45-second outer deadline plus a bounded browser-client
     close; target resolution, CDP attachment, Runtime enablement, and Page
     enablement each have a 10-second bound and report a named debug stage
@@ -346,7 +439,38 @@
     attachment stage must return control so the CLI can release its file-backed
     browser-operation lease
   - non-submitting app-selection smoke:
-    `pnpm tsx bin/auracall.ts --profile <runtime> apps --target chatgpt test <exact-app> --expected-account <email> --json`
+    `auracall --profile <runtime> apps --target chatgpt test <exact-app> --expected-account <email> --json`
+  - installed/runtime/live acceptance must use the installed `auracall`
+    launcher; repo-local `pnpm tsx bin/auracall.ts` is source-checkout evidence
+    only and must bind an explicitly intended branch and commit
+  - private developer apps use the composer `@mention` ecosystem picker and an
+    exact `ecosystemMention` plugin pill. Source `apps test --submit` carries
+    the accepted plugin identities into the shared prompt path and refuses a
+    non-fresh or nonempty composer, a document-reference pill, or the wrong app identity
+    before Send. It then uses the shared assistant-response lifecycle so tool
+    and app-security approval gates are detected and exposed. Provider/live
+    behavior remains unaccepted until separately authorized
+  - issue-6 fixtures in `tests/browser/chatgptDeveloperAppLifecycle.test.ts`
+    cross the real adapter -> shared runBrowserMode -> remote response/P45
+    seam with hermetic transport and fail-closed launcher mocks. They prove
+    exactly one Send, terminal answer and refreshed URL/conversation identity,
+    unknown/observed/pre-effect failure evidence, account/selection refusal,
+    no automatic resubmit, and explicit incompatible-input refusal. The shared
+    structural guard retains symmetric local/remote hooks and keeps the
+    low-level adapter prompt-submitted-only
+  - submitted app tests override inherited Work/tool/project/conversation
+    routing with fresh-root Chat/current semantics. Manual approval is terminal
+    `failed` with nonzero CLI exit, not a guaranteed human handoff; JSON/plain
+    output carries answer text, identity, URL, effect state and retry safety.
+    Source fixtures do not accept installed parity, approval clicks or live use
+  - developer-app remote lifecycle proof is limited to attributable managed
+    local/WSL Chrome exposed on loopback (including the canonical
+    `windows-loopback` alias) with a live matching managed-profile
+    PID. Arbitrary remote endpoints or missing process provenance fail before
+    Send; a local PID file must never authorize an unrelated remote browser
+  - developer-app submit tests preserve the active Chat model. Record the
+    visible composer model separately from any configured/resolved `--model`
+    value; the latter does not prove a UI selection
   - do not use `--submit`, `create`, `refresh`, or `uninstall` as routine live
     tests; they require exact authorization and `--yes`
   - an authorized refresh uses replacement semantics and requires a complete
@@ -364,6 +488,8 @@
     `aria-checked="true"` before the named server URL input is addressed
   - `inventoryComplete: false` is a hard mutation stop; a timed-out installed
     apps response must never be interpreted as proof that zero apps exist
+  - inventory auth status is bound only by one exact app-id/connector-id match;
+    same-name replacement records and ambiguous exact matches return null
   - stop immediately on a provider rate-limit, CAPTCHA, or human-verification
     surface
   - OAuth create may report `awaiting-human` only when the post-submit target
@@ -901,8 +1027,10 @@
       - an all-failed completion-owned materialization job is not a benign
         terminal event: bounded and live-follow operations become `blocked`
         with `account_mirror_materialization_failed` before completion or
-        another collector/provider pass; successful and genuinely skipped
-        live-follow jobs retain the normal post-materialization quiet window
+        another collector/provider pass; a failed job with one or more verified
+        materializations is partial success and retains the normal
+        post-materialization quiet window, as do successful and genuinely
+        skipped live-follow jobs
       - ChatGPT file-download regressions must cover both camel-case provider
         errors and the live snake-case `error_code` / `error_type` envelope;
         explicit not-found evidence is non-retryable `provider_unavailable`,
@@ -953,9 +1081,10 @@
         `{"action":"pause|resume|run_one_pass|cancel"}`; paused operations stay
         discoverable in active readback, resume relaunches the service-owned
         loop, `run_one_pass` wakes one bounded live-follow pass while preserving
-        safety gates; it may also explicitly re-arm a blocked live-follow
-        completion after the underlying fault is repaired, but does not re-arm
-        completed, failed, cancelled, or bounded operations. The forced pass
+        safety gates; it may also explicitly re-arm a blocked or failed
+        live-follow completion after the underlying fault is diagnosed and
+        repaired, but does not re-arm completed, cancelled, or bounded
+        operations. The forced pass
         retains ownership through any completion-owned
         materialization terminal, and blocks on an all-failed result before
         returning; successful/skipped materialization settles before the forced
@@ -1065,11 +1194,16 @@
       `pnpm vitest run tests/browser/chatgptComposerTool.test.ts tests/browser/pageActions.test.ts tests/services/registry.test.ts`
       - the visible `.popover` may mix file-source rows and tool/app rows;
         file-source rows must never satisfy composer-tool selection
-      - local and remote `--file` paths must verify exactly one
-        `Add photos & files / Upload from computer` row, one
-        `Add from library / Browse and search your files` row, and one
-        unrestricted multi-file `#upload-files` input before transfer
-      - drift, ambiguity, or an image-restricted `#upload-files` input must
+      - local and remote `--file` paths require one unrestricted multi-file
+        `#upload-files` input plus the exact local-file row or the validated
+        composer fallback below; the provider-library row is optional
+      - label drift may use one uniquely visible composer/editor/trigger;
+        `tests/browser/chatgptAttachmentComposer.test.ts` executes the real
+        inventory expression for inactive forms, hidden fallback textareas,
+        foreign inputs, ambiguous triggers/popovers, and explicit ownership
+      - handoff coverage in `tests/browser/chatgptService.test.ts` retains both
+        omitted/current and explicit semantic model/effort selection
+      - unresolved drift, ambiguity, or an image-restricted `#upload-files` input must
         fail closed before any file transfer or prompt submission
   - read it back:
     - copy the returned `id`, then run `curl http://127.0.0.1:8080/v1/responses/<response_id>`
@@ -1084,7 +1218,11 @@
       `pnpm tsx bin/auracall.ts --profile wsl-chrome-3 conversations artifacts fetch <conversation_id> --target chatgpt`
       should return `document` artifacts materialized from the Deep Research
       iframe: inline Markdown plus provider-exported Word and PDF files when
-      the finished report exposes those export options.
+      the finished report exposes those export options. Word/PDF acceptance
+      snapshots the destination first, then requires one fresh stable file with
+      the requested extension and matching ZIP/PDF signature. An unchanged
+      retained file or fresh wrong variant remains on disk but is an explicit
+      manifest error and does not increment `materializedCount`.
   - create a shared-contract CLI media request:
     - `pnpm tsx bin/auracall.ts media generate --provider chatgpt --type image -p "Generate an image of an asphalt secret agent" --json`
     - `pnpm tsx bin/auracall.ts media generate --provider gemini --type image -p "Generate an image of an asphalt secret agent" --json`
@@ -1396,6 +1534,20 @@
       probe lease evidence when the provider has not surfaced readable
       progress text; missing assistant/status text alone is not evidence that
       the run stopped
+    - if the command observation window expires while the exact submitted
+      generation has a visible Stop control, including before ChatGPT mounts
+      an assistant turn, Session/model state remains `running` with
+      `response.incompleteReason=observation_expired_generation_active`; exact
+      browser and conversation evidence must survive for `auracall session
+      <id>` read-only reattachment, with assistant identity and text
+      fingerprint added once that turn mounts
+    - if the last runtime URL is stale or synthetic, the validated final
+      ChatGPT progress `/c/<id>` URL must replace only runtime URL/conversation
+      identity before reattach; target ID and port must remain unchanged
+    - healthy assistant fingerprint/length progress must not refresh the page;
+      only positively stale or interrupted observation may refresh, only the
+      same conversation may be targeted, and one Runtime may refresh at most
+      once in a 15-minute window
     - passive DOM probe evidence must stay bound to the submitted conversation
       target; a target that has moved to ChatGPT Library/root/project or a
       different conversation should fail with `chatgpt-target-mismatch` instead
@@ -2193,8 +2345,20 @@
       - `changed = false`
   - treat unsupported or undocumented cells as non-commitments until the Gemini completion plan advances them.
 - Browser smokes: `pnpm test:browser` (builds, checks DevTools port 45871 or `AURACALL_BROWSER_PORT`, then runs headful browser smokes with GPT-5.2 for most cases and GPT-5.2 Pro for the reattach + markdown checks). Requires a signed-in Chrome profile; runs headful but now starts Chrome with `browser.hideWindow` as a best-effort minimized/no-focus-steal launch. On the current WSL/X11 stack, the active window stays unchanged even though DevTools may still report `windowState: normal`.
+- ChatGPT skill capability fixtures must keep label-only `skills[]` evidence at
+  `availability=unknown` and `invocationMode=unknown`. Stable installation,
+  activation, identity, version, and invocation require separate exact-account
+  evidence; developer-app fixtures cannot substitute.
 - Grok browser smoke: `pnpm test:grok-smoke` (requires an active Grok session; uses the Aura-Call browser registry or `AURACALL_BROWSER_PORT`).
 - Grok acceptance bar: run `DISPLAY=:0.0 pnpm test:grok-acceptance` on the authenticated WSL Grok profile before calling Grok browser support "fully functional." The script executes the canonical WSL-primary checklist from `docs/dev/smoke-tests.md` and covers project CRUD, instructions/files CRUD, project-knowledge cache freshness, account-wide `/files` CRUD plus `account-files` cache freshness, project conversation CRUD, root/non-project conversation-file parity, append-only `conversations files add`, markdown capture, the medium-file guard, and cleanup. If Grok's root conversation list lags after a browser-file prompt, the runner now logs that and falls back to the fresh browser session `conversationId` so the rest of the CRUD path still gets validated on the real new conversation.
+- The ChatGPT and Grok acceptance scripts share
+  `scripts/lib/browserAcceptanceHarness.ts` for process, deadline, output/exit,
+  JSON, optional state, and final-evidence mechanics. Provider commands,
+  assertions, retry/guard rules, phases, and cleanup decisions remain in the
+  scripts. Run `pnpm vitest run tests/scripts.browserAcceptanceHarness.test.ts
+  tests/scripts.browserAcceptanceStructure.test.ts` for the provider-free
+  contract; that suite does not replace either authenticated live acceptance
+  bar.
 - ChatGPT project lifecycle + project-management CRUD is green on the authenticated managed WSL Chrome path: list/create/rename/delete, create-time `--memory-mode global|project`, `projects files add|list|remove --target chatgpt`, and `projects instructions get|set --target chatgpt`. Source add/remove now verify success against a fresh `Sources` reload rather than trusting only the first immediate post-picker row, and instructions writes verify by reopening the project settings sheet and confirming the persisted textarea value. The project surface is effectively complete for current native UI purposes; clone stays out of scope unless ChatGPT later exposes a real clone action. Historical closure notes now live in `docs/dev/plans/legacy-archive/0019-2026-04-08-chatgpt-conversation-surface-plan.md`.
 - ChatGPT root conversation list/read/rename/delete are green on the authenticated managed WSL Chrome path, and the conversation context surface now includes more than sent user-turn file tiles. `auracall conversations files list <conversationId> --target chatgpt` still returns stable synthetic refs for real sent uploads, but `auracall conversations context get <conversationId> --target chatgpt --json-only` now also enriches ChatGPT context with `sources[]` from assistant citation/content-reference metadata plus `artifacts[]` for downloadable `sandbox:/...` outputs, generated `image_asset_pointer` artifacts, `ada_visualizations` table/spreadsheet artifacts, spreadsheet-like `.csv` / `.xlsx` markdown downloads, DOM-only assistant-turn `button.behavior-btn` artifacts, and canvas/textdoc blocks. Live proof on `69c3e6d0-3550-8325-b10e-79d946e31562` returns file-backed `sources[]` plus downloadable artifacts such as `updated skill.zip`, `combined JSON extraction`, and `combined BibTeX extraction`; live proof on image chat `69bc77cf-be28-8326-8f07-88521224abeb` returns four `image` artifacts with `sediment://...` asset pointers plus size/dimensions and generation metadata; live proof on CSV/table chat `bc626d18-8b2e-4121-9c4a-93abb9daed4b` returns two `spreadsheet` artifacts backed by ChatGPT `file_id`s; live proof on spreadsheet-download chat `69ca9d71-1a04-8332-abe1-830d327b2a65` returns `parabola_trendline_demo.xlsx` as a `spreadsheet` artifact; live proof on the DOCX + canvas chat `69caa22d-1e2c-8329-904f-808fb33a4a56` now fills `canvas.metadata.contentText` from the visible textdoc DOM; and live proof on the “vibe coding” chat `69bded7e-4a88-8332-910f-cab6be0daf9b` now returns `artifactCount = 86` from the assistant-turn button surface. The important implementation nuance is that direct in-page `fetch('/backend-api/conversation/<id>')` can return a JSON 404 even on a page that visibly hydrates correctly, so the adapter now falls back to CDP `Network.responseReceived` + `Network.loadingFinished` + `getResponseBody` while one governed fallback navigation reacquires the exact conversation route, even when ChatGPT has moved the active tab home. Another important artifact nuance is that many inline binary download buttons do not use fetch/XHR at all; a native click programmatically triggers an anchor click to a signed `backend-api/estuary/content?id=file_...` URL. The root rename repair still matters because ChatGPT's current header `Open conversation options` menu is not a rename surface; rename must come from the sidebar-row `Open conversation options for ...` menu on the home/list page, the edit field that appears there is just a plain visible `input[type=\"text\"]`, and the authoritative completion signal is that the same conversation id reappears as the top root-list row with the new title after a short lag. Root delete now uses that same list-first row surface with header delete only as fallback, standalone `auracall delete <conversationId> --target chatgpt` accepts a raw fresh ChatGPT conversation id directly, and the full guarded `scripts/chatgpt-acceptance.ts` runner is now green end to end even when this account hits real ChatGPT cooldowns during rename/delete cleanup. For project chats, keep the project page conversation list as the authoritative surface; the abbreviated sidebar subset shown while a project is selected is not the full catalog. For real small-text upload validation, force native uploads with `--browser-attachments always`; under `auto`, ChatGPT can inline the file content into the prompt and never create a real attachment tile. Treat those conversation files as read-only after send: users can remove them from the composer before sending, but durable delete belongs to ChatGPT project `Sources`, not post-send conversation history.
 - ChatGPT now has an opt-in artifact materialization path: `auracall conversations artifacts fetch <conversationId> --target chatgpt`. On the current managed WSL Chrome profile, serialized live runs materialize generated images into `conversation-attachments/<conversationId>/files/.../*.png`, inline `ada_visualizations` table artifacts into CSVs in the same cache tree, visible textdoc/canvas blocks into text files when `contentText` is present or can be filled from the DOM, and signed anchor-backed binary downloads into real files by capturing the generated `backend-api/estuary/content?id=file_...` URL and fetching it directly. Each run also writes a sidecar `conversation-attachments/<conversationId>/artifact-fetch-manifest.json` so operators can inspect per-artifact `materialized|skipped|error` results without changing the existing attachment manifest shape. Live proof:
@@ -2206,6 +2370,15 @@
   - `69d061ea-5098-8326-a2e4-70e38d845190` -> `artifactCount = 1`, `materializedCount = 1` (`auracall-identity-matrix-qmrqpe.xlsx`)
   - `69d06243-62f8-832f-8fc7-cba9e0148044` -> `artifactCount = 1`, `materializedCount = 1` (`Kitten enjoying ice skating fun.png`)
   The workbook case matters because ChatGPT exposes it through the embedded spreadsheet card's unlabeled header button rather than a filename-matching behavior button; Aura-Call now uses that fallback for `sandbox:/...xlsx` spreadsheet artifacts. The earlier canvas sample `69c8a0fc-c960-8333-8006-c4d6e6704e6e` no longer reproduces a live canvas artifact on this account, so do not use it as a current smoke. Also, do not run multiple live ChatGPT artifact fetches in parallel against the same managed browser; they share one active signed-in tab and can interfere with each other's navigation/state.
+  Sequential artifacts within one fetch are different: Aura-Call awaits each
+  transfer and closes its scoped provider session before binding the next one.
+  Deep Research Word/PDF export also separates the synchronous `Export` click
+  from exact option selection: Node closes that iframe binding, waits, and
+  reacquires a fresh target/context before the next synchronous click. Never
+  await a page-owned timer across the export-menu DOM transition; Chromium can
+  collect that execution-context Promise even though the menu opened.
+  Provider-free coverage must include at least three distinct artifact paths so
+  title/URI reconciliation cannot collapse the settlement fixture.
   One current side finding from the fresh generated-image proof: the direct browser-mode wrapper appeared to linger after the image artifact was already visible and materializable via `conversations context get` / `conversations artifacts fetch`. Record that as a later follow-up, not a current blocker.
 - ChatGPT serialized full-context ingestion has now also been re-proven on a small representative chat set where each conversation was read first and then materialized:
   - `69bc77cf-be28-8326-8f07-88521224abeb` -> context `messages = 4`, `files = 1`, `sources = 0`, `artifacts = 4`; artifact fetch `materializedCount = 4`
@@ -2213,7 +2386,7 @@
   - `69ca9d71-1a04-8332-abe1-830d327b2a65` -> context `messages = 4`, `files = 0`, `sources = 0`, `artifacts = 1`, `spreadsheetArtifacts = 1`; artifact fetch `materializedCount = 1`
   During `conversations context get` and `conversations artifacts fetch`, the ChatGPT adapter now watches for a visible `Too many requests` / `...too quickly` dialog, dismisses it, waits about 15 seconds, and retries once before surfacing a real rate-limit failure. This particular serialized smoke set stayed below the throttle threshold, so the recovery path was present but did not have to fire live.
 - ChatGPT project-scoped conversation list/rename/delete should now also be treated as live on the managed WSL Chrome path when `--project-id <g-p-...>` is supplied: the provider prefers the project page `Chats` tabpanel (`SECTION -> OL -> LI` in the main content area) over the sidebar subset when scraping project chats or verifying project-scoped rename/delete, and the phased guarded acceptance runner has now re-proven that slice live.
-- ChatGPT browser-mode dialog selection now tracks the live composer surface: browser defaults resolve to `Instant`, `--browser-thinking-time` should use `standard|extended` (`light|heavy` still work as legacy aliases), and `--browser-composer-tool <tool>` applies ChatGPT add-ons like `web-search`, `canvas`, and `google-drive` from the `Add files and more` menu. Pro is a model-picker lane, not a Standard/Extended depth selector; Pro smokes should use `--model gpt-5.2-pro` with the default model strategy so AuraCall can verify the `Pro` row before selecting the depth. File upload remains the normal attachment flow (`--file` / composer upload), not a composer-tool selection.
+- ChatGPT browser-mode dialog selection tracks the live composer surface. New tests and fixtures should use the durable `chatgpt:fast`, `chatgpt:reasoning*`, `chatgpt:premium`, or `chatgpt:legacy` selectors; versioned GPT-5.2 and Sol/Terra/Luna spellings are compatibility cases only. The current compact provider label `6Pro` is semantically equivalent to `6 Pro` for exact premium-family matching, but AuraCall preserves `6Pro` as the observed label and continues to reject `6Power`, generic `Pro`, and effort controls. `--browser-composer-tool <tool>` applies ChatGPT add-ons like `web-search`, `canvas`, and `google-drive` from the `Add files and more` menu. File upload remains the normal attachment flow (`--file` / composer upload), not a composer-tool selection.
 - ChatGPT existing-conversation tool state is now an inspected runtime surface, not just a click side effect: browser runs persist the actual selected add-on in session metadata as `browser.runtime.composerTool` (for example `web search`), and final ChatGPT browser session metadata now also persists the normalized `conversationId` alongside `tabUrl`, which makes prompt-matched acceptance/debug lookups reliable.
 - ChatGPT live browser work now carries a persisted profile-scoped guard under `~/.auracall/cache/providers/chatgpt/__runtime__/rate-limit-<profile>.json`: mutating ChatGPT llmservice CRUD operations are spaced apart automatically, ChatGPT browser-mode prompt runs consult the same guard before sending another live write, and both paths now also enforce a rolling per-profile write budget before ChatGPT has a chance to surface a visible `Too many requests` dialog. If the live UI still does expose a `Too many requests` / `...too quickly` failure, later ChatGPT live CRUD or browser-mode calls fail fast on that cooldown instead of continuing to hammer the account from fresh CLI processes.
 - ChatGPT context/artifact read paths now also have local dialog recovery inside the provider adapter itself: if ChatGPT throws a visible rate-limit modal during `conversations context get` or `conversations artifacts fetch`, Aura-Call dismisses that modal, pauses briefly, and retries once before letting the higher-level persisted guard take over.
@@ -2259,6 +2432,14 @@
   a materialization job completes, without provider or browser work.
 - History-backed materialization unit coverage is deterministic and browser-free:
   `pnpm vitest run tests/accountMirror/chatgptMetadataCollector.test.ts tests/runtime.historyMaterializationService.test.ts tests/runtime.historyArchiveItems.test.ts tests/runtime.searchProjectionService.test.ts tests/cli/apiHistoryMaterializationCommand.test.ts tests/mcp.historyMaterialization.test.ts tests/http.responsesServer.test.ts tests/mcp.server.test.ts --maxWorkers 1 --testNamePattern "history materialization|account history materialization|history-backed|history-materialized|mcp server service wiring|ChatGPT account mirror metadata collector"`.
+  The attempt-lifecycle contract is additionally locked by
+  `tests/runtime.historyMaterializationAttemptStructure.test.ts` and focused
+  history-service cases: one selected handoff must own refresh/provider
+  ordering, target and metric verification, awaited evidence persistence,
+  phase projection, durable receipt construction, and receipt-derived budget
+  and provider-guard accounting. Repeat provider work within one attempt must
+  reuse the exact context object. A target mismatch or evidence-write failure
+  must leave the terminal job with no accepted result or attempt receipt.
   Candidate-observability coverage additionally locks a fixture with seven
   globally missing-local assets, three eligible conversation candidates, and
   two selected candidates after within-job family deduplication/budget. The

@@ -1,11 +1,18 @@
 #!/usr/bin/env tsx
 import { randomBytes } from 'node:crypto';
-import { spawnSync } from 'node:child_process';
 import { readFileSync, type Dirent } from 'node:fs';
-import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {
+  createBrowserAcceptanceHarness,
+  parseAcceptanceJson as parseJson,
+  readAcceptanceResume,
+  type AcceptanceCommandOptions as RunOptions,
+  type AcceptanceCommandResult as RunResult,
+  type AcceptanceRunState,
+} from './lib/browserAcceptanceHarness.js';
 
 type Project = {
   id: string;
@@ -57,18 +64,7 @@ type BrowserSessionMetadata = {
   createdAt?: unknown;
 };
 
-type RunOptions = {
-  expectFailure?: boolean;
-  timeoutMs?: number;
-};
-
-type RunResult = {
-  stdout: string;
-  stderr: string;
-  combined: string;
-};
-
-type Args = {
+export type ChatgptAcceptanceArgs = {
   json: boolean;
   profile?: string;
   model: string;
@@ -81,9 +77,11 @@ type Args = {
   resumeFile?: string;
 };
 
+type Args = ChatgptAcceptanceArgs;
+
 type AcceptancePhase = 'full' | 'project' | 'project-chat' | 'root-base' | 'root-followups' | 'cleanup';
 
-type AcceptanceSummary = {
+export type ChatgptAcceptanceSummary = {
   ok: boolean;
   phase: AcceptancePhase;
   profile: string | null;
@@ -102,15 +100,27 @@ type AcceptanceSummary = {
   attachmentFileName: string;
 };
 
-type AcceptanceState = {
-  version: 1;
-  updatedAt: string;
-  lastError?: string | null;
-  summary: AcceptanceSummary;
+type AcceptanceSummary = ChatgptAcceptanceSummary;
+
+type ChatgptAcceptanceCleanupMutation = (
+  args: Args,
+  extra: string[],
+  options?: RunOptions,
+) => Promise<RunResult>;
+
+export type ChatgptAcceptanceMainAdapter = {
+  execute?(context: {
+    args: Readonly<Args>;
+    summary: AcceptanceSummary;
+    checkpoint(error?: unknown): Promise<void>;
+  }): Promise<void>;
+  cleanupMutation?: ChatgptAcceptanceCleanupMutation;
 };
 
+type AcceptanceState = AcceptanceRunState<AcceptanceSummary>;
+
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const DEFAULT_MODEL = 'gpt-5.2-thinking';
+const DEFAULT_MODEL = 'chatgpt:reasoning';
 const DEFAULT_THINKING_TIME = 'standard';
 const DEFAULT_CHATGPT_MUTATION_TIMEOUT_MS = 6 * 60_000;
 const DEFAULT_CHATGPT_COMMAND_TIMEOUT_MS = 180_000;
@@ -216,11 +226,6 @@ function logStep(message: string): void {
   console.log(`[chatgpt-acceptance] ${message}`);
 }
 
-function resolveCliPath(filePath: string): string {
-  const trimmed = filePath.trim();
-  return path.isAbsolute(trimmed) ? trimmed : path.resolve(ROOT, trimmed);
-}
-
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) {
     throw new Error(message);
@@ -233,46 +238,13 @@ function randomSuffix(length = 6): string {
   return Array.from(bytes, (value) => alphabet[value % alphabet.length]).join('');
 }
 
-function buildAuracallArgs(args: Args, extra: string[]): string[] {
-  const cliArgs = ['tsx', 'bin/auracall.ts'];
-  if (args.profile) {
-    cliArgs.push('--profile', args.profile);
-  }
-  cliArgs.push(...extra);
-  return cliArgs;
-}
-
 function runAuracall(args: Args, extra: string[], options: RunOptions = {}): RunResult {
-  const cliArgs = buildAuracallArgs(args, extra);
-  const command = ['pnpm', ...cliArgs].join(' ');
-  logStep(`$ ${command}`);
-  const result = spawnSync('pnpm', cliArgs, {
-    cwd: ROOT,
-    encoding: 'utf8',
-    timeout: options.timeoutMs ?? args.commandTimeoutMs,
-    maxBuffer: 20 * 1024 * 1024,
-    env: {
-      ...process.env,
-      ORACLE_NO_BANNER: '1',
-      NODE_NO_WARNINGS: '1',
-    },
-  });
-  if (result.error) {
-    throw result.error;
-  }
-  const stdout = result.stdout ?? '';
-  const stderr = result.stderr ?? '';
-  const combined = [stdout, stderr].filter(Boolean).join('\n').trim();
-  if (options.expectFailure) {
-    if (result.status === 0) {
-      throw new Error(`Expected failure but command succeeded: ${command}`);
-    }
-    return { stdout, stderr, combined };
-  }
-  if (result.status !== 0) {
-    throw new Error(`Command failed (${result.status}): ${command}\n${combined}`);
-  }
-  return { stdout, stderr, combined };
+  return createBrowserAcceptanceHarness({
+    rootDir: ROOT,
+    profile: args.profile,
+    commandTimeoutMs: args.commandTimeoutMs,
+    log: logStep,
+  }).run(extra, options);
 }
 
 function readChatgptGuardCooldownUntilMs(profile?: string | null): number | null {
@@ -342,40 +314,6 @@ function logChatgptGuardStatus(profile?: string | null): void {
   if (recentMutationCount > 0) {
     logStep(`Guard: ${recentMutationCount} recent ChatGPT writes recorded in the last 120s.`);
   }
-}
-
-async function readAcceptanceState(filePath: string): Promise<AcceptanceState | null> {
-  try {
-    const raw = await readFile(resolveCliPath(filePath), 'utf8');
-    const parsed = JSON.parse(raw) as Partial<AcceptanceState>;
-    if (!parsed || parsed.version !== 1 || !parsed.summary || typeof parsed.summary !== 'object') {
-      return null;
-    }
-    return {
-      version: 1,
-      updatedAt: typeof parsed.updatedAt === 'string' ? parsed.updatedAt : new Date().toISOString(),
-      lastError: typeof parsed.lastError === 'string' ? parsed.lastError : null,
-      summary: parsed.summary as AcceptanceSummary,
-    };
-  } catch {
-    return null;
-  }
-}
-
-async function writeAcceptanceState(
-  filePath: string,
-  summary: AcceptanceSummary,
-  lastError?: string | null,
-): Promise<void> {
-  const resolved = resolveCliPath(filePath);
-  await mkdir(path.dirname(resolved), { recursive: true });
-  const payload: AcceptanceState = {
-    version: 1,
-    updatedAt: new Date().toISOString(),
-    lastError: lastError ?? null,
-    summary,
-  };
-  await writeFile(resolved, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
 }
 
 function mergeArgsWithAcceptanceState(args: Args, state: AcceptanceState | null): Args {
@@ -467,42 +405,8 @@ async function runChatgptMutation(args: Args, extra: string[], options: RunOptio
 }
 
 function probeAuracall(args: Args, extra: string[]): RunResult | null {
-  const cliArgs = buildAuracallArgs(args, extra);
-  const result = spawnSync('pnpm', cliArgs, {
-    cwd: ROOT,
-    encoding: 'utf8',
-    timeout: args.commandTimeoutMs,
-    maxBuffer: 20 * 1024 * 1024,
-    env: {
-      ...process.env,
-      ORACLE_NO_BANNER: '1',
-      NODE_NO_WARNINGS: '1',
-    },
-  });
-  if (result.error) {
-    throw result.error;
-  }
-  if (result.status !== 0) {
-    return null;
-  }
-  const stdout = result.stdout ?? '';
-  const stderr = result.stderr ?? '';
-  const combined = [stdout, stderr].filter(Boolean).join('\n').trim();
-  return { stdout, stderr, combined };
-}
-
-function parseJson<T>(label: string, text: string): T {
-  const trimmed = text.trim();
-  if (!trimmed) {
-    throw new Error(`${label} returned empty output.`);
-  }
-  try {
-    return JSON.parse(trimmed) as T;
-  } catch (error) {
-    throw new Error(
-      `${label} did not return valid JSON.\n${trimmed}\n${error instanceof Error ? error.message : String(error)}`,
-    );
-  }
+  const result = runAuracall(args, extra, { expect: 'any', log: false });
+  return result.status === 0 ? result : null;
 }
 
 function sleep(ms: number): Promise<void> {
@@ -830,10 +734,14 @@ async function writeFixtureFiles(tempDir: string, instructionsFileName: string, 
   await writeFile(path.join(tempDir, attachmentFileName), 'ChatGPT conversation attachment acceptance\n', 'utf8');
 }
 
-async function bestEffortCleanup(args: Args, summary: AcceptanceSummary): Promise<void> {
+async function bestEffortCleanup(
+  args: Args,
+  summary: AcceptanceSummary,
+  cleanupMutation: ChatgptAcceptanceCleanupMutation = runChatgptMutation,
+): Promise<void> {
   if (summary.projectConversationId && summary.projectId) {
     try {
-      await runChatgptMutation(
+      await cleanupMutation(
         args,
         ['delete', summary.projectConversationId, '--target', 'chatgpt', '--project-id', summary.projectId, '--yes'],
         { timeoutMs: 120_000 },
@@ -844,7 +752,7 @@ async function bestEffortCleanup(args: Args, summary: AcceptanceSummary): Promis
   }
   if (summary.conversationId) {
     try {
-      await runChatgptMutation(
+      await cleanupMutation(
         args,
         ['delete', summary.conversationId, '--target', 'chatgpt', '--yes'],
         { timeoutMs: 120_000 },
@@ -855,7 +763,7 @@ async function bestEffortCleanup(args: Args, summary: AcceptanceSummary): Promis
   }
   if (summary.projectId) {
     try {
-      await runChatgptMutation(
+      await cleanupMutation(
         args,
         ['projects', 'remove', summary.projectId, '--target', 'chatgpt'],
         { timeoutMs: 120_000 },
@@ -866,11 +774,22 @@ async function bestEffortCleanup(args: Args, summary: AcceptanceSummary): Promis
   }
 }
 
-async function main() {
-  const parsedArgs = parseArgs(process.argv.slice(2));
-  const resumedState = parsedArgs.resumeFile ? await readAcceptanceState(parsedArgs.resumeFile) : null;
+export async function runChatgptAcceptanceMain(
+  argv: readonly string[] = process.argv.slice(2),
+  adapter: ChatgptAcceptanceMainAdapter = {},
+): Promise<AcceptanceSummary> {
+  const parsedArgs = parseArgs([...argv]);
+  const resumed = await readAcceptanceResume<AcceptanceSummary>(ROOT, parsedArgs.resumeFile);
+  const resumedState = resumed?.state ?? null;
   const args = mergeArgsWithAcceptanceState(parsedArgs, resumedState);
   const stateFile = args.stateFile ?? args.resumeFile ?? null;
+  const acceptance = createBrowserAcceptanceHarness<AcceptanceSummary>({
+    rootDir: ROOT,
+    profile: args.profile,
+    commandTimeoutMs: args.commandTimeoutMs,
+    stateFile,
+    log: logStep,
+  });
   const priorSummary = resumedState?.summary ?? null;
   const suffix = priorSummary?.suffix?.trim() ? priorSummary.suffix.trim() : randomSuffix();
   const tempDir = await mkdtemp(path.join(tmpdir(), 'auracall-chatgpt-acceptance-'));
@@ -915,13 +834,12 @@ async function main() {
     attachmentFileName,
   };
   const persistSummary = async (lastError?: string | null): Promise<void> => {
-    if (!stateFile) return;
-    await writeAcceptanceState(stateFile, summary, lastError);
+    await acceptance.checkpoint(summary, lastError);
   };
 
   try {
     if (resumedState) {
-      logStep(`Resumed state from ${resolveCliPath(args.resumeFile ?? stateFile ?? '')}`);
+      logStep(`Resumed state from ${resumed?.path ?? ''}`);
       if (resumedState.lastError) {
         logStep(`Previous recorded failure: ${resumedState.lastError}`);
       }
@@ -942,7 +860,11 @@ async function main() {
       throw new Error('--phase cleanup requires --project-id, --conversation-id, or both.');
     }
 
-    if (args.phase === 'full' || args.phase === 'project') {
+    if (adapter.execute) {
+      await adapter.execute({ args, summary, checkpoint: persistSummary });
+    }
+
+    if (!adapter.execute && (args.phase === 'full' || args.phase === 'project')) {
       await runChatgptMutation(args, [
         'projects',
         'create',
@@ -984,7 +906,7 @@ async function main() {
       );
     }
 
-    if (args.phase === 'full' || args.phase === 'project-chat') {
+    if (!adapter.execute && (args.phase === 'full' || args.phase === 'project-chat')) {
       assert(workingProjectId, 'Project conversation phase requires a project id.');
       const projectConversationRun = await runChatgptMutation(
         args,
@@ -1031,7 +953,7 @@ async function main() {
       await persistSummary(null);
     }
 
-    if (args.phase === 'full' || args.phase === 'root-base') {
+    if (!adapter.execute && (args.phase === 'full' || args.phase === 'root-base')) {
       const baseRun = await runChatgptMutation(
         args,
         ['--chatgpt', '--model', args.model, '--browser-thinking-time', args.thinkingTime, '--verbose', basePrompt],
@@ -1060,7 +982,7 @@ async function main() {
       await persistSummary(null);
     }
 
-    if (args.phase === 'full' || args.phase === 'root-followups') {
+    if (!adapter.execute && (args.phase === 'full' || args.phase === 'root-followups')) {
       assert(workingConversationId, 'Root follow-up phase requires a conversation id.');
 
       await runChatgptMutation(
@@ -1149,7 +1071,7 @@ async function main() {
       await persistSummary(null);
     }
 
-    if (args.phase === 'full' || args.phase === 'cleanup') {
+    if (!adapter.execute && (args.phase === 'full' || args.phase === 'cleanup')) {
       if (workingConversationId) {
         await runChatgptMutation(args, ['delete', workingConversationId, '--target', 'chatgpt', '--yes']);
         await waitForConversationMissing(args, workingConversationId);
@@ -1167,9 +1089,9 @@ async function main() {
     }
 
     summary.ok = true;
-    await persistSummary(null);
+    const evidence = await acceptance.finalize(summary);
     if (args.json) {
-      console.log(JSON.stringify(summary, null, 2));
+      console.log(evidence.json);
     } else {
       logStep(`PASS (${args.phase})`);
       if (summary.projectId) {
@@ -1181,24 +1103,28 @@ async function main() {
     }
   } catch (error) {
     summary.ok = false;
-    await persistSummary(error instanceof Error ? error.message : String(error));
+    const evidence = await acceptance.finalize(summary, error);
     if (args.json) {
-      console.log(JSON.stringify(summary, null, 2));
+      console.log(evidence.json);
     } else {
       console.error(`[chatgpt-acceptance] FAIL: ${error instanceof Error ? error.message : String(error)}`);
     }
     throw error;
   } finally {
     if (args.phase === 'full') {
-      await bestEffortCleanup(args, summary).catch(() => undefined);
+      await bestEffortCleanup(args, summary, adapter.cleanupMutation).catch(() => undefined);
     }
     await rm(tempDir, { recursive: true, force: true }).catch(() => undefined);
   }
+
+  return summary;
 }
 
-main().catch((error) => {
-  if (!(error instanceof Error)) {
-    console.error(String(error));
-  }
-  process.exitCode = 1;
-});
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  runChatgptAcceptanceMain().catch((error) => {
+    if (!(error instanceof Error)) {
+      console.error(String(error));
+    }
+    process.exitCode = 1;
+  });
+}

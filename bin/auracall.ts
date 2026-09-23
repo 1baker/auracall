@@ -4,7 +4,6 @@ import { spawn } from 'node:child_process';
 import fs from 'node:fs/promises';
 import JSON5 from 'json5';
 import { fileURLToPath } from 'node:url';
-import { once } from 'node:events';
 import readline from 'node:readline/promises';
 import { Command, Option } from 'commander';
 import type { OptionValues } from 'commander';
@@ -235,6 +234,12 @@ import {
   type ChatgptDeveloperAppOperationInput,
 } from '../src/cli/chatgptDeveloperAppsCommand.js';
 import {
+  formatChatgptSkillOperationResult,
+  loadChatgptSkillSource,
+  runChatgptSkillOperationForCli,
+  type ChatgptSkillOperationInput,
+} from '../src/cli/chatgptSkillsCommand.js';
+import {
   buildProfileIdentitySmokeBatchReport,
   buildProfileIdentitySmokeReport,
   formatProfileIdentitySmokeBatchReport,
@@ -243,13 +248,14 @@ import {
   resolveProfileIdentitySmokeExitCode,
   resolveProfileIdentitySmokeTargets,
 } from '../src/cli/profileIdentitySmokeCommand.js';
+import { exitAfterCompletedBrowserProbeCommand } from '../src/cli/completedBrowserCommandExit.js';
 import {
   registerMediaGenerationCliCommand,
 } from '../src/cli/mediaGenerationCommand.js';
 import { createWorkbenchCapabilityService } from '../src/workbench/service.js';
 import { createBrowserWorkbenchCapabilityDiscovery } from '../src/workbench/browserDiscovery.js';
 import { createBrowserWorkbenchCapabilityDiagnostics } from '../src/workbench/browserDiagnostics.js';
-import { performSessionRun } from '../src/cli/sessionRunner.js';
+import { performSessionRun, SessionRunCancelledError } from '../src/cli/sessionRunner.js';
 import { buildRootBrowserProviderSessionAuthorization } from '../src/cli/browserProviderSession.js';
 import type { BrowserSessionRunnerDeps } from '../src/browser/sessionRunner.js';
 import { isMediaFile } from '../src/browser/prompt.js';
@@ -302,6 +308,7 @@ import {
   LlmService,
   createLlmService,
 } from '../src/browser/llmService/index.js';
+import { resolveNonInteractiveBrowserContextIdentity } from '../src/browser/llmService/cache/browserContextIdentity.js';
 import { resolveBrowserConfig } from '../src/browser/config.js';
 import { resolveManagedProfileDirForUserConfig } from '../src/browser/profileStore.js';
 import type { BrowserAttachment, BrowserLogger, BrowserRunOptions } from '../src/browser/types.js';
@@ -407,6 +414,7 @@ interface CliOptions extends OptionValues {
   browserTimeout?: string;
   browserInputTimeout?: string;
   browserCookieWait?: string;
+  browserCookieSync?: boolean;
   browserNoCookieSync?: boolean;
   browserInlineCookiesFile?: string;
   browserCookieNames?: string;
@@ -421,7 +429,9 @@ interface CliOptions extends OptionValues {
   forceReseedManagedProfile?: boolean;
   browserTarget?: 'chatgpt' | 'gemini' | 'grok';
   browserThinkingTime?: 'light' | 'standard' | 'extended' | 'heavy';
+  browserNoThinkingTime?: boolean;
   browserChatgptMode?: 'chat' | 'work';
+  browserChatgptToolApproval?: 'manual' | 'allow-once' | 'always-allow';
   browserWorkModel?: string;
   browserComposerTool?: string;
   browserDeepResearchPlanAction?: 'start' | 'edit';
@@ -673,7 +683,7 @@ program
   .option('-s, --slug <words>', 'Custom session slug (3-5 words).')
   .option(
     '-m, --model <model>',
-    'Model to target (API default: gpt-5.1-pro stable alias). Browser ChatGPT runs also support current semantic selectors like chatgpt:sol-high, chatgpt:terra, and chatgpt:luna.',
+    'Model to target (API default: openai:frontier, currently GPT-6 Astra). Browser ChatGPT runs support durable selectors such as chatgpt:fast, chatgpt:reasoning-high, and chatgpt:premium.',
     normalizeModelOption,
   )
   .addOption(
@@ -687,7 +697,7 @@ program
   .addOption(
     new Option(
       '--chatgpt',
-      'Use ChatGPT browser automation (shorthand for --engine browser --model chatgpt:instant).',
+      'Use ChatGPT browser automation (shorthand for --engine browser --model chatgpt:fast).',
     ),
   )
   .addOption(
@@ -727,8 +737,8 @@ program
   )
   .addOption(
     new Option(
-      '--timeout <seconds|auto>',
-      'Overall timeout before aborting the API call (auto = 60m for Pro API runs, 120s otherwise).',
+      '--timeout <seconds|duration|auto>',
+      'Overall run timeout; accepts seconds or units such as 90s, 60m, and 1h30m (auto = 60m for Pro API and browser runs, 120s for other API runs).',
     )
       .argParser(parseTimeoutOption)
       .default('auto'),
@@ -858,6 +868,12 @@ program
   .addOption(
     new Option('--browser-inline-cookies-file <path>', 'Load inline cookies from file (JSON or base64 JSON).').hideHelp(),
   )
+  .addOption(
+    new Option(
+      '--browser-cookie-sync',
+      'Copy cookies from a source browser profile (opt-in; token rotation may invalidate that source session).',
+    ),
+  )
   .addOption(new Option('--browser-no-cookie-sync', 'Skip copying cookies from Chrome.').hideHelp())
   .addOption(
     new Option(
@@ -887,6 +903,12 @@ program
   )
   .addOption(
     new Option(
+      '--browser-chatgpt-tool-approval <policy>',
+      'Handle ChatGPT third-party tool approvals (manual | allow-once | always-allow).',
+    ).choices(['manual', 'allow-once', 'always-allow']),
+  )
+  .addOption(
+    new Option(
       '--browser-work-model <label>',
       'Select a model through the dedicated ChatGPT Work picker (only with --browser-chatgpt-mode work).',
     ),
@@ -897,10 +919,14 @@ program
       "ChatGPT 'thinking' time level (standard | extended; light/heavy kept as legacy aliases).",
     ).hideHelp(),
   )
+  .option(
+    '--browser-no-thinking-time',
+    'Omit inherited ChatGPT thinking-time selection for this browser run.',
+  )
   .addOption(
     new Option(
       '--browser-composer-tool <tool>',
-      'Select a ChatGPT composer add-on/tool (for example web-search, deep-research, canvas, google-drive, or gmail).',
+      'Select a ChatGPT composer add-on/tool by durable ID (for example chatgpt.commerce.shopping or chatgpt.search.web_search; legacy labels remain aliases).',
     ).hideHelp(),
   )
   .addOption(
@@ -1824,7 +1850,7 @@ handoffCommand
   .option('--target-profile <profile>', 'Target AuraCall runtime profile.')
   .option('--target-ref <ref>', 'Optional target conversation reference.')
   .option('--target-project-ref <ref>', 'Optional target project reference.')
-  .option('--target-model-selector <selector>', 'Optional semantic target model selector such as chatgpt:pro-extended.')
+  .option('--target-model-selector <selector>', 'Optional semantic target model selector such as chatgpt:reasoning-high.')
   .option('--source-context-json <path>', 'Existing cached source context JSON to include in the packet.')
   .option('--source-manifest-json <path>', 'Existing source file/artifact manifest JSON to include in the packet.')
   .option('--source-omissions-json <path>', 'Existing source omissions JSON to include in the packet.')
@@ -3951,28 +3977,25 @@ conversationArtifactsCommand
           2,
         ),
       );
-      return;
-    }
-    if (result.artifacts.length === 0) {
+    } else if (result.artifacts.length === 0) {
       console.log(`No artifacts found for conversation ${conversationId}.`);
-      return;
-    }
-    if (result.files.length === 0) {
+    } else if (result.files.length === 0) {
       console.log(`No supported artifacts were materialized for conversation ${conversationId}.`);
       if (result.manifestPath) {
         console.log(chalk.dim(`Artifact fetch manifest: ${result.manifestPath}`));
       }
-      return;
+    } else {
+      for (const file of result.files) {
+        console.log(`${file.name}\t${file.localPath ?? ''}`);
+      }
+      const skipped = result.artifacts.length - result.files.length;
+      const suffix = skipped > 0 ? ` (${skipped} unsupported or unavailable)` : '';
+      console.log(chalk.dim(`Materialized ${result.files.length} artifact(s)${suffix}.`));
+      if (result.manifestPath) {
+        console.log(chalk.dim(`Artifact fetch manifest: ${result.manifestPath}`));
+      }
     }
-    for (const file of result.files) {
-      console.log(`${file.name}\t${file.localPath ?? ''}`);
-    }
-    const skipped = result.artifacts.length - result.files.length;
-    const suffix = skipped > 0 ? ` (${skipped} unsupported or unavailable)` : '';
-    console.log(chalk.dim(`Materialized ${result.files.length} artifact(s)${suffix}.`));
-    if (result.manifestPath) {
-      console.log(chalk.dim(`Artifact fetch manifest: ${result.manifestPath}`));
-    }
+    exitAfterCompletedBrowserFileCommand();
   });
 
 conversationContextCommand
@@ -5273,6 +5296,11 @@ program
   .option('--local-only', 'Inspect managed browser profile/bootstrap/browser-state only; do not attach to Chrome.')
   .option('--prune-browser-state', 'Remove dead entries from ~/.auracall/browser-state.json before reporting.')
   .option('--save-snapshot', 'Save a semantic snapshot of the page even if checks pass.')
+  .option('--prepare-composer', 'Prepare and verify the ChatGPT composer without inserting or sending a prompt.')
+  .option('--target-url <url>', 'Open or attach to this exact ChatGPT URL before preparing the composer.')
+  .option('--chatgpt-mode <chat|work>', 'Composer mode to select for --prepare-composer.', 'chat')
+  .option('--desired-model <label>', 'Chat model label to select for --prepare-composer.')
+  .option('--work-model <label>', 'Work model label to select for --prepare-composer.')
   .addOption(
     new Option(
       '--operation-timeout <seconds|auto>',
@@ -5308,6 +5336,8 @@ program
     let browserToolsError: string | null = null;
     let runtimeBlockingState: any = null;
     let featureStatus: Awaited<ReturnType<typeof inspectBrowserDoctorFeatures>> | null = null;
+    let promptWorkbench: Awaited<ReturnType<BrowserAutomationClient['preparePromptWorkbench']>> | null = null;
+    let promptWorkbenchError: string | null = null;
     let selectorDiagnosis: any = null;
     let selectorDiagnosisError: string | null = null;
 
@@ -5336,6 +5366,25 @@ program
               localReport,
               browserTools,
             });
+
+            if (commandOptions.prepareComposer) {
+              if (target !== 'chatgpt') {
+                promptWorkbenchError = '--prepare-composer is currently supported only for ChatGPT.';
+              } else {
+                try {
+                  const client = await BrowserAutomationClient.fromConfig(userConfig, { target });
+                  promptWorkbench = await client.preparePromptWorkbench({
+                    targetUrl: commandOptions.targetUrl ?? null,
+                    chatgptMode: commandOptions.chatgptMode,
+                    desiredModel: commandOptions.desiredModel ?? null,
+                    workModel: commandOptions.workModel ?? null,
+                    modelStrategy: 'select',
+                  });
+                } catch (error) {
+                  promptWorkbenchError = error instanceof Error ? error.message : String(error);
+                }
+              }
+            }
 
             if (target !== 'gemini' && !runtimeBlockingState?.requiresHuman) {
               try {
@@ -5366,6 +5415,8 @@ program
         identityStatus,
         identityReconciliation: reconcileBrowserDoctorIdentities(userConfig, target, localReport, identityStatus),
         featureStatus,
+        promptWorkbench,
+        promptWorkbenchError,
         operation,
         browserTools,
         browserToolsError,
@@ -5375,6 +5426,7 @@ program
       console.log(JSON.stringify(contract, null, 2));
       if (
         selectorDiagnosisError ||
+        promptWorkbenchError ||
         (selectorDiagnosis && !selectorDiagnosis.report.allPassed) ||
         runtimeBlockingState?.requiresHuman
       ) {
@@ -5390,6 +5442,21 @@ program
       browserTools,
       browserToolsError,
     });
+
+    if (commandOptions.prepareComposer) {
+      if (promptWorkbenchError) {
+        console.error(`Composer preparation failed: ${promptWorkbenchError}`);
+        process.exit(1);
+      }
+      const preparedWorkbench = promptWorkbench as
+        | Awaited<ReturnType<BrowserAutomationClient['preparePromptWorkbench']>>
+        | null;
+      if (preparedWorkbench) {
+        console.log(
+          `- promptWorkbench: ${preparedWorkbench.chatgptMode} / ${preparedWorkbench.model ?? preparedWorkbench.modelSelectionKind}`,
+        );
+      }
+    }
 
     if (commandOptions.localOnly) {
       return;
@@ -5474,7 +5541,8 @@ async function runChatgptDeveloperAppsCliAction(
     throw new Error(formatBrowserOperationBusyResult(acquired));
   }
   try {
-    const result = await runChatgptDeveloperAppOperationForCli(userConfig, input);
+    const result = await runChatgptDeveloperAppOperationForCli(userConfig, input, { browserOperationOwned: true });
+    if (result.action !== 'list' && result.status === 'failed') process.exitCode = 1;
     if (commandOptions.json) {
       console.log(JSON.stringify(result, null, 2));
       return;
@@ -5484,6 +5552,169 @@ async function runChatgptDeveloperAppsCliAction(
     await acquired.release();
   }
 }
+
+async function runChatgptSkillsCliAction(
+  command: Command,
+  buildInput: (options: OptionValues) => Promise<ChatgptSkillOperationInput> | ChatgptSkillOperationInput,
+): Promise<void> {
+  const parentOptions =
+    typeof command.parent?.opts === 'function' ? (command.parent.opts() as OptionValues) : ({} as OptionValues);
+  const ownOptions = typeof command.opts === 'function' ? (command.opts() as OptionValues) : ({} as OptionValues);
+  const commandOptions = {
+    ...(program.opts?.() ?? {}),
+    ...parentOptions,
+    ...ownOptions,
+  } as OptionValues;
+  if (commandOptions.target && commandOptions.target !== 'chatgpt') {
+    throw new Error('Skill lifecycle currently supports --target chatgpt only.');
+  }
+  const input = await buildInput(commandOptions);
+  const userConfig = await resolveConfig(commandOptions, process.cwd(), process.env);
+  const dispatcher = createFileBackedBrowserOperationDispatcher({
+    lockRoot: path.join(getAuracallHomeDir(), 'browser-operations'),
+  });
+  const acquired = await dispatcher.acquire({
+    managedProfileDir: resolveManagedProfileDirForUserConfig(userConfig, 'chatgpt'),
+    serviceTarget: 'chatgpt',
+    kind: 'browser-tools',
+    operationClass: input.action === 'list' || input.action === 'show'
+      ? 'exclusive-probe'
+      : 'exclusive-mutating',
+    ownerCommand: `skills:${input.action}`,
+  });
+  if (!acquired.acquired) throw new Error(formatBrowserOperationBusyResult(acquired));
+  try {
+    const result = await runChatgptSkillOperationForCli(userConfig, input);
+    console.log(commandOptions.json ? JSON.stringify(result, null, 2) : formatChatgptSkillOperationResult(result));
+  } finally {
+    await acquired.release();
+  }
+}
+
+const skillsCommand = program
+  .command('skills')
+  .description('Inventory and operate guarded ChatGPT Skills.')
+  .option('--target <chatgpt>', 'Provider target (currently chatgpt only).', 'chatgpt');
+
+skillsCommand
+  .command('list')
+  .description('List ChatGPT Skills by exact account without mutation.')
+  .requiredOption('--expected-account <email>', 'Exact ChatGPT account expected in the managed browser.')
+  .option('--json', 'Emit machine-readable JSON output.', false)
+  .action(async function (this: Command) {
+    await runChatgptSkillsCliAction(this, (options) => ({
+      action: 'list',
+      expectedAccount: String(options.expectedAccount ?? ''),
+    }));
+  });
+
+skillsCommand
+  .command('show <skill-id>')
+  .description('Read one ChatGPT Skill by its exact 32-hex ID.')
+  .requiredOption('--expected-account <email>', 'Exact ChatGPT account expected in the managed browser.')
+  .option('--json', 'Emit machine-readable JSON output.', false)
+  .action(async function (this: Command, skillId: string) {
+    await runChatgptSkillsCliAction(this, (options) => ({
+      action: 'show',
+      skillId,
+      expectedAccount: String(options.expectedAccount ?? ''),
+    }));
+  });
+
+skillsCommand
+  .command('select <skill-id>')
+  .description('Select one exact ChatGPT Skill through Try in chat without submitting a prompt.')
+  .requiredOption('--expected-account <email>', 'Exact ChatGPT account expected in the managed browser.')
+  .option('--yes', 'Confirm the bounded non-submitting selection.', false)
+  .option('--json', 'Emit machine-readable JSON output.', false)
+  .action(async function (this: Command, skillId: string) {
+    await runChatgptSkillsCliAction(this, (options) => ({
+      action: 'select',
+      skillId,
+      expectedAccount: String(options.expectedAccount ?? ''),
+      confirmed: Boolean(options.yes),
+    }));
+  });
+
+skillsCommand
+  .command('run <skill-id>')
+  .description('Reject Chat-mode execution of user-added Skills before browser launch or Send; Work-mode testing is deferred.')
+  .requiredOption('--expected-account <email>', 'Exact ChatGPT account expected in the managed browser.')
+  .requiredOption('-p, --prompt <text>', 'Prompt to submit once with the selected Skill (maximum 32000 characters).')
+  .option('--response-timeout <seconds>', 'Response capture timeout, 1 to 600 seconds.', '300')
+  .option('--yes', 'Confirm one prompt submission; uncertain sends are never retried.', false)
+  .option('--json', 'Emit machine-readable JSON output.', false)
+  .action(async function (this: Command, skillId: string) {
+    await runChatgptSkillsCliAction(this, (options) => ({
+      action: 'run', skillId,
+      expectedAccount: String(options.expectedAccount ?? ''),
+      confirmed: Boolean(options.yes),
+      prompt: String(options.prompt ?? ''),
+      timeoutMs: Number(options.responseTimeout) * 1000,
+    }));
+  });
+
+skillsCommand
+  .command('create')
+  .description('Create one ChatGPT Skill from a deterministic SKILL.md source.')
+  .requiredOption('--source <path>', 'SKILL.md file or directory containing SKILL.md.')
+  .requiredOption('--name <name>', 'Skill display name.')
+  .requiredOption('--expected-account <email>', 'Exact ChatGPT account expected in the managed browser.')
+  .option('--description <text>', 'Skill description.')
+  .option('--yes', 'Confirm creation.', false)
+  .option('--json', 'Emit machine-readable JSON output.', false)
+  .action(async function (this: Command) {
+    await runChatgptSkillsCliAction(this, async (options) => ({
+      action: 'create',
+      expectedAccount: String(options.expectedAccount ?? ''),
+      confirmed: Boolean(options.yes),
+      source: await loadChatgptSkillSource({
+        sourcePath: String(options.source ?? ''),
+        name: String(options.name ?? ''),
+        description: typeof options.description === 'string' ? options.description : null,
+      }),
+    }));
+  });
+
+skillsCommand
+  .command('update <skill-id>')
+  .description('Update one exact ChatGPT Skill with an optimistic prior-hash guard.')
+  .requiredOption('--source <path>', 'Replacement SKILL.md file or directory containing SKILL.md.')
+  .requiredOption('--name <name>', 'Replacement skill display name.')
+  .requiredOption('--expected-hash <sha256>', 'Exact previously observed SKILL.md SHA-256.')
+  .requiredOption('--expected-account <email>', 'Exact ChatGPT account expected in the managed browser.')
+  .option('--description <text>', 'Replacement skill description.')
+  .option('--yes', 'Confirm update.', false)
+  .option('--json', 'Emit machine-readable JSON output.', false)
+  .action(async function (this: Command, skillId: string) {
+    await runChatgptSkillsCliAction(this, async (options) => ({
+      action: 'update',
+      skillId,
+      expectedHash: String(options.expectedHash ?? ''),
+      expectedAccount: String(options.expectedAccount ?? ''),
+      confirmed: Boolean(options.yes),
+      source: await loadChatgptSkillSource({
+        sourcePath: String(options.source ?? ''),
+        name: String(options.name ?? ''),
+        description: typeof options.description === 'string' ? options.description : null,
+      }),
+    }));
+  });
+
+skillsCommand
+  .command('delete <skill-id>')
+  .description('Permanently delete one exact ChatGPT Skill and prove absence.')
+  .requiredOption('--expected-account <email>', 'Exact ChatGPT account expected in the managed browser.')
+  .option('--yes', 'Confirm exact permanent deletion.', false)
+  .option('--json', 'Emit machine-readable JSON output.', false)
+  .action(async function (this: Command, skillId: string) {
+    await runChatgptSkillsCliAction(this, (options) => ({
+      action: 'delete',
+      skillId,
+      expectedAccount: String(options.expectedAccount ?? ''),
+      confirmed: Boolean(options.yes),
+    }));
+  });
 
 const appsCommand = program
   .command('apps')
@@ -9411,6 +9642,9 @@ async function runBrowserSetupCommand(commandOptions: SetupCommandOptions): Prom
       browserTarget: target,
       browserChatgptMode:
         (cliOptions as CliOptions).browserChatgptMode ?? userConfig.browser.chatgptMode,
+      browserChatgptToolApproval:
+        (cliOptions as CliOptions).browserChatgptToolApproval ??
+        userConfig.browser.chatgptToolApproval,
       browserWorkModel: (cliOptions as CliOptions).browserWorkModel ?? userConfig.browser.workModel,
       browserManualLogin: true,
       browserManualLoginProfileDir: launchOptions.manualLoginProfileDir,
@@ -9577,10 +9811,10 @@ async function buildBrowserContext({
   const projectName = options.projectName ? options.projectName.trim() : null;
   const conversationName = options.conversationName ? options.conversationName.trim() : null;
   const llmService = createLlmService(target, userConfig);
-  const listOptions = await llmService.buildListOptions({ configuredUrl });
+  const listOptions = await llmService.buildListOptions({ configuredUrl, skipFeatureSignature: true });
   let cacheKey: string | null = null;
   try {
-    const identity = await llmService.resolveCacheIdentity(listOptions, { prompt: false });
+    const identity = await resolveNonInteractiveBrowserContextIdentity(llmService, listOptions);
     if (identity.identityKey) {
       cacheKey = resolveProviderCacheKey({ provider: target, userConfig, listOptions, ...identity });
     }
@@ -10063,10 +10297,10 @@ profileCommand
       process.exitCode = resolveProfileIdentitySmokeBatchExitCode(batchReport);
       if (commandOptions.json) {
         console.log(JSON.stringify(batchReport, null, 2));
-        return;
+      } else {
+        console.log(formatProfileIdentitySmokeBatchReport(batchReport));
       }
-      console.log(formatProfileIdentitySmokeBatchReport(batchReport));
-      return;
+      exitAfterCompletedBrowserProbeCommand();
     }
     const report = reports[0];
     if (!report) {
@@ -10075,9 +10309,10 @@ profileCommand
     process.exitCode = resolveProfileIdentitySmokeExitCode(report);
     if (commandOptions.json) {
       console.log(JSON.stringify(report, null, 2));
-      return;
+    } else {
+      console.log(formatProfileIdentitySmokeReport(report));
     }
-    console.log(formatProfileIdentitySmokeReport(report));
+    exitAfterCompletedBrowserProbeCommand();
   });
 
 const configCommand = program
@@ -11133,6 +11368,8 @@ async function runRootCommand(options: CliOptions): Promise<void> {
           browserModelLabel: browserModelLabelOverride,
           chatgptSemanticModelSelection,
           browserChatgptMode: options.browserChatgptMode ?? config.browser.chatgptMode,
+          browserChatgptToolApproval:
+            options.browserChatgptToolApproval ?? config.browser.chatgptToolApproval,
           browserWorkModel: options.browserWorkModel ?? config.browser.workModel,
           browserManualLogin: config.browser.manualLogin ?? true,
           browserManualLoginProfileDir: config.browser.manualLoginProfileDir,
@@ -11379,7 +11616,8 @@ function exitAfterCompletedBrowserFileCommand(): void {
 	if (process.env.AURACALL_DISABLE_BROWSER_FILE_FORCE_EXIT === '1') {
 		return;
 	}
-	// Account-file list/download commands are one-shot browser utility commands.
+	// Account-file list/download and conversation-artifact fetch commands are
+	// one-shot browser utility commands.
 	// CDP handles may remain open after the operation has completed and stdout
 	// has been flushed, so exit explicitly to preserve CLI completion semantics.
 	process.exit(process.exitCode ?? 0);
@@ -11473,6 +11711,7 @@ function printDebugHelp(cliName: string): void {
     ['--browser-timeout <ms|s|m>', 'Cap total wait time for the assistant response.'],
     ['--browser-input-timeout <ms|s|m>', 'Cap how long we wait for the composer textarea.'],
     ['--browser-cookie-wait <ms|s|m>', 'Wait before retrying cookie sync when Chrome cookies are empty or locked.'],
+    ['--browser-cookie-sync', 'Copy cookies from a source browser profile (explicit opt-in).'],
     ['--browser-no-cookie-sync', 'Skip copying cookies from your main profile.'],
     ['--browser-manual-login', 'Skip cookie copy; reuse a persistent automation profile and log in manually.'],
     ['--browser-headless', 'Launch Chrome in headless mode.'],
@@ -11551,15 +11790,13 @@ program.action(async function (this: Command) {
 
 async function main(): Promise<void> {
   try {
-    const parsePromise = program.parseAsync(process.argv);
-    const sigintPromise = once(process, 'SIGINT').then(() => 'sigint' as const);
-
-    const result = await Promise.race([parsePromise, sigintPromise]);
-    if (result === 'sigint') {
-      console.log(chalk.yellow('\nInterrupted.'));
-      process.exit(130);
-    }
+    await program.parseAsync(process.argv);
   } catch (error) {
+    if (error instanceof SessionRunCancelledError) {
+      console.log(chalk.yellow('\nInterrupted after browser cleanup completed.'));
+      process.exitCode = 130;
+      return;
+    }
     console.error(chalk.red('FATAL ERROR:'), error);
     process.exit(1);
   }

@@ -12,16 +12,20 @@ import {
   releaseBrowserExecutionOperationAfterPreflightFailureForTest,
   resolveBrokerHeadlessForTest,
   sanitizeThinkingTextForTest,
+  shouldPreserveBrowserForObservationExpiryForTest,
   shouldPreserveBrowserOnErrorForTest,
+  shouldWriteChatgptRateLimitCooldownForTest,
+  readProviderEffectStateForTest,
+  resolveChatgptProviderSessionProcessIdForTest,
   shouldKeepManagedChatgptBrowserOpenForTest,
   shouldTreatChatgptAssistantResponseAsStaleForTest,
   canRefreshChatgptAssistantSnapshot,
   buildChatgptSubmittedUserBoundaryExpression,
   buildChatgptSubmittedUserIdentityExpression,
-  resolveManagedBrowserLaunchContextForTest,
   extractParseableJsonObjectTextForTest,
   createRemoteChatgptConnectionLossErrorForTest,
 } from '../../src/browser/index.js';
+import { resolveBrowserLaunchPlan } from '../../src/browser/service/browserLaunchPlan.js';
 import { BrowserAutomationError } from '../../src/oracle/errors.js';
 import { setAuracallHomeDirOverrideForTest } from '../../src/auracallHome.js';
 import type { BrowserAutomationConfig, BrowserLogger, ChromeClient } from '../../src/browser/types.js';
@@ -136,6 +140,45 @@ describe('browserMode exports', () => {
     expect(typeof CHATGPT_URL).toBe('string');
   });
 
+  test('suppresses a new cooldown write after provider effect was observed', () => {
+    expect(shouldWriteChatgptRateLimitCooldownForTest('effect_observed')).toBe(false);
+    expect(shouldWriteChatgptRateLimitCooldownForTest('pre_effect')).toBe(true);
+    expect(shouldWriteChatgptRateLimitCooldownForTest('unknown')).toBe(true);
+  });
+
+  test('carries structured provider-effect evidence across later browser failures', () => {
+    const error = new BrowserAutomationError('commit uncertain', { effectState: 'effect_observed' });
+    expect(readProviderEffectStateForTest(error, 'unknown')).toBe('effect_observed');
+    expect(readProviderEffectStateForTest(new Error('plain'), 'pre_effect')).toBe('pre_effect');
+  });
+
+  test('recovers live managed-profile pid for reused-browser provider provenance', async () => {
+    const readChromePid = vi.fn().mockResolvedValue(58728);
+    const isChromeAlive = vi.fn().mockResolvedValue(true);
+
+    await expect(
+      resolveChatgptProviderSessionProcessIdForTest({
+        launchedPid: undefined,
+        userDataDir: '/managed/chatgpt',
+        readChromePid,
+        isChromeAlive,
+      }),
+    ).resolves.toBe(58728);
+    expect(readChromePid).toHaveBeenCalledWith('/managed/chatgpt');
+    expect(isChromeAlive).toHaveBeenCalledWith(58728, '/managed/chatgpt');
+  });
+
+  test('rejects stale managed-profile pid for provider provenance', async () => {
+    await expect(
+      resolveChatgptProviderSessionProcessIdForTest({
+        launchedPid: undefined,
+        userDataDir: '/managed/chatgpt',
+        readChromePid: vi.fn().mockResolvedValue(58728),
+        isChromeAlive: vi.fn().mockResolvedValue(false),
+      }),
+    ).resolves.toBeNull();
+  });
+
   test('preserves browser only for non-headless manual-clear challenges', () => {
     const cloudflare = new BrowserAutomationError('blocked', { stage: 'cloudflare-challenge' });
     const manualClear = new BrowserAutomationError('blocked', { stage: 'manual-clear-blocking-page' });
@@ -180,6 +223,14 @@ describe('browserMode exports', () => {
         browserOperationReleased: false,
       }),
     ).toBe(true);
+  });
+
+  test('holds the ChatGPT managed-profile operation through terminal cleanup', async () => {
+    const source = await fs.readFile(path.resolve('src/browser/index.ts'), 'utf8');
+
+    expect(source).not.toContain('releaseBrowserOperationLock("ChatGPT prompt dispatch")');
+    expect(source).not.toContain('releaseBrowserOperationLock("ChatGPT prompt submission")');
+    expect(source).toContain('releaseBrowserOperationLock("ChatGPT cleanup")');
   });
 
   test('treats the same assistant message id as a stale reused response', () => {
@@ -283,38 +334,24 @@ describe('browserMode exports', () => {
     await fs.mkdir(path.dirname(bootstrapCookiePath), { recursive: true });
     await fs.writeFile(sourceCookiePath, '');
     await fs.writeFile(bootstrapCookiePath, '');
-    const context = resolveManagedBrowserLaunchContextForTest(
-      resolvedBrowserConfig({
-        target: 'grok',
-        chromeProfile: 'Default',
-        chromeCookiePath: sourceCookiePath,
-        bootstrapCookiePath,
-        managedProfileRoot: path.join(tempRoot, 'managed-root'),
-      }),
-      'grok',
-    );
+    const context = resolveBrowserLaunchPlan({
+      source: {
+        kind: 'session-config',
+        config: resolvedBrowserConfig({
+          target: 'grok',
+          chromeProfile: 'Default',
+          chromeCookiePath: sourceCookiePath,
+          bootstrapCookiePath,
+          managedProfileRoot: path.join(tempRoot, 'managed-root'),
+        }),
+      },
+      intent: { provider: 'grok' },
+    });
 
-    expect(context.userDataDir).toBe(path.join(tempRoot, 'managed-root', 'default', 'grok'));
-    expect(context.defaultManagedProfileDir).toBe(path.join(tempRoot, 'managed-root', 'default', 'grok'));
-    expect(context.chromeProfile).toBe('Default');
-    expect(context.bootstrapCookiePath).toBe(bootstrapCookiePath);
-  });
-
-  test('resolves managed browser launch context within the selected AuraCall runtime profile', () => {
-    const context = resolveManagedBrowserLaunchContextForTest(
-      resolvedBrowserConfig({
-        target: 'chatgpt',
-        chromeProfile: 'Profile 1',
-        managedProfileRoot: path.resolve('/home/test/.auracall/browser-profiles'),
-        manualLoginProfileDir: path.resolve('/home/test/.auracall/browser-profiles/wsl-chrome-2/chatgpt'),
-      }),
-      'chatgpt',
-      'wsl-chrome-2',
-    );
-
-    expect(context.userDataDir).toBe(path.resolve('/home/test/.auracall/browser-profiles/wsl-chrome-2/chatgpt'));
-    expect(context.defaultManagedProfileDir).toBe(path.resolve('/home/test/.auracall/browser-profiles/wsl-chrome-2/chatgpt'));
-    expect(context.chromeProfile).toBe('Profile 1');
+    expect(context.managedBrowserProfile.directory).toBe(path.join(tempRoot, 'managed-root', 'default', 'grok'));
+    expect(context.managedBrowserProfile.defaultDirectory).toBe(path.join(tempRoot, 'managed-root', 'default', 'grok'));
+    expect(context.managedBrowserProfile.configuredProfileName).toBe('Default');
+    expect(context.sourceBrowserProfile.bootstrapCookiePath).toBe(bootstrapCookiePath);
   });
 
   test('resolves browser runtime entry config and injects a fixed debug port when needed', async () => {
@@ -423,6 +460,59 @@ describe('browserMode exports', () => {
       await acquired?.release();
     } finally {
       setAuracallHomeDirOverrideForTest(null);
+      await fs.rm(tempRoot, { recursive: true, force: true });
+    }
+  });
+
+  test('account mirror cannot acquire the profile during foreground post-submit ownership', async () => {
+    const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'auracall-post-submit-operation-'));
+    const managedProfileDir = path.join(tempRoot, 'browser-profiles', 'wsl-chrome-3', 'chatgpt');
+    const dispatcher = createFileBackedBrowserOperationDispatcher({
+      lockRoot: path.join(tempRoot, 'browser-operations'),
+      isOwnerAlive: () => true,
+    });
+    const foreground = await dispatcher.acquire({
+      managedProfileDir,
+      serviceTarget: 'chatgpt',
+      kind: 'browser-execution',
+      operationClass: 'exclusive-mutating',
+      ownerPid: process.pid,
+      ownerCommand: 'browser-execution',
+    });
+    let foregroundReleased = false;
+
+    try {
+      expect(foreground.acquired).toBe(true);
+      const blockedMirror = await dispatcher.acquire({
+        managedProfileDir,
+        serviceTarget: 'chatgpt',
+        kind: 'browser-execution',
+        operationClass: 'exclusive-probe',
+        ownerPid: process.pid + 1,
+        ownerCommand: 'account-mirror-refresh:chatgpt:wsl-chrome-3',
+      });
+      expect(blockedMirror.acquired).toBe(false);
+
+      if (foreground.acquired) {
+        await foreground.release();
+        foregroundReleased = true;
+      }
+      const admittedMirror = await dispatcher.acquire({
+        managedProfileDir,
+        serviceTarget: 'chatgpt',
+        kind: 'browser-execution',
+        operationClass: 'exclusive-probe',
+        ownerPid: process.pid + 1,
+        ownerCommand: 'account-mirror-refresh:chatgpt:wsl-chrome-3',
+      });
+      expect(admittedMirror.acquired).toBe(true);
+      if (admittedMirror.acquired) {
+        await admittedMirror.release();
+      }
+    } finally {
+      if (foreground.acquired && !foregroundReleased) {
+        await foreground.release();
+      }
       await fs.rm(tempRoot, { recursive: true, force: true });
     }
   });

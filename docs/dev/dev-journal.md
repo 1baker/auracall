@@ -36709,6 +36709,10 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
   - fixed a runner-control CAS race found during installed-runtime dogfood:
     concurrent local-runner heartbeat and activity writes now retry against the
     latest runner revision instead of terminating the API service.
+- Later correction (Plan 0301, 2026-08-21): releasing the profile-wide lock
+  after Send permits account-mirror refresh to seize a target still owned for
+  response/tool-approval work. The current contract retains the lock through
+  terminal cleanup; concurrency belongs above the same-profile CDP operation.
 - Verification:
   - focused browser/runtime tests and typecheck pass.
   - installed user runtime was rebuilt, installed, and restarted under
@@ -38272,6 +38276,10 @@ Log ongoing progress, current focus, and problems/solutions. Keep entries brief 
     preserve-on-error state, not dispatcher lock release.
   - made the background conversation hint poll cancelable before the final
     post-response URL refresh.
+- Later correction (Plan 0301, 2026-08-21): browser retention remains
+  independent of dispatcher release, but same-profile probes are not unrelated
+  while the foreground run still owns CDP. The dispatcher lock now remains
+  held until terminal cleanup without changing keep-browser behavior.
   - unref'd kept AuraCall-launched Chrome processes so explicit browser
     retention does not block CLI exit.
   - made the root CLI force-exit after a successful inline browser `--wait`

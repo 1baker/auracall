@@ -18,7 +18,7 @@ describe('Config Resolver', () => {
     expect(result.browser.headless).toBe(undefined);
   });
 
-  it('should default browser runs through the semantic ChatGPT Instant selector when no model is configured', async () => {
+  it('should default browser runs through the durable ChatGPT fast selector when no model is configured', async () => {
     vi.spyOn(configModule, 'loadUserConfig').mockResolvedValue({
       config: { browser: {} } satisfies UserConfigInput,
       path: '/tmp/config.json',
@@ -28,7 +28,7 @@ describe('Config Resolver', () => {
     const result = await resolveConfig({ engine: 'browser' });
 
     expect(result.engine).toBe('browser');
-    expect(result.model).toBe('gpt-5.2-instant');
+    expect(result.model).toBe('gpt-5.6-sol');
   });
 
   it('should resolve legacy ChatGPT Pro Extended intent to the current Sol compatibility model', async () => {
@@ -508,6 +508,7 @@ describe('Config Resolver', () => {
     const result = await resolveConfig({
       browserModelStrategy: 'ignore',
       browserChatgptMode: 'work',
+      browserChatgptToolApproval: 'always-allow',
       browserWorkModel: 'Research',
       browserThinkingTime: 'extended',
       browserComposerTool: 'canvas',
@@ -516,12 +517,14 @@ describe('Config Resolver', () => {
 
     expect(result.browser.modelStrategy).toBe('ignore');
     expect(result.browser.chatgptMode).toBe('work');
+    expect(result.browser.chatgptToolApproval).toBe('always-allow');
     expect(result.browser.workModel).toBe('Research');
     expect(result.browser.thinkingTime).toBe('extended');
     expect(result.browser.composerTool).toBe('canvas');
     expect(result.browser.deepResearchPlanAction).toBe('edit');
     expect(result.runtimeProfiles?.default?.services?.chatgpt?.modelStrategy).toBe('ignore');
     expect(result.runtimeProfiles?.default?.services?.chatgpt?.chatgptMode).toBe('work');
+    expect(result.runtimeProfiles?.default?.services?.chatgpt?.chatgptToolApproval).toBe('always-allow');
     expect(result.runtimeProfiles?.default?.services?.chatgpt?.workModel).toBe('Research');
     expect(result.runtimeProfiles?.default?.services?.chatgpt?.thinkingTime).toBe('extended');
     expect(result.runtimeProfiles?.default?.services?.chatgpt?.composerTool).toBe('canvas');

@@ -32,12 +32,23 @@ Read the target repo's:
 - roadmap / runbook / progress files if present
 - `docs/dev/plans/`, `docs/dev/notes/`, and `docs/dev/memories/` when present
 - obvious repo-shape signals such as `package.json`, `pyproject.toml`, `tests/`, `docs/dev/`
+- issue, work-item, backlog, dependency, WIP-limit, and provider-neutral
+  traceability language
+- GitHub or GitLab issue-reporting language, explicit owned or permissioned
+  targets, `gh` or `glab` usage, target registries, label mappings, and
+  provider-specific security routes
 
 Extract existing policy surfaces before recommending adoption changes.
 That extraction should inventory current policy-bearing files and classify them against the installed templates as:
 - `keep`
 - `merge`
 - `retire`
+
+Derive adopted identity from the module id encoded by the local policy filename,
+not from the ordinal prefix. Report every canonical path when more than one file
+claims an identity, use recommendation mode `identity-reconciliation-required`,
+and refuse write mode until a maintainer preserves the intended local semantics
+in one retained file and removes superseded wire-in entries.
 
 When `AGENTS.md` already contains substantive local guidance, infer repo-local policy sections and classify them as:
 - `keep`
@@ -72,6 +83,40 @@ Treat `AGENTS.md` as a policy-loading contract, not just a static pointer:
 - whether the repo uses an installed durable graph-memory system and needs explicit read/write/cleanup discipline in addition to notes and memories
 - whether the repo has an indexed codegraph or `../codegraph` workflow that agents should consult before source-code edits or architecture analysis
 - whether the repo produces local artifacts, reports, review packets, rendered documents, or local builds that should be surfaced through a preview or approval service for human review
+- whether the repo reports issues across GitHub, GitLab, enterprise or
+  self-managed hosts, owned forks, or permissioned upstreams
+- whether multiple human contributors or agents acting for different people
+  share branches, worktrees, pull requests, reviews, or deployment authority
+
+For collaborative development, require both contributor signals and workflow
+signals so incidental uses of words such as "collaborate" do not add team
+ceremony to a single-maintainer repository. When selected, compose
+`collaborative-development-workflow` with `work-item-traceability`, the complete
+Git worktree/commit/branch/push set, and `validation-and-handoff`. Add
+`active-lane-coordination` separately when the repository actually has several
+concurrent off-main lanes.
+
+Add `development-runtime-isolation` when repository policy or operating docs
+explicitly describe isolated development services, per-lane runtimes, or
+concurrent lane execution that could share mutable runtime resources. Do not add
+it merely because a repository has a local development command or mentions a
+generic development environment.
+
+For forge issue reporting, prioritize signals such as:
+
+- GitHub Issues, GitLab Issues, `gh issue`, `glab issue`, or cross-forge
+  reporting language
+- owned or permissioned repository targets and fork/upstream distinctions
+- issue forms, templates, contribution guidance, or security-reporting routes
+- label taxonomies, normalized label mappings, project or group labels, and
+  rules for label creation versus application
+- idempotency markers, duplicate searches, ambiguous-write retries, and
+  provider receipts
+
+Recommend `forge-issue-reporting` plus `work-item-traceability` whenever these
+signals are present. Add `github-issue-operations` only for GitHub signals and
+`gitlab-issue-operations` only for GitLab or `glab` signals. Do not add either
+adapter to a profile merely because a Git remote happens to use that provider.
 
 For course workspaces, prioritize operational signals over generic document-folder shape:
 - LMS config such as `canvas-cli.yml`
@@ -90,6 +135,12 @@ For graph-backed memory usage, prioritize signals such as:
 - destructive memory-maintenance tools that require explicit caution
 
 Graph-backed memory usage is part of the starter policy set by default. Repo-local adoption still needs to specify the actual memory group, discovery skill or command, privacy boundary, and write/cleanup expectations.
+
+The selector must also return a `memory_discovery` assessment. Use
+`repo_default: use` when repo signals establish Graphiti or another graph-backed
+memory workflow, and `repo_default: task-conditional` otherwise. This is a
+repo-level routing result, not a command to query memory on every task. The
+adopted policy supplies the per-task `use` / `skip` / `unavailable` decision.
 
 For codegraph usage, prioritize signals such as:
 - `../codegraph`, codegraph MCP tools, codegraph CLI wrappers, or indexed workspace service language
@@ -161,8 +212,10 @@ Return:
 - inferred `execution_bias` when applicable
 - recommended profile
 - recommended modules
-- recommendation mode such as `full-profile`, `patch-missing`, or
-  `already-aligned`
+- memory-discovery assessment, including whether the shared policy is selected,
+  whether repo-level graph-memory signals exist, and the repo default
+- recommendation mode such as `full-profile`, `patch-missing`,
+  `already-aligned`, or `identity-reconciliation-required`
 - next modules to add when the repo already partially matches the selected profile
 - deterministic install-plan entries with target local policy paths and rendered draft content
 - an `AGENTS.md` wire-in patch for the planned policy set
@@ -178,6 +231,7 @@ Return:
 - per-surface migration actions such as `keep`, `merge`, or `retire`
 - extracted plan, note, and memory migration surfaces
 - validation problems if recommended profiles/modules are missing from the installed library
+- duplicate adopted-policy identities with every conflicting canonical path
 - strong signals observed
 - gaps between current local policy and selected shared policy
 - whether to patch `docs/dev/policies/` and the `AGENTS.md` wire-in now or only produce a recommendation

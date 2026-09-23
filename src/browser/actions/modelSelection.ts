@@ -8,13 +8,40 @@ import { logDomFailure } from '../domDebug.js';
 import { buildClickDispatcher } from './domEvents.js';
 
 const MODEL_SELECTION_EVALUATE_TIMEOUT_MS = 35_000;
+const ANIMATED_SLIDER_TRIGGER_SELECTOR = '[data-animated-slider-trigger="true"]';
+
+type ModelPickerTriggerCandidate = {
+  selector: string;
+  text?: string | null;
+  ariaLabel?: string | null;
+  visible: boolean;
+  inComposer: boolean;
+  inAssistantTurn: boolean;
+};
+
+function hasExplicitModelFamilyLabel(value: string): boolean {
+  const normalized = normalizeModelPickerText(value);
+  return (
+    /(?:^| )6 pro(?: |$)/.test(normalized) ||
+    /(?:^| )gpt 5 6 (?:sol|terra|luna)(?: |$)/.test(normalized) ||
+    /(?:^| )gpt 5 5(?: |$)/.test(normalized)
+  );
+}
+
+export function isModelPickerTriggerCandidateForTest(
+  candidate: ModelPickerTriggerCandidate,
+): boolean {
+  if (!candidate.visible || !candidate.inComposer || candidate.inAssistantTurn) return false;
+  if (candidate.selector !== ANIMATED_SLIDER_TRIGGER_SELECTOR) return true;
+  return hasExplicitModelFamilyLabel(`${candidate.text ?? ''} ${candidate.ariaLabel ?? ''}`);
+}
 
 export async function ensureModelSelection(
   Runtime: ChromeClient['Runtime'],
   desiredModel: string,
   logger: BrowserLogger,
   strategy: BrowserModelStrategy = 'select',
-) {
+): Promise<string> {
   const outcome = await withStageTimeout(
     Runtime.evaluate({
       expression: buildModelSelectionExpression(desiredModel, strategy),
@@ -39,7 +66,7 @@ export async function ensureModelSelection(
     case 'switched-best-effort': {
       const label = result.label ?? desiredModel;
       logger(`Model picker: ${label}`);
-      return;
+      return label;
     }
     case 'option-not-found': {
       await logDomFailure(Runtime, logger, 'model-switcher-option');
@@ -48,7 +75,7 @@ export async function ensureModelSelection(
       const availableHint = available.length > 0 ? ` Available: ${available.join(', ')}.` : '';
       const tempHint =
         isTemporary && /\bpro\b/i.test(desiredModel)
-          ? ' You are in Temporary Chat mode; Pro models are not available there. Remove "temporary-chat=true" from --chatgpt-url or use a non-Pro model (e.g. chatgpt:instant).'
+          ? ' You are in Temporary Chat mode; Pro models are not available there. Remove "temporary-chat=true" from --chatgpt-url or use a non-Pro model (e.g. chatgpt:fast).'
           : '';
       throw new Error(`Unable to find model option matching "${desiredModel}" in the model switcher.${availableHint}${tempHint}`);
     }
@@ -75,6 +102,7 @@ type ModelOptionKind = 'instant' | 'thinking' | 'pro' | 'sol' | 'terra' | 'luna'
 
 type ModelPickerNavigationItem = {
   text: string;
+  ariaLabel?: string | null;
   role: string | null;
   expanded: string | null;
 };
@@ -93,10 +121,24 @@ function chooseModelPickerNavigationAction(
       .replace(/[^a-z0-9]+/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
+  const labels = (item: ModelPickerNavigationItem) =>
+    [item.text, item.ariaLabel ?? ''].map(normalize).filter(Boolean);
+  const isAdvancedControl = (item: ModelPickerNavigationItem) =>
+    labels(item).some(
+      (label) => label === 'advanced' || label.startsWith('show advanced options'),
+    );
+  const isModelControl = (item: ModelPickerNavigationItem) =>
+    labels(item).some(
+      (label) =>
+        label === 'model' ||
+        label.startsWith('model ') ||
+        label.startsWith('modelgpt ') ||
+        label.startsWith('modelchatgpt '),
+    );
   const advancedIndex = items.findIndex(
     (item) =>
       item.role === 'menuitem' &&
-      normalize(item.text).startsWith('show advanced options') &&
+      isAdvancedControl(item) &&
       item.expanded !== 'true',
   );
   if (advancedIndex >= 0) {
@@ -105,7 +147,7 @@ function chooseModelPickerNavigationAction(
   const modelIndex = items.findIndex(
     (item) =>
       item.role === 'menuitem' &&
-      normalize(item.text).startsWith('model ') &&
+      isModelControl(item) &&
       item.expanded !== 'true',
   );
   return modelIndex >= 0 ? { kind: 'open-model', index: modelIndex } : null;
@@ -117,6 +159,8 @@ function normalizeModelPickerText(value: string | null | undefined): string {
   }
   return value
     .toLowerCase()
+    .replace(/([a-z])([0-9])/g, '$1 $2')
+    .replace(/([0-9])([a-z])/g, '$1 $2')
     .replace(/[^a-z0-9]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
@@ -125,6 +169,9 @@ function normalizeModelPickerText(value: string | null | undefined): string {
 function classifyModelPickerOption(normalizedText: string, normalizedTestId = ''): ModelOptionKind {
   const text = normalizedText.trim();
   const testId = normalizedTestId.toLowerCase();
+  if (text === 'latest' || testId.includes('latest')) {
+    return 'instant';
+  }
   const startsWith = (pattern: RegExp) => pattern.test(text);
   if (text.includes('gpt 5 6 terra') || testId.includes('terra')) {
     return 'terra';
@@ -305,6 +352,8 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
       }
       return value
         .toLowerCase()
+        .replace(/([a-z])([0-9])/g, '$1 $2')
+        .replace(/([0-9])([a-z])/g, '$1 $2')
         .replace(/[^a-z0-9]+/g, ' ')
         .replace(/\\s+/g, ' ')
         .trim();
@@ -317,11 +366,46 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
     const targetWords = normalizedTarget.split(' ').filter(Boolean);
 
     let button = null;
+    const visible = (node) => {
+      if (!(node instanceof HTMLElement)) return false;
+      const rect = node.getBoundingClientRect();
+      const style = window.getComputedStyle(node);
+      return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden';
+    };
+    const isAssistantTurnControl = (node) => Boolean(
+      node?.closest('[data-testid^="conversation-turn"]') ||
+      node?.closest('[data-message-author-role]') ||
+      node?.closest('[data-turn]')
+    );
+    const hasExplicitModelFamilyLabel = (node) => {
+      const label = normalizeText(
+        (node?.textContent ?? '') + ' ' + (node?.getAttribute?.('aria-label') ?? '')
+      );
+      return (
+        /(?:^| )6 pro(?: |$)/.test(label) ||
+        /(?:^| )gpt 5 6 (?:sol|terra|luna)(?: |$)/.test(label) ||
+        /(?:^| )gpt 5 5(?: |$)/.test(label)
+      );
+    };
+    const findComposerButton = () => {
+      const prompt = document.querySelector('#prompt-textarea, textarea[name="prompt-textarea"], .ProseMirror');
+      const composer = prompt?.closest('form, [data-testid*="composer"]') ?? null;
+      for (const selector of BUTTON_SELECTORS) {
+        const candidates = composer
+          ? Array.from(composer.querySelectorAll(selector))
+          : Array.from(document.querySelectorAll(selector));
+        const candidate = candidates.find((node) =>
+          visible(node) &&
+          !isAssistantTurnControl(node) &&
+          (selector !== '[data-animated-slider-trigger="true"]' || hasExplicitModelFamilyLabel(node))
+        );
+        if (candidate) return candidate;
+      }
+      return null;
+    };
     const buttonWaitStartedAt = performance.now();
     while (!button && performance.now() - buttonWaitStartedAt <= BUTTON_WAIT_MS) {
-      button = BUTTON_SELECTORS
-        .map((selector) => document.querySelector(selector))
-        .find((node) => node) ?? null;
+      button = findComposerButton();
       if (!button) {
         await new Promise((resolve) => setTimeout(resolve, REOPEN_INTERVAL_MS / 2));
       }
@@ -347,6 +431,9 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
     const classifyOption = (normalizedText, normalizedTestId) => {
       const text = normalizedText.trim();
       const testId = (normalizedTestId ?? '').toLowerCase();
+      if (text === 'latest' || testId.includes('latest')) {
+        return 'instant';
+      }
       if (text.includes('gpt 5 6 terra') || testId.includes('terra')) {
         return 'terra';
       }
@@ -438,21 +525,36 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
       }
       return Array.from(document.querySelectorAll(${menuItemLiteral}));
     };
+    const hasVisibleMenu = () => Array.from(
+      document.querySelectorAll(${menuContainerLiteral})
+    ).some((menu) => visible(menu));
     const findNavigationAction = () => {
       const nodes = collectOptionNodes();
+      const labelsForNode = (node) => [
+        normalizeText(node.textContent ?? ''),
+        normalizeText(node.getAttribute?.('aria-label') ?? ''),
+      ].filter(Boolean);
+      const isAdvancedControl = (node) => labelsForNode(node).some(
+        (label) => label === 'advanced' || label.startsWith('show advanced options')
+      );
+      const isModelControl = (node) => labelsForNode(node).some(
+        (label) =>
+          label === 'model' ||
+          label.startsWith('model ') ||
+          label.startsWith('modelgpt ') ||
+          label.startsWith('modelchatgpt ')
+      );
       const advancedIndex = nodes.findIndex((node) => {
-        const text = normalizeText([node.textContent ?? '', node.getAttribute?.('aria-label') ?? ''].join(' '));
         return node.getAttribute?.('role') === 'menuitem' &&
-          text.startsWith('show advanced options') &&
+          isAdvancedControl(node) &&
           node.getAttribute('aria-expanded') !== 'true';
       });
       if (advancedIndex >= 0) {
         return { kind: 'open-advanced', node: nodes[advancedIndex] };
       }
       const modelIndex = nodes.findIndex((node) => {
-        const text = normalizeText([node.textContent ?? '', node.getAttribute?.('aria-label') ?? ''].join(' '));
         return node.getAttribute?.('role') === 'menuitem' &&
-          text.startsWith('model ') &&
+          isModelControl(node) &&
           node.getAttribute('aria-expanded') !== 'true';
       });
       return modelIndex >= 0 ? { kind: 'open-model', node: nodes[modelIndex] } : null;
@@ -572,6 +674,7 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
 
     return new Promise((resolve) => {
       const start = performance.now();
+      let selectionAttempt = null;
       const detectTemporaryChat = () => {
         try {
           const url = new URL(window.location.href);
@@ -606,6 +709,27 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
           initialized = true;
           await openDelay();
         }
+        if (performance.now() - start > MAX_WAIT_MS) {
+          resolve({
+            status: 'option-not-found',
+            hint: { temporaryChat: detectTemporaryChat(), availableOptions: collectAvailableOptions() },
+          });
+          return;
+        }
+        if (selectionAttempt && !hasVisibleMenu()) {
+          const buttonLabel = getButtonLabel();
+          const buttonScore = scoreOption(
+            normalizeText(buttonLabel + ' ' + (button.getAttribute?.('aria-label') ?? '')),
+            button.getAttribute?.('data-testid') ?? ''
+          );
+          if (buttonScore > 0) {
+            resolve({
+              status: 'switched-best-effort',
+              label: buttonLabel || selectionAttempt.label || PRIMARY_LABEL,
+            });
+            return;
+          }
+        }
         ensureMenuOpen();
         const selected = findSelectedOption();
         const match = findBestOption();
@@ -622,14 +746,20 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
           dispatchClickSequence(match.node);
           // Submenus (e.g. "Legacy models") need a second pass to pick the actual model option.
           // Keep scanning once the submenu opens instead of treating the submenu click as a final switch.
+          const matchKind = classifyOption(match.normalizedText, match.testid);
+          const isTerminalModelFamily =
+            ['sol', 'terra', 'luna', 'legacy', 'instant', 'thinking', 'pro'].includes(matchKind);
           const isSubmenu =
-            (match.testid ?? '').toLowerCase().includes('submenu') ||
-            match.node.getAttribute?.('aria-expanded') !== null ||
-            match.normalizedText.startsWith('model ');
+            match.normalizedText.startsWith('model ') ||
+            (!isTerminalModelFamily && (
+              (match.testid ?? '').toLowerCase().includes('submenu') ||
+              match.node.getAttribute?.('aria-expanded') !== null
+            ));
           if (isSubmenu) {
             setTimeout(attempt, REOPEN_INTERVAL_MS / 2);
             return;
           }
+          selectionAttempt = { label: match.label || PRIMARY_LABEL };
           // Verify via the checked menu item instead of the top button label, which is often generic.
           setTimeout(attempt, Math.max(160, INITIAL_WAIT_MS));
           return;
@@ -638,13 +768,6 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
         if (navigation) {
           dispatchClickSequence(navigation.node);
           setTimeout(attempt, REOPEN_INTERVAL_MS / 2);
-          return;
-        }
-        if (performance.now() - start > MAX_WAIT_MS) {
-          resolve({
-            status: 'option-not-found',
-            hint: { temporaryChat: detectTemporaryChat(), availableOptions: collectAvailableOptions() },
-          });
           return;
         }
         setTimeout(attempt, REOPEN_INTERVAL_MS / 2);
@@ -869,6 +992,9 @@ function buildModelMatchersLiteral(targetModel: string): {
   };
 }
 
-export function buildModelSelectionExpressionForTest(targetModel: string): string {
-  return buildModelSelectionExpression(targetModel, 'select');
+export function buildModelSelectionExpressionForTest(
+  targetModel: string,
+  strategy: BrowserModelStrategy = 'select',
+): string {
+  return buildModelSelectionExpression(targetModel, strategy);
 }

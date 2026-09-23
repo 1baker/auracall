@@ -19,7 +19,7 @@ const RUNS_DIRNAME = "runs";
 const BUNDLE_FILENAME = "bundle.json";
 const RECORD_FILENAME = "record.json";
 const JSON_READ_RETRY_DELAYS_MS = [10, 25, 50];
-const RUNTIME_RECORD_READ_CONCURRENCY = 4;
+const RUNTIME_RECORD_READ_CONCURRENCY = 16;
 
 export interface ListExecutionRunRecordOptions {
 	limit?: number;

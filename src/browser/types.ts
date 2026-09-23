@@ -16,6 +16,7 @@ export type {
 
 export type BrowserModelStrategy = 'select' | 'current' | 'ignore';
 export type ChatgptComposerMode = 'chat' | 'work';
+export type ChatgptToolApprovalPolicy = 'manual' | 'allow-once' | 'always-allow';
 export type ThinkingTimeLevel = 'light' | 'standard' | 'extended' | 'heavy';
 export type ChatgptDeepResearchPlanAction = 'start' | 'edit';
 export type BrowserPassiveObservationState =
@@ -54,6 +55,7 @@ type LlmBrowserFields = {
   chatgptUrl?: string | null;
   desiredModel?: string | null;
   chatgptMode?: ChatgptComposerMode;
+  chatgptToolApproval?: ChatgptToolApprovalPolicy;
   workModel?: string | null;
   modelStrategy?: BrowserModelStrategy;
   thinkingTime?: ThinkingTimeLevel;
@@ -84,6 +86,7 @@ export type BrowserRuntimeMetadata = BaseTypes.BrowserRuntimeMetadata & {
   agentBrowserTabReconciliation?: 'preserved_selection_only';
   selectedAgentId?: string | null;
   conversationId?: string;
+  observedModel?: string | null;
   composerTool?: string | null;
   thinkingTime?: string;
   chatgptProMode?: string;
@@ -121,6 +124,8 @@ export type BrowserRunOptions = Omit<BaseTypes.BrowserRunOptions, 'config' | 'ru
   /** Trusted runtime dependency; never serialized into browser config/evidence. */
   nativeBrokerTransport?: AgentBrowserBridgeDependencies['nativeTransport'];
   config?: BrowserAutomationConfig;
+  ecosystemMention?: import('./actions/chatgptEcosystemMention.js').ChatgptEcosystemMentionRequest;
+  onProviderEffectState?: (state: 'pre_effect' | 'unknown' | 'effect_observed') => void;
   runtimeHintCb?: (hint: BrowserRuntimeMetadata) => void | Promise<void>;
   runtimeEvidenceCb?: (evidence: BrowserRuntimeEvidence) => void | Promise<void>;
 };
@@ -129,6 +134,7 @@ export type BrowserRunResult = BaseTypes.BrowserRunResult & {
   answerMessageId?: string | null;
   chromeTargetId?: string | null;
   conversationId?: string;
+  observedModel?: string | null;
   composerTool?: string | null;
   thinkingTime?: string;
   chatgptProMode?: string;

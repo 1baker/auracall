@@ -38,6 +38,7 @@ export const HTTP_ROUTE_MANIFEST = {
 	chatCompletionsCreate: route(["POST"], "/v1/chat/completions"),
 	responsesCreate: route(["POST"], "/v1/responses"),
 	responsesGetTemplate: route(["GET"], "/v1/responses/{response_id}"),
+	responsesRecoveryObservationTemplate: route(["POST"], "/v1/responses/{response_id}/recovery-observation"),
 	responseBatchesCreate: route(["POST"], "/v1/response-batches"),
 	responseBatchesGetTemplate: route(["GET"], "/v1/response-batches/{batch_id}"),
 	responseBatchesCancelTemplate: route(["POST"], "POST /v1/response-batches/{batch_id}/cancel"),

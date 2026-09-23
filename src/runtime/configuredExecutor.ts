@@ -682,6 +682,10 @@ function asChatgptMode(value: unknown): 'chat' | 'work' | null {
   return value === 'chat' || value === 'work' ? value : null;
 }
 
+function asChatgptToolApproval(value: unknown): 'manual' | 'allow-once' | 'always-allow' | null {
+  return value === 'manual' || value === 'allow-once' || value === 'always-allow' ? value : null;
+}
+
 function asAgentBrowserHost(value: unknown): AgentBrowserHost | null {
   return value === 'local_headless' ||
     value === 'local_headed' ||
@@ -1267,6 +1271,14 @@ export function createConfiguredStoredStepExecutor(
       asChatgptMode(browserProfileConfig?.chatgptMode) ??
       asChatgptMode(browserConfigRecord?.chatgptMode) ??
       'chat';
+    const chatgptToolApproval =
+      asChatgptToolApproval(requestAuracall?.chatgptToolApproval) ??
+      asChatgptToolApproval(runtimeServiceConfig?.chatgptToolApproval) ??
+      asChatgptToolApproval(globalServiceConfig?.chatgptToolApproval) ??
+      asChatgptToolApproval(runtimeBrowserConfig?.chatgptToolApproval) ??
+      asChatgptToolApproval(browserProfileConfig?.chatgptToolApproval) ??
+      asChatgptToolApproval(browserConfigRecord?.chatgptToolApproval) ??
+      'manual';
     const workModel =
       asNonEmptyString(requestAuracall?.workModel) ??
       asNonEmptyString(runtimeServiceConfig?.workModel) ??
@@ -1554,6 +1566,7 @@ export function createConfiguredStoredStepExecutor(
         manualLogin: true,
         manualLoginProfileDir,
         chatgptMode: service === 'chatgpt' ? chatgptMode : undefined,
+        chatgptToolApproval: service === 'chatgpt' ? chatgptToolApproval : undefined,
         workModel: service === 'chatgpt' ? workModel : null,
         chromePath:
           asNonEmptyString(runtimeBrowserConfig?.chromePath) ??
@@ -2023,6 +2036,7 @@ export function createConfiguredStoredStepExecutor(
               boundIdentityKey,
               configuredUrl: targetUrl,
               desiredModel,
+              observedModel: browserResult.observedModel ?? null,
               modelSelector: agentModelSelector,
               thinkingTime,
               promptTransport,
@@ -2079,6 +2093,7 @@ export function createConfiguredStoredStepExecutor(
             boundIdentityKey,
             configuredUrl: targetUrl,
             desiredModel,
+            observedModel: browserResult.observedModel ?? null,
             modelSelector: agentModelSelector,
             thinkingTime,
             promptTransport,

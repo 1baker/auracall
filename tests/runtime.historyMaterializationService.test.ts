@@ -2,6 +2,10 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+	type BrowserOperationDispatcher,
+	createFileBackedBrowserOperationDispatcher,
+} from "../packages/browser-service/src/service/operationDispatcher.js";
 import { setAuracallHomeDirOverrideForTest } from "../src/auracallHome.js";
 import { createCacheStore } from "../src/browser/llmService/cache/store.js";
 import type { ProviderCacheContext } from "../src/browser/providers/cache.js";
@@ -290,6 +294,7 @@ describe("history materialization service", () => {
 				assetKinds: ["artifacts"],
 			}),
 			"hmj_test_1",
+			expect.any(Object),
 		);
 	});
 
@@ -599,7 +604,110 @@ describe("history materialization service", () => {
 
 		expect(governors).toHaveLength(2);
 		expect(governors[1]).toBe(governors[0]);
+		expect(
+			(refreshConversationSnapshot.mock.calls[0]?.[3] as HistoryMaterializationProviderWorkContext)
+				.contextTimeoutMs,
+		).toBe(180_000);
 		expect(sleep).toHaveBeenCalledWith(60_000);
+	});
+
+	it("aborts a shared interaction-governor cooldown with the active provider read", async () => {
+		const homeDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), "auracall-history-materialize-abort-governor-"),
+		);
+		setAuracallHomeDirOverrideForTest(homeDir);
+		let scheduled: (() => Promise<void>) | undefined;
+		const nowMs = Date.parse("2026-08-24T04:00:00.000Z");
+		const sleep = vi.fn(() => new Promise<void>(() => undefined));
+		const abortController = new AbortController();
+		const abortReason = new Error("conversation context deadline expired");
+		let releaseMaterializeStarted: (() => void) | undefined;
+		const materializeStarted = new Promise<void>((resolve) => {
+			releaseMaterializeStarted = resolve;
+		});
+		let materializeOutcome: unknown = null;
+		const refreshConversationSnapshot = vi.fn(async (target, _request, _jobId, context) => {
+			await context?.interactionGovernor?.beforeInteraction("renavigation");
+			return {
+				object: "history_materialization_snapshot_refresh" as const,
+				generatedAt: new Date(nowMs).toISOString(),
+				status: "refreshed" as const,
+				target,
+				routeabilityState: "routeable" as const,
+				messageCount: 1,
+				fileCount: 0,
+				sourceCount: 0,
+				artifactCount: 1,
+				error: null,
+				message: "Conversation snapshot refreshed.",
+			};
+		});
+		const materializeConversation = vi.fn(async (target, _request, _jobId, context) => {
+			releaseMaterializeStarted?.();
+			try {
+				await (
+					context?.interactionGovernor as {
+						beforeInteraction: (kind: "renavigation", abortSignal: AbortSignal) => Promise<void>;
+					}
+				)?.beforeInteraction("renavigation", abortController.signal);
+				materializeOutcome = "admitted";
+			} catch (error) {
+				materializeOutcome = error;
+			}
+			return {
+				object: "history_materialization_result" as const,
+				generatedAt: new Date(nowMs).toISOString(),
+				status: "skipped" as const,
+				target,
+				source: {
+					type: "conversation" as const,
+					provider: "chatgpt" as const,
+					conversationId: "conv_abort_governor_1",
+				},
+				manifestPaths: [],
+				entries: [],
+				archiveItems: [],
+				metrics: { conversations: 1, materialized: 0, skipped: 1, failed: 0 },
+				message: "No materializable assets.",
+			};
+		});
+		const service = createHistoryMaterializationService({
+			config: {},
+			catalogService: { readCatalog: vi.fn(), readItem: vi.fn() },
+			generateId: () => "hmj_abort_governor_1",
+			now: () => new Date(nowMs),
+			sleep,
+			schedule: (work) => {
+				scheduled = work;
+			},
+			refreshConversationSnapshot,
+			materializeConversation,
+		});
+
+		await service.createJob({
+			provider: "chatgpt",
+			runtimeProfile: "default",
+			conversationId: "conv_abort_governor_1",
+			refreshSnapshot: true,
+			interactionPolicy: {
+				maxInteractionsPerMinute: 6,
+				conversationReadCooldownMs: 120_000,
+				pageRefreshCooldownMs: 120_000,
+				renavigationCooldownMs: 120_000,
+			},
+			assetKinds: ["artifacts"],
+		});
+		if (!scheduled) throw new Error("Expected job to be scheduled.");
+		const work = scheduled();
+		await materializeStarted;
+		expect(sleep).toHaveBeenCalledWith(120_000);
+
+		abortController.abort(abortReason);
+		await Promise.resolve();
+		await Promise.resolve();
+
+		expect(materializeOutcome).toBe(abortReason);
+		await work;
 	});
 
 	it("persists and runs a ChatGPT project source materialization job", async () => {
@@ -2508,6 +2616,7 @@ describe("history materialization service", () => {
 		);
 		const service = createHistoryMaterializationService({
 			config: {},
+			store: createInMemoryHistoryMaterializationJobStore([]),
 			catalogService: {
 				readCatalog: vi.fn(),
 				readItem: vi.fn(),
@@ -2545,6 +2654,7 @@ describe("history materialization service", () => {
 			expect.objectContaining({ conversationId: "conv_refresh_1" }),
 			expect.objectContaining({ refreshSnapshot: true }),
 			"hmj_refresh_snapshot_1",
+			expect.any(Object),
 		);
 		expect(refreshConversationSnapshot.mock.invocationCallOrder[0]).toBeLessThan(
 			materializeConversation.mock.invocationCallOrder[0],
@@ -2570,9 +2680,25 @@ describe("history materialization service", () => {
 			}),
 		);
 		const completed = await service.readJob("hmj_refresh_snapshot_1");
+		expect(Object.isFrozen(snapshotRefresh)).toBe(false);
+		expect(Object.isFrozen(completed?.result?.phases)).toBe(false);
+		expect(Object.isFrozen(completed?.result?.attempts?.[0]?.phases)).toBe(true);
+		expect(
+			Object.isFrozen(completed?.result?.attempts?.[0]?.phases.snapshotRefresh?.target),
+		).toBe(true);
 		expect(completed).toMatchObject({
 			status: "succeeded",
 			result: {
+				attempts: [
+					{
+						origin: "direct",
+						index: 0,
+						evidence: {
+							status: "persisted",
+							writes: ["snapshot_refresh", "materialization"],
+						},
+					},
+				],
 				phases: {
 					snapshotRefresh: {
 						status: "refreshed",
@@ -2833,6 +2959,13 @@ describe("history materialization service", () => {
 			status: "skipped",
 			result: {
 				status: "skipped",
+				attempts: [
+					{
+						origin: "direct",
+						evidence: { status: "persisted", writes: ["snapshot_refresh"] },
+						accounting: { candidateMaterialized: false },
+					},
+				],
 				phases: {
 					snapshotRefresh: {
 						status: "failed",
@@ -3304,6 +3437,309 @@ describe("history materialization service", () => {
 		});
 	});
 
+	it("holds exact-profile browser ownership through provider work and managed-browser cleanup", async () => {
+		const events: string[] = [];
+		const release = vi.fn(async () => {
+			events.push("release");
+		});
+		const browserOperationDispatcher: BrowserOperationDispatcher = {
+			acquire: vi.fn(),
+			acquireQueued: vi.fn(async (input) => {
+				events.push("acquire");
+				return {
+					acquired: true as const,
+					operation: {
+						...input,
+						id: "history-operation",
+						key: `managed-profile:${path.resolve(input.managedProfileDir ?? "unknown")}::service:chatgpt`,
+						ownerPid: process.pid,
+						startedAt: "2026-08-22T02:30:00.000Z",
+						updatedAt: "2026-08-22T02:30:00.000Z",
+					},
+					release,
+				};
+			}),
+			getActive: vi.fn(async () => null),
+		};
+		const managedProfileDir = "/tmp/auracall-plan0306/chatgpt";
+		const store = createInMemoryHistoryMaterializationJobStore([
+			buildHistoryMaterializationJob({
+				id: "hmj_browser_ownership",
+				status: "queued",
+				request: {
+					provider: "chatgpt",
+					conversationId: "conv_browser_ownership",
+					assetKinds: ["artifacts"],
+				},
+			}),
+		]);
+		const service = createHistoryMaterializationService({
+			config: {
+				browser: {
+					target: "chatgpt",
+					manualLoginProfileDir: managedProfileDir,
+				},
+			},
+			store,
+			schedule: () => undefined,
+			cleanupManagedBrowserAfterProviderWork: true,
+			browserOperationDispatcher,
+			cleanupManagedBrowser: async () => {
+				events.push("cleanup");
+			},
+			materializeConversation: vi.fn(
+				async (target): Promise<HistoryMaterializationResult> => {
+					events.push("provider-work");
+					return {
+						object: "history_materialization_result",
+						generatedAt: "2026-08-22T02:30:01.000Z",
+						status: "materialized",
+						target,
+						source: {
+							type: "conversation",
+							provider: "chatgpt",
+							conversationId: "conv_browser_ownership",
+						},
+						manifestPaths: [],
+						entries: [],
+						archiveItems: [],
+						metrics: { conversations: 1, materialized: 0, skipped: 0, failed: 0 },
+						message: "Provider work completed.",
+					};
+				},
+			),
+		});
+
+		await expect(service.runJob("hmj_browser_ownership")).resolves.toMatchObject({
+			status: "succeeded",
+		});
+
+		expect(browserOperationDispatcher.acquireQueued).toHaveBeenCalledWith(
+			expect.objectContaining({
+				managedProfileDir,
+				serviceTarget: "chatgpt",
+				kind: "browser-execution",
+				operationClass: "exclusive-mutating",
+				ownerCommand: "history-materialization:hmj_browser_ownership",
+			}),
+			expect.any(Object),
+		);
+		expect(events).toEqual(["acquire", "provider-work", "cleanup", "release"]);
+		expect(release).toHaveBeenCalledTimes(1);
+	});
+
+	it("keeps the file-backed exact-profile fence held until cleanup while unrelated profiles remain independent", async () => {
+		const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-plan0306-fence-"));
+		setAuracallHomeDirOverrideForTest(homeDir);
+		const lockRoot = path.join(homeDir, "browser-operations");
+		const foregroundDispatcher = createFileBackedBrowserOperationDispatcher({ lockRoot });
+		const managedProfileDir = path.join(homeDir, "browser-profiles", "wsl-chrome-3", "chatgpt");
+		const unrelatedProfileDir = path.join(homeDir, "browser-profiles", "other", "chatgpt");
+		let providerStartedResolve: (() => void) | undefined;
+		const providerStarted = new Promise<void>((resolve) => {
+			providerStartedResolve = resolve;
+		});
+		let providerFinishedResolve: (() => void) | undefined;
+		const providerFinished = new Promise<void>((resolve) => {
+			providerFinishedResolve = resolve;
+		});
+		let cleanupStartedResolve: (() => void) | undefined;
+		const cleanupStarted = new Promise<void>((resolve) => {
+			cleanupStartedResolve = resolve;
+		});
+		let cleanupFinishedResolve: (() => void) | undefined;
+		const cleanupFinished = new Promise<void>((resolve) => {
+			cleanupFinishedResolve = resolve;
+		});
+		const store = createInMemoryHistoryMaterializationJobStore([
+			buildHistoryMaterializationJob({
+				id: "hmj_file_fence",
+				status: "queued",
+				request: {
+					provider: "chatgpt",
+					conversationId: "conv_file_fence",
+					assetKinds: ["artifacts"],
+				},
+			}),
+		]);
+		const service = createHistoryMaterializationService({
+			config: {
+				browser: {
+					target: "chatgpt",
+					manualLoginProfileDir: managedProfileDir,
+				},
+			},
+			store,
+			schedule: () => undefined,
+			cleanupManagedBrowserAfterProviderWork: true,
+			cleanupManagedBrowser: async () => {
+				cleanupStartedResolve?.();
+				await cleanupFinished;
+			},
+			materializeConversation: vi.fn(
+				async (target): Promise<HistoryMaterializationResult> => {
+					providerStartedResolve?.();
+					await providerFinished;
+					return {
+						object: "history_materialization_result",
+						generatedAt: "2026-08-22T02:31:00.000Z",
+						status: "materialized",
+						target,
+						source: {
+							type: "conversation",
+							provider: "chatgpt",
+							conversationId: "conv_file_fence",
+						},
+						manifestPaths: [],
+						entries: [],
+						archiveItems: [],
+						metrics: { conversations: 1, materialized: 0, skipped: 0, failed: 0 },
+						message: "Provider work completed.",
+					};
+				},
+			),
+		});
+		const run = service.runJob("hmj_file_fence");
+		await providerStarted;
+
+		const sameProfileDuringProvider = await foregroundDispatcher.acquire({
+			managedProfileDir,
+			serviceTarget: "chatgpt",
+			kind: "browser-execution",
+			operationClass: "exclusive-mutating",
+			ownerCommand: "foreground-during-provider",
+		});
+		expect(sameProfileDuringProvider.acquired).toBe(false);
+		const unrelatedProfile = await foregroundDispatcher.acquire({
+			managedProfileDir: unrelatedProfileDir,
+			serviceTarget: "chatgpt",
+			kind: "browser-execution",
+			operationClass: "exclusive-mutating",
+			ownerCommand: "unrelated-profile",
+		});
+		expect(unrelatedProfile.acquired).toBe(true);
+		if (unrelatedProfile.acquired) await unrelatedProfile.release();
+
+		providerFinishedResolve?.();
+		await cleanupStarted;
+		const sameProfileDuringCleanup = await foregroundDispatcher.acquire({
+			managedProfileDir,
+			serviceTarget: "chatgpt",
+			kind: "browser-execution",
+			operationClass: "exclusive-mutating",
+			ownerCommand: "foreground-during-cleanup",
+		});
+		expect(sameProfileDuringCleanup.acquired).toBe(false);
+
+		cleanupFinishedResolve?.();
+		await expect(run).resolves.toMatchObject({ status: "succeeded" });
+		const sameProfileAfterCleanup = await foregroundDispatcher.acquire({
+			managedProfileDir,
+			serviceTarget: "chatgpt",
+			kind: "browser-execution",
+			operationClass: "exclusive-mutating",
+			ownerCommand: "foreground-after-cleanup",
+		});
+		expect(sameProfileAfterCleanup.acquired).toBe(true);
+		if (sameProfileAfterCleanup.acquired) await sameProfileAfterCleanup.release();
+	});
+
+	it("does not run provider work or cleanup when a foreground owner keeps the exact profile busy", async () => {
+		const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-plan0306-busy-"));
+		setAuracallHomeDirOverrideForTest(homeDir);
+		const managedProfileDir = path.join(homeDir, "browser-profiles", "wsl-chrome-3", "chatgpt");
+		const dispatcher = createFileBackedBrowserOperationDispatcher({
+			lockRoot: path.join(homeDir, "browser-operations"),
+		});
+		const foreground = await dispatcher.acquire({
+			managedProfileDir,
+			serviceTarget: "chatgpt",
+			kind: "browser-execution",
+			operationClass: "exclusive-mutating",
+			ownerCommand: "foreground-owner",
+		});
+		if (!foreground.acquired) throw new Error("Expected foreground fixture ownership.");
+		const cleanupManagedBrowser = vi.fn(async () => undefined);
+		const materializeConversation = vi.fn();
+		const service = createHistoryMaterializationService({
+			config: {
+				browser: {
+					target: "chatgpt",
+					manualLoginProfileDir: managedProfileDir,
+				},
+			},
+			store: createInMemoryHistoryMaterializationJobStore([
+				buildHistoryMaterializationJob({ id: "hmj_browser_busy", status: "queued" }),
+			]),
+			schedule: () => undefined,
+			cleanupManagedBrowserAfterProviderWork: true,
+			browserOperationDispatcher: dispatcher,
+			browserOperationQueueTimeoutMs: 1,
+			browserOperationQueuePollMs: 1,
+			cleanupManagedBrowser,
+			materializeConversation,
+		});
+
+		await expect(service.runJob("hmj_browser_busy")).resolves.toMatchObject({
+			status: "failed",
+			error: { type: "internal_error" },
+		});
+		expect(materializeConversation).not.toHaveBeenCalled();
+		expect(cleanupManagedBrowser).not.toHaveBeenCalled();
+		const stillOwned = await dispatcher.getActive(foreground.operation.key);
+		expect(stillOwned?.id).toBe(foreground.operation.id);
+		await foreground.release();
+	});
+
+	it("cleans up and releases browser ownership when provider work fails", async () => {
+		const events: string[] = [];
+		const browserOperationDispatcher: BrowserOperationDispatcher = {
+			acquire: vi.fn(),
+			acquireQueued: vi.fn(async (input) => ({
+				acquired: true as const,
+				operation: {
+					...input,
+					id: "history-operation-failure",
+					key: "managed-profile:/tmp/auracall-plan0306/failure::service:chatgpt",
+					ownerPid: process.pid,
+					startedAt: "2026-08-22T02:32:00.000Z",
+					updatedAt: "2026-08-22T02:32:00.000Z",
+				},
+				release: async () => {
+					events.push("release");
+				},
+			})),
+			getActive: vi.fn(async () => null),
+		};
+		const service = createHistoryMaterializationService({
+			config: {
+				browser: {
+					target: "chatgpt",
+					manualLoginProfileDir: "/tmp/auracall-plan0306/failure",
+				},
+			},
+			store: createInMemoryHistoryMaterializationJobStore([
+				buildHistoryMaterializationJob({ id: "hmj_browser_failure", status: "queued" }),
+			]),
+			schedule: () => undefined,
+			cleanupManagedBrowserAfterProviderWork: true,
+			browserOperationDispatcher,
+			cleanupManagedBrowser: async () => {
+				events.push("cleanup");
+			},
+			materializeConversation: vi.fn(async () => {
+				events.push("provider-failure");
+				throw new Error("provider failed");
+			}),
+		});
+
+		await expect(service.runJob("hmj_browser_failure")).resolves.toMatchObject({
+			status: "failed",
+			error: { message: "provider failed" },
+		});
+		expect(events).toEqual(["provider-failure", "cleanup", "release"]);
+	});
+
 	it("re-dispatches queued jobs and marks running jobs failed during startup recovery", async () => {
 		const store = createInMemoryHistoryMaterializationJobStore([
 			buildHistoryMaterializationJob({ id: "hmj_recover_queued", status: "queued" }),
@@ -3476,6 +3912,61 @@ describe("history materialization service", () => {
 				active: 0,
 			},
 		});
+	});
+
+	it("skips stale-recovery cleanup while a foreground owner holds the exact profile", async () => {
+		const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), "auracall-plan0306-stale-"));
+		setAuracallHomeDirOverrideForTest(homeDir);
+		const managedProfileDir = path.join(homeDir, "browser-profiles", "wsl-chrome-3", "chatgpt");
+		const dispatcher = createFileBackedBrowserOperationDispatcher({
+			lockRoot: path.join(homeDir, "browser-operations"),
+		});
+		const foreground = await dispatcher.acquire({
+			managedProfileDir,
+			serviceTarget: "chatgpt",
+			kind: "browser-execution",
+			operationClass: "exclusive-mutating",
+			ownerCommand: "foreground-owner",
+		});
+		if (!foreground.acquired) throw new Error("Expected foreground fixture ownership.");
+		const cleanupManagedBrowser = vi.fn(async () => undefined);
+		const store = createInMemoryHistoryMaterializationJobStore([
+			buildHistoryMaterializationJob({
+				id: "hmj_stale_browser_ownership",
+				status: "running",
+				request: {
+					provider: "chatgpt",
+					conversationId: "conv_stale_browser_ownership",
+					assetKinds: ["artifacts"],
+				},
+				startedAt: "2026-08-22T01:00:00.000Z",
+				updatedAt: "2026-08-22T01:00:00.000Z",
+				completedAt: null,
+			}),
+		]);
+		const service = createHistoryMaterializationService({
+			config: {
+				browser: {
+					target: "chatgpt",
+					manualLoginProfileDir: managedProfileDir,
+				},
+			},
+			store,
+			now: sequenceNow(["2026-08-22T01:31:00.000Z"]),
+			schedule: () => undefined,
+			cleanupManagedBrowserAfterProviderWork: true,
+			browserOperationDispatcher: dispatcher,
+			cleanupManagedBrowser,
+			materializeConversation: vi.fn(),
+		});
+
+		await expect(service.readJob("hmj_stale_browser_ownership")).resolves.toMatchObject({
+			status: "failed",
+		});
+		expect(cleanupManagedBrowser).not.toHaveBeenCalled();
+		const stillOwned = await dispatcher.getActive(foreground.operation.key);
+		expect(stillOwned?.id).toBe(foreground.operation.id);
+		await foreground.release();
 	});
 
 	it("attaches partial scrape telemetry when stale running conversation jobs fail on readback", async () => {
@@ -3858,6 +4349,7 @@ describe("history materialization service", () => {
 				assetKinds: ["artifacts", "files"],
 			}),
 			"hmj_catalog_1",
+			expect.any(Object),
 		);
 	});
 
@@ -4605,10 +5097,143 @@ describe("history materialization service", () => {
 			source: { type: "reconciliation", provider: "chatgpt" },
 			result: {
 				status: "materialized",
+				attempts: [
+					{
+						index: 0,
+						budgetBefore: { targetLimit: 2, targetsConsumed: 0, assetsRemaining: 2 },
+						accounting: { targetConsumed: true, candidateMaterialized: true },
+					},
+					{
+						index: 1,
+						budgetBefore: { targetLimit: 2, targetsConsumed: 1, assetsRemaining: 1 },
+						accounting: { targetConsumed: true, candidateMaterialized: true },
+					},
+				],
 				metrics: {
 					conversations: 2,
 					materialized: 2,
+					materializedCandidates: 2,
 				},
+			},
+		});
+	});
+
+	it("does not spend the asset-transfer budget on synthetic no-materializable evidence", async () => {
+		let scheduled: (() => Promise<void>) | undefined;
+		const conversationIds = ["conv_empty_1", "conv_empty_2", "conv_empty_3", "conv_empty_4"];
+		const materializeConversation = vi.fn(
+			async (target: HistoryMaterializationTarget): Promise<HistoryMaterializationResult> =>
+				buildNoMaterializableHistoryResult(target),
+		);
+		const service = createHistoryMaterializationService({
+			config: {},
+			store: createInMemoryHistoryMaterializationJobStore([]),
+			catalogService: {
+				readCatalog: vi.fn(async () => buildReconciliationCatalog(conversationIds)),
+				readItem: vi.fn(),
+			},
+			generateId: () => "hmj_synthetic_budget",
+			now: sequenceNow([
+				"2026-09-01T14:00:00.000Z",
+				"2026-09-01T14:00:01.000Z",
+				"2026-09-01T14:00:02.000Z",
+				"2026-09-01T14:00:03.000Z",
+				"2026-09-01T14:00:04.000Z",
+			]),
+			schedule: (work) => {
+				scheduled = work;
+			},
+			materializeConversation,
+		});
+
+		await service.createJob({
+			provider: "chatgpt",
+			runtimeProfile: "default",
+			reconcile: true,
+			assetKinds: ["artifacts", "files"],
+			maxItems: 4,
+			refreshSnapshot: false,
+		});
+		if (!scheduled) throw new Error("Expected synthetic-budget job to be scheduled.");
+		await scheduled();
+
+		expect(materializeConversation.mock.calls.map(([target]) => target.conversationId)).toEqual(
+			conversationIds,
+		);
+		await expect(service.readJob("hmj_synthetic_budget")).resolves.toMatchObject({
+			status: "skipped",
+			result: {
+				attempts: conversationIds.map(() => ({ accounting: { assetsAttempted: 0 } })),
+				metrics: {
+					eligibleCandidates: 4,
+					selectedCandidates: 4,
+					materializedCandidates: 0,
+				},
+			},
+		});
+	});
+
+	it("rotates retryable no-materializable candidates across consecutive reconciliation jobs", async () => {
+		const scheduled: Array<() => Promise<void>> = [];
+		const conversationIds = ["conv_rotate_1", "conv_rotate_2", "conv_rotate_3", "conv_rotate_4"];
+		const materializeConversation = vi.fn(
+			async (target: HistoryMaterializationTarget): Promise<HistoryMaterializationResult> =>
+				buildNoMaterializableHistoryResult(target),
+		);
+		const service = createHistoryMaterializationService({
+			config: {},
+			store: createInMemoryHistoryMaterializationJobStore([]),
+			catalogService: {
+				readCatalog: vi.fn(async () => buildReconciliationCatalog(conversationIds)),
+				readItem: vi.fn(),
+			},
+			generateId: sequenceId(["hmj_rotation_1", "hmj_rotation_2"]),
+			now: sequenceNow([
+				"2026-09-01T15:00:00.000Z",
+				"2026-09-01T15:00:01.000Z",
+				"2026-09-01T15:00:02.000Z",
+				"2026-09-01T15:00:03.000Z",
+				"2026-09-01T15:00:04.000Z",
+				"2026-09-01T15:00:05.000Z",
+				"2026-09-01T15:00:06.000Z",
+				"2026-09-01T15:00:07.000Z",
+			]),
+			schedule: (work) => {
+				scheduled.push(work);
+			},
+			materializeConversation,
+		});
+		const request: HistoryMaterializationCreateRequest = {
+			provider: "chatgpt",
+			runtimeProfile: "default",
+			reconcile: true,
+			assetKinds: ["artifacts", "files"],
+			maxItems: 2,
+			refreshSnapshot: false,
+		};
+
+		await service.createJob(request);
+		const firstScheduled = scheduled.shift();
+		if (!firstScheduled) throw new Error("Expected first rotation job to be scheduled.");
+		await firstScheduled();
+		await service.createJob(request);
+		const secondScheduled = scheduled.shift();
+		if (!secondScheduled) throw new Error("Expected second rotation job to be scheduled.");
+		await secondScheduled();
+
+		expect(materializeConversation.mock.calls.map(([target]) => target.conversationId)).toEqual([
+			"conv_rotate_1",
+			"conv_rotate_2",
+			"conv_rotate_3",
+			"conv_rotate_4",
+		]);
+		await expect(service.readJob("hmj_rotation_2")).resolves.toMatchObject({
+			status: "skipped",
+			result: {
+				attempts: [
+					{ target: { conversationId: "conv_rotate_3" } },
+					{ target: { conversationId: "conv_rotate_4" } },
+				],
 			},
 		});
 	});
@@ -4871,6 +5496,19 @@ describe("history materialization service", () => {
 		expect(materializeConversation).toHaveBeenCalledTimes(1);
 		expect(materializeConversation.mock.calls[0]?.[0]).toMatchObject({
 			conversationId: "conv_guard_1",
+		});
+		await expect(service.readJob("hmj_provider_guard")).resolves.toMatchObject({
+			result: {
+				attempts: [
+					{
+						index: 0,
+						accounting: {
+							providerGuardObserved: true,
+							candidateMaterialized: false,
+						},
+					},
+				],
+			},
 		});
 	});
 
@@ -6942,6 +7580,345 @@ describe("history materialization service", () => {
 		});
 	}, 15_000);
 
+	it("records a no-refresh selected materialization attempt after verified evidence persistence", async () => {
+		let scheduled: (() => Promise<void>) | undefined;
+		const operations: string[] = [];
+		const targetResult = (target: HistoryMaterializationTarget): HistoryMaterializationResult => ({
+			object: "history_materialization_result",
+			generatedAt: "2026-08-15T20:00:02.000Z",
+			status: "materialized",
+			target,
+			source: { type: "reconciliation", provider: "chatgpt" },
+			manifestPaths: ["/tmp/attempt-one.json"],
+			entries: [
+				{
+					kind: "artifact",
+					providerId: "artifact_attempt_one",
+					title: "attempt-one.json",
+					status: "materialized",
+					localPath: "/tmp/attempt-one.json",
+					remoteUrl: null,
+					cacheKey: null,
+					checksumSha256: null,
+					mimeType: "application/json",
+					size: 12,
+					materializationMethod: "provider-download",
+					reason: null,
+					archiveItemId: null,
+					assetRoute: null,
+				},
+			],
+			archiveItems: [],
+			metrics: { conversations: 1, materialized: 1, skipped: 0, failed: 0 },
+			message: "Materialized one selected asset.",
+		});
+		const materializeConversation = vi.fn(async (target: HistoryMaterializationTarget) => {
+			operations.push("materialize");
+			return targetResult(target);
+		});
+		const recordConversationEvidence = vi.fn(async () => {
+			operations.push("evidence");
+		});
+		const service = createHistoryMaterializationService({
+			config: {},
+			store: createInMemoryHistoryMaterializationJobStore([]),
+			catalogService: {
+				readCatalog: vi.fn(async () => ({
+					object: "account_mirror_catalog" as const,
+					generatedAt: "2026-08-15T20:00:00.000Z",
+					kind: "all" as const,
+					limit: 500,
+					entries: [],
+					metrics: {
+						targets: 0,
+						projects: 0,
+						conversations: 0,
+						artifacts: 0,
+						files: 0,
+						media: 0,
+					},
+				})),
+				readItem: vi.fn(),
+			},
+			generateId: () => "hmj_attempt_receipt_1",
+			now: sequenceNow([
+				"2026-08-15T20:00:00.000Z",
+				"2026-08-15T20:00:01.000Z",
+				"2026-08-15T20:00:03.000Z",
+				"2026-08-15T20:00:04.000Z",
+			]),
+			schedule: (work) => {
+				scheduled = work;
+			},
+			materializeConversation,
+			recordConversationEvidence,
+		});
+
+		await service.createJob({
+			provider: "chatgpt",
+			runtimeProfile: "default",
+			conversationIds: ["conv_attempt_one"],
+			assetKinds: ["artifacts"],
+			maxItems: 1,
+		});
+		if (!scheduled) throw new Error("Expected selected attempt job to be scheduled.");
+		await scheduled();
+
+		expect(operations).toEqual(["materialize", "evidence"]);
+		const completed = await service.readJob("hmj_attempt_receipt_1");
+		const receipt = completed?.result?.attempts?.[0];
+		expect(receipt).toMatchObject({
+			object: "history_materialization_attempt_receipt",
+			version: 1,
+			origin: "selected_conversation_id",
+			index: 0,
+			target: { provider: "chatgpt", conversationId: "conv_attempt_one" },
+			budgetBefore: {
+				targetLimit: 1,
+				targetsConsumed: 0,
+				assetsRemaining: 1,
+			},
+			accounting: {
+				targetConsumed: true,
+				assetsAttempted: 1,
+				providerGuardObserved: false,
+				candidateMaterialized: true,
+			},
+			phases: {
+				snapshotRefresh: null,
+				materialization: { status: "materialized", entries: 1 },
+			},
+			evidence: { status: "persisted", writes: ["materialization"] },
+			status: "materialized",
+		});
+		expect(Object.isFrozen(receipt)).toBe(true);
+		expect(Object.isFrozen(receipt?.target)).toBe(true);
+		expect(completed?.result?.metrics).toMatchObject({
+			eligibleCandidates: 1,
+			selectedCandidates: 1,
+			materializedCandidates: 1,
+		});
+	});
+
+	it("reuses the exact provider work context when a materialize-first attempt falls back after refresh", async () => {
+		let scheduled: (() => Promise<void>) | undefined;
+		const operations: string[] = [];
+		const contexts: HistoryMaterializationProviderWorkContext[] = [];
+		let materializationCount = 0;
+		const materializeConversation = vi.fn(
+			async (
+				target: HistoryMaterializationTarget,
+				_request: HistoryMaterializationCreateRequest,
+				_jobId: string,
+				context?: HistoryMaterializationProviderWorkContext,
+			): Promise<HistoryMaterializationResult> => {
+				operations.push("materialize");
+				if (!context) throw new Error("Expected provider work context.");
+				contexts.push(context);
+				materializationCount += 1;
+				return {
+					object: "history_materialization_result",
+					generatedAt: `2026-08-15T21:00:0${materializationCount}.000Z`,
+					status: materializationCount === 1 ? "skipped" : "materialized",
+					target,
+					source: { type: "reconciliation", provider: "chatgpt" },
+					manifestPaths: [],
+					entries:
+						materializationCount === 1
+							? []
+							: [
+									{
+										kind: "artifact",
+										providerId: "artifact-after-refresh",
+										title: "after-refresh.json",
+										status: "materialized",
+										localPath: "/tmp/after-refresh.json",
+										remoteUrl: null,
+										cacheKey: null,
+										checksumSha256: null,
+										mimeType: "application/json",
+										size: 1,
+										materializationMethod: "provider-download",
+										reason: null,
+										archiveItemId: null,
+										assetRoute: null,
+									},
+								],
+					archiveItems: [],
+					metrics: {
+						conversations: 1,
+						materialized: materializationCount === 1 ? 0 : 1,
+						skipped: materializationCount === 1 ? 1 : 0,
+						failed: 0,
+					},
+					message: materializationCount === 1 ? "No cached asset." : "Materialized after refresh.",
+				};
+			},
+		);
+		const refreshConversationSnapshot = vi.fn(
+			async (target: HistoryMaterializationTarget): Promise<HistoryMaterializationSnapshotRefresh> => {
+				operations.push("refresh");
+				return {
+					object: "history_materialization_snapshot_refresh",
+					generatedAt: "2026-08-15T21:00:03.000Z",
+					status: "refreshed",
+					target,
+					routeabilityState: "routeable",
+					messageCount: 1,
+					fileCount: 1,
+					sourceCount: 0,
+					artifactCount: 0,
+					error: null,
+					message: "Refreshed.",
+				};
+			},
+		);
+		const recordConversationEvidence = vi.fn(async () => {
+			operations.push("evidence");
+		});
+		const service = createHistoryMaterializationService({
+			config: {},
+			store: createInMemoryHistoryMaterializationJobStore([]),
+			catalogService: {
+				readCatalog: vi.fn(async () => ({
+					object: "account_mirror_catalog" as const,
+					generatedAt: "2026-08-15T21:00:00.000Z",
+					kind: "all" as const,
+					limit: 500,
+					entries: [],
+					metrics: { targets: 0, projects: 0, conversations: 0, artifacts: 0, files: 0, media: 0 },
+				})),
+				readItem: vi.fn(),
+			},
+			generateId: () => "hmj_attempt_context_1",
+			now: sequenceNow([
+				"2026-08-15T21:00:00.000Z",
+				"2026-08-15T21:00:01.000Z",
+				"2026-08-15T21:00:04.000Z",
+				"2026-08-15T21:00:05.000Z",
+			]),
+			schedule: (work) => {
+				scheduled = work;
+			},
+			materializeConversation,
+			refreshConversationSnapshot,
+			recordConversationEvidence,
+		});
+
+		await service.createJob({
+			provider: "chatgpt",
+			conversationIds: ["conv_attempt_context"],
+			reconcile: true,
+			refreshSnapshot: true,
+			assetKinds: ["artifacts"],
+			maxItems: 1,
+		});
+		if (!scheduled) throw new Error("Expected fallback attempt job to be scheduled.");
+		await scheduled();
+
+		expect(operations).toEqual([
+			"materialize",
+			"evidence",
+			"refresh",
+			"evidence",
+			"materialize",
+			"evidence",
+		]);
+		expect(contexts).toHaveLength(2);
+		expect(contexts[1]).toBe(contexts[0]);
+		await expect(service.readJob("hmj_attempt_context_1")).resolves.toMatchObject({
+			status: "succeeded",
+			result: {
+				attempts: [
+					{
+						evidence: {
+							writes: ["materialization", "snapshot_refresh", "materialization"],
+						},
+						accounting: { candidateMaterialized: true },
+					},
+				],
+			},
+		});
+	});
+
+	it("fails closed before publishing an attempt receipt on target mismatch or evidence failure", async () => {
+		const runCase = async (input: {
+			jobId: string;
+			materializeConversation: (
+				target: HistoryMaterializationTarget,
+			) => Promise<HistoryMaterializationResult>;
+			recordConversationEvidence: () => Promise<void>;
+		}) => {
+			let scheduled: (() => Promise<void>) | undefined;
+			const service = createHistoryMaterializationService({
+				config: {},
+				store: createInMemoryHistoryMaterializationJobStore([]),
+				catalogService: { readCatalog: vi.fn(), readItem: vi.fn() },
+				generateId: () => input.jobId,
+				now: sequenceNow([
+					"2026-08-15T22:00:00.000Z",
+					"2026-08-15T22:00:01.000Z",
+					"2026-08-15T22:00:02.000Z",
+				]),
+				schedule: (work) => {
+					scheduled = work;
+				},
+				materializeConversation: input.materializeConversation,
+				recordConversationEvidence: input.recordConversationEvidence,
+			});
+			await service.createJob({
+				provider: "chatgpt",
+				conversationId: "conv_fail_closed",
+				assetKinds: ["artifacts"],
+			});
+			if (!scheduled) throw new Error("Expected fail-closed attempt job to be scheduled.");
+			await scheduled();
+			return service.readJob(input.jobId);
+		};
+		const resultFor = (
+			target: HistoryMaterializationTarget,
+		): HistoryMaterializationResult => ({
+			object: "history_materialization_result",
+			generatedAt: "2026-08-15T22:00:01.000Z",
+			status: "skipped",
+			target,
+			source: { type: "conversation", provider: "chatgpt", conversationId: target.conversationId },
+			manifestPaths: [],
+			entries: [],
+			archiveItems: [],
+			metrics: { conversations: 1, materialized: 0, skipped: 1, failed: 0 },
+			message: "No asset.",
+		});
+		const mismatchEvidence = vi.fn(async () => undefined);
+		const mismatch = await runCase({
+			jobId: "hmj_attempt_mismatch",
+			materializeConversation: async (target) =>
+				resultFor({ ...target, conversationId: "different_conversation" }),
+			recordConversationEvidence: mismatchEvidence,
+		});
+		expect(mismatchEvidence).not.toHaveBeenCalled();
+		expect(mismatch).toMatchObject({
+			status: "failed",
+			result: null,
+			error: {
+				message: "History materialization attempt result target did not match selected target.",
+			},
+		});
+
+		const evidenceFailure = await runCase({
+			jobId: "hmj_attempt_evidence_failure",
+			materializeConversation: async (target) => resultFor(target),
+			recordConversationEvidence: async () => {
+				throw new Error("account-mirror-evidence-write-failed");
+			},
+		});
+		expect(evidenceFailure).toMatchObject({
+			status: "failed",
+			result: null,
+			error: { message: "account-mirror-evidence-write-failed" },
+		});
+	});
+
 	it("skips a direct conversation asset family already materialized in the archive", async () => {
 		const homeDir = await fs.mkdtemp(
 			path.join(os.tmpdir(), "auracall-history-materialize-selected-archive-skip-"),
@@ -7227,6 +8204,7 @@ describe("history materialization service", () => {
 			expect.objectContaining({ conversationId: "chatgpt_missing_assets" }),
 			expect.objectContaining({ refreshSnapshot: true }),
 			"hmj_chatgpt_cache_first_1",
+			expect.any(Object),
 		);
 		expect(refreshConversationSnapshot).not.toHaveBeenCalled();
 		expect(recordConversationEvidence).toHaveBeenCalledWith(
@@ -7240,6 +8218,12 @@ describe("history materialization service", () => {
 		await expect(service.readJob("hmj_chatgpt_cache_first_1")).resolves.toMatchObject({
 			status: "succeeded",
 			result: {
+				attempts: [
+					{
+						origin: "reconciliation_candidate",
+						evidence: { writes: ["materialization"] },
+					},
+				],
 				metrics: {
 					conversations: 1,
 					materialized: 1,
@@ -7266,7 +8250,7 @@ describe("history materialization service", () => {
 				browserProfile: null,
 				boundIdentityKey: null,
 				conversationId: "conv_guard",
-				providerConversationUrl: null,
+				providerConversationUrl: "https://chatgpt.com/c/conv_guard",
 				projectId: null,
 			},
 			source: { type: "conversation", provider: "chatgpt", conversationId: "conv_guard" },
@@ -7705,6 +8689,7 @@ describe("history materialization service", () => {
 				assetKinds: ["artifacts"],
 			}),
 			"hmj_manifest_candidate_1",
+			expect.any(Object),
 		);
 		await expect(service.readJob("hmj_manifest_candidate_1")).resolves.toMatchObject({
 			status: "succeeded",
@@ -10417,6 +11402,118 @@ function buildArchiveItem(overrides: Partial<RunArchiveItem>): RunArchiveItem {
 		metadata: {},
 		links: {},
 		...overrides,
+	};
+}
+
+function buildReconciliationCatalog(conversationIds: string[]) {
+	return {
+		object: "account_mirror_catalog" as const,
+		generatedAt: "2026-09-01T14:00:00.000Z",
+		kind: "all" as const,
+		limit: 500,
+		entries: [
+			{
+				provider: "chatgpt" as const,
+				runtimeProfileId: "default",
+				browserProfileId: "default",
+				boundIdentityKey: "user@example.com",
+				status: "eligible" as const,
+				reason: "eligible" as const,
+				mirrorCompleteness: {
+					state: "in_progress" as const,
+					summary: "Asset recovery remains open.",
+					remainingDetailSurfaces: {
+						projects: 0,
+						conversations: conversationIds.length,
+						total: conversationIds.length,
+					},
+					signals: {
+						projectsTruncated: false,
+						conversationsTruncated: true,
+						attachmentInventoryTruncated: true,
+						attachmentCursorPresent: true,
+					},
+				},
+				counts: {
+					projects: 0,
+					conversations: conversationIds.length,
+					artifacts: conversationIds.length,
+					files: 0,
+					media: 0,
+				},
+				manifests: {
+					projects: [],
+					conversations: conversationIds.map((id) => ({
+						id,
+						title: id,
+						provider: "chatgpt" as const,
+						cachedArtifactCount: 1,
+						cachedFileCount: 0,
+					})),
+					artifacts: [],
+					files: [],
+					media: [],
+				},
+			},
+		],
+		metrics: {
+			targets: 1,
+			projects: 0,
+			conversations: conversationIds.length,
+			artifacts: conversationIds.length,
+			files: 0,
+			media: 0,
+		},
+	};
+}
+
+function buildNoMaterializableHistoryResult(
+	target: HistoryMaterializationTarget,
+): HistoryMaterializationResult {
+	return {
+		object: "history_materialization_result",
+		generatedAt: "2026-09-01T14:00:02.000Z",
+		status: "skipped",
+		target,
+		source: { type: "reconciliation", provider: "chatgpt" },
+		manifestPaths: [],
+		entries: [
+			{
+				kind: "artifact",
+				providerId: null,
+				title: null,
+				status: "skipped",
+				localPath: null,
+				remoteUrl: null,
+				cacheKey: null,
+				checksumSha256: null,
+				mimeType: null,
+				size: null,
+				materializationMethod: null,
+				reason: `no-materializable-artifact: provider detail exposed no downloadable artifact assets for conversation ${target.conversationId}`,
+				archiveItemId: null,
+				assetRoute: null,
+			},
+			{
+				kind: "file",
+				providerId: null,
+				title: null,
+				status: "skipped",
+				localPath: null,
+				remoteUrl: null,
+				cacheKey: null,
+				checksumSha256: null,
+				mimeType: null,
+				size: null,
+				materializationMethod: null,
+				reason: `no-materializable-file: provider detail exposed no downloadable file assets for conversation ${target.conversationId}`,
+				archiveItemId: null,
+				assetRoute: null,
+			},
+		],
+		archiveItems: [],
+		metrics: { conversations: 1, materialized: 0, skipped: 2, failed: 0 },
+		message: "Provider detail exposed no downloadable assets.",
 	};
 }
 
