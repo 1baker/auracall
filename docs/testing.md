@@ -155,6 +155,10 @@
     observes either an empty selected composer or only the provider-authored
     prompt that exactly matches the decoded current `prompt` parameter, restores
     the original route, and observes that the selection and prompt are cleared
+  - `skills run` is a provider-free negative contract in Chat mode: user-added
+    Skills are not available there, so both exported execution paths must fail
+    before inventory reads, browser launch, or Send; Work-mode testing is
+    deferred
   - `list` and `show` require the exact expected account; all mutations also
     require `--yes`, a complete inventory, and an exact 32-hex ID after create
   - identity preflight merges missing fields from the exact logged-in

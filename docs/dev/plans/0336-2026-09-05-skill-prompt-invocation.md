@@ -1,7 +1,7 @@
 # Skill Prompt Invocation | 0336-2026-09-05
 
-State: OPEN
-Operational state: SKILL_EXECUTION_UNACCEPTED
+State: CLOSED
+Operational state: CHAT_MODE_PROVIDER_LIMITATION_ACCEPTED_WORK_DEFERRED
 Lane: P29
 Branch: fix/plan0336-skill-prompt-invocation
 Target: main
@@ -13,6 +13,17 @@ Select an exact-account, exact-ID Skill and submit one user prompt in the same
 owned composer, preserving positive selection through the send boundary.
 
 ## Current State
+
+The operator confirmed that ChatGPT Chat does not expose user-added Skills for
+selection. This matches both prior native and AuraCall evidence: exact Skill ID
+serialization succeeded, but the model could not access the custom Skill
+resource. Chat-mode execution is therefore an accepted provider limitation,
+not an open AuraCall execution defect.
+
+AuraCall now rejects `skills run` through both exported execution paths before
+inventory reads, browser launch, or Send, with an explicit message that Work
+mode testing is deferred. Skill list/show/select and exact-ID CRUD remain
+supported. No new browser or provider action was performed for this closeout.
 
 `skills run` is implemented and installed. One live canary committed the exact
 Skill ID in its user turn and returned an answer. ChatGPT explicitly reported
@@ -67,3 +78,7 @@ account changes, scheduler changes, service restarts, or release publish.
 
 Implementation and docs are committed and integrated after validation. Record
 whether the live provider loaded the Skill and any exact remaining limitation.
+
+Disposition: closed with the Chat-mode limitation documented and enforced
+pre-effect. Work-mode execution is intentionally deferred and is not part of
+this plan's completion contract.

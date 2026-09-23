@@ -49947,3 +49947,16 @@ Chat repair integrated. Inventory complete at 11. Blank-tab readiness fix instal
   no foreground or queue conflict, then completed at
   `2026-09-23T16:29:41.213Z` in healthy scheduled posture without
   backpressure. DAS-R5 and issue 6 are accepted.
+## 2026-09-23 | Issue 8 Chat-mode Skill limitation closeout
+
+- Accepted the operator's direct observation that ChatGPT Chat does not expose
+  user-added Skills, consistent with the prior AuraCall and native exact-ID
+  attempts that could serialize but not load the custom Skill resource.
+- Added RED/GREEN coverage at both exported execution paths. `skills run` now
+  rejects before inventory reads, browser launch, or Send and states that Work
+  mode testing is deferred. List/show/select and Skill CRUD are unchanged.
+- No browser, provider prompt, scheduler mutation, installation, or live retry
+  ran. P29/Plan 0336 and issue 8 are ready to close as a documented provider
+  limitation after integration. The plan audit retains 32 pre-existing missing
+  policy-target findings from main commit `2b08d5f2e`; this slice does not
+  expand into that policy repair.

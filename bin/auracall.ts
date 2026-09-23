@@ -5617,7 +5617,7 @@ skillsCommand
 
 skillsCommand
   .command('run <skill-id>')
-  .description('Select one exact ChatGPT Skill and submit one prompt in the same Chat composer.')
+  .description('Reject Chat-mode execution of user-added Skills before browser launch or Send; Work-mode testing is deferred.')
   .requiredOption('--expected-account <email>', 'Exact ChatGPT account expected in the managed browser.')
   .requiredOption('-p, --prompt <text>', 'Prompt to submit once with the selected Skill (maximum 32000 characters).')
   .option('--response-timeout <seconds>', 'Response capture timeout, 1 to 600 seconds.', '300')
