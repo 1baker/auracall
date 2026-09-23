@@ -1,5 +1,16 @@
 # RUNBOOK
 
+## Turn 617 | 2026-09-23
+
+- Closed P16/issue 6 from installed commit `64a446cf9`. One explicit
+  `wsl-chrome-3` LitScout Send under `eric.cochran@soylei.com` returned terminal
+  conversation `6ab3fbd8-4aa0-83ea-8ea8-af3e1bc0a25a` with marker
+  `AURACALL_DAS_R5_OK`; no approval surface or retry occurred.
+- Attributable canary Chrome PID `25130` was cleaned after passive readback.
+  One scheduler resume was accepted and selected normal `wsl-chrome-3` work
+  without foreground or queue conflict. Durable receipt:
+  `docs/dev/notes/2026-09-23-issue-6-live-acceptance.md`.
+
 ## Turn 616 | 2026-09-16
 
 - P16/issue 6 recovery started from `dc0b909fb3d6d3354e5c2fee9f4ac6525cc94157`

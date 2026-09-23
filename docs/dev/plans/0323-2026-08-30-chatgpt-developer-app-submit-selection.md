@@ -1,18 +1,30 @@
 # ChatGPT developer-app submit selection | 0323-2026-08-30
 
-State: OPEN
+State: CLOSED
 Lane: P16
-Operational state: TERMINAL_RESPONSE_PROVIDER_FREE_INTEGRATED_INSTALL_LIVE_BLOCKED
+Operational state: LIVE_ACCEPTED
 Branch: fix/issue-6-developer-app-response
 Target: main
 Integration: merge
-Revision: 10 | 2026-09-23
+Revision: 11 | 2026-09-23
 
 ## Current State
 
+- DAS-R5 passed from installed commit `64a446cf94946950bc5e5610eb6811d503e3af34`
+  on explicit AuraCall runtime profile `wsl-chrome-3`. The exact LitScout app
+  ran under `eric.cochran@soylei.com`, authenticated successfully, listed five
+  accessible projects, and returned terminal conversation
+  `6ab3fbd8-4aa0-83ea-8ea8-af3e1bc0a25a` with exact marker
+  `AURACALL_DAS_R5_OK`. No `Answer now` or manual approval surface appeared.
+- The accepted run used one Send and zero retries. Its attributable Chrome PID
+  `25130` was terminated after passive terminal readback. The scheduler was
+  resumed once and accepted normal `wsl-chrome-3` work with no foreground or
+  queue conflict. Issue `ecochran76/auracall#6` is satisfied and may close.
+
 - The operator authorized one installed DAS-R5 attempt on 2026-09-23. Current
-  source/install parity passed at 525 `dist` files with identical aggregate
-  SHA-256 `30f58843ff76c95db59eddc54c591bd7adb1be3394a01658907897765d6910d8`.
+  source/install parity passed at 525 `dist` files. After PR 42 adoption, the
+  accepted runtime and source had identical aggregate SHA-256
+  `817c1f7f6ca586528245cdc75bee5187fca989177bd058abd538cc965921bd01`.
   The first inventory accidentally omitted `--profile wsl-chrome-3` and read
   the configured default account; that result is invalid for DAS-R5.
 - The corrected explicit-profile inventory observed Pro account
@@ -23,9 +35,9 @@ Revision: 10 | 2026-09-23
   the Gmail Team account while authorization still expected `wsl-chrome-3`.
   AuraCall returned `provider_session_dimension_conflict`, null conversation,
   and `effectState=pre_effect`; no Send or retry occurred.
-- Provider-free RED/GREEN now preserves `auracallProfileName` in the shared
-  submit config. A new installed/live attempt remains separately gated after
-  integration and adoption of that repair.
+- Provider-free RED/GREEN preserves `auracallProfileName` in the shared submit
+  config. PR 42 integrated and installed that repair before the accepted live
+  attempt.
 - Issue `ecochran76/auracall#6` recovery source merged through PR 21 at
   `c3800d460019f6dcf11fee29e9ddabc7907e44b0`; the clean, remote-equal,
   process-unowned implementation worktree and local branch were removed while
@@ -182,9 +194,10 @@ evidence without duplicating provider-local response or approval watchers.
 
 `DAS-R1` through `DAS-R3` must have current source and installed evidence.
 `DAS-R4` is the bounded revision-8 provider-free terminal-response milestone.
-`DAS-R5` and current source/installed parity remain separate open gates; neither
-may be claimed from provider-free source validation.
+`DAS-R5` is accepted only from the installed, explicit-profile live receipt;
+provider-free source validation alone did not satisfy it.
 
 The 2026-09-23 authorized attempt consumed no Send because cross-profile
 handoff failed the pre-effect identity gate. This is a valid fail-closed
-receipt, not DAS-R5 acceptance.
+receipt, not DAS-R5 acceptance. PR 42 corrected that handoff; the subsequent
+single installed run supplied the accepted DAS-R5 receipt above.
