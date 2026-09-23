@@ -788,6 +788,20 @@ export function createAccountMirrorCompletionService(input: {
 						message: `Live-follow phase decision: ${refreshed.liveFollowCycle.currentPhase} (${refreshed.liveFollowCycle.decisionReason}).`,
 					});
 				}
+				if (
+					refresh.browserLifecycle?.cleanupRequested === true &&
+					refresh.browserLifecycle.status === "failed"
+				) {
+					throw new AccountMirrorRefreshError(
+						503,
+						"account_mirror_browser_cleanup_failed",
+						`Managed browser cleanup failed before history materialization handoff: ${refresh.browserLifecycle.message}`,
+						{
+							managedProfileDir: refresh.browserLifecycle.managedProfileDir,
+							pid: refresh.browserLifecycle.pid,
+						},
+					);
+				}
 				const queuedCompletionMaterialization = Boolean(
 					refreshed &&
 						(await shouldQueueMaterialization(

@@ -49835,3 +49835,16 @@ Chat repair integrated. Inventory complete at 11. Blank-tab readiness fix instal
   retry ran. Both browser owners exited, active child jobs returned to zero,
   the provider-work lease released, and the API retained PID `12008` with zero
   restarts. Issue 29 owns the lifecycle handoff repair.
+
+## 2026-09-22 | Issue 29 provider-free browser handoff repair
+
+- A focused red regression proved bounded refresh cleanup returned after its
+  initial owner lookup and process signal without confirming profile release.
+- Refresh cleanup now polls the exact managed browser profile for up to five
+  seconds after termination. It reports `terminated` only after ownership
+  disappears and otherwise returns the remaining PID in a failed receipt.
+- Completion records the refresh/pass and blocks with
+  `account_mirror_browser_cleanup_failed` before creating a materialization
+  child when release is unproved. The existing second-Chrome guard is unchanged.
+- The focused refresh, completion, and browser-service suite passes 107 tests.
+  No install, browser, provider, runtime, or issue 10 retry was performed.

@@ -22649,3 +22649,14 @@ ChatGPT commits a native Skill mention before the user text. Prompt equality mus
 - Never retry a one-shot canary to hide that outcome. Preserve the terminal job
   and per-candidate receipts, verify browser/process cleanup and lease release,
   then route the lifecycle defect to a separate provider-free repair item.
+
+## 2026-09-22 | Process signaling is not managed-profile release proof
+
+- A successful `SIGTERM`/`SIGKILL` path does not prove that the managed browser
+  profile is owner-free. Re-probe the exact profile after termination and wait
+  within a bounded deadline before reporting cleanup success.
+- Treat a remaining PID as an explicit failed lifecycle receipt. Completion
+  must preserve that refresh evidence and stop before queuing child provider
+  work; the browser-service second-Chrome guard remains the final safety net.
+- Test both seams: delayed owner disappearance in refresh cleanup and zero
+  child-job creation when completion receives a failed cleanup receipt.
