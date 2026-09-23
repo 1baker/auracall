@@ -31,6 +31,26 @@ describe('browser model selection matchers', () => {
     );
   });
 
+  it('accepts an exact 5.6 Pro composer pill without reopening the model menu', async () => {
+    let clicks = 0;
+    class FakeElement {
+      textContent = '5.6\nPro';
+      getAttribute() { return null; }
+      dispatchEvent() { clicks += 1; return true; }
+    }
+    const button = new FakeElement();
+    const context: Record<string, unknown> = {
+      setTimeout,
+      performance: { now: () => Date.now() },
+      document: { querySelector: () => button },
+    };
+    const result = runInNewContext(buildModelSelectionExpressionForTest('5.6Pro'), context) as Promise<{
+      status: string; label: string;
+    }>;
+    await expect(result).resolves.toEqual({ status: 'already-selected', label: '5.6\nPro' });
+    expect(clicks).toBe(0);
+  });
+
   it('ends a persistent submenu retry before the native broker command timeout', async () => {
     vi.useFakeTimers();
     try {
@@ -72,7 +92,7 @@ describe('browser model selection matchers', () => {
       await vi.advanceTimersByTimeAsync(25_000);
       await expect(result).resolves.toEqual({
         status: 'option-not-found',
-        hint: { temporaryChat: false, availableOptions: ['Pro'] },
+        hint: { temporaryChat: false, availableOptions: ['Pro [role=-, expanded=false, checked=-, testid=-]'] },
       });
       expect(clicks).toBeGreaterThan(10);
     } finally {
@@ -103,6 +123,7 @@ describe('browser model selection matchers', () => {
         }
       }
       const button = new FakeElement();
+      button.textContent = 'ChatGPT';
       const option = new FakeElement();
       const context: Record<string, unknown> = {
         setTimeout,
@@ -132,8 +153,64 @@ describe('browser model selection matchers', () => {
     }
   });
 
+  it('opens the observed 5.6Pro submenu and then chooses its Pro leaf', async () => {
+    vi.useFakeTimers();
+    try {
+      let expanded = false;
+      let selected = false;
+      class FakeElement {
+        children: FakeElement[] = [];
+        classList = { contains: () => false };
+        constructor(public textContent: string, public role: string) {}
+        getAttribute(name: string) {
+          if (name === 'role') return this.role;
+          if (name === 'aria-expanded') return this === parent ? String(expanded) : null;
+          if (name === 'aria-checked') return this === leaf ? String(selected) : null;
+          return null;
+        }
+        hasAttribute() { return false; }
+        querySelector() { return null; }
+        getBoundingClientRect() { return { left: 0, top: 0, width: 10, height: 10 }; }
+        dispatchEvent(event: { type: string }) {
+          if (event.type === 'click' && this === parent) expanded = true;
+          if (event.type === 'click' && this === leaf) selected = true;
+          return true;
+        }
+      }
+      const button = new FakeElement('ChatGPT', 'button');
+      const parent = new FakeElement('5.6Pro', 'menuitem');
+      const leaf = new FakeElement('Pro', 'menuitemradio');
+      const context: Record<string, unknown> = {
+        setTimeout,
+        performance: { now: () => Date.now() },
+        EventTarget: FakeElement,
+        Element: FakeElement,
+        HTMLElement: FakeElement,
+        MouseEvent: class { constructor(public type: string) {} },
+        document: {
+          title: 'ChatGPT', body: { innerText: '' },
+          querySelector: () => button,
+          querySelectorAll: (selector: string) => selector.includes('[role="menu"]')
+            ? [] : expanded ? [parent, leaf] : [parent],
+        },
+        location: { href: 'https://chatgpt.com/c/test' },
+      };
+      context.window = context;
+      const result = runInNewContext(buildModelSelectionExpressionForTest('5.6Pro'), context) as Promise<{
+        status: string; label: string;
+      }>;
+      await vi.advanceTimersByTimeAsync(1_000);
+      await expect(result).resolves.toEqual({ status: 'already-selected', label: 'Pro' });
+      expect(expanded).toBe(true);
+      expect(selected).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('keeps the currently offered 5.6Pro row distinct from 6 Pro', () => {
     expect(scoreModelPickerOptionForTest('6 Pro', { text: '5.6Pro' }).score).toBe(0);
+    expect(scoreModelPickerOptionForTest('6 Pro', { text: 'Pro' }).score).toBe(0);
     expect(scoreModelPickerOptionForTest('5.6Pro', { text: '6 Pro' }).score).toBe(0);
     expect(scoreModelPickerOptionForTest('5.6Pro', { text: '5.6Pro' }).score).toBeGreaterThan(0);
   });

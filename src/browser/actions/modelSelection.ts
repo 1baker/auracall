@@ -201,7 +201,8 @@ function scoreModelPickerOption(targetModel: string, option: { text?: string | n
   };
   const requestedProVersion = proVersion(targetModel);
   const candidateProVersion = proVersion(`${option.text ?? ''} ${option.testId ?? ''}`);
-  if (requestedProVersion && candidateProVersion && requestedProVersion !== candidateProVersion) {
+  if (requestedProVersion === '6' && candidateProVersion !== '6'
+    || requestedProVersion === '5.6' && candidateProVersion === '6') {
     return { score: 0, optionKind, normalizedText, normalizedTestId };
   }
 
@@ -344,6 +345,15 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
     }
 
     const getButtonLabel = () => (button.textContent ?? '').trim();
+    // The current composer pill can name the active model directly. Its
+    // versioned Pro label is stronger evidence than a submenu with no leaf.
+    const compactModelLabel = (value) => value.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const targetModelKey = compactModelLabel(PRIMARY_LABEL);
+    const buttonModelKey = compactModelLabel(getButtonLabel());
+    if (['56pro', 'gpt56pro'].includes(targetModelKey)
+      && ['56pro', 'gpt56pro'].includes(buttonModelKey)) {
+      return { status: 'already-selected', label: getButtonLabel() };
+    }
     if (MODEL_STRATEGY === 'current') {
       // We still open the menu below to discover the checked item because the top button label
       // currently only says "ChatGPT" and does not expose the active model.
@@ -485,7 +495,8 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
       };
       const requestedProVersion = proVersion(PRIMARY_LABEL);
       const candidateProVersion = proVersion(normalizedText + ' ' + normalizedTestId);
-      if (requestedProVersion && candidateProVersion && requestedProVersion !== candidateProVersion) {
+      if (requestedProVersion === '6' && candidateProVersion !== '6'
+        || requestedProVersion === '5.6' && candidateProVersion === '6') {
         return 0;
       }
       if (SEMANTIC_TARGET) {
@@ -551,8 +562,10 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
     };
 
     const findBestOption = () => {
-      // Walk through every menu item and keep whichever earns the highest score.
-      let bestMatch = null;
+      // A model-family submenu can score above its actual leaf option. Once
+      // the submenu opens, choose the matching leaf before its parent.
+      let bestLeaf = null;
+      let bestSubmenu = null;
       const buttons = collectOptionNodes();
       for (const option of buttons) {
         const text = option.textContent ?? '';
@@ -563,11 +576,18 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
           continue;
         }
         const label = getOptionLabel(option);
-        if (!bestMatch || score > bestMatch.score) {
-          bestMatch = { node: option, label, score, testid, normalizedText };
+        const submenu = testid.toLowerCase().includes('submenu') ||
+          (option.getAttribute?.('role') === 'menuitem'
+            && option.getAttribute?.('aria-expanded') !== null) ||
+          normalizedText.startsWith('model ');
+        const candidate = { node: option, label, score, testid, normalizedText };
+        if (submenu) {
+          if (!bestSubmenu || score > bestSubmenu.score) bestSubmenu = candidate;
+        } else if (!bestLeaf || score > bestLeaf.score) {
+          bestLeaf = candidate;
         }
       }
-      return bestMatch;
+      return bestLeaf ?? bestSubmenu;
     };
     const findSelectedOption = () => {
       let selected = null;
@@ -606,7 +626,16 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
       };
       const collectAvailableOptions = () => {
         const labels = collectOptionNodes()
-          .map((node) => (node?.textContent ?? '').trim())
+          .map((node) => {
+            const label = (node?.textContent ?? '').replace(/\s+/g, ' ').trim().slice(0, 80);
+            if (!label) return '';
+            const role = node.getAttribute?.('role') ?? '-';
+            const expanded = node.getAttribute?.('aria-expanded') ?? '-';
+            const checked = node.getAttribute?.('aria-checked') ?? '-';
+            const testId = (node.getAttribute?.('data-testid') ?? '-').slice(0, 80);
+            return label + ' [role=' + role + ', expanded=' + expanded
+              + ', checked=' + checked + ', testid=' + testId + ']';
+          })
           .filter(Boolean)
           .filter((label, index, arr) => arr.indexOf(label) === index);
         return labels.slice(0, 12);
@@ -649,7 +678,6 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
           return;
         }
         if (MODEL_STRATEGY !== 'current' && match) {
-          dispatchClickSequence(match.node);
           // Submenus (e.g. "Legacy models") need a second pass to pick the actual model option.
           // Keep scanning once the submenu opens instead of treating the submenu click as a final switch.
           const isSubmenu =
@@ -658,9 +686,13 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
               && match.node.getAttribute?.('aria-expanded') !== null) ||
             match.normalizedText.startsWith('model ');
           if (isSubmenu) {
+            if (match.node.getAttribute?.('aria-expanded') !== 'true') {
+              dispatchClickSequence(match.node);
+            }
             setTimeout(attempt, REOPEN_INTERVAL_MS / 2);
             return;
           }
+          dispatchClickSequence(match.node);
           // Verify via the checked menu item instead of the top button label, which is often generic.
           setTimeout(attempt, Math.max(160, INITIAL_WAIT_MS));
           return;

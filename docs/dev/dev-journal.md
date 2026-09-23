@@ -49421,6 +49421,22 @@ prevented cross-version Pro matches. A checked leaf model option with an
 that attribute exists. Focused source tests passed; installed/live acceptance
 is still required before the proposal can use this route.
 
+The next short installed probe failed before Send but exposed the exact menu
+shape: `5.6Pro` is a collapsed `menuitem` submenu, while `GPT-5.6 Sol` is the
+checked `menuitemradio` leaf. The picker had kept preferring the high-scoring
+submenu parent. Source now prefers a matching leaf once a submenu opens and
+does not re-click an already expanded parent. A fake-DOM parent-to-leaf switch
+test passes; this revision still needs installed/live confirmation.
+
+The submenu revision was installed with exact compiled-file parity; 106 focused
+tests passed with one unrelated skip, build typecheck and production build
+passed, and the API returned healthy after restart while retained Chrome PID
+73650 stayed unchanged. A second short live selector probe still failed before
+Send. Its bounded menu evidence showed `5.6Pro` expanded but no selectable Pro
+leaf among the model-menu options; Sol remained checked. No further probe was
+submitted. The explicit 5.6Pro route is source-supported but not live-accepted
+on this account's present workbench UI.
+
 ## 2026-09-23 | Bound ChatGPT model-picker retries to the native CDP window
 
 Two retained-browser Pro requests for the NSF STTR Project Description failed

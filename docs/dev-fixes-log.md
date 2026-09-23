@@ -22900,3 +22900,13 @@ browser-stage lifecycle observability, not transcript truncation.
   as a submenu merely for carrying `aria-expanded`.
 - Selector, scoring, and fake-DOM leaf-switch tests passed in source; live
   installation and browser verification are separate gates.
+- A short installed selector probe then showed `5.6Pro` as a collapsed
+  `menuitem` and Sol as the checked `menuitemradio`. The follow-up source fix
+  prefers matching leaf options after opening a submenu and leaves an already
+  expanded parent alone. A parent-to-leaf fake-DOM regression passed; installed
+  acceptance remains separate.
+- Installed parity, a healthy restarted API and unchanged retained Chrome PID
+  were verified. The next short live probe failed before Send with the 5.6Pro
+  submenu expanded but no selectable Pro leaf exposed. The route remains
+  live-unverified on this account; stop retries until the menu or account
+  state changes or a governed selector path is found.
