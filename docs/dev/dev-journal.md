@@ -49761,3 +49761,21 @@ Chat repair integrated. Inventory complete at 11. Blank-tab readiness fix instal
   `57a0796662bf592f11b1edcc1d33db37f8452dee`; remote custody, exact source
   locators, merge ancestry, and process ownership were re-read before the clean
   implementation worktree and local branch were removed.
+
+## 2026-09-22 | Issue 5 policy and worktree reconciliation
+
+- The pinned v0.1.26 selector remains installed, and deterministic selection
+  reports the repo policy set already aligned. Goal-policy and catalog-only
+  active-lane audits pass; the active planning audit retains only two unrelated
+  legacy Plan 0017/0018 findings.
+- Fresh GitHub readback shows no open PR for the mixed source branch. Its 24
+  unique commits remain prohibited from wholesale integration and are now 246
+  commits behind canonical `main`; issues 6 and 9 have source-integration
+  receipts while issues 7 and 10 retain separate open outcomes.
+- A fresh OS census still reports multiple process working directories plus
+  CodeGraph state under the mixed checkout. P46 therefore remains open and the
+  source worktree, local branch, and remote branch were not switched, removed,
+  rebased, pruned, or rewritten.
+- This reconciliation runs from a fresh issue-5 branch based on canonical
+  `origin/main` and updates only governance receipts. It performs no browser,
+  provider, runtime, or product effect.

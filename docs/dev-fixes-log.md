@@ -22603,3 +22603,16 @@ ChatGPT commits a native Skill mention before the user text. Prompt equality mus
 - 2026-09-16: Policy entrypoint wiring is not adoption proof unless every named
   durable target exists. Audit `AGENTS.md` policy paths as real files so an
   installed selector manifest cannot hide a missing repo-local authority.
+
+## 2026-09-22 | Reconcile integrated source separately from worktree retirement
+
+- An issue can have current-main source integration while still retaining a
+  separately gated installed or live acceptance outcome. Record both states;
+  do not keep historical commits marked merely as recovery candidates after a
+  current-main PR has dispositioned them.
+- A clean/equal Git worktree is not removable while OS processes retain it as
+  a working directory or hold repo-local service state. Refresh the cwd census
+  immediately before cleanup and leave the branch/worktree untouched when any
+  owner remains.
+- Reconcile policy from a fresh canonical-main issue branch. Never use a stale
+  mixed source branch as the vehicle for its own governance or cleanup patch.
