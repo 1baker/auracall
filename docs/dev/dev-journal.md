@@ -1,3 +1,12 @@
+## 2026-09-23 | Oracle remote reclassified as historical provenance
+
+- Renamed the local Git remote `upstream` to `oracle-archive` without changing
+  its Oracle URL or remote-tracking commit. `origin` and all branch tracking
+  remain unchanged.
+- Oracle is historical research/provenance only and is no longer considered an
+  upstream or directly related repository. Historical receipts retain the old
+  remote name where that name was true at the time.
+
 ## 2026-09-23 | Plan 0358 final issue 29 live acceptance opened
 
 - Operator live-acceptance authority plus the follow-up execution direction

@@ -385,8 +385,9 @@ Lanes: P01-P15, P17, P19-P28, P30-P45 (completed/accepted); P16, P18, P29, P46 (
   [docs/dev/plans/0308-2026-08-22-repository-git-true-up-oracle-reference-review.md](docs/dev/plans/0308-2026-08-22-repository-git-true-up-oracle-reference-review.md)
   Fresh fetches of `origin` and the Oracle-reference remote prove clean
   `main == origin/main`, seven clean linked worktrees, 14 merged topic branches,
-  and three non-ancestral local branches. The Git remote named `upstream` points
-  to Oracle, which now serves a different purpose from AuraCall; its 517
+  and three non-ancestral local branches. The historical Oracle remote is now
+  named `oracle-archive`; Oracle is no longer treated as an AuraCall upstream.
+  Its 517
   Oracle-only commits are research input, not synchronization debt. The bounded
   plan first restores the missing active-lane catalog and adjudicates exact
   custody. A separate reference review may identify narrow cherry-pick
