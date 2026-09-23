@@ -22636,3 +22636,16 @@ ChatGPT commits a native Skill mention before the user text. Prompt equality mus
   fresh materialization for every required variant. The issue 7 acceptance
   produced completed Markdown, DOCX, and PDF artifacts (`3/3`) after one Send
   and zero retries.
+
+## 2026-09-22 | Fair selection does not prove browser-lifecycle handoff
+
+- A bounded completion pass can prove fair candidate rotation and
+  concrete-only budget accounting while the child materialization still fails
+  before any asset attempt. Preserve these as separate acceptance boundaries.
+- The issue 10 canary selected six distinct candidates and charged zero assets
+  for six failed snapshot refreshes, but a transient managed Chrome owner had
+  no attributable responsive DevTools endpoint. The second-Chrome guard
+  correctly failed closed.
+- Never retry a one-shot canary to hide that outcome. Preserve the terminal job
+  and per-candidate receipts, verify browser/process cleanup and lease release,
+  then route the lifecycle defect to a separate provider-free repair item.
