@@ -16,13 +16,19 @@ history.
 ## Current State
 
 - The local branch equals its remote at `0531931410a1f362f1138cd5b66758b51d6347db`.
-- The branch is 216 commits behind canonical `main` and retains 24 commits not
+- After the 2026-09-22 remote refresh, the branch is 246 commits behind
+  canonical `main` and retains 24 commits not
   reachable from `main`, including two historical merge commits.
 - Its worktree is clean but actively owned by multiple processes, so it must
   not be removed, renamed, switched, rebased, or otherwise repurposed.
 - Patch comparison shows the final two GitHub-policy commits are already
   equivalent to canonical work integrated through PR 12. The remaining commits
   require issue-scoped recovery or explicit historical disposition.
+- Issue 9's provider-free source recovery merged through PR 17, and issue 6's
+  provider-free shared-lifecycle recovery merged through PR 21. Their installed
+  and live acceptance gates remain owned by those issues rather than P46.
+- Issue 7 and issue 10 remain open and retain their separately gated product
+  and live-effect outcomes.
 - The exact commit ledger is
   `docs/dev/notes/2026-09-16-issue-5-mixed-branch-disposition.md`.
 
@@ -59,6 +65,8 @@ history.
 
 ## Next Action
 
-Issue 9 should recover the aggregate-status slice first because its earliest
-commits establish the branch base. Issues 6 and 7 can then recover only their
-owned ChatGPT surfaces from fresh current-main branches.
+Keep issues 6, 7, 9, and 10 as the authorities for their remaining acceptance
+outcomes. Re-run the clean/equal/ignored-file/remote/process-cwd gates only
+after those outcomes are explicitly dispositioned and all source-worktree
+owners have released the checkout; until then, do not switch, remove, or prune
+the mixed branch worktree.

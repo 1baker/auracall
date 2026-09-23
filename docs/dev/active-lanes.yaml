@@ -900,12 +900,12 @@ lanes:
     overlaps: [P08, P16, P18, P29, P45]
     reconciled_overlaps: [P08, P16, P18, P29, P45]
     reconciliation_note: P46 owns commit disposition and eventual custody cleanup only; issues 6, 7, 9, and 10 retain their product and live-effect outcomes.
-    validation_status: commit-disposition-recorded
-    validation_ref: docs/dev/notes/2026-09-16-issue-5-mixed-branch-disposition.md
+    validation_status: disposition-current-custody-blocked
+    validation_ref: docs/dev/notes/2026-09-22-issue-5-policy-worktree-reconciliation.md
     integration_receipt: null
     blocker: The clean mixed worktree has active process-cwd owners and must remain untouched until they release it and every routed child outcome is reconciled.
-    disposition: All 24 unique commits have an explicit route or non-cherry-pick disposition; the branch is prohibited from direct integration and remains retained for child recovery.
-    updated_at: 2026-09-16
+    disposition: All 24 unique commits retain an explicit route or non-cherry-pick disposition; issues 6 and 9 have source-integration receipts, issues 7 and 10 remain open, and the process-owned branch remains prohibited from direct integration or cleanup.
+    updated_at: 2026-09-22
   - id: P47
     objective: Restore the missing adopted model-selection policy and fail closed on dangling AGENTS.md policy targets.
     plan: docs/dev/plans/0354-2026-09-16-policy-target-integrity.md
