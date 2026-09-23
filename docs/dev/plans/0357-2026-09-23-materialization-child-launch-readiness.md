@@ -1,6 +1,6 @@
 # Materialization child launch readiness | 0357-2026-09-23
 
-State: OPEN
+State: CLOSED
 Lane: P50
 Branch: fix/issue-29-child-launch-readiness
 Target: main
@@ -43,3 +43,13 @@ second-Chrome guard.
 Canonical main contains the bounded readiness repair, regression coverage, and
 documentation receipts. Installed/live acceptance remains a separate authority
 boundary; the scheduler remains paused until that acceptance succeeds.
+
+## Result
+
+PR 35 merged the bounded owner-readiness repair into canonical `main` at
+`52cf3641494b623c9fdf6ce2ca105e2430e9e231`. The exact PID-before-port
+regression went red before the repair and green after it. The affected packet
+passed 112 tests, typecheck, production build, full lint with zero errors, and
+the 357-candidate plan audit with zero validation errors. Fresh process census
+found no managed browser owner. No install or live effect occurred; issue 29
+remains open and unassigned for separately authorized installed acceptance.
