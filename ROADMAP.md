@@ -5,7 +5,7 @@
   one Send and honest answer/identity/effect evidence. Provider-free validation
   and local commits only; integration, installation and live proof remain open.
 
-- Active decomposition lane P46: [Plan 0353](docs/dev/plans/0353-2026-09-16-mixed-branch-decomposition.md)
+- Completed decomposition lane P46: [Plan 0353](docs/dev/plans/0353-2026-09-16-mixed-branch-decomposition.md)
   registers the process-owned mixed historical branch under GitHub issue 5.
   Its 24 unique commits route to issues 6, 7, and 9 or explicit historical
   dispositions; the branch must never be proposed as one pull request.
@@ -115,8 +115,8 @@
 
 ### Current Execution Board
 
-Status: P08 installed accepted; P46 decomposition active
-Lanes: P01-P15, P17, P19-P28, P30-P45 (completed/accepted); P16, P18, P29, P46 (open)
+Status: P08 installed accepted; P46 decomposition closed
+Lanes: P01-P15, P17, P19-P28, P30-P46 (completed/accepted); P16, P18, P29 (open)
 
 - Completed-with-terminal-evidence installed/live successor:
   [Plan 0349](docs/dev/plans/0349-2026-09-11-installed-plan0348-live-acceptance.md)
@@ -672,6 +672,13 @@ Lanes: P01-P15, P17, P19-P28, P30-P45 (completed/accepted); P16, P18, P29, P46 (
   guard tests. The core source is published in personal commit `aecf12f9`.
   Independent artifact review remains recorded at 82 because its submitted
   evidence predated that immutable source commit; no third provider run was made.
+
+- Closed automatic MCP response recovery:
+  [Plan 0363](docs/dev/plans/0363-2026-09-22-mcp-automatic-response-recovery.md).
+  Current state: `run_status` automatically performs strict observation-only
+  recovery for typed after-submit new-project uncertainty and returns the
+  completed assistant text without replaying the prompt or rewriting the
+  original failed audit record. Installed recovery of the SABER response passed.
 
 - Closed policy-governed ChatGPT destination routing:
   [Plan 0360](docs/dev/plans/0360-2026-09-21-policy-governed-chatgpt-destination-routing.md).

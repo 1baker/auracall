@@ -1,3 +1,4 @@
+// biome-ignore-all lint/style/noNonNullAssertion: synthetic message fixtures establish these fields before assertion.
 import { runInNewContext } from 'node:vm';
 import { expect, test } from 'vitest';
 import { bindRecoveredResponse, RECOVERY_RESPONSE_SNAPSHOT } from '../../src/browser/service/recoveryResponseBinding.js';

@@ -12,6 +12,7 @@ import {
   type ProbeRuntimeRunBrowserDiagnosticsInput,
   type RuntimeRunInspectionBrowserDiagnosticsProbeResult,
 } from '../../runtime/inspection.js';
+import type { observeFailedResponse } from '../../runtime/responseRecoveryObservation.js';
 
 const runStatusInputShape = {
   id: z.string().min(1),
@@ -78,6 +79,8 @@ const runStatusOutputShape = {
   browserDiagnostics: z.unknown().optional(),
   metadata: z.record(z.string(), z.unknown()),
   failure: z.unknown().nullable().optional(),
+  effectiveStatus: z.literal('completed_recovered').optional(),
+  recoveryObservation: z.unknown().optional(),
 } satisfies z.ZodRawShape;
 
 export interface RegisterRunStatusToolDeps {
@@ -86,6 +89,7 @@ export interface RegisterRunStatusToolDeps {
   probeRuntimeRunBrowserDiagnostics?: (
     input: ProbeRuntimeRunBrowserDiagnosticsInput,
   ) => Promise<RuntimeRunInspectionBrowserDiagnosticsProbeResult | null>;
+  observeFailedResponse?: (responseId: string) => ReturnType<typeof observeFailedResponse>;
 }
 
 export function registerRunStatusTool(
@@ -107,13 +111,14 @@ export function registerRunStatusTool(
       responsesService,
       mediaGenerationService,
       probeRuntimeRunBrowserDiagnostics: deps.probeRuntimeRunBrowserDiagnostics,
+      observeFailedResponse: deps.observeFailedResponse,
     }),
   );
 }
 
 export function createRunStatusToolHandler(
   deps: Required<Pick<RegisterRunStatusToolDeps, 'responsesService' | 'mediaGenerationService'>> &
-    Pick<RegisterRunStatusToolDeps, 'probeRuntimeRunBrowserDiagnostics'>,
+    Pick<RegisterRunStatusToolDeps, 'probeRuntimeRunBrowserDiagnostics' | 'observeFailedResponse'>,
 ) {
   return async (input: unknown) => {
     const textContent = (text: string) => [{ type: 'text' as const, text }];
@@ -141,15 +146,48 @@ export function createRunStatusToolHandler(
         }
       }
     }
+    let recoveryObservation: Awaited<ReturnType<typeof observeFailedResponse>> | undefined;
+    if (status.kind === 'response' && status.status === 'failed'
+        && isAfterSubmitNewProjectOutcomeUnknown(status.failure)
+        && deps.observeFailedResponse) {
+      try {
+        recoveryObservation = await deps.observeFailedResponse(status.id);
+      } catch {
+        // The original failure remains authoritative when strict recovery
+        // eligibility, runtime idleness, or browser identity cannot be proven.
+      }
+    }
+    const recovered = recoveryObservation !== undefined;
+    const effectiveStatus = recovered ? 'completed_recovered' as const : undefined;
+    const recoveredAnswer = recoveryObservation?.answer_text;
+    const structuredContent = {
+      ...status,
+      ...(effectiveStatus ? { effectiveStatus } : {}),
+      ...(recoveryObservation ? { recoveryObservation } : {}),
+    };
     const lastEvent = readLastEventLabel(status.lastEvent);
     return {
-      isError: status.status === 'failed',
+      isError: status.status === 'failed' && !recovered,
       content: textContent(
-        `Run ${status.id} (${status.kind}) is ${status.status}; last event ${lastEvent}; artifacts ${status.artifactCount}.`,
+        recoveredAnswer !== undefined
+          ? `Run ${status.id} recovered its completed ChatGPT response without replaying the prompt.\n\n${recoveredAnswer}`
+          : `Run ${status.id} (${status.kind}) is ${status.status}; last event ${lastEvent}; artifacts ${status.artifactCount}.`,
       ),
-      structuredContent: status as typeof status & Record<string, unknown>,
+      structuredContent: structuredContent as typeof structuredContent & Record<string, unknown>,
     };
   };
+}
+
+function isAfterSubmitNewProjectOutcomeUnknown(value: unknown, depth = 0): boolean {
+  if (depth > 8 || value === null || value === undefined) return false;
+  if (Array.isArray(value)) {
+    return value.some((item) => isAfterSubmitNewProjectOutcomeUnknown(item, depth + 1));
+  }
+  if (typeof value !== 'object') return false;
+  const record = value as Record<string, unknown>;
+  if (record.code === 'chatgpt_new_conversation_outcome_unknown'
+      && record.phase === 'after' && record.retryable === false) return true;
+  return Object.values(record).some((item) => isAfterSubmitNewProjectOutcomeUnknown(item, depth + 1));
 }
 
 function readLastEventLabel(lastEvent: unknown): string {

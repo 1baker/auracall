@@ -1,3 +1,4 @@
+// biome-ignore-all lint/suspicious/noExplicitAny: HTTP fixture adapters exercise dynamic payloads from external clients.
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";

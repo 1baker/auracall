@@ -41,6 +41,7 @@ import type { ResolvedUserConfig } from '../config.js';
 import { createMediaGenerationService } from '../media/service.js';
 import { createExecutionResponsesService } from '../runtime/responsesService.js';
 import { createExecutionRuntimeControl } from '../runtime/control.js';
+import { observeFailedResponse } from '../runtime/responseRecoveryObservation.js';
 import {
   createResponseBatchService,
   type ResponseBatchService,
@@ -160,6 +161,11 @@ export async function startMcpServer(): Promise<void> {
   registerRunStatusTool(server, {
     responsesService: services.responsesService,
     mediaGenerationService: services.mediaGenerationService,
+    observeFailedResponse: (responseId) => observeFailedResponse({
+      responseId,
+      config: services.resolvedUserConfig as Record<string, unknown>,
+      control: createExecutionRuntimeControl(),
+    }),
   });
   registerApiLogTailTool(server);
   registerPreflightRunTool(server);

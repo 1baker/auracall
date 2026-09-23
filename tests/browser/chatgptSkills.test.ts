@@ -1,3 +1,4 @@
+// biome-ignore-all lint/style/useNamingConvention: test fixtures preserve provider-defined wire keys.
 import { describe, expect, it, vi } from "vitest";
 
 import {
@@ -30,8 +31,8 @@ describe("ChatGPT Skill provider contracts", () => {
 		const adapter = createChatgptSkillBrowserAdapter({
 			connectChatgptPromptWorkbench: vi.fn(async () => ({
 				client: {
-					["Runtime"]: { enable: vi.fn(), evaluate },
-					["Page"]: { enable: vi.fn() },
+					"Runtime": { enable: vi.fn(), evaluate },
+					"Page": { enable: vi.fn() },
 					close: vi.fn(),
 				},
 				port: 45015,
@@ -51,11 +52,11 @@ describe("ChatGPT Skill provider contracts", () => {
 		const genericConnect = vi.fn();
 		const promptConnect = vi.fn(async () => ({
 			client: {
-				["Runtime"]: {
+				"Runtime": {
 					enable: vi.fn(async () => undefined),
 					evaluate: vi.fn(async () => ({ result: { value: "https://chatgpt.com/" } })),
 				},
-				["Page"]: { enable: vi.fn(async () => undefined) },
+				"Page": { enable: vi.fn(async () => undefined) },
 				close: vi.fn(async () => undefined),
 			},
 			port: 45015,
@@ -86,8 +87,8 @@ describe("ChatGPT Skill provider contracts", () => {
 			connectDevTools: vi.fn(),
 			connectChatgptPromptWorkbench: vi.fn(async () => ({
 				client: {
-					["Runtime"]: { enable: vi.fn(async () => undefined), evaluate },
-					["Page"]: { enable: vi.fn(async () => undefined), navigate },
+					"Runtime": { enable: vi.fn(async () => undefined), evaluate },
+					"Page": { enable: vi.fn(async () => undefined), navigate },
 					close: vi.fn(async () => undefined),
 				},
 				port: 45015,

@@ -1,3 +1,4 @@
+// biome-ignore-all lint/style/useNamingConvention: test fixtures preserve provider-defined wire keys.
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 const chatgptTabLifecycleMocks = vi.hoisted(() => ({
@@ -49,7 +50,7 @@ describe("ChatGPT tab lifecycle", () => {
 		const events: string[] = [];
 		let expression = "";
 		const ready = await prepareChatgptPromptWorkbenchTargetForTest({
-			["Page"]: {
+			"Page": {
 				enable: vi.fn(async () => {
 					events.push("page-enable");
 				}),
@@ -57,7 +58,7 @@ describe("ChatGPT tab lifecycle", () => {
 					events.push("front");
 				}),
 			},
-			["Runtime"]: {
+			"Runtime": {
 				enable: vi.fn(async () => {
 					events.push("runtime-enable");
 				}),

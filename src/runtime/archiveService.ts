@@ -1599,17 +1599,6 @@ function buildMissingLocalFileEvidence(
 	};
 }
 
-function buildUnavailableLocalFileEvidence(
-  localPath: string,
-  errorCode: string,
-): Record<string, unknown> {
-  return {
-    unavailableReason: 'local-file-unavailable',
-    unavailableLocalPath: localPath,
-    unavailableErrorCode: errorCode,
-  };
-}
-
 function readUnavailableEvidenceReason(evidence: Record<string, unknown>): string {
 	return (
 		readRecordString(evidence, ["sourceArtifactFetchReason", "unavailableReason"]) ?? "unavailable"

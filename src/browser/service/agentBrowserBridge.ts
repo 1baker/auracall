@@ -813,6 +813,7 @@ export async function reattachAgentBrowserBrokerTab(
 	});
 	let recoveredResponse: RecoveryResponseBinding | undefined;
 	if (matchedRoutes.length === 0 && !input.originalNativeBinding && input.recoveryPrompt && input.url) {
+		const recoveryUrl = input.url;
 		const oldTarget = input.serviceTabHandle.targetId;
 		const oldTargetRecords = routes.flatMap(route => route.browsers.flatMap(browser =>
 			(browser.tabHandles ?? []).filter(handle => handle.targetId === oldTarget)
@@ -822,7 +823,7 @@ export async function reattachAgentBrowserBrokerTab(
 		}
 		const restored = routes.flatMap(route => exactBrokerCandidates({
 			browsers: route.browsers, browserId: input.browserId, profileId: input.profileId,
-			sessionName: input.sessionName, url: input.url!,
+				sessionName: input.sessionName, url: recoveryUrl,
 		}).map(candidate => ({ route, candidate })));
 		const identities = new Set(restored.map(({ candidate }) => JSON.stringify([
 			candidate.browser.id, candidate.browser.pid, candidate.browser.cdpEndpoint, candidate.handle.targetId,
@@ -852,7 +853,8 @@ export async function reattachAgentBrowserBrokerTab(
 			}, { ...dependencies, nativeTransport: undefined }), { fetch: fetchImpl });
 		}
 		if (identities.size !== 1) throw new Error('Restored recovery requires one unambiguous broker-owned target');
-		const selected = restored[0]!;
+		const selected = restored[0];
+		if (!selected) throw new Error('Restored recovery target disappeared');
 		if (input.browserHost && selected.candidate.browser.host !== input.browserHost) {
 			throw new Error('Restored recovery browser host does not match the requested host');
 		}
@@ -1161,7 +1163,8 @@ export async function observeAgentBrowserProjectResponse(
  // canonical conversation.
  const observationCandidates = originalTarget ? [originalTarget] : Array.from(candidates.values());
  if (!observationCandidates.length && closedOriginalTargets.size === 1) {
-   const closed = Array.from(closedOriginalTargets.values())[0]!;
+	   const closed = Array.from(closedOriginalTargets.values())[0];
+	   if (!closed) throw new Error('Closed original recovery target disappeared');
    return reattachAgentBrowserBrokerTab({ ...input, baseUrl: closed.baseUrl, url: closed.url }, dependencies);
  }
  if (!observationCandidates.length || observationCandidates.length > 8) throw new Error('Project response candidate inventory is absent or exceeds observation bound');
@@ -1181,13 +1184,14 @@ export async function observeAgentBrowserProjectResponse(
        || snapshot.messages.length > 200 || snapshot.messages.some(message => !message || typeof message !== 'object')) {
      throw new Error('Project response candidate snapshot is incomplete');
    }
-   if (!snapshot.messages.some(message => message.role === 'user' && typeof message.text === 'string'
-       && normalize(message.text) === normalize(input.recoveryPrompt!))) continue;
+	 if (!snapshot.messages.some(message => message.role === 'user' && typeof message.text === 'string'
+	     && normalize(message.text) === normalize(input.recoveryPrompt ?? ''))) continue;
    // A matching but incomplete/streaming/duplicate prompt is not an unrelated tab.
    matches.push({ ...candidate, binding: bindRecoveredResponse(snapshot, input.recoveryPrompt, candidate.url) });
  }
  if (matches.length !== 1) throw new Error('Project response requires exactly one complete original prompt binding');
- const selected = matches[0]!;
+	 const selected = matches[0];
+	 if (!selected) throw new Error('Project response match disappeared');
  const result = await reattachAgentBrowserBrokerTab({ ...input, baseUrl: selected.baseUrl,
    serviceTabHandle: selected.handle, url: selected.url }, dependencies);
  if (result.browserProcessId !== input.expectedBrowserProcessId
@@ -1264,7 +1268,9 @@ export async function acquireAgentBrowserBrokerTab(
 					});
 					if (retained.length > 1) throw new Error('New project conversation retained browser authority is ambiguous');
 					if (retained.length === 1) {
-						const { browser, pid } = retained[0]!;
+						const selectedRetained = retained[0];
+						if (!selectedRetained) throw new Error('Retained browser disappeared');
+						const { browser, pid } = selectedRetained;
 						const sessions = new Set((browser.tabHandles ?? []).filter(handle => handle.valid === true
 							&& handle.browserId === browser.id && handle.profileId === profileId && typeof handle.sessionName === 'string'
 							&& handle.sessionName.trim()).map(handle => String(handle.sessionName)));
@@ -1272,7 +1278,9 @@ export async function acquireAgentBrowserBrokerTab(
 						if (sessions.size !== 1 || !stream || !browser.host) {
 							throw new Error('New project conversation retained session or display posture is missing or ambiguous');
 						}
-						retainedPosture = { browserId: browser.id!, sessionName: [...sessions][0]!, pid, browserHost: browser.host,
+						const sessionName = [...sessions][0];
+						if (!browser.id || !sessionName) throw new Error('Retained browser identity is incomplete');
+						retainedPosture = { browserId: browser.id, sessionName, pid, browserHost: browser.host,
 							displayIsolation: browser.displayIsolation ?? null, viewStreamProvider: stream.provider, controlInputProvider: stream.controlInput };
 						for (const key of ['viewStreamProvider', 'controlInputProvider', 'displayIsolation'] as const) {
 							if (input[key] !== undefined && input[key] !== retainedPosture[key]) throw new Error('Explicit browser posture conflicts with retained browser');

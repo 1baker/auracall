@@ -1,3 +1,5 @@
+// biome-ignore-all lint/suspicious/noExplicitAny: recovery fixtures intentionally mutate untyped persisted payloads.
+// biome-ignore-all lint/style/noNonNullAssertion: fixture fields are created immediately before these assertions.
 import { createHash } from 'node:crypto';
 import { describe, expect, it, vi } from 'vitest';
 import { createExecutionRun, createExecutionRunEvent, createExecutionRunRecordBundle, createExecutionRunSharedState, createExecutionRunStep } from '../src/runtime/model.js';
@@ -7,7 +9,7 @@ import { observeAgentBrowserProjectResponse, reattachAgentBrowserBrokerTab } fro
 
 const url = 'https://chatgpt.com/g/g-p-11111111111111111111111111111111/c/11111111-1111-1111-1111-111111111111';
 const runId = 'resp_recover';
-const stepId = runId + ':step:1';
+const stepId = `${runId}:step:1`;
 const at = '2026-09-11T19:20:00.000Z';
 const handle = { browserId: 'session:retained', profileId: 'chatgpt-pro', sessionName: 'retained', targetId: 'target-1', valid: true, url };
 function fixture() {
@@ -16,11 +18,11 @@ function fixture() {
     run: createExecutionRun({ id: runId, sourceKind: 'direct', sourceId: null, status: 'failed', createdAt: at, updatedAt: at,
       trigger: 'api', requestedBy: null, entryPrompt: 'Exact request', initialInputs: { requestInput: 'Exact request', metadata,
         auracall: { runtimeProfile: 'default', service: 'chatgpt', transport: 'browser', chatgptConversationUrl: url, browserHost: 'remote_headed' } },
-      sharedStateId: runId + ':state', stepIds: [stepId], policy: DEFAULT_TEAM_RUN_EXECUTION_POLICY }),
+      sharedStateId: `${runId}:state`, stepIds: [stepId], policy: DEFAULT_TEAM_RUN_EXECUTION_POLICY }),
     steps: [createExecutionRunStep({ id: stepId, runId, agentId: 'api-responses', runtimeProfileId: 'default', browserProfileId: 'default',
       service: 'chatgpt', kind: 'prompt', status: 'failed', order: 1, dependsOnStepIds: [],
       input: { prompt: 'Exact request', notes: ['Exact instructions'], artifacts: [], handoffIds: [], structuredData: { metadata } } })],
-    sharedState: createExecutionRunSharedState({ id: runId + ':state', runId, status: 'failed', artifacts: [], structuredOutputs: [], notes: [], history: [], lastUpdatedAt: at }),
+    sharedState: createExecutionRunSharedState({ id: `${runId}:state`, runId, status: 'failed', artifacts: [], structuredOutputs: [], notes: [], history: [], lastUpdatedAt: at }),
     events: [createExecutionRunEvent({ id: 'e1', runId, stepId, type: 'note-added', createdAt: at, payload: { runtimeEvidence: {
       state: 'browser-runtime-hint', details: { service: 'chatgpt', agentId: 'api-responses', runtimeProfileId: 'default', browserProfileId: 'default', tabUrl: url,
         agentBrowserRequestedUrl: url, agentBrowserBrowserId: handle.browserId, agentBrowserProfileId: handle.profileId,
@@ -59,7 +61,7 @@ describe('trusted failed response observation', () => {
     if (kind === 'pending-leased' || kind === 'terminal-leased') pending.bundle.leases.push({ status: 'active' } as never);
     const listRuns = vi.fn(async () => ['busy', 'pending', 'pending-leased', 'terminal-leased', 'running-step'].includes(kind) ? [pending] : []);
     const result = observeFailedResponse({ responseId: runId, config, control: { listRuns } as never }, {
-      readRecordBytes: async () => (++reads > 1 && kind === 'changed-record') ? Buffer.from(original.toString() + ' ') : original,
+      readRecordBytes: async () => (++reads > 1 && kind === 'changed-record') ? Buffer.from(`${original.toString()} `) : original,
       observe: input => reattachAgentBrowserBrokerTab(input, { fetch: fetch as never, listStreamFiles: async () => [], readStreamFile: async () => '' }),
     });
     if (kind === 'valid' || kind === 'pending') {
@@ -76,10 +78,12 @@ describe('trusted failed response observation', () => {
   });
   it.each(['attachments', 'oversize', 'mismatched-input', 'missing-correlation', 'active', 'wrong-project'] as const)('rejects %s before browser work', kind => {
     const record = fixture();
-    if (kind === 'attachments') record.bundle.steps[0]!.input.artifacts.push({} as never);
-    if (kind === 'oversize') record.bundle.run.initialInputs.requestInput = record.bundle.steps[0]!.input.prompt = 'x'.repeat(60001);
-    if (kind === 'mismatched-input') record.bundle.steps[0]!.input.prompt = 'wrong';
-    if (kind === 'missing-correlation') record.bundle.steps[0]!.input.structuredData.metadata = {};
+    const step = record.bundle.steps[0];
+    if (!step) throw new Error('fixture step missing');
+    if (kind === 'attachments') step.input.artifacts.push({} as never);
+    if (kind === 'oversize') record.bundle.run.initialInputs.requestInput = step.input.prompt = 'x'.repeat(60001);
+    if (kind === 'mismatched-input') step.input.prompt = 'wrong';
+    if (kind === 'missing-correlation') step.input.structuredData.metadata = {};
     if (kind === 'active') record.bundle.run.status = 'running';
     if (kind === 'wrong-project') (record.bundle.run.initialInputs.auracall as any).chatgptConversationUrl = 'https://chatgpt.com/';
     expect(() => reconstructRecoveryWire(record)).toThrow();
@@ -146,7 +150,9 @@ describe('after-submit new-project observation', () => {
   });
   it.each(['artifacts', 'attachments'] as const)('rejects potentially bundled %s without guessing the submitted prefix', kind => {
     const record = projectFixture();
-    if (kind === 'artifacts') record.bundle.steps[0]!.input.artifacts = Array.from({ length: 11 }, (_, i) => ({ id: `a${i}`, kind: 'file', path: `/fixture/${i}.md` } as never));
+    const step = record.bundle.steps[0];
+    if (!step) throw new Error('fixture step missing');
+    if (kind === 'artifacts') step.input.artifacts = Array.from({ length: 11 }, (_, i) => ({ id: `a${i}`, kind: 'file', path: `/fixture/${i}.md` } as never));
     else record.bundle.run.initialInputs.attachments = Array.from({ length: 11 }, (_, i) => `/fixture/${i}.md`);
     expect(() => reconstructRecoveryWire(record)).toThrow('bundled attachment transport');
   });
@@ -167,12 +173,12 @@ describe('after-submit new-project observation', () => {
   it.each(['untyped', 'before', 'retryable', 'wrong-project', 'dependency', 'task-context', 'wrong-owner', 'missing-pid'] as const)('rejects %s eligibility', kind => {
     const record = projectFixture();
     const step = record.bundle.steps[0]!;
-    const failure = step.failure!.details as any;
+    const failure = step.failure?.details as any;
     const details = (record.bundle.events[0]?.payload?.runtimeEvidence as any).details;
     if (kind === 'untyped') delete failure.code;
     if (kind === 'before') failure.phase = 'before';
     if (kind === 'retryable') failure.retryable = true;
-    if (kind === 'wrong-project') failure.projectId = 'g-p-' + '2'.repeat(32);
+    if (kind === 'wrong-project') failure.projectId = `g-p-${'2'.repeat(32)}`;
     if (kind === 'dependency') step.dependsOnStepIds.push('other-step');
     if (kind === 'task-context') step.input.structuredData.taskContext = {};
     if (kind === 'wrong-owner') details.agentBrowserServiceTabHandle.sessionName = 'other';
@@ -218,7 +224,7 @@ describe('after-submit new-project observation', () => {
     });
     let reads = 0;
     const result = observeFailedResponse({ responseId: runId, config, control: { listRuns: async () => [] } as never }, {
-      readRecordBytes: async () => ++reads > 1 && kind === 'changed-record' ? Buffer.from(original.toString() + ' ') : original,
+      readRecordBytes: async () => ++reads > 1 && kind === 'changed-record' ? Buffer.from(`${original.toString()} `) : original,
       observeProject: input => observeAgentBrowserProjectResponse(input, { fetch: fetch as never, listStreamFiles: async () => [] }),
     });
     if (kind === 'valid' || kind === 'proof-pid' || kind === 'unconstrained-host' || kind === 'many-siblings' || kind === 'ambiguous') {

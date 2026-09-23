@@ -116,7 +116,7 @@ export function resolveChatgptArtifactControlCandidate(
 			continue;
 		matches.push(candidate);
 	}
-	return matches.length === 1 ? matches[0]! : null;
+	return matches.length === 1 ? matches[0] ?? null : null;
 }
 
 function isDomDownloadControl(artifact: ConversationArtifact): boolean {

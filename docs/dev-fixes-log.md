@@ -1,3 +1,10 @@
+- 2026-09-22: MCP `run_status` now hands a completed ChatGPT answer back to
+  Codex when, and only when, an immutable response has the typed non-retryable
+  after-submit new-project uncertainty. It uses strict observation-only recovery,
+  returns `completed_recovered`, preserves the original failed audit record, and
+  never resubmits the prompt. Installed recovery of the original SABER response
+  matched the verified answer digest with `prompt_submitted: false`.
+
 - 2026-09-22: Attached-existing browsers can legitimately omit the top-level
   PID while carrying a live PID in build proof, and one browser can expose CDP
   plus RDP streams simultaneously. Reuse only matching verified proof; prefer an
@@ -22910,3 +22917,24 @@ browser-stage lifecycle observability, not transcript truncation.
   host, CDP endpoint and executable before/after. Keep the known-good
   `chatgpt:sol` selector explicit. The repair is isolated in a clean worktree;
   one live exact-nonce roundtrip passed with stable browser and target identity.
+
+# 2026-09-23 - Preserve native broker event polls and accept virtualized turns
+
+- A retained browser stayed ready while AuraCall's 10-second native event poll
+  interrupted model selection before Send. The native attachment now allows a
+  45-second event poll, longer than the 35-second model-selection stage.
+- A later prompt reached ChatGPT and received the exact answer, but AuraCall
+  failed its commit check because the visible turn count stayed at ten. Commit
+  verification now accepts a unique, newly identified last user message whose
+  full normalized text matches the prompt and whose composer has cleared.
+  Historical matching messages with the prior identity remain rejected.
+- After installation, three consecutive responses completed on one retained
+  target and conversation with exact dependent answers. The original failed
+  response records were preserved and not replayed.
+- 2026-09-23: Upstream/fork reconciliation retained exact ChatGPT user-turn,
+  assistant-response, model, and browser-target binding across the merged
+  composer and lifecycle paths. The full integrated tree passed 3,764 tests,
+  typecheck, lint, build, and CI runtime contract. A detached CLI test's
+  two-second completion poll was load-sensitive; bounded ten-second polling
+  passed in isolation and the full rerun. This validates source behavior only;
+  the combined commit still needs a governed installed retained-browser smoke.

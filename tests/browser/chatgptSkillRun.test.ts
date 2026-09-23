@@ -1,3 +1,4 @@
+// biome-ignore-all lint/style/useNamingConvention: test fixtures preserve provider-defined wire keys.
 import { describe, expect, it, vi } from "vitest";
 import { ChatgptSkillBrowserAdapter } from "../../src/browser/providers/chatgptSkills.js";
 import type { ChatgptSkill } from "../../src/cli/chatgptSkillsCommand.js";
@@ -58,7 +59,7 @@ function setup(
 		return 1;
 	});
 	const client = {
-		["Runtime"]: {
+		"Runtime": {
 			enable: vi.fn(),
 			evaluate: vi.fn(async ({ expression }) => {
 				if (expression.startsWith("document.querySelectorAll(")) return { result: { value: 0 } };
@@ -79,8 +80,8 @@ function setup(
 				return { result: { value: true } };
 			}),
 		},
-		["Page"]: { enable: vi.fn() },
-		["Input"]: {},
+		"Page": { enable: vi.fn() },
+		"Input": {},
 		close: vi.fn(async () => undefined),
 	};
 	const connect = vi.fn(async () => ({ client, port: 45015 }));

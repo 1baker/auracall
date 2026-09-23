@@ -9,9 +9,11 @@ import { getExecutionRunRecordPath, type ExecutionRunStoredRecord } from './stor
 import { ExecutionRunRecordBundleSchema } from './schema.js';
 import type { ExecutionRuntimeControlContract } from './contract.js';
 
+// biome-ignore lint/style/useNamingConvention: exported Zod schemas use the existing PascalCase API convention.
 export const RecoveryObservationBodySchema = z.object({}).strict();
 export class RecoveryObservationBusyError extends Error {}
 const sha = (value: string | Buffer) => createHash('sha256').update(value).digest('hex');
+// biome-ignore lint/suspicious/noExplicitAny: provider recovery records are dynamically validated field by field below.
 const object = (value: unknown): Record<string, any> => value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, any> : {};
 
 /** Only the currently reproducible direct inline transport is eligible. */

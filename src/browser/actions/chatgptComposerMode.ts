@@ -31,7 +31,7 @@ export async function ensureChatgptComposerMode(
 ): Promise<void> {
 	const deadline = Date.now() + 5_000;
 	let result: ComposerModeOutcome | null | undefined;
-	while (true) {
+	while (Date.now() <= deadline) {
 		const outcome = await Runtime.evaluate({
 			expression: buildChatgptComposerModeExpression(desiredMode),
 			awaitPromise: true,

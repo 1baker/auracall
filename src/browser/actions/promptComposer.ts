@@ -865,14 +865,32 @@ async function verifyPromptCommitted(
 		}
 		await delay(100);
 	}
+	// A successful Send can surface during the final delay; inspect once more
+	// before classifying its effect as unknown.
+	const finalInfo = await Runtime.evaluate({ expression: script, returnByValue: true })
+		.then((res) => res?.result?.value as typeof latestInfo)
+		.catch(() => null);
+	if (finalInfo) {
+		latestInfo = finalInfo;
+		const finalCount = typeof finalInfo.turnsCount === "number" && Number.isFinite(finalInfo.turnsCount)
+			? finalInfo.turnsCount : null;
+		const exactMatch = Boolean(finalInfo.lastExactMatched);
+		const attachmentMatch = Boolean(finalInfo.lastMatched && finalInfo.lastExtraTextRecognized &&
+			finalInfo.hasNewTurn && finalInfo.composerCleared && finalInfo.inConversation &&
+			(finalInfo.assistantVisible || finalInfo.stopVisible));
+		const baselineUnknown = typeof finalInfo.baseline === "number"
+			? finalInfo.baseline < 0 : baselineLiteral < 0;
+		if (baselineUserId && finalInfo.latestMatchingUserId &&
+			finalInfo.latestMatchingUserId !== baselineUserId && finalInfo.composerCleared && finalInfo.inConversation) {
+			return finalCount;
+		}
+		if ((exactMatch || attachmentMatch) && (baselineUnknown || finalInfo.hasNewTurn)) {
+			return finalCount;
+		}
+	}
 	if (logger) {
 		logger(
-			`Prompt commit check failed; latest state: ${await Runtime.evaluate({
-				expression: script,
-				returnByValue: true,
-			})
-				.then((res) => JSON.stringify(res?.result?.value))
-				.catch(() => "unavailable")}`,
+			`Prompt commit check failed; latest state: ${latestInfo === null ? "unavailable" : JSON.stringify(latestInfo)}`,
 		);
 		await logDomFailure(Runtime, logger, "prompt-commit");
 	}
@@ -912,6 +930,7 @@ async function verifyPromptCommitted(
 	);
 }
 
+// biome-ignore lint/style/useNamingConvention: preserve the internal test-hook export used by existing suites.
 export const __test__ = {
 	composerContainsPrompt,
 	normalizedComposerText,

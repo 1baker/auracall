@@ -1,3 +1,4 @@
+// biome-ignore-all lint/style/noNonNullAssertion: run fixture setup creates the asserted records.
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';

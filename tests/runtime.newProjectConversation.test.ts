@@ -55,7 +55,7 @@ it.each(['valid', 'wrong-project', 'missing-url', 'missing-artifact', 'conflict'
     engine: 'browser', defaultService: 'chatgpt', browserProfile: 'default',
     services: { chatgpt: { projectId: 'g-p-stale-config', manualLoginProfileDir: '/tmp/new-project-test' } },
   } } }, { runBrowserModeImpl, browserResponseArtifactMaterializer: materializer });
-  const result = execute!({
+  const result = execute?.({
     record: { runId: 'new-project-test', revision: 1, bundle: { run: { id: 'new-project-test', initialInputs: { auracall: {
       chatgptNewConversationProjectId: project, ...(kind === 'conflict' ? { chatgptConversationUrl: conversation } : {}),
     } } }, events: [] } } as never,

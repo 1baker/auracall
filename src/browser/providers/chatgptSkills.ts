@@ -491,7 +491,7 @@ export class ChatgptSkillBrowserAdapter {
 			} else {
 				selectionObserved = true;
 				selectionUrl = await readCurrentUrl(client);
-				if (onSelected) return await onSelected(client);
+				if (onSelected !== undefined) return await onSelected(client);
 			}
 		} catch (error) {
 			selectionFailure = error instanceof Error ? error.message : String(error);

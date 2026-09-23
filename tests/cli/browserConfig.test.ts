@@ -121,7 +121,7 @@ describe('buildBrowserConfig', () => {
   test('uses the Premium semantic selector metadata for the 6 Pro picker', async () => {
     const config = await buildBrowserConfig({
       model: 'gpt-6-astra',
-      chatgptSemanticModelSelection: { desiredModel: '6 Pro' },
+      chatgptSemanticModelSelection: { canonicalSelector: 'chatgpt:premium', desiredModel: '6 Pro', apiModel: 'gpt-6-astra' },
     });
     expect(config.desiredModel).toBe('6 Pro');
   });

@@ -1,3 +1,4 @@
+// biome-ignore-all lint/style/noNonNullAssertion: the synthetic response fixture establishes this value.
 import { runInNewContext } from "node:vm";
 import { describe, expect, it } from "vitest";
 import {

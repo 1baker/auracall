@@ -17,7 +17,7 @@ it.each(['capacity', 'other-browser', 'plain-error', 'lookalike'] as const)(
       runtimeProfiles: { default: { engine: 'browser', defaultService: 'chatgpt', browserProfile: 'default',
         services: { chatgpt: { manualLoginProfileDir: '/tmp/recovery-capacity-test' } } } },
     }, { runBrowserModeImpl, resumeBrowserSessionImpl, browserResponseArtifactMaterializer });
-    const result = execute!({
+    const result = execute?.({
       record: { runId: 'recovery-capacity-test', revision: 1, bundle: {
         run: { id: 'recovery-capacity-test', initialInputs: {} },
         events: [

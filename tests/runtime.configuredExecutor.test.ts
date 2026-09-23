@@ -1789,7 +1789,7 @@ describe('configured stored-step executor', () => {
       default: { engine: 'browser', defaultService: 'chatgpt', browserProfile: 'default',
         services: { chatgpt: { manualLoginProfileDir: '/tmp/recovery-only-profile' } } },
     } }, { runBrowserModeImpl, resumeBrowserSessionImpl });
-    await expect(execute!({
+    await expect(execute?.({
       record: { runId: 'recovery-only', revision: 2, bundle: {
         run: { id: 'recovery-only', initialInputs: {} }, events: [{
           stepId: 'recovery-only:step:1', type: 'note-added',
@@ -1911,6 +1911,87 @@ describe('configured stored-step executor', () => {
       service: 'chatgpt',
       conversationId: 'replayed-chat',
       tabUrl: 'https://chatgpt.com/c/replayed-chat',
+    });
+  });
+
+  it('forwards a direct response semantic model selector and records the observed browser selection', async () => {
+    const runBrowserModeImpl = vi.fn(async () => ({
+      answerText: 'AURACALL_DIRECT_PREMIUM_OK',
+      answerMarkdown: 'AURACALL_DIRECT_PREMIUM_OK',
+      tookMs: 700,
+      answerTokens: 8,
+      answerChars: 27,
+      tabUrl: 'https://chatgpt.com/c/mock-direct-premium',
+      conversationId: 'mock-direct-premium',
+      selectedModel: '6 Pro',
+      modelSelectionStatus: 'already-selected' as const,
+    }));
+
+    const executeStoredRunStep = createConfiguredStoredStepExecutor(
+      {
+        browserProfiles: {
+          default: {
+            chromePath: '/usr/bin/google-chrome',
+            sourceProfileName: 'Default',
+            managedProfileRoot: '/tmp/auracall/browser-profiles',
+          },
+        },
+        runtimeProfiles: {
+          'chatgpt-pro': {
+            engine: 'browser',
+            defaultService: 'chatgpt',
+            browserProfile: 'default',
+            services: {
+              chatgpt: {
+                manualLoginProfileDir: '/tmp/auracall/browser-profiles/default/chatgpt',
+              },
+            },
+          },
+        },
+      },
+      { runBrowserModeImpl },
+    );
+
+    const result = await executeStoredRunStep?.({
+      record: {
+        runId: 'resp_direct_premium_1',
+        revision: 1,
+        bundle: {
+          run: {
+            id: 'resp_direct_premium_1',
+            sourceKind: 'direct',
+            initialInputs: { model: 'chatgpt:premium' },
+          },
+        },
+      } as never,
+      step: {
+        id: 'resp_direct_premium_1:step:1',
+        agentId: 'api-responses',
+        runtimeProfileId: 'chatgpt-pro',
+        browserProfileId: 'default',
+        service: 'chatgpt',
+        input: {
+          prompt: 'Reply exactly with AURACALL_DIRECT_PREMIUM_OK',
+          artifacts: [],
+          structuredData: {},
+          notes: [],
+        },
+      } as never,
+    });
+
+    expect(runBrowserModeImpl).toHaveBeenCalledWith(
+      expect.objectContaining({
+        config: expect.objectContaining({
+          desiredModel: '6 Pro',
+          modelStrategy: 'select',
+        }),
+      }),
+    );
+    expect(result?.output?.structuredData?.browserRun).toMatchObject({
+      desiredModel: '6 Pro',
+      modelSelector: 'chatgpt:premium',
+      selectedModel: '6 Pro',
+      modelSelectionStatus: 'already-selected',
     });
   });
 

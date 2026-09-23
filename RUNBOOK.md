@@ -1,5 +1,31 @@
 # RUNBOOK
 
+## 2026-09-23 | Isolated upstream/fork integration
+
+The integration worktree combines upstream `7f6692db` and personal recovery
+commit `d991814c`. The final source tree passed `pnpm run typecheck`,
+`pnpm run lint`, `pnpm run build`, `pnpm run check:ci-runtime`, and the full
+Vitest suite (385 files, 3,764 tests; 55 opt-in live tests skipped). One
+load-sensitive detached-CLI poll was bounded to ten seconds and passed in
+isolation and in the full rerun. No installed runtime, retained browser,
+GitHub remote, or primary checkout was changed by this integration work.
+The combined commit must not be called live-accepted until its exact installed
+version completes the governed retained-browser smoke.
+
+## 2026-09-22 | Automatic MCP response handback
+
+MCP `run_status` now recognizes only the typed, non-retryable
+`chatgpt_new_conversation_outcome_unknown` after-submit failure and invokes the
+existing strict observation-only recovery path. A verified answer is returned
+as `effectiveStatus: completed_recovered` and as normal MCP text while the
+original durable run remains failed and immutable for audit.
+
+The installed handler recovered the original SABER response, returned a
+non-error MCP result, and matched the browser-observed answer digest. Its receipt
+records `prompt_submitted: false` and `original_run_modified: false`. Ordinary,
+pre-submit, busy-runtime, ambiguous-browser, account-mismatched, or otherwise
+unverified failures remain failed and are not replayed.
+
 ## 2026-09-22 | Retained attached-browser proof acquisition
 
 Plan 0362 fixes new-project acquisition when an attached-existing Agent Browser
@@ -21134,3 +21160,24 @@ contract, so it must be reconciled before this source behavior is deployed.
   no clicks/downloads/prompts. Follow-up bounded read-only diagnosis checks
   supported attestation availability. Full proposal/routing and final artifact
   audit goals remain open; this is not an end-to-end completion claim.
+
+## 2026-09-23 | Retained ChatGPT three-round acceptance
+
+- State: complete for the requested Codex/AuraCall/retained-browser round trip.
+  Personal GitHub fetch left the local branch equal to its remote; dirty work
+  was preserved without a pull merge.
+- Repair: increase the native broker event-poll window to 45 seconds and bind
+  prompt commit to a fresh exact user-message identity when visible turns are
+  virtualized. Retarget the local API environment to the current retained
+  session and exact conversation target. No browser process was replaced.
+- Verification: 90 focused tests, typecheck, production build, installed
+  source/dist parity, and three completed durable response records. Their IDs
+  are `resp_idem_441b36b58b2c0e94db7006e027ac19d9`,
+  `resp_idem_f0e354bfa6ddaabb5d8767e7098891d1`, and
+  `resp_idem_c8b7c56c060a687a17620e72e586ec08`. All returned exact R1/R2/R3
+  markers on target `82720AD2F7A474EF0DA7A2C624D5EEC5` in conversation
+  `6ab164bb-419c-83ea-b86d-eb3c12796730`. Independent tab readback showed
+  the six ordered messages and stable retained Chrome PID `73650`.
+- Scope note: `chatgpt:auto` currently maps to Terra, absent from this account's
+  live picker, and the older one-round smoke preflight has stale inventory
+  assumptions. The verified three-round route used `chatgpt:sol`.

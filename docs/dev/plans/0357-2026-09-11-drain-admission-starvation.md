@@ -1,6 +1,6 @@
 # Plan 0357 | Drain admission starvation
 
-Status: OPEN
+State: OPEN
 Lane: P01
 
 ## Durable reconciliation live result

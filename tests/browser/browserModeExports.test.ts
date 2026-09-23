@@ -12,7 +12,6 @@ import {
   releaseBrowserExecutionOperationAfterPreflightFailureForTest,
   resolveBrokerHeadlessForTest,
   sanitizeThinkingTextForTest,
-  shouldPreserveBrowserForObservationExpiryForTest,
   shouldPreserveBrowserOnErrorForTest,
   shouldWriteChatgptRateLimitCooldownForTest,
   readProviderEffectStateForTest,

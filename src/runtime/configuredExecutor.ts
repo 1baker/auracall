@@ -415,7 +415,8 @@ function readRequiredBrowserResponseArtifactFileNames(metadata: unknown): string
   const raw = names.artifactFileNames;
   if (!Array.isArray(raw) || raw.length === 0 || raw.length > 32 ||
       raw.some(name => typeof name !== 'string' || !name.trim() ||
-        name.trim() === '.' || name.trim() === '..' || /[\\\x00-\x1f]/.test(name) ||
+        name.trim() === '.' || name.trim() === '..' || name.includes('\\') ||
+        Array.from(name).some(character => character.charCodeAt(0) < 32) ||
         path.basename(name.trim()) !== name.trim())) {
     throw new Error('outputContract.artifactFileNames must contain 1 to 32 nonempty local filenames');
   }
@@ -482,7 +483,8 @@ function hasRequiredBrowserResponseArtifactMaterialized(input: {
   if (hasRequiredArtifactFileSet(input.metadata)) {
     const names = readRequiredBrowserResponseArtifactFileNames(input.metadata);
     return names.every(name => input.artifacts.some(artifact => artifactIsMaterializedFile(artifact) &&
-      normalizeArtifactName(path.basename(artifact.path!)) === normalizeArtifactName(path.basename(name))));
+      typeof artifact.path === 'string' &&
+      normalizeArtifactName(path.basename(artifact.path)) === normalizeArtifactName(path.basename(name))));
   }
   const requiredFileName = readRequiredBrowserResponseArtifactFileName(input.metadata);
   if (!requiredFileName && !shouldMaterializeBrowserResponseArtifacts(input.metadata)) {
@@ -1217,7 +1219,8 @@ export function createConfiguredStoredStepExecutor(
       : null;
     const agentConfig = getAgent(executionConfig, context.step.agentId);
     const agentModel = asNonEmptyString(agentConfig?.model);
-    const agentModelSelector = asNonEmptyString(agentConfig?.modelSelector);
+    const requestModelSelector = asNonEmptyString(runInitialInputs?.model);
+    const agentModelSelector = asNonEmptyString(agentConfig?.modelSelector) ?? requestModelSelector;
     const chatgptSemanticSelection =
       service === 'chatgpt' && !agentModel
         ? resolveChatgptSemanticModelSelector(agentModelSelector)
@@ -2038,6 +2041,8 @@ export function createConfiguredStoredStepExecutor(
               desiredModel,
               observedModel: browserResult.observedModel ?? null,
               modelSelector: agentModelSelector,
+              selectedModel: browserResult.selectedModel ?? null,
+              modelSelectionStatus: browserResult.modelSelectionStatus ?? null,
               thinkingTime,
               promptTransport,
               cachePath: null,
@@ -2095,6 +2100,8 @@ export function createConfiguredStoredStepExecutor(
             desiredModel,
             observedModel: browserResult.observedModel ?? null,
             modelSelector: agentModelSelector,
+            selectedModel: browserResult.selectedModel ?? null,
+            modelSelectionStatus: browserResult.modelSelectionStatus ?? null,
             thinkingTime,
             promptTransport,
             cachePath: null,

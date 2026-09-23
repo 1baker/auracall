@@ -58,7 +58,8 @@ async function exchange(input: {
 		throw new Error('broker_native_socket_identity_invalid');
 	}
 	const token = await readPrivateToken(input.tokenPath);
-	const payload = Buffer.from(`${JSON.stringify({ ...input.command, ['_agentBrowserAuthToken']: token })}\n`);
+	// biome-ignore lint/style/useNamingConvention: this wire key is defined by the native broker protocol.
+	const payload = Buffer.from(`${JSON.stringify({ ...input.command, _agentBrowserAuthToken: token })}\n`);
 	if (payload.length > 1_048_576) throw new Error('broker_native_authority_request_too_large');
 	const signal = AbortSignal.any([input.signal, AbortSignal.timeout(15_000)]);
 	return new Promise((resolve, reject) => {
@@ -321,7 +322,11 @@ export function createConfiguredNativeBrokerAuthority(input: {
 	};
 	const issue = async (action: string, consequenceCeiling: string, signal: AbortSignal,
 		requestLabels?: { serviceName: string; agentName: string; taskName: string }, stepUrl?: string) =>
-		withAuthorityLock(async () => (await issueLocked(action, consequenceCeiling, signal, requestLabels, 1, 8_388_608, stepUrl))[0]!);
+		withAuthorityLock(async () => {
+			const first = (await issueLocked(action, consequenceCeiling, signal, requestLabels, 1, 8_388_608, stepUrl))[0];
+			if (!first) throw new Error('broker_native_authority_receipt_missing');
+			return first;
+		});
 	return {
 		get socketPath() { return socketPath; },
 		authToken: () => readPrivateToken(tokenPath),

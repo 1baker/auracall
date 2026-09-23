@@ -41,7 +41,7 @@ export async function ensureModelSelection(
   desiredModel: string,
   logger: BrowserLogger,
   strategy: BrowserModelStrategy = 'select',
-): Promise<string> {
+): Promise<{ status: 'already-selected' | 'switched' | 'switched-best-effort'; label: string }> {
   const outcome = await withStageTimeout(
     Runtime.evaluate({
       expression: buildModelSelectionExpression(desiredModel, strategy),
@@ -66,7 +66,7 @@ export async function ensureModelSelection(
     case 'switched-best-effort': {
       const label = result.label ?? desiredModel;
       logger(`Model picker: ${label}`);
-      return label;
+      return { status: result.status, label };
     }
     case 'option-not-found': {
       await logDomFailure(Runtime, logger, 'model-switcher-option');

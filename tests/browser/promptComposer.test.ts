@@ -1,3 +1,4 @@
+// biome-ignore-all lint/style/useNamingConvention: DOM fixture keys mirror provider attributes.
 import { describe, expect, test, vi } from "vitest";
 import {
 	__test__ as promptComposer,
@@ -22,13 +23,13 @@ describe("promptComposer", () => {
 			"Node",
 			"window",
 			`return ${promptComposer.buildReadCommittedTurnTextFunction()};`,
-		)(Element, { ["TEXT_NODE"]: 3 }, { getComputedStyle: () => ({ display: "inline" }) });
+		)(Element, { "TEXT_NODE": 3 }, { getComputedStyle: () => ({ display: "inline" }) });
 		const prompt = "Investigate this snippet.";
 		expect(
 			read(new Element([new Element([text("Codebase Investigator")], true), text(prompt)])),
 		).toBe(prompt);
 		expect(read(new Element([text("Retained user text. "), text(prompt)]))).toBe(
-			"Retained user text. " + prompt,
+			`Retained user text. ${prompt}`,
 		);
 	});
 
@@ -205,6 +206,23 @@ describe("promptComposer", () => {
 			const rejection = expect(pending).rejects.toThrow(/did not appear/i);
 			await vi.advanceTimersByTimeAsync(250);
 			await rejection;
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	test("accepts an exact commit first visible in the final timeout sample", async () => {
+		vi.useFakeTimers();
+		try {
+			const pending = { turnsCount: 10, lastExactMatched: false, hasNewTurn: false, baseline: 10 };
+			const runtime = { evaluate: vi.fn()
+				.mockResolvedValueOnce({ result: { value: pending } })
+				.mockResolvedValueOnce({ result: { value: { ...pending, turnsCount: 11, lastExactMatched: true, hasNewTurn: true } } }),
+			};
+			const result = promptComposer.verifyPromptCommitted(runtime as never, "hello", 50, undefined, 10);
+			await vi.advanceTimersByTimeAsync(200);
+			await expect(result).resolves.toBe(11);
+			expect(runtime.evaluate).toHaveBeenCalledTimes(2);
 		} finally {
 			vi.useRealTimers();
 		}

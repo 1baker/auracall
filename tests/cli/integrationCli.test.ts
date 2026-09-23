@@ -109,7 +109,8 @@ describe('oracle CLI integration', () => {
     const metadataPath = path.join(sessionsDir, sessionId, 'meta.json');
 
     let metadata: { status?: string; response?: { requestId?: string } } = {};
-    for (let attempt = 0; attempt < 20; attempt += 1) {
+    const completionDeadline = Date.now() + 10_000;
+    while (Date.now() < completionDeadline) {
       metadata = JSON.parse(await readFile(metadataPath, 'utf8'));
       if (metadata.status === 'completed') break;
       await delay(100);

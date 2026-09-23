@@ -3,7 +3,6 @@ import path from 'node:path';
 import { afterEach, describe, expect, test } from 'vitest';
 import {
   buildChromeFlags,
-  parseWslResolverHost,
   probeChromeDebuggerPort,
   resolveChromeLauncherTempPrefix,
   resolveUserDataBaseDir,

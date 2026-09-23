@@ -175,13 +175,16 @@ export function bindRecoveredResponse(
       .map(message => normalize(String(message.text)).length).join('_') || 'none';
     return fail(`prompt_matches_${matches.length}_expected_${prompt.length}_rendered_${renderedPrompt.length}_users_${userLengths}`);
   }
-  const { message: user, index } = matches[0]!;
+	const matched = matches[0];
+	if (!matched) return fail('prompt_match_missing');
+	const { message: user, index } = matched;
   const following = messages.slice(index + 1);
   const nextUser = following.findIndex(message => message.role === 'user');
   const answers = (nextUser < 0 ? following : following.slice(0, nextUser))
     .filter(message => message.role === 'assistant');
   if (answers.length !== 1) return fail(`assistant_answers_${answers.length}`);
-  const answer = answers[0]!;
+	const answer = answers[0];
+	if (!answer) return fail('assistant_answer_missing');
   if (typeof user.id !== 'string' || !user.id.trim() || typeof answer.id !== 'string' || !answer.id.trim() ||
       user.id === answer.id || typeof answer.text !== 'string' || !answer.text.trim()) return fail('message_identity');
   if (messages.filter(message => message.id === user.id).length !== 1 ||
@@ -194,8 +197,9 @@ export function bindRecoveredResponse(
       if (typeof owner !== 'string' || !owner.trim()) return fail('generation_owner');
       const occurrences = messages.map((message, position) => ({ message, position }))
         .filter(({ message }) => message.id === owner);
-      if (occurrences.length !== 1 || occurrences[0]!.message.role !== 'user' ||
-          occurrences[0]!.position <= messages.indexOf(answer)) return fail('generation_order');
+		const occurrence = occurrences[0];
+		if (occurrences.length !== 1 || !occurrence || occurrence.message.role !== 'user' ||
+		    occurrence.position <= messages.indexOf(answer)) return fail('generation_order');
     }
   }
   return { userMessageId: user.id, answerMessageId: answer.id, answerText: answer.text };

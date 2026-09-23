@@ -1957,6 +1957,8 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 	let observedModel: string | null = null;
 	let selectedThinkingTime: ThinkingTimeLevel | null = null;
 	let selectedChatgptProMode: ChatgptProMode | null = null;
+	let selectedModel: string | null = null;
+	let modelSelectionStatus: "already-selected" | "switched" | "switched-best-effort" | null = null;
 	let selectedChatgptAccountLevel: string | null = null;
 	let selectedChatgptAccountPlanType: string | null = null;
 	let selectedChatgptAccountStructure: string | null = null;
@@ -2063,6 +2065,8 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 			controllerPid: process.pid,
 			thinkingTime: selectedThinkingTime ?? undefined,
 			chatgptProMode: selectedChatgptProMode ?? undefined,
+			selectedModel: selectedModel ?? undefined,
+			modelSelectionStatus: modelSelectionStatus ?? undefined,
 			chatgptAccountLevel: selectedChatgptAccountLevel ?? undefined,
 			chatgptAccountPlanType: selectedChatgptAccountPlanType ?? undefined,
 			chatgptAccountStructure: selectedChatgptAccountStructure ?? undefined,
@@ -2617,7 +2621,7 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 		});
 		if (modelSelectionPlan.kind === "chat-model") {
 			await raceWithDisconnect(dismissOpenMenus(Runtime).catch(() => false));
-			observedModel = await raceWithDisconnect(
+			const modelSelection = await raceWithDisconnect(
 				withRetries(
 					() =>
 						ensureModelSelection(
@@ -2646,6 +2650,9 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 						: "";
 				throw new Error(`${base}${hint}`);
 			});
+			selectedModel = modelSelection.label;
+			modelSelectionStatus = modelSelection.status;
+			observedModel = modelSelection.label;
 			await raceWithDisconnect(ensurePromptReady(Runtime, config.inputTimeoutMs, logger));
 			logger(
 				`Prompt textarea ready (after model switch, ${promptText.length.toLocaleString()} chars queued)`,
@@ -3030,6 +3037,8 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 				composerTool: selectedComposerTool,
 				thinkingTime: selectedThinkingTime ?? undefined,
 				chatgptProMode: selectedChatgptProMode ?? undefined,
+				selectedModel: selectedModel ?? undefined,
+				modelSelectionStatus: modelSelectionStatus ?? undefined,
 				chatgptAccountLevel: selectedChatgptAccountLevel ?? undefined,
 				chatgptAccountPlanType: selectedChatgptAccountPlanType ?? undefined,
 				chatgptAccountStructure: selectedChatgptAccountStructure ?? undefined,
@@ -3152,7 +3161,7 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 						turnId: baselineAssistantTurnId,
 					},
 					onPassiveDomProbe: async () => {
-						recordTargetBoundPassiveObservation({
+						await recordTargetBoundPassiveObservation({
 							state: "thinking",
 							source: "browser-service",
 							evidenceRef: "chatgpt-passive-dom-probe",
@@ -3417,6 +3426,8 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 			composerTool: selectedComposerTool,
 			thinkingTime: selectedThinkingTime ?? undefined,
 			chatgptProMode: selectedChatgptProMode ?? undefined,
+			selectedModel: selectedModel ?? undefined,
+			modelSelectionStatus: modelSelectionStatus ?? undefined,
 			chatgptAccountLevel: selectedChatgptAccountLevel ?? undefined,
 			chatgptAccountPlanType: selectedChatgptAccountPlanType ?? undefined,
 			chatgptAccountStructure: selectedChatgptAccountStructure ?? undefined,
@@ -3801,6 +3812,8 @@ async function runRemoteBrowserMode(
 	const runtimeHintCb = options.runtimeHintCb;
 	let selectedThinkingTime: ThinkingTimeLevel | null = null;
 	let selectedChatgptProMode: ChatgptProMode | null = null;
+	let selectedModel: string | null = null;
+	let modelSelectionStatus: "already-selected" | "switched" | "switched-best-effort" | null = null;
 	let selectedChatgptAccountLevel: string | null = null;
 	let selectedChatgptAccountPlanType: string | null = null;
 	let selectedChatgptAccountStructure: string | null = null;
@@ -3824,6 +3837,8 @@ async function runRemoteBrowserMode(
 		controllerPid: process.pid,
 		thinkingTime: selectedThinkingTime ?? undefined,
 		chatgptProMode: selectedChatgptProMode ?? undefined,
+		selectedModel: selectedModel ?? undefined,
+		modelSelectionStatus: modelSelectionStatus ?? undefined,
 		chatgptAccountLevel: selectedChatgptAccountLevel ?? undefined,
 		chatgptAccountPlanType: selectedChatgptAccountPlanType ?? undefined,
 		chatgptAccountStructure: selectedChatgptAccountStructure ?? undefined,
@@ -4004,7 +4019,7 @@ async function runRemoteBrowserMode(
 		});
 		if (modelSelectionPlan.kind === "chat-model") {
 			await dismissOpenMenus(Runtime).catch(() => false);
-			await withRetries(
+			const modelSelection = await withRetries(
 				() =>
 					ensureModelSelection(
 						Runtime,
@@ -4024,6 +4039,9 @@ async function runRemoteBrowserMode(
 					},
 				},
 			);
+			selectedModel = modelSelection.label;
+			modelSelectionStatus = modelSelection.status;
+			observedModel = modelSelection.label;
 			await ensurePromptReady(Runtime, config.inputTimeoutMs, logger);
 			logger(
 				`Prompt textarea ready (after model switch, ${promptText.length.toLocaleString()} chars queued)`,
@@ -4350,6 +4368,8 @@ async function runRemoteBrowserMode(
 				composerTool: selectedComposerTool,
 				thinkingTime: selectedThinkingTime ?? undefined,
 				chatgptProMode: selectedChatgptProMode ?? undefined,
+				selectedModel: selectedModel ?? undefined,
+				modelSelectionStatus: modelSelectionStatus ?? undefined,
 				chatgptAccountLevel: selectedChatgptAccountLevel ?? undefined,
 				chatgptAccountPlanType: selectedChatgptAccountPlanType ?? undefined,
 				chatgptAccountStructure: selectedChatgptAccountStructure ?? undefined,
@@ -4666,6 +4686,8 @@ async function runRemoteBrowserMode(
 			composerTool: selectedComposerTool,
 			thinkingTime: selectedThinkingTime ?? undefined,
 			chatgptProMode: selectedChatgptProMode ?? undefined,
+			selectedModel: selectedModel ?? undefined,
+			modelSelectionStatus: modelSelectionStatus ?? undefined,
 			chatgptAccountLevel: selectedChatgptAccountLevel ?? undefined,
 			chatgptAccountPlanType: selectedChatgptAccountPlanType ?? undefined,
 			chatgptAccountStructure: selectedChatgptAccountStructure ?? undefined,

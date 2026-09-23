@@ -1,9 +1,10 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { setAuracallHomeDirOverrideForTest } from '../src/auracallHome.js';
-import { createRunStatusToolHandler } from '../src/mcp/tools/runStatus.js';
+import { createRunStatusToolHandler, registerRunStatusTool } from '../src/mcp/tools/runStatus.js';
 import { createExecutionRuntimeControl } from '../src/runtime/control.js';
 import {
   createExecutionRun,
@@ -120,6 +121,135 @@ describe('mcp run_status tool', () => {
         },
       },
     });
+  });
+
+  it('automatically returns a strictly recovered new-project response without prompt replay', async () => {
+    const responseId = 'resp_status_recovered_1';
+    const observeFailedResponse = vi.fn(async () => ({
+      schema: 'auracall.response_recovery_observation.v1' as const,
+      response_id: responseId,
+      original_status: 'failed' as const,
+      original_record_digest: 'a'.repeat(64),
+      request_metadata: {},
+      logical_prompt_sha256: 'b'.repeat(64),
+      wire_prompt_sha256: 'c'.repeat(64),
+      observation_kind: 'after_submit_new_project' as const,
+      project_id: `g-p-${'1'.repeat(32)}`,
+      conversation_url: `https://chatgpt.com/g/g-p-${'1'.repeat(32)}/c/11111111-1111-1111-1111-111111111111`,
+      runtime_profile: 'agent-browser-chatgpt',
+      observed_at: '2026-09-22T15:00:00.000Z',
+      user_message_id: 'user-message-1',
+      assistant_message_id: 'assistant-message-1',
+      answer_text: 'Recovered Pro answer.',
+      answer_sha256: 'd'.repeat(64),
+      account_verdict: 'match' as const,
+      browser_process_id: 2696783,
+      target_id: 'TARGET-1',
+      prompt_submitted: false as const,
+      original_run_modified: false as const,
+    }));
+    const handler = createRunStatusToolHandler({
+      responsesService: {
+        readResponse: async () => ({
+          id: responseId,
+          object: 'response',
+          status: 'failed',
+          output: [],
+          metadata: {
+            executionSummary: {
+              failureSummary: {
+                code: 'runner_execution_failed',
+                details: {
+                  code: 'chatgpt_new_conversation_outcome_unknown',
+                  phase: 'after',
+                  retryable: false,
+                },
+              },
+            },
+          },
+        }),
+      },
+      mediaGenerationService: { readGeneration: async () => null },
+      observeFailedResponse,
+    });
+
+    const result = await handler({ id: responseId });
+
+    expect(observeFailedResponse).toHaveBeenCalledOnce();
+    expect(result).toMatchObject({
+      isError: false,
+      content: [{ type: 'text', text: expect.stringContaining('Recovered Pro answer.') }],
+      structuredContent: {
+        id: responseId,
+        status: 'failed',
+        effectiveStatus: 'completed_recovered',
+        recoveryObservation: {
+          response_id: responseId,
+          answer_text: 'Recovered Pro answer.',
+          prompt_submitted: false,
+          original_run_modified: false,
+        },
+      },
+    });
+  });
+
+  it('forwards automatic recovery through the registered MCP tool', async () => {
+    const registered = vi.fn();
+    const server = { registerTool: registered } as unknown as McpServer;
+    const observeFailedResponse = vi.fn(async () => ({
+      answer_text: 'Registered recovery answer.',
+      prompt_submitted: false,
+      original_run_modified: false,
+    })) as never;
+    registerRunStatusTool(server, {
+      responsesService: {
+        readResponse: async (id) => ({
+          id,
+          object: 'response',
+          status: 'failed',
+          output: [],
+          metadata: { executionSummary: { failureSummary: { details: {
+            code: 'chatgpt_new_conversation_outcome_unknown', phase: 'after', retryable: false,
+          } } } },
+        }),
+      },
+      mediaGenerationService: { readGeneration: async () => null },
+      observeFailedResponse,
+    });
+    const registeredHandler = registered.mock.calls.at(0)?.[2];
+    expect(registeredHandler).toBeTypeOf('function');
+    const handler = registeredHandler as (input: unknown) => Promise<Record<string, unknown>>;
+
+    const result = await handler({ id: 'resp_registered_recovery_1' });
+
+    expect(observeFailedResponse).toHaveBeenCalledWith('resp_registered_recovery_1');
+    expect(result).toMatchObject({
+      isError: false,
+      content: [{ text: expect.stringContaining('Registered recovery answer.') }],
+      structuredContent: { effectiveStatus: 'completed_recovered' },
+    });
+  });
+
+  it('does not invoke recovery for an ordinary failed response', async () => {
+    const observeFailedResponse = vi.fn();
+    const handler = createRunStatusToolHandler({
+      responsesService: {
+        readResponse: async (id) => ({
+          id,
+          object: 'response',
+          status: 'failed',
+          output: [],
+          metadata: { executionSummary: { failureSummary: { code: 'ordinary_failure' } } },
+        }),
+      },
+      mediaGenerationService: { readGeneration: async () => null },
+      observeFailedResponse,
+    });
+
+    const result = await handler({ id: 'resp_status_failed_1' });
+
+    expect(observeFailedResponse).not.toHaveBeenCalled();
+    expect(result).toMatchObject({ isError: true, structuredContent: { status: 'failed' } });
   });
 
   it('reads stored ChatGPT Deep Research review evidence through generic MCP run status', async () => {

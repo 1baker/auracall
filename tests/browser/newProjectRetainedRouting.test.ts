@@ -1,3 +1,4 @@
+// biome-ignore-all lint/style/noNonNullAssertion: assertions dereference fixture values constructed in this suite.
 import { expect, it, vi } from 'vitest';
 import { acquireAgentBrowserBrokerTab } from '../../src/browser/service/agentBrowserBridge.js';
 
@@ -55,7 +56,7 @@ it.each(['valid', 'unisolated', 'stale', 'no-match', 'missing-hint', 'conflict',
 			expect(requests[0]).not.toHaveProperty('browserId');
 		} else if (kind === 'unisolated') {
 			expect(requests).toEqual([expect.objectContaining({ action: 'tab_new', url, browserId: handle.browserId, sessionName: 'retained' })]);
-			expect(planQueries[0]!.has('displayIsolation')).toBe(false);
+			expect(planQueries[0]?.has('displayIsolation')).toBe(false);
 		} else if (kind === 'cold-launch') {
 			expect(requests).toEqual([expect.objectContaining({ action: 'tab_new', url, runtimeProfile: 'chatgpt-pro' })]);
 			expect(requests[0]).not.toHaveProperty('browserId');

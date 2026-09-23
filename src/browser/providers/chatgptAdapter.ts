@@ -7177,7 +7177,7 @@ async function readCurrentProject(client: ChromeClient): Promise<Project | null>
 
 async function scrapeChatgptProjects(
 	client: ChromeClient,
-	options: { disableClickFallback?: boolean } = {},
+	_options: { disableClickFallback?: boolean } = {},
 ): Promise<Project[]> {
 	const { result } = await client.Runtime.evaluate({
 		expression: `(() => {
@@ -12209,42 +12209,6 @@ export async function waitForChatgptExportDownloadForTest(
 export const validateChatgptDeepResearchExportFileForTest =
 	validateChatgptDeepResearchExportFile;
 
-async function waitForChatgptDownloadedFile(
-	destDir: string,
-	timeoutMs = 20_000,
-): Promise<string | null> {
-	const deadline = Date.now() + timeoutMs;
-	let lastPath: string | null = null;
-	let lastSize = -1;
-	let stableCount = 0;
-	while (Date.now() < deadline) {
-		const entries = await fs.readdir(destDir, { withFileTypes: true }).catch(() => []);
-		const completed = entries
-			.filter(
-				(entry) =>
-					entry.isFile() && !entry.name.endsWith(".crdownload") && !entry.name.endsWith(".tmp"),
-			)
-			.map((entry) => entry.name);
-		if (completed.length > 0) {
-			const candidateName = completed.sort()[0];
-			if (!candidateName) continue;
-			const candidatePath = path.join(destDir, candidateName);
-			const stat = await fs.stat(candidatePath).catch(() => null);
-			if (stat) {
-				if (candidatePath === lastPath && stat.size === lastSize) {
-					stableCount += 1;
-				} else {
-					lastPath = candidatePath;
-					lastSize = stat.size;
-					stableCount = 0;
-				}
-				if (stableCount >= 1) return candidatePath;
-			}
-		}
-		await sleep(250);
-	}
-	return null;
-}
 
 async function waitForSingleChatgptDownloadedFile(
 	destDir: string,
@@ -12362,12 +12326,14 @@ async function fileRefFromChatgptDownloadedArtifact(
 		const control = /^chatgpt:\/\/download-button\/([^/]+)\/(\d+)$/.exec(artifact.uri ?? "");
 		const messageId = artifact.messageId?.trim();
 		const controlOwner = String(artifact.metadata?.turnId || messageId || "");
-		const asymmetricStem = validTimestampSuffix
-			? actualStem.slice(0, timestampSuffix!.index)
+		const asymmetricStem = validTimestampSuffix && timestampSuffix
+			? actualStem.slice(0, timestampSuffix.index)
 			: actualStem.replace(/ ?\([1-9]\d*\)$/, "");
 		if (!control || !messageId || control[1] !== encodeURIComponent(controlOwner)
 			|| artifact.id !== `download-dom:${control[1]}:${control[2]}`
-			|| !targetName || targetName === "." || targetName === ".." || /[\\/\x00-\x1f]/.test(targetName)
+			|| !targetName || targetName === "." || targetName === ".." ||
+			targetName.includes("/") || targetName.includes("\\") ||
+			Array.from(targetName).some((character) => character.charCodeAt(0) < 32)
 			|| asymmetricStem === actualStem || asymmetricStem !== targetStem
 			|| path.extname(name) !== extension) {
 			throw new Error("ChatGPT collision filename lacks exact response/control provenance.");

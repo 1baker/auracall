@@ -21,7 +21,7 @@ describe('recovered response binding', () => {
     canonical.replace('https:', 'http:'),
     canonical.replace('6a7e0166', '7a7e0166'),
     canonical.replace('6a80e64e', '7a80e64e'),
-    canonical + '?redirect=1', canonical + '#other',
+    `${canonical}?redirect=1`, `${canonical}#other`,
     canonical.replace('chatgpt.com', 'user@chatgpt.com'),
     `https://chatgpt.com${conversationPath}`,
   ])('rejects non-equivalent recovery URL %s', actual => {
@@ -122,7 +122,7 @@ describe('recovered response binding', () => {
   });
   it.each([
     [], [answer], [user],
-    [{ ...user, text: prompt + ' extra content' }, answer],
+    [{ ...user, text: `${prompt} extra content` }, answer],
     [{ ...user, text: prompt.slice(0, 12) }, answer],
     [user, answer, { ...user, id: 'duplicate-user' }, { ...answer, id: 'duplicate-answer' }],
     [user, answer, { ...answer, id: 'alternative-answer' }],
@@ -135,7 +135,7 @@ describe('recovered response binding', () => {
     expect(() => bindRecoveredResponse(snapshot(messages), prompt, url)).toThrow();
   });
   it('rejects wrong URL, streaming, malformed snapshots and empty requests', () => {
-    for (const value of [null, {}, { ...snapshot([user, answer]), url: url + '-wrong' },
+    for (const value of [null, {}, { ...snapshot([user, answer]), url: `${url}-wrong` },
       { ...snapshot([user, answer]), generating: true }]) {
       expect(() => bindRecoveredResponse(value, prompt, url)).toThrow();
     }

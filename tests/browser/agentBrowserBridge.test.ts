@@ -1,3 +1,4 @@
+// biome-ignore-all lint/suspicious/noExplicitAny: broker test doubles intentionally model untyped wire payloads.
 import path from "node:path";
 import { describe, expect, test, vi } from "vitest";
 import { BrowserAutomationError } from "../../src/oracle/errors.js";
