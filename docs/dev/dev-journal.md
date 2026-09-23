@@ -49451,3 +49451,11 @@ mounting and every retry path, returning the observed option list on failure.
 A fake-DOM repeating-submenu regression and all 19 model-selection tests passed;
 build typecheck passed. This is source validation only. Installed runtime and
 live Pro selection remain to be checked before retrying the proposal request.
+
+## 2026-09-23 | Distinguish a fresh ordered reply from overlapping text
+
+The browser answer guard now lets a distinct assistant message through when
+the submitted user message is proved to precede it and the turn identity is
+new, even if a short previous answer appears inside the new text. The focused
+browser export suite passed 30 tests and TypeScript typecheck passed. The
+proposal browser run is still active; this note records source behavior only.

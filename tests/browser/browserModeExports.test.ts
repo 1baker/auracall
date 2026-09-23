@@ -45,6 +45,16 @@ test('identical output requires distinct identities and proven submitted-user or
   expect(shouldTreatChatgptAssistantResponseAsStaleForTest({ ...input, answerMessageId: null, answerAfterSubmittedUser: true })).toBe(true);
 });
 
+test('fresh ordered assistant identity beats overlap with the previous reply', () => {
+  const input = {
+    baselineText: 'READY', baselineMessageId: 'old-assistant',
+    answerText: 'PRO_MODEL_READY', answerMessageId: 'new-assistant',
+  };
+  expect(shouldTreatChatgptAssistantResponseAsStaleForTest({ ...input, answerAfterSubmittedUser: true })).toBe(false);
+  expect(shouldTreatChatgptAssistantResponseAsStaleForTest({ ...input, answerAfterSubmittedUser: false })).toBe(true);
+  expect(shouldTreatChatgptAssistantResponseAsStaleForTest({ ...input, answerMessageId: 'old-assistant', answerAfterSubmittedUser: true })).toBe(true);
+});
+
 test('submitted-user DOM boundary rejects older, disconnected and superseded answers', () => {
   const constants = Object.fromEntries([['DOCUMENT_POSITION_DISCONNECTED', 1], ['DOCUMENT_POSITION_FOLLOWING', 4]]);
   const makeNode = (id: string, role: string, position = 4) => ({

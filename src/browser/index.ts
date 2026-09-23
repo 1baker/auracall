@@ -993,6 +993,12 @@ function shouldTreatChatgptAssistantResponseAsStale(options: {
 		Boolean(options.baselineMessageId) &&
 		Boolean(options.answerMessageId) &&
 		options.answerMessageId !== options.baselineMessageId;
+	// A fresh assistant identity after the submitted user is stronger evidence
+	// than text overlap. Short canary replies can legitimately end with the
+	// previous answer (for example READY -> PRO_MODEL_READY).
+	if (distinctMessageIds && options.answerAfterSubmittedUser === true && !sameTurnId) {
+		return false;
+	}
 	return (
 		sameMessageId ||
 		sameTurnId ||

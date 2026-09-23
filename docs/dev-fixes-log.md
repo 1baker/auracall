@@ -22910,3 +22910,14 @@ browser-stage lifecycle observability, not transcript truncation.
   submenu expanded but no selectable Pro leaf exposed. The route remains
   live-unverified on this account; stop retries until the menu or account
   state changes or a governed selector path is found.
+
+# 2026-09-23 - Preserve fresh ordered ChatGPT replies despite text overlap
+
+- A newly identified assistant reply after the submitted user can contain the
+  previous short reply as a suffix. Text overlap alone had marked that fresh
+  answer stale.
+- The stale-answer guard now accepts the distinct assistant identity when the
+  submitted-user ordering is proved and the turn identity does not match the
+  baseline. Same-message and missing-ordering cases remain rejected.
+- The 30 browser export tests and TypeScript typecheck passed in source. This
+  checkpoint does not claim installed-runtime or live-response acceptance.
