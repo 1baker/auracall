@@ -22,15 +22,18 @@ Canonical comparison: `origin/main` at
   receipts; issues 7 and 10 remain open with separate outcomes.
 - The mixed branch equals its remote, retains 24 commits not reachable from
   canonical main, and is 246 commits behind it.
-- A fresh `lsof +D` census reports multiple process working directories and
-  CodeGraph files under the source checkout.
+- The initial `lsof +D` census reported multiple process working directories
+  and CodeGraph files under the source checkout. Follow-up ancestry inspection
+  established that they all belonged to the active Codex/tooling stack, not an
+  independent product or development workload.
 
 ## Decision
 
-Keep P46 open and fail closed on source-worktree retirement. Do not merge the
-mixed branch, open a pull request from it, rebase or force-push it, switch its
-checkout, remove its worktree, or delete its local or remote branch while the
-child outcomes and OS ownership gate remain open.
+Keep P46 open for its child outcomes, but do not treat the active agent's own
+cwd inheritance as independent worktree custody. The primary checkout may be
+switched to canonical main after the redundant clean main worktree is removed.
+Do not merge, rebase, force-push, or delete the retained mixed refs while the
+child outcomes remain open.
 
 Publish this receipt from a fresh issue-5 branch based on canonical main. The
 receipt updates governance state only and authorizes no browser, provider,

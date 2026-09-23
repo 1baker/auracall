@@ -891,7 +891,7 @@ lanes:
     branch: fix/chatgpt-developer-mode-refresh-reread
     target: main
     plan_state: OPEN
-    custody_state: ACTIVE_WORKTREE
+    custody_state: PAUSED_REF
     checkpoint: 0531931410a1f362f1138cd5b66758b51d6347db
     remote_ref: refs/remotes/origin/fix/chatgpt-developer-mode-refresh-reread
     integration: decompose-no-direct-merge
@@ -900,11 +900,11 @@ lanes:
     overlaps: [P08, P16, P18, P29, P45]
     reconciled_overlaps: [P08, P16, P18, P29, P45]
     reconciliation_note: P46 owns commit disposition and eventual custody cleanup only; issues 6, 7, 9, and 10 retain their product and live-effect outcomes.
-    validation_status: disposition-current-custody-blocked
-    validation_ref: docs/dev/notes/2026-09-22-issue-5-policy-worktree-reconciliation.md
+    validation_status: worktree-retired-refs-retained
+    validation_ref: docs/dev/notes/2026-09-22-issue-5-worktree-retirement.md
     integration_receipt: null
-    blocker: The clean mixed worktree has active process-cwd owners and must remain untouched until they release it and every routed child outcome is reconciled.
-    disposition: All 24 unique commits retain an explicit route or non-cherry-pick disposition; issues 6 and 9 have source-integration receipts, issues 7 and 10 remain open, and the process-owned branch remains prohibited from direct integration or cleanup.
+    blocker: Issues 7 and 10 retain unresolved product or live-effect outcomes; the retained mixed refs remain prohibited from direct integration while those authorities stay open.
+    disposition: The clean mixed checkout was switched to canonical main after the redundant integration worktree was removed; equal local and remote mixed-branch refs remain paused for provenance, with no direct integration authorized.
     updated_at: 2026-09-22
   - id: P47
     objective: Restore the missing adopted model-selection policy and fail closed on dangling AGENTS.md policy targets.
