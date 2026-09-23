@@ -1,3 +1,10 @@
+- 2026-09-22: MCP `run_status` now hands a completed ChatGPT answer back to
+  Codex when, and only when, an immutable response has the typed non-retryable
+  after-submit new-project uncertainty. It uses strict observation-only recovery,
+  returns `completed_recovered`, preserves the original failed audit record, and
+  never resubmits the prompt. Installed recovery of the original SABER response
+  matched the verified answer digest with `prompt_submitted: false`.
+
 - 2026-09-22: Attached-existing browsers can legitimately omit the top-level
   PID while carrying a live PID in build proof, and one browser can expose CDP
   plus RDP streams simultaneously. Reuse only matching verified proof; prefer an
@@ -22856,3 +22863,17 @@ browser-stage lifecycle observability, not transcript truncation.
   session, and tab-handle projection without replacing retained Chrome. A fresh
   response, `resp_1beaf76d8f074816962b7117116980b5`, completed through the
   retained browser and returned its exact nonce on 2026-09-21.
+
+# 2026-09-23 - Preserve native broker event polls and accept virtualized turns
+
+- A retained browser stayed ready while AuraCall's 10-second native event poll
+  interrupted model selection before Send. The native attachment now allows a
+  45-second event poll, longer than the 35-second model-selection stage.
+- A later prompt reached ChatGPT and received the exact answer, but AuraCall
+  failed its commit check because the visible turn count stayed at ten. Commit
+  verification now accepts a unique, newly identified last user message whose
+  full normalized text matches the prompt and whose composer has cleared.
+  Historical matching messages with the prior identity remain rejected.
+- After installation, three consecutive responses completed on one retained
+  target and conversation with exact dependent answers. The original failed
+  response records were preserved and not replayed.

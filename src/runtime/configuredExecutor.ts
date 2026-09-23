@@ -1213,7 +1213,8 @@ export function createConfiguredStoredStepExecutor(
       : null;
     const agentConfig = getAgent(executionConfig, context.step.agentId);
     const agentModel = asNonEmptyString(agentConfig?.model);
-    const agentModelSelector = asNonEmptyString(agentConfig?.modelSelector);
+    const requestModelSelector = asNonEmptyString(runInitialInputs?.model);
+    const agentModelSelector = asNonEmptyString(agentConfig?.modelSelector) ?? requestModelSelector;
     const chatgptSemanticSelection =
       service === 'chatgpt' && !agentModel
         ? resolveChatgptSemanticModelSelector(agentModelSelector)
@@ -2024,6 +2025,8 @@ export function createConfiguredStoredStepExecutor(
               configuredUrl: targetUrl,
               desiredModel,
               modelSelector: agentModelSelector,
+              selectedModel: browserResult.selectedModel ?? null,
+              modelSelectionStatus: browserResult.modelSelectionStatus ?? null,
               thinkingTime,
               promptTransport,
               cachePath: null,
@@ -2080,6 +2083,8 @@ export function createConfiguredStoredStepExecutor(
             configuredUrl: targetUrl,
             desiredModel,
             modelSelector: agentModelSelector,
+            selectedModel: browserResult.selectedModel ?? null,
+            modelSelectionStatus: browserResult.modelSelectionStatus ?? null,
             thinkingTime,
             promptTransport,
             cachePath: null,

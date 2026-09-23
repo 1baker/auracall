@@ -87,6 +87,8 @@ export type BrowserRuntimeMetadata = BaseTypes.BrowserRuntimeMetadata & {
   composerTool?: string | null;
   thinkingTime?: string;
   chatgptProMode?: string;
+  selectedModel?: string | null;
+  modelSelectionStatus?: 'already-selected' | 'switched' | 'switched-best-effort' | null;
   chatgptAccountLevel?: string;
   chatgptAccountPlanType?: string;
   chatgptAccountStructure?: string;
@@ -132,6 +134,8 @@ export type BrowserRunResult = BaseTypes.BrowserRunResult & {
   composerTool?: string | null;
   thinkingTime?: string;
   chatgptProMode?: string;
+  selectedModel?: string | null;
+  modelSelectionStatus?: 'already-selected' | 'switched' | 'switched-best-effort' | null;
   chatgptAccountLevel?: string;
   chatgptAccountPlanType?: string;
   chatgptAccountStructure?: string;

@@ -1,5 +1,19 @@
 # Testing quickstart
 
+- Retained ChatGPT continuity acceptance (2026-09-23): submit three sequential
+  `/v1/responses` calls with `auracall.chatgptDestination=existing_conversation`
+  and one exact canonical conversation URL. Read each durable response by its
+  returned ID before creating the next; make rounds two and three transform the
+  preceding assistant answer. Require exact output, matching browser target and
+  Agent Browser authority on all three records, the six ordered user/assistant
+  messages in the retained tab, and unchanged browser PID/CDP endpoint. The
+  current account exposed `GPT-5.6 Sol`; `chatgpt:auto` resolved to unavailable
+  Terra and is not a passing live route on this account. The older
+  `smoke:codex-browser-roundtrip` preflight also expects an obsolete
+  `attached_existing` host and process fields inside `browserBuildProof`; use
+  the current service browser `pid`, `host`, and `cdpEndpoint` for future smoke
+  maintenance.
+
 - Native transport crash/lost-reply fixture:
   `tests/fixtures/native-broker-cross-process.mjs` now creates a disposable client,
   fsyncs its binding receipt, verifies SIGKILL termination, and starts a distinct

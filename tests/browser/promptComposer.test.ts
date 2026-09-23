@@ -135,6 +135,43 @@ describe('promptComposer', () => {
     await expect(promptComposer.verifyPromptCommitted(runtime as never, 'hello', 150, undefined, 10)).resolves.toBe(11);
   });
 
+  test('accepts an exact fresh user message when the visible turn count is virtualized', async () => {
+    const runtime = {
+      evaluate: vi.fn().mockResolvedValue({ result: { value: {
+        turnsCount: 10,
+        hasNewTurn: false,
+        latestMatchingUserId: 'new-user',
+        composerCleared: true,
+      } } }),
+    };
+
+    await expect(promptComposer.verifyPromptCommitted(
+      runtime as never, 'hello', 150, undefined, 10, 'previous-user',
+    )).resolves.toBe(10);
+  });
+
+  test('does not accept a historical matching user message with the same identity', async () => {
+    vi.useFakeTimers();
+    try {
+      const runtime = {
+        evaluate: vi.fn().mockResolvedValue({ result: { value: {
+          turnsCount: 10,
+          hasNewTurn: false,
+          latestMatchingUserId: 'previous-user',
+          composerCleared: true,
+        } } }),
+      };
+      const pending = promptComposer.verifyPromptCommitted(
+        runtime as never, 'hello', 150, undefined, 10, 'previous-user',
+      );
+      const assertion = expect(pending).rejects.toThrow(/prompt did not appear/i);
+      await vi.advanceTimersByTimeAsync(250);
+      await assertion;
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   test('accepts a commit that becomes visible on the final timeout sample', async () => {
     vi.useFakeTimers();
     try {

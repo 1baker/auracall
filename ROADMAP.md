@@ -15,6 +15,13 @@ Lane: P01
   Independent artifact review remains recorded at 82 because its submitted
   evidence predated that immutable source commit; no third provider run was made.
 
+- Closed automatic MCP response recovery:
+  [Plan 0363](docs/dev/plans/0363-2026-09-22-mcp-automatic-response-recovery.md).
+  Current state: `run_status` automatically performs strict observation-only
+  recovery for typed after-submit new-project uncertainty and returns the
+  completed assistant text without replaying the prompt or rewriting the
+  original failed audit record. Installed recovery of the SABER response passed.
+
 - Closed policy-governed ChatGPT destination routing:
   [Plan 0360](docs/dev/plans/0360-2026-09-21-policy-governed-chatgpt-destination-routing.md).
   Current state: typed resolver and compatibility tests pass. Runtime agent

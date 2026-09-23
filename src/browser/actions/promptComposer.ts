@@ -95,6 +95,7 @@ export async function submitPrompt(
     input: ChromeClient['Input'];
     attachmentNames?: string[];
     baselineTurns?: number | null;
+    baselineUserId?: string | null;
     inputTimeoutMs?: number | null;
 		requireSendButton?: boolean;
     onPromptDispatched?: () => void | Promise<void>;
@@ -341,7 +342,7 @@ export async function submitPrompt(
 
   const commitTimeoutMs = Math.max(60_000, deps.inputTimeoutMs ?? 0);
   // Learned: the send button can succeed but the turn doesn't appear immediately; verify commit via turns/stop button.
-  return await verifyPromptCommitted(runtime, prompt, commitTimeoutMs, logger, deps.baselineTurns ?? undefined);
+  return await verifyPromptCommitted(runtime, prompt, commitTimeoutMs, logger, deps.baselineTurns ?? undefined, deps.baselineUserId ?? undefined);
 }
 
 export async function clearPromptComposer(Runtime: ChromeClient['Runtime'], logger: BrowserLogger) {
@@ -557,6 +558,7 @@ async function verifyPromptCommitted(
   timeoutMs: number,
   logger?: BrowserLogger,
   baselineTurns?: number,
+  baselineUserId?: string,
 ): Promise<number | null> {
   const deadline = Date.now() + timeoutMs;
   const encodedPrompt = JSON.stringify(prompt.trim());
@@ -603,6 +605,11 @@ async function verifyPromptCommitted(
 	    const CONVERSATION_SELECTOR = ${JSON.stringify(CONVERSATION_TURN_SELECTOR)};
 	    const articles = Array.from(document.querySelectorAll(CONVERSATION_SELECTOR));
 	    const normalizedTurns = articles.map((node) => normalize(node?.innerText));
+	    const users = Array.from(document.querySelectorAll('[data-message-author-role="user"][data-message-id]'));
+	    const latestUser = users[users.length - 1];
+	    const latestUserId = latestUser?.getAttribute('data-message-id') ?? '';
+	    const latestMatchingUserId = latestUserId && users.filter((node) => node.getAttribute('data-message-id') === latestUserId).length === 1
+	      && normalize(latestUser?.innerText).includes(normalizedPrompt) ? latestUserId : null;
 	    const readValue = (node) => {
 	      if (!node) return '';
 	      if (node instanceof HTMLTextAreaElement) return node.value ?? '';
@@ -648,6 +655,7 @@ async function verifyPromptCommitted(
       userMatched,
       prefixMatched,
       lastMatched,
+      latestMatchingUserId,
       hasNewTurn,
       stopVisible,
       assistantVisible,
@@ -665,6 +673,7 @@ async function verifyPromptCommitted(
       userMatched?: boolean;
       prefixMatched?: boolean;
       lastMatched?: boolean;
+      latestMatchingUserId?: string | null;
       hasNewTurn?: boolean;
       stopVisible?: boolean;
       assistantVisible?: boolean;
@@ -674,6 +683,9 @@ async function verifyPromptCommitted(
       baseline?: number;
   };
   const isCommitted = (info: PromptCommitInfo | undefined): boolean => {
+    if (baselineUserId && info?.latestMatchingUserId && info.latestMatchingUserId !== baselineUserId && info.composerCleared) {
+      return true;
+    }
     const matchesPrompt = Boolean(info?.lastMatched || info?.userMatched || info?.prefixMatched);
     const baselineUnknown = typeof info?.baseline === 'number' ? info.baseline < 0 : baselineLiteral < 0;
     if (matchesPrompt && (baselineUnknown || info?.hasNewTurn)) {

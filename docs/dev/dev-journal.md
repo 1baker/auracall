@@ -1,3 +1,13 @@
+## 2026-09-22 | MCP automatically hands recovered Pro answers back to Codex
+
+General MCP polling previously stopped at the immutable failed response even
+though AuraCall's strict observer could recover a completed new-project answer.
+`run_status` now invokes that observer only for the typed after-submit uncertainty
+class and returns verified text as `completed_recovered`. The installed handler
+recovered the original SABER response with identical answer digest, no prompt
+submission, and no original-record mutation. Focused recovery/MCP tests, the full
+MCP suite, typecheck, strict changed-file lint, build and installed parity passed.
+
 ## 2026-09-22 | Retained browser proof and honest recovery errors
 
 Live inventory exposed the boundary: the sole healthy `chatgpt-pro` browser had
@@ -49378,3 +49388,24 @@ launched and no provider prompt was submitted.
   `resp_1beaf76d8f074816962b7117116980b5` completed with exact nonce readback.
   Its retained Chrome process identity remained unchanged, and AuraCall received
   the provider result from Agent Browser's returned target handle.
+
+## 2026-09-23 | Three-round Codex and retained ChatGPT exchange
+
+- Fetched personal `1baker` AuraCall; `personal/codex/auracall-personal-main`
+  and local HEAD were identical. Preserved the existing dirty worktree.
+- Rebound AuraCall's stale runtime target/session to the verified retained
+  `dashboard-service-backend` target `82720AD2F7A474EF0DA7A2C624D5EEC5`
+  and restarted only the API service. Chrome PID `73650` and its CDP endpoint
+  remained stable.
+- The first live probes exposed a native event-poll timeout and a virtualized
+  turn-count false failure. Both were repaired, 90 focused tests and typecheck
+  passed, the production build succeeded, and installed `dist` matched source.
+- Responses `resp_idem_441b36b58b2c0e94db7006e027ac19d9`,
+  `resp_idem_f0e354bfa6ddaabb5d8767e7098891d1`, and
+  `resp_idem_c8b7c56c060a687a17620e72e586ec08` each completed with exact
+  R1/R2/R3 marker outputs. R2 and R3 used the immediately preceding answer;
+  the browser showed six ordered user/assistant messages with distinct IDs.
+  All records named the same target and canonical conversation URL.
+- Remaining tooling drift: the older one-round smoke preflight expects stale
+  browser inventory fields, and `chatgpt:auto` selects Terra, unavailable in
+  this account's live picker. The three-round Sol route passed.
