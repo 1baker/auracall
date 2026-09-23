@@ -1,6 +1,6 @@
 # Final materialization handoff acceptance | 0358-2026-09-23
 
-State: OPEN
+State: CLOSED
 Lane: P51
 Branch: ops/issue-29-final-live-acceptance
 Target: main
@@ -51,3 +51,13 @@ managed browser after DevTools attribution becomes available.
 Stop without retry on identity mismatch, CAPTCHA/human verification, unknown
 browser ownership, autonomous scheduler work, more than one pass advance,
 second-Chrome evidence, or any uncertain provider effect.
+
+## Result
+
+Accepted. The one control advanced pass 27 to 28 and child
+`hmj_e944834c227446b5ae07b7f5b2545fbb` succeeded on one attempt after crossing
+the former PID-before-port failure boundary. It attempted six conversations,
+materialized one asset, skipped eleven, and failed zero. Final readback proved
+zero active jobs and managed browser owners, healthy API PID `7701` with zero
+crash restarts, a null force ceiling, and the scheduler still paused. The full
+receipt is `docs/dev/notes/2026-09-23-issue-29-final-live-acceptance.md`.
