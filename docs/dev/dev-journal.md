@@ -49916,3 +49916,16 @@ Chat repair integrated. Inventory complete at 11. Blank-tab readiness fix instal
 - Fresh Gemini status retained `manual_clear_required` / `google-sorry` for
   `auracall-gemini-pro`. Both Gemini targets remain disabled; no Gemini launch,
   clear, or retry occurred. API PID `7701` stayed active with zero restarts.
+
+## 2026-09-23 | Issue 6 live preflight stopped before Send
+
+- Current source and installed runtime passed exact 525-file `dist` parity.
+  Scheduler/browser ownership, active work, and API health gates were clean.
+- The installed read-only app inventory matched Team account
+  `ecochran76@gmail.com`, but Developer mode was disabled and the complete
+  inventory contained no LitScout app. Exact DAS-R5 app identity could not be
+  established.
+- The run stopped before prompt staging or Send. No substitute app, app
+  recreation, OAuth reconnect, or retry ran. The exact managed browser returned
+  to zero owners, the scheduler stayed healthy, and API PID `7701` retained zero
+  restarts. Issue 6 remains blocked on separately authorized app restoration.
