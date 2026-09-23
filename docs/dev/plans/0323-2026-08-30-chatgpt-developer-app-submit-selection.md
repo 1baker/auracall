@@ -6,10 +6,23 @@ Operational state: TERMINAL_RESPONSE_PROVIDER_FREE_INTEGRATED_INSTALL_LIVE_BLOCK
 Branch: fix/issue-6-developer-app-response
 Target: main
 Integration: merge
-Revision: 9 | 2026-09-16
+Revision: 10 | 2026-09-23
 
 ## Current State
 
+- The operator authorized one installed DAS-R5 attempt on 2026-09-23. Current
+  source/install parity passed at 525 `dist` files with identical aggregate
+  SHA-256 `30f58843ff76c95db59eddc54c591bd7adb1be3394a01658907897765d6910d8`.
+  Scheduler, completion, API, and exact managed-browser ownership gates were
+  clean before the read-only provider inventory.
+- The installed inventory observed the expected Team account
+  `ecochran76@gmail.com`, but reported Developer mode disabled and a complete
+  app inventory with no LitScout entry. Exact app selection was therefore
+  impossible. The run stopped before prompt staging or Send; no substitute app,
+  recreation, OAuth reconnect, or retry was attempted. The browser cleaned to
+  zero exact-profile owners and the scheduler remained healthy. DAS-R5 remains
+  blocked on restoring the exact LitScout app through separately authorized
+  app administration.
 - Issue `ecochran76/auracall#6` recovery source merged through PR 21 at
   `c3800d460019f6dcf11fee29e9ddabc7907e44b0`; the clean, remote-equal,
   process-unowned implementation worktree and local branch were removed while
@@ -168,3 +181,7 @@ evidence without duplicating provider-local response or approval watchers.
 `DAS-R4` is the bounded revision-8 provider-free terminal-response milestone.
 `DAS-R5` and current source/installed parity remain separate open gates; neither
 may be claimed from provider-free source validation.
+
+The 2026-09-23 authorized attempt consumed no Send because the exact required
+app was absent at the pre-effect identity gate. This is a valid fail-closed
+receipt, not DAS-R5 acceptance.
