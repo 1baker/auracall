@@ -49779,3 +49779,17 @@ Chat repair integrated. Inventory complete at 11. Blank-tab readiness fix instal
 - This reconciliation runs from a fresh issue-5 branch based on canonical
   `origin/main` and updates only governance receipts. It performs no browser,
   provider, runtime, or product effect.
+
+## 2026-09-22 | Issue 5 mixed worktree retired
+
+- Follow-up process ancestry showed that the reported cwd owners were the
+  active Codex session, its inherited MCP/tooling children, CodeGraph, and the
+  repo wake helper—not an independent product runtime or development lane.
+- The clean canonical-main integration worktree had no owners and was removed.
+  The primary repository path then switched from the mixed branch to exact
+  canonical `main` at `0994a51140710c5308c779ebd346bef4b4be0662`.
+- The mixed local and remote refs remain equal at `053193141` without an
+  assigned worktree. P46 is now `PAUSED_REF`; issue 5 stays open because issues
+  7 and 10 retain separately governed outcomes.
+- No mixed history was merged, rebased, rewritten, or deleted. No browser,
+  provider, runtime, or product effect ran.

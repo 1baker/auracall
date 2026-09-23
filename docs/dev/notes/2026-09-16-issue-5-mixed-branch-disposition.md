@@ -8,7 +8,9 @@ Latest reconciliation comparison: `origin/main` at
 `4982466cc62e29cba600d3ff7c65374fdb9bed89` on 2026-09-22
 
 This ledger is a routing artifact, not implementation or integration proof.
-The source worktree is process-owned and remains untouched.
+The source worktree was retired on 2026-09-22 after its apparent owners were
+classified as the active Codex/tooling stack rather than an independent
+workload. Equal local and remote branch refs remain retained.
 
 | Commit | Subject | Disposition |
 | --- | --- | --- |
@@ -39,12 +41,10 @@ The source worktree is process-owned and remains untouched.
 
 ## Retirement Gate
 
-Keep the source branch and worktree until issues 6, 7, 9, and 10 have recorded
-their commit-level outcomes and a fresh process-cwd census reports no owner.
-Remote custody remains required even after local worktree retirement unless a
+Keep the equal local and remote source refs until issues 6, 7, 9, and 10 have
+recorded their commit-level outcomes. Remote custody remains required unless a
 later explicit cleanup decision records an equivalent durable archive.
 
 As of 2026-09-22, issues 6 and 9 have source-integration receipts, while their
-remaining installed/live gates stay issue-owned. Issues 7 and 10 remain open,
-and a fresh census still reports multiple process-cwd owners. The retirement
-gate therefore remains closed.
+remaining installed/live gates stay issue-owned. Issues 7 and 10 remain open.
+The worktree-retirement gate is complete; retained-ref deletion remains closed.

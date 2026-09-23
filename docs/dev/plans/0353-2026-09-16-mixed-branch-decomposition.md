@@ -19,8 +19,12 @@ history.
 - After the 2026-09-22 remote refresh, the branch is 246 commits behind
   canonical `main` and retains 24 commits not
   reachable from `main`, including two historical merge commits.
-- Its worktree is clean but actively owned by multiple processes, so it must
-  not be removed, renamed, switched, rebased, or otherwise repurposed.
+- On 2026-09-22, fresh classification showed the only cwd owners were the
+  active Codex/tooling stack rather than an independent product or development
+  workload. The redundant clean `main` integration worktree was removed, and
+  the primary repository path was switched to canonical `main`.
+- Equal local and remote refs for the mixed branch remain paused at the exact
+  checkpoint for issue 7/10 provenance. The branch has no assigned worktree.
 - Patch comparison shows the final two GitHub-policy commits are already
   equivalent to canonical work integrated through PR 12. The remaining commits
   require issue-scoped recovery or explicit historical disposition.
@@ -45,8 +49,8 @@ history.
 ## Hard Stops
 
 - Do not merge or open a pull request from the mixed branch.
-- Do not rebase, force-push, switch, remove, or clean its process-owned
-  worktree.
+- Do not rebase, force-push, delete, or directly integrate the retained mixed
+  refs while their remaining child outcomes are open.
 - Do not treat patch equivalence as installed or provider acceptance.
 - Do not combine recovery for issues 6, 7, and 9 into one implementation lane.
 - Do not run a browser/provider canary from this decomposition plan.
@@ -58,15 +62,14 @@ history.
 - all recovered code moves through fresh branches from canonical `main`;
 - patch-equivalent or superseded policy commits are not replayed;
 - historical merge commits remain provenance only;
-- the mixed worktree is retired only after its process owners release it and
-  every child issue records integration, supersession, or an explicit drop;
-- final branch/worktree cleanup uses fresh cleanliness, remote, ancestry or
-  replay-receipt, ignored-file, and process-cwd gates.
+- the mixed worktree is retired using fresh cleanliness, remote, ignored-file,
+  and process classification gates;
+- final retained-ref cleanup waits until every child issue records integration,
+  supersession, or an explicit drop.
 
 ## Next Action
 
 Keep issues 6, 7, 9, and 10 as the authorities for their remaining acceptance
-outcomes. Re-run the clean/equal/ignored-file/remote/process-cwd gates only
-after those outcomes are explicitly dispositioned and all source-worktree
-owners have released the checkout; until then, do not switch, remove, or prune
-the mixed branch worktree.
+outcomes. Retain the equal local and remote mixed-branch refs without a
+worktree until those outcomes are explicitly dispositioned; then make a
+separate, explicit retained-ref cleanup decision.

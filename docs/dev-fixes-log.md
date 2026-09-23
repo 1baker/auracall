@@ -22616,3 +22616,6 @@ ChatGPT commits a native Skill mention before the user text. Prompt equality mus
   owner remains.
 - Reconcile policy from a fresh canonical-main issue branch. Never use a stale
   mixed source branch as the vehicle for its own governance or cleanup patch.
+- Classify cwd owners by process ancestry before calling a worktree externally
+  occupied. The active agent, its inherited MCP servers, CodeGraph, and a repo
+  wake helper are tooling ownership; they do not prove a separate work lane.
