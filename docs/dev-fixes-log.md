@@ -22877,3 +22877,15 @@ browser-stage lifecycle observability, not transcript truncation.
 - After installation, three consecutive responses completed on one retained
   target and conversation with exact dependent answers. The original failed
   response records were preserved and not replayed.
+# 2026-09-23 - Bound ChatGPT model-picker retries before native CDP timeout
+
+- Two exact retained-browser Pro attempts failed before prompt submission. The
+  native Agent Browser jobs failed on `Runtime.evaluate` after about 28 seconds,
+  while AuraCall flattened the error to an unknown broker response envelope.
+- The ChatGPT model-picker script could repeatedly click a submenu match and
+  skip its old timeout check. A total 24-second page deadline now includes
+  button mounting and checks before every model or submenu retry. An unavailable
+  picker returns bounded option evidence instead of waiting for the 30-second
+  native CDP timeout.
+- A fake-DOM persistent-submenu regression and the 19 model-selection tests
+  passed; build typecheck passed. Installed/live validation is still required.

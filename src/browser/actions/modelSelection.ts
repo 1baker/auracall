@@ -297,8 +297,11 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
     const MODEL_STRATEGY = ${strategyLiteral};
     const INITIAL_WAIT_MS = 150;
     const REOPEN_INTERVAL_MS = 400;
-    const MAX_WAIT_MS = 20000;
+    // The native broker allows 30 seconds for one CDP command. Include both
+    // button mounting and submenu navigation inside one smaller page deadline.
+    const MAX_TOTAL_WAIT_MS = 24000;
     const BUTTON_WAIT_MS = 12000;
+    const selectionStartedAt = performance.now();
     const normalizeText = (value) => {
       if (!value) {
         return '';
@@ -318,7 +321,8 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
 
     let button = null;
     const buttonWaitStartedAt = performance.now();
-    while (!button && performance.now() - buttonWaitStartedAt <= BUTTON_WAIT_MS) {
+    while (!button && performance.now() - buttonWaitStartedAt <= BUTTON_WAIT_MS
+      && performance.now() - selectionStartedAt <= MAX_TOTAL_WAIT_MS) {
       button = BUTTON_SELECTORS
         .map((selector) => document.querySelector(selector))
         .find((node) => node) ?? null;
@@ -571,7 +575,6 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
     };
 
     return new Promise((resolve) => {
-      const start = performance.now();
       const detectTemporaryChat = () => {
         try {
           const url = new URL(window.location.href);
@@ -602,6 +605,15 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
       const openDelay = () => new Promise((r) => setTimeout(r, INITIAL_WAIT_MS));
       let initialized = false;
       const attempt = async () => {
+        // Check before all click/reopen paths. A persistent submenu match used
+        // to bypass the old timeout and outlive the broker's CDP deadline.
+        if (performance.now() - selectionStartedAt > MAX_TOTAL_WAIT_MS) {
+          resolve({
+            status: 'option-not-found',
+            hint: { temporaryChat: detectTemporaryChat(), availableOptions: collectAvailableOptions() },
+          });
+          return;
+        }
         if (!initialized) {
           initialized = true;
           await openDelay();
@@ -638,13 +650,6 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
         if (navigation) {
           dispatchClickSequence(navigation.node);
           setTimeout(attempt, REOPEN_INTERVAL_MS / 2);
-          return;
-        }
-        if (performance.now() - start > MAX_WAIT_MS) {
-          resolve({
-            status: 'option-not-found',
-            hint: { temporaryChat: detectTemporaryChat(), availableOptions: collectAvailableOptions() },
-          });
           return;
         }
         setTimeout(attempt, REOPEN_INTERVAL_MS / 2);

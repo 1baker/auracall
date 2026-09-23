@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import { runInNewContext } from 'node:vm';
+import { describe, expect, it, vi } from 'vitest';
 import {
   buildModelMatchersLiteralForTest,
   buildModelSelectionExpressionForTest,
@@ -23,11 +24,60 @@ describe('browser model selection matchers', () => {
     const expression = buildModelSelectionExpressionForTest('Pro');
     expect(expression).toContain('const BUTTON_WAIT_MS = 12000');
     expect(expression).toContain(
-      'while (!button && performance.now() - buttonWaitStartedAt <= BUTTON_WAIT_MS)',
+      'performance.now() - buttonWaitStartedAt <= BUTTON_WAIT_MS',
     );
     expect(expression).toContain(
       'await new Promise((resolve) => setTimeout(resolve, REOPEN_INTERVAL_MS / 2))',
     );
+  });
+
+  it('ends a persistent submenu retry before the native broker command timeout', async () => {
+    vi.useFakeTimers();
+    try {
+      let clicks = 0;
+      class FakeElement {
+        textContent = 'Pro';
+        children: FakeElement[] = [];
+        classList = { contains: () => false };
+        getAttribute(name: string) {
+          return name === 'aria-expanded' ? 'false' : null;
+        }
+        hasAttribute() { return false; }
+        querySelector() { return null; }
+        getBoundingClientRect() { return { left: 0, top: 0, width: 10, height: 10 }; }
+        dispatchEvent() { clicks += 1; return true; }
+      }
+      const button = new FakeElement();
+      const option = new FakeElement();
+      const context: Record<string, unknown> = {
+        setTimeout,
+        performance: { now: () => Date.now() },
+        EventTarget: FakeElement,
+        Element: FakeElement,
+        HTMLElement: FakeElement,
+        MouseEvent: class {},
+        document: {
+          title: 'ChatGPT',
+          body: { innerText: '' },
+          querySelector: () => button,
+          querySelectorAll: (selector: string) => selector.includes('[role="menu"]') ? [] : [option],
+        },
+        location: { href: 'https://chatgpt.com/c/test' },
+      };
+      context.window = context;
+      const result = runInNewContext(buildModelSelectionExpressionForTest('Pro'), context) as Promise<{
+        status: string;
+        hint?: { availableOptions: string[] };
+      }>;
+      await vi.advanceTimersByTimeAsync(25_000);
+      await expect(result).resolves.toEqual({
+        status: 'option-not-found',
+        hint: { temporaryChat: false, availableOptions: ['Pro'] },
+      });
+      expect(clicks).toBeGreaterThan(10);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('includes rich tokens for gpt-5.1 base selection', () => {

@@ -49409,3 +49409,17 @@ launched and no provider prompt was submitted.
 - Remaining tooling drift: the older one-round smoke preflight expects stale
   browser inventory fields, and `chatgpt:auto` selects Terra, unavailable in
   this account's live picker. The three-round Sol route passed.
+## 2026-09-23 | Bound ChatGPT model-picker retries to the native CDP window
+
+Two retained-browser Pro requests for the NSF STTR Project Description failed
+before Send. The Agent Browser job records show the same native `Runtime.evaluate`
+command timing out at about 28 seconds after earlier attachment and reads
+succeeded. AuraCall reported the failed native response as an unknown broker
+outcome; the exact conversation showed no proposal prompt or files. The model
+picker expression had a 20-second check only after its click/navigation retry
+branches, allowing persistent submenu matches to run past the broker's
+30-second CDP deadline. Source now applies a 24-second deadline across button
+mounting and every retry path, returning the observed option list on failure.
+A fake-DOM repeating-submenu regression and all 19 model-selection tests passed;
+build typecheck passed. This is source validation only. Installed runtime and
+live Pro selection remain to be checked before retrying the proposal request.
