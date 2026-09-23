@@ -5,6 +5,7 @@ import {
 	type ChatgptSkillState,
 	executeChatgptSkillOperation,
 	loadChatgptSkillSource,
+	runChatgptSkillOperationForCli,
 } from "../../src/cli/chatgptSkillsCommand.js";
 
 function state(overrides: Partial<ChatgptSkillState> = {}): ChatgptSkillState {
@@ -51,41 +52,46 @@ function adapterWith(initial: ChatgptSkillState): ChatgptSkillAdapter {
 }
 
 describe("executeChatgptSkillOperation", () => {
-	it("routes a confirmed exact-ID run and rejects missing authority, invalid bounds, or duplicate marker names", async () => {
-		const initial = state();
-		initial.skills[0].name = "Unique";
-		const adapter = adapterWith(initial);
-		const input = {
-			action: "run" as const,
-			expectedAccount: "owner@example.com",
-			confirmed: true,
-			skillId: "1".repeat(32),
-			prompt: "Investigate",
-			timeoutMs: 1000,
-		};
-		vi.mocked(adapter.run).mockResolvedValue({ status: "completed", message: "Captured response", responseText: "Result" });
-		for (const override of [
-			{ confirmed: false },
-			{ prompt: " " },
-			{ timeoutMs: NaN },
-			{ timeoutMs: 601000 },
-			{ skillId: "missing" },
-			{ expectedAccount: "wrong@example.com" },
-		]) {
-			await expect(
-				executeChatgptSkillOperation({ ...input, ...override }, adapter),
-			).rejects.toThrow();
-		}
-		expect(adapter.run).not.toHaveBeenCalled();
-		const result = await executeChatgptSkillOperation(input, adapter);
-		expect(result.action).toBe("run");
-		expect(adapter.run).toHaveBeenCalledWith(initial.skills[0], input);
-		expect(adapter.select).not.toHaveBeenCalled();
-		initial.skills[1].name = "Unique";
-		await expect(executeChatgptSkillOperation(input, adapter)).rejects.toThrow(
-			"unambiguous inventory name",
+	it("rejects user-added Skill execution in Chat mode before browser launch", async () => {
+		const createBrowser = vi.fn();
+
+		await expect(
+			runChatgptSkillOperationForCli(
+				{} as never,
+				{
+					action: "run",
+					expectedAccount: "owner@example.com",
+					confirmed: true,
+					skillId: "1".repeat(32),
+					prompt: "Use the selected Skill.",
+					timeoutMs: 300_000,
+				},
+				{ createBrowser },
+			),
+		).rejects.toThrow(
+			"User-added ChatGPT Skills are not available in Chat mode; AuraCall did not launch a browser or send the prompt. Work mode testing is deferred.",
 		);
-		expect(adapter.run).toHaveBeenCalledTimes(1);
+		expect(createBrowser).not.toHaveBeenCalled();
+	});
+
+	it("rejects a direct Chat-mode Skill run before inventory reads or Send", async () => {
+		const adapter = adapterWith(state());
+
+		await expect(
+			executeChatgptSkillOperation(
+				{
+					action: "run",
+					expectedAccount: "owner@example.com",
+					confirmed: true,
+					skillId: "1".repeat(32),
+					prompt: "Use the selected Skill.",
+					timeoutMs: 300_000,
+				},
+				adapter,
+			),
+		).rejects.toThrow("User-added ChatGPT Skills are not available in Chat mode");
+		expect(adapter.readState).not.toHaveBeenCalled();
+		expect(adapter.run).not.toHaveBeenCalled();
 	});
 
 	it("loads one deterministic bounded SKILL.md source", async () => {

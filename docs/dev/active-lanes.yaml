@@ -499,7 +499,7 @@ lanes:
     plan_ref: refs/heads/fix/plan0336-skill-prompt-invocation
     branch: fix/plan0336-skill-prompt-invocation
     target: main
-    plan_state: OPEN
+    plan_state: CLOSED
     custody_state: INTEGRATED
     checkpoint: d942e80d87b8b76b17d9eecac7b5872ab30cfd67
     remote_ref: refs/remotes/origin/fix/plan0336-skill-prompt-invocation
@@ -507,12 +507,12 @@ lanes:
     work_items: [ecochran76/auracall#8]
     dependencies: [P27, P28]
     overlaps: []
-    validation_status: native-submission-proven-execution-unaccepted
-    validation_ref: docs/dev/notes/2026-09-05-plan0336-skill-prompt-live.json
+    validation_status: chat-mode-provider-limitation-accepted-work-deferred
+    validation_ref: docs/dev/notes/2026-09-23-issue-8-chat-mode-skill-limitation.md
     integration_receipt: 01bb65ad2bed76422b19a1367a275dbed99b5313
-    blocker: Actual Skill execution remains unaccepted; model reported selected resource inaccessible.
-    disposition: One native exact-ID Skill prompt committed; provider reported resource inaccessible. Commit-readback repair recovered existing answer; 377 focused tests pass. No prompt retry.
-    updated_at: 2026-09-05
+    closeout_pr: 44
+    disposition: Chat mode does not expose user-added Skills. AuraCall now rejects skills run before inventory, browser launch, or Send; Work-mode testing is deferred. Prior exact-ID and native evidence is retained without retry.
+    updated_at: 2026-09-23
   - id: P30
     objective: Complete Git maintenance and close stale worktrees while preserving unfinished work.
     plan: docs/dev/plans/0337-2026-09-06-git-maintenance.md

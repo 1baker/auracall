@@ -22715,3 +22715,11 @@ ChatGPT commits a native Skill mention before the user text. Prompt equality mus
 - Treat the terminal conversation URL plus passive DOM marker readback as the
   live receipt, then clean only the attributable browser and restore scheduler
   posture separately.
+## 2026-09-23 | Reject user-added Skill execution in Chat mode pre-effect
+
+- Exact Skill inventory, selection, and serialized IDs do not establish that
+  ChatGPT Chat can execute a user-added Skill. Native and AuraCall attempts both
+  reached a model that could not access the custom Skill resource.
+- Keep read/selection/CRUD support, but reject `skills run` at every exported
+  execution boundary before inventory, browser launch, or Send. The rejection
+  must say that Work-mode testing is deferred rather than implying Work support.

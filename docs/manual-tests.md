@@ -48,6 +48,9 @@ human-submitted existing tab with the diagnostic readback probe.
 
 ### ChatGPT Skill CRUD (explicitly authorized only)
 
+- Do not run user-added Skills in Chat mode. `skills run` must reject before
+  browser launch or Send. Work-mode Skill execution testing is deferred.
+
 - A separately authorized non-submitting selection smoke may use
   `skills select <id> --expected-account <email> --yes --json` once. It must
   return only after proving the exact selected Skill on an empty composer and

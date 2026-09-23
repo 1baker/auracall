@@ -1,5 +1,16 @@
 # RUNBOOK
 
+## Turn 618 | 2026-09-23
+
+- Closed P29/issue 8 as a Chat-mode provider limitation. Operator observation
+  plus the retained AuraCall/native receipts show that Chat does not expose or
+  load user-added Skills even when the exact Skill ID is serialized.
+- `skills run` now rejects through both exported execution paths before
+  inventory reads, browser launch, or Send. Work-mode testing is explicitly
+  deferred; list/show/select and exact-ID CRUD remain supported. No live or
+  installed-runtime action ran.
+
+
 ## Turn 617 | 2026-09-23
 
 - Closed P16/issue 6 from installed commit `64a446cf9`. One explicit

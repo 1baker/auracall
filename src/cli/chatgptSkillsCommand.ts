@@ -11,6 +11,8 @@ import {
 import type { ResolvedUserConfig } from "../config.js";
 
 const MAX_CHATGPT_SKILL_SOURCE_BYTES = 1_048_576;
+const CHATGPT_CHAT_MODE_SKILL_RUN_UNSUPPORTED_MESSAGE =
+	"User-added ChatGPT Skills are not available in Chat mode; AuraCall did not launch a browser or send the prompt. Work mode testing is deferred.";
 
 export type ChatgptSkillCollection = "installed" | "created-by-me" | "unknown";
 export type ChatgptSkillReviewStatus = "needs-review" | "ready" | "unknown";
@@ -128,6 +130,9 @@ export async function executeChatgptSkillOperation(
 	input: ChatgptSkillOperationInput,
 	adapter: ChatgptSkillAdapter,
 ): Promise<ChatgptSkillOperationResult> {
+	if (input.action === "run") {
+		throw new Error(CHATGPT_CHAT_MODE_SKILL_RUN_UNSUPPORTED_MESSAGE);
+	}
 	const state = await adapter.readState();
 	assertExpectedAccount(state, input.expectedAccount);
 	if (!state.inventoryComplete) {
@@ -143,35 +148,14 @@ export async function executeChatgptSkillOperation(
 	if (!input.confirmed) {
 		throw new Error(`ChatGPT skill ${input.action} requires --yes.`);
 	}
-	if (input.action === "select" || input.action === "run") {
-		if (
-			input.action === "run" &&
-			(!input.prompt.trim() ||
-				input.prompt.length > 32_000 ||
-				!Number.isFinite(input.timeoutMs) ||
-				input.timeoutMs < 1000 ||
-				input.timeoutMs > 600_000)
-		) {
-			throw new Error(
-				"ChatGPT Skill run requires a non-empty prompt of at most 32000 characters and a timeout of 1 to 600 seconds.",
-			);
-		}
+	if (input.action === "select") {
 		const skillId = assertExactSkillId(input.skillId);
 		const matches = state.skills.filter((skill) => skill.id === skillId);
 		if (matches.length !== 1) {
 			throw new Error(`ChatGPT skill ${skillId} was not found once in the complete inventory.`);
 		}
 		const skill = matches[0];
-		if (
-			input.action === "run" &&
-			state.skills.filter((candidate) => candidate.name.trim() === skill.name.trim()).length !== 1
-		) {
-			throw new Error(
-				"ChatGPT Skill run requires an unambiguous inventory name for composer marker verification.",
-			);
-		}
-		const outcome =
-			input.action === "run" ? await adapter.run(skill, input) : await adapter.select(skill);
+		const outcome = await adapter.select(skill);
 		return { action: input.action, status: outcome.status, state, outcome, skill };
 	}
 	if (input.action === "create") {
@@ -260,6 +244,9 @@ export async function runChatgptSkillOperationForCli(
 	input: ChatgptSkillOperationInput,
 	dependencies: ChatgptSkillCliDependencies = {},
 ): Promise<ChatgptSkillOperationResult> {
+	if (input.action === "run") {
+		throw new Error(CHATGPT_CHAT_MODE_SKILL_RUN_UNSUPPORTED_MESSAGE);
+	}
 	const createBrowser = dependencies.createBrowser ?? BrowserAutomationClient.fromConfig;
 	const createAdapter = dependencies.createAdapter ?? createChatgptSkillBrowserAdapter;
 	const controller = new AbortController();
