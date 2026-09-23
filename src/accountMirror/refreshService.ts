@@ -1301,6 +1301,21 @@ async function cleanupManagedBrowserAfterRefresh(input: {
 			provider: input.provider,
 			runtimeProfileId: input.runtimeProfileId,
 		});
+		const releaseDeadline = Date.now() + 5_000;
+		let remainingOwnerPid = await input.findManagedBrowserPid(input.managedProfileDir);
+		while (remainingOwnerPid && Date.now() < releaseDeadline) {
+			await new Promise((resolve) => setTimeout(resolve, 100));
+			remainingOwnerPid = await input.findManagedBrowserPid(input.managedProfileDir);
+		}
+		if (remainingOwnerPid) {
+			return {
+				cleanupRequested: true,
+				status: "failed",
+				managedProfileDir: input.managedProfileDir,
+				pid: remainingOwnerPid,
+				message: `Managed browser profile remained owned by PID ${remainingOwnerPid} after bounded cleanup.`,
+			};
+		}
 		return {
 			cleanupRequested: true,
 			status: "terminated",

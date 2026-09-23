@@ -1914,7 +1914,7 @@ describe("account mirror refresh service", () => {
 		);
 	});
 
-	test("terminates the managed Gemini browser when bounded refresh cleanup is requested", async () => {
+	test("waits for managed profile ownership release after bounded refresh cleanup", async () => {
 		const geminiConfig = {
 			...config,
 			runtimeProfiles: {
@@ -1934,7 +1934,11 @@ describe("account mirror refresh service", () => {
 				},
 			},
 		};
-		const findManagedBrowserPid = vi.fn(async () => 4242);
+		const findManagedBrowserPid = vi
+			.fn<() => Promise<number | null>>()
+			.mockResolvedValueOnce(4242)
+			.mockResolvedValueOnce(4242)
+			.mockResolvedValueOnce(null);
 		const terminateManagedBrowserProcess = vi.fn(async () => {});
 		const service = createAccountMirrorRefreshService({
 			config: geminiConfig,
@@ -1991,6 +1995,7 @@ describe("account mirror refresh service", () => {
 				managedProfileDir: expect.stringContaining("gemini"),
 			}),
 		);
+		expect(findManagedBrowserPid).toHaveBeenCalledTimes(3);
 		expect(result.browserLifecycle).toMatchObject({
 			cleanupRequested: true,
 			status: "terminated",
@@ -2000,7 +2005,10 @@ describe("account mirror refresh service", () => {
 	});
 
 	test("terminates the managed browser after a bounded refresh failure", async () => {
-		const findManagedBrowserPid = vi.fn(async () => 4343);
+		const findManagedBrowserPid = vi
+			.fn<() => Promise<number | null>>()
+			.mockResolvedValueOnce(4343)
+			.mockResolvedValueOnce(null);
 		const terminateManagedBrowserProcess = vi.fn(async () => {});
 		const service = createAccountMirrorRefreshService({
 			config,
@@ -2032,6 +2040,7 @@ describe("account mirror refresh service", () => {
 				runtimeProfileId: "default",
 			}),
 		);
+		expect(findManagedBrowserPid).toHaveBeenCalledTimes(2);
 	});
 
 	test("reports dispatcher busy instead of bypassing the browser control plane", async () => {

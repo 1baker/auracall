@@ -1756,6 +1756,56 @@ describe("account mirror completion service", () => {
 		});
 	});
 
+	test("blocks child materialization when managed browser cleanup does not release ownership", async () => {
+		const requestRefresh = vi.fn(async () => ({
+			...createRefreshResult(),
+			browserLifecycle: {
+				cleanupRequested: true,
+				status: "failed" as const,
+				managedProfileDir: "/tmp/default/chatgpt",
+				pid: 37909,
+				message: "Managed browser profile remained owned by PID 37909 after bounded cleanup.",
+			},
+		}));
+		const createJob = vi.fn();
+		const service = createAccountMirrorCompletionService({
+			registry: createAccountMirrorStatusRegistry({
+				config,
+				now: () => new Date("2026-07-31T12:00:00.000Z"),
+			}),
+			refreshService: { requestRefresh },
+			historyMaterializationService: { createJob },
+			now: () => new Date("2026-07-31T12:00:00.000Z"),
+			generateId: () => "acctmirror_cleanup_handoff",
+		});
+
+		service.start({
+			provider: "chatgpt",
+			runtimeProfileId: "default",
+			maxPasses: 1,
+			sweepMode: "full_sweep",
+			materializationPolicy: "full_missing_assets",
+		});
+
+		await waitFor(() => service.read("acctmirror_cleanup_handoff")?.status === "blocked");
+
+		expect(requestRefresh).toHaveBeenCalledTimes(1);
+		expect(createJob).not.toHaveBeenCalled();
+		expect(service.read("acctmirror_cleanup_handoff")).toMatchObject({
+			status: "blocked",
+			passCount: 1,
+			lastRefresh: {
+				browserLifecycle: {
+					status: "failed",
+					pid: 37909,
+				},
+			},
+			error: {
+				code: "account_mirror_browser_cleanup_failed",
+			},
+		});
+	});
+
 	test("re-arms one blocked live-follow pass without resuming continuous follow", async () => {
 		const requestRefresh = vi.fn(async () => createRefreshResult());
 		const service = createAccountMirrorCompletionService({
