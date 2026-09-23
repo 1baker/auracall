@@ -49447,3 +49447,17 @@ full rerun. This is a source/integration checkpoint, not an installed or live
 retained-browser acceptance of the combined commit. Preserve the running
 browser and verify exact owner/access-plan authority before any later live
 smoke or installation.
+## 2026-09-23 | Isolated candidate passed retained-browser continuity
+
+After the clean upstream/fork integration, packaged commit `cfbb9fd7` into a
+separate runtime prefix and proved full compiled-tree parity. A no-launch
+Agent Browser access plan selected the existing `chatgpt-pro` browser and
+forbade duplicate-process acquisition. A candidate API on port 18096 with
+isolated AuraCall data completed three exact, sequential responses in the
+same pinned conversation; a read-only DOM check independently found all six
+ordered messages. Browser PID/CDP endpoint and target/URL were unchanged.
+Stopped only the candidate API. The old port-18095 service and source checkout
+were not changed by this smoke. A concurrent external reinstall of that
+service from the separate source checkout was observed; its newer bytes are
+not the tested candidate. Permanent deployment and artifact/recovery live paths
+remain separate decisions.

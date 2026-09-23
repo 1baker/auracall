@@ -1,5 +1,24 @@
 # RUNBOOK
 
+## 2026-09-23 | Isolated installed-candidate browser smoke accepted
+
+Commit `cfbb9fd7` was packaged into a separate prefix; installed `dist/`
+byte-matches its source build. The isolated port-18096 API completed three
+nonce-bound, context-dependent responses on the same exact retained ChatGPT
+target. Records `resp_1c63811caaf943edb028113e65bc1c57`,
+`resp_59baf5fa75c34c27b605840303f248a3`, and
+`resp_d6173e9008844ecb810f68e402268e43` all report `completed`, exact
+answers, required Agent Browser authority, and the pinned target/URL. A
+read-only page audit found six ordered user/assistant messages. The unique
+`chatgpt-pro` browser retained PID 73650 and the same CDP endpoint; no
+replacement process or tab was opened. The candidate API was stopped without
+stopping the port-18095 installation or retained browser. Another
+process independently reinstalled port 18095 from the separate source checkout
+during the smoke; the candidate did not install there. This is
+live text-continuity acceptance of the isolated candidate, not permanent
+installation or document/artifact acceptance.
+
+
 ## 2026-09-23 | Isolated upstream/fork integration
 
 The integration worktree combines upstream `7f6692db` and personal recovery

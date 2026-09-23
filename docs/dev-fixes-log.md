@@ -22938,3 +22938,10 @@ browser-stage lifecycle observability, not transcript truncation.
   two-second completion poll was load-sensitive; bounded ten-second polling
   passed in isolation and the full rerun. This validates source behavior only;
   the combined commit still needs a governed installed retained-browser smoke.
+- 2026-09-23: The reconciled fork's exact packaged build passed an isolated
+  retained-browser three-turn continuity smoke. Use an explicit no-launch
+  access plan for the authenticated `chatgpt-pro` profile; the generic
+  `auracall-chatgpt` profile was unseeded and was not used. Verify installed
+  `dist/` parity, exact durable response IDs/output, six ordered rendered
+  messages, and stable browser PID/CDP/target/URL. Keep the candidate API and
+  data isolated so live proof does not replace the production service.

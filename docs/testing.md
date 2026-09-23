@@ -1,5 +1,27 @@
 # Testing quickstart
 
+- Isolated installed-candidate retained-browser acceptance (2026-09-23,
+  `cfbb9fd725e0dd6bcd7a5b80904df145517d2f5f`): installed the exact
+  committed build into a separate prefix and verified its complete `dist/`
+  tree byte-matches the source build. A proof-only API on loopback port 18096
+  used a separate AuraCall data directory, leaving the port-18095 user service
+  untouched. The no-launch Agent Browser access plan required reuse of the
+  unique ready `chatgpt-pro` browser and forbade a duplicate process. Three
+  sequential `existing_conversation` responses completed on the pinned target:
+  `resp_1c63811caaf943edb028113e65bc1c57`,
+  `resp_59baf5fa75c34c27b605840303f248a3`, and
+  `resp_d6173e9008844ecb810f68e402268e43`. The first returned its exact
+  nonce; rounds two and three transformed the preceding assistant answer
+  exactly. All records reported required Agent Browser authority and the same
+  target and URL. A bounded read-only DOM audit found the six new
+  user/assistant messages in order. Browser PID 73650 and its CDP endpoint
+  remained unchanged; the candidate API was stopped afterward. This accepts
+  retained-browser text continuity for this candidate, not a permanent user
+  runtime deployment, document/artifact recovery, or every opt-in live test.
+  During the run, another process independently reinstalled the separate
+  port-18095 user runtime from its source checkout; its later version is not
+  the tested candidate and was not modified by this smoke.
+
 - Retained ChatGPT continuity acceptance (2026-09-23): submit three sequential
   `/v1/responses` calls with `auracall.chatgptDestination=existing_conversation`
   and one exact canonical conversation URL. Read each durable response by its
