@@ -890,8 +890,8 @@ lanes:
     plan_ref: refs/remotes/origin/chore/issue-5-register-mixed-lane
     branch: fix/chatgpt-developer-mode-refresh-reread
     target: main
-    plan_state: OPEN
-    custody_state: PAUSED_REF
+    plan_state: CLOSED
+    custody_state: DISCARD_APPROVED
     checkpoint: 0531931410a1f362f1138cd5b66758b51d6347db
     remote_ref: refs/remotes/origin/fix/chatgpt-developer-mode-refresh-reread
     integration: decompose-no-direct-merge
@@ -900,11 +900,11 @@ lanes:
     overlaps: [P08, P16, P18, P29, P45]
     reconciled_overlaps: [P08, P16, P18, P29, P45]
     reconciliation_note: P46 owns commit disposition and eventual custody cleanup only; issues 6, 7, 9, and 10 retain their product and live-effect outcomes.
-    validation_status: worktree-retired-refs-retained
-    validation_ref: docs/dev/notes/2026-09-22-issue-5-worktree-retirement.md
-    integration_receipt: null
-    blocker: Issues 7 and 10 retain unresolved product or live-effect outcomes; the retained mixed refs remain prohibited from direct integration while those authorities stay open.
-    disposition: The clean mixed checkout was switched to canonical main after the redundant integration worktree was removed; equal local and remote mixed-branch refs remain paused for provenance, with no direct integration authorized.
+    validation_status: custody-closeout-approved
+    validation_ref: docs/dev/notes/2026-09-22-issue-5-final-custody-cleanup.md
+    integration_receipt: b8f38dd376e903822eb391b9abd7569ee7c0b635
+    blocker: null
+    disposition: Operator approved final custody cleanup after all 24 commits received durable dispositions; delete the equal local and remote mixed refs after this closeout reaches canonical main. Issues 7 and 10 remain independent work items.
     updated_at: 2026-09-22
   - id: P47
     objective: Restore the missing adopted model-selection policy and fail closed on dangling AGENTS.md policy targets.
