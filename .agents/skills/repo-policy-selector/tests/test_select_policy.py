@@ -154,6 +154,57 @@ class SelectPolicyRegressionTests(unittest.TestCase):
             modules = self.select_policy.base_modules_for_profile(profile_id, installed_library)
             self.assertIn("graph-backed-memory-usage", modules, profile_id)
 
+    def test_graph_memory_module_defines_use_skip_unavailable_decision(self):
+        module_text = (self.policy_root / "modules" / "graph-backed-memory-usage.md").read_text(
+            encoding="utf-8"
+        )
+        for required in ("`use`", "`skip`", "`unavailable`", "graphiti-discovery", "one or two focused"):
+            self.assertIn(required, module_text)
+
+    def test_memory_discovery_assessment_uses_repo_signals(self):
+        assessment = self.select_policy.memory_discovery_assessment(
+            {"has_repo_memory_discovery_workflow": True},
+            ["planning-discipline", "graph-backed-memory-usage"],
+        )
+
+        self.assertTrue(assessment["policy_selected"])
+        self.assertTrue(assessment["repo_graph_memory_signals"])
+        self.assertEqual(assessment["repo_default"], "use")
+        self.assertEqual(assessment["task_decisions"], ["use", "skip", "unavailable"])
+
+    def test_memory_discovery_assessment_is_task_conditional_without_repo_signals(self):
+        assessment = self.select_policy.memory_discovery_assessment(
+            {"has_repo_memory_discovery_workflow": False},
+            ["planning-discipline", "graph-backed-memory-usage"],
+        )
+
+        self.assertTrue(assessment["policy_selected"])
+        self.assertFalse(assessment["repo_graph_memory_signals"])
+        self.assertEqual(assessment["repo_default"], "task-conditional")
+
+    def test_generic_adopted_module_does_not_invent_repo_graphiti_workflow(self):
+        repo_root = self.make_repo(
+            agents_text="# Fixture\n\n## Policy Entry\n\nRead shared policy files."
+        )
+        policy_dir = repo_root / "docs" / "dev" / "policies"
+        policy_dir.mkdir(parents=True, exist_ok=True)
+        (policy_dir / "0001-graph-backed-memory-usage.md").write_text(
+            (self.policy_root / "modules" / "graph-backed-memory-usage.md").read_text(
+                encoding="utf-8"
+            ),
+            encoding="utf-8",
+        )
+
+        signals = self.select_policy.detect_signals(repo_root)
+        assessment = self.select_policy.memory_discovery_assessment(
+            signals,
+            ["planning-discipline", "graph-backed-memory-usage"],
+        )
+
+        self.assertTrue(signals["mentions_graph_backed_memory"])
+        self.assertFalse(signals["has_repo_memory_discovery_workflow"])
+        self.assertEqual(assessment["repo_default"], "task-conditional")
+
     def test_planning_discipline_is_in_every_starter_profile(self):
         installed_library = self.select_policy.enumerate_policy_library(self.policy_root)
         for profile_id in installed_library["profile_ids"]:
@@ -185,6 +236,8 @@ class SelectPolicyRegressionTests(unittest.TestCase):
             "periodic comprehensive run",
             "Preserve the first failure",
             "pass-on-retry as flaky",
+            "If no such seam exists",
+            "architecture or testability gap",
             "retained-risk mapping",
             "presubmit_blocking_budget",
             "presubmit_compute_budget",
@@ -210,6 +263,32 @@ class SelectPolicyRegressionTests(unittest.TestCase):
         self.assertEqual(coverage["readiness"], "fully-installed")
         self.assertEqual(coverage["missing_recommended_modules"], [])
         self.assertEqual(self.select_policy.recommendation_mode(coverage), "already-aligned")
+
+    def test_duplicate_policy_identity_is_reported_and_blocks_writes(self):
+        repo_root = self.make_repo()
+        policy_dir = repo_root / "docs" / "dev" / "policies"
+        policy_dir.mkdir(parents=True, exist_ok=True)
+        first = policy_dir / "0001-planning-discipline.md"
+        second = policy_dir / "0008-planning-discipline.md"
+        first.write_text("# Policy | Planning Discipline\n\n- Old.\n", encoding="utf-8")
+        second.write_text("# Policy | Planning Discipline\n\n- Current.\n", encoding="utf-8")
+
+        installed_library = self.select_policy.enumerate_policy_library(self.policy_root)
+        modules = self.select_policy.base_modules_for_profile("standalone-library", installed_library)
+        surfaces = self.select_policy.extract_existing_policy_surfaces(repo_root)
+        coverage = self.select_policy.policy_adoption_coverage(surfaces, modules, installed_library)
+
+        self.assertEqual(coverage["readiness"], "conflicted-local-policy")
+        self.assertEqual(
+            coverage["duplicate_policy_ids"],
+            {"planning-discipline": [str(first), str(second)]},
+        )
+        self.assertEqual(
+            self.select_policy.recommendation_mode(coverage),
+            "identity-reconciliation-required",
+        )
+        with self.assertRaisesRegex(ValueError, "duplicate adopted policy identity planning-discipline"):
+            self.select_policy.require_unique_policy_identities(coverage)
 
     def test_harvest_policy_does_not_semantically_adopt_feedback_or_preview_policy(self):
         repo_root = self.make_repo()
@@ -242,6 +321,36 @@ class SelectPolicyRegressionTests(unittest.TestCase):
         self.assertNotIn("policy-adoption-feedback-loop", semantic_matches)
         self.assertNotIn("preview-artifact-review", semantic_matches)
 
+    def test_model_selection_reference_does_not_replace_its_local_policy(self):
+        repo_root = self.make_repo()
+        policy_dir = repo_root / "docs" / "dev" / "policies"
+        policy_dir.mkdir(parents=True, exist_ok=True)
+        (policy_dir / "0002-subagent-runtime-governance.md").write_text(
+            "# Policy | Subagent Runtime Governance\n\n"
+            "## Policy\n\n"
+            "- Apply `model-selection-and-calibration` for task-tier selection.\n",
+            encoding="utf-8",
+        )
+
+        installed_library = self.select_policy.enumerate_policy_library(self.policy_root)
+        surfaces = self.select_policy.extract_existing_policy_surfaces(repo_root)
+        semantic_matches = self.select_policy.semantic_module_matches(surfaces, installed_library)
+        coverage = self.select_policy.policy_adoption_coverage(
+            surfaces,
+            ["model-selection-and-calibration"],
+            installed_library,
+        )
+        plan = self.select_policy.build_install_plan(
+            repo_root,
+            coverage["missing_recommended_modules"],
+            coverage,
+            installed_library,
+        )
+
+        self.assertNotIn("model-selection-and-calibration", semantic_matches)
+        self.assertEqual(coverage["missing_recommended_modules"], ["model-selection-and-calibration"])
+        self.assertEqual(plan[0]["action"], "install-new")
+
     def test_memory_consumer_language_does_not_imply_runtime_operations(self):
         repo_root = self.make_repo(
             agents_text="""
@@ -255,6 +364,7 @@ class SelectPolicyRegressionTests(unittest.TestCase):
         signals = self.select_policy.detect_signals(repo_root)
 
         self.assertTrue(signals["mentions_graph_backed_memory"])
+        self.assertTrue(signals["has_repo_memory_discovery_workflow"])
         self.assertFalse(signals["mentions_memory_service_runtime"])
 
     def test_goal_language_recommends_goal_and_subagent_governance(self):
@@ -374,6 +484,148 @@ class SelectPolicyRegressionTests(unittest.TestCase):
             modules = self.select_policy.base_modules_for_profile(profile_id, installed_library)
             self.assertNotIn("active-lane-coordination", modules, profile_id)
 
+    def test_work_item_traceability_defaults_to_complex_profiles(self):
+        installed_library = self.select_policy.enumerate_policy_library(self.policy_root)
+        for profile_id in ["repo-product-engineering", "operations-platform"]:
+            modules = self.select_policy.base_modules_for_profile(profile_id, installed_library)
+            self.assertIn("work-item-traceability", modules, profile_id)
+        for profile_id in ["writing-project", "standalone-library"]:
+            modules = self.select_policy.base_modules_for_profile(profile_id, installed_library)
+            self.assertNotIn("work-item-traceability", modules, profile_id)
+
+    def test_issue_tracking_language_selects_work_item_traceability(self):
+        repo_root = self.make_repo(
+            readme_text="""
+            # Grant Proposal
+
+            The issue tracker is the backlog and uses WIP limits and issue dependencies.
+            """
+        )
+        installed_library = self.select_policy.enumerate_policy_library(self.policy_root)
+        signals = self.select_policy.detect_signals(repo_root)
+        purpose, _subtype, _execution_bias, profile, modules, reasons = self.select_policy.choose_profile(
+            signals, installed_library
+        )
+
+        self.assertEqual((purpose, profile), ("writing-project", "writing-project"))
+        self.assertTrue(signals["mentions_work_item_tracking"])
+        self.assertIn("work-item-traceability", modules, reasons)
+
+    def test_collaborative_development_selects_complete_workflow(self):
+        repo_root = self.make_repo(
+            readme_text="""
+            # Shared Website Repository
+
+            Multiple contributors use feature branches and isolated worktrees.
+            Every change follows a pull request workflow with peer review before
+            deployment.
+            """
+        )
+        installed_library = self.select_policy.enumerate_policy_library(self.policy_root)
+        signals = self.select_policy.detect_signals(repo_root)
+        _purpose, _subtype, _execution_bias, _profile, modules, reasons = self.select_policy.choose_profile(
+            signals, installed_library
+        )
+
+        self.assertTrue(signals["mentions_collaborative_development"])
+        for module_id in (
+            "work-item-traceability",
+            "git-worktree-hygiene",
+            "commit-history-discipline",
+            "branch-and-integration-strategy",
+            "commit-and-push-cadence",
+            "validation-and-handoff",
+            "collaborative-development-workflow",
+        ):
+            self.assertIn(module_id, modules, reasons)
+
+    def test_incidental_collaboration_word_does_not_select_workflow(self):
+        repo_root = self.make_repo(
+            readme_text="""
+            # Library
+
+            This package collaborates with an external rendering service.
+            """
+        )
+
+        signals = self.select_policy.detect_signals(repo_root)
+
+        self.assertFalse(signals["mentions_collaborative_development"])
+
+    def test_github_issue_reporting_selects_core_and_github_adapter(self):
+        repo_root = self.make_repo(
+            readme_text="""
+            # Maintainer Tool
+
+            Report findings through GitHub Issues on an owned repository.
+            Use gh issue only after checking the GitHub issue form and labels.
+            """
+        )
+        installed_library = self.select_policy.enumerate_policy_library(self.policy_root)
+        signals = self.select_policy.detect_signals(repo_root)
+        _purpose, _subtype, _execution_bias, _profile, modules, reasons = self.select_policy.choose_profile(
+            signals, installed_library
+        )
+
+        self.assertTrue(signals["mentions_github_issue_operations"])
+        self.assertIn("work-item-traceability", modules, reasons)
+        self.assertIn("forge-issue-reporting", modules, reasons)
+        self.assertIn("github-issue-operations", modules, reasons)
+        self.assertNotIn("gitlab-issue-operations", modules, reasons)
+
+    def test_gitlab_issue_reporting_selects_core_and_gitlab_adapter(self):
+        repo_root = self.make_repo(
+            readme_text="""
+            # Maintainer Tool
+
+            Use glab issue creation for a permissioned repo issue on a
+            self-managed GitLab host. Respect GitLab issue templates and labels.
+            """
+        )
+        installed_library = self.select_policy.enumerate_policy_library(self.policy_root)
+        signals = self.select_policy.detect_signals(repo_root)
+        _purpose, _subtype, _execution_bias, _profile, modules, reasons = self.select_policy.choose_profile(
+            signals, installed_library
+        )
+
+        self.assertTrue(signals["mentions_forge_issue_reporting"])
+        self.assertTrue(signals["mentions_gitlab_issue_operations"])
+        self.assertIn("work-item-traceability", modules, reasons)
+        self.assertIn("forge-issue-reporting", modules, reasons)
+        self.assertIn("gitlab-issue-operations", modules, reasons)
+        self.assertNotIn("github-issue-operations", modules, reasons)
+
+    def test_cross_forge_language_selects_both_adapters(self):
+        repo_root = self.make_repo(
+            readme_text="""
+            # Cross-forge Reporter
+
+            This tool supports GitHub Issues with gh issue and GitLab Issues
+            with glab issue, using one issue target registry.
+            """
+        )
+        installed_library = self.select_policy.enumerate_policy_library(self.policy_root)
+        signals = self.select_policy.detect_signals(repo_root)
+        _purpose, _subtype, _execution_bias, _profile, modules, reasons = self.select_policy.choose_profile(
+            signals, installed_library
+        )
+
+        for module_id in (
+            "work-item-traceability",
+            "forge-issue-reporting",
+            "github-issue-operations",
+            "gitlab-issue-operations",
+        ):
+            self.assertIn(module_id, modules, reasons)
+
+    def test_forge_issue_modules_are_conditional_not_profile_defaults(self):
+        installed_library = self.select_policy.enumerate_policy_library(self.policy_root)
+        for profile_id in installed_library["profile_ids"]:
+            modules = self.select_policy.base_modules_for_profile(profile_id, installed_library)
+            self.assertNotIn("forge-issue-reporting", modules, profile_id)
+            self.assertNotIn("github-issue-operations", modules, profile_id)
+            self.assertNotIn("gitlab-issue-operations", modules, profile_id)
+
     def test_codegraph_policy_maps_to_shared_codegraph_module(self):
         repo_root = self.make_repo(
             agents_text="""
@@ -422,9 +674,11 @@ class SelectPolicyRegressionTests(unittest.TestCase):
         installed_library = self.select_policy.enumerate_policy_library(self.policy_root)
         body = installed_library["parsed_modules"]["codegraph-usage"]["body"]
 
-        self.assertIn("missing index in a verified local worktree", body)
-        self.assertIn("Do not require a fresh approval solely because the worktree is new", body)
+        self.assertIn("Whenever codegraph is needed for the task", body)
+        self.assertIn("the repository has not been initialized before", body)
+        self.assertIn("do not require separate approval solely to initialize codegraph", body)
         self.assertIn("run the documented explicit sync once", body)
+        self.assertNotIn("codegraph has not been established for the repo", body)
         self.assertIn("unexpected tracked-file changes", body)
 
     def test_graphiti_runtime_policy_maps_to_memory_service_runtime_module(self):
@@ -564,6 +818,45 @@ class SelectPolicyRegressionTests(unittest.TestCase):
         self.assertFalse(workflow_signals["mentions_subagent_runtime"])
         self.assertTrue(runtime_signals["mentions_subagents"])
         self.assertTrue(runtime_signals["mentions_subagent_runtime"])
+
+    def test_development_runtime_isolation_requires_explicit_lane_runtime_signal(self):
+        generic_repo = self.make_repo(
+            agents_text="""
+            # Product Repo
+
+            Run the local development server before submitting changes.
+            """,
+        )
+        isolated_repo = self.make_repo(
+            agents_text="""
+            # Multi-Lane Product Repo
+
+            Each active branch that executes the service needs an isolated
+            development runtime with per-lane runtime state, ports, and data.
+            """,
+        )
+
+        generic_signals = self.select_policy.detect_signals(generic_repo)
+        isolated_signals = self.select_policy.detect_signals(isolated_repo)
+        installed_library = self.select_policy.enumerate_policy_library(self.policy_root)
+        _purpose, _subtype, _bias, _profile, modules, reasons = (
+            self.select_policy.choose_profile(isolated_signals, installed_library)
+        )
+
+        self.assertFalse(generic_signals["mentions_development_runtime_isolation"])
+        self.assertTrue(isolated_signals["mentions_development_runtime_isolation"])
+        self.assertIn("development-runtime-isolation", modules, reasons)
+
+    def test_every_profile_adopts_model_selection_and_calibration(self):
+        installed_library = self.select_policy.enumerate_policy_library(self.policy_root)
+
+        self.assertIn("model-selection-and-calibration", installed_library["module_ids"])
+        for profile_id, profile in installed_library["parsed_profiles"].items():
+            self.assertIn(
+                "model-selection-and-calibration",
+                profile.get("modules", []),
+                profile_id,
+            )
 
 
 if __name__ == "__main__":

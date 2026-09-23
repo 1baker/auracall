@@ -182,6 +182,33 @@ def adopted_policy_id(path: Path) -> str:
     return stem
 
 
+def duplicate_adopted_policy_ids(existing_policy_surfaces: list[dict]) -> dict[str, list[str]]:
+    paths_by_id: dict[str, list[str]] = {}
+    for item in existing_policy_surfaces:
+        if item.get("source_type") != "canonical-policy":
+            continue
+        path = Path(item["path"])
+        paths_by_id.setdefault(adopted_policy_id(path), []).append(str(path))
+    return {
+        module_id: sorted(paths)
+        for module_id, paths in sorted(paths_by_id.items())
+        if len(paths) > 1
+    }
+
+
+def policy_identity_problems(duplicates: dict[str, list[str]]) -> list[str]:
+    return [
+        f"duplicate adopted policy identity {module_id}: {', '.join(paths)}"
+        for module_id, paths in sorted(duplicates.items())
+    ]
+
+
+def require_unique_policy_identities(coverage: dict[str, Any]) -> None:
+    duplicates = coverage.get("duplicate_policy_ids", {})
+    if duplicates:
+        raise ValueError("; ".join(policy_identity_problems(duplicates)))
+
+
 def next_policy_serial(repo_root: Path) -> int:
     policy_dir = repo_root / "docs" / "dev" / "policies"
     max_serial = 0
@@ -580,6 +607,7 @@ def semantic_module_matches(
                 "codegraph-usage",
                 "graph-backed-memory-usage",
                 "memory-service-runtime-governance",
+                "model-selection-and-calibration",
                 "policy-adoption-feedback-loop",
                 "policy-harvest-loop",
                 "preview-artifact-review",
@@ -649,6 +677,23 @@ def infer_repo_local_policy_findings(
         "planning-discipline": ["plan", "planning", "bounded plan", "definition of done"],
         "goal-execution-governance": ["/goal", "goal execution", "long-running goal", "goal checkpoint", "goal-compatible"],
         "roadmap-runbook-governance": ["roadmap", "runbook", "progress", "current working set"],
+        "work-item-traceability": ["issue tracking", "work item", "work-item", "backlog", "wip limit"],
+        "collaborative-development-workflow": [
+            "multi-user development",
+            "collaborative development",
+            "multiple contributors",
+            "pull request workflow",
+            "peer review",
+        ],
+        "forge-issue-reporting": [
+            "forge issue reporting",
+            "owned repository issue",
+            "permissioned repository issue",
+            "issue target registry",
+            "idempotency marker",
+        ],
+        "github-issue-operations": ["github issues", "gh issue", "github issue forms", "viewerpermission"],
+        "gitlab-issue-operations": ["gitlab issues", "glab issue", "gitlab work items", "confidential issue"],
         "git-worktree-hygiene": ["worktree", "worktrees"],
         "commit-history-discipline": ["commit", "atomic", "history"],
         "branch-and-integration-strategy": ["branch", "rebase", "merge", "integration"],
@@ -659,6 +704,12 @@ def infer_repo_local_policy_findings(
         "runtime-vs-product-boundary": ["runtime home", "outside the repo", "user-scoped runtime", "product repo"],
         "runtime-state-governance": ["version controlled", "runtime state", "redaction", "pruning"],
         "tenant-isolation-and-operator-state": ["tenant", "tenant-scoped", "one profile per tenant", "state isolation"],
+        "development-runtime-isolation": [
+            "isolated development runtime",
+            "per-lane runtime",
+            "lane runtime",
+            "development runtime isolation",
+        ],
         "fieldwork-productization": ["fieldwork", "keep as product", "refactor before keep", "archive as note only"],
         "monolith-extraction-discipline": ["monolith", "monolithic", "strong trunk", "oversized cli"],
         "policy-management": ["docs/dev/policies", "policy library", "agents.md"],
@@ -1232,6 +1283,87 @@ def detect_signals(repo_root: Path) -> dict:
                 "parallel worktree",
             ]
         ),
+        "mentions_development_runtime_isolation": any(
+            phrase in combined or phrase in semantic_text
+            for phrase in [
+                "isolated development runtime",
+                "isolated dev runtime",
+                "per-lane runtime",
+                "per lane runtime",
+                "lane runtime",
+                "development runtime isolation",
+            ]
+        ),
+        "mentions_work_item_tracking": any(
+            phrase in combined or phrase in semantic_text
+            for phrase in [
+                "issue tracking",
+                "issue tracker",
+                "work item",
+                "work-item",
+                "backlog governance",
+                "wip limit",
+                "work in process limit",
+                "issue dependency",
+            ]
+        ),
+        "mentions_collaborative_development": any(
+            phrase in combined or phrase in semantic_text
+            for phrase in [
+                "multi-user development",
+                "multi user development",
+                "collaborative development",
+                "multiple contributors",
+                "more than one contributor",
+                "human collaborators",
+                "team development",
+            ]
+        ) and any(
+            phrase in combined or phrase in semantic_text
+            for phrase in [
+                "pull request",
+                "feature branch",
+                "worktree",
+                "shared repository",
+                "shared repo",
+                "peer review",
+            ]
+        ),
+        "mentions_forge_issue_reporting": any(
+            phrase in combined or phrase in semantic_text
+            for phrase in [
+                "forge issue reporting",
+                "owned repository issue",
+                "permissioned repository issue",
+                "owned repo issue",
+                "permissioned repo issue",
+                "issue target registry",
+                "cross-forge issue",
+                "cross forge issue",
+            ]
+        ),
+        "mentions_github_issue_operations": any(
+            phrase in combined or phrase in semantic_text
+            for phrase in [
+                "github issues",
+                "github issue",
+                "gh issue",
+                "github project issue",
+                "github issue form",
+                "github issue template",
+            ]
+        ),
+        "mentions_gitlab_issue_operations": any(
+            phrase in combined or phrase in semantic_text
+            for phrase in [
+                "gitlab issues",
+                "gitlab issue",
+                "glab issue",
+                "gitlab work item",
+                "gitlab confidential issue",
+                "gitlab issue template",
+            ]
+        ),
         "mentions_closeout": "closeout" in text or "best recommendation" in text,
         "mentions_policy_harvest": "policy" in semantic_text and "harvest" in semantic_text,
         "mentions_policy_library": any(
@@ -1274,6 +1406,17 @@ def detect_signals(repo_root: Path) -> dict:
                 "group_id",
                 "memory spam",
                 "duplicate writes",
+            ]
+        ),
+        "has_repo_memory_discovery_workflow": any(
+            phrase in semantic_text
+            for phrase in [
+                "graphiti",
+                "graphiti-discovery",
+                "graphiti-runtime",
+                "memory atlas",
+                "atlas-discover",
+                "search_memory_facts",
             ]
         ),
         "mentions_codegraph_usage": any(
@@ -1797,6 +1940,7 @@ def policy_adoption_coverage(
     recommended_modules: list[str],
     installed_library: dict[str, Any],
 ) -> dict[str, Any]:
+    duplicate_policy_ids = duplicate_adopted_policy_ids(existing_policy_surfaces)
     canonical_ids = sorted(
         {
             adopted_policy_id(Path(item["path"]))
@@ -1811,7 +1955,9 @@ def policy_adoption_coverage(
     adopted_set = set(canonical_ids) | set(semantically_adopted)
     already_adopted = [module_id for module_id in recommended_modules if module_id in adopted_set]
     missing = [module_id for module_id in recommended_modules if module_id not in adopted_set]
-    if not recommended_modules:
+    if duplicate_policy_ids:
+        readiness = "conflicted-local-policy"
+    elif not recommended_modules:
         readiness = "fresh-adoption"
     elif len(already_adopted) == len(recommended_modules):
         readiness = "fully-installed"
@@ -1831,6 +1977,7 @@ def policy_adoption_coverage(
             module_id: semantic_matches[module_id]
             for module_id in semantically_adopted
         },
+        "duplicate_policy_ids": duplicate_policy_ids,
         "already_adopted_modules": already_adopted,
         "missing_recommended_modules": missing,
     }
@@ -1838,6 +1985,8 @@ def policy_adoption_coverage(
 
 def recommendation_mode(coverage: dict[str, Any]) -> str:
     readiness = coverage["readiness"]
+    if readiness == "conflicted-local-policy":
+        return "identity-reconciliation-required"
     if readiness == "fully-installed":
         return "already-aligned"
     if readiness in {"partial-local-policy", "mostly-installed"}:
@@ -2161,6 +2310,43 @@ def choose_profile(signals: dict, installed_library: dict[str, Any]) -> tuple[st
     if signals["mentions_active_lane_coordination"] and "active-lane-coordination" not in modules:
         modules.append("active-lane-coordination")
         reasons.append("repo language indicates concurrent off-main lanes need default-branch discovery")
+    if signals["mentions_development_runtime_isolation"] and "development-runtime-isolation" not in modules:
+        modules.append("development-runtime-isolation")
+        reasons.append("repo language indicates concurrent development services need lane and production isolation")
+    if signals["mentions_work_item_tracking"] and "work-item-traceability" not in modules:
+        modules.append("work-item-traceability")
+        reasons.append("repo language indicates issue or backlog state needs traceability to plans and delivery evidence")
+    if signals["mentions_collaborative_development"]:
+        collaboration_modules = (
+            "work-item-traceability",
+            "git-worktree-hygiene",
+            "commit-history-discipline",
+            "branch-and-integration-strategy",
+            "commit-and-push-cadence",
+            "validation-and-handoff",
+            "collaborative-development-workflow",
+        )
+        for module_id in collaboration_modules:
+            if module_id not in modules:
+                modules.append(module_id)
+        reasons.append("repo language indicates multiple human contributors need proportional shared-custody and deployment coordination")
+    forge_reporting = (
+        signals["mentions_forge_issue_reporting"]
+        or signals["mentions_github_issue_operations"]
+        or signals["mentions_gitlab_issue_operations"]
+    )
+    if forge_reporting and "work-item-traceability" not in modules:
+        modules.append("work-item-traceability")
+        reasons.append("provider issue reporting still needs traceability to plans and delivery evidence")
+    if forge_reporting and "forge-issue-reporting" not in modules:
+        modules.append("forge-issue-reporting")
+        reasons.append("repo language indicates permission-aware reporting to an owned or permissioned forge target")
+    if signals["mentions_github_issue_operations"] and "github-issue-operations" not in modules:
+        modules.append("github-issue-operations")
+        reasons.append("repo language explicitly references GitHub issue operations")
+    if signals["mentions_gitlab_issue_operations"] and "gitlab-issue-operations" not in modules:
+        modules.append("gitlab-issue-operations")
+        reasons.append("repo language explicitly references GitLab or glab issue operations")
     if signals["mentions_upstream_fork"] and "upstream-fork-maintenance" not in modules:
         modules.append("upstream-fork-maintenance")
         reasons.append("repo signals indicate private or local work layered on a non-owned upstream")
@@ -2169,6 +2355,25 @@ def choose_profile(signals: dict, installed_library: dict[str, Any]) -> tuple[st
         if module_id not in deduped_modules:
             deduped_modules.append(module_id)
     return purpose, subtype, execution_bias, profile, deduped_modules, reasons
+
+
+def memory_discovery_assessment(
+    signals: dict[str, Any], recommended_modules: list[str]
+) -> dict[str, Any]:
+    policy_selected = "graph-backed-memory-usage" in recommended_modules
+    repo_signals = bool(signals.get("has_repo_memory_discovery_workflow"))
+    return {
+        "policy_module": "graph-backed-memory-usage",
+        "policy_selected": policy_selected,
+        "repo_graph_memory_signals": repo_signals,
+        "repo_default": "use" if repo_signals else "task-conditional",
+        "task_decisions": ["use", "skip", "unavailable"],
+        "rationale": (
+            "repo policy or guidance explicitly names a graph-backed memory workflow"
+            if repo_signals
+            else "shared policy is selected, but repo evidence does not establish a concrete graph-memory workflow"
+        ),
+    }
 
 
 def choose_adoption_mode(signals: dict, expectation_gaps: list[str], coverage: dict[str, Any]) -> tuple[str, list[str], dict[str, str]]:
@@ -2280,14 +2485,18 @@ def main() -> int:
     existing_migration_surfaces = extract_existing_migration_surfaces(repo_root)
     existing_policy_surfaces = extract_existing_policy_surfaces(repo_root)
     purpose, subtype, execution_bias, profile, modules, reasons = choose_profile(signals, installed_library)
+    memory_discovery = memory_discovery_assessment(signals, modules)
     repo_local_policy_findings = infer_repo_local_policy_findings(repo_root, modules, profile, signals)
     coverage = policy_adoption_coverage(existing_policy_surfaces, modules, installed_library)
     expectation_gaps = profile_expectation_gaps(profile, signals, installed_library)
     adoption_mode, migration_reasons, migration_targets = choose_adoption_mode(signals, expectation_gaps, coverage)
     validation_problems = validate_recommendations(profile, modules, installed_library)
+    validation_problems.extend(policy_identity_problems(coverage["duplicate_policy_ids"]))
     rec_mode = recommendation_mode(coverage)
     next_modules = (
-        coverage["missing_recommended_modules"]
+        []
+        if rec_mode == "identity-reconciliation-required"
+        else coverage["missing_recommended_modules"]
         if rec_mode == "patch-missing"
         else modules
     )
@@ -2295,6 +2504,7 @@ def main() -> int:
     agents_patch = render_agents_wirein(repo_root, install_plan, existing_policy_surfaces, purpose)
     written_paths: list[str] = []
     if args.write_drafts:
+        require_unique_policy_identities(coverage)
         written_paths = write_drafts(repo_root, install_plan, agents_patch)
     out = {
         "repo_root": str(repo_root),
@@ -2316,6 +2526,7 @@ def main() -> int:
         "migration_surface_actions": summarize_migration_surface_actions(existing_migration_surfaces),
         "recommended_profile": profile,
         "recommended_modules": modules,
+        "memory_discovery": memory_discovery,
         "next_modules": next_modules,
         "install_plan": install_plan,
         "agents_wirein_patch": agents_patch,
@@ -2334,6 +2545,7 @@ def main() -> int:
         print(f"adoption_readiness: {coverage['readiness']}")
         print(f"recommendation_mode: {rec_mode}")
         print(f"modules: {', '.join(modules)}")
+        print(f"memory_discovery: {memory_discovery['repo_default']}")
         print(f"next_modules: {', '.join(next_modules) if next_modules else '-'}")
         if install_plan:
             print("install_plan:")

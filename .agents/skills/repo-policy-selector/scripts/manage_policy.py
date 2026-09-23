@@ -26,9 +26,12 @@ from select_policy import (
     extract_existing_migration_surfaces,
     extract_existing_policy_surfaces,
     infer_repo_local_policy_findings,
+    memory_discovery_assessment,
     policy_adoption_coverage,
+    policy_identity_problems,
     profile_expectation_gaps,
     recommendation_mode,
+    require_unique_policy_identities,
     render_agents_wirein,
     summarize_migration_surface_actions,
     summarize_policy_surface_actions,
@@ -42,17 +45,26 @@ def run_adopt(repo_root: Path, installed_library: dict[str, Any], write_drafts_f
     existing_migration_surfaces = extract_existing_migration_surfaces(repo_root)
     existing_policy_surfaces = extract_existing_policy_surfaces(repo_root)
     purpose, subtype, execution_bias, profile, modules, reasons = choose_profile(signals, installed_library)
+    memory_discovery = memory_discovery_assessment(signals, modules)
     repo_local_policy_findings = infer_repo_local_policy_findings(repo_root, modules, profile, signals)
     coverage = policy_adoption_coverage(existing_policy_surfaces, modules, installed_library)
     expectation_gaps = profile_expectation_gaps(profile, signals, installed_library)
     adoption_mode, migration_reasons, migration_targets = choose_adoption_mode(signals, expectation_gaps, coverage)
     validation_problems = validate_recommendations(profile, modules, installed_library)
+    validation_problems.extend(policy_identity_problems(coverage["duplicate_policy_ids"]))
     rec_mode = recommendation_mode(coverage)
-    next_modules = coverage["missing_recommended_modules"] if rec_mode == "patch-missing" else modules
+    next_modules = (
+        []
+        if rec_mode == "identity-reconciliation-required"
+        else coverage["missing_recommended_modules"]
+        if rec_mode == "patch-missing"
+        else modules
+    )
     install_plan = build_install_plan(repo_root, next_modules, coverage, installed_library)
     agents_patch = render_agents_wirein(repo_root, install_plan, existing_policy_surfaces, purpose)
     written_paths: list[str] = []
     if write_drafts_flag:
+        require_unique_policy_identities(coverage)
         written_paths = write_drafts(repo_root, install_plan, agents_patch)
     return {
         "mode": "adopt",
@@ -64,6 +76,7 @@ def run_adopt(repo_root: Path, installed_library: dict[str, Any], write_drafts_f
         "execution_bias": execution_bias,
         "recommended_profile": profile,
         "recommended_modules": modules,
+        "memory_discovery": memory_discovery,
         "recommendation_mode": rec_mode,
         "next_modules": next_modules,
         "install_plan": install_plan,

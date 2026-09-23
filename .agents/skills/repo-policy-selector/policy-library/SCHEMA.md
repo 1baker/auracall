@@ -119,23 +119,33 @@ optional outside repositories with concurrent projects, branches, or worktrees.
 The catalog uses `schema_version: 1` and a `lanes` list. Every lane requires:
 
 ```yaml
-- id: P42
-  objective: Carrier reconciliation
-  plan: docs/dev/plans/0042-YYYY-MM-DD-carrier-reconciliation.md
-  plan_ref: refs/heads/feature/p42-carrier-reconciliation
-  branch: feature/p42-carrier-reconciliation
-  target: main
-  plan_state: OPEN
-  custody_state: ACTIVE_WORKTREE
-  checkpoint: <full-commit-sha>
-  remote_ref: refs/remotes/origin/feature/p42-carrier-reconciliation
-  integration: merge
-  dependencies: []
-  overlaps: []
-  updated_at: YYYY-MM-DD
+schema_version: 1
+work_item_tracking: required
+lanes:
+  - id: P42
+    objective: Carrier reconciliation
+    work_items: [owner/repo#42]
+    plan: docs/dev/plans/0042-YYYY-MM-DD-carrier-reconciliation.md
+    plan_ref: refs/heads/feature/p42-carrier-reconciliation
+    branch: feature/p42-carrier-reconciliation
+    target: main
+    plan_state: OPEN
+    custody_state: ACTIVE_WORKTREE
+    checkpoint: <full-commit-sha>
+    remote_ref: refs/remotes/origin/feature/p42-carrier-reconciliation
+    integration: merge
+    dependencies: []
+    overlaps: []
+    updated_at: YYYY-MM-DD
 ```
 
-Optional fields include `reconciled_overlaps`, `validation_status`,
+`work_item_tracking` is optional and accepts `optional` or `required`; omitted
+catalogs behave as `optional` for backward compatibility. When it is
+`required`, every lane needs a non-empty inline `work_items` list. Locators are
+opaque, compact, non-secret identifiers; the auditor validates shape and
+presence without querying a provider.
+
+Optional fields include `work_items`, `reconciled_overlaps`, `validation_status`,
 `validation_ref`, `integration_receipt`, `archive_ref`, `archive_remote_ref`,
 `blocker`, and `disposition`. Lists use inline YAML form in schema version 1 so
 the bundled dependency-free auditor can parse them deterministically.
@@ -143,6 +153,8 @@ the bundled dependency-free auditor can parse them deterministically.
 Rules:
 
 - lane ids and branch ownership are unique
+- `work_item_tracking: required` makes a non-empty `work_items` list mandatory
+  for every lane
 - plan states are `PLANNED`, `OPEN`, `BLOCKED`, `CLOSED`, or `CANCELLED`
 - custody states are `ACTIVE_WORKTREE`, `PAUSED_REF`, `INTEGRATION_READY`,
   `INTEGRATED`, `ARCHIVED`, or `DISCARD_APPROVED`
@@ -163,6 +175,96 @@ Rules:
 - `ACTIVE_WORKTREE` lanes fail closed with `local_ahead_of_remote`,
   `remote_ahead_of_local`, or `local_remote_diverged` when both tips exist but
   are unequal
+
+## Forge Issue Target Contract
+
+Repos that adopt `forge-issue-reporting` should keep an explicit, non-secret
+target registry at `docs/dev/forge-issue-targets.json` or a documented
+equivalent. JSON is the canonical interchange format for the dependency-free
+preflight; another source format may be used only when it deterministically
+renders the same object.
+
+The registry uses `schema_version: 1` and a `targets` list:
+
+```json
+{
+  "schema_version": 1,
+  "targets": [
+    {
+      "id": "odollo-github",
+      "forge": "github",
+      "host": "github.com",
+      "repository": "example/odollo",
+      "relationship": "owned",
+      "allowed_actions": ["read", "create", "comment", "apply_labels", "close"],
+      "security_route": "private_vulnerability_reporting",
+      "label_map": {
+        "intent/defect": {"provider_label": "bug"},
+        "priority/high": {"provider_label": "priority: high"}
+      }
+    },
+    {
+      "id": "litscout-gitlab",
+      "forge": "gitlab",
+      "host": "gitlab.example.com",
+      "repository": "research/tools/litscout",
+      "relationship": "permissioned",
+      "allowed_actions": ["read", "create", "comment", "apply_labels"],
+      "security_route": "confidential_issue",
+      "label_map": {
+        "intent/defect": {"provider_label": "type::bug"}
+      }
+    }
+  ]
+}
+```
+
+Required target fields are `id`, `forge`, `host`, `repository`,
+`relationship`, `allowed_actions`, `security_route`, and `label_map`.
+
+Rules:
+
+- target ids are unique and stable
+- `forge` is `github` or `gitlab`
+- `host` is explicit even for GitHub.com or GitLab.com
+- GitHub repositories use `OWNER/REPO`; GitLab repositories allow
+  `GROUP/SUBGROUP/PROJECT`
+- `relationship` is `owned` or `permissioned`; it expresses intended operating
+  scope and is not current provider-permission evidence
+- allowed actions come from `read`, `create`, `comment`, `edit`,
+  `apply_labels`, `create_labels`, `assign`, `milestone`, `planning`, `close`,
+  `reopen`, and `transfer`
+- normalized label keys are repo-local intent vocabulary; each maps to one
+  exact existing provider label
+- applying labels and creating labels are separate actions; missing mapped
+  labels fail preflight and are not created during issue creation
+- security routes are `private_vulnerability_reporting`, `security_policy`,
+  `private_contact`, `confidential_issue`, or `none`; `none` cannot authorize a
+  security report
+- registries contain no credentials, tokens, vulnerability details, private
+  customer data, or inferred lists of every accessible repository
+- registry membership, provider role, and operator authority remain separate
+  gates
+
+The read-only preflight snapshot schema is intentionally small:
+
+```json
+{
+  "forge": "github",
+  "host": "github.com",
+  "repository": "example/odollo",
+  "authenticated_actor": "reporter-login",
+  "effective_role": "TRIAGE",
+  "issues_enabled": true,
+  "archived": false,
+  "available_labels": ["bug", "priority: high"],
+  "duplicate_candidates": []
+}
+```
+
+Snapshots are evidence inputs for deterministic validation, not reusable
+proof of current live capability. Live mutations require a fresh provider
+readback.
 
 ## Module Contract
 
@@ -239,8 +341,12 @@ For deployment and installation:
 - profile and module enumeration should come from deterministic library artifacts such as `catalog.yaml`
 - adoption wiring into target repos should be deterministic:
   - adopted policy files live under `docs/dev/policies/`
+  - each shared module identity has exactly one active adopted policy path,
+    regardless of the local ordinal filename
   - `AGENTS.md` acts as the entrypoint that wires those files into the repo contract
   - `AGENTS.md` should tell agents when to re-read relevant adopted policy files, especially at the start of non-trivial turns and when scope changes
+  - duplicate identities are reported with all claiming paths and block write
+    mode until explicit content and wire-in reconciliation chooses one path
 
 ## Harvesting Contract
 
@@ -361,7 +467,7 @@ For repos that contain code and have an indexed codegraph available, likely reus
 - consulting codegraph before non-trivial code edits, architecture claims, trace analysis, or refactor planning
 - using structural queries such as context, trace, callers, callees, impact, and indexed file listings before broad manual search loops
 - treating codegraph output as discovery evidence that still requires source reads and tests
-- treating fresh-worktree initialization as routine local derived-state maintenance when the repo already establishes codegraph as expected
+- permitting initialization whenever codegraph is necessary and the intended repository or worktree root is verified, including first-time initialization and fresh worktrees
 - distinguishing a watched active checkout from explicit-path projects and fresh worktrees that may require an explicit sync
 - checking status after edits and performing one explicit sync when the index is stale, pending, unwatched, or auto-sync is disabled
 - keeping exact sibling checkout paths, MCP tool names, service repair, and project-specific index exclusions repo-local
