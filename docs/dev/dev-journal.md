@@ -1,3 +1,12 @@
+## 2026-09-23 | Plan 0358 final issue 29 live acceptance opened
+
+- Operator live-acceptance authority plus the follow-up execution direction
+  permits one install/restart and one exact zero-retry `wsl-chrome-3`
+  completion control from canonical `cab98b154`.
+- The scheduler stays paused. Identity mismatch, CAPTCHA, unknown ownership,
+  autonomous work, a second pass, or uncertain provider effects are terminal
+  stops.
+
 ## 2026-09-23 | Plan 0357 child-launch readiness repair opened
 
 - Plan 0356's sole installed canary proved the parent release gate but exposed
