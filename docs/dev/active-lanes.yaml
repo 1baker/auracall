@@ -510,6 +510,7 @@ lanes:
     validation_status: chat-mode-provider-limitation-accepted-work-deferred
     validation_ref: docs/dev/notes/2026-09-23-issue-8-chat-mode-skill-limitation.md
     integration_receipt: 01bb65ad2bed76422b19a1367a275dbed99b5313
+    closeout_pr: 44
     disposition: Chat mode does not expose user-added Skills. AuraCall now rejects skills run before inventory, browser launch, or Send; Work-mode testing is deferred. Prior exact-ID and native evidence is retained without retry.
     updated_at: 2026-09-23
   - id: P30
