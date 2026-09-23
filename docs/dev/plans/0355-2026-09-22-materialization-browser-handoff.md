@@ -43,3 +43,11 @@ child job when cleanup cannot prove release.
 Canonical main contains the bounded release wait, fail-closed child gate,
 regressions, and documentation receipts. Issue 29 is closed. Installed/live
 acceptance remains a separate authority boundary and issue 10 was not retried.
+
+## Installed Acceptance Update | 2026-09-23
+
+Plan 0356's single zero-retry live canary disproved the wider handoff outcome.
+Parent cleanup correctly released attributable PID `11917`, but the child then
+launched PID `36730` and probed ownership before its DevTools endpoint became
+attributable. Issue 29 is reopened for the remaining child-launch readiness
+defect; the provider-free parent cleanup repair remains integrated.

@@ -49851,3 +49851,23 @@ Chat repair integrated. Inventory complete at 11. Blank-tab readiness fix instal
 - The broader account-mirror and browser-service suite passes 420 tests.
   PR 31 merged at `5cef9d58266ddbe3e5046db2f7b453c2f65bdbce`, closed
   issue 29, and removed the temporary implementation refs.
+
+## 2026-09-23 | Issue 29 installed handoff acceptance failed closed
+
+- Temporarily paused the previously enabled account-mirror scheduler, allowed
+  active child `hmj_311fe4f2c0c142288aa1fd4513f2c139` to settle, then installed
+  canonical main and restarted the API once. Installed/source parity passed at
+  525 files and aggregate SHA-256 `29bb1d851f11472f5240f7643bc3765f2d376bf31ad4b99465dd3bf7b76f4fec`.
+- Exact `wsl-chrome-3` identity matched the configured Pro personal account.
+  One `run_one_pass` advanced pass 26 to 27 with zero retries. Parent refresh
+  `acctmirror_9d80bb0e-235c-4b37-a16d-516944db05be` proved bounded release of
+  attributable PID `11917` before queuing the child.
+- Child `hmj_f6d222a1b51545a8ae51037190d6f301` launched transient Chrome PID
+  `36730`, then all six snapshot refreshes failed at
+  `preflight:browserManagedProfileOwnerProbe` because that same child-launched
+  process had no attributable responsive DevTools endpoint yet. The
+  second-Chrome guard remained fail-closed and all attempts spent zero assets.
+- Final state: completion blocked/pass 27 with null force ceiling, active jobs
+  zero, exact managed-browser owners/listeners zero, API PID `10657` healthy
+  with zero crash restarts. The scheduler remains paused to prevent an
+  autonomous retry, and issue 29 is reopened.

@@ -22660,3 +22660,14 @@ ChatGPT commits a native Skill mention before the user text. Prompt equality mus
   work; the browser-service second-Chrome guard remains the final safety net.
 - Test both seams: delayed owner disappearance in refresh cleanup and zero
   child-job creation when completion receives a failed cleanup receipt.
+
+## 2026-09-23 | Parent release does not prove child launch readiness
+
+- The issue 29 live canary proved parent cleanup can release its exact managed
+  browser while the child still fails: the child may launch a new Chrome and
+  immediately observe its own PID before DevTools attribution becomes ready.
+- Preserve the second-Chrome guard. The remaining repair must attribute and
+  await the child-launched process through its bounded launch/readiness path,
+  rather than treating an owner PID without a responsive endpoint as unrelated.
+- Do not retry this live symptom. Retain the six zero-asset attempt receipts
+  and reproduce the child-launch timing provider-free before another canary.
