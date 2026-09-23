@@ -1,12 +1,12 @@
 # Installed History Materialization Fairness Canary | 0325-2026-09-01
 
-State: OPEN
+State: CLOSED
 Lane: P18
-Operational state: BLOCKED_ON_EXTERNAL_FOREGROUND_BROWSER
+Operational state: CANARY_COMPLETED_WITH_FAILED_MATERIALIZATION_HANDOFF
 Branch: ops/plan0325-installed-fairness-canary
 Target: main
 Integration: direct
-Revision: 3 | 2026-09-01
+Revision: 4 | 2026-09-22
 
 ## Stable Objective
 
@@ -106,3 +106,29 @@ ChatGPT/Gemini-disabled ownership gate before consuming either effect allowance.
 Plan 0337 moved this unfinished operational plan to a published paused branch
 so its checkpoint can remain stable while main advances. The operational
 hard stop and all unused live allowances remain unchanged and unexecuted.
+
+## Closeout | 2026-09-22
+
+The historical ownership blocker was gone, current source and installed
+runtime were byte-identical, and fresh no-launch identity proof established the
+exact Pro account plus an attributable managed browser. The single authorized
+`run-one-pass` action advanced completion
+`acctmirror_completion_603fbcf2-cae9-401c-b1d1-3be109c391e4` from pass 36 to
+37 and created exactly one child job,
+`hmj_a616ec85279841f6a0c6199e9871185b`.
+
+The child selected six distinct candidates from 206 eligible conversations.
+Every attempt recorded `assetsAttempted: 0`, so failed snapshot refreshes did
+not spend the concrete asset budget. The child then failed closed because
+Chrome PID `37909` transiently owned the managed profile without an
+attributable responsive DevTools endpoint. AuraCall correctly refused to
+launch a second Chrome. No retry ran; the provider-work lease released, both
+observed Chrome owners exited, no active materialization job remained, and the
+API stayed healthy with zero restarts.
+
+P18 is closed because its one-shot canary allowance was consumed and produced
+an attributable terminal receipt. `IHMF-R1`, `IHMF-R2`, and the fairness and
+budget-accounting portion of `IHMF-R3` passed. Materialization success and the
+paused-status portion of `IHMF-R4` did not pass: the completion is fail-closed
+as `blocked`, not running, after the failed child. Issue 29 owns the newly
+isolated browser-lifecycle handoff repair. This canary must not be retried.

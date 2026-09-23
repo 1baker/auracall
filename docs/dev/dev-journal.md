@@ -49820,3 +49820,18 @@ Chat repair integrated. Inventory complete at 11. Blank-tab readiness fix instal
   acceptance marker. One artifact-fetch command exited zero and freshly
   materialized Markdown, DOCX, and PDF (`3/3`). Issue 7 is accepted and ready
   to close; no implementation repair remains.
+
+## 2026-09-22 | Issue 10 one-shot fairness canary completed
+
+- Fresh source/install, service, pause, ownership, and exact-account gates
+  passed before the sole `wsl-chrome-3` `run-one-pass` action. Gemini remained
+  disabled and untouched.
+- The completion advanced exactly once from pass 36 to 37. Child job
+  `hmj_a616ec85279841f6a0c6199e9871185b` selected six distinct candidates from
+  206 eligible and recorded zero concrete assets attempted for each failed
+  snapshot refresh, proving fair advancement and concrete-only budgeting.
+- The child failed closed because transient Chrome PID `37909` owned the exact
+  managed profile without an attributable responsive DevTools endpoint. No
+  retry ran. Both browser owners exited, active child jobs returned to zero,
+  the provider-work lease released, and the API retained PID `12008` with zero
+  restarts. Issue 29 owns the lifecycle handoff repair.
