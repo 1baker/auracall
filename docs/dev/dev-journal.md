@@ -49793,3 +49793,14 @@ Chat repair integrated. Inventory complete at 11. Blank-tab readiness fix instal
   7 and 10 retain separately governed outcomes.
 - No mixed history was merged, rebased, rewritten, or deleted. No browser,
   provider, runtime, or product effect ran.
+
+## 2026-09-22 | Issue 5 final custody cleanup approved
+
+- The operator explicitly rejected indefinite paused-ref custody and approved
+  final cleanup. The 24-commit disposition ledger remains the durable record;
+  issues 7 and 10 continue independently and do not require the mixed branch.
+- P46 / Plan 0353 is closed with `DISCARD_APPROVED` custody. After this closeout
+  merges to canonical main, delete the equal local and remote mixed refs plus
+  the two already-integrated issue-5 reconciliation branches.
+- No product source, mixed history, browser, provider, runtime, or live-effect
+  state is part of this cleanup.

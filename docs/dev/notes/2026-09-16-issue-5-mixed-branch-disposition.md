@@ -41,10 +41,11 @@ workload. Equal local and remote branch refs remain retained.
 
 ## Retirement Gate
 
-Keep the equal local and remote source refs until issues 6, 7, 9, and 10 have
-recorded their commit-level outcomes. Remote custody remains required unless a
-later explicit cleanup decision records an equivalent durable archive.
+The operator approved deletion of the equal local and remote source refs on
+2026-09-22 after confirming that this ledger is the durable disposition record
+and that issues 7 and 10 are independent work items, not branch-custody gates.
 
 As of 2026-09-22, issues 6 and 9 have source-integration receipts, while their
 remaining installed/live gates stay issue-owned. Issues 7 and 10 remain open.
-The worktree-retirement gate is complete; retained-ref deletion remains closed.
+The worktree-retirement gate is complete, and retained-ref deletion is approved
+after the final closeout reaches canonical main.

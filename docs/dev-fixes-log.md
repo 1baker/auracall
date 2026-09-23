@@ -22619,3 +22619,6 @@ ChatGPT commits a native Skill mention before the user text. Prompt equality mus
 - Classify cwd owners by process ancestry before calling a worktree externally
   occupied. The active agent, its inherited MCP servers, CodeGraph, and a repo
   wake helper are tooling ownership; they do not prove a separate work lane.
+- Do not retain a `PAUSED_REF` merely because independent successor issues are
+  still open. Once every historical commit has a durable disposition and the
+  operator approves discard, close the custody lane and delete its refs.

@@ -1,6 +1,6 @@
 # Mixed Historical Branch Decomposition | 0353-2026-09-16
 
-State: OPEN
+State: CLOSED
 Lane: P46
 Branch: fix/chatgpt-developer-mode-refresh-reread
 Target: main
@@ -23,8 +23,10 @@ history.
   active Codex/tooling stack rather than an independent product or development
   workload. The redundant clean `main` integration worktree was removed, and
   the primary repository path was switched to canonical `main`.
-- Equal local and remote refs for the mixed branch remain paused at the exact
-  checkpoint for issue 7/10 provenance. The branch has no assigned worktree.
+- Equal local and remote refs for the mixed branch were retained temporarily at
+  the exact checkpoint after worktree retirement. On 2026-09-22, the operator
+  explicitly approved their final deletion after confirming that issues 7 and
+  10 are independent work items rather than custody dependencies.
 - Patch comparison shows the final two GitHub-policy commits are already
   equivalent to canonical work integrated through PR 12. The remaining commits
   require issue-scoped recovery or explicit historical disposition.
@@ -67,9 +69,9 @@ history.
 - final retained-ref cleanup waits until every child issue records integration,
   supersession, or an explicit drop.
 
-## Next Action
+## Closeout
 
-Keep issues 6, 7, 9, and 10 as the authorities for their remaining acceptance
-outcomes. Retain the equal local and remote mixed-branch refs without a
-worktree until those outcomes are explicitly dispositioned; then make a
-separate, explicit retained-ref cleanup decision.
+All 24 unique commits have durable dispositions, no mixed-branch PR was opened,
+and the worktree is retired. Delete the equal local and remote mixed refs after
+this closeout merges to canonical main. Issues 6, 7, 9, and 10 remain the sole
+authorities for their own remaining acceptance outcomes.
