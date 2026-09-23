@@ -49409,6 +49409,18 @@ launched and no provider prompt was submitted.
 - Remaining tooling drift: the older one-round smoke preflight expects stale
   browser inventory fields, and `chatgpt:auto` selects Terra, unavailable in
   this account's live picker. The three-round Sol route passed.
+## 2026-09-23 | Bind the offered 5.6Pro row separately from 6 Pro
+
+The installed bounded model-picker fix converted the prior CDP timeout into an
+explicit pre-send failure: this account's picker offered `5.6Pro`, `Latest`,
+`GPT-5.6 Sol`, and `GPT-5.5`, but the `chatgpt:premium` request required `6 Pro`.
+No proposal prompt was submitted. Added one exact `chatgpt:gpt-5.6-pro` selector
+for the currently offered Pro row, kept `chatgpt:premium` bound to 6 Pro, and
+prevented cross-version Pro matches. A checked leaf model option with an
+`aria-expanded` attribute is no longer treated as a submenu solely because
+that attribute exists. Focused source tests passed; installed/live acceptance
+is still required before the proposal can use this route.
+
 ## 2026-09-23 | Bound ChatGPT model-picker retries to the native CDP window
 
 Two retained-browser Pro requests for the NSF STTR Project Description failed

@@ -152,6 +152,8 @@ function resolveModelForChatgptSemanticSelection(selection: { desiredModel: stri
   switch (selection.desiredModel) {
     case '6 Pro':
       return 'gpt-6-astra';
+    case '5.6Pro':
+      return 'gpt-5.6-pro';
     case 'GPT-5.6 Sol':
       return 'gpt-5.6-sol';
     default:

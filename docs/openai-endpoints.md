@@ -957,7 +957,7 @@ Current limits:
   - raw `model` remains the provider-version escape hatch
   - `modelSelector` is the stable semantic intent field, e.g.
     `chatgpt:auto`, `chatgpt:instant`, `chatgpt:sol`, `chatgpt:terra`,
-    `chatgpt:luna`, `chatgpt:gpt-5.5`, `chatgpt:thinking-standard`,
+    `chatgpt:luna`, `chatgpt:gpt-5.5`, `chatgpt:gpt-5.6-pro`, `chatgpt:thinking-standard`,
     `chatgpt:thinking-extended`, `chatgpt:sol-medium`,
     `chatgpt:sol-high`, `chatgpt:sol-extra-high`, `chatgpt:sol-pro`,
     `chatgpt:pro-standard`, `chatgpt:pro-extended`, `grok:auto`,
@@ -969,6 +969,9 @@ Current limits:
     current nested `Advanced` model picker. `auto` targets GPT-5.6 Terra,
     `instant` targets GPT-5.6 Luna, and Sol/Thinking/Pro effort aliases target
     GPT-5.6 Sol plus Light/Medium/High/Extra High
+  - `chatgpt:premium` targets the distinct `6 Pro` row. Use the explicit
+    `chatgpt:gpt-5.6-pro` selector for a visible `5.6Pro` row; the picker does
+    not silently substitute one for the other.
   - Grok browser-backed execution resolves `grok:auto`, `grok:instant`, and
     `grok:thinking` to the current `Auto`, `Fast`, and `Expert` picker rows;
     missing menus or exact options stop execution before prompt submission

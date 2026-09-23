@@ -80,6 +80,64 @@ describe('browser model selection matchers', () => {
     }
   });
 
+  it('selects the observed 5.6Pro leaf without treating its expanded attribute as a submenu', async () => {
+    vi.useFakeTimers();
+    try {
+      let selected = false;
+      class FakeElement {
+        textContent = '5.6Pro';
+        children: FakeElement[] = [];
+        classList = { contains: () => false };
+        getAttribute(name: string) {
+          if (name === 'role') return 'menuitemradio';
+          if (name === 'aria-expanded') return 'false';
+          if (name === 'aria-checked') return selected ? 'true' : 'false';
+          return null;
+        }
+        hasAttribute() { return false; }
+        querySelector() { return null; }
+        getBoundingClientRect() { return { left: 0, top: 0, width: 10, height: 10 }; }
+        dispatchEvent(event: { type: string }) {
+          if (this === option && event.type === 'click') selected = true;
+          return true;
+        }
+      }
+      const button = new FakeElement();
+      const option = new FakeElement();
+      const context: Record<string, unknown> = {
+        setTimeout,
+        performance: { now: () => Date.now() },
+        EventTarget: FakeElement,
+        Element: FakeElement,
+        HTMLElement: FakeElement,
+        MouseEvent: class { constructor(public type: string) {} },
+        document: {
+          title: 'ChatGPT',
+          body: { innerText: '' },
+          querySelector: () => button,
+          querySelectorAll: (selector: string) => selector.includes('[role="menu"]') ? [] : [option],
+        },
+        location: { href: 'https://chatgpt.com/c/test' },
+      };
+      context.window = context;
+      const result = runInNewContext(buildModelSelectionExpressionForTest('5.6Pro'), context) as Promise<{
+        status: string;
+        label: string;
+      }>;
+      await vi.advanceTimersByTimeAsync(700);
+      await expect(result).resolves.toEqual({ status: 'already-selected', label: '5.6Pro' });
+      expect(selected).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('keeps the currently offered 5.6Pro row distinct from 6 Pro', () => {
+    expect(scoreModelPickerOptionForTest('6 Pro', { text: '5.6Pro' }).score).toBe(0);
+    expect(scoreModelPickerOptionForTest('5.6Pro', { text: '6 Pro' }).score).toBe(0);
+    expect(scoreModelPickerOptionForTest('5.6Pro', { text: '5.6Pro' }).score).toBeGreaterThan(0);
+  });
+
   it('includes rich tokens for gpt-5.1 base selection', () => {
     const { labelTokens, testIdTokens, semanticTarget } =
       buildModelMatchersLiteralForTest('gpt-5.1');

@@ -195,6 +195,15 @@ function scoreModelPickerOption(targetModel: string, option: { text?: string | n
   const normalizedText = normalizeModelPickerText(option.text ?? '');
   const normalizedTestId = (option.testId ?? '').toLowerCase();
   const optionKind = classifyModelPickerOption(normalizedText, normalizedTestId);
+  const proVersion = (value: string) => {
+    const compact = value.toLowerCase().replace(/[^a-z0-9]/g, '');
+    return compact.includes('56pro') ? '5.6' : compact.includes('6pro') ? '6' : null;
+  };
+  const requestedProVersion = proVersion(targetModel);
+  const candidateProVersion = proVersion(`${option.text ?? ''} ${option.testId ?? ''}`);
+  if (requestedProVersion && candidateProVersion && requestedProVersion !== candidateProVersion) {
+    return { score: 0, optionKind, normalizedText, normalizedTestId };
+  }
 
   if (!normalizedText && !normalizedTestId) {
     return { score: 0, optionKind, normalizedText, normalizedTestId };
@@ -470,6 +479,15 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
       let score = 0;
       const normalizedTestId = (testid ?? '').toLowerCase();
       const optionKind = classifyOption(normalizedText, normalizedTestId);
+      const proVersion = (value) => {
+        const compact = value.toLowerCase().replace(/[^a-z0-9]/g, '');
+        return compact.includes('56pro') ? '5.6' : compact.includes('6pro') ? '6' : null;
+      };
+      const requestedProVersion = proVersion(PRIMARY_LABEL);
+      const candidateProVersion = proVersion(normalizedText + ' ' + normalizedTestId);
+      if (requestedProVersion && candidateProVersion && requestedProVersion !== candidateProVersion) {
+        return 0;
+      }
       if (SEMANTIC_TARGET) {
         if (optionKind === SEMANTIC_TARGET) {
           score += 2000;
@@ -636,7 +654,8 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
           // Keep scanning once the submenu opens instead of treating the submenu click as a final switch.
           const isSubmenu =
             (match.testid ?? '').toLowerCase().includes('submenu') ||
-            match.node.getAttribute?.('aria-expanded') !== null ||
+            (match.node.getAttribute?.('role') === 'menuitem'
+              && match.node.getAttribute?.('aria-expanded') !== null) ||
             match.normalizedText.startsWith('model ');
           if (isSubmenu) {
             setTimeout(attempt, REOPEN_INTERVAL_MS / 2);

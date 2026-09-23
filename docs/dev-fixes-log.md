@@ -22889,3 +22889,14 @@ browser-stage lifecycle observability, not transcript truncation.
   native CDP timeout.
 - A fake-DOM persistent-submenu regression and the 19 model-selection tests
   passed; build typecheck passed. Installed/live validation is still required.
+# 2026-09-23 - Select the observed 5.6Pro row without changing 6 Pro intent
+
+- After installing the bounded picker, the NSF STTR request failed before Send
+  with an explicit available-options list: `5.6Pro`, `Latest`, `GPT-5.6 Sol`,
+  `GPT-5.5`. The requested `6 Pro` row was absent.
+- `chatgpt:gpt-5.6-pro` now targets the exact offered Pro version. The existing
+  `chatgpt:premium` still targets 6 Pro. Version-aware scoring rejects a
+  5.6Pro/6 Pro substitution, while a `menuitemradio` leaf is no longer looped
+  as a submenu merely for carrying `aria-expanded`.
+- Selector, scoring, and fake-DOM leaf-switch tests passed in source; live
+  installation and browser verification are separate gates.
