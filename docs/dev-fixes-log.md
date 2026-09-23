@@ -1,3 +1,8 @@
+- 2026-09-23: Name archival Git remotes for their actual role. The former
+  `upstream` remote now uses `oracle-archive`; Oracle is historical
+  research/provenance, not an AuraCall synchronization authority. Preserve old
+  names in historical receipts rather than rewriting the record.
+
 - 2026-09-23: A managed Chrome PID can become discoverable before its DevTools
   port is attributable during an agent-browser child launch. A one-shot owner
   probe turns that valid startup interval into a terminal materialization

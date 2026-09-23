@@ -1,5 +1,13 @@
 # RUNBOOK
 
+## Turn 619 | 2026-09-23
+
+- Renamed the local Git remote `upstream` to `oracle-archive`, preserving its
+  Oracle URL and remote-tracking commit. `origin`, branch tracking, and issue
+  state are unchanged.
+- Current operational docs now classify Oracle as historical provenance only,
+  not an AuraCall upstream. Historical receipts keep their time-accurate names.
+
 ## Turn 618 | 2026-09-23
 
 - Closed P29/issue 8 as a Chat-mode provider limitation. Operator observation
