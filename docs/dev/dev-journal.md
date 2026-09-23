@@ -49900,3 +49900,19 @@ Chat repair integrated. Inventory complete at 11. Blank-tab readiness fix instal
   zero, exact managed-browser owners/listeners zero, API PID `10657` healthy
   with zero crash restarts. The scheduler remains paused to prevent an
   autonomous retry, and issue 29 is reopened.
+
+## 2026-09-23 | Issue 9 installed aggregate-status acceptance
+
+- Proved 525-file source/install parity at aggregate SHA-256
+  `30f58843ff76c95db59eddc54c591bd7adb1be3394a01658907897765d6910d8`.
+  Three default installed aggregate calls exited zero in 2.52, 2.52, and 2.62
+  seconds; required fields and closed-port failure behavior remained intact.
+- Narrow completion and scheduler diagnostics exited zero in 1.22 and 1.51
+  seconds. Scheduler history correctly retained its separate authorization
+  boundary and rejected an unauthenticated read with HTTP 401.
+- One dry scheduler pass selected only `chatgpt/wsl-chrome-3`. The authorized
+  resume completed one bounded refresh without conflict or provider guard,
+  cleaned its managed browser, and returned to healthy scheduled posture.
+- Fresh Gemini status retained `manual_clear_required` / `google-sorry` for
+  `auracall-gemini-pro`. Both Gemini targets remain disabled; no Gemini launch,
+  clear, or retry occurred. API PID `7701` stayed active with zero restarts.

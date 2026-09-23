@@ -1,13 +1,37 @@
 # Aggregate Status Latency | 0315-2026-08-25
 
-State: OPEN
+State: CLOSED
 Lane: P08
-Operational state: SOURCE_INTEGRATED_INSTALLED_BLOCKED
+Operational state: ACCEPTED
 Branch: fix/issue-9-aggregate-status
 Target: main
 Integration: merge
-Revision: 6 | 2026-09-16
+Revision: 7 | 2026-09-23
 Work item: ecochran76/auracall#9
+
+## Installed Acceptance | 2026-09-23
+
+- Canonical main and the installed `0.1.1` runtime contain 525 `dist` files
+  with identical aggregate SHA-256
+  `30f58843ff76c95db59eddc54c591bd7adb1be3394a01658907897765d6910d8`;
+  `diff -qr` also returned zero.
+- Three consecutive installed default aggregate-status calls exited zero in
+  2.52, 2.52, and 2.62 seconds. Required aggregate fields passed a direct
+  assertion, and a closed-port probe retained nonzero failure semantics.
+- The installed narrow completion and scheduler-diagnostics reads exited zero
+  in 1.22 and 1.51 seconds. Scheduler history retained its separate ops-auth
+  boundary and returned HTTP 401 without authorization.
+- A dry scheduler selection chose only `chatgpt/wsl-chrome-3`. The authorized
+  resume completed one bounded refresh from 13:51:02Z to 13:58:36Z with
+  identity match, no dispatcher conflict, no provider guard, exact managed
+  browser cleanup, and terminal scheduler posture `healthy` / `scheduled`.
+- Fresh aggregate readback preserved the Gemini hard stop:
+  `gemini/auracall-gemini-pro` remains disabled with
+  `manual_clear_required` / `google-sorry`; no Gemini launch, clear, or retry
+  occurred. The default Gemini target also remains disabled.
+- API PID `7701` remained active with zero restarts, the exact ChatGPT managed
+  profile returned to zero processes, Git was clean before documentation, and
+  no issue assignee was added. ASL-R5 and ASL-R6 are accepted; P08 is closed.
 
 ## Recovery Packet | 2026-09-16
 

@@ -22678,3 +22678,16 @@ ChatGPT commits a native Skill mention before the user text. Prompt equality mus
   rather than treating an owner PID without a responsive endpoint as unrelated.
 - Do not retry this live symptom. Retain the six zero-asset attempt receipts
   and reproduce the child-launch timing provider-free before another canary.
+
+## 2026-09-23 | Aggregate status can prove a provider hard stop without retrying it
+
+- Installed aggregate acceptance should assert both latency and semantics:
+  required projection fields, a negative transport case, and responsive narrow
+  completion/scheduler reads. A fast aggregate response alone is incomplete.
+- A persisted `manual_clear_required` provider guard is affirmative hard-stop
+  evidence when that target is disabled and the scheduler selection proves it
+  was skipped. Do not launch or retry the guarded provider merely to make the
+  guard newer.
+- Record scheduler health only after the selected pass reaches a terminal
+  outcome and its exact managed browser is gone; a successful resume response
+  proves control acceptance, not completed provider work.
