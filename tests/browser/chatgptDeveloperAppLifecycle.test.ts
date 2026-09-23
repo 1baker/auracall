@@ -303,6 +303,18 @@ describe("developer app to real shared remote lifecycle", () => {
 });
 
 describe("bounded submission contract", () => {
+	it("preserves the selected AuraCall runtime profile across the shared submit lifecycle", async () => {
+		const runBrowser = vi.fn(async () => ({ answerText: "answer" }) as never);
+		await submitChatgptDeveloperApp(config as never, app, "Use app", { runBrowser });
+		expect(runBrowser).toHaveBeenCalledWith(
+			expect.objectContaining({
+				config: expect.objectContaining({
+					auracallProfileName: "fixture",
+					manualLoginProfileDir: expect.stringContaining("/browser-profiles/fixture/chatgpt"),
+				}),
+			}),
+		);
+	});
 	it("upgrades unknown to structured observed effect without retry", async () => {
 		const runBrowser = vi.fn(async (options) => {
 			options.onProviderEffectState("unknown");

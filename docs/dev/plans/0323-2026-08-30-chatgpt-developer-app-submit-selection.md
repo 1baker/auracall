@@ -13,16 +13,19 @@ Revision: 10 | 2026-09-23
 - The operator authorized one installed DAS-R5 attempt on 2026-09-23. Current
   source/install parity passed at 525 `dist` files with identical aggregate
   SHA-256 `30f58843ff76c95db59eddc54c591bd7adb1be3394a01658907897765d6910d8`.
-  Scheduler, completion, API, and exact managed-browser ownership gates were
-  clean before the read-only provider inventory.
-- The installed inventory observed the expected Team account
-  `ecochran76@gmail.com`, but reported Developer mode disabled and a complete
-  app inventory with no LitScout entry. Exact app selection was therefore
-  impossible. The run stopped before prompt staging or Send; no substitute app,
-  recreation, OAuth reconnect, or retry was attempted. The browser cleaned to
-  zero exact-profile owners and the scheduler remained healthy. DAS-R5 remains
-  blocked on restoring the exact LitScout app through separately authorized
-  app administration.
+  The first inventory accidentally omitted `--profile wsl-chrome-3` and read
+  the configured default account; that result is invalid for DAS-R5.
+- The corrected explicit-profile inventory observed Pro account
+  `eric.cochran@soylei.com`, Developer mode enabled, and exact private LitScout
+  app `plugin_asdk_app_6aab43983cb48191bdbd222e1e86d736` enabled with active
+  authentication. The one submit attempt then failed before effect because the
+  shared lifecycle attached to default-profile browser PID `11884` and observed
+  the Gmail Team account while authorization still expected `wsl-chrome-3`.
+  AuraCall returned `provider_session_dimension_conflict`, null conversation,
+  and `effectState=pre_effect`; no Send or retry occurred.
+- Provider-free RED/GREEN now preserves `auracallProfileName` in the shared
+  submit config. A new installed/live attempt remains separately gated after
+  integration and adoption of that repair.
 - Issue `ecochran76/auracall#6` recovery source merged through PR 21 at
   `c3800d460019f6dcf11fee29e9ddabc7907e44b0`; the clean, remote-equal,
   process-unowned implementation worktree and local branch were removed while
@@ -182,6 +185,6 @@ evidence without duplicating provider-local response or approval watchers.
 `DAS-R5` and current source/installed parity remain separate open gates; neither
 may be claimed from provider-free source validation.
 
-The 2026-09-23 authorized attempt consumed no Send because the exact required
-app was absent at the pre-effect identity gate. This is a valid fail-closed
+The 2026-09-23 authorized attempt consumed no Send because cross-profile
+handoff failed the pre-effect identity gate. This is a valid fail-closed
 receipt, not DAS-R5 acceptance.
