@@ -1,6 +1,6 @@
 # Materialization browser handoff | 0355-2026-09-22
 
-State: OPEN
+State: CLOSED
 Lane: P48
 Branch: fix/issue-29-materialization-browser-handoff
 Target: main
@@ -9,7 +9,9 @@ Work item: ecochran76/auracall#29
 
 ## Current State
 
-The issue 10 one-shot canary proved candidate fairness but the child
+PR 31 integrated the provider-free repair into canonical `main` at
+`5cef9d58266ddbe3e5046db2f7b453c2f65bdbce`. The issue 10 one-shot canary
+proved candidate fairness but the child
 materialization job encountered transient managed-profile owner PID `37909`
 after the parent completion refresh. The browser-service second-Chrome guard
 correctly failed closed. Provider-free diagnosis found that refresh cleanup
@@ -39,5 +41,5 @@ child job when cleanup cannot prove release.
 ## Definition Of Done
 
 Canonical main contains the bounded release wait, fail-closed child gate,
-regressions, and documentation receipts. Installed/live acceptance remains a
-separate authority boundary and issue 10 is not retried.
+regressions, and documentation receipts. Issue 29 is closed. Installed/live
+acceptance remains a separate authority boundary and issue 10 was not retried.

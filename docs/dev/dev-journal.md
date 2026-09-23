@@ -49848,3 +49848,6 @@ Chat repair integrated. Inventory complete at 11. Blank-tab readiness fix instal
   child when release is unproved. The existing second-Chrome guard is unchanged.
 - The focused refresh, completion, and browser-service suite passes 107 tests.
   No install, browser, provider, runtime, or issue 10 retry was performed.
+- The broader account-mirror and browser-service suite passes 420 tests.
+  PR 31 merged at `5cef9d58266ddbe3e5046db2f7b453c2f65bdbce`, closed
+  issue 29, and removed the temporary implementation refs.

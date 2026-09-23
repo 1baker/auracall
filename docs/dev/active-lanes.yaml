@@ -930,21 +930,21 @@ lanes:
   - id: P48
     objective: Repair the bounded completion-refresh to materialization-child managed-browser handoff.
     plan: docs/dev/plans/0355-2026-09-22-materialization-browser-handoff.md
-    plan_ref: refs/heads/fix/issue-29-materialization-browser-handoff
+    plan_ref: refs/remotes/origin/main
     branch: fix/issue-29-materialization-browser-handoff
     target: main
-    plan_state: OPEN
-    custody_state: ACTIVE
-    checkpoint: 104111210948298f4633889faa4e1c6cd3f9f755
-    remote_ref: null
+    plan_state: CLOSED
+    custody_state: INTEGRATED
+    checkpoint: abf46de9f69008a5fb036aa831176296fa561a8f
+    remote_ref: refs/remotes/origin/main
     integration: merge
     work_items: [ecochran76/auracall#29]
     dependencies: []
     overlaps: []
     reconciled_overlaps: []
     blocker: null
-    validation_status: focused-provider-free-passed
-    validation_ref: working-tree
-    integration_receipt: null
-    disposition: Provider-free repair in progress; no installed, browser, provider, or live effect authorized.
+    validation_status: provider-free-integrated
+    validation_ref: abf46de9f69008a5fb036aa831176296fa561a8f
+    integration_receipt: 5cef9d58266ddbe3e5046db2f7b453c2f65bdbce
+    disposition: PR 31 integrated the bounded owner-release wait and fail-closed child gate; issue 29 is closed with installed/live acceptance remaining separately authorized.
     updated_at: 2026-09-22
