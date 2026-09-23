@@ -1,3 +1,10 @@
+- 2026-09-23: A managed Chrome PID can become discoverable before its DevTools
+  port is attributable during an agent-browser child launch. A one-shot owner
+  probe turns that valid startup interval into a terminal materialization
+  failure. Once ownership is observed, poll the owner and endpoint for one
+  bounded readiness window, reuse only a responsive endpoint, honor caller
+  cancellation, and otherwise preserve the second-Chrome fail-closed refusal.
+
 - 2026-09-16: Refresh local runtime identity before ordinary terminal failure
   exits, not only socket loss or observation expiry. A committed Send can fail
   on manual approval before the background conversation hint sees `/c/<id>`;

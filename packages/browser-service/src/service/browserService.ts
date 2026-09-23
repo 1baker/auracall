@@ -1,5 +1,6 @@
 import os from 'node:os';
 import path from 'node:path';
+import { setTimeout as delay } from 'node:timers/promises';
 import type {
   BrowserLogger,
   ChromeClient,
@@ -11,6 +12,8 @@ import type { CredentialHint } from './types.js';
 import { connectToChrome } from '../chromeLifecycle.js';
 
 const DEFAULT_DEVTOOLS_ATTACHMENT_STAGE_TIMEOUT_MS = 10_000;
+const MANAGED_PROFILE_OWNER_READINESS_ATTEMPTS = 10;
+const MANAGED_PROFILE_OWNER_READINESS_INTERVAL_MS = 250;
 
 export type BrowserServiceDependencies = {
   resolveBrowserListTarget: () => Promise<{ host?: string; port?: number } | undefined>;
@@ -95,24 +98,34 @@ export class BrowserService {
         this.resolvedConfig.manualLoginProfileDir ??
         options.defaultProfileDir ??
         path.join(os.homedir(), '.browser-service', 'browser-profile');
-      const managedProfileOwner = await this.deps.resolveManagedProfileOwner?.(userDataDir);
+      let managedProfileOwner = await this.deps.resolveManagedProfileOwner?.(userDataDir);
       if (managedProfileOwner) {
         options.onStage?.('browserManagedProfileOwnerProbe');
-        const ownerHost = managedProfileOwner.host ?? '127.0.0.1';
-        const ownerPort = managedProfileOwner.port;
-        const ownerReachable = ownerPort
-          ? await isDevToolsResponsive({
-              host: ownerHost,
-              port: ownerPort,
-              attempts: 2,
-              timeoutMs: 1000,
-            })
-          : false;
-        if (ownerPort && ownerReachable) {
-          return { host: ownerHost, port: ownerPort, launched: false };
+        const initialOwner = managedProfileOwner;
+        for (let attempt = 1; attempt <= MANAGED_PROFILE_OWNER_READINESS_ATTEMPTS; attempt += 1) {
+          const ownerHost = managedProfileOwner?.host ?? initialOwner.host ?? '127.0.0.1';
+          const ownerPort = managedProfileOwner?.port;
+          const ownerReachable = ownerPort
+            ? await isDevToolsResponsive({
+                host: ownerHost,
+                port: ownerPort,
+                attempts: 2,
+                timeoutMs: 1000,
+              })
+            : false;
+          if (ownerPort && ownerReachable) {
+            return { host: ownerHost, port: ownerPort, launched: false };
+          }
+          if (attempt < MANAGED_PROFILE_OWNER_READINESS_ATTEMPTS) {
+            await delay(MANAGED_PROFILE_OWNER_READINESS_INTERVAL_MS, undefined, {
+              signal: options.abortSignal,
+            });
+            managedProfileOwner =
+              (await this.deps.resolveManagedProfileOwner?.(userDataDir)) ?? managedProfileOwner;
+          }
         }
         throw new Error(
-          `Managed browser profile ${userDataDir} is already owned by Chrome process ${managedProfileOwner.pid ?? 'unknown'}, but no responsive DevTools endpoint could be attributed. Refusing to launch a second Chrome process for the same managed browser profile.`,
+          `Managed browser profile ${userDataDir} is already owned by Chrome process ${managedProfileOwner.pid ?? initialOwner.pid ?? 'unknown'}, but no responsive DevTools endpoint could be attributed. Refusing to launch a second Chrome process for the same managed browser profile.`,
         );
       }
       const profileName = this.resolvedConfig.chromeProfile ?? 'Default';
