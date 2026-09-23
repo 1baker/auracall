@@ -1,3 +1,15 @@
+## 2026-09-23 | Plan 0357 child-launch readiness repair opened
+
+- Plan 0356's sole installed canary proved the parent release gate but exposed
+  child PID `36730` before its DevTools port became attributable. The scheduler
+  remains paused and no further live attempt is authorized.
+- A provider-free PID-before-port regression reproduced the exact
+  `browserManagedProfileOwnerProbe` failure. The core now re-discovers the same
+  owned profile for a bounded interval and reuses it only after responsive CDP
+  proof; persistent owners still fail closed without a second launch.
+- P50 owns issue 29 on `fix/issue-29-child-launch-readiness`; no GitHub assignee
+  is set.
+
 ## 2026-09-16 | Issue 6 shared developer-app terminal lifecycle
 
 - Closed-world final review reproduced stale local root identity after an

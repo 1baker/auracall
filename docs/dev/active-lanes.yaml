@@ -944,6 +944,10 @@ lanes:
     reconciled_overlaps: []
     blocker: null
     validation_status: provider-free-integrated
+    validation_ref: abf46de9f69008a5fb036aa831176296fa561a8f
+    integration_receipt: 5cef9d58266ddbe3e5046db2f7b453c2f65bdbce
+    disposition: PR 31 integrated the bounded owner-release wait and fail-closed child gate; issue 29 was reopened after installed acceptance exposed a separate child-launch readiness race.
+    updated_at: 2026-09-23
   - id: P49
     objective: Prove the installed issue 29 managed-browser handoff with one zero-retry ChatGPT pass.
     plan: docs/dev/plans/0356-2026-09-23-installed-materialization-browser-handoff-acceptance.md
@@ -965,7 +969,24 @@ lanes:
     integration_receipt: d8c9282ebb6a6e2776f6b306ad648d5cadb6fab6
     disposition: PR 33 integrated the terminal live receipt; one zero-retry canary disproved child launch readiness, scheduler remains paused, and issue 29 is reopened.
     updated_at: 2026-09-23
-    validation_ref: abf46de9f69008a5fb036aa831176296fa561a8f
-    integration_receipt: 5cef9d58266ddbe3e5046db2f7b453c2f65bdbce
-    disposition: PR 31 integrated the bounded owner-release wait and fail-closed child gate; issue 29 is closed with installed/live acceptance remaining separately authorized.
-    updated_at: 2026-09-22
+  - id: P50
+    objective: Repair bounded child-launch readiness after managed-profile ownership appears before DevTools attribution.
+    plan: docs/dev/plans/0357-2026-09-23-materialization-child-launch-readiness.md
+    plan_ref: refs/heads/fix/issue-29-child-launch-readiness
+    branch: fix/issue-29-child-launch-readiness
+    target: main
+    plan_state: OPEN
+    custody_state: ACTIVE
+    checkpoint: null
+    remote_ref: null
+    integration: merge
+    work_items: [ecochran76/auracall#29]
+    dependencies: [P49]
+    overlaps: []
+    reconciled_overlaps: []
+    blocker: null
+    validation_status: provider-free-red-green-in-progress
+    validation_ref: docs/dev/plans/0357-2026-09-23-materialization-child-launch-readiness.md
+    integration_receipt: null
+    disposition: Exact PID-before-port regression is green with bounded owner re-discovery; broader validation and integration remain.
+    updated_at: 2026-09-23

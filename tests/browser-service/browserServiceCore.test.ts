@@ -135,6 +135,43 @@ describe('BrowserService core launch port handling', () => {
     expect(launchManualLoginSession).not.toHaveBeenCalled();
   });
 
+  test('waits for an already-starting managed-profile owner to publish its DevTools port', async () => {
+    const stages: string[] = [];
+    processCheckMocks.isDevToolsResponsive.mockResolvedValueOnce(true);
+    const launchManualLoginSession = vi.fn();
+    const resolveManagedProfileOwner = vi
+      .fn()
+      .mockResolvedValueOnce({ host: '127.0.0.1', pid: 36730 })
+      .mockResolvedValueOnce({ host: '127.0.0.1', port: 45011, pid: 36730 });
+    const service = new BrowserService(
+      {
+        ...DEFAULT_BROWSER_CONFIG,
+        manualLoginProfileDir: '/tmp/auracall/wsl-chrome-3/chatgpt',
+        chromeProfile: 'Default',
+        debugPort: 45011,
+        debugPortStrategy: 'fixed',
+      } as ResolvedBrowserConfig,
+      {
+        resolveBrowserListTarget: vi.fn(async () => undefined),
+        resolveManagedProfileOwner,
+        pruneRegistry: vi.fn(async () => {}),
+        launchManualLoginSession,
+      },
+    );
+
+    const target = await service.resolveDevToolsTarget({
+      ensurePort: true,
+      defaultProfileDir: '/tmp/auracall/wsl-chrome-3/chatgpt',
+      launchUrl: 'https://chatgpt.com/',
+      onStage: (stage) => stages.push(stage),
+    });
+
+    expect(target).toEqual({ host: '127.0.0.1', port: 45011, launched: false });
+    expect(stages).toEqual(['browserTargetDiscovery', 'browserManagedProfileOwnerProbe']);
+    expect(resolveManagedProfileOwner).toHaveBeenCalledTimes(2);
+    expect(launchManualLoginSession).not.toHaveBeenCalled();
+  });
+
   test('fails closed when a Chrome process owns the managed browser profile without responsive DevTools', async () => {
     processCheckMocks.isDevToolsResponsive.mockResolvedValueOnce(false);
     const launchManualLoginSession = vi.fn();
@@ -165,6 +202,38 @@ describe('BrowserService core launch port handling', () => {
         launchUrl: 'https://chatgpt.com/',
       }),
     ).rejects.toThrow('already owned by Chrome process 1234');
+    expect(launchManualLoginSession).not.toHaveBeenCalled();
+  });
+
+  test('aborts an in-flight managed-profile owner readiness wait', async () => {
+    const launchManualLoginSession = vi.fn();
+    const service = new BrowserService(
+      {
+        ...DEFAULT_BROWSER_CONFIG,
+        manualLoginProfileDir: '/tmp/auracall/wsl-chrome-3/chatgpt',
+        chromeProfile: 'Default',
+        debugPort: 45011,
+        debugPortStrategy: 'fixed',
+      } as ResolvedBrowserConfig,
+      {
+        resolveBrowserListTarget: vi.fn(async () => undefined),
+        resolveManagedProfileOwner: vi.fn(async () => ({
+          host: '127.0.0.1',
+          pid: 36730,
+        })),
+        pruneRegistry: vi.fn(async () => {}),
+        launchManualLoginSession,
+      },
+    );
+
+    await expect(
+      service.resolveDevToolsTarget({
+        ensurePort: true,
+        defaultProfileDir: '/tmp/auracall/wsl-chrome-3/chatgpt',
+        launchUrl: 'https://chatgpt.com/',
+        abortSignal: AbortSignal.timeout(20),
+      }),
+    ).rejects.toMatchObject({ name: 'AbortError' });
     expect(launchManualLoginSession).not.toHaveBeenCalled();
   });
 
