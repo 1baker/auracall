@@ -990,3 +990,24 @@ lanes:
     integration_receipt: 52cf3641494b623c9fdf6ce2ca105e2430e9e231
     disposition: PR 35 integrated bounded owner re-discovery, responsive-endpoint reuse, cancellation, and persistent-owner refusal. Issue 29 remains open and unassigned for separately authorized installed acceptance; the scheduler remains paused.
     updated_at: 2026-09-23
+  - id: P51
+    objective: Prove the final installed issue 29 browser handoff with one zero-retry ChatGPT completion pass.
+    plan: docs/dev/plans/0358-2026-09-23-final-materialization-handoff-acceptance.md
+    plan_ref: refs/heads/ops/issue-29-final-live-acceptance
+    branch: ops/issue-29-final-live-acceptance
+    target: main
+    plan_state: OPEN
+    custody_state: ACTIVE
+    checkpoint: null
+    remote_ref: null
+    integration: merge
+    work_items: [ecochran76/auracall#29]
+    dependencies: [P50]
+    overlaps: []
+    reconciled_overlaps: []
+    blocker: null
+    validation_status: authorized-live-acceptance-pending
+    validation_ref: docs/dev/plans/0358-2026-09-23-final-materialization-handoff-acceptance.md
+    integration_receipt: null
+    disposition: One install, one restart, and one exact zero-retry completion control are authorized; scheduler resume remains forbidden.
+    updated_at: 2026-09-23
