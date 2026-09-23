@@ -6,6 +6,11 @@
 - The scheduler stays paused. Identity mismatch, CAPTCHA, unknown ownership,
   autonomous work, a second pass, or uncertain provider effects are terminal
   stops.
+- The sole pass advanced 27 to 28 and child
+  `hmj_e944834c227446b5ae07b7f5b2545fbb` succeeded on one attempt: six
+  conversations, one asset materialized, eleven skipped, zero failed. Final
+  active jobs and managed browser owners are zero; API PID `7701` is healthy
+  with zero crash restarts and the scheduler remains paused.
 
 ## 2026-09-23 | Plan 0357 child-launch readiness repair opened
 
