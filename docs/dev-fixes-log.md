@@ -22622,3 +22622,17 @@ ChatGPT commits a native Skill mention before the user text. Prompt equality mus
 - Do not retain a `PAUSED_REF` merely because independent successor issues are
   still open. Once every historical commit has a durable disposition and the
   operator approves discard, close the custody lane and delete its refs.
+
+## 2026-09-22 | Deep Research acceptance must follow asynchronous completion
+
+- A successful Deep Research submission can truthfully exit after reporting
+  the provider's started state while the terminal report continues inside the
+  provider iframe. Do not treat that initial exit as terminal completion and do
+  not resend the prompt.
+- Reconcile the same conversation read-only, then use passive iframe evidence
+  to prove the completed report identity and terminal marker before fetching
+  artifacts exactly once.
+- Admit completion only when the one-shot fetch exits normally and reports
+  fresh materialization for every required variant. The issue 7 acceptance
+  produced completed Markdown, DOCX, and PDF artifacts (`3/3`) after one Send
+  and zero retries.
