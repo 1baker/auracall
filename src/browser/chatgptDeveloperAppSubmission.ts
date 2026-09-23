@@ -47,6 +47,7 @@ export async function submitChatgptDeveloperApp(
 			skipBrowserExecutionOperation: options.browserOperationOwned === true,
 			config: {
 				...(structuredClone(plan.launchPolicy) as BrowserAutomationConfig),
+				auracallProfileName: plan.selection.auraCallRuntimeProfileId,
 				providerSessionAuthorization: createProviderSessionAuthorization(
 					userConfig as Record<string, unknown>,
 					{

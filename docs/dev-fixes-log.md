@@ -22691,3 +22691,16 @@ ChatGPT commits a native Skill mention before the user text. Prompt equality mus
 - Record scheduler health only after the selected pass reaches a terminal
   outcome and its exact managed browser is gone; a successful resume response
   proves control acceptance, not completed provider work.
+
+## 2026-09-23 | Carry the explicit runtime profile across nested browser lifecycles
+
+- A top-level `--profile` can correctly drive inventory while a nested shared
+  browser lifecycle silently falls back if its per-run configuration omits
+  `auracallProfileName`. Expected-account authorization may remain correct and
+  expose the mismatch only after the wrong browser is attached.
+- Preserve the resolved AuraCall runtime profile alongside browser-profile
+  launch policy whenever one command hands work to another browser lifecycle.
+  Test the public handoff config, not only the initial inventory client.
+- Treat a cross-profile identity rejection with `effectState=pre_effect` as a
+  successful safety stop. Do not retry; correct the handoff and require fresh
+  installed acceptance.
