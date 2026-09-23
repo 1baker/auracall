@@ -49804,3 +49804,19 @@ Chat repair integrated. Inventory complete at 11. Blank-tab readiness fix instal
   the two already-integrated issue-5 reconciliation branches.
 - No product source, mixed history, browser, provider, runtime, or live-effect
   state is part of this cleanup.
+
+## 2026-09-22 | Issue 7 final Deep Research acceptance
+
+- Revalidated canonical source and installed-runtime parity at 525 `dist`
+  files with equal aggregate SHA-256
+  `a9b3351a4f098434adca66ba0287ed25e88ea1bf5d5798bd94654bcc1094d51d`;
+  the eight-file focused provider-free gate passed 174 tests with one skipped.
+- The exact `wsl-chrome-3` identity and managed-browser owner passed before the
+  only live Send. The request selected observed `6Pro`, omitted thinking-time
+  selection, selected Deep Research, uploaded one attachment, committed one
+  turn, retried zero times, and auto-started the provider plan.
+- Read-only reconciliation of conversation
+  `6ab32fa8-7de0-83ea-b590-e66a3503358b` proved the terminal report and exact
+  acceptance marker. One artifact-fetch command exited zero and freshly
+  materialized Markdown, DOCX, and PDF (`3/3`). Issue 7 is accepted and ready
+  to close; no implementation repair remains.
