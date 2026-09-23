@@ -115,8 +115,8 @@
 
 ### Current Execution Board
 
-Status: P45 provider-free accepted and integrated; P46 decomposition active
-Lanes: P01-P07, P09-P15, P17, P19-P28, P30-P45 (completed/accepted); P08, P16, P18, P29, P46 (open)
+Status: P08 installed accepted; P46 decomposition active
+Lanes: P01-P15, P17, P19-P28, P30-P45 (completed/accepted); P16, P18, P29, P46 (open)
 
 - Completed-with-terminal-evidence installed/live successor:
   [Plan 0349](docs/dev/plans/0349-2026-09-11-installed-plan0348-live-acceptance.md)
@@ -311,15 +311,14 @@ Lanes: P01-P07, P09-P15, P17, P19-P28, P30-P45 (completed/accepted); P08, P16, P
   `fix/plan0444-provider-provenance` and does not overlap P08's aggregate-status
   source surface.
 
-- Active aggregate status latency repair:
+- Completed aggregate status latency repair:
   [docs/dev/plans/0315-2026-08-25-aggregate-status-latency.md](docs/dev/plans/0315-2026-08-25-aggregate-status-latency.md)
-  P08 owns a measured server-side repair for aggregate `/status` exceeding the
-  existing default five-second client budget. Three installed baseline probes
-  timed out in 7.2-7.8 seconds. Payload semantics, provider/browser behavior,
-  and live-follow policy remain frozen.
-  Issue `ecochran76/auracall#9` integrated the provider-free recovery through
-  PR 17 at `1fdd4d088`; installed acceptance remains a separate gate requiring
-  fresh scheduler/browser/provider-guard evidence.
+  P08 repaired aggregate `/status` exceeding the default five-second client
+  budget. Issue `ecochran76/auracall#9` integrated the provider-free recovery
+  through PR 17 at `1fdd4d088`; installed acceptance on 2026-09-23 proved
+  source/install byte parity, three 2.52-2.62 second aggregate calls, responsive
+  narrow reads, preserved failure semantics, healthy ChatGPT scheduler resume,
+  exact browser cleanup, and the disabled Gemini manual-clear hard stop.
 
 - Completed bounded live-follow recovery:
   [docs/dev/plans/0314-2026-08-24-bounded-live-follow-recovery.md](docs/dev/plans/0314-2026-08-24-bounded-live-follow-recovery.md)

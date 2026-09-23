@@ -21605,3 +21605,17 @@ DISPLAY=:0.0 ORACLE_NO_BANNER=1 NODE_NO_WARNINGS=1 pnpm tsx bin/auracall.ts file
 - Record the mocked-test coverage hole and mark one bounded shared-high-level
   lifecycle bridge READY. Do not open an implementation worktree or invoke a
   provider in this audit-only packet.
+
+## Turn 579 | 2026-09-23
+
+- Close P08 / Plan 0315 after installed source parity and three consecutive
+  default aggregate-status calls at 2.52, 2.52, and 2.62 seconds.
+- Narrow completion and scheduler diagnostics remain responsive; required
+  fields and closed-port failure semantics are preserved. Scheduler history
+  retains its separate ops-auth boundary.
+- One dry scheduler selection and one authorized resume targeted only
+  `chatgpt/wsl-chrome-3`. The pass completed without conflict or guard, cleaned
+  its exact managed browser, and returned to healthy scheduled posture.
+- Fresh status retains Gemini `manual_clear_required` / `google-sorry`; Gemini
+  stays disabled and receives no launch, clear, or retry. Issue 9 may close
+  after this receipt reaches canonical main.
