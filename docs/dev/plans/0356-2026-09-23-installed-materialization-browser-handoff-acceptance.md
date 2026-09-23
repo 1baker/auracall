@@ -47,4 +47,6 @@ The child is terminal failed, the completion is blocked at pass 27 with a null
 force ceiling, active materialization jobs are zero, the exact managed browser
 has no owner or listener, and API PID `10657` remains healthy with zero crash
 restarts. The scheduler remains paused because restoring it would permit an
-autonomous retry of the confirmed defect. Issue 29 is reopened.
+autonomous retry of the confirmed defect. Issue 29 is reopened. PR 33
+integrated this terminal receipt at
+`d8c9282ebb6a6e2776f6b306ad648d5cadb6fab6`.
