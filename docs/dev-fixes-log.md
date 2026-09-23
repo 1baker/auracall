@@ -22704,3 +22704,14 @@ ChatGPT commits a native Skill mention before the user text. Prompt equality mus
 - Treat a cross-profile identity rejection with `effectState=pre_effect` as a
   successful safety stop. Do not retry; correct the handoff and require fresh
   installed acceptance.
+## 2026-09-23 | Bind installed app acceptance to an explicit runtime profile
+
+- Developer-app live acceptance must name the AuraCall runtime profile on both
+  inventory and submit commands. A default-profile inventory is not evidence
+  about an app installed in `wsl-chrome-3`.
+- After correcting nested profile propagation, one installed LitScout run on
+  `wsl-chrome-3` preserved the SoyLei account, reached the terminal response,
+  and returned `AURACALL_DAS_R5_OK` without an approval prompt or retry.
+- Treat the terminal conversation URL plus passive DOM marker readback as the
+  live receipt, then clean only the attributable browser and restore scheduler
+  posture separately.
