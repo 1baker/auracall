@@ -49452,6 +49452,33 @@ A fake-DOM repeating-submenu regression and all 19 model-selection tests passed;
 build typecheck passed. This is source validation only. Installed runtime and
 live Pro selection remain to be checked before retrying the proposal request.
 
+## 2026-09-23 | Accept exact active Pro pill and fresh ordered reply
+
+The retained ChatGPT project conversation exposed `5.6 Pro` on its composer
+pill even though opening the model submenu did not expose a selectable Pro
+leaf. The selector now accepts only that exact active pill for a `5.6Pro`
+request, leaving `6 Pro` distinct and all other selectors unchanged. A focused
+fake-DOM test verifies no menu click. The installed source and compiled picker
+matched byte-for-byte, and the same retained Chrome PID 73650 survived the
+API restart.
+
+A first live pinned 5.6 Pro probe reached ChatGPT, which visibly replied
+`PRO_MODEL_READY` with a new assistant message ID after the new user turn.
+AuraCall incorrectly marked it stale because that answer ends with the prior
+`READY`. The stale guard now accepts a distinct assistant identity after the
+submitted user even when answer text overlaps the baseline. It remains
+conservative when that DOM ordering is missing. The repeated live probe
+completed in AuraCall with exact `PRO_MODEL_READY` output. Fifty-three focused
+tests, typecheck and full production build passed; compiled browser index
+matched the installed runtime and Chrome PID 73650 persisted.
+
+The full reviewed NSF STTR packet with six attachments and full inline source
+was then submitted once through the pinned project conversation. Durable
+response `resp_idem_c0b8306d5d5df4adad7a2565e4363ac7` was still running at
+the checkpoint. The exact new user turn and six attachments were observed in
+the retained tab, while no final assistant files were yet proved. Do not
+resubmit while the same response remains live.
+
 ## 2026-09-23 | Distinguish a fresh ordered reply from overlapping text
 
 The browser answer guard now lets a distinct assistant message through when

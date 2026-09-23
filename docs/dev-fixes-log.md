@@ -22921,3 +22921,16 @@ browser-stage lifecycle observability, not transcript truncation.
   baseline. Same-message and missing-ordering cases remain rejected.
 - The 30 browser export tests and TypeScript typecheck passed in source. This
   checkpoint does not claim installed-runtime or live-response acceptance.
+
+# 2026-09-23 - Use the exact active 5.6 Pro composer label
+
+- The retained project conversation visibly displayed `5.6 Pro` as its active
+  composer pill. That exact label now satisfies a `5.6Pro` request without
+  reopening an unhelpful submenu; it cannot satisfy the separate `6 Pro` route.
+- The focused selector and stale-response suites passed (53 tests), followed
+  by typecheck, full build, user-runtime installation, compiled-file parity,
+  and an API restart that preserved Chrome PID 73650.
+- A live pinned probe completed with exact `PRO_MODEL_READY` output after the
+  stale-response repair. A subsequent full NSF STTR packet was submitted with
+  six attachments; its response was still active at this checkpoint. This
+  proves live route and readback for a short answer, not document completion.
