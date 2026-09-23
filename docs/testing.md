@@ -138,11 +138,13 @@
   a mismatch fails before response creation. The no-launch Agent Browser access
   plan must then reuse that exact browser and session with duplicate processes
   forbidden.
-  It submits one random nonce through `agent:normal-chatgpt`, polls only the
+  It requires the API environment's exact retained session, target, and
+  canonical conversation URL. It submits one random nonce through
+  `chatgpt:sol` with an explicit `existing_conversation` destination, polls only the
   returned response ID, requires exact assistant nonce equality, checks required
   Agent Browser bridge evidence, and independently confirms that the reported
-  target converged to a canonical ChatGPT conversation under the same retained
-  browser. It then rechecks the browser PID, process-start token, CDP endpoint,
+  target and URL remain the pinned conversation under the same retained
+  browser. It then rechecks the top-level browser PID, host, CDP endpoint,
   executable, and session so replacement cannot pass unnoticed. The default
   deadline is 240 seconds; use `--timeout-ms`, `--poll-interval-ms`, or
   `--tab-convergence-ms` only for a reviewed bounded override.

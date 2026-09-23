@@ -22856,3 +22856,11 @@ browser-stage lifecycle observability, not transcript truncation.
   session, and tab-handle projection without replacing retained Chrome. A fresh
   response, `resp_1beaf76d8f074816962b7117116980b5`, completed through the
   retained browser and returned its exact nonce on 2026-09-21.
+- 2026-09-23: The retained-browser smoke drifted from the Agent Browser inventory
+  contract: `local_headed` is a legitimate retained host, process identity
+  fields are top-level, and AuraCall runtime-profile IDs differ from physical
+  browser profiles. Bind the no-launch plan, response and tab to the API
+  environment's exact retained session, target and conversation; compare PID,
+  host, CDP endpoint and executable before/after. Keep the known-good
+  `chatgpt:sol` selector explicit. The repair is isolated in a clean worktree;
+  one live exact-nonce roundtrip passed with stable browser and target identity.

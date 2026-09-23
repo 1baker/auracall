@@ -82,14 +82,13 @@ interface ServiceBrowser {
 	browserBuild?: string;
 	health?: string;
 	host?: string;
+	pid?: number;
+	cdpEndpoint?: string;
+	executablePath?: string;
 	activeSessionIds?: string[];
 	browserBuildProof?: {
 		applied?: boolean;
 		profileId?: string;
-		browserPid?: number;
-		processStartTicks?: number;
-		cdpEndpoint?: string;
-		executablePath?: string;
 	};
 }
 
@@ -108,11 +107,21 @@ export async function runCodexBrowserRoundtripSmoke(
 	const baseUrl = normalizeLocalV1BaseUrl(env.AURACALL_BASE_URL);
 	const apiKey = env.AURACALL_API_KEY;
 	const runtimeProfile = env.AURACALL_AGENT_BROWSER_PROFILE_CHATGPT || "chatgpt-pro";
+	const expectedSession = env.AURACALL_AGENT_BROWSER_SESSION;
+	const expectedTarget = env.AURACALL_AGENT_BROWSER_TARGET_CHATGPT;
+	const conversationUrl = env.AURACALL_AGENT_BROWSER_URL_CHATGPT;
 	if (!apiKey) throw new Error(`${options.envPath} is missing AURACALL_API_KEY.`);
+	if (!expectedSession || !expectedTarget || !isChatgptConversationUrl(conversationUrl)) {
+		throw new Error(
+			"The smoke requires an exact retained session, target, and canonical ChatGPT conversation URL in the API environment.",
+		);
+	}
 	const retainedBefore = requireRetainedBrowser(runtimeProfile);
 	const accessPlanProfile = retainedBefore.profileId as string;
 	const retainedBrowserId = retainedBefore.id as string;
 	const retainedSessionName = retainedBefore.activeSessionIds?.[0] as string;
+	if (retainedSessionName !== expectedSession)
+		throw new Error("Retained session differs from the API route.");
 	if (accessPlanProfile !== runtimeProfile) {
 		throw new Error(
 			`Retained browser profile projection mismatch: service=${accessPlanProfile}, physical=${runtimeProfile}. Repair Agent Browser custody before submitting a smoke response.`,
@@ -131,13 +140,13 @@ export async function runCodexBrowserRoundtripSmoke(
 		"--target-service-id",
 		"chatgpt",
 		"--url",
-		"https://chatgpt.com/",
+		conversationUrl,
 		"--runtime-profile",
 		runtimeProfile,
 		"--browser-build",
 		"stock_chrome",
 		"--browser-host",
-		"attached_existing",
+		retainedBefore.host as string,
 		"--json",
 	]);
 	const reuse = accessPlan.data?.decision?.profileReuse;
@@ -180,6 +189,10 @@ export async function runCodexBrowserRoundtripSmoke(
 		body: JSON.stringify({
 			model: options.model,
 			input: `Return exactly this token and nothing else: ${nonce}`,
+			auracall: {
+				chatgptDestination: "existing_conversation",
+				chatgptConversationUrl: conversationUrl,
+			},
 			metadata: {
 				purpose: "codex-browser-roundtrip-smoke",
 				schemaVersion: smokeSchema,
@@ -228,16 +241,19 @@ export async function runCodexBrowserRoundtripSmoke(
 	const browserEvidence = diagnostics?.lastProviderEvidence?.details;
 	if (
 		browserEvidence?.browserAuthority !== "agent-browser" ||
-		browserEvidence.agentBrowserBridgeMode !== "required" ||
-		browserEvidence.runtimeProfileId !== runtimeProfile
+		browserEvidence.agentBrowserBridgeMode !== "required"
 	) {
 		throw new Error(
-			`Response ${responseId} browser evidence did not match the retained runtime profile.`,
+			`Response ${responseId} browser evidence did not retain Agent Browser authority.`,
 		);
 	}
 	const targetId =
 		typeof browserEvidence.chromeTargetId === "string" ? browserEvidence.chromeTargetId : "";
-	if (!targetId) throw new Error(`Response ${responseId} omitted its browser target identity.`);
+	if (targetId !== expectedTarget || browserEvidence.tabUrl !== conversationUrl) {
+		throw new Error(
+			`Response ${responseId} did not use the exact retained target and conversation.`,
+		);
+	}
 
 	const tab = await waitForConversationTab(
 		targetId,
@@ -247,6 +263,7 @@ export async function runCodexBrowserRoundtripSmoke(
 	);
 	const retainedAfter = requireRetainedBrowser(runtimeProfile);
 	assertRetainedBrowserIdentityStable(retainedBefore, retainedAfter);
+	if (tab.url !== conversationUrl) throw new Error("Retained tab changed conversation URL.");
 	return {
 		success: true,
 		schemaVersion: smokeSchema,
@@ -262,8 +279,8 @@ export async function runCodexBrowserRoundtripSmoke(
 			sessionName: retainedSessionName,
 			serviceProfileId: runtimeProfile,
 			physicalProfileId: runtimeProfile,
-			browserPid: retainedAfter.browserBuildProof?.browserPid,
-			processStartTicks: retainedAfter.browserBuildProof?.processStartTicks,
+			browserPid: retainedAfter.pid,
+			cdpEndpoint: retainedAfter.cdpEndpoint,
 			duplicateProcessAllowed: false,
 		},
 		target: {
@@ -283,17 +300,16 @@ function requireRetainedBrowser(runtimeProfile: string): ServiceBrowser {
 		const proof = browser.browserBuildProof;
 		return (
 			browser.health === "ready" &&
-			browser.host === "attached_existing" &&
+			typeof browser.host === "string" &&
 			browser.browserBuild === "stock_chrome" &&
 			typeof browser.id === "string" &&
 			typeof browser.profileId === "string" &&
 			browser.activeSessionIds?.length === 1 &&
 			proof?.applied === true &&
 			proof.profileId === runtimeProfile &&
-			Number.isInteger(proof.browserPid) &&
-			Number.isInteger(proof.processStartTicks) &&
-			typeof proof.cdpEndpoint === "string" &&
-			typeof proof.executablePath === "string"
+			Number.isInteger(browser.pid) &&
+			typeof browser.cdpEndpoint === "string" &&
+			typeof browser.executablePath === "string"
 		);
 	});
 	if (matches.length !== 1) {
@@ -305,15 +321,13 @@ function requireRetainedBrowser(runtimeProfile: string): ServiceBrowser {
 }
 
 function assertRetainedBrowserIdentityStable(before: ServiceBrowser, after: ServiceBrowser): void {
-	const beforeProof = before.browserBuildProof;
-	const afterProof = after.browserBuildProof;
 	if (
 		before.id !== after.id ||
 		before.activeSessionIds?.[0] !== after.activeSessionIds?.[0] ||
-		beforeProof?.browserPid !== afterProof?.browserPid ||
-		beforeProof?.processStartTicks !== afterProof?.processStartTicks ||
-		beforeProof?.cdpEndpoint !== afterProof?.cdpEndpoint ||
-		beforeProof?.executablePath !== afterProof?.executablePath
+		before.host !== after.host ||
+		before.pid !== after.pid ||
+		before.cdpEndpoint !== after.cdpEndpoint ||
+		before.executablePath !== after.executablePath
 	) {
 		throw new Error("Retained browser process identity changed during the roundtrip smoke.");
 	}
@@ -434,7 +448,7 @@ function normalizeLocalV1BaseUrl(value: string | undefined): string {
 function parseArgs(argv: string[]): SmokeOptions {
 	const options: SmokeOptions = {
 		envPath: path.join(os.homedir(), ".auracall", "api.env"),
-		model: "agent:normal-chatgpt",
+		model: "chatgpt:sol",
 		timeoutMs: 240_000,
 		pollIntervalMs: 2_000,
 		tabConvergenceMs: 15_000,

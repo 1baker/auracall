@@ -49378,3 +49378,17 @@ launched and no provider prompt was submitted.
   `resp_1beaf76d8f074816962b7117116980b5` completed with exact nonce readback.
   Its retained Chrome process identity remained unchanged, and AuraCall received
   the provider result from Agent Browser's returned target handle.
+## 2026-09-23 | Isolated smoke repair and upstream reconciliation assessment
+
+Created a clean worktree from personal branch `b308cbaf`, leaving the dirty
+source checkout and installed runtime untouched. A read-only three-way merge
+assessment against `origin/main` found 461 changed paths and conflicts across
+browser, runtime, tests and docs; this is not a safe fast-forward or blind
+merge. Updated the retained-browser smoke to consume current Agent Browser
+inventory and exact existing-conversation route. Validation and disposition
+are tracked in this worktree before any upstream integration or publication.
+The repaired smoke passed live as response
+`resp_c2350cb952174980b613d10711af7022`: exact nonce, `chatgpt:sol`,
+required Agent Browser authority, unchanged retained browser PID 73650 and
+CDP endpoint, and the exact pinned target/conversation. The clean worktree
+typecheck and build passed. This does not validate a full upstream merge.
