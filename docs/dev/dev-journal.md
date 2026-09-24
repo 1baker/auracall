@@ -49493,5 +49493,8 @@ browser UI as proof of provider-consumed bytes. The runner and configured
 executor now carry a typed receipt, including across artifact correction.
 Forty-six focused tests, typecheck, build, browser-file lint, and index sync
 pass. Existing executor lint and planning-audit debt is recorded in Plan 0364.
-Next: install only after confirming the active API and retained browser can be preserved. A real
-attachment response is required before closing Plan 0364.
+Installed checkpoint: an exact previous-runtime copy was retained; the API
+was idle before installation and restart. Installed compiled-file parity,
+healthy API status, provider-free module load, and unchanged ready ChatGPT
+browser PID 1829010 passed. The next check is one authorized real attachment
+response with durable receipt readback; no provider call was made here.

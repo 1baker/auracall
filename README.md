@@ -46,8 +46,9 @@ through the browser upload path, whether upload completion was observed,
 whether attachment UI appeared on the sent user turn, and the submitted user
 message ID. A missing receipt or a skipped confirmation is not a delivery
 claim. Even a fully confirmed UI receipt does not prove the provider consumed
-identical file bytes; downstream graders must keep that distinction. The source
-change is pending installed and live validation under Plan 0364.
+identical file bytes; downstream graders must keep that distinction. The
+installed API has the receipt code, but a real attachment response readback
+remains pending under Plan 0364.
 
 Configured browser requests may set `metadata.browserPromptTransport` to
 `inline_required` when the complete request must remain in the browser

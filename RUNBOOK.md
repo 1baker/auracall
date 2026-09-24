@@ -9,8 +9,13 @@ The original request receipt survives a later artifact-correction turn.
 Provider-consumed bytes remain unverified. Forty-six focused provider-free
 tests, no-emit typecheck, production build, browser-file lint and CodeGraph
 sync passed. The pre-existing configured-executor lint and plan-audit findings
-remain disclosed in Plan 0364. Installed and retained-browser acceptance are
-still open.
+remain disclosed in Plan 0364. The committed build was installed into the
+user-scoped runtime after an exact old-runtime backup. Three touched compiled
+file digests matched the checkout. The API restarted at PID 2331068 with a
+healthy `/status` and no selected run; Agent Browser retained the ready
+ChatGPT process at PID 1829010. An installed-module probe passed. No provider
+submission or durable attachment UI receipt has yet been observed, so Plan
+0364 stays open.
 
 ## 2026-09-22 | Automatic MCP response handback
 
