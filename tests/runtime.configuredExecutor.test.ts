@@ -1454,6 +1454,13 @@ describe('configured stored-step executor', () => {
         chromeTargetId: 'target-evidence',
         tabUrl: 'https://chatgpt.com/c/evidence-chat',
         conversationId: 'evidence-chat',
+        attachmentUiReceipt: {
+          schema: 'auracall.browser_attachment_ui_receipt.v1',
+          attachmentPaths: ['/private/review.txt'],
+          uploadCompletion: 'confirmed',
+          sentUserTurnAttachments: 'confirmed',
+          submittedUserId: 'user-evidence',
+        },
       });
       await options.runtimeEvidenceCb?.({
         observation: {
@@ -1555,6 +1562,12 @@ describe('configured stored-step executor', () => {
           state: 'browser-runtime-hint',
           source: 'browser-service',
           evidenceRef: 'https://chatgpt.com/c/evidence-chat',
+          details: expect.objectContaining({
+            attachmentUiReceipt: expect.objectContaining({
+              submittedUserId: 'user-evidence',
+              sentUserTurnAttachments: 'confirmed',
+            }),
+          }),
         }),
         expect.objectContaining({
           observedAt: '2026-04-15T21:30:00.000Z',

@@ -2725,6 +2725,7 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 						attachmentNames,
 						20_000,
 						logger,
+						submittedUserId ?? undefined,
 					);
 					if (!verified) {
 						throw new Error("Sent user message did not expose attachment UI after upload.");
@@ -3627,6 +3628,7 @@ async function runRemoteBrowserMode(
 	let selectedChatgptAccountLevel: string | null = null;
 	let selectedChatgptAccountPlanType: string | null = null;
 	let selectedChatgptAccountStructure: string | null = null;
+	let attachmentUiReceipt: BrowserAttachmentUiReceipt | undefined;
 	let chatgptDeepResearchStage: ChatgptDeepResearchStage | null = null;
 	let chatgptDeepResearchPlanAction: "start" | "edit" | null = null;
 	let chatgptDeepResearchStartMethod: "manual" | "auto" | null = null;
@@ -3652,6 +3654,7 @@ async function runRemoteBrowserMode(
 		chatgptAccountLevel: selectedChatgptAccountLevel ?? undefined,
 		chatgptAccountPlanType: selectedChatgptAccountPlanType ?? undefined,
 		chatgptAccountStructure: selectedChatgptAccountStructure ?? undefined,
+		attachmentUiReceipt,
 		chatgptDeepResearchStage: chatgptDeepResearchStage ?? undefined,
 		chatgptDeepResearchPlanAction: chatgptDeepResearchPlanAction ?? undefined,
 		chatgptDeepResearchStartMethod: chatgptDeepResearchStartMethod ?? undefined,
@@ -3949,7 +3952,8 @@ async function runRemoteBrowserMode(
 				const perFileTimeout = 15_000;
 				const waitBudget =
 					Math.max(baseTimeout, 30_000) + (submissionAttachments.length - 1) * perFileTimeout;
-				await waitForAttachmentCompletion(Runtime, waitBudget, attachmentNames, logger);
+				await waitForAttachmentCompletion(Runtime, waitBudget, attachmentNames, logger,
+					{ allowDisabledWithStableChips: true });
 				logger("All attachments uploaded");
 			}
 			let baselineTurns = await readConversationTurnCount(Runtime, logger);
@@ -4020,6 +4024,7 @@ async function runRemoteBrowserMode(
 					attachmentNames,
 					20_000,
 					logger,
+					submittedUserId ?? undefined,
 				);
 				if (!verified) {
 					throw new Error("Sent user message did not expose attachment UI after upload.");
@@ -4049,7 +4054,6 @@ async function runRemoteBrowserMode(
 		let submittedUserId: string | null = null;
 		let baselineAssistantMessageId: string | null = null;
 		let baselineAssistantTurnId: string | null = null;
-		let attachmentUiReceipt: BrowserAttachmentUiReceipt | undefined;
 		try {
 			const submission = await submitOnce(promptText, attachments);
 			baselineTurns = submission.baselineTurns;
@@ -4058,6 +4062,7 @@ async function runRemoteBrowserMode(
 			baselineAssistantMessageId = submission.baselineAssistantMessageId || null;
 			baselineAssistantTurnId = submission.baselineAssistantTurnId || null;
 			attachmentUiReceipt = submission.attachmentUiReceipt;
+			if (attachmentUiReceipt) await emitRuntimeHint();
 		} catch (error) {
 			const isPromptTooLarge =
 				error instanceof BrowserAutomationError &&
@@ -4076,6 +4081,7 @@ async function runRemoteBrowserMode(
 				baselineAssistantMessageId = submission.baselineAssistantMessageId || null;
 				baselineAssistantTurnId = submission.baselineAssistantTurnId || null;
 				attachmentUiReceipt = submission.attachmentUiReceipt;
+				if (attachmentUiReceipt) await emitRuntimeHint();
 			} else {
 				throw error;
 			}

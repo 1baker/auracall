@@ -149,6 +149,7 @@ export function bindRecoveredResponse(
   snapshot: unknown,
   expectedPrompt: string,
   expectedUrl: string,
+  expectedUserMessageId?: string,
 ): RecoveryResponseBinding {
   const fail = (reason: string): never => { throw new RecoveryResponseBindingError(reason); };
   if (!snapshot || typeof snapshot !== 'object' || Array.isArray(snapshot)) return fail('snapshot_shape');
@@ -176,6 +177,7 @@ export function bindRecoveredResponse(
     return fail(`prompt_matches_${matches.length}_expected_${prompt.length}_rendered_${renderedPrompt.length}_users_${userLengths}`);
   }
   const { message: user, index } = matches[0]!;
+  if (expectedUserMessageId && user.id !== expectedUserMessageId) return fail('submitted_user_identity');
   const following = messages.slice(index + 1);
   const nextUser = following.findIndex(message => message.role === 'user');
   const answers = (nextUser < 0 ? following : following.slice(0, nextUser))

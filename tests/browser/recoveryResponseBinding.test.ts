@@ -16,6 +16,11 @@ describe('recovered response binding', () => {
   it('accepts provider project-slug removal without changing either stable ID', () => {
     expect(bindRecoveredResponse({ ...snapshot([user, answer]), url: canonical }, prompt, slugged).answerMessageId).toBe(answer.id);
   });
+  it('requires the exact submitted user ID for attachment-backed recovery', () => {
+    expect(bindRecoveredResponse(snapshot([user, answer]), prompt, url, user.id).answerMessageId).toBe(answer.id);
+    expect(() => bindRecoveredResponse(snapshot([user, answer]), prompt, url, 'other-user'))
+      .toThrow('submitted_user_identity');
+  });
   it.each([
     canonical.replace('chatgpt.com', 'example.com'),
     canonical.replace('https:', 'http:'),

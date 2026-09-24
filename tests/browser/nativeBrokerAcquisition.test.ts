@@ -247,7 +247,9 @@ test.each(["profileId", "sessionName", "targetId", "browserId"])("original bindi
 	const f = await fixture();
 	await expect(reattachAgentBrowserBrokerTab({ ...handle, baseUrl: "http://127.0.0.1:47777",
 		serviceTabHandle: handle, originalNativeBinding: { ...binding, [key]: "changed" } }, f.dependencies))
-		.rejects.toThrow("identity changed");
+		.rejects.toMatchObject({ message: expect.stringContaining("identity changed"), details: {
+			code: "agent_browser_native_identity_changed", retryable: false, phase: "after",
+		} });
 	expect(f.operations).toEqual([]);
 });
 

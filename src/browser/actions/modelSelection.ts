@@ -350,8 +350,12 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
     const compactModelLabel = (value) => value.toLowerCase().replace(/[^a-z0-9]/g, '');
     const targetModelKey = compactModelLabel(PRIMARY_LABEL);
     const buttonModelKey = compactModelLabel(getButtonLabel());
-    if (['56pro', 'gpt56pro'].includes(targetModelKey)
-      && ['56pro', 'gpt56pro'].includes(buttonModelKey)) {
+    const exactVersionedProPill =
+      (['56pro', 'gpt56pro'].includes(targetModelKey)
+        && ['56pro', 'gpt56pro'].includes(buttonModelKey)) ||
+      (['6pro', 'gpt6pro'].includes(targetModelKey)
+        && ['6pro', 'gpt6pro'].includes(buttonModelKey));
+    if (exactVersionedProPill) {
       return { status: 'already-selected', label: getButtonLabel() };
     }
     if (MODEL_STRATEGY === 'current') {

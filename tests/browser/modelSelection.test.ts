@@ -51,6 +51,26 @@ describe('browser model selection matchers', () => {
     expect(clicks).toBe(0);
   });
 
+  it('accepts the observed exact 6Pro composer pill without reopening the model menu', async () => {
+    let clicks = 0;
+    class FakeElement {
+      textContent = '6Pro';
+      getAttribute() { return null; }
+      dispatchEvent() { clicks += 1; return true; }
+    }
+    const button = new FakeElement();
+    const context: Record<string, unknown> = {
+      setTimeout,
+      performance: { now: () => Date.now() },
+      document: { querySelector: () => button },
+    };
+    const result = runInNewContext(buildModelSelectionExpressionForTest('6 Pro'), context) as Promise<{
+      status: string; label: string;
+    }>;
+    await expect(result).resolves.toEqual({ status: 'already-selected', label: '6Pro' });
+    expect(clicks).toBe(0);
+  });
+
   it('ends a persistent submenu retry before the native broker command timeout', async () => {
     vi.useFakeTimers();
     try {

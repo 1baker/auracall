@@ -1,8 +1,11 @@
 import { createHash } from 'node:crypto';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { createExecutionRun, createExecutionRunEvent, createExecutionRunRecordBundle, createExecutionRunSharedState, createExecutionRunStep } from '../src/runtime/model.js';
 import { DEFAULT_TEAM_RUN_EXECUTION_POLICY } from '../src/teams/types.js';
-import { observeFailedResponse, reconstructRecoveryWire, RecoveryObservationBodySchema, RecoveryObservationBusyError } from '../src/runtime/responseRecoveryObservation.js';
+import { observeFailedResponse, persistRecoveryObservation, reconstructRecoveryWire, RecoveryObservationBodySchema, RecoveryObservationBusyError } from '../src/runtime/responseRecoveryObservation.js';
 import { observeAgentBrowserProjectResponse, reattachAgentBrowserBrokerTab } from '../src/browser/service/agentBrowserBridge.js';
 
 const url = 'https://chatgpt.com/g/g-p-11111111111111111111111111111111/c/11111111-1111-1111-1111-111111111111';
@@ -30,8 +33,121 @@ function fixture() {
   });
   return { runId, revision: 2, persistedAt: at, bundle };
 }
+function attachedFixture() {
+  const record = fixture();
+  const prompt = 'Please review the attached candidate against the task in review-goal.md.';
+  const metadata = { workflow: 'codex-pro-guard',
+    guard_id: 'document-111111111111111111111111-r1', round: 1,
+    guard_nonce: `codex-pro-guard-${'2'.repeat(32)}`,
+    submission_fingerprint: '3'.repeat(64), learning_trace_digest: 'a'.repeat(64),
+    guardFileReview: { schema: 'codex.pro_guard_file_handoff.v1' } };
+  record.bundle.steps[0]!.input.prompt = prompt;
+  record.bundle.run.initialInputs.requestInput = prompt;
+  record.bundle.steps[0]!.input.structuredData.metadata = metadata;
+  record.bundle.run.initialInputs.metadata = metadata;
+  const artifact = { id: 'file-1', kind: 'file', path: '/fixture/review.txt',
+    title: 'review.txt', uri: 'file:///fixture/review.txt' };
+  record.bundle.steps[0]!.input.artifacts = [artifact as never];
+  record.bundle.run.initialInputs.attachments = [{ id: artifact.id, uri: artifact.uri,
+    fileName: artifact.title, mimeType: 'text/plain' }];
+  record.bundle.steps[0]!.failure = { code: 'runner_execution_failed', message: 'transport lost',
+    ownerStepId: stepId, details: { phase: 'after', retryable: false } };
+  record.bundle.events.push(createExecutionRunEvent({ id: 'e2', runId, stepId,
+    type: 'note-added', createdAt: at, payload: { runtimeEvidence: {
+      state: 'thinking', evidenceRef: 'chatgpt-prompt-submitted' } } }));
+  const details = { ...(record.bundle.events[0]!.payload!.runtimeEvidence as any).details,
+    attachmentUiReceipt: { schema: 'auracall.browser_attachment_ui_receipt.v1',
+      attachmentPaths: [artifact.path], uploadCompletion: 'confirmed',
+      sentUserTurnAttachments: 'confirmed', submittedUserId: 'u1' } };
+  record.bundle.events.push(createExecutionRunEvent({ id: 'e3', runId, stepId,
+    type: 'note-added', createdAt: at, payload: { runtimeEvidence: {
+      state: 'browser-runtime-hint', details } } }));
+  return record;
+}
 const config = { profiles: { default: { services: { chatgpt: { identity: { email: 'expected@example.com' } } } } } };
 describe('trusted failed response observation', () => {
+  it('persists exact recovery evidence once without changing the failed record', async () => {
+    const runDir = await fs.mkdtemp(path.join(os.tmpdir(), 'auracall-recovery-evidence-'));
+    try {
+      const original = Buffer.from(JSON.stringify(fixture()));
+      await fs.writeFile(path.join(runDir, 'record.json'), original);
+      const answer = '{"nonce":"bound-nonce","score":91}';
+      const digest = (value: string | Buffer) => createHash('sha256').update(value).digest('hex');
+      const observation = {
+        schema: 'auracall.response_recovery_observation.v1', response_id: runId,
+        original_status: 'failed', original_record_digest: digest(original),
+        request_metadata: {}, logical_prompt_sha256: digest('Exact request'),
+        wire_prompt_sha256: digest('Exact request'), conversation_url: url,
+        runtime_profile: 'default', observed_at: at, user_message_id: 'u1',
+        assistant_message_id: 'a1', answer_text: answer, answer_sha256: digest(answer),
+        account_verdict: 'match', browser_process_id: 1234, target_id: 'target-1',
+        prompt_submitted: false, original_run_modified: false,
+      } as Awaited<ReturnType<typeof observeFailedResponse>>;
+      const target = await persistRecoveryObservation(observation, { runDir });
+      expect(target).toBe(path.join(runDir, 'recovery-observation.json'));
+      expect(JSON.parse(await fs.readFile(target, 'utf8'))).toEqual(observation);
+      expect((await fs.stat(target)).mode & 0o777).toBe(0o600);
+      expect(await fs.readFile(path.join(runDir, 'record.json'))).toEqual(original);
+      expect(await persistRecoveryObservation(observation, { runDir })).toBe(target);
+      await expect(persistRecoveryObservation({ ...observation, answer_text: 'changed',
+        answer_sha256: digest('changed') }, { runDir })).rejects.toThrow('conflicts');
+      await fs.writeFile(path.join(runDir, 'record.json'), '{}');
+      await expect(persistRecoveryObservation(observation, { runDir })).rejects.toThrow('changed');
+    } finally {
+      await fs.rm(runDir, { recursive: true, force: true });
+    }
+  });
+
+  it.each(['matching-user', 'wrong-user'] as const)
+  ('observes an attached request only through the exact submitted user turn: %s', async kind => {
+    const record = attachedFixture();
+    const original = Buffer.from(JSON.stringify(record));
+    const source = reconstructRecoveryWire(record);
+    expect(source.attachedUserMessageId).toBe('u1');
+    expect(source.wire).toContain('Task input artifacts:\n- file:review.txt');
+    const fetch = vi.fn(async (resource: unknown, init?: RequestInit) => {
+      const data = String(resource).endsWith('/api/service/browsers')
+        ? { browsers: [{ id: handle.browserId, profileId: handle.profileId,
+          health: 'ready', host: 'remote_headed', pid: 1234, tabHandles: [handle] }] }
+        : String(JSON.parse(String(init?.body)).expression).includes('data-message-author-role')
+          ? { result: { url, generating: false, messages: [
+            { role: 'user', id: kind === 'matching-user' ? 'u1' : 'other-user', text: source.wire },
+            { role: 'assistant', id: 'a1', text: 'Bound answer' }] } }
+          : { result: { user: { email: 'expected@example.com' } } };
+      return new Response(JSON.stringify({ success: true, data }));
+    });
+    const result = observeFailedResponse({ responseId: runId, config,
+      control: { listRuns: async () => [] } as never }, {
+      readRecordBytes: async () => original,
+      observe: input => reattachAgentBrowserBrokerTab(input,
+        { fetch: fetch as never, listStreamFiles: async () => [], readStreamFile: async () => '' }),
+    });
+    if (kind === 'matching-user') {
+      expect(await result).toMatchObject({ user_message_id: 'u1', assistant_message_id: 'a1',
+        answer_text: 'Bound answer', prompt_submitted: false, original_run_modified: false });
+    } else await expect(result).rejects.toThrow('submitted_user_identity');
+    expect(JSON.stringify(record)).toBe(original.toString());
+  });
+
+  it.each(['missing-receipt', 'wrong-path', 'wrong-file', 'missing-submit', 'untyped-failure', 'missing-user'] as const)
+  ('rejects attached provenance drift: %s', kind => {
+    const record = attachedFixture();
+    const receipt = ((record.bundle.events[2]!.payload!.runtimeEvidence as any).details.attachmentUiReceipt);
+    if (kind === 'missing-receipt') delete (record.bundle.events[2]!.payload!.runtimeEvidence as any).details.attachmentUiReceipt;
+    if (kind === 'wrong-path') receipt.attachmentPaths[0] = '/fixture/other.txt';
+    if (kind === 'wrong-file') (record.bundle.run.initialInputs.attachments as any[])[0].fileName = 'other.txt';
+    if (kind === 'missing-submit') record.bundle.events.splice(1, 1);
+    if (kind === 'untyped-failure') delete (record.bundle.steps[0]!.failure!.details as any).phase;
+    if (kind === 'missing-user') receipt.submittedUserId = null;
+    expect(() => reconstructRecoveryWire(record)).toThrow();
+  });
+  it('accepts the real review-loop guard, nonce, fingerprint, trace, and file-handoff correlation', () => {
+    const record = attachedFixture();
+    const metadata = record.bundle.steps[0]!.input.structuredData.metadata as any;
+    expect(reconstructRecoveryWire(record).attachedUserMessageId).toBe('u1');
+    metadata.guard_nonce = 'invalid-guard-nonce';
+    expect(() => reconstructRecoveryWire(record)).toThrow('saved request correlation');
+  });
   it.each(['valid', 'streaming', 'duplicate', 'wrong-account', 'changed-record', 'busy', 'pending', 'pending-leased', 'terminal-leased', 'running-step'] as const)('%s', async kind => {
     const record = fixture();
     const original = Buffer.from(JSON.stringify(record));

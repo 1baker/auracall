@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { observeFailedResponse, RecoveryObservationBodySchema, RecoveryObservationBusyError } from "../runtime/responseRecoveryObservation.js";
+import { observeFailedResponse, persistRecoveryObservation, RecoveryObservationBodySchema, RecoveryObservationBusyError } from "../runtime/responseRecoveryObservation.js";
 import { createReadStream } from "node:fs";
 import fs from "node:fs/promises";
 import http from "node:http";
@@ -4347,7 +4347,8 @@ export async function createResponsesHttpServer(
 				const endObservationWork = beginForegroundAuraCallWork();
 				try {
 					const observation = await observeFailedResponse({ responseId: recoveryObservationMatch[1]!, config: resolvedUserConfig ?? {}, control });
-					sendJson(res, 200, observation);
+					const observationPath = await persistRecoveryObservation(observation);
+					sendJson(res, 200, { ...observation, observation_path: observationPath });
 				} catch (error) {
 					sendJson(res, 409, { error: { type: error instanceof RecoveryObservationBusyError ? 'recovery_observation_busy' : 'recovery_observation_unavailable', message: error instanceof Error ? error.message : String(error) } });
 				} finally { recoveryObservationActive = false; endObservationWork(); }

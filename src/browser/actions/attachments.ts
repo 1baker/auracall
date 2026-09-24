@@ -1248,12 +1248,14 @@ export async function waitForAttachmentCompletion(
   timeoutMs: number,
   expectedNames: string[] = [],
   logger?: BrowserLogger,
+  options?: { allowDisabledWithStableChips?: boolean },
 ): Promise<void> {
   const deadline = Date.now() + timeoutMs;
   const expectedNormalized = expectedNames.map((name) => name.toLowerCase());
   let inputMatchSince: number | null = null;
   let sawInputMatch = false;
   let attachmentMatchSince: number | null = null;
+  let disabledChipMatchSince: number | null = null;
   let lastVerboseLog = 0;
   const expression = `(() => {
     const sendSelectors = ${JSON.stringify(SEND_BUTTON_SELECTORS)};
@@ -1345,6 +1347,7 @@ export async function waitForAttachmentCompletion(
       'button[aria-label*="Remove"]',
     ];
     const attachedNames = [];
+    const chipNames = [];
     for (const selector of attachmentChipSelectors) {
       for (const node of Array.from(composerScope.querySelectorAll(selector))) {
         if (!node) continue;
@@ -1352,6 +1355,10 @@ export async function waitForAttachmentCompletion(
         const aria = node.getAttribute?.('aria-label') ?? '';
         const title = node.getAttribute?.('title') ?? '';
         const parentText = node.parentElement?.parentElement?.innerText ?? '';
+        if (selector === '[data-testid*="chip"]') {
+          const normalized = [text, aria, title].filter(Boolean).join(' ').toLowerCase();
+          if (normalized) chipNames.push(normalized);
+        }
         for (const value of [text, aria, title, parentText]) {
           const normalized = value?.toLowerCase?.();
           if (normalized) attachedNames.push(normalized);
@@ -1362,6 +1369,7 @@ export async function waitForAttachmentCompletion(
       btn?.parentElement?.parentElement?.innerText?.toLowerCase?.() ?? '',
     );
     attachedNames.push(...cardTexts.filter(Boolean));
+    if (chipNames.length === 0) chipNames.push(...cardTexts.filter(Boolean));
 
     const inputNames = [];
     const inputScope = composerScope ? Array.from(composerScope.querySelectorAll('input[type="file"]')) : [];
@@ -1458,6 +1466,7 @@ export async function waitForAttachmentCompletion(
       uploading,
       filesAttached,
       attachedNames,
+      chipNames,
       inputNames,
       fileCount,
     };
@@ -1470,6 +1479,7 @@ export async function waitForAttachmentCompletion(
       uploading?: boolean;
       filesAttached?: boolean;
       attachedNames?: string[];
+      chipNames?: string[];
       inputNames?: string[];
       fileCount?: number;
     } | undefined;
@@ -1503,16 +1513,19 @@ export async function waitForAttachmentCompletion(
       const attachedNames = (value.attachedNames ?? [])
         .map((name) => name.toLowerCase().replace(/\s+/g, ' ').trim())
         .filter(Boolean);
+      const chipNames = (value.chipNames ?? [])
+        .map((name) => name.toLowerCase().replace(/\s+/g, ' ').trim())
+        .filter(Boolean);
       const inputNames = (value.inputNames ?? [])
         .map((name) => name.toLowerCase().replace(/\s+/g, ' ').trim())
         .filter(Boolean);
       const fileCount = typeof value.fileCount === 'number' ? value.fileCount : 0;
       const fileCountSatisfied = expectedNormalized.length > 0 && fileCount >= expectedNormalized.length;
-      const matchesExpected = (expected: string): boolean => {
+      const matchesExpected = (expected: string, candidates = attachedNames): boolean => {
         const baseName = expected.split('/').pop()?.split('\\').pop() ?? expected;
         const normalizedExpected = baseName.toLowerCase().replace(/\s+/g, ' ').trim();
         const expectedNoExt = normalizedExpected.replace(/\.[a-z0-9]{1,10}$/i, '');
-        return attachedNames.some((raw) => {
+        return candidates.some((raw) => {
           if (raw.includes(normalizedExpected)) return true;
           if (expectedNoExt.length >= 6 && raw.includes(expectedNoExt)) return true;
           if (raw.includes('…') || raw.includes('...')) {
@@ -1529,6 +1542,26 @@ export async function waitForAttachmentCompletion(
         });
       };
       const missing = expectedNormalized.filter((expected) => !matchesExpected(expected));
+      const unmatchedChipNames = [...chipNames];
+      const missingChips = expectedNormalized.filter((expected) => {
+        const index = unmatchedChipNames.findIndex((name) => matchesExpected(expected, [name]));
+        if (index < 0) return true;
+        unmatchedChipNames.splice(index, 1);
+        return false;
+      });
+      // A remote file review stages files before inserting its prompt. On some
+      // ChatGPT composers that leaves Send disabled even after all file chips
+      // are ready. Require every named chip and a quiet upload indicator;
+      // input filenames or an aggregate count alone are not sufficient here.
+      const disabledChipsReady = options?.allowDisabledWithStableChips === true
+        && expectedNormalized.length > 0 && missingChips.length === 0
+        && value.state === 'disabled' && value.uploading === false;
+      if (disabledChipsReady) {
+        disabledChipMatchSince ??= Date.now();
+        if (Date.now() - disabledChipMatchSince > 3_000) return;
+      } else {
+        disabledChipMatchSince = null;
+      }
       if (missing.length === 0 || fileCountSatisfied) {
         const stableThresholdMs = value.uploading ? 3000 : 1500;
         if (attachmentMatchSince === null) {
@@ -1592,6 +1625,7 @@ export async function waitForUserTurnAttachments(
   expectedNames: string[],
   timeoutMs: number,
   logger?: BrowserLogger,
+  expectedUserMessageId?: string,
 ): Promise<boolean> {
   if (!expectedNames || expectedNames.length === 0) {
     return true;
@@ -1609,6 +1643,9 @@ export async function waitForUserTurnAttachments(
     });
     const lastUser = userTurns[userTurns.length - 1];
     if (!lastUser) return { ok: false };
+    const userMessage = lastUser.matches('[data-message-author-role="user"]')
+      ? lastUser : lastUser.querySelector('[data-message-author-role="user"]');
+    const userMessageId = userMessage?.getAttribute('data-message-id') || null;
     const text = (lastUser.innerText || '').toLowerCase();
     const attrs = Array.from(lastUser.querySelectorAll('[aria-label],[title]')).map((el) => {
       const aria = el.getAttribute('aria-label') || '';
@@ -1661,7 +1698,7 @@ export async function waitForUserTurnAttachments(
         }
       }
     }
-    return { ok: true, text, attrs, fileCount, hasAttachmentUi, attachmentUiCount };
+    return { ok: true, userMessageId, text, attrs, fileCount, hasAttachmentUi, attachmentUiCount };
   })()`;
 
   const deadline = Date.now() + timeoutMs;
@@ -1671,6 +1708,7 @@ export async function waitForUserTurnAttachments(
     const value = result?.value as
       | {
           ok?: boolean;
+          userMessageId?: string | null;
           text?: string;
           attrs?: string[];
           fileCount?: number;
@@ -1679,6 +1717,10 @@ export async function waitForUserTurnAttachments(
         }
       | undefined;
     if (!value?.ok) {
+      await delay(200);
+      continue;
+    }
+    if (expectedUserMessageId && value.userMessageId !== expectedUserMessageId) {
       await delay(200);
       continue;
     }

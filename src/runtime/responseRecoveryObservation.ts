@@ -1,16 +1,18 @@
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import fs from 'node:fs/promises';
+import path from 'node:path';
 import { z } from 'zod';
 import { createProviderSessionAuthorization } from '../browser/providers/providerSessionAuthority.js';
 import { observeAgentBrowserProjectResponse, reattachAgentBrowserBrokerTab, type AgentBrowserBrokerReattachInput } from '../browser/service/agentBrowserBridge.js';
 import { BROWSER_INLINE_PROMPT_CHAR_BUDGET, buildBrowserPromptWithRequestInstructions } from './configuredExecutor.js';
 import { shouldUseAuraCallStepOutputContract } from './stepOutputContract.js';
-import { getExecutionRunRecordPath, type ExecutionRunStoredRecord } from './store.js';
+import { getExecutionRunDir, getExecutionRunRecordPath, type ExecutionRunStoredRecord } from './store.js';
 import { ExecutionRunRecordBundleSchema } from './schema.js';
 import type { ExecutionRuntimeControlContract } from './contract.js';
 
 export const RecoveryObservationBodySchema = z.object({}).strict();
 export class RecoveryObservationBusyError extends Error {}
+export const RECOVERY_OBSERVATION_FILENAME = 'recovery-observation.json';
 const sha = (value: string | Buffer) => createHash('sha256').update(value).digest('hex');
 const object = (value: unknown): Record<string, any> => value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, any> : {};
 
@@ -41,7 +43,6 @@ export function reconstructRecoveryWire(record: ExecutionRunStoredRecord) {
     throw new Error('Recovery bundled attachment transport is unsupported');
   }
   if (typeof prompt !== 'string' || !prompt.trim() || prompt !== initial.requestInput
-      || (!newProject && (step.input.artifacts.length || (Array.isArray(initial.attachments) && initial.attachments.length)))
       || shouldUseAuraCallStepOutputContract(step.input.structuredData)
       || step.dependsOnStepIds.length || step.input.handoffIds.length
       || ['taskContext', 'taskOverrideStructuredContext', 'humanEscalationResume'].some(key => step.input.structuredData[key] != null)) {
@@ -50,8 +51,24 @@ export function reconstructRecoveryWire(record: ExecutionRunStoredRecord) {
   const metadata = object(step.input.structuredData.metadata);
   if (metadata.browserPromptTransport !== undefined && metadata.browserPromptTransport !== 'auto'
       && metadata.browserPromptTransport !== 'inline_required') throw new Error('Unsupported browser prompt transport policy');
+  const codexCorrelation = typeof object(metadata.codexSubmission).token === 'string'
+    && Boolean(object(metadata.codexSubmission).token);
+  // The review loop binds its original request with a guard identity, fresh
+  // nonce, submission fingerprint and private learning-trace digest. The nonce
+  // may live in the attached review goal rather than the short chat prompt.
+  const guardCorrelation = metadata.workflow === 'codex-pro-guard'
+    && Number.isInteger(metadata.round) && metadata.round >= 1 && metadata.round <= 20
+    && typeof metadata.guard_id === 'string'
+    && /^(?:document-[0-9a-f]{24}-r[1-9][0-9]*|codex-pro-guard-[0-9a-f]{32})$/.test(metadata.guard_id)
+    && typeof metadata.guard_nonce === 'string'
+    && /^codex-pro-guard-[0-9a-f]{32}$/.test(metadata.guard_nonce)
+    && typeof metadata.submission_fingerprint === 'string'
+    && /^[0-9a-f]{64}$/.test(metadata.submission_fingerprint)
+    && typeof metadata.learning_trace_digest === 'string'
+    && /^[0-9a-f]{64}$/.test(metadata.learning_trace_digest)
+    && object(metadata.guardFileReview).schema === 'codex.pro_guard_file_handoff.v1';
   if (JSON.stringify(metadata) !== JSON.stringify(initial.metadata)
-      || !object(metadata.codexSubmission).token) throw new Error('Recovery requires saved request correlation');
+      || (!codexCorrelation && !guardCorrelation)) throw new Error('Recovery requires saved request correlation');
   // Mirror runner.formatTaskInputArtifactsPromptContext for this explicitly
   // dependency-free transport; never reconstruct attachment content from files.
   const artifactLines = step.input.artifacts.slice(0, 5).map(artifact =>
@@ -70,6 +87,44 @@ export function reconstructRecoveryWire(record: ExecutionRunStoredRecord) {
     .map(event => object(object(event.payload).runtimeEvidence)).filter(event => event.state === 'browser-runtime-hint');
   const details = object(evidence.at(-1)?.details);
   const handle = object(details.agentBrowserServiceTabHandle);
+  let attachedUserMessageId: string | undefined;
+  if (!newProject) {
+    const attachments = Array.isArray(initial.attachments) ? initial.attachments : [];
+    if (step.input.artifacts.length !== attachments.length || step.input.artifacts.length > 10) {
+      throw new Error('Recovery attachment transport is unsupported');
+    }
+    if (step.input.artifacts.length > 0) {
+      const receipt = object(details.attachmentUiReceipt);
+      const paths = step.input.artifacts.map(artifact => artifact.path);
+      const submittedIndex = bundle.events.findIndex(event => event.runId === record.runId
+        && (event.stepId === step.id || event.stepId == null)
+        && object(event.payload).runtimeEvidence?.evidenceRef === 'chatgpt-prompt-submitted');
+      let receiptIndex = -1;
+      bundle.events.forEach((event, index) => {
+        if (event.runId === record.runId && (event.stepId === step.id || event.stepId == null)
+            && object(object(event.payload).runtimeEvidence).details?.attachmentUiReceipt != null) {
+          receiptIndex = index;
+        }
+      });
+      if (step.failure?.code !== 'runner_execution_failed' || step.failure.ownerStepId !== step.id
+          || failure.phase !== 'after' || failure.retryable !== false
+          || submittedIndex < 0 || receiptIndex <= submittedIndex
+          || receipt.schema !== 'auracall.browser_attachment_ui_receipt.v1'
+          || receipt.uploadCompletion !== 'confirmed' || receipt.sentUserTurnAttachments !== 'confirmed'
+          || typeof receipt.submittedUserId !== 'string' || !receipt.submittedUserId.trim()
+          || !Array.isArray(receipt.attachmentPaths) || receipt.attachmentPaths.length !== paths.length
+          || paths.some((path, index) => typeof path !== 'string' || !path
+            || receipt.attachmentPaths[index] !== path)
+          || new Set(paths).size !== paths.length
+          || step.input.artifacts.some((artifact, index) => {
+            const attachment = object(attachments[index]);
+            return artifact.kind !== 'file' || !artifact.id || !artifact.uri || !artifact.title
+              || attachment.id !== artifact.id || attachment.uri !== artifact.uri
+              || attachment.fileName !== artifact.title;
+          })) throw new Error('Recovery attached request lacks exact sent-turn provenance');
+      attachedUserMessageId = receipt.submittedUserId;
+    }
+  }
   const evidenceUrl = typeof details.tabUrl === 'string' ? details.tabUrl : '';
   const url = new URL(newProject ? evidenceUrl : String(hints.chatgptConversationUrl));
   const projectLanding = newProject
@@ -93,7 +148,8 @@ export function reconstructRecoveryWire(record: ExecutionRunStoredRecord) {
       || (newProject && (details.projectId !== projectId || details.browserAuthority !== 'agent-browser'
         || handle.browserId !== details.agentBrowserBrowserId || handle.profileId !== details.agentBrowserProfileId
         || handle.sessionName !== details.agentBrowserSessionName))) throw new Error('Recovery original browser provenance is incomplete');
-  return { step, prompt, wire, metadata, url: url.href, runtimeProfile, details, handle, projectId: newProject ? projectId as string : undefined };
+  return { step, prompt, wire, metadata, url: url.href, runtimeProfile, details, handle,
+    attachedUserMessageId, projectId: newProject ? projectId as string : undefined };
 }
 
 export async function observeFailedResponse(input: {
@@ -129,6 +185,7 @@ export async function observeFailedResponse(input: {
   });
   const observationInput: AgentBrowserBrokerReattachInput = {
     observationOnly: true, recoveryPrompt: source.wire, providerSessionAuthorization: authorization,
+    expectedUserMessageId: source.attachedUserMessageId,
     baseUrl: source.details.agentBrowserBaseUrl, browserId: source.details.agentBrowserBrowserId,
     browserHost: source.details.agentBrowserRequestedHost as AgentBrowserBrokerReattachInput['browserHost'],
     expectedBrowserProcessId: source.details.agentBrowserProcessId,
@@ -156,4 +213,54 @@ export async function observeFailedResponse(input: {
     account_verdict: 'match' as const, browser_process_id: result.browserProcessId, target_id: result.canonicalTargetId,
     prompt_submitted: false as const, original_run_modified: false as const,
   };
+}
+
+/** Persist verified recovery evidence beside, never inside, the failed run. */
+export async function persistRecoveryObservation(
+  observation: Awaited<ReturnType<typeof observeFailedResponse>>,
+  options: { runDir?: string } = {},
+): Promise<string> {
+  const runId = observation.response_id;
+  if (!/^resp_[a-zA-Z0-9_-]+$/.test(runId)
+      || observation.schema !== 'auracall.response_recovery_observation.v1'
+      || observation.original_status !== 'failed' || observation.original_run_modified !== false
+      || observation.prompt_submitted !== false || observation.account_verdict !== 'match'
+      || !observation.user_message_id || !observation.assistant_message_id
+      || !observation.answer_text.trim() || observation.answer_text.length > 256_000
+      || observation.answer_sha256 !== sha(observation.answer_text)) {
+    throw new Error('Recovery observation is not eligible for durable evidence');
+  }
+  const runDir = options.runDir ?? getExecutionRunDir(runId);
+  const recordPath = path.join(runDir, 'record.json');
+  const [directory, recordInfo] = await Promise.all([fs.lstat(runDir), fs.lstat(recordPath)]);
+  if (!directory.isDirectory() || directory.isSymbolicLink()
+      || !recordInfo.isFile() || recordInfo.isSymbolicLink()
+      || sha(await fs.readFile(recordPath)) !== observation.original_record_digest) {
+    throw new Error('Original failed record changed before recovery evidence persistence');
+  }
+  const target = path.join(runDir, RECOVERY_OBSERVATION_FILENAME);
+  const payload = Buffer.from(JSON.stringify(observation) + '\n');
+  const temporary = path.join(runDir, `.recovery-observation-${randomUUID()}.tmp`);
+  const handle = await fs.open(temporary, 'wx', 0o600);
+  try {
+    try {
+      await handle.writeFile(payload);
+      await handle.sync();
+    } finally {
+      await handle.close();
+    }
+    try {
+      await fs.link(temporary, target);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
+      const existingInfo = await fs.lstat(target);
+      if (!existingInfo.isFile() || existingInfo.isSymbolicLink()
+          || !payload.equals(await fs.readFile(target))) {
+        throw new Error('Recovery evidence conflicts with an existing observation');
+      }
+    }
+  } finally {
+    await fs.unlink(temporary);
+  }
+  return target;
 }

@@ -833,3 +833,20 @@ not be reduced silently to host/port discovery. Invalid endpoints trigger matchi
 attachment cleanup. If cleanup fails, retain AgentBrowserAttachmentCleanupError's
 exact bridge handle for reconciliation; do not release the target or replay the
 provider request. This does not enable raw CDP on custody-protected browser modes.
+A remote ChatGPT run with file uploads now emits the confirmed sent-user-turn
+attachment UI receipt in durable runtime hints before waiting for the assistant.
+The receipt records attempted paths, upload and sent-turn UI confirmation, and
+the submitted user ID. It does not prove the provider consumed identical file
+bytes, and a failed run is not converted into success by this hint. Source
+failed-response observation accepts a direct attached request only when the
+post-submit receipt matches every saved file ID, URI, name and path, the review
+guard ID, nonce, submission fingerprint, trace digest and file-handoff schema
+are intact, and the recovered assistant belongs to
+that exact submitted user ID. Missing receipts, unknown transport and changed
+ownership fail before browser work; the original failed record stays immutable.
+The controller does not automatically promote these observations into training.
+The operator recovery endpoint persists an exact observation sidecar beside the
+failed record only after the read-only browser binding and account checks pass.
+The sidecar is mode `0600`, write-once and digest-bound to the unchanged failed
+record. ModelLabs must ingest it as ungraded observation evidence, never as a
+succeeded browser run or a reviewer verdict.

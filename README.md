@@ -28,6 +28,17 @@ attaching, navigating, replaying or changing run history. `/status` advertises
 `compatibility.recoveryObservation`. It requires exact saved inline transport,
 an idle runtime, retained browser ownership and fresh account verification.
 Unsupported transport, missing provenance or ambiguous answers fail closed.
+The source observer also supports a failed attached review request only when a
+durable, post-submit UI receipt matches every original file artifact and the
+recovered answer follows that receipt's exact user-message ID. A saved review
+guard ID, nonce, submission fingerprint, trace digest and file-handoff schema
+may provide correlation instead of a `codexSubmission` token. Historical failures without these receipts remain
+ineligible; this source extension still needs installed live validation.
+On a verified operator response, the endpoint writes a private, write-once
+`runtime/runs/<id>/recovery-observation.json` sidecar and returns its
+`observation_path`. It checks the original record digest again before writing;
+an incompatible second observation fails rather than replacing evidence. The
+sidecar is not a successful response, a grade, or permission to replay.
 The Codex controller records a separate recovery receipt and applies normal
 verdict checks; a service observation alone is not workflow completion.
 

@@ -1,3 +1,58 @@
+## 2026-09-24 | Reconcile attached-response recovery for publication
+
+Reviewed every dirty source, test and documentation path on
+`codex/auracall-personal-main`. The recovery fixture now matches the actual Pro
+Guard metadata shape, and native attachment-identity drift carries typed
+non-retryable after-submit details so a future failed run can be evaluated by
+the strict observer. Six focused suites passed 225 tests; no-emit TypeScript,
+the production build, diff hygiene and error-level lint outside the documented
+configured-executor regex debt passed. The plan audit retains the same three
+documented findings: the recovery endpoint's raw route regex and Plan 0357's
+noncanonical/missing State header. No browser, API service or installed runtime
+was launched, replaced, restarted or stopped during this publication slice.
+
+## 2026-09-24 | Exact 6Pro picker repair during ModelLabs forward trial
+
+The first hash-bound, file-review calibration run
+`resp_idem_a75174de40c826dbb89f254ae0a56b60` failed before submission:
+ChatGPT showed a `6Pro` expanded menu row, while AuraCall searched for `6 Pro`.
+The run has no prompt-submitted event or attachment receipt. A fresh no-launch
+access plan reused the retained browser; a separate bounded diagnostic tab
+proved the active composer pill text was exactly `6Pro` and was released after
+inspection. Added only the exact 6Pro already-selected shortcut (parallel to
+the existing 5.6Pro shortcut), passed 91 focused tests and a build, backed up
+the installed compiled module, and installed the matching single-file change
+with an API restart. The original failed response was not replayed. A new
+guard ID and fingerprint were used for a fresh browser review, but that
+file-backed run also failed before prompt submission: three files transferred,
+then attachment completion timed out with no submitted event or UI receipt.
+An attachment-free inline guard then completed a nonce-bound 87/100 review of
+the original synthetic prompt. Its browser response proposed a complete
+clarification, verified as an exact quote; a child round bound that revised
+prompt to the same origin and completed at 100/100. Both successful run records
+contain `desiredModel: 6 Pro`, observed `selectedModel: 6Pro`, and
+`modelSelectionStatus: already-selected`. ModelLabs imported both grades.
+Four original and four revised local Codex benchmark executions all passed the
+same verifier, but model identities were CLI-requested only and the token
+effect was not consistent across the two tested model/effort arms. This is not
+adaptive-routing go-live evidence yet.
+
+## 2026-09-24 | Install recovery-observation instrumentation for forward validation
+
+Built the dirty checkout and passed 141 focused attachment/recovery tests. Staged
+the package outside the live runtime; only seven compiled files differed from
+the installed package, all in the attachment/recovery path. With zero selected
+API runs, stopped `auracall-api.service`, moved the prior runtime to
+`~/.auracall/user-runtime-backup-20260924-forward-recovery`, moved the verified
+stage into place, and restarted the service. `/status` returned `ok: true` on
+port 18095 with a new PID, and installed `dist` matches the source build exactly.
+One operator-only observation attempt for the known ineligible historical failed
+run returned HTTP 409 and created no recovery sidecar, confirming the installed
+path fails closed without submitting another prompt.
+This installs evidence collection only. No ChatGPT prompt was submitted and
+ModelLabs adaptive routing remains shadow-only pending forward validation,
+canary, and rollback checks.
+
 ## 2026-09-22 | MCP automatically hands recovered Pro answers back to Codex
 
 General MCP polling previously stopped at the immutable failed response even
@@ -49521,3 +49576,54 @@ browser result recorded the exact path, confirmed upload completion, confirmed
 sent-user-turn attachment UI, and a submitted user-message ID. Plan 0364 is
 closed. ModelLabs still has zero UI-confirmed bound review rounds; this smoke
 does not authorize adaptive routing or claim provider-consumed byte identity.
+
+## 2026-09-24 | Preserve sent attachment UI evidence before answer wait
+
+The ModelLabs forward-validation response failed after ChatGPT accepted two
+attachments and the prompt, leaving the original response terminal-failed and
+ineligible for bound training. The browser later showed an answer, but no
+durable successful browser run or attachment receipt was produced. Remote
+ChatGPT runs now emit their confirmed sent-turn attachment UI receipt as a
+runtime hint immediately after submission and before assistant waiting, including
+the fallback-upload path. Focused tests (126), production TypeScript checking,
+and the full build passed. This source change is not installed or live-tested yet. The strict
+failed-response observer still rejects attached requests; the old failed run
+is not retroactively promoted and no prompt was replayed.
+
+## 2026-09-24 | Bind attached failed-response observation to original user turn
+
+Extended the existing read-only observer for direct attached review requests.
+Eligibility now requires a durable attachment UI receipt after the submitted
+boundary, exact saved file ID/URI/name/path correspondence, non-retryable
+after-submit failure, and either the original Codex token or the review loop's
+guard ID, nonce, submission fingerprint, trace digest and file-handoff schema.
+The snapshot binder also requires
+the receipt's user-message ID; mismatched users fail before an answer is
+returned. The historical ModelLabs failure remains ineligible because its
+receipt is missing. Provider-free tests and build passed; no installed runtime
+or retained browser was changed, and no failed result was promoted to training.
+
+## 2026-09-24 | Persist recovered browser evidence outside the failed run
+
+The operator recovery endpoint now saves a mode-0600, write-once observation
+sidecar beside the unchanged failed record after exact browser and account
+verification. A second identical observation is idempotent; a conflicting one
+or changed original record fails closed. This supplies durable, ungraded
+evidence for a later ModelLabs importer, not a successful AuraCall response or
+review grade. Focused source tests and typecheck passed. The runtime is not
+installed and no browser recovery was run in this slice.
+
+## 2026-09-24 | Allow remote pre-send file chips with an empty composer
+
+The saved ModelLabs file-backed review failed before prompt submission with an
+attachment-completion timeout. In the remote submit path, the completion wait
+runs before prompt text is inserted, yet it required Send to be enabled. A
+composer may keep Send disabled while empty even after all files are queued.
+The remote-only wait now accepts one distinct composer attachment-chip match
+per expected filename after three stable seconds with no upload indicator.
+Input filenames, broad parent text, and aggregate file counts cannot satisfy
+this exception. Prompt insertion, enabled Send,
+submitted user turn, and attachment UI receipt remain separate later gates.
+This is a source-level repair hypothesis, not proof of the historical failure's
+precise UI state or a live file-backed success. Fourteen focused tests and the
+full production build passed. No retained browser or installed API was changed.

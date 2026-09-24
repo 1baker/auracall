@@ -1,5 +1,13 @@
 # Testing quickstart
 
+- Attached failed-response observation (source candidate): run
+  `pnpm exec vitest run tests/runtime.responseRecoveryObservation.test.ts tests/browser/recoveryResponseBinding.test.ts tests/browser/attachmentsCompletion.test.ts --maxWorkers 1`.
+  Fixtures require a post-submit receipt with exact saved files and user ID,
+  accept the real review-loop guard/nonce/fingerprint/trace/file-handoff
+  correlation, and reject the historical
+  failed request without a receipt. This is provider-free source evidence,
+  not installed live recovery or a training-grade browser result.
+
 - Retained ChatGPT continuity acceptance (2026-09-23): submit three sequential
   `/v1/responses` calls with `auracall.chatgptDestination=existing_conversation`
   and one exact canonical conversation URL. Read each durable response by its
@@ -3191,4 +3199,5 @@
     compact/prebuilt assignment conflicts, and keep compact create behavior
     unchanged.
 - If you are debugging a raw direct-CDP setup instead of Aura-Call’s integrated Windows path, you can still pin `AURACALL_BROWSER_PORT` / `AURACALL_BROWSER_DEBUG_PORT` and use firewall hints from `scripts/test-browser.ts`. That is now a fallback/debug workflow, not the primary Windows setup.
+- Recovery evidence persistence: `pnpm exec vitest run tests/runtime.responseRecoveryObservation.test.ts --maxWorkers 1` verifies a mode-0600 write-once sidecar, original failed-record immutability, duplicate idempotence, conflicting evidence rejection, and record-digest drift rejection. This is source-only; it does not prove an installed browser observation.
 - Scoped browser runs can be smoke-tested by passing `--project-id` / `--conversation-id` to a browser command; they should not change default config behavior.

@@ -75,6 +75,8 @@ export type AgentBrowserBrokerReattachInput = {
   providerSessionAuthorization?: ProviderSessionAuthorization;
   /** Full original wire prompt. Enables read-only recovery from a restored target. */
   recoveryPrompt?: string;
+  /** Exact submitted user turn when recovery relies on sent attachment UI evidence. */
+  expectedUserMessageId?: string;
 	expectedBrowserProcessId?: number;
 	abortSignal?: AbortSignal;
 	agentName?: string;
@@ -872,7 +874,10 @@ export async function reattachAgentBrowserBrokerTab(
 			|| original.sessionName !== input.sessionName || original.targetId !== candidate.handle.targetId
 			|| ['tabId', 'leaseId', 'leaseState', 'ownerSessionId', 'cleanupPolicy', 'profileOrigin'].some(
 				key => input.serviceTabHandle[key] != null && input.serviceTabHandle[key] !== candidate.handle[key])) {
-			throw new Error('Native original attachment identity changed; refusing reconciliation or reacquisition');
+			throw new BrowserAutomationError(
+				'Native original attachment identity changed; refusing reconciliation or reacquisition',
+				{ code: 'agent_browser_native_identity_changed', retryable: false, phase: 'after' },
+			);
 		}
 	}
 	if (input.browserHost && candidate.browser.host !== input.browserHost) {
@@ -894,7 +899,8 @@ export async function reattachAgentBrowserBrokerTab(
 			}, input.abortSignal, 15000);
 			if (observation.data?.resultTruncated === true) throw new Error('Recovery snapshot was truncated');
 			try {
-				recoveredResponse = bindRecoveredResponse(observation.data?.result, input.recoveryPrompt, input.url);
+				recoveredResponse = bindRecoveredResponse(observation.data?.result, input.recoveryPrompt, input.url,
+					input.expectedUserMessageId);
 				break;
 			} catch (error) {
 				const virtualizedUser = error instanceof RecoveryResponseBindingError
@@ -908,7 +914,8 @@ export async function reattachAgentBrowserBrokerTab(
 							awaitPromise: true, timeoutMs: 10000, maxReturnBytes: 1000000, returnByValue: true }),
 					}, input.abortSignal, 15000);
 					if (apiObservation.data?.resultTruncated === true) throw new Error('Recovery API snapshot was truncated');
-					recoveredResponse = bindRecoveredResponse(apiObservation.data?.result, input.recoveryPrompt, input.url);
+					recoveredResponse = bindRecoveredResponse(apiObservation.data?.result, input.recoveryPrompt, input.url,
+						input.expectedUserMessageId);
 					break;
 				}
 				const awaitingHydration = error instanceof RecoveryResponseBindingError

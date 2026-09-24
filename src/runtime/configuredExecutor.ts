@@ -1400,6 +1400,7 @@ export function createConfiguredStoredStepExecutor(
         | 'agentBrowserServiceTabHandle'
         | 'agentBrowserSessionName'
         | 'agentBrowserTabReconciliation'
+        | 'attachmentUiReceipt'
       > | null,
     ): Record<string, unknown> => ({
       service,
@@ -1430,6 +1431,7 @@ export function createConfiguredStoredStepExecutor(
       agentBrowserServiceTabHandle: runtime?.agentBrowserServiceTabHandle ?? null,
       agentBrowserSessionName: runtime?.agentBrowserSessionName ?? null,
       agentBrowserTabReconciliation: runtime?.agentBrowserTabReconciliation ?? null,
+      attachmentUiReceipt: runtime?.attachmentUiReceipt ?? null,
     });
     const recordBrowserRuntimeEvidence = async (evidence: BrowserRuntimeEvidence): Promise<void> => {
       const observation = evidence.observation;
@@ -1627,6 +1629,7 @@ export function createConfiguredStoredStepExecutor(
             agentBrowserServiceTabHandle: hint.agentBrowserServiceTabHandle ?? null,
             agentBrowserSessionName: hint.agentBrowserSessionName ?? null,
             agentBrowserTabReconciliation: hint.agentBrowserTabReconciliation ?? null,
+            attachmentUiReceipt: hint.attachmentUiReceipt ?? null,
           },
         });
       },

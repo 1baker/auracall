@@ -103,6 +103,8 @@ export type BrowserRuntimeMetadata = BaseTypes.BrowserRuntimeMetadata & {
   chatgptNewConversationFreshUrl?: string;
   chatgptNewConversationFreshMessageCount?: 0;
   chatgptNewConversationFreshPromptReady?: true;
+  /** Sent-turn UI evidence, emitted before waiting for the assistant response. */
+  attachmentUiReceipt?: BrowserAttachmentUiReceipt;
 };
 
 type BrowserBlockingProfileAction =

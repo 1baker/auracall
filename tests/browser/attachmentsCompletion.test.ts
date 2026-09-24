@@ -105,6 +105,61 @@ describe('attachment completion fallbacks', () => {
     useRealTime();
   });
 
+  test('remote pre-send wait accepts stable named chips with disabled empty composer', async () => {
+    useFakeTime();
+    const runtime = {
+      evaluate: vi.fn().mockResolvedValue({ result: { value: {
+        state: 'disabled', uploading: false, filesAttached: true,
+        attachedNames: ['review-goal.md', 'candidate.md', 'review-guide.md'],
+        chipNames: ['review-goal.md', 'candidate.md', 'review-guide.md'],
+        inputNames: ['review-guide.md'], fileCount: 0,
+      } } }),
+    } as unknown as ChromeClient['Runtime'];
+    const promise = waitForAttachmentCompletion(runtime, 10_000,
+      ['review-goal.md', 'candidate.md', 'review-guide.md'], undefined,
+      { allowDisabledWithStableChips: true });
+    await vi.advanceTimersByTimeAsync(4_000);
+    await expect(promise).resolves.toBeUndefined();
+    useRealTime();
+  });
+
+  test('remote pre-send wait refuses disabled chips while upload is still indicated', async () => {
+    useFakeTime();
+    const runtime = {
+      evaluate: vi.fn().mockResolvedValue({ result: { value: {
+        state: 'disabled', uploading: true, filesAttached: true,
+        attachedNames: ['review-goal.md', 'candidate.md', 'review-guide.md'],
+        chipNames: ['review-goal.md', 'candidate.md', 'review-guide.md'],
+        inputNames: [], fileCount: 0,
+      } } }),
+    } as unknown as ChromeClient['Runtime'];
+    const promise = waitForAttachmentCompletion(runtime, 800,
+      ['review-goal.md', 'candidate.md', 'review-guide.md'], undefined,
+      { allowDisabledWithStableChips: true });
+    const assertion = expect(promise).rejects.toThrow(/did not finish uploading/i);
+    await vi.advanceTimersByTimeAsync(2_000);
+    await assertion;
+    useRealTime();
+  });
+
+  test('remote pre-send wait refuses names inferred only from a broad parent or input', async () => {
+    useFakeTime();
+    const runtime = {
+      evaluate: vi.fn().mockResolvedValue({ result: { value: {
+        state: 'disabled', uploading: false, filesAttached: true,
+        attachedNames: ['review-goal.md candidate.md review-guide.md'],
+        chipNames: [], inputNames: ['review-guide.md'], fileCount: 0,
+      } } }),
+    } as unknown as ChromeClient['Runtime'];
+    const promise = waitForAttachmentCompletion(runtime, 800,
+      ['review-goal.md', 'candidate.md', 'review-guide.md'], undefined,
+      { allowDisabledWithStableChips: true });
+    const assertion = expect(promise).rejects.toThrow(/did not finish uploading/i);
+    await vi.advanceTimersByTimeAsync(2_000);
+    await assertion;
+    useRealTime();
+  });
+
   test('waitForAttachmentCompletion times out when neither UI nor file input matches', async () => {
     useFakeTime();
 
@@ -146,6 +201,32 @@ describe('sent turn attachment verification', () => {
     } as unknown as ChromeClient['Runtime'];
 
     await expect(waitForUserTurnAttachments(runtime, ['oracle-attach-verify.txt'], 1000)).resolves.toBe(true);
+  });
+
+  test('waitForUserTurnAttachments binds a confirmed attachment to the submitted user ID', async () => {
+    const runtime = {
+      evaluate: vi.fn().mockResolvedValue({ result: { value: {
+        ok: true, userMessageId: 'submitted-user',
+        text: 'oracle-attach-verify.txt', attrs: [], hasAttachmentUi: true,
+      } } }),
+    } as unknown as ChromeClient['Runtime'];
+    await expect(waitForUserTurnAttachments(runtime, ['oracle-attach-verify.txt'], 1000,
+      undefined, 'submitted-user')).resolves.toBe(true);
+  });
+
+  test('waitForUserTurnAttachments rejects a different user ID despite matching file UI', async () => {
+    useFakeTime();
+    const runtime = {
+      evaluate: vi.fn().mockResolvedValue({ result: { value: {
+        ok: true, userMessageId: 'other-user',
+        text: 'oracle-attach-verify.txt', attrs: [], hasAttachmentUi: true,
+      } } }),
+    } as unknown as ChromeClient['Runtime'];
+    const pending = waitForUserTurnAttachments(runtime, ['oracle-attach-verify.txt'], 600,
+      undefined, 'submitted-user');
+    await vi.advanceTimersByTimeAsync(2000);
+    await expect(pending).resolves.toBe(false);
+    useRealTime();
   });
 
   test('waitForUserTurnAttachments times out when filename never appears', async () => {

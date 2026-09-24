@@ -1,3 +1,20 @@
+- 2026-09-24: The attached-response observer's first source fixture used a
+  review-correlation shape that did not match the real Pro Guard request, and
+  native attachment-identity drift surfaced without typed after-submit details.
+  Recovery now validates the real guard ID, guard nonce, submission fingerprint,
+  learning-trace digest and file-handoff schema, while native identity drift is
+  a non-retryable after-submit browser error. The observer still requires the
+  exact post-submit attachment receipt and user-message ID before browser work.
+
+- 2026-09-24: A live ModelLabs forward-validation review failed before prompt
+  submission because ChatGPT's active composer pill read `6Pro`, while the
+  selector only trusted an exact `5.6Pro` pill and kept searching a submenu.
+  A bounded retained-browser DOM read confirmed the exact pill. The selector
+  now accepts either exact versioned Pro pill as `already-selected`, without
+  treating a bare `Pro` or a different version as proof. The old failed response
+  remains failed, with zero prompt-submitted events; 91 focused tests and build
+  passed. A new guard identity is required for a fresh submission.
+
 - 2026-09-22: MCP `run_status` now hands a completed ChatGPT answer back to
   Codex when, and only when, an immutable response has the typed non-retryable
   after-submit new-project uncertainty. It uses strict observation-only recovery,
@@ -22958,3 +22975,28 @@ browser-stage lifecycle observability, not transcript truncation.
   `resp_idem_8ca8cb8ea4245a1a11d15ab59af0b2a7` completed with a durable
   confirmed UI receipt on the exact retained browser; provider-consumed byte
   identity remains outside this evidence.
+- 2026-09-24: A remote ChatGPT answer can arrive after a browser transport
+  failure, while the returned `browserRun.attachmentUiReceipt` never reaches the
+  durable response record. Persist a confirmed sent-turn attachment UI receipt
+  as a runtime hint before waiting for the answer. This is recovery evidence,
+  not proof of provider-consumed bytes or permission to replay. Existing failed
+  attached requests remain ineligible for the strict observation endpoint.
+
+- 2026-09-24: A valid sent-turn attachment receipt alone does not bind a later
+  assistant to the original failed review. The strict observer now requires
+  post-submit receipt ordering, exact stored file identity, review-loop
+  nonce/trace correlation, and the same submitted user-message ID in the
+  recovered conversation. Old failed runs without that receipt still reject;
+  observation does not mutate the original response or authorize replay.
+
+- 2026-09-24: Returning a verified failed-response observation only in an HTTP
+  body leaves no durable evidence for a later learner. The operator endpoint
+  now persists a private write-once sidecar after checking the original record
+  digest. Duplicate exact observations are harmless, but changed evidence or
+  changed run history is rejected. Keep this sidecar observational and ungraded.
+- 2026-09-24: Remote ChatGPT file upload waited for enabled Send before the
+  prompt was inserted; an empty composer could time out with visible queued
+  files. The remote-only pre-send wait now requires a distinct stable composer
+  chip match for every expected filename with no upload indicator. Later prompt/send and sent-turn
+  attachment gates remain strict. Source tests and build pass; live proof is
+  still pending, and the old failed response is unchanged.
