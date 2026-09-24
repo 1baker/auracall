@@ -22945,3 +22945,13 @@ browser-stage lifecycle observability, not transcript truncation.
 - The receipt is deliberately not a provider-byte verification. Source tests
   cover confirmed, timeout, input-only, text-only and correction cases; live
   readback remains open under Plan 0364.
+
+# 2026-09-24 - Match attachment receipt behavior on retained remote browsers
+
+- A real native Agent Browser attachment response completed with the synthetic
+  file-only code, yet its durable `browserRun.attachmentUiReceipt` was null.
+- The remote ChatGPT submit path transferred the file and awaited upload, but
+  skipped sent-user-turn attachment verification and receipt construction.
+  It now fails closed when that UI check is absent and carries the typed
+  receipt through normal or fallback submission into the browser result.
+- Source validation passed; installed/live receipt readback remains open.

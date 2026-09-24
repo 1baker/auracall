@@ -47,8 +47,11 @@ whether attachment UI appeared on the sent user turn, and the submitted user
 message ID. A missing receipt or a skipped confirmation is not a delivery
 claim. Even a fully confirmed UI receipt does not prove the provider consumed
 identical file bytes; downstream graders must keep that distinction. The
-installed API has the receipt code, but a real attachment response readback
-remains pending under Plan 0364.
+first real retained-browser attachment response returned the synthetic code
+from its file, but the durable receipt was null. That run exposed a missing
+receipt path in remote/native browser submission. Source now applies the same
+sent-user-turn check and receipt construction there; installed retest remains
+pending under Plan 0364. Do not count the first run as UI-confirmed evidence.
 
 Configured browser requests may set `metadata.browserPromptTransport` to
 `inline_required` when the complete request must remain in the browser

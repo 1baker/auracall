@@ -4013,12 +4013,34 @@ async function runRemoteBrowserMode(
 					},
 				);
 			}
+			let sentUserTurnAttachmentsConfirmed = false;
+			if (attachmentNames.length > 0) {
+				const verified = await waitForUserTurnAttachments(
+					Runtime,
+					attachmentNames,
+					20_000,
+					logger,
+				);
+				if (!verified) {
+					throw new Error("Sent user message did not expose attachment UI after upload.");
+				}
+				logger("Verified attachments present on sent user message");
+				sentUserTurnAttachmentsConfirmed = true;
+			}
+			const attachmentUiReceipt = buildChatgptAttachmentUiReceipt({
+				attachments: submissionAttachments,
+				uploadTimedOut: false,
+				inputOnlyAttachments: false,
+				sentUserTurnAttachmentsConfirmed,
+				submittedUserId,
+			});
 			return {
 				baselineTurns,
 				baselineAssistantText,
 				submittedUserId,
 				baselineAssistantMessageId,
 				baselineAssistantTurnId,
+				attachmentUiReceipt,
 			};
 		};
 
@@ -4027,6 +4049,7 @@ async function runRemoteBrowserMode(
 		let submittedUserId: string | null = null;
 		let baselineAssistantMessageId: string | null = null;
 		let baselineAssistantTurnId: string | null = null;
+		let attachmentUiReceipt: BrowserAttachmentUiReceipt | undefined;
 		try {
 			const submission = await submitOnce(promptText, attachments);
 			baselineTurns = submission.baselineTurns;
@@ -4034,6 +4057,7 @@ async function runRemoteBrowserMode(
 			submittedUserId = submission.submittedUserId;
 			baselineAssistantMessageId = submission.baselineAssistantMessageId || null;
 			baselineAssistantTurnId = submission.baselineAssistantTurnId || null;
+			attachmentUiReceipt = submission.attachmentUiReceipt;
 		} catch (error) {
 			const isPromptTooLarge =
 				error instanceof BrowserAutomationError &&
@@ -4051,6 +4075,7 @@ async function runRemoteBrowserMode(
 				submittedUserId = submission.submittedUserId;
 				baselineAssistantMessageId = submission.baselineAssistantMessageId || null;
 				baselineAssistantTurnId = submission.baselineAssistantTurnId || null;
+				attachmentUiReceipt = submission.attachmentUiReceipt;
 			} else {
 				throw error;
 			}
@@ -4426,6 +4451,7 @@ async function runRemoteBrowserMode(
 
 		return {
 			answerText,
+			attachmentUiReceipt,
 			answerMarkdown,
 			answerHtml: answerHtml.length > 0 ? answerHtml : undefined,
 			answerMessageId: verifiedAssistantMessageId(answerText, answer, baselineAssistantMessageId),

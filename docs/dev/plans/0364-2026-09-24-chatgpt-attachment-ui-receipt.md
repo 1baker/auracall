@@ -13,8 +13,10 @@ learning does not mistake request or transport intent for confirmed UI delivery.
 - Configured responses persist requested attachments and prompt transport paths.
 - The ChatGPT runner checks upload completion and sent-user-turn attachment UI,
   but previously discarded those observations from the durable response.
-- Source and the installed API now include the typed UI receipt. A real
-  attachment-bearing response readback remains open.
+- The first real attachment response completed and returned the synthetic code
+  from the file, but its durable `attachmentUiReceipt` was null. The retained
+  browser took the remote/native submission path, which lacked the local path's
+  receipt construction. Source now adds that parity; installed retest remains.
 
 ## Scope
 
@@ -42,7 +44,24 @@ learning does not mistake request or transport intent for confirmed UI delivery.
 - [x] Installed runtime parity and healthy API restart preserve the retained
       ChatGPT browser process and ready state.
 - [ ] One exact retained-browser attachment run confirms the typed receipt in
-      durable response readback.
+      durable response readback. The first run, `resp_idem_392300561796477ed218da9fb0ac14dd`,
+      completed without that receipt and is not acceptance evidence.
+
+## Forward Validation Finding
+
+- No-launch Agent Browser access-plan selected the existing authenticated
+  `session:chatgpt-stealth-linux-20260924` browser; no duplicate lane was
+  requested. AuraCall response `resp_idem_392300561796477ed218da9fb0ac14dd`
+  completed with the synthetic attachment-only code. Durable step output had
+  an attachment transport path but `browserRun.attachmentUiReceipt: null`.
+- The remote/native browser path uploaded and awaited completion but neither
+  checked the sent user turn nor built the receipt. The local browser path did.
+  The source fix now checks sent-turn attachment UI after remote submission,
+  carries the receipt through normal and fallback submissions, and returns it
+  with the browser result. A failed sent-turn check fails closed.
+- Typecheck, 48 focused browser/executor tests, production build, and touched
+  browser-file lint passed for this source repair. Installed parity and a
+  second real readback are still required; historical records stay unchanged.
 
 ## Definition Of Done
 

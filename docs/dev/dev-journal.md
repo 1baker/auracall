@@ -49498,3 +49498,16 @@ was idle before installation and restart. Installed compiled-file parity,
 healthy API status, provider-free module load, and unchanged ready ChatGPT
 browser PID 1829010 passed. The next check is one authorized real attachment
 response with durable receipt readback; no provider call was made here.
+
+## 2026-09-24 | Forward attachment test found remote receipt gap
+
+A no-launch plan selected the existing authenticated retained ChatGPT browser.
+One synthetic file-bearing AuraCall response,
+`resp_idem_392300561796477ed218da9fb0ac14dd`, completed and returned the
+code present only in that file. Its durable browser result had the attachment
+transport path but `attachmentUiReceipt: null`. This is not a confirmed UI
+receipt or provider-byte proof. Source inspection showed the remote/native
+submission path omitted the local path's sent-turn check and receipt builder.
+The narrow source fix adds that check and carries the receipt through both
+normal and fallback submission. Typecheck, 48 focused tests, build and touched
+browser-file lint pass. Installed retest remains the acceptance gate.
