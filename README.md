@@ -49,9 +49,10 @@ claim. Even a fully confirmed UI receipt does not prove the provider consumed
 identical file bytes; downstream graders must keep that distinction. The
 first real retained-browser attachment response returned the synthetic code
 from its file, but the durable receipt was null. That run exposed a missing
-receipt path in remote/native browser submission. Source now applies the same
-sent-user-turn check and receipt construction there; installed retest remains
-pending under Plan 0364. Do not count the first run as UI-confirmed evidence.
+receipt path in remote/native browser submission. The repaired installed path
+then recorded confirmed upload and sent-user-turn UI with an exact submitted
+user ID on a second synthetic response. Only the second record counts as
+UI-confirmed evidence; neither proves identical provider-consumed file bytes.
 
 Configured browser requests may set `metadata.browserPromptTransport` to
 `inline_required` when the complete request must remain in the browser

@@ -22954,4 +22954,7 @@ browser-stage lifecycle observability, not transcript truncation.
   skipped sent-user-turn attachment verification and receipt construction.
   It now fails closed when that UI check is absent and carries the typed
   receipt through normal or fallback submission into the browser result.
-- Source validation passed; installed/live receipt readback remains open.
+- Source validation passed. Installed response
+  `resp_idem_8ca8cb8ea4245a1a11d15ab59af0b2a7` completed with a durable
+  confirmed UI receipt on the exact retained browser; provider-consumed byte
+  identity remains outside this evidence.

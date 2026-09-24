@@ -49511,3 +49511,13 @@ submission path omitted the local path's sent-turn check and receipt builder.
 The narrow source fix adds that check and carries the receipt through both
 normal and fallback submission. Typecheck, 48 focused tests, build and touched
 browser-file lint pass. Installed retest remains the acceptance gate.
+
+The source commit `c9c10756` was installed after a dry-run and an exact
+user-runtime backup. Compiled browser-index SHA-256 matched the installed copy.
+The API restarted healthy while the retained ChatGPT browser stayed ready at
+PID 1829010. A second synthetic response,
+`resp_idem_8ca8cb8ea4245a1a11d15ab59af0b2a7`, completed and its durable
+browser result recorded the exact path, confirmed upload completion, confirmed
+sent-user-turn attachment UI, and a submitted user-message ID. Plan 0364 is
+closed. ModelLabs still has zero UI-confirmed bound review rounds; this smoke
+does not authorize adaptive routing or claim provider-consumed byte identity.

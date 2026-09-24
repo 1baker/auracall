@@ -21186,3 +21186,18 @@ contract, so it must be reconciled before this source behavior is deployed.
 - Scope note: `chatgpt:auto` currently maps to Terra, absent from this account's
   live picker, and the older one-round smoke preflight has stale inventory
   assumptions. The verified three-round route used `chatgpt:sol`.
+
+## 2026-09-24 | Retained attachment receipt forward check
+
+- First synthetic retained-browser response
+  `resp_idem_392300561796477ed218da9fb0ac14dd` completed with its file-only
+  code but a null durable UI receipt. This found a remote/native path omission.
+- Source commit `c9c10756` added sent-turn verification and receipt propagation
+  on that path. Typecheck, 48 focused tests, build and touched-file lint passed.
+  The installed browser index matches the built SHA-256. API restart preserved
+  the ready retained ChatGPT browser PID 1829010.
+- Second response `resp_idem_8ca8cb8ea4245a1a11d15ab59af0b2a7` completed
+  with a durable receipt confirming exact attachment path, upload completion,
+  sent-user-turn visibility and submitted user ID. Plan 0364 closes. This is
+  browser UI evidence, not provider-byte verification or ModelLabs live-promotion
+  evidence; its bound graded review count remains zero.

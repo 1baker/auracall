@@ -1,6 +1,6 @@
 # ChatGPT Attachment UI Receipt | 0364-2026-09-24
 
-State: OPEN
+State: CLOSED
 Lane: P01
 
 ## Objective
@@ -16,7 +16,8 @@ learning does not mistake request or transport intent for confirmed UI delivery.
 - The first real attachment response completed and returned the synthetic code
   from the file, but its durable `attachmentUiReceipt` was null. The retained
   browser took the remote/native submission path, which lacked the local path's
-  receipt construction. Source now adds that parity; installed retest remains.
+  receipt construction. A source repair and installed retest now pass; the
+  second response has the typed receipt in its durable record.
 
 ## Scope
 
@@ -43,9 +44,11 @@ learning does not mistake request or transport intent for confirmed UI delivery.
       audit findings remain separate pre-existing debt.
 - [x] Installed runtime parity and healthy API restart preserve the retained
       ChatGPT browser process and ready state.
-- [ ] One exact retained-browser attachment run confirms the typed receipt in
+- [x] One exact retained-browser attachment run confirms the typed receipt in
       durable response readback. The first run, `resp_idem_392300561796477ed218da9fb0ac14dd`,
-      completed without that receipt and is not acceptance evidence.
+      completed without that receipt and is not acceptance evidence. The
+      installed retest, `resp_idem_8ca8cb8ea4245a1a11d15ab59af0b2a7`,
+      has the expected durable receipt and completed assistant output.
 
 ## Forward Validation Finding
 
@@ -60,8 +63,19 @@ learning does not mistake request or transport intent for confirmed UI delivery.
   carries the receipt through normal and fallback submissions, and returns it
   with the browser result. A failed sent-turn check fails closed.
 - Typecheck, 48 focused browser/executor tests, production build, and touched
-  browser-file lint passed for this source repair. Installed parity and a
-  second real readback are still required; historical records stay unchanged.
+  browser-file lint passed for this source repair. Installed browser-index
+  digest matched the build. The API restarted healthy with no selected runs;
+  the retained browser stayed ready at PID 1829010. The second response's
+  durable `browserRun.attachmentUiReceipt` records the exact test path,
+  `uploadCompletion: confirmed`, `sentUserTurnAttachments: confirmed`, and a
+  nonempty `submittedUserId`. Historical records stay unchanged. This proves
+  browser UI submission evidence, not provider-consumed byte identity.
+
+## Closure
+
+The installed remote/native path now produces the typed UI receipt on a real
+retained-browser attachment run. Downstream ModelLabs promotion still requires
+separate graded, bound forward episodes and is outside this plan.
 
 ## Definition Of Done
 
