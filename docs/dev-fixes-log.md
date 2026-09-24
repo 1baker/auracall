@@ -22934,3 +22934,14 @@ browser-stage lifecycle observability, not transcript truncation.
   stale-response repair. A subsequent full NSF STTR packet was submitted with
   six attachments; its response was still active at this checkpoint. This
   proves live route and readback for a short answer, not document completion.
+# 2026-09-24 - Persist ChatGPT attachment UI observations
+
+- A configured response previously retained attachment request and transport
+  paths but lost the browser's upload-completion and sent-user-turn checks.
+  Learning consumers could not distinguish dispatch intent from UI evidence.
+- ChatGPT browser results now carry an optional typed UI receipt with attempted
+  paths, completion state, sent-turn visibility and submitted user ID. A later
+  artifact-correction turn keeps the original request receipt.
+- The receipt is deliberately not a provider-byte verification. Source tests
+  cover confirmed, timeout, input-only, text-only and correction cases; live
+  readback remains open under Plan 0364.

@@ -7,6 +7,11 @@
 Status: active
 Lane: P01
 
+- Active ChatGPT attachment UI receipt:
+  [Plan 0364](docs/dev/plans/0364-2026-09-24-chatgpt-attachment-ui-receipt.md).
+  Source records upload and sent-turn UI observations separately from transport
+  intent. Installed retained-browser readback remains an explicit gate.
+
 - Closed retained-browser proof acquisition repair:
   [Plan 0362](docs/dev/plans/0362-2026-09-22-retained-browser-proof-acquisition.md).
   Current state: installed behavior is functionally verified by two completed

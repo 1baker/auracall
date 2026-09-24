@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { setAuracallHomeDirOverrideForTest } from '../src/auracallHome.js';
-import type { BrowserPassiveObservation, BrowserRunOptions } from '../src/browser/types.js';
+import type { BrowserPassiveObservation, BrowserRunOptions, BrowserRunResult } from '../src/browser/types.js';
 import { createConfiguredStoredStepExecutor } from '../src/runtime/configuredExecutor.js';
 import {
   readLiveRuntimeRunServiceState,
@@ -739,7 +739,7 @@ describe('configured stored-step executor', () => {
   });
 
   it('enforces opt-in AuraCall step output contract for browser-backed steps', async () => {
-    const runBrowserModeImpl = vi.fn(async () => ({
+    const runBrowserModeImpl = vi.fn(async (): Promise<BrowserRunResult> => ({
       answerText: JSON.stringify({
         version: AURACALL_STEP_OUTPUT_CONTRACT_VERSION,
         status: 'needs_local_action',
@@ -783,6 +783,13 @@ describe('configured stored-step executor', () => {
       answerChars: 331,
       tabUrl: 'https://grok.com/c/contract-conversation',
       conversationId: 'contract-conversation',
+      attachmentUiReceipt: {
+        schema: 'auracall.browser_attachment_ui_receipt.v1',
+        attachmentPaths: ['/tmp/contract-packet.md'],
+        uploadCompletion: 'confirmed',
+        sentUserTurnAttachments: 'confirmed',
+        submittedUserId: 'user-contract',
+      },
     }));
 
     const executeStoredRunStep = createConfiguredStoredStepExecutor(
@@ -855,6 +862,10 @@ describe('configured stored-step executor', () => {
     ).mock.calls[0]?.[0];
     expect(browserOptions?.prompt).toContain(`version "${AURACALL_STEP_OUTPUT_CONTRACT_VERSION}"`);
     expect(browserOptions?.prompt).toContain('User assignment:\nUse the contract.');
+    expect((result?.output?.structuredData?.browserRun as Record<string, unknown>)?.attachmentUiReceipt).toMatchObject({
+      attachmentPaths: ['/tmp/contract-packet.md'],
+      submittedUserId: 'user-contract',
+    });
     expect(result?.output).toMatchObject({
       summary: 'Need one host command.',
       structuredData: {
@@ -1260,7 +1271,7 @@ describe('configured stored-step executor', () => {
         confidence: 'high',
       },
     ];
-    const runBrowserModeImpl = vi.fn(async () => ({
+    const runBrowserModeImpl = vi.fn(async (): Promise<BrowserRunResult> => ({
       answerText: 'AURACALL_CHATGPT_OBS_OK',
       answerMarkdown: 'AURACALL_CHATGPT_OBS_OK',
       tookMs: 800,
@@ -1276,6 +1287,13 @@ describe('configured stored-step executor', () => {
       chatgptDeepResearchReviewEvidence: {
         stage: 'plan-edit-opened',
         screenshotPath: '/tmp/deep-research-review.png',
+      },
+      attachmentUiReceipt: {
+        schema: 'auracall.browser_attachment_ui_receipt.v1',
+        attachmentPaths: ['/tmp/review-packet.md'],
+        uploadCompletion: 'confirmed',
+        sentUserTurnAttachments: 'confirmed',
+        submittedUserId: 'user-review-packet',
       },
       passiveObservations,
     }));
@@ -1399,6 +1417,13 @@ describe('configured stored-step executor', () => {
       chatgptDeepResearchReviewEvidence: {
         stage: 'plan-edit-opened',
         screenshotPath: '/tmp/deep-research-review.png',
+      },
+      attachmentUiReceipt: {
+        schema: 'auracall.browser_attachment_ui_receipt.v1',
+        attachmentPaths: ['/tmp/review-packet.md'],
+        uploadCompletion: 'confirmed',
+        sentUserTurnAttachments: 'confirmed',
+        submittedUserId: 'user-review-packet',
       },
       passiveObservations: [
         {
@@ -2508,6 +2533,13 @@ describe('configured stored-step executor', () => {
         chromeTargetId: 'target-artifact-retry',
         chromeHost: '127.0.0.1',
         chromePort: 45011,
+        attachmentUiReceipt: {
+          schema: 'auracall.browser_attachment_ui_receipt.v1',
+          attachmentPaths: ['/tmp/legacy-source.md'],
+          uploadCompletion: 'confirmed',
+          sentUserTurnAttachments: 'confirmed',
+          submittedUserId: 'user-original',
+        },
       })
       .mockResolvedValueOnce({
         answerText: '[legacy_readout.json](sandbox:/mnt/data/legacy_readout.json)',
@@ -2646,6 +2678,10 @@ describe('configured stored-step executor', () => {
       'browser response artifact correction: retrying once in the same ChatGPT conversation',
     );
     expect(result?.output?.summary).toContain('legacy_readout.json');
+    expect((result?.output?.structuredData?.browserRun as Record<string, unknown>)?.attachmentUiReceipt).toMatchObject({
+      attachmentPaths: ['/tmp/legacy-source.md'],
+      submittedUserId: 'user-original',
+    });
   });
 
   it('keeps exact ChatGPT agent model pins ahead of semantic selector defaults', async () => {

@@ -1,5 +1,17 @@
 # RUNBOOK
 
+## 2026-09-24 | Source-side ChatGPT attachment UI receipt
+
+Plan 0364 adds an optional typed receipt to the ChatGPT browser result and
+configured response record. It distinguishes upload completion, sent-turn
+attachment UI, and the submitted user ID from request and transport intent.
+The original request receipt survives a later artifact-correction turn.
+Provider-consumed bytes remain unverified. Forty-six focused provider-free
+tests, no-emit typecheck, production build, browser-file lint and CodeGraph
+sync passed. The pre-existing configured-executor lint and plan-audit findings
+remain disclosed in Plan 0364. Installed and retained-browser acceptance are
+still open.
+
 ## 2026-09-22 | Automatic MCP response handback
 
 MCP `run_status` now recognizes only the typed, non-retryable

@@ -10,6 +10,7 @@ import {
 } from "../../packages/browser-service/src/service/operationDispatcher.js";
 import { getAuracallHomeDir } from "../auracallHome.js";
 import { BrowserAutomationError } from "../oracle/errors.js";
+import { buildChatgptAttachmentUiReceipt } from "./attachmentUiReceipt.js";
 import { assertChatgptNewConversationDispatch, isChatgptNewConversationRoute } from "./providers/chatgptNewConversation.js";
 import { formatElapsed } from "../oracle/format.js";
 import type { ThinkingTimeLevel } from "../oracle/types.js";
@@ -164,6 +165,7 @@ import {
 } from "./simpleProviderGuard.js";
 import type {
 	BrowserAttachment,
+	BrowserAttachmentUiReceipt,
 	BrowserLogger,
 	BrowserModelStrategy,
 	BrowserPassiveObservation,
@@ -2620,6 +2622,7 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 			const attachmentNames = submissionAttachments.map((a) => path.basename(a.path));
 			let attachmentWaitTimedOut = false;
 			let inputOnlyAttachments = false;
+			let sentUserTurnAttachmentsConfirmed = false;
 			if (submissionAttachments.length > 0) {
 				if (!DOM) {
 					throw new Error("Chrome DOM domain unavailable while uploading attachments.");
@@ -2727,8 +2730,16 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 						throw new Error("Sent user message did not expose attachment UI after upload.");
 					}
 					logger("Verified attachments present on sent user message");
+					sentUserTurnAttachmentsConfirmed = true;
 				}
 			}
+			const attachmentUiReceipt = buildChatgptAttachmentUiReceipt({
+				attachments: submissionAttachments,
+				uploadTimedOut: attachmentWaitTimedOut,
+				inputOnlyAttachments,
+				sentUserTurnAttachmentsConfirmed,
+				submittedUserId,
+			});
 			// Reattach needs a /c/ URL; ChatGPT can update it late, so poll in the background.
 			scheduleConversationHint("post-submit", config.timeoutMs ?? 120_000);
 			return {
@@ -2737,6 +2748,7 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 				baselineAssistantText,
 				baselineAssistantMessageId,
 				baselineAssistantTurnId,
+				attachmentUiReceipt,
 			};
 		};
 
@@ -2745,6 +2757,7 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 		let baselineAssistantText: string | null = null;
 		let baselineAssistantMessageId: string | null = null;
 		let baselineAssistantTurnId: string | null = null;
+		let attachmentUiReceipt: BrowserAttachmentUiReceipt | undefined;
 		try {
 			const submission = await raceWithDisconnect(submitOnce(promptText, attachments));
 			baselineTurns = submission.baselineTurns;
@@ -2752,6 +2765,7 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 			baselineAssistantText = submission.baselineAssistantText;
 			baselineAssistantMessageId = submission.baselineAssistantMessageId || null;
 			baselineAssistantTurnId = submission.baselineAssistantTurnId || null;
+			attachmentUiReceipt = submission.attachmentUiReceipt;
 		} catch (error) {
 			const isPromptTooLarge =
 				error instanceof BrowserAutomationError &&
@@ -2769,6 +2783,7 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 				baselineAssistantText = submission.baselineAssistantText;
 				baselineAssistantMessageId = submission.baselineAssistantMessageId || null;
 				baselineAssistantTurnId = submission.baselineAssistantTurnId || null;
+				attachmentUiReceipt = submission.attachmentUiReceipt;
 			} else {
 				throw error;
 			}
@@ -2850,6 +2865,7 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 			await noteChatgptBrowserMutationSuccess(config, userDataDir).catch(() => undefined);
 			return {
 				answerText: "",
+				attachmentUiReceipt,
 				answerMarkdown: "",
 				tookMs: durationMs,
 				answerTokens: 0,
@@ -3231,6 +3247,7 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
 		await noteChatgptBrowserMutationSuccess(config, userDataDir).catch(() => undefined);
 		return {
 			answerText,
+			attachmentUiReceipt,
 			answerMarkdown,
 			answerHtml: answerHtml.length > 0 ? answerHtml : undefined,
 			answerMessageId: verifiedAssistantMessageId(answerText, answer, baselineAssistantMessageId),

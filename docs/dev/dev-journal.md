@@ -49486,3 +49486,12 @@ the submitted user message is proved to precede it and the turn identity is
 new, even if a short previous answer appears inside the new text. The focused
 browser export suite passed 30 tests and TypeScript typecheck passed. The
 proposal browser run is still active; this note records source behavior only.
+## 2026-09-24 | Attachment UI evidence for downstream learning
+
+Current focus: make ChatGPT attachment confirmation durable without treating
+browser UI as proof of provider-consumed bytes. The runner and configured
+executor now carry a typed receipt, including across artifact correction.
+Forty-six focused tests, typecheck, build, browser-file lint, and index sync
+pass. Existing executor lint and planning-audit debt is recorded in Plan 0364.
+Next: install only after confirming the active API and retained browser can be preserved. A real
+attachment response is required before closing Plan 0364.

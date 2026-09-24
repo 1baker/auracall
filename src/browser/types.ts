@@ -127,7 +127,17 @@ export type BrowserRunOptions = Omit<BaseTypes.BrowserRunOptions, 'config' | 'ru
   runtimeEvidenceCb?: (evidence: BrowserRuntimeEvidence) => void | Promise<void>;
 };
 
+/** Browser UI evidence only; this does not prove provider-consumed file bytes. */
+export type BrowserAttachmentUiReceipt = {
+  schema: 'auracall.browser_attachment_ui_receipt.v1';
+  attachmentPaths: string[];
+  uploadCompletion: 'confirmed' | 'timed_out';
+  sentUserTurnAttachments: 'confirmed' | 'skipped_input_only' | 'skipped_upload_timeout';
+  submittedUserId: string | null;
+};
+
 export type BrowserRunResult = BaseTypes.BrowserRunResult & {
+  attachmentUiReceipt?: BrowserAttachmentUiReceipt;
   answerMessageId?: string | null;
   chromeTargetId?: string | null;
   conversationId?: string;

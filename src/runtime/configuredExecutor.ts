@@ -1878,6 +1878,8 @@ export function createConfiguredStoredStepExecutor(
       }
     };
     let browserResult = await runOrResumeBrowserStep();
+    // Artifact correction is a later browser turn; retain the original request's upload evidence.
+    const requestAttachmentUiReceipt = browserResult.attachmentUiReceipt;
     if (newConversationProjectId) assertChatgptNewConversationUrl(browserResult.tabUrl, newConversationProjectId);
     let responseArtifacts: TeamRunArtifactRef[] = [];
     let responseArtifactNotes: string[] = [];
@@ -2029,6 +2031,7 @@ export function createConfiguredStoredStepExecutor(
               modelSelectionStatus: browserResult.modelSelectionStatus ?? null,
               thinkingTime,
               promptTransport,
+              attachmentUiReceipt: requestAttachmentUiReceipt ?? null,
               cachePath: null,
               cachePathStatus: 'unavailable',
               cachePathReason: 'provider cache identity is not resolved during stored-step execution',
@@ -2087,6 +2090,7 @@ export function createConfiguredStoredStepExecutor(
             modelSelectionStatus: browserResult.modelSelectionStatus ?? null,
             thinkingTime,
             promptTransport,
+            attachmentUiReceipt: requestAttachmentUiReceipt ?? null,
             cachePath: null,
             cachePathStatus: 'unavailable',
             cachePathReason: 'provider cache identity is not resolved during stored-step execution',
