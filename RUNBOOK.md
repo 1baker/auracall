@@ -1,5 +1,22 @@
 # RUNBOOK
 
+## 2026-09-25 | Current Pro `Latest` leaf recognition
+
+Plan 0369 follows Plan 0368 without replaying its terminal guard. The retained
+route is proved through task-tab creation and CDP attach; the independent
+blocker is model identity. A fresh no-launch plan selected the exact retained
+browser, and one disposable diagnostic tab proved the live structure: `High`
+is the thinking-effort pill; its exact `Select model` row opens a model-
+selection view whose checked leaf is `Latest`, alongside `GPT-5.6 Sol` and
+`GPT-5.5`. No prompt or upload was submitted, the exact tab was closed, and
+Chrome stayed PID `1829010`. A provider-free negative regression then proved
+that AuraCall's embedded diagnostic whitespace expression had turned `Latest`
+into `Late t`; that escape defect is part of this repair. Do not match that
+corrupted text or a checked row alone. Bind `Latest` only to the exact expanded
+`Select model` view, keep explicit GPT-6/GPT-5.6 selectors strict, then publish,
+install, and submit one new learning-traced document guard after a fresh no-
+launch authority check.
+
 ## 2026-09-25 | Request-time retained route acceptance
 
 Plan 0368 owns the exact successor to Plan 0367's pre-tab launch-binding
@@ -22,13 +39,14 @@ author `codex`, Markdown, DOCX, and PDF. After an unrelated live runner lease
 released normally, its retained-route `tab_new`, focus, task-authority issue,
 and CDP attach all succeeded. The run then failed before attachment upload or
 prompt submission because the model switcher had no option matching
-`Current Pro`; visible rows were `High`, a clipped `Late t` checked row,
+`Current Pro`; its diagnostic reported `High`, `Late t` as a checked row,
 `GPT-5.6 Sol`, and `GPT-5.5 Leaving on October 14`. Do not guess a selector or
 replay this guard. It produced no provider answer, verdict, score, review
 record/chat, canonical conversation URL, Codex final-answer link, attachment
 receipt, or ModelLabs learning sync. Agent Browser released the task tab.
 Chrome PID/start token `1829010`/`3619174`, CDP port `39415`, and the exact
-session route remain unchanged and healthy.
+session route remain unchanged and healthy. Plan 0369 later proved that the
+live row was `Latest`; `Late t` came from AuraCall's diagnostic escape defect.
 
 ## 2026-09-25 | Retained daemon forward review
 

@@ -77,6 +77,7 @@ type ModelPickerNavigationItem = {
   text: string;
   role: string | null;
   expanded: string | null;
+  ariaLabel?: string | null;
 };
 
 type ModelPickerNavigationAction = {
@@ -105,7 +106,8 @@ function chooseModelPickerNavigationAction(
   const modelIndex = items.findIndex(
     (item) =>
       item.role === 'menuitem' &&
-      normalize(item.text).startsWith('model ') &&
+      (normalize(item.ariaLabel ?? '') === 'select model' ||
+        normalize(item.text).startsWith('model ')) &&
       item.expanded !== 'true',
   );
   return modelIndex >= 0 ? { kind: 'open-model', index: modelIndex } : null;
@@ -487,12 +489,31 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
         return { kind: 'open-advanced', node: nodes[advancedIndex] };
       }
       const modelIndex = nodes.findIndex((node) => {
-        const text = normalizeText([node.textContent ?? '', node.getAttribute?.('aria-label') ?? ''].join(' '));
+        const text = normalizeText(node.textContent ?? '');
+        const ariaLabel = normalizeText(node.getAttribute?.('aria-label') ?? '');
         return node.getAttribute?.('role') === 'menuitem' &&
-          text.startsWith('model ') &&
+          (ariaLabel === 'select model' || text.startsWith('model ')) &&
           node.getAttribute('aria-expanded') !== 'true';
       });
       return modelIndex >= 0 ? { kind: 'open-model', node: nodes[modelIndex] } : null;
+    };
+
+    let observedExactModelSelectionView = false;
+    const exactModelSelectionViewWasObserved = () => {
+      const activeViews = Array.from(
+        document.querySelectorAll('[data-model-selection-view="true"][data-view="advanced"]'),
+      );
+      if (activeViews.some((view) => {
+        const menu = view.closest?.('[role="menu"]');
+        if (!menu) return false;
+        return Array.from(menu.querySelectorAll('[role="menuitem"]')).some((node) =>
+          normalizeText(node.getAttribute?.('aria-label') ?? '') === 'select model' &&
+          node.getAttribute?.('aria-expanded') === 'true'
+        );
+      })) {
+        observedExactModelSelectionView = true;
+      }
+      return observedExactModelSelectionView;
     };
 
     let openedProSubmenuVersion = null;
@@ -500,14 +521,20 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
       const compact = value.toLowerCase().replace(/[^a-z0-9]/g, '');
       return compact.includes('56pro') ? '5.6' : compact.includes('6pro') ? '6' : null;
     };
-    const scoreOption = (normalizedText, testid) => {
+    const scoreOption = (normalizedText, testid, role = null, activeModelSelectionView = false) => {
       // Assign a score to every node so we can pick the most likely match without brittle equality checks.
       if (!normalizedText && !testid) {
         return 0;
       }
       let score = 0;
       const normalizedTestId = (testid ?? '').toLowerCase();
-      const optionKind = classifyOption(normalizedText, normalizedTestId);
+      const currentProLatestLeaf = currentVersionedPro &&
+        activeModelSelectionView &&
+        role === 'menuitemradio' &&
+        normalizedText === 'latest';
+      const optionKind = currentProLatestLeaf
+        ? 'pro'
+        : classifyOption(normalizedText, normalizedTestId);
       const requestedProVersion = proVersion(PRIMARY_LABEL);
       const candidateProVersion = proVersion(normalizedText + ' ' + normalizedTestId);
       const scopedVersionedProLeaf = candidateProVersion === null
@@ -518,7 +545,7 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
         return 0;
       }
       if (currentVersionedPro && candidateProVersion === null
-        && !scopedVersionedProLeaf) {
+        && !scopedVersionedProLeaf && !currentProLatestLeaf) {
         return 0;
       }
       if (SEMANTIC_TARGET) {
@@ -530,6 +557,9 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
       }
       if (currentVersionedPro && candidateProVersion !== null) {
         score += candidateProVersion === '6' ? 160 : 120;
+      }
+      if (currentProLatestLeaf) {
+        score += 160;
       }
       if (normalizedTestId) {
         // Exact testid matches take priority over substring matches
@@ -592,11 +622,17 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
       let bestLeaf = null;
       let bestSubmenu = null;
       const buttons = collectOptionNodes();
+      const activeModelSelectionView = exactModelSelectionViewWasObserved();
       for (const option of buttons) {
         const text = option.textContent ?? '';
         const normalizedText = normalizeText(text);
         const testid = option.getAttribute('data-testid') ?? '';
-        const score = scoreOption(normalizedText, testid);
+        const score = scoreOption(
+          normalizedText,
+          testid,
+          option.getAttribute?.('role') ?? null,
+          activeModelSelectionView,
+        );
         if (score <= 0) {
           continue;
         }
@@ -617,6 +653,7 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
     const findSelectedOption = () => {
       let selected = null;
       const buttons = collectOptionNodes();
+      const activeModelSelectionView = exactModelSelectionViewWasObserved();
       for (const option of buttons) {
         if (!optionIsSelected(option)) {
           continue;
@@ -624,9 +661,20 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
         const text = option.textContent ?? '';
         const normalizedText = normalizeText(text);
         const testid = option.getAttribute('data-testid') ?? '';
-        const score = scoreOption(normalizedText, testid);
+        const currentProLatestLeaf = currentVersionedPro &&
+          activeModelSelectionView &&
+          option.getAttribute?.('role') === 'menuitemradio' &&
+          normalizedText === 'latest';
+        const score = scoreOption(
+          normalizedText,
+          testid,
+          option.getAttribute?.('role') ?? null,
+          activeModelSelectionView,
+        );
         const label = getOptionLabel(option);
-        const optionKind = classifyOption(normalizedText, testid);
+        const optionKind = currentProLatestLeaf
+          ? 'pro'
+          : classifyOption(normalizedText, testid);
         if (!['sol', 'terra', 'luna', 'legacy', 'instant', 'thinking', 'pro'].includes(optionKind)) {
           continue;
         }
@@ -652,7 +700,7 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
       const collectAvailableOptions = () => {
         const labels = collectOptionNodes()
           .map((node) => {
-            const label = (node?.textContent ?? '').replace(/\s+/g, ' ').trim().slice(0, 80);
+            const label = (node?.textContent ?? '').replace(/\\s+/g, ' ').trim().slice(0, 80);
             if (!label) return '';
             const role = node.getAttribute?.('role') ?? '-';
             const expanded = node.getAttribute?.('aria-expanded') ?? '-';

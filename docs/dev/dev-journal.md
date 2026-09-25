@@ -1,3 +1,18 @@
+## 2026-09-25 | Bind `Latest` to the opened Pro family
+
+Plan 0369 isolates the Plan 0368 model-menu blocker. A fresh retained-session
+diagnostic tab proved that `High` is the thinking-effort pill and its exact
+`Select model` row opens a model-selection view whose checked leaf is `Latest`.
+The earlier compact error reported that leaf as `Late t`; a provider-free
+negative regression proved AuraCall's embedded diagnostic whitespace regex had
+lost its escape and removed the letter `s`. No prompt or upload was submitted;
+the exact diagnostic tab was closed and Chrome PID `1829010` remained live.
+The repair uses the exact parent/view/leaf structure rather than fuzzy text or
+checked-state inference, preserves exact-version selectors, corrects the
+diagnostic escape, and covers both acceptance and rejection in a provider-free
+fake DOM. Publication, installed parity, retained-browser preservation, and
+one fresh learning-traced guard remain part of this slice.
+
 ## 2026-09-25 | Prove request-time retained route reuse
 
 Plan 0368 follows Plan 0367 without replaying its terminal failed guard.

@@ -168,10 +168,6 @@ describe('browser model selection matchers', () => {
       const context: Record<string, unknown> = {
         setTimeout,
         performance: { now: () => Date.now() },
-        EventTarget: FakeElement,
-        Element: FakeElement,
-        HTMLElement: FakeElement,
-        MouseEvent: class { constructor(public type: string) {} },
         document: {
           title: 'ChatGPT',
           body: { innerText: '' },
@@ -180,6 +176,14 @@ describe('browser model selection matchers', () => {
         },
         location: { href: 'https://chatgpt.com/c/test' },
       };
+      for (const [name, value] of [
+        ['EventTarget', FakeElement],
+        ['Element', FakeElement],
+        ['HTMLElement', FakeElement],
+        ['MouseEvent', class { constructor(public type: string) {} }],
+      ] as const) {
+        context[name] = value;
+      }
       context.window = context;
       const result = runInNewContext(buildModelSelectionExpressionForTest('5.6Pro'), context) as Promise<{
         status: string;
@@ -248,6 +252,156 @@ describe('browser model selection matchers', () => {
     }
   });
 
+  it('opens the live Select model view and accepts its exact Latest radio for current Pro intent', async () => {
+    vi.useFakeTimers();
+    try {
+      let modelViewOpen = false;
+      let latestSelected = false;
+      let latestClosedView = false;
+      class FakeElement {
+        children: FakeElement[] = [];
+        classList = { contains: () => false };
+        constructor(
+          public textContent: string,
+          public role: string | null,
+          public kind: 'button' | 'menu' | 'parent' | 'view' | 'latest' | 'sol',
+        ) {}
+        getAttribute(name: string) {
+          if (name === 'role') return this.role;
+          if (name === 'aria-label' && this.kind === 'parent') return 'Select model';
+          if (name === 'aria-expanded' && this.kind === 'parent') return String(modelViewOpen);
+          if (name === 'aria-checked' && this.kind === 'latest') return String(latestSelected);
+          if (name === 'aria-checked' && this.kind === 'sol') return String(!latestSelected);
+          if (name === 'data-state' && this.kind === 'latest') return latestSelected ? 'checked' : 'unchecked';
+          if (name === 'data-state' && this.kind === 'sol') return latestSelected ? 'unchecked' : 'checked';
+          if (name === 'data-model-selection-view' && this.kind === 'view') return 'true';
+          if (name === 'data-view' && this.kind === 'view') return modelViewOpen ? 'advanced' : 'simple';
+          return null;
+        }
+        hasAttribute() { return false; }
+        querySelector() { return null; }
+        querySelectorAll(selector: string) {
+          if (this.kind !== 'menu') return [];
+          if (selector === '[role="menuitem"]') return [modelParent];
+          return modelViewOpen ? [modelParent, latest, sol] : [modelParent];
+        }
+        closest(selector: string) {
+          return this.kind === 'view' && selector === '[role="menu"]' ? menu : null;
+        }
+        getBoundingClientRect() { return { left: 0, top: 0, width: 10, height: 10 }; }
+        dispatchEvent(event: { type: string }) {
+          if (event.type === 'click' && this.kind === 'parent') modelViewOpen = true;
+          if (event.type === 'click' && this.kind === 'latest') {
+            latestSelected = true;
+            modelViewOpen = false;
+            latestClosedView = true;
+          }
+          return true;
+        }
+      }
+      const button = new FakeElement('High', 'button', 'button');
+      const menu = new FakeElement('', 'menu', 'menu');
+      const modelParent = new FakeElement('High', 'menuitem', 'parent');
+      const modelView = new FakeElement('', null, 'view');
+      const latest = new FakeElement('Latest', 'menuitemradio', 'latest');
+      const sol = new FakeElement('GPT-5.6 Sol', 'menuitemradio', 'sol');
+      const context: Record<string, unknown> = {
+        setTimeout,
+        performance: { now: () => Date.now() },
+        document: {
+          title: 'ChatGPT',
+          body: { innerText: '' },
+          querySelector: (selector: string) => selector.includes('[role="menu"]') ? menu : button,
+          querySelectorAll: (selector: string) => {
+            if (selector === '[data-model-selection-view="true"][data-view="advanced"]') {
+              return modelViewOpen ? [modelView] : [];
+            }
+            if (selector.includes('[role="menu"]')) return [menu];
+            return modelViewOpen ? [modelParent, latest, sol] : [modelParent];
+          },
+        },
+        location: { href: 'https://chatgpt.com/' },
+      };
+      for (const [name, value] of [
+        ['EventTarget', FakeElement],
+        ['Element', FakeElement],
+        ['HTMLElement', FakeElement],
+        ['MouseEvent', class { constructor(public type: string) {} }],
+      ] as const) {
+        context[name] = value;
+      }
+      context.window = context;
+      const result = runInNewContext(buildModelSelectionExpressionForTest('Current Pro'), context) as Promise<{
+        status: string; label: string;
+      }>;
+      await vi.advanceTimersByTimeAsync(1_500);
+      await expect(result).resolves.toEqual({ status: 'already-selected', label: 'Latest' });
+      expect(latestClosedView).toBe(true);
+      expect(latestSelected).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('rejects a checked Latest radio when the exact Select model view was never observed', async () => {
+    vi.useFakeTimers();
+    try {
+      class FakeElement {
+        children: FakeElement[] = [];
+        classList = { contains: () => false };
+        constructor(public textContent: string, public role: string) {}
+        getAttribute(name: string) {
+          if (name === 'role') return this.role;
+          if (name === 'aria-checked' && this.role === 'menuitemradio') return 'true';
+          return null;
+        }
+        hasAttribute() { return false; }
+        querySelector() { return null; }
+        getBoundingClientRect() { return { left: 0, top: 0, width: 10, height: 10 }; }
+        dispatchEvent() { return true; }
+      }
+      const button = new FakeElement('High', 'button');
+      const latest = new FakeElement('Latest', 'menuitemradio');
+      const context: Record<string, unknown> = {
+        setTimeout,
+        performance: { now: () => Date.now() },
+        document: {
+          title: 'ChatGPT',
+          body: { innerText: '' },
+          querySelector: (selector: string) => selector.includes('[role="menu"]') ? {} : button,
+          querySelectorAll: (selector: string) => {
+            if (selector === '[data-model-selection-view="true"][data-view="advanced"]') return [];
+            if (selector.includes('[role="menu"]')) return [];
+            return [latest];
+          },
+        },
+        location: { href: 'https://chatgpt.com/' },
+      };
+      for (const [name, value] of [
+        ['EventTarget', FakeElement],
+        ['Element', FakeElement],
+        ['HTMLElement', FakeElement],
+        ['MouseEvent', class { constructor(public type: string) {} }],
+      ] as const) {
+        context[name] = value;
+      }
+      context.window = context;
+      const result = runInNewContext(buildModelSelectionExpressionForTest('Current Pro'), context) as Promise<{
+        status: string; hint: { availableOptions: string[] };
+      }>;
+      await vi.advanceTimersByTimeAsync(25_000);
+      await expect(result).resolves.toEqual({
+        status: 'option-not-found',
+        hint: {
+          temporaryChat: false,
+          availableOptions: ['Latest [role=menuitemradio, expanded=-, checked=true, testid=-]'],
+        },
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('keeps the currently offered 5.6Pro row distinct from 6 Pro', () => {
     expect(scoreModelPickerOptionForTest('6 Pro', { text: '5.6Pro' }).score).toBe(0);
     expect(scoreModelPickerOptionForTest('6 Pro', { text: 'Pro' }).score).toBe(0);
@@ -260,6 +414,7 @@ describe('browser model selection matchers', () => {
     const six = scoreModelPickerOptionForTest('Current Pro', { text: '6 Pro' }).score;
     const fiveSix = scoreModelPickerOptionForTest('Current Pro', { text: '5.6Pro' }).score;
     expect(scoreModelPickerOptionForTest('Current Pro', { text: 'Pro' }).score).toBe(0);
+    expect(scoreModelPickerOptionForTest('Current Pro', { text: 'Latest' }).score).toBe(0);
     expect(six).toBeGreaterThan(fiveSix);
     expect(fiveSix).toBeGreaterThan(0);
   });
@@ -344,6 +499,13 @@ describe('browser model selection matchers', () => {
         { text: 'Show advanced options', role: 'menuitem', expanded: 'false' },
       ]),
     ).toEqual({ kind: 'open-advanced', index: 1 });
+
+    expect(
+      chooseModelPickerNavigationActionForTest([
+        { text: 'High', ariaLabel: 'Select model', role: 'menuitem', expanded: 'false' },
+        { text: 'Power', role: 'menuitem', expanded: null },
+      ]),
+    ).toEqual({ kind: 'open-model', index: 0 });
 
     expect(
       chooseModelPickerNavigationActionForTest([

@@ -7,6 +7,15 @@
 Status: active
 Lane: P01
 
+- Active current-Pro `Latest` leaf recognition:
+  [Plan 0369](docs/dev/plans/0369-2026-09-25-current-pro-latest-leaf.md).
+  Plan 0368 proved the retained request route, then exposed a model-menu drift:
+  the thinking-effort menu's exact `Select model` view reports a checked
+  `Latest` leaf instead of a versioned Pro label. The repair must bind `Latest`
+  to that exact model-selection structure, preserve explicit-version strictness,
+  publish and install without replacing retained Chrome, and run one new traced
+  document guard.
+
 - Closed request-time retained-route acceptance:
   [Plan 0368](docs/dev/plans/0368-2026-09-25-request-time-retained-route-acceptance.md).
   Five focused suites passed 146 tests, source/install bridge parity and the
