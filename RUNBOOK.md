@@ -30,6 +30,18 @@ selector aliases or synthetic fallback, make no second provider submission in
 this slice, then validate, publish through personal `1baker`, install once, and
 record installed parity without replacing retained Chrome.
 
+Personal commit `cbb62748` implements that bounded retry and is published and
+installed. The built and installed modules share SHA-256
+`213056873a0b62e53deb540e625c0c2a5ac1e32d0882ffb125f7aa9f7a77a1bf`.
+AuraCall API restarted healthy as PID `2576185`; retained Chrome kept PID/start
+token `1829010`/`3619174`. Four focused/adjacent suites pass 38 tests, as do
+typecheck, production build, touched-file lint, CodeGraph sync/status, and diff
+hygiene. The full suite passes 3,550 tests with 55 skips, repeats two existing
+raw-route contract failures, and its extra load-sensitive CLI failure passes
+7/7 alone. Plan audit repeats only the existing raw-route and Plan 0357 header
+findings. No second provider submission occurred, so this closes the source and
+runtime repair but not live end-to-end acceptance.
+
 ## 2026-09-25 | Current ChatGPT attachment opener
 
 Plan 0374 follows Plan 0373 without replaying its terminal guard. The retained

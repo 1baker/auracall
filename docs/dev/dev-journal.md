@@ -20,6 +20,18 @@ initial page-local readiness miss, with no selector or input broadening, and
 fails closed after the second miss. No second provider submission is allowed
 in this slice.
 
+The bounded repair is complete in personal commit `cbb62748`, published and
+installed with built/installed SHA-256
+`213056873a0b62e53deb540e625c0c2a5ac1e32d0882ffb125f7aa9f7a77a1bf`.
+Four focused/adjacent suites pass 38 tests, with typecheck, production build,
+touched-file lint, CodeGraph, and diff hygiene also passing. The full suite
+passes 3,550 tests with 55 skips, repeats the two existing raw-route failures,
+and its one additional load-sensitive CLI failure passes 7/7 alone. Plan audit
+repeats only its three existing findings. AuraCall API is healthy as PID
+`2576185`; retained Chrome kept PID/start token `1829010`/`3619174`. No second
+provider submission was made, so a new guard identity remains necessary for
+live acceptance.
+
 ## 2026-09-25 | Bind `Current Pro` to the current flat model menu
 
 Plan 0373 owns the next bounded blocker from Plan 0372. Its guard proved that

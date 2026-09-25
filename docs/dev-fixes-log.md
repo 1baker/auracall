@@ -9,7 +9,15 @@
   opener at most once after the first page-local miss, keep strict action/input
   validation, and fail closed after the second miss. Preserve the terminal
   guard, release only task-owned tabs, and do not claim review or learning sync
-  without a later independent guard.
+  without a later independent guard. Personal commit `cbb62748` implements and
+  publishes that bounded retry. Thirty-eight focused/adjacent tests, typecheck,
+  production build, touched-file lint, CodeGraph, and diff hygiene pass. The
+  full suite passes 3,550 tests with 55 skips, repeats two existing raw-route
+  failures, and its additional load-sensitive CLI failure passes 7/7 alone.
+  The installed module matches the build at SHA-256
+  `213056873a0b62e53deb540e625c0c2a5ac1e32d0882ffb125f7aa9f7a77a1bf`;
+  AuraCall API is healthy as PID `2576185`, retained Chrome kept PID/start token
+  `1829010`/`3619174`, and no second provider submission occurred.
 
 - 2026-09-25: The exact current `Select ChatGPT model` control now opens a
   flat menu whose checked current-Pro row is `Latest`, so the older nested-view

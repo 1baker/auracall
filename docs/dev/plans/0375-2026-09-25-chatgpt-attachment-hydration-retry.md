@@ -1,6 +1,6 @@
 # ChatGPT Attachment Hydration Retry | 0375-2026-09-25
 
-State: OPEN
+State: CLOSED
 Lane: P01
 
 ## Objective
@@ -65,20 +65,38 @@ before file upload or prompt submission.
 
 ## Acceptance Criteria
 
-- [ ] A first menu-readiness miss triggers exactly one fresh resolution and
+- [x] A first menu-readiness miss triggers exactly one fresh resolution and
       trusted-pointer attempt against the same exact opener.
-- [ ] A second miss still returns `menu-not-found` without selector or input
+- [x] A second miss still returns `menu-not-found` without selector or input
       broadening.
-- [ ] Focused tests, typecheck, production build, touched-file lint, diff
+- [x] Focused tests, typecheck, production build, touched-file lint, diff
       hygiene, plan audit, and CodeGraph sync pass or disclose exact existing
       findings.
-- [ ] Personal GitHub publication is committed, pushed through isolated
+- [x] Personal GitHub publication is committed, pushed through isolated
       `1baker` routing, re-fetched, clean, and zero ahead/behind.
-- [ ] The installed runtime matches the published build and retained Chrome
+- [x] The installed runtime matches the published build and retained Chrome
       keeps its original process identity.
-- [ ] The terminal guard and both task-tab cleanup receipts remain preserved;
+- [x] The terminal guard and both task-tab cleanup receipts remain preserved;
       no successful end-to-end review is claimed without a later independent
       guard.
+
+## Closeout Evidence
+
+- Personal commit `cbb62748` implements the bounded retry and its positive and
+  fail-closed regressions. It is published through isolated `1baker` routing.
+- The four focused/adjacent suites pass 38 tests. Typecheck, production build,
+  touched-file lint, diff hygiene, and CodeGraph sync/status pass.
+- The full suite passes 3,550 tests with 55 skips. It repeats two existing raw-
+  route contract failures; its additional load-sensitive CLI failure passes
+  7/7 in isolation. Plan audit repeats only the existing raw-route finding and
+  the two Plan 0357 header findings.
+- The published build and installed module share SHA-256
+  `213056873a0b62e53deb540e625c0c2a5ac1e32d0882ffb125f7aa9f7a77a1bf`.
+  AuraCall API is healthy as PID `2576185`; retained Chrome kept PID/start token
+  `1829010`/`3619174`.
+- No second provider submission occurred. The failed guard record and both
+  physical task-tab cleanup receipts remain the live boundary; a later new
+  guard identity is required for successful end-to-end acceptance.
 
 ## Definition Of Done
 
