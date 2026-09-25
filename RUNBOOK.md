@@ -1,5 +1,38 @@
 # RUNBOOK
 
+## 2026-09-25 | Current ChatGPT attachment opener
+
+Plan 0374 follows Plan 0373 without replaying its terminal guard. The retained
+route, default Chat composer, and current Pro `Latest` decision are proved. The
+next independent blocker is that the local-file attachment preparation could
+not open a recognized menu. Start with a fresh no-launch Agent Browser access
+plan and normal authority checks, use one disposable task-owned tab for a
+read-only opener/menu/file-input census, submit no prompt and upload no file,
+then release only that exact tab. Derive the narrow provider-owned contract
+from the live structure, preserve prior exact contracts, validate, publish
+through personal `1baker`, install once without replacing retained Chrome, and
+run exactly one new round-one `--require-learning-trace` document guard.
+
+The no-launch plan selected the sole retained Linux Fortress browser and one
+task-owned tab with duplicate launch disabled. The live DOM still exposes the
+exact visible `Add files and more` button, `.composer-home-top-menu`, plain
+`Add photos & files` and `Add library files` buttons, and exactly one
+unrestricted multiple `input[type="file"][aria-label="Attach files"]`. The
+shared Agent Browser click opened and closed the menu successfully. The exact
+task tab was then physically closed; the retained browser process was
+preserved.
+
+The provider repair replaces the attachment path's coordinate-only click with
+the existing trusted-pointer helper. That helper re-resolves the exact opener,
+scrolls it into view, verifies the click point hits it, emits a native CDP
+click, and requires a trusted activation receipt before continuing. The strict
+current and legacy menu/action/input contracts remain unchanged. Strict
+touched-file lint, typecheck, production build, 36 focused and adjacent tests,
+CodeGraph sync/status, and diff hygiene pass. The full suite passes 3,548 tests
+with 55 skips and repeats the two existing raw-route policy failures; its one
+load-sensitive detached-CLI failure passes 7/7 alone. Plan audit repeats only
+the existing raw-route finding and the two Plan 0357 header findings.
+
 ## 2026-09-25 | Current Pro `Latest` flat-menu compatibility
 
 Plan 0373 follows Plan 0372 without replaying its terminal guard. The exact

@@ -1,12 +1,3 @@
-import type { ChromeClient, BrowserLogger } from '../types.js';
-import type {
-  LabelMatchOptions,
-  PressButtonOptions,
-  VisibleMenuInventoryEntry,
-  VisibleMenuInventoryItem,
-} from '../service/ui.js';
-import { ATTACHMENT_MENU_SELECTOR } from '../constants.js';
-import { logDomFailure } from '../domDebug.js';
 import {
   resolveBundledServiceComposerAliases,
   resolveBundledServiceComposerChipIgnoreTokens,
@@ -17,13 +8,23 @@ import {
   resolveBundledServiceComposerTopMenuSignalSubstrings,
   resolveBundledServiceComposerTopLevelSentinels,
 } from '../../services/registry.js';
+import { ATTACHMENT_MENU_SELECTOR } from '../constants.js';
+import { logDomFailure } from '../domDebug.js';
+import type {
+  LabelMatchOptions,
+  PressButtonOptions,
+  VisibleMenuInventoryEntry,
+  VisibleMenuInventoryItem,
+} from '../service/ui.js';
 import {
   collectVisibleMenuInventory,
   dismissOpenMenus,
   openMenu,
   openSubmenu,
+  pressButtonWithTrustedPointer,
   selectAndVerifyNestedMenuPathOption,
 } from '../service/ui.js';
+import type { BrowserLogger, ChromeClient } from '../types.js';
 
 type ComposerToolOutcome =
   | { status: 'already-selected'; label?: string | null }
@@ -511,53 +512,38 @@ async function readComposerPopoverEntry(
   return (result.result?.value as VisibleMenuInventoryEntry | null | undefined) ?? null;
 }
 
-async function openComposerPopoverWithCdp(
-  Runtime: ChromeClient['Runtime'],
-  Input: ChromeClient['Input'],
-  Page: ChromeClient['Page'],
+async function openComposerPopoverWithTrustedPointer(
+  runtime: ChromeClient['Runtime'],
+  input: ChromeClient['Input'],
+  page: ChromeClient['Page'],
 ): Promise<VisibleMenuInventoryEntry | null> {
-  const existing = await readComposerPopoverEntry(Runtime);
+  const existing = await readComposerPopoverEntry(runtime);
   if (existing) return existing;
   // A retained browser can have another tab focused. Bringing this target to
   // the front can reflow the workbench, so establish focus before measuring
-  // the composer trigger instead of clicking coordinates captured pre-reflow.
-  await Page.bringToFront().catch(() => undefined);
-  await Input.dispatchKeyEvent({ type: 'keyDown', key: 'Escape', code: 'Escape' }).catch(() => undefined);
-  await Input.dispatchKeyEvent({ type: 'keyUp', key: 'Escape', code: 'Escape' }).catch(() => undefined);
-  const trigger = await Runtime.evaluate({
-    expression: `(() => {
-      const node = document.querySelector(${JSON.stringify(ATTACHMENT_MENU_SELECTOR)});
-      if (!(node instanceof HTMLElement)) return null;
-      const rect = node.getBoundingClientRect();
-      if (rect.width <= 0 || rect.height <= 0) return null;
-      return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
-    })()`,
-    returnByValue: true,
-  });
-  const point = trigger.result?.value as { x?: number; y?: number } | null | undefined;
-  if (typeof point?.x !== 'number' || typeof point.y !== 'number') return null;
-  await Input.dispatchMouseEvent({ type: 'mouseMoved', x: point.x, y: point.y });
-  await Input.dispatchMouseEvent({
-    type: 'mousePressed',
-    x: point.x,
-    y: point.y,
-    button: 'left',
-    buttons: 1,
-    clickCount: 1,
-  });
-  await Input.dispatchMouseEvent({
-    type: 'mouseReleased',
-    x: point.x,
-    y: point.y,
-    button: 'left',
-    buttons: 0,
-    clickCount: 1,
-  });
+  // the composer trigger. The shared trusted-pointer helper re-resolves and
+  // hit-tests the control immediately before clicking, which avoids stale
+  // coordinates on the retained workbench.
+  await page.bringToFront().catch(() => undefined);
+  await input.dispatchKeyEvent({ type: 'keyDown', key: 'Escape', code: 'Escape' }).catch(() => undefined);
+  await input.dispatchKeyEvent({ type: 'keyUp', key: 'Escape', code: 'Escape' }).catch(() => undefined);
+  const pressed = await pressButtonWithTrustedPointer(
+    // biome-ignore lint/style/useNamingConvention: Chrome DevTools Protocol clients use these exact domain names.
+    { Runtime: runtime, Input: input },
+    {
+      selector: ATTACHMENT_MENU_SELECTOR,
+      requireVisible: true,
+      timeoutMs: 5_000,
+    },
+  );
+  if (!pressed.ok) {
+    return null;
+  }
   // Keep the short UI-hydration deadline inside the page. A retained browser's
   // brokered CDP command can legitimately spend longer than 2.5 seconds in
   // authority/transport work before this expression starts running; wrapping
   // that round trip in the UI deadline creates a false pre-upload failure.
-  const readiness = await Runtime.evaluate({
+  const readiness = await runtime.evaluate({
     expression: `(async () => {
       const deadline = performance.now() + 2500;
       while (performance.now() < deadline) {
@@ -580,7 +566,7 @@ async function openComposerPopoverWithCdp(
     awaitPromise: true,
   });
   if (readiness.result?.value !== true) {
-    const fallback = await openMenu(Runtime, {
+    const fallback = await openMenu(runtime, {
       trigger: {
         ...buildComposerTriggerOptions(),
         interactionStrategies: ['click'],
@@ -591,7 +577,7 @@ async function openComposerPopoverWithCdp(
     });
     if (!fallback.ok) return null;
   }
-  return readComposerPopoverEntry(Runtime);
+  return readComposerPopoverEntry(runtime);
 }
 
 export async function prepareChatgptWorkbenchLocalAttachment(
@@ -602,7 +588,7 @@ export async function prepareChatgptWorkbenchLocalAttachment(
   },
 ): Promise<ChatgptWorkbenchAttachmentSurface> {
   const { runtime, input, page } = deps;
-  const popover = await openComposerPopoverWithCdp(runtime, input, page);
+  const popover = await openComposerPopoverWithTrustedPointer(runtime, input, page);
   if (!popover) {
     return { status: 'menu-not-found' };
   }
@@ -981,7 +967,7 @@ async function selectComposerTool(
     return { status: 'already-selected', label: currentSelection.label };
   }
 
-  const currentPopover = await openComposerPopoverWithCdp(client.Runtime, client.Input, client.Page);
+  const currentPopover = await openComposerPopoverWithTrustedPointer(client.Runtime, client.Input, client.Page);
   let directMenu = currentPopover
     ? {
         ok: true as const,

@@ -49893,3 +49893,28 @@ submitted user turn, and attachment UI receipt remain separate later gates.
 This is a source-level repair hypothesis, not proof of the historical failure's
 precise UI state or a live file-backed success. Fourteen focused tests and the
 full production build passed. No retained browser or installed API was changed.
+# 2026-09-25 | Inspect the current ChatGPT attachment opener
+
+Plan 0374 owns the next bounded blocker from Plan 0373. The prior guard proved
+the live current-Pro model decision, then failed before file transfer or prompt
+submission because the attachment preparation returned `menu-not-found`.
+Begin with a no-launch Agent Browser plan and one task-owned diagnostic tab,
+inspect only the opener/menu/file-input structure, and release that exact tab
+without uploading or submitting. Preserve retained Chrome PID/start token
+`1829010`/`3619174` and do not replay any prior response or guard.
+
+The diagnostic proved selector drift was not the cause. ChatGPT still exposes
+the exact `Add files and more` opener, current home menu, `Add photos & files`
+row, optional library row, and one unrestricted multiple `Attach files` input.
+The shared browser click opened and closed that menu, and the task-owned tab was
+physically released without closing the retained browser. AuraCall now uses its
+shared trusted-pointer helper for the opener so it re-resolves and hit-tests the
+control and requires a trusted click receipt before menu validation. The strict
+surface and chooser resolver is unchanged.
+
+Strict touched-file lint, typecheck, production build, 36 focused and adjacent
+tests, CodeGraph sync/status, and diff hygiene pass. The full suite passes 3,548
+tests with 55 skips and repeats the two existing raw-route contract failures;
+the load-sensitive detached-CLI failure passes 7/7 alone. Plan audit repeats
+only the three existing findings. Publication, installation, and the one fresh
+learning-traced guard remain pending.

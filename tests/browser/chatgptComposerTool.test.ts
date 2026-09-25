@@ -168,7 +168,7 @@ describe('chatgpt composer tool selection', () => {
     expect(evaluate).toHaveBeenCalledWith(expect.objectContaining({ returnByValue: true }));
   });
 
-  test('brings a retained tab forward before measuring the workbench attachment trigger', async () => {
+  test('brings a retained tab forward and uses the shared trusted-pointer attachment trigger', async () => {
     const events: string[] = [];
     let popoverReads = 0;
     const evaluate = vi.fn().mockImplementation(async ({ expression }: { expression?: string }) => {
@@ -192,9 +192,29 @@ describe('chatgpt composer tool selection', () => {
           },
         };
       }
-      if (source.includes('const node = document.querySelector')) {
-        events.push('measure');
-        return { result: { value: { x: 24, y: 24 } } };
+      if (source.includes('const stateKey =') && source.includes('match.scrollIntoView')) {
+        events.push('trusted-target');
+        return {
+          result: {
+            value: {
+              ok: true,
+              center: { x: 24.4, y: 24.4 },
+              matchedLabel: 'add files and more',
+              rootSelectorUsed: 'document',
+            },
+          },
+        };
+      }
+      if (source.includes('?.result || null')) {
+        return {
+          result: {
+            value: {
+              trusted: true,
+              matchedLabel: 'add files and more',
+              rootSelectorUsed: 'document',
+            },
+          },
+        };
       }
       if (source.includes('.some((node)')) {
         return { result: { value: true } };
@@ -237,8 +257,15 @@ describe('chatgpt composer tool selection', () => {
       status: 'ready',
       inputSelector: 'input[type="file"][aria-label="Attach files"]',
     });
-    expect(events).toEqual(['front', 'measure']);
+    expect(events).toEqual(['front', 'trusted-target']);
     expect(input.dispatchMouseEvent).toHaveBeenCalledTimes(3);
+    expect(input.dispatchMouseEvent).toHaveBeenNthCalledWith(2, {
+      type: 'mousePressed',
+      x: 24,
+      y: 24,
+      button: 'left',
+      clickCount: 1,
+    });
   });
 
   test('keeps the page readiness deadline separate from broker transport latency', async () => {
@@ -270,8 +297,28 @@ describe('chatgpt composer tool selection', () => {
           },
         };
       }
-      if (source.includes('const node = document.querySelector')) {
-        return { result: { value: { x: 24, y: 24 } } };
+      if (source.includes('const stateKey =') && source.includes('match.scrollIntoView')) {
+        return {
+          result: {
+            value: {
+              ok: true,
+              center: { x: 24, y: 24 },
+              matchedLabel: 'add files and more',
+              rootSelectorUsed: 'document',
+            },
+          },
+        };
+      }
+      if (source.includes('?.result || null')) {
+        return {
+          result: {
+            value: {
+              trusted: true,
+              matchedLabel: 'add files and more',
+              rootSelectorUsed: 'document',
+            },
+          },
+        };
       }
       const isLegacyReadinessCall =
         source.includes('.some((node)') && source.includes('Boolean(node.querySelector');
