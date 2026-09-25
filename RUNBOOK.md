@@ -1,5 +1,27 @@
 # RUNBOOK
 
+## 2026-09-25 | Current Pro `Latest` flat-menu compatibility
+
+Plan 0373 follows Plan 0372 without replaying its terminal guard. The exact
+current model-picker trigger and flat model-menu contents are proved; the next
+independent blocker is that `Current Pro` recognizes `Latest` only in the older
+nested `Select model` structure. Carry the exact current-trigger provenance
+into flat-menu interpretation, require the exact `Latest` radio plus a distinct
+recognized model sibling in one containing menu, and retain the older nested
+contract. Preserve strict explicit GPT-6/GPT-5.6 selection. After provider-free
+validation, publish through personal `1baker`, install once without replacing
+retained Chrome, then run exactly one new round-one
+`--require-learning-trace` document guard after a fresh no-launch authority
+check.
+
+The provider-free source gate passed 172 focused/adjacent tests with one
+intentional skip, typecheck, production build, error-level touched-file lint,
+diff hygiene, and CodeGraph sync. The full suite passed 3,547 tests with 55
+skips. Its two durable contract failures are the existing raw-route finding;
+the two unrelated timing failures pass in isolated 31-test and 7-test reruns.
+Plan audit repeats only the three existing findings. Publication, installation,
+and the one bounded forward guard remain pending.
+
 ## 2026-09-25 | Current ChatGPT model-picker trigger scope
 
 Plan 0372 follows Plan 0371 without replaying its terminal guard. The retained

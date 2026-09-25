@@ -340,12 +340,18 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
     const currentVersionedPro = normalizedTarget === 'current pro';
 
     let button = null;
+    let matchedButtonSelector = null;
     const buttonWaitStartedAt = performance.now();
     while (!button && performance.now() - buttonWaitStartedAt <= BUTTON_WAIT_MS
       && performance.now() - selectionStartedAt <= MAX_TOTAL_WAIT_MS) {
-      button = BUTTON_SELECTORS
-        .map((selector) => document.querySelector(selector))
-        .find((node) => node) ?? null;
+      for (const selector of BUTTON_SELECTORS) {
+        const candidate = document.querySelector(selector);
+        if (candidate) {
+          button = candidate;
+          matchedButtonSelector = selector;
+          break;
+        }
+      }
       if (!button) {
         await new Promise((resolve) => setTimeout(resolve, REOPEN_INTERVAL_MS / 2));
       }
@@ -375,10 +381,16 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
       // currently only says "ChatGPT" and does not expose the active model.
     }
 
+    const exactCurrentModelPickerTrigger =
+      matchedButtonSelector === 'button[aria-label="Select ChatGPT model"]';
+    let exactCurrentModelPickerOpened = false;
     let lastPointerClick = 0;
     const pointerClick = () => {
       if (dispatchClickSequence(button)) {
         lastPointerClick = performance.now();
+        if (exactCurrentModelPickerTrigger) {
+          exactCurrentModelPickerOpened = true;
+        }
       }
     };
 
@@ -503,14 +515,30 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
       const activeViews = Array.from(
         document.querySelectorAll('[data-model-selection-view="true"][data-view="advanced"]'),
       );
-      if (activeViews.some((view) => {
+      const nestedViewObserved = activeViews.some((view) => {
         const menu = view.closest?.('[role="menu"]');
         if (!menu) return false;
         return Array.from(menu.querySelectorAll('[role="menuitem"]')).some((node) =>
           normalizeText(node.getAttribute?.('aria-label') ?? '') === 'select model' &&
           node.getAttribute?.('aria-expanded') === 'true'
         );
-      })) {
+      });
+      const flatMenuObserved = exactCurrentModelPickerOpened &&
+        Array.from(document.querySelectorAll(${menuContainerLiteral})).some((menu) => {
+          const options = Array.from(menu.querySelectorAll(${menuItemLiteral}));
+          const latest = options.find((node) =>
+            node.getAttribute?.('role') === 'menuitemradio' &&
+            normalizeText(node.textContent ?? '') === 'latest'
+          );
+          if (!latest) return false;
+          return options.some((node) => {
+            if (node === latest || node.getAttribute?.('role') !== 'menuitemradio') return false;
+            const text = normalizeText(node.textContent ?? '');
+            const testid = node.getAttribute?.('data-testid') ?? '';
+            return classifyOption(text, testid) !== null;
+          });
+        });
+      if (nestedViewObserved || flatMenuObserved) {
         observedExactModelSelectionView = true;
       }
       return observedExactModelSelectionView;

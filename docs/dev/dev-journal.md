@@ -1,3 +1,23 @@
+## 2026-09-25 | Bind `Current Pro` to the current flat model menu
+
+Plan 0373 owns the next bounded blocker from Plan 0372. Its guard proved that
+the exact `Select ChatGPT model` composer control opens the current flat menu,
+whose rows include checked `Latest` plus distinct versioned model choices. The
+older compatibility rule required an expanded nested `Select model` parent, so
+the run stopped before upload or prompt submission. Preserve that failure and
+do not replay it. The repair will accept `Latest` only from a model menu opened
+by the exact current trigger and containing a separate recognized model row;
+fallback triggers, unrelated or lone `Latest` rows, and explicit-version
+selectors remain strict.
+
+The focused/adjacent selector gate passes 172 tests with one intentional skip;
+typecheck, production build, error-level touched-file lint, diff hygiene, and
+CodeGraph sync pass. The full suite passes 3,547 tests with 55 skips and repeats
+the two existing raw-route contract failures. Its two unrelated timing failures
+pass in isolated 31-test and 7-test reruns. Plan audit repeats only its three
+existing findings. Publication, installed parity, and the one bounded forward
+guard remain outstanding.
+
 ## 2026-09-25 | Inspect and repair the current Chat model-picker trigger
 
 Plan 0372 owns the next bounded blocker from Plan 0371. The prior guard proved

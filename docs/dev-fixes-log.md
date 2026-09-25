@@ -1,3 +1,18 @@
+- 2026-09-25: The exact current `Select ChatGPT model` control now opens a
+  flat menu whose checked current-Pro row is `Latest`, so the older nested-view
+  proof rejected a real current picker. AuraCall now carries exact-trigger
+  provenance into menu interpretation and accepts `Latest` only when one
+  containing menu also exposes a distinct recognized model radio. Compatibility
+  triggers, unrelated or lone `Latest` rows, checked state alone, and explicit
+  GPT-6/GPT-5.6 selectors remain strict. The focused/adjacent selection passed
+  172 tests with one intentional skip; typecheck, production build, error-level
+  touched-file lint, diff hygiene, and CodeGraph sync pass. The full suite
+  passed 3,547 tests with 55 skips, repeated two existing raw-route contract
+  failures, and its two unrelated timing failures passed in isolated reruns.
+  Plan audit repeats only its three existing findings. Publication, installed
+  parity, retained-browser preservation, and the slice's one traced forward
+  guard remain pending under Plan 0373.
+
 - 2026-09-25: Chat model selection used generic case-sensitive
   `aria-label*="Model"` triggers, so project buttons such as
   `Actions for Review ModelLabs Evidence` could open the conversation-actions

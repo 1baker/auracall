@@ -7,6 +7,14 @@
 Status: active
 Lane: P01
 
+- Active current-Pro flat-menu compatibility repair:
+  [Plan 0373](docs/dev/plans/0373-2026-09-25-current-pro-latest-flat-menu.md).
+  Plan 0372 proved the exact current picker trigger and current flat model
+  menu, then failed closed before upload or prompt submission because semantic
+  `Current Pro` did not recognize its checked `Latest` row. Bind that row only
+  to the exact trigger and a containing model-menu structure, preserve strict
+  explicit versions, then publish, install, and run one fresh traced guard.
+
 - Closed current ChatGPT model-picker trigger repair:
   [Plan 0372](docs/dev/plans/0372-2026-09-25-current-model-picker-trigger-scope.md).
   Personal commit `ab00b5bb` binds the exact current control and rejects the

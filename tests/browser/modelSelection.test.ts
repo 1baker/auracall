@@ -419,6 +419,204 @@ describe('browser model selection matchers', () => {
     }
   });
 
+  it('accepts checked Latest in the flat menu opened by the exact current model trigger', async () => {
+    vi.useFakeTimers();
+    try {
+      let menuOpen = false;
+      class FakeElement {
+        children: FakeElement[] = [];
+        classList = { contains: () => false };
+        constructor(
+          public textContent: string,
+          public role: string | null,
+          public kind: 'button' | 'menu' | 'latest' | 'sol',
+        ) {}
+        getAttribute(name: string) {
+          if (name === 'role') return this.role;
+          if (name === 'aria-label' && this.kind === 'button') return 'Select ChatGPT model';
+          if (name === 'aria-checked' && this.kind === 'latest') return 'true';
+          if (name === 'aria-checked' && this.kind === 'sol') return 'false';
+          return null;
+        }
+        hasAttribute() { return false; }
+        querySelector() { return null; }
+        querySelectorAll() { return this.kind === 'menu' ? [latest, sol] : []; }
+        getBoundingClientRect() { return { left: 0, top: 0, width: 10, height: 10 }; }
+        dispatchEvent(event: { type: string }) {
+          if (event.type === 'click' && this.kind === 'button') menuOpen = true;
+          return true;
+        }
+      }
+      const button = new FakeElement('ChatGPT', 'button', 'button');
+      const menu = new FakeElement('', 'menu', 'menu');
+      const latest = new FakeElement('Latest', 'menuitemradio', 'latest');
+      const sol = new FakeElement('GPT-5.6 Sol', 'menuitemradio', 'sol');
+      const context: Record<string, unknown> = {
+        setTimeout,
+        performance: { now: () => Date.now() },
+        document: {
+          title: 'ChatGPT',
+          body: { innerText: '' },
+          querySelector: (selector: string) => {
+            if (selector === 'button[aria-label="Select ChatGPT model"]') return button;
+            if (selector.includes('[role="menu"]')) return menuOpen ? menu : null;
+            return null;
+          },
+          querySelectorAll: (selector: string) => {
+            if (selector === '[data-model-selection-view="true"][data-view="advanced"]') return [];
+            if (selector.includes('[role="menu"]')) return menuOpen ? [menu] : [];
+            return [];
+          },
+        },
+        location: { href: 'https://chatgpt.com/' },
+      };
+      for (const [name, value] of [
+        ['EventTarget', FakeElement],
+        ['Element', FakeElement],
+        ['HTMLElement', FakeElement],
+        ['MouseEvent', class { constructor(public type: string) {} }],
+      ] as const) {
+        context[name] = value;
+      }
+      context.window = context;
+      const result = runInNewContext(buildModelSelectionExpressionForTest('Current Pro'), context) as Promise<{
+        status: string; label: string;
+      }>;
+      await vi.advanceTimersByTimeAsync(700);
+      await expect(result).resolves.toEqual({ status: 'already-selected', label: 'Latest' });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('rejects flat-menu Latest when the picker opened through a compatibility trigger', async () => {
+    vi.useFakeTimers();
+    try {
+      let menuOpen = false;
+      class FakeElement {
+        children: FakeElement[] = [];
+        classList = { contains: () => false };
+        constructor(public textContent: string, public role: string | null) {}
+        getAttribute(name: string) {
+          if (name === 'role') return this.role;
+          if (name === 'aria-checked' && this === latest) return 'true';
+          if (name === 'aria-checked' && this === sol) return 'false';
+          return null;
+        }
+        hasAttribute() { return false; }
+        querySelector() { return null; }
+        querySelectorAll() { return this === menu ? [latest, sol] : []; }
+        getBoundingClientRect() { return { left: 0, top: 0, width: 10, height: 10 }; }
+        dispatchEvent(event: { type: string }) {
+          if (event.type === 'click' && this === button) menuOpen = true;
+          return true;
+        }
+      }
+      const button = new FakeElement('ChatGPT', 'button');
+      const menu = new FakeElement('', 'menu');
+      const latest = new FakeElement('Latest', 'menuitemradio');
+      const sol = new FakeElement('GPT-5.6 Sol', 'menuitemradio');
+      const context: Record<string, unknown> = {
+        setTimeout,
+        performance: { now: () => Date.now() },
+        document: {
+          title: 'ChatGPT',
+          body: { innerText: '' },
+          querySelector: (selector: string) => {
+            if (selector === '[data-testid="model-switcher-dropdown-button"]') return button;
+            if (selector.includes('[role="menu"]')) return menuOpen ? menu : null;
+            return null;
+          },
+          querySelectorAll: (selector: string) => {
+            if (selector === '[data-model-selection-view="true"][data-view="advanced"]') return [];
+            if (selector.includes('[role="menu"]')) return menuOpen ? [menu] : [];
+            return [];
+          },
+        },
+        location: { href: 'https://chatgpt.com/' },
+      };
+      for (const [name, value] of [
+        ['EventTarget', FakeElement],
+        ['Element', FakeElement],
+        ['HTMLElement', FakeElement],
+        ['MouseEvent', class { constructor(public type: string) {} }],
+      ] as const) {
+        context[name] = value;
+      }
+      context.window = context;
+      const result = runInNewContext(buildModelSelectionExpressionForTest('Current Pro'), context) as Promise<{
+        status: string; hint: { availableOptions: string[] };
+      }>;
+      await vi.advanceTimersByTimeAsync(25_000);
+      await expect(result).resolves.toMatchObject({ status: 'option-not-found' });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('rejects a lone flat-menu Latest row even behind the exact current trigger', async () => {
+    vi.useFakeTimers();
+    try {
+      let menuOpen = false;
+      class FakeElement {
+        children: FakeElement[] = [];
+        classList = { contains: () => false };
+        constructor(public textContent: string, public role: string | null) {}
+        getAttribute(name: string) {
+          if (name === 'role') return this.role;
+          if (name === 'aria-checked' && this === latest) return 'true';
+          return null;
+        }
+        hasAttribute() { return false; }
+        querySelector() { return null; }
+        querySelectorAll() { return this === menu ? [latest] : []; }
+        getBoundingClientRect() { return { left: 0, top: 0, width: 10, height: 10 }; }
+        dispatchEvent(event: { type: string }) {
+          if (event.type === 'click' && this === button) menuOpen = true;
+          return true;
+        }
+      }
+      const button = new FakeElement('ChatGPT', 'button');
+      const menu = new FakeElement('', 'menu');
+      const latest = new FakeElement('Latest', 'menuitemradio');
+      const context: Record<string, unknown> = {
+        setTimeout,
+        performance: { now: () => Date.now() },
+        document: {
+          title: 'ChatGPT',
+          body: { innerText: '' },
+          querySelector: (selector: string) => {
+            if (selector === 'button[aria-label="Select ChatGPT model"]') return button;
+            if (selector.includes('[role="menu"]')) return menuOpen ? menu : null;
+            return null;
+          },
+          querySelectorAll: (selector: string) => {
+            if (selector === '[data-model-selection-view="true"][data-view="advanced"]') return [];
+            if (selector.includes('[role="menu"]')) return menuOpen ? [menu] : [];
+            return [];
+          },
+        },
+        location: { href: 'https://chatgpt.com/' },
+      };
+      for (const [name, value] of [
+        ['EventTarget', FakeElement],
+        ['Element', FakeElement],
+        ['HTMLElement', FakeElement],
+        ['MouseEvent', class { constructor(public type: string) {} }],
+      ] as const) {
+        context[name] = value;
+      }
+      context.window = context;
+      const result = runInNewContext(buildModelSelectionExpressionForTest('Current Pro'), context) as Promise<{
+        status: string;
+      }>;
+      await vi.advanceTimersByTimeAsync(25_000);
+      await expect(result).resolves.toMatchObject({ status: 'option-not-found' });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('rejects a checked Latest radio when the exact Select model view was never observed', async () => {
     vi.useFakeTimers();
     try {

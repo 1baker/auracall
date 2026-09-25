@@ -287,6 +287,14 @@ outside the composer while the real lowercase-`model` control does not. When
 the exact picker is absent, fail closed instead of opening a conversation
 actions menu.
 
+That exact current trigger opens a flat model menu on the current workbench.
+For semantic `Current Pro`, accept exact `Latest` only after AuraCall has opened
+that trigger and found the radio inside one containing menu with a distinct
+recognized model-radio sibling. Keep the older expanded `Select model` view as
+a separate compatibility proof. Do not let a fallback trigger, checked state,
+lone `Latest` row, effort menu, or unrelated menu establish current-Pro
+identity, and do not apply this semantic alias to explicit version selectors.
+
 Do not generalize the Work path into the Chat picker. If current provider DOM
 does not expose a distinct Work selector, fail closed and collect bounded DOM
 diagnostics. For the provider-free suite, live-effect gates, and cleanup
