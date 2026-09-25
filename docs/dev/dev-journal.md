@@ -49912,9 +49912,29 @@ shared trusted-pointer helper for the opener so it re-resolves and hit-tests the
 control and requires a trusted click receipt before menu validation. The strict
 surface and chooser resolver is unchanged.
 
+Personal commit `c43e7839` published and installed that first repair. The sole
+fresh guard `document-c43e7839-current-attachment-trusted-r1`, response
+`resp_idem_86dfc972a4858ec4e8e12a8d2504905c`, preserved round-one author
+`codex`, no parent, the immutable prompt pair, Markdown/DOCX/PDF packet, and
+learning-trace digest. It failed before file upload or prompt submission: the
+helper's first target evaluation received only 145 ms of remaining broker
+command budget. It produced no answer, verdict, score, review record/chat,
+conversation URL, exact final-answer link, attachment receipt, or ModelLabs
+learning sync. The exact task target was physically closed while retained
+Chrome was preserved, and the guard was not replayed.
+
+The allowed provider-free rework, personal commit `630d1247`, performs the
+exact target preparation and page-local menu wait through direct evaluations
+without inner transport timeout fields. It retains the exact selector,
+visibility and center hit-test, native CDP mouse sequence, trusted click
+receipt, and strict menu/input resolver, while removing the synthetic fallback.
 Strict touched-file lint, typecheck, production build, 36 focused and adjacent
-tests, CodeGraph sync/status, and diff hygiene pass. The full suite passes 3,548
+tests, CodeGraph sync/status, and diff hygiene pass. The full suite passes 3,547
 tests with 55 skips and repeats the two existing raw-route contract failures;
-the load-sensitive detached-CLI failure passes 7/7 alone. Plan audit repeats
-only the three existing findings. Publication, installation, and the one fresh
-learning-traced guard remain pending.
+two load-sensitive failures pass 1/1 and 7/7 alone. The published and installed
+module share SHA-256
+`8daf3d5d01dba12c31062d300583170b8b405c3ac654199e7a5a49e792874017`.
+AuraCall API is healthy as PID `2470517`; retained Chrome kept PID/start token
+`1829010`/`3619174`. Plan 0374 closes as an exact failed live guard plus a
+published, installed provider-free correction, not as successful end-to-end
+review proof.

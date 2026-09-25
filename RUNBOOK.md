@@ -22,16 +22,33 @@ shared Agent Browser click opened and closed the menu successfully. The exact
 task tab was then physically closed; the retained browser process was
 preserved.
 
-The provider repair replaces the attachment path's coordinate-only click with
-the existing trusted-pointer helper. That helper re-resolves the exact opener,
-scrolls it into view, verifies the click point hits it, emits a native CDP
-click, and requires a trusted activation receipt before continuing. The strict
-current and legacy menu/action/input contracts remain unchanged. Strict
-touched-file lint, typecheck, production build, 36 focused and adjacent tests,
-CodeGraph sync/status, and diff hygiene pass. The full suite passes 3,548 tests
-with 55 skips and repeats the two existing raw-route policy failures; its one
-load-sensitive detached-CLI failure passes 7/7 alone. Plan audit repeats only
-the existing raw-route finding and the two Plan 0357 header findings.
+Personal commit `c43e7839` replaced the attachment path's coordinate-only click
+with the shared trusted-pointer helper and was published and installed. The
+plan's sole traced guard,
+`document-c43e7839-current-attachment-trusted-r1` / response
+`resp_idem_86dfc972a4858ec4e8e12a8d2504905c`, preserved its immutable round-one
+prompt provenance and Markdown/DOCX/PDF packet. It failed before upload or
+prompt submission because the helper's first target evaluation received only
+145 ms of remaining broker command budget. No browser answer, verdict, score,
+review file/chat, conversation URL, exact Codex final-answer link, attachment
+receipt, or ModelLabs learning sync exists. Its exact task target
+`99E08C383037575D89D488FABBB9F47C` was physically closed while the retained
+browser process was preserved, and the guard was not replayed.
+
+The allowed provider-free rework in personal commit `630d1247` preserves the
+exact opener, visibility and center-point hit-test, native CDP mouse input,
+trusted click receipt, and strict menu/action/input resolver. It removes inner
+transport timeouts from the target and page-readiness evaluations and removes
+the synthetic-click fallback. The published build and installed module share
+SHA-256 `8daf3d5d01dba12c31062d300583170b8b405c3ac654199e7a5a49e792874017`.
+AuraCall API is healthy as PID `2470517`; retained Chrome kept PID/start token
+`1829010`/`3619174`. Strict touched-file lint, typecheck, production build, 36
+focused and adjacent tests, CodeGraph sync/status, and diff hygiene pass. The
+full suite passes 3,547 tests with 55 skips, repeats the two existing raw-route
+policy failures, and its two load-sensitive failures pass 1/1 and 7/7 alone.
+Plan audit repeats only the existing raw-route finding and the two Plan 0357
+header findings. This closes the bounded repair but does not prove a successful
+live file-backed review; use a new guard identity for any later acceptance run.
 
 ## 2026-09-25 | Current Pro `Latest` flat-menu compatibility
 

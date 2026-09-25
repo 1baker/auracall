@@ -23149,3 +23149,19 @@ browser-stage lifecycle observability, not transcript truncation.
   `Current Pro`. The run failed before attachment upload or prompt submission,
   retained no review verdict or learning sync, released its task target, and
   was not replayed.
+- 2026-09-25: The current ChatGPT attachment opener still matched source, but
+  the first repair's shared trusted-pointer helper added an inner timed
+  evaluation after the broker had only 145 ms of command budget left. The sole
+  traced guard `document-c43e7839-current-attachment-trusted-r1` failed before
+  upload or submission and produced no verdict, score, review record, final-
+  answer link, attachment receipt, or learning sync. Follow-up personal commit
+  `630d1247` keeps exact visibility/hit-testing, trusted CDP input, and strict
+  menu/input validation while removing inner transport timeouts and the
+  synthetic fallback. Thirty-six focused tests, typecheck, build, touched-file
+  lint, diff hygiene, and CodeGraph pass. The full suite's two durable failures
+  are the existing raw-route contract finding; two load-sensitive failures pass
+  alone. The published and installed module share SHA-256
+  `8daf3d5d01dba12c31062d300583170b8b405c3ac654199e7a5a49e792874017`,
+  AuraCall is healthy as PID `2470517`, retained Chrome is unchanged, and the
+  guard task tab is closed. A new independent guard is still required for a
+  successful live end-to-end proof.

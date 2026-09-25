@@ -7,17 +7,21 @@
 Status: active
 Lane: P01
 
-- Active current ChatGPT attachment-opener repair:
+- Closed current ChatGPT attachment-opener repair:
   [Plan 0374](docs/dev/plans/0374-2026-09-25-current-chatgpt-attachment-opener.md).
-  Plan 0373 proved current Chat mode and Current Pro selection, then its sole
-  traced guard failed before file transfer or prompt submission because the
-  attachment surface returned `menu-not-found`. A bounded live inspection proved
-  the current exact opener/menu/chooser contract is unchanged and that the
-  Agent Browser shared click opens it. AuraCall now uses the shared hit-tested,
-  trusted-pointer helper instead of a coordinate-only sequence; provider-free
-  validation passes. Publish through personal `1baker`, install once without
-  replacing Chrome, then run exactly one new round-one learning-traced document
-  guard.
+  The current exact opener/menu/chooser contract was unchanged. Personal commit
+  `c43e7839` used a shared trusted-pointer helper, but the sole traced guard
+  `document-c43e7839-current-attachment-trusted-r1` reached that helper with
+  only 145 ms of broker command budget and failed before upload or submission.
+  It preserved its complete round-one Markdown/DOCX/PDF provenance but produced
+  no verdict, score, review record, final-answer link, attachment receipt, or
+  learning sync. The allowed provider-free rework in personal commit
+  `630d1247` keeps exact hit-testing and trusted CDP input while removing inner
+  transport timeouts and the synthetic fallback. It is published and installed
+  with exact compiled parity; AuraCall is healthy as PID `2470517`, retained
+  Chrome stayed PID `1829010`, and the guard's exact task tab is closed. No
+  successful live end-to-end review is claimed and the terminal guard was not
+  replayed.
 
 - Closed current-Pro flat-menu compatibility repair:
   [Plan 0373](docs/dev/plans/0373-2026-09-25-current-pro-latest-flat-menu.md).
