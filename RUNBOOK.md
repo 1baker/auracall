@@ -1,5 +1,35 @@
 # RUNBOOK
 
+## 2026-09-25 | Request-time retained route acceptance
+
+Plan 0368 owns the exact successor to Plan 0367's pre-tab launch-binding
+failure. AuraCall's live environment selects Agent Browser profile
+`chatgpt-stealth-linux-20260924`. Fresh no-launch access plans from the exact
+session route and dashboard routes all select retained browser
+`session:chatgpt-stealth-linux-20260924`, session
+`chatgpt-stealth-linux-20260924`, `reuse_existing_browser`, and an explicit
+`tab_new` request carrying both route hints. Chrome remains PID `1829010`, start
+token `3619174`, CDP port `39415`. Do not launch or replace it, and do not
+replay Plan 0367. Run the focused bridge checks, verify installed parity, then
+submit exactly one fresh learning-traced document guard and poll only that
+response to terminal.
+
+The focused bridge suites passed `146/146`; typecheck, production build, and
+exact installed bridge parity passed. Guard
+`document-1baef1cc-retained-route-r1`, response
+`resp_idem_815f7313b3224ec08eff25e557ab1e82`, preserved both prompt digests,
+author `codex`, Markdown, DOCX, and PDF. After an unrelated live runner lease
+released normally, its retained-route `tab_new`, focus, task-authority issue,
+and CDP attach all succeeded. The run then failed before attachment upload or
+prompt submission because the model switcher had no option matching
+`Current Pro`; visible rows were `High`, a clipped `Late t` checked row,
+`GPT-5.6 Sol`, and `GPT-5.5 Leaving on October 14`. Do not guess a selector or
+replay this guard. It produced no provider answer, verdict, score, review
+record/chat, canonical conversation URL, Codex final-answer link, attachment
+receipt, or ModelLabs learning sync. Agent Browser released the task tab.
+Chrome PID/start token `1829010`/`3619174`, CDP port `39415`, and the exact
+session route remain unchanged and healthy.
+
 ## 2026-09-25 | Retained daemon forward review
 
 Plan 0367 owns the exact successor to the Plan 0366 daemon-connection blocker.

@@ -1,3 +1,27 @@
+## 2026-09-25 | Prove request-time retained route reuse
+
+Plan 0368 follows Plan 0367 without replaying its terminal failed guard.
+Current no-launch Agent Browser plans agree on the exact retained ChatGPT
+browser/session and return a `tab_new` request with explicit `browserId` and
+`sessionName` reuse hints. AuraCall's configured Agent Browser profile matches
+that retained profile. The remaining bounded work is provider-free bridge
+validation, installed parity, one new learning-traced document review, and
+post-run identity and cleanup verification. Retained Chrome lifecycle and the
+dirty Agent Browser source checkout remain outside this slice.
+
+Five focused suites passed 146 tests; typecheck, build, and installed bridge
+parity passed. Fresh guard `document-1baef1cc-retained-route-r1`, response
+`resp_idem_815f7313b3224ec08eff25e557ab1e82`, retained the complete round-one
+learning provenance and document packet. After a separate response released
+the runner, the exact retained route successfully opened and attached the task
+tab. Model selection then failed closed because `Current Pro` did not match the
+live menu. The failure occurred before uploads or prompt submission, so no
+verdict, score, review artifact/chat, final-answer link, attachment receipt, or
+learning sync exists. The task tab was released, Chrome PID/start token
+`1829010`/`3619174` stayed unchanged, and the guard was not replayed. Plan 0368
+closes with request-time reuse proved and model-menu drift preserved as the
+next independent blocker.
+
 ## 2026-09-25 | Restore the retained daemon route without replacing Chrome
 
 Plan 0367 continues only the blocked Plan 0366 forward review. Agent Browser

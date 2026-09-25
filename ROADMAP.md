@@ -7,6 +7,17 @@
 Status: active
 Lane: P01
 
+- Closed request-time retained-route acceptance:
+  [Plan 0368](docs/dev/plans/0368-2026-09-25-request-time-retained-route-acceptance.md).
+  Five focused suites passed 146 tests, source/install bridge parity and the
+  production build passed, and guard `document-1baef1cc-retained-route-r1`
+  proved live retained `tab_new`, focus, task authority, and CDP attachment.
+  It then failed before upload or prompt submission because the live model menu
+  did not expose an option matching `Current Pro`. There is no provider
+  verdict, score, review record/chat, final-answer link, attachment receipt, or
+  learning sync. The task tab was released, retained Chrome stayed unchanged,
+  and the guard was not replayed.
+
 - Closed retained-daemon forward review:
   [Plan 0367](docs/dev/plans/0367-2026-09-25-retained-daemon-forward-review.md).
   Guard `document-8c118aaa-daemon-rebound-r1` preserved its complete learning

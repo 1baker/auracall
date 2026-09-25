@@ -23041,3 +23041,11 @@ browser-stage lifecycle observability, not transcript truncation.
   launch binding and failed closed before tab creation. Keep browser identity,
   daemon health, and request-time binding as separate acceptance gates; never
   convert an attach failure into an auto-launch fallback or replay the guard.
+- 2026-09-25: Fresh guard `document-1baef1cc-retained-route-r1` proved the
+  request-time repair end to end through retained `tab_new`, focus, task
+  authority, and CDP attach without a duplicate browser. It then failed before
+  upload or prompt submission because `Current Pro` matched no live model-menu
+  row. Preserve route reuse and model selection as separate gates: do not
+  reinterpret a successful attach as provider completion, guess a clipped
+  model label, or replay the terminal guard. Agent Browser released the task
+  tab and retained Chrome identity stayed unchanged.
