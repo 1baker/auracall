@@ -23090,3 +23090,9 @@ browser-stage lifecycle observability, not transcript truncation.
   reinterpret a successful attach as provider completion, guess a clipped
   model label, or replay the terminal guard. Agent Browser released the task
   tab and retained Chrome identity stayed unchanged.
+- 2026-09-25: A current ChatGPT project can omit the Chat/Work switcher and
+  label its empty composer `New chat in <project>` instead of
+  `Chat with ChatGPT`. Default Chat recognition now requires that observed
+  non-empty label prefix together with exact textbox/contenteditable semantics
+  and a containing form. Project-like textareas and unbound textboxes remain
+  rejected, so UI drift does not broaden the contract to arbitrary inputs.

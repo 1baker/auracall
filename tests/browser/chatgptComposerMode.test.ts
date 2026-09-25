@@ -158,6 +158,10 @@ describe("ChatGPT composer mode", () => {
 
 	it("accepts the default Chat composer when the mode switcher is absent", async () => {
 		const composer = new FixtureElement("", { placeholder: "Chat with ChatGPT" });
+		const composerForm = new FixtureElement("");
+		composer.closestResult = composerForm;
+		(composerForm as FixtureElement & { querySelectorAll: typeof installFixtureDocument }).querySelectorAll =
+			(() => []) as never;
 		installFixtureDocument((selector) => {
 			if (selector === '[role="radio"]' || selector === 'button[aria-haspopup="menu"]') return [];
 			if (selector === 'textarea, [contenteditable="true"], [role="textbox"]') return [composer];
@@ -168,6 +172,59 @@ describe("ChatGPT composer mode", () => {
 		const result = await new Function(`return ${expression}`)();
 
 		expect(result).toEqual({ status: "default-chat", mode: "chat" });
+	});
+
+	it("accepts the observed project composer as default Chat", async () => {
+		const composer = new FixtureElement("", {
+			"aria-label": "New chat in Codex + ChatGPT Workshop",
+			contenteditable: "true",
+			role: "textbox",
+		});
+		const composerForm = new FixtureElement("");
+		composer.closestResult = composerForm;
+		(composerForm as FixtureElement & { querySelectorAll: typeof installFixtureDocument }).querySelectorAll =
+			(() => []) as never;
+		installFixtureDocument((selector) => {
+			if (selector === 'textarea, [contenteditable="true"], [role="textbox"]') return [composer];
+			return [];
+		});
+
+		const expression = buildChatgptComposerModeExpressionForTest("chat");
+		const result = await new Function(`return ${expression}`)();
+
+		expect(result).toEqual({ status: "default-chat", mode: "chat" });
+	});
+
+	it("does not infer default Chat from an unbound project-like textbox", async () => {
+		const composer = new FixtureElement("", {
+			"aria-label": "New chat in an unrelated form",
+			contenteditable: "true",
+			role: "textbox",
+		});
+		installFixtureDocument((selector) => {
+			if (selector === 'textarea, [contenteditable="true"], [role="textbox"]') return [composer];
+			return [];
+		});
+
+		const expression = buildChatgptComposerModeExpressionForTest("chat");
+		const result = await new Function(`return ${expression}`)();
+
+		expect(result).toEqual({ status: "mode-not-found", availableModes: [], controlsAbsent: true });
+	});
+
+	it("does not infer default Chat from a project-like textarea", async () => {
+		const composer = new FixtureElement("", { "aria-label": "New chat in an unrelated form" });
+		const composerForm = new FixtureElement("");
+		composer.closestResult = composerForm;
+		installFixtureDocument((selector) => {
+			if (selector === 'textarea, [contenteditable="true"], [role="textbox"]') return [composer];
+			return [];
+		});
+
+		const expression = buildChatgptComposerModeExpressionForTest("chat");
+		const result = await new Function(`return ${expression}`)();
+
+		expect(result).toEqual({ status: "mode-not-found", availableModes: [], controlsAbsent: true });
 	});
 
 	it("ignores unrelated Work menu buttons outside the unified composer", async () => {

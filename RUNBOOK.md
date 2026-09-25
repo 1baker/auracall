@@ -1,5 +1,17 @@
 # RUNBOOK
 
+## 2026-09-25 | Current Chat-mode default composer
+
+Plan 0371 follows Plan 0370 without replaying its terminal guard. The retained
+route is proved, but the new guard stopped at Chat-mode admission before model
+or attachment work. Start with a fresh no-launch access plan, inspect one
+disposable task-owned retained-browser tab without uploading or submitting,
+and release only that exact tab. Bind default Chat to the observed exact
+composer structure while preserving strict explicit Work mode. After
+provider-free validation, publish through personal `1baker`, install once while
+preserving retained Chrome, and run exactly one new round-one
+`--require-learning-trace` document guard.
+
 ## 2026-09-25 | Current ChatGPT local-file action
 
 Plan 0370 follows Plan 0369 without replaying its terminal guard. The retained

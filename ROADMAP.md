@@ -7,6 +7,15 @@
 Status: active
 Lane: P01
 
+- Open current Chat-mode default-composer repair:
+  [Plan 0371](docs/dev/plans/0371-2026-09-25-current-chat-mode-default-composer.md).
+  Plan 0370's sole traced guard failed before model selection, attachment
+  upload, or prompt submission because the live project page did not satisfy
+  AuraCall's exact Chat-mode control contract. Inspect one disposable retained
+  task tab read-only, bind the observed default-composer structure fail closed,
+  publish and install once, then submit exactly one new provenance-complete
+  round-one guard.
+
 - Closed current ChatGPT local-file action repair:
   [Plan 0370](docs/dev/plans/0370-2026-09-25-current-chatgpt-local-file-action.md).
   Personal commit `f9c98db3` binds the exact current home-menu buttons and

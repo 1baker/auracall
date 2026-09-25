@@ -1,3 +1,29 @@
+## 2026-09-25 | Inspect and repair the current default Chat composer
+
+Plan 0371 owns the next bounded blocker from Plan 0370. The prior guard opened
+the exact retained project tab, then failed before model selection, attachment
+upload, or prompt submission because no expected Chat-mode control was found.
+Use one fresh no-launch plan and one disposable task-owned tab for a read-only
+composer inspection. Preserve retained Chrome and derive the provider repair
+from exact live structure; do not replay the prior response or guard identity.
+
+The access plan selected the sole retained browser/session, required
+`attached_existing`, and forbade duplicate launch. The disposable project tab
+had no Chat/Work radios. Its sole visible empty composer was an editable
+textbox with accessible label `New chat in Codex + ChatGPT Workshop` inside a
+form. The detector now admits that exact project-composer shape while requiring
+the containing form; negative regressions reject a project-like textarea and a
+matching textbox outside a form. The task tab was released and retained Chrome
+kept PID/start token `1829010`/`3619174`.
+
+The focused and adjacent browser/runtime suites passed 118 tests. Typecheck,
+production build, touched-file Biome lint, diff hygiene, and CodeGraph sync
+passed. Plan audit retained only its three existing findings. The full parallel
+suite passed 3,526 tests with 55 skips and 20 failures under host load; two are
+the existing raw-route contract failures. The other implicated files passed 76
+tests in a single-worker rerun, and the remaining detached-CLI timing test file
+then passed 7/7 alone.
+
 ## 2026-09-25 | Inspect and repair the current ChatGPT local-file action
 
 Plan 0370 owns the next bounded blocker from Plan 0369. The prior guard proved

@@ -31,7 +31,7 @@ export async function ensureChatgptComposerMode(
 ): Promise<void> {
 	const deadline = Date.now() + 5_000;
 	let result: ComposerModeOutcome | null | undefined;
-	while (true) {
+	for (;;) {
 		const outcome = await Runtime.evaluate({
 			expression: buildChatgptComposerModeExpression(desiredMode),
 			awaitPromise: true,
@@ -108,9 +108,15 @@ function buildChatgptComposerModeExpression(desiredMode: ChatgptComposerMode): s
           node.getAttribute('placeholder') ||
           node.textContent,
         );
-        return label === 'chat with chatgpt';
+        const currentProjectComposer =
+          node.getAttribute('role') === 'textbox' &&
+          node.getAttribute('contenteditable') === 'true' &&
+          label.startsWith('new chat in ') &&
+          label.length > 'new chat in '.length;
+        return label === 'chat with chatgpt' || currentProjectComposer;
       });
-    const composerRoot = prompt?.closest('form[data-type="unified-composer"], form') || document;
+    const promptComposerRoot = prompt?.closest('form[data-type="unified-composer"], form');
+    const composerRoot = promptComposerRoot || document;
     const radios = Array.from(composerRoot.querySelectorAll('[role="radio"]'))
       .filter(visible)
       .map((node) => ({ node, label: normalize(node.textContent) }))
@@ -136,7 +142,7 @@ function buildChatgptComposerModeExpression(desiredMode: ChatgptComposerMode): s
       return { status: 'already-selected', mode: DESIRED_MODE };
     }
     if (!trigger && DESIRED_MODE === 'chat') {
-      if (prompt) return { status: 'default-chat', mode: DESIRED_MODE };
+      if (prompt && promptComposerRoot) return { status: 'default-chat', mode: DESIRED_MODE };
     }
     if (!trigger || !dispatchClickSequence(trigger.node)) {
       return {

@@ -160,6 +160,12 @@ Chat is the default composer mode for every AuraCall ChatGPT browser run. Work
 must be explicit, and its model is selected through a separate nested slider
 menu rather than the Chat model picker:
 
+When a project page has no Chat/Work switcher, AuraCall accepts the current
+default Chat composer only when the visible editable control has the observed
+`New chat in ...` accessible label, exact textbox/contenteditable semantics,
+and a containing form. An arbitrary visible textbox does not establish Chat
+mode.
+
 ```bash
 oracle --profile wsl-chrome-3 --engine browser \
   --browser-chatgpt-mode work \

@@ -269,7 +269,10 @@ Keep these provider-owned contracts separate:
 
 - `src/browser/actions/chatgptComposerMode.ts` selects and verifies exact
   `Chat` or `Work` state. It supports a persistent `radiogroup` and the compact
-  exact mode trigger whose menu choices are `menuitemradio` elements.
+  exact mode trigger whose menu choices are `menuitemradio` elements. A
+  switcher-free project page counts as default Chat only when its visible
+  composer matches the observed `New chat in ...` accessible-label,
+  textbox/contenteditable, and containing-form contract.
 - `src/browser/actions/modelSelection.ts` owns the Chat picker.
 - `src/browser/actions/chatgptWorkModelSelection.ts` owns Work's animated
   slider, optional **Show advanced options** expansion, exact **Model ...**
