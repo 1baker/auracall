@@ -8,6 +8,15 @@ model control with the competing trigger. Preserve retained Chrome and derive
 the repair from exact bounded DOM evidence; do not replay the prior response or
 guard identity.
 
+The live evidence showed that the real control's accessible label is exactly
+`Select ChatGPT model`, while the false positives were project action buttons
+whose labels contained `ModelLabs` or `Model`. Personal commit `ab00b5bb`
+replaced the generic case-sensitive selectors with that exact current label,
+published and installed it, and preserved retained Chrome. Its only forward
+guard opened the correct menu, proving this repair, then stopped before upload
+because the next semantic rule could not map `Current Pro` to checked
+`Latest`. The terminal response is preserved and was not replayed.
+
 ## 2026-09-25 | Inspect and repair the current default Chat composer
 
 Plan 0371 owns the next bounded blocker from Plan 0370. The prior guard opened

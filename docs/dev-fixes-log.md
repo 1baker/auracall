@@ -1,3 +1,24 @@
+- 2026-09-25: Chat model selection used generic case-sensitive
+  `aria-label*="Model"` triggers, so project buttons such as
+  `Actions for Review ModelLabs Evidence` could open the conversation-actions
+  menu while the true lowercase-`model` control was missed. AuraCall now leads
+  with the exact current `button[aria-label="Select ChatGPT model"]` selector
+  and removes both generic triggers. Provider-free positive and negative
+  regressions pass; 55 focused and 299 widened tests pass, as do typecheck,
+  build, error-level touched-file lint, diff hygiene, and CodeGraph sync. The
+  full suite passes 3,544 tests with 55 skips, repeats two existing raw-route
+  contract failures, and its two unrelated timing failures pass alone. Plan
+  audit repeats only the three existing findings. Personal commit `ab00b5bb`
+  is published and installed with compiled/config hash parity; retained Chrome
+  kept PID/start token `1829010`/`3619174`. Fresh traced guard
+  `document-ab00b5bb-current-model-trigger-r1`, response
+  `resp_idem_1d77b287e7e09c3096df86e89439e006`, opened the correct menu and
+  proved the repair. It then failed before attachment upload or prompt
+  submission because `Current Pro` did not match checked `Latest` in the
+  flattened current menu. There is no verdict, score, review record, final-
+  answer link, or ModelLabs learning sync. Its lease released and the terminal
+  guard was not replayed.
+
 - 2026-09-25: ChatGPT's current attachment home menu replaced the legacy
   described rows and stable `#upload-files` input with plain
   `Add photos & files` and `Add library files` buttons plus a dynamically

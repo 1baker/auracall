@@ -13,6 +13,17 @@ negative regressions, validate, publish through personal `1baker`, install
 once without replacing retained Chrome, and run exactly one new round-one
 `--require-learning-trace` document guard.
 
+Personal commit `ab00b5bb` is published and installed. Guard
+`document-ab00b5bb-current-model-trigger-r1` proved the repaired trigger by
+opening the real current menu (`Instant`, checked `Latest`, `GPT-5.6 Sol`, and
+`GPT-5.5 Leaving on October 14`). It then failed closed because semantic
+`Current Pro` did not match those flattened options. Preserve response
+`resp_idem_1d77b287e7e09c3096df86e89439e006` without replay. No attachment or
+prompt was submitted, so there is no verdict, score, review record, final-
+answer link, or learning sync. The runtime lease released and the exact
+project-root task route has no live tab; retained Chrome remains externally
+owned.
+
 ## 2026-09-25 | Current Chat-mode default composer
 
 Plan 0371 follows Plan 0370 without replaying its terminal guard. The retained

@@ -1,6 +1,6 @@
 # Current ChatGPT Model-Picker Trigger Scope | 0372-2026-09-25
 
-State: OPEN
+State: CLOSED
 Lane: P01
 
 ## Objective
@@ -39,6 +39,13 @@ preserving exact current-Pro selection and fail-closed diagnostics.
 - The full suite passes 3,544 tests with 55 skips. Its two raw-route contract
   failures are the existing route-manifest debt; two unrelated timing-sensitive
   background-completion cases both pass in a bounded single-worker rerun.
+- Personal commit `ab00b5bb` is published to isolated personal `1baker`,
+  re-fetched at zero ahead/behind, and installed. Checkout and installed hashes
+  match for both compiled `chatgpt.js`
+  (`be23198538c872d14d823f7509f62b89eaa86470b89685bc65465eeb418f0367`)
+  and `auracall.services.json`
+  (`862b95121605c42b9ddc5f5b11284cb77421280c25cb06c8111fc3d4f4be21c4`).
+  The AuraCall API restarted healthy as PID `2114101`.
 - Retained Chrome is externally owned at PID `1829010`, start token `3619174`,
   and must not be launched, replaced, or closed.
 
@@ -82,14 +89,39 @@ preserving exact current-Pro selection and fail-closed diagnostics.
 - [x] Focused tests, typecheck, production build, touched-file lint, diff
       hygiene, plan audit, and CodeGraph sync pass or disclose exact existing
       findings.
-- [ ] Personal GitHub publication is committed, pushed through isolated
+- [x] Personal GitHub publication is committed, pushed through isolated
       `1baker` routing, re-fetched, clean, and zero ahead/behind.
-- [ ] The installed runtime matches the published commit while retained Chrome
+- [x] The installed runtime matches the published commit while retained Chrome
       keeps its original process identity.
 - [ ] One fresh round-one learning trace preserves the immutable original
       prompt, exact generation prompt, true author, no parent guard, reviewed
       Markdown/DOCX/PDF packet, and records the browser verdict, score, exact
       Codex final-answer link, and ModelLabs learning-sync result when present.
+
+## Terminal Result
+
+- Exactly one fresh guard ran:
+  `document-ab00b5bb-current-model-trigger-r1`, response
+  `resp_idem_1d77b287e7e09c3096df86e89439e006`. Round 1 records author `codex`,
+  no parent, learning-trace digest
+  `c6821c2d71cf8ec4aa250f5bbc62e62a557b4759611c90c61800da1a3544b698`,
+  the immutable origin/generation prompt digests, reviewed Markdown, DOCX, and
+  PDF.
+- The installed selector opened the correct current model menu. Available
+  options were `Instant`, checked `Latest`, `GPT-5.6 Sol`, and
+  `GPT-5.5 Leaving on October 14`; the old conversation-actions menu did not
+  appear. This accepts the model-trigger repair.
+- The run then failed before upload or prompt submission because semantic
+  `Current Pro` did not match the current flattened menu. No reviewer answer,
+  verdict, score, review record, conversation URL, attachment receipt, exact
+  Codex final-answer link, or ModelLabs learning sync exists. The runtime lease
+  released, no exact project-root task tab remains live, and the guard was not
+  replayed.
+- Retained Chrome preserved PID/start token `1829010`/`3619174`; only the
+  installed AuraCall API restarted.
+
+The unchecked review-output criterion is the next independent compatibility
+blocker, not an implicit pass. Any follow-up belongs to a new bounded slice.
 
 ## Definition Of Done
 
