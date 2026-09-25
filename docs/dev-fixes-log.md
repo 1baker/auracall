@@ -1,3 +1,17 @@
+- 2026-09-25: ChatGPT's current attachment home menu replaced the legacy
+  described rows and stable `#upload-files` input with plain
+  `Add photos & files` and `Add library files` buttons plus a dynamically
+  identified unrestricted input labeled `Attach files`. AuraCall now binds
+  that exact current structure while retaining the exact legacy contract and
+  failing closed on label drift, ambiguity, missing multiplicity, or restricted
+  types. A fresh no-launch diagnostic used and released one task-owned tab
+  without changing retained Chrome. Eight widened suites pass 161 tests; the
+  focused set passes 31 tests; typecheck, production build, touched-file lint,
+  diff hygiene, and CodeGraph sync pass. The full suite passes 3,540 tests with
+  55 skips and repeats two existing raw-route contract failures; one unrelated
+  timing-sensitive CLI test passed all 7 tests in isolation. Publication,
+  installed parity, and the one bounded forward guard remain pending.
+
 - 2026-09-25: ChatGPT split current model selection from thinking effort, so
   `chatgpt:premium` could not recognize the exact checked `Latest` radio behind
   the expanded `Select model` row. AuraCall now binds `Latest` only to that

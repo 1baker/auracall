@@ -43,7 +43,7 @@ export type ChatgptComposerToolSelection = {
 export type ChatgptWorkbenchAttachmentSurface =
   | {
       status: 'ready';
-      inputSelector: '#upload-files';
+      inputSelector: '#upload-files' | 'input[type="file"][aria-label="Attach files"]';
       localFileLabel: string;
       libraryLabel: string | null;
     }
@@ -58,8 +58,9 @@ export type ChatgptWorkbenchAttachmentSurface =
     };
 
 type ChatgptWorkbenchAttachmentInventory = {
+  surface: 'legacy-popover' | 'composer-home-top-menu';
   rows: Array<{ label: string; description: string }>;
-  inputs: Array<{ id: string; accept: string | null; multiple: boolean }>;
+  inputs: Array<{ id: string; ariaLabel: string | null; accept: string | null; multiple: boolean }>;
 };
 
 const COMPOSER_TOOL_ALIASES = resolveBundledServiceComposerAliases('chatgpt', {});
@@ -71,11 +72,18 @@ const COMPOSER_TOP_MENU_SIGNAL_SUBSTRINGS = resolveBundledServiceComposerTopMenu
 const KNOWN_COMPOSER_TOOL_LABELS = resolveBundledServiceComposerKnownLabels('chatgpt', []);
 const COMPOSER_FILE_REQUEST_LABELS = resolveBundledServiceComposerFileRequestLabels('chatgpt', []);
 const COMPOSER_CHIP_IGNORE_TOKENS = resolveBundledServiceComposerChipIgnoreTokens('chatgpt', []);
-const CHATGPT_COMPOSER_POPOVER_SELECTOR = '.popover';
-const CHATGPT_COMPOSER_POPOVER_ITEM_SELECTOR =
+const CHATGPT_LEGACY_COMPOSER_POPOVER_SELECTOR = '.popover';
+const CHATGPT_CURRENT_COMPOSER_MENU_SELECTOR = '.composer-home-top-menu';
+const CHATGPT_COMPOSER_POPOVER_SELECTOR =
+  `${CHATGPT_LEGACY_COMPOSER_POPOVER_SELECTOR}, ${CHATGPT_CURRENT_COMPOSER_MENU_SELECTOR}`;
+const CHATGPT_LEGACY_COMPOSER_POPOVER_ITEM_SELECTOR =
   '.__menu-item[tabindex], [data-fill][tabindex]';
+const CHATGPT_CURRENT_COMPOSER_MENU_ITEM_SELECTOR = 'button';
 const CHATGPT_LOCAL_FILE_ACTION_LABEL = 'add photos files';
-const CHATGPT_LIBRARY_ACTION_LABEL = 'add from library';
+const CHATGPT_LEGACY_LIBRARY_ACTION_LABEL = 'add from library';
+const CHATGPT_CURRENT_LIBRARY_ACTION_LABEL = 'add library files';
+const CHATGPT_CURRENT_LOCAL_FILE_INPUT_LABEL = 'attach files';
+const CHATGPT_CURRENT_LOCAL_FILE_INPUT_SELECTOR = 'input[type="file"][aria-label="Attach files"]';
 
 export async function ensureChatgptComposerTool(
   client: ChromeClient,
@@ -197,7 +205,8 @@ function isComposerFileSourceLabel(label: string): boolean {
   const normalized = normalizeComposerToolLabel(label);
   return (
     normalized === CHATGPT_LOCAL_FILE_ACTION_LABEL ||
-    normalized === CHATGPT_LIBRARY_ACTION_LABEL ||
+    normalized === CHATGPT_LEGACY_LIBRARY_ACTION_LABEL ||
+    normalized === CHATGPT_CURRENT_LIBRARY_ACTION_LABEL ||
     COMPOSER_FILE_REQUEST_LABELS.includes(normalized)
   );
 }
@@ -248,23 +257,29 @@ function findBestComposerToolItem(
 function resolveChatgptWorkbenchAttachmentSurface(
   inventory: ChatgptWorkbenchAttachmentInventory,
 ): ChatgptWorkbenchAttachmentSurface {
+  const currentSurface = inventory.surface === 'composer-home-top-menu';
   const localRows = inventory.rows.filter(
     (row) =>
       normalizeComposerToolLabel(row.label) === CHATGPT_LOCAL_FILE_ACTION_LABEL &&
-      normalizeComposerToolLabel(row.description) === 'upload from computer',
+      normalizeComposerToolLabel(row.description) === (currentSurface ? '' : 'upload from computer'),
   );
   if (localRows.length !== 1) {
     return { status: 'local-file-action-not-found' };
   }
   const libraryRows = inventory.rows.filter(
     (row) =>
-      normalizeComposerToolLabel(row.label) === CHATGPT_LIBRARY_ACTION_LABEL &&
-      normalizeComposerToolLabel(row.description) === 'browse and search your files',
+      normalizeComposerToolLabel(row.label) ===
+        (currentSurface ? CHATGPT_CURRENT_LIBRARY_ACTION_LABEL : CHATGPT_LEGACY_LIBRARY_ACTION_LABEL) &&
+      normalizeComposerToolLabel(row.description) === (currentSurface ? '' : 'browse and search your files'),
   );
   if (libraryRows.length > 1) {
     return { status: 'library-action-not-found' };
   }
-  const uploadInputs = inventory.inputs.filter((input) => input.id === 'upload-files');
+  const uploadInputs = inventory.inputs.filter((input) =>
+    currentSurface
+      ? normalizeComposerToolLabel(input.ariaLabel ?? '') === CHATGPT_CURRENT_LOCAL_FILE_INPUT_LABEL
+      : input.id === 'upload-files',
+  );
   if (uploadInputs.length === 0) {
     return { status: 'file-input-not-found' };
   }
@@ -277,7 +292,7 @@ function resolveChatgptWorkbenchAttachmentSurface(
   }
   return {
     status: 'ready',
-    inputSelector: '#upload-files',
+    inputSelector: currentSurface ? CHATGPT_CURRENT_LOCAL_FILE_INPUT_SELECTOR : '#upload-files',
     localFileLabel: localRows[0].label,
     libraryLabel: libraryRows[0]?.label ?? null,
   };
@@ -458,7 +473,11 @@ async function readComposerPopoverEntry(
       const root = roots.filter(isVisible).at(-1);
       if (!root) return null;
       root.setAttribute('data-auracall-chatgpt-composer-menu', 'true');
-      const items = Array.from(root.querySelectorAll(${JSON.stringify(CHATGPT_COMPOSER_POPOVER_ITEM_SELECTOR)}))
+      const currentSurface = root.matches(${JSON.stringify(CHATGPT_CURRENT_COMPOSER_MENU_SELECTOR)});
+      const itemSelector = currentSurface
+        ? ${JSON.stringify(CHATGPT_CURRENT_COMPOSER_MENU_ITEM_SELECTOR)}
+        : ${JSON.stringify(CHATGPT_LEGACY_COMPOSER_POPOVER_ITEM_SELECTOR)};
+      const items = Array.from(root.querySelectorAll(itemSelector))
         .filter(isVisible)
         .map((item) => {
           const primary = item.querySelector('span.max-w-full, span.truncate');
@@ -477,7 +496,9 @@ async function readComposerPopoverEntry(
       const rect = root.getBoundingClientRect();
       return {
         selector: '[data-auracall-chatgpt-composer-menu="true"]',
-        sourceSelector: ${JSON.stringify(CHATGPT_COMPOSER_POPOVER_SELECTOR)},
+        sourceSelector: currentSurface
+          ? ${JSON.stringify(CHATGPT_CURRENT_COMPOSER_MENU_SELECTOR)}
+          : ${JSON.stringify(CHATGPT_LEGACY_COMPOSER_POPOVER_SELECTOR)},
         signature: JSON.stringify({ items: items.map((item) => item.label) }),
         rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
         distanceToAnchor: null,
@@ -544,8 +565,11 @@ async function openComposerPopoverWithCdp(
           .some((node) => {
             if (!(node instanceof HTMLElement)) return false;
             const rect = node.getBoundingClientRect();
+            const itemSelector = node.matches(${JSON.stringify(CHATGPT_CURRENT_COMPOSER_MENU_SELECTOR)})
+              ? ${JSON.stringify(CHATGPT_CURRENT_COMPOSER_MENU_ITEM_SELECTOR)}
+              : ${JSON.stringify(CHATGPT_LEGACY_COMPOSER_POPOVER_ITEM_SELECTOR)};
             return rect.width > 0 && rect.height > 0
-              && Boolean(node.querySelector(${JSON.stringify(CHATGPT_COMPOSER_POPOVER_ITEM_SELECTOR)}));
+              && Boolean(node.querySelector(itemSelector));
           });
         if (ready) return true;
         await new Promise((resolve) => setTimeout(resolve, 100));
@@ -593,8 +617,14 @@ export async function prepareChatgptWorkbenchLocalAttachment(
       const roots = Array.from(document.querySelectorAll(${JSON.stringify(CHATGPT_COMPOSER_POPOVER_SELECTOR)}))
         .filter(visible);
       const root = roots.at(-1);
+      const surface = root?.matches(${JSON.stringify(CHATGPT_CURRENT_COMPOSER_MENU_SELECTOR)})
+        ? 'composer-home-top-menu'
+        : 'legacy-popover';
+      const itemSelector = surface === 'composer-home-top-menu'
+        ? ${JSON.stringify(CHATGPT_CURRENT_COMPOSER_MENU_ITEM_SELECTOR)}
+        : ${JSON.stringify(CHATGPT_LEGACY_COMPOSER_POPOVER_ITEM_SELECTOR)};
       const rows = root
-        ? Array.from(root.querySelectorAll(${JSON.stringify(CHATGPT_COMPOSER_POPOVER_ITEM_SELECTOR)}))
+        ? Array.from(root.querySelectorAll(itemSelector))
             .filter(visible)
             .map((item) => {
               const primary = item.querySelector('span.max-w-full, span.truncate');
@@ -609,16 +639,22 @@ export async function prepareChatgptWorkbenchLocalAttachment(
         : [];
       const inputs = Array.from(document.querySelectorAll('input[type="file"]')).map((input) => ({
         id: input.id || '',
+        ariaLabel: input.getAttribute('aria-label'),
         accept: input.getAttribute('accept'),
         multiple: input.hasAttribute('multiple'),
       }));
-      return { rows, inputs };
+      return { surface, rows, inputs };
     })()`,
     returnByValue: true,
   });
   await dismissOpenMenus(runtime).catch(() => false);
   const inventory = result.result?.value as ChatgptWorkbenchAttachmentInventory | null | undefined;
-  if (!inventory || !Array.isArray(inventory.rows) || !Array.isArray(inventory.inputs)) {
+  if (
+    !inventory ||
+    !['legacy-popover', 'composer-home-top-menu'].includes(inventory.surface) ||
+    !Array.isArray(inventory.rows) ||
+    !Array.isArray(inventory.inputs)
+  ) {
     return { status: 'menu-not-found' };
   }
   return resolveChatgptWorkbenchAttachmentSurface(inventory);
@@ -656,7 +692,10 @@ async function activateComposerPopoverItem(
         .filter(visible);
       const root = roots.at(-1);
       if (!root) return null;
-      const ranked = Array.from(root.querySelectorAll(${JSON.stringify(CHATGPT_COMPOSER_POPOVER_ITEM_SELECTOR)}))
+      const itemSelector = root.matches(${JSON.stringify(CHATGPT_CURRENT_COMPOSER_MENU_SELECTOR)})
+        ? ${JSON.stringify(CHATGPT_CURRENT_COMPOSER_MENU_ITEM_SELECTOR)}
+        : ${JSON.stringify(CHATGPT_LEGACY_COMPOSER_POPOVER_ITEM_SELECTOR)};
+      const ranked = Array.from(root.querySelectorAll(itemSelector))
         .filter(visible)
         .map((item) => {
           const primary = item.querySelector('span.max-w-full, span.truncate');

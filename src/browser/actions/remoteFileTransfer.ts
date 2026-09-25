@@ -31,7 +31,7 @@ export async function uploadAttachmentViaDataTransfer(
   if (workbenchSurface.status !== 'ready') {
     await logDomFailure(runtime, logger, `chatgpt-workbench-remote-attachment-${workbenchSurface.status}`);
     throw new Error(
-      `ChatGPT workbench attachment surface is not ready (${workbenchSurface.status}). Expected the Add photos & files row plus one unrestricted #upload-files input; the provider library row is optional.`,
+      `ChatGPT workbench attachment surface is not ready (${workbenchSurface.status}). Expected the exact Add photos & files action plus one unrestricted local-file chooser; the provider library action is optional.`,
     );
   }
 

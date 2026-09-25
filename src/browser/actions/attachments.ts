@@ -350,13 +350,13 @@ export async function uploadAttachmentFile(
     return true;
   }
 
-  let preferredInputSelector: '#upload-files' | null = null;
+  let preferredInputSelector: string | null = null;
   if (input && page) {
     const workbenchSurface = await prepareChatgptWorkbenchLocalAttachment({ runtime, input, page });
     if (workbenchSurface.status !== 'ready') {
       await logDomFailure(runtime, logger, `chatgpt-workbench-attachment-${workbenchSurface.status}`);
       throw new Error(
-        `ChatGPT workbench attachment surface is not ready (${workbenchSurface.status}). Expected the Add photos & files row plus one unrestricted #upload-files input; the provider library row is optional.`,
+        `ChatGPT workbench attachment surface is not ready (${workbenchSurface.status}). Expected the exact Add photos & files action plus one unrestricted local-file chooser; the provider library action is optional.`,
       );
     }
     preferredInputSelector = workbenchSurface.inputSelector;

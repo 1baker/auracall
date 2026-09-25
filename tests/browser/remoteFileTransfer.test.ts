@@ -24,9 +24,9 @@ describe('uploadAttachmentViaDataTransfer', () => {
     vi.clearAllMocks();
     prepareChatgptWorkbenchLocalAttachment.mockResolvedValue({
       status: 'ready',
-      inputSelector: '#upload-files',
+      inputSelector: 'input[type="file"][aria-label="Attach files"]',
       localFileLabel: 'Add photos & files',
-      libraryLabel: 'Add from library',
+      libraryLabel: 'Add library files',
     });
     transferAttachmentViaDataTransfer.mockResolvedValue({ fileName: 'fixture.txt', size: 7 });
     waitForAttachmentVisible.mockResolvedValue(undefined);
@@ -49,11 +49,14 @@ describe('uploadAttachmentViaDataTransfer', () => {
 
     expect(prepareChatgptWorkbenchLocalAttachment).toHaveBeenCalledWith({ runtime, input, page });
     expect(dom.querySelector).toHaveBeenCalledTimes(1);
-    expect(dom.querySelector).toHaveBeenCalledWith({ nodeId: 1, selector: '#upload-files' });
+    expect(dom.querySelector).toHaveBeenCalledWith({
+      nodeId: 1,
+      selector: 'input[type="file"][aria-label="Attach files"]',
+    });
     expect(transferAttachmentViaDataTransfer).toHaveBeenCalledWith(
       runtime,
       expect.objectContaining({ path: '/tmp/fixture.txt' }),
-      '#upload-files',
+      'input[type="file"][aria-label="Attach files"]',
     );
   });
 

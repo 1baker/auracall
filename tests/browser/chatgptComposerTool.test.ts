@@ -78,14 +78,15 @@ describe('chatgpt composer tool selection', () => {
   test('recognizes the current workbench attachment rows and unrestricted local upload input', () => {
     expect(
       resolveChatgptWorkbenchAttachmentSurfaceForTest({
+        surface: 'legacy-popover',
         rows: [
           { label: 'Add photos & files', description: 'Upload from computer' },
           { label: 'Add from library', description: 'Browse and search your files' },
           { label: 'Web search', description: 'Find real-time news and info' },
         ],
         inputs: [
-          { id: 'upload-files', accept: null, multiple: true },
-          { id: 'upload-photos', accept: 'image/*', multiple: true },
+          { id: 'upload-files', ariaLabel: null, accept: null, multiple: true },
+          { id: 'upload-photos', ariaLabel: null, accept: 'image/*', multiple: true },
         ],
       }),
     ).toEqual({
@@ -93,6 +94,29 @@ describe('chatgpt composer tool selection', () => {
       inputSelector: '#upload-files',
       localFileLabel: 'Add photos & files',
       libraryLabel: 'Add from library',
+    });
+  });
+
+  test('recognizes the current home-menu action and exact unrestricted Attach files chooser', () => {
+    expect(
+      resolveChatgptWorkbenchAttachmentSurfaceForTest({
+        surface: 'composer-home-top-menu',
+        rows: [
+          { label: 'Add photos & files', description: '' },
+          { label: 'Add library files', description: '' },
+          { label: 'Create image', description: 'Visualize anything' },
+        ],
+        inputs: [
+          { id: '_r_54_', ariaLabel: 'Attach files', accept: null, multiple: true },
+          { id: '_r_55_', ariaLabel: 'Attach photos', accept: 'image/*', multiple: true },
+          { id: '_r_56_', ariaLabel: 'Attach photos or videos', accept: 'image/*,video/*', multiple: true },
+        ],
+      }),
+    ).toEqual({
+      status: 'ready',
+      inputSelector: 'input[type="file"][aria-label="Attach files"]',
+      localFileLabel: 'Add photos & files',
+      libraryLabel: 'Add library files',
     });
   });
 
@@ -104,7 +128,7 @@ describe('chatgpt composer tool selection', () => {
           result: {
             value: {
               selector: '[data-auracall-chatgpt-composer-menu="true"]',
-              sourceSelector: '.popover',
+              sourceSelector: '.composer-home-top-menu',
               signature: 'current-workbench',
               rect: { x: 0, y: 0, width: 400, height: 600 },
               distanceToAnchor: null,
@@ -118,11 +142,12 @@ describe('chatgpt composer tool selection', () => {
         return {
           result: {
             value: {
+              surface: 'composer-home-top-menu',
               rows: [
-                { label: 'Add photos & files', description: 'Upload from computer' },
-                { label: 'Add from library', description: 'Browse and search your files' },
+                { label: 'Add photos & files', description: '' },
+                { label: 'Add library files', description: '' },
               ],
-              inputs: [{ id: 'upload-files', accept: null, multiple: true }],
+              inputs: [{ id: '_r_54_', ariaLabel: 'Attach files', accept: null, multiple: true }],
             },
           },
         };
@@ -136,7 +161,10 @@ describe('chatgpt composer tool selection', () => {
       input: {} as Parameters<typeof prepareChatgptWorkbenchLocalAttachment>[0]['input'],
       page: {} as Parameters<typeof prepareChatgptWorkbenchLocalAttachment>[0]['page'],
     });
-    expect(surface).toMatchObject({ status: 'ready', inputSelector: '#upload-files' });
+    expect(surface).toMatchObject({
+      status: 'ready',
+      inputSelector: 'input[type="file"][aria-label="Attach files"]',
+    });
     expect(evaluate).toHaveBeenCalledWith(expect.objectContaining({ returnByValue: true }));
   });
 
@@ -154,7 +182,7 @@ describe('chatgpt composer tool selection', () => {
                 ? null
                 : {
                     selector: '[data-auracall-chatgpt-composer-menu="true"]',
-                    sourceSelector: '.popover',
+                    sourceSelector: '.composer-home-top-menu',
                     signature: 'current-workbench',
                     rect: { x: 0, y: 0, width: 400, height: 600 },
                     distanceToAnchor: null,
@@ -175,11 +203,12 @@ describe('chatgpt composer tool selection', () => {
         return {
           result: {
             value: {
+              surface: 'composer-home-top-menu',
               rows: [
-                { label: 'Add photos & files', description: 'Upload from computer' },
-                { label: 'Add from library', description: 'Browse and search your files' },
+                { label: 'Add photos & files', description: '' },
+                { label: 'Add library files', description: '' },
               ],
-              inputs: [{ id: 'upload-files', accept: null, multiple: true }],
+              inputs: [{ id: '_r_54_', ariaLabel: 'Attach files', accept: null, multiple: true }],
             },
           },
         };
@@ -204,7 +233,10 @@ describe('chatgpt composer tool selection', () => {
       page: page as unknown as Parameters<typeof prepareChatgptWorkbenchLocalAttachment>[0]['page'],
     });
 
-    expect(surface).toMatchObject({ status: 'ready', inputSelector: '#upload-files' });
+    expect(surface).toMatchObject({
+      status: 'ready',
+      inputSelector: 'input[type="file"][aria-label="Attach files"]',
+    });
     expect(events).toEqual(['front', 'measure']);
     expect(input.dispatchMouseEvent).toHaveBeenCalledTimes(3);
   });
@@ -228,7 +260,7 @@ describe('chatgpt composer tool selection', () => {
                 ? null
                 : {
                     selector: '[data-auracall-chatgpt-composer-menu="true"]',
-                    sourceSelector: '.popover',
+                    sourceSelector: '.composer-home-top-menu',
                     signature: 'current-workbench',
                     rect: { x: 0, y: 0, width: 400, height: 600 },
                     distanceToAnchor: null,
@@ -254,8 +286,9 @@ describe('chatgpt composer tool selection', () => {
         return {
           result: {
             value: {
-              rows: [{ label: 'Add photos & files', description: 'Upload from computer' }],
-              inputs: [{ id: 'upload-files', accept: null, multiple: true }],
+              surface: 'composer-home-top-menu',
+              rows: [{ label: 'Add photos & files', description: '' }],
+              inputs: [{ id: '_r_54_', ariaLabel: 'Attach files', accept: null, multiple: true }],
             },
           },
         };
@@ -279,7 +312,10 @@ describe('chatgpt composer tool selection', () => {
       });
       await readinessStarted;
       await vi.advanceTimersByTimeAsync(2_600);
-      await expect(pending).resolves.toMatchObject({ status: 'ready', inputSelector: '#upload-files' });
+      await expect(pending).resolves.toMatchObject({
+        status: 'ready',
+        inputSelector: 'input[type="file"][aria-label="Attach files"]',
+      });
 
       expect(readinessCall).toMatchObject({ returnByValue: true, awaitPromise: true });
       expect(readinessCall).not.toHaveProperty('timeout');
@@ -291,8 +327,9 @@ describe('chatgpt composer tool selection', () => {
   test('accepts an optional provider library row but fails closed on generic input drift', () => {
     expect(
       resolveChatgptWorkbenchAttachmentSurfaceForTest({
+        surface: 'legacy-popover',
         rows: [{ label: 'Add photos & files', description: 'Upload from computer' }],
-        inputs: [{ id: 'upload-files', accept: null, multiple: true }],
+        inputs: [{ id: 'upload-files', ariaLabel: null, accept: null, multiple: true }],
       }),
     ).toEqual({
       status: 'ready',
@@ -302,11 +339,37 @@ describe('chatgpt composer tool selection', () => {
     });
     expect(
       resolveChatgptWorkbenchAttachmentSurfaceForTest({
+        surface: 'legacy-popover',
         rows: [
           { label: 'Add photos & files', description: 'Upload from computer' },
           { label: 'Add from library', description: 'Browse and search your files' },
         ],
-        inputs: [{ id: 'upload-files', accept: 'image/*', multiple: true }],
+        inputs: [{ id: 'upload-files', ariaLabel: null, accept: 'image/*', multiple: true }],
+      }),
+    ).toEqual({ status: 'file-input-restricted' });
+
+    expect(
+      resolveChatgptWorkbenchAttachmentSurfaceForTest({
+        surface: 'composer-home-top-menu',
+        rows: [{ label: 'Add photos & files', description: '' }],
+        inputs: [{ id: '_r_54_', ariaLabel: 'Upload files', accept: null, multiple: true }],
+      }),
+    ).toEqual({ status: 'file-input-not-found' });
+    expect(
+      resolveChatgptWorkbenchAttachmentSurfaceForTest({
+        surface: 'composer-home-top-menu',
+        rows: [{ label: 'Add photos & files', description: '' }],
+        inputs: [
+          { id: '_r_54_', ariaLabel: 'Attach files', accept: null, multiple: true },
+          { id: '_r_99_', ariaLabel: 'Attach files', accept: null, multiple: true },
+        ],
+      }),
+    ).toEqual({ status: 'file-input-ambiguous' });
+    expect(
+      resolveChatgptWorkbenchAttachmentSurfaceForTest({
+        surface: 'composer-home-top-menu',
+        rows: [{ label: 'Add photos & files', description: '' }],
+        inputs: [{ id: '_r_54_', ariaLabel: 'Attach files', accept: 'text/plain', multiple: true }],
       }),
     ).toEqual({ status: 'file-input-restricted' });
   });

@@ -171,12 +171,14 @@ If the mode menu or the Work slider's `advanced options -> Model` submenu is
 not present, AuraCall fails closed. It does not reuse Chat picker selectors.
 
 On the current Chat workbench, `Add files and more` opens one searchable
-popover containing both file sources and tools. Use `--browser-composer-tool`
+home menu containing both file sources and tools. Use `--browser-composer-tool`
 only for tool/app rows such as `web-search`, `canvas`, or `deep-research`; use
-`--file` for local paths. AuraCall verifies `Add photos & files / Upload from
-computer` and the unrestricted `#upload-files` input without confusing them
-with `Add from library / Browse and search your files`, which is ChatGPT's
-separate provider-library drawer. Missing or ambiguous rows fail closed.
+`--file` for local paths. AuraCall verifies the exact `Add photos & files`
+button and the unique unrestricted input labeled `Attach files` without
+confusing them with the image/video inputs or `Add library files`, which opens
+ChatGPT's separate provider-library drawer. The legacy described popover and
+fixed `#upload-files` input remain supported exactly. Missing, ambiguous, or
+restricted signals fail closed.
 
 ## Troubleshooting
 - **Chrome opens but the URL never changes**: Oracle is connecting to the wrong DevTools host.

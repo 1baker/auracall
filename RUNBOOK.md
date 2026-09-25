@@ -1,5 +1,18 @@
 # RUNBOOK
 
+## 2026-09-25 | Current ChatGPT local-file action
+
+Plan 0370 follows Plan 0369 without replaying its terminal guard. The retained
+route and current Pro `Latest` model decision are proved; the independent
+blocker is the attachment menu's current local-file action. Start with a fresh
+no-launch access plan, inspect one disposable task-owned retained-browser tab
+without uploading or submitting, and release only that exact tab. Bind the
+source decision to the observed exact menu and chooser-input structure while
+preserving ambiguity, restricted-input, receipt, sent-turn, account, model, and
+browser-authority checks. After provider-free validation, publish through the
+personal `1baker` route, install once while preserving retained Chrome, and run
+exactly one new round-one `--require-learning-trace` document guard.
+
 ## 2026-09-25 | Current Pro `Latest` leaf recognition
 
 Plan 0369 follows Plan 0368 without replaying its terminal guard. The retained

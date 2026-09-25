@@ -1,3 +1,21 @@
+## 2026-09-25 | Inspect and repair the current ChatGPT local-file action
+
+Plan 0370 owns the next bounded blocker from Plan 0369. The prior guard proved
+current Pro `Latest`, then failed before completed file upload or prompt
+submission because no exact `Add photos & files` plus unrestricted
+`#upload-files` surface was observed. Use one fresh no-launch access plan and
+one disposable task-owned tab for a read-only menu inspection, preserve the
+retained browser, and derive the provider repair from the exact live structure.
+No prior response or guard identity may be replayed.
+
+A fresh no-launch plan selected the sole retained browser. One disposable tab
+showed that ChatGPT replaced the legacy described `.popover` rows and stable
+`#upload-files` ID with plain buttons in `.composer-home-top-menu` plus a
+dynamically identified input whose exact accessible label is `Attach files`.
+The repair binds those exact current signals, preserves strict legacy support,
+and rejects wrong, duplicate, non-multiple, or restricted inputs. The task tab
+was released without changing retained Chrome.
+
 ## 2026-09-25 | Bind `Latest` to the opened Pro family
 
 Plan 0369 isolates the Plan 0368 model-menu blocker. A fresh retained-session
