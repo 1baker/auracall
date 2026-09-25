@@ -9,8 +9,18 @@
   focused set passes 31 tests; typecheck, production build, touched-file lint,
   diff hygiene, and CodeGraph sync pass. The full suite passes 3,540 tests with
   55 skips and repeats two existing raw-route contract failures; one unrelated
-  timing-sensitive CLI test passed all 7 tests in isolation. Publication,
-  installed parity, and the one bounded forward guard remain pending.
+  timing-sensitive CLI test passed all 7 tests in isolation. Personal commit
+  `f9c98db3` is published and installed with exact parity across the three
+  repaired compiled modules; only AuraCall API restarted, while retained
+  Chrome kept PID/start token `1829010`/`3619174`. Fresh traced guard
+  `document-f9c98db3-current-file-action-r1`, response
+  `resp_idem_d63c23c347b628336b4ca3fffaf1e990`, preserved round-one author
+  `codex`, no parent, both prompt digests, Markdown, DOCX, PDF, and learning
+  trace. It failed before attachment upload or prompt submission because the
+  live page lacked the expected Chat-mode control, so it did not exercise the
+  repaired upload path and produced no verdict, score, review record,
+  final-answer link, attachment receipt, or learning sync. The task target
+  closed and the terminal guard was not replayed.
 
 - 2026-09-25: ChatGPT split current model selection from thinking effort, so
   `chatgpt:premium` could not recognize the exact checked `Latest` radio behind

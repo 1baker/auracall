@@ -16,6 +16,18 @@ The repair binds those exact current signals, preserves strict legacy support,
 and rejects wrong, duplicate, non-multiple, or restricted inputs. The task tab
 was released without changing retained Chrome.
 
+Personal commit `f9c98db3` was published through isolated `1baker`, installed
+with exact parity across all three repaired compiled modules, and restarted
+only AuraCall API as PID `1893824`. Retained Chrome kept PID/start token
+`1829010`/`3619174`. The fresh no-launch plan selected exact retained reuse,
+then guard `document-f9c98db3-current-file-action-r1`, response
+`resp_idem_d63c23c347b628336b4ca3fffaf1e990`, preserved its complete round-one
+prompt and document provenance. It failed before reaching attachment upload or
+prompt submission because the current page no longer exposed AuraCall's
+expected Chat-mode control. No verdict, score, review record/chat,
+conversation URL, final-answer link, attachment receipt, or learning sync
+exists. The exact task target is closed and the guard was not replayed.
+
 ## 2026-09-25 | Bind `Latest` to the opened Pro family
 
 Plan 0369 isolates the Plan 0368 model-menu blocker. A fresh retained-session

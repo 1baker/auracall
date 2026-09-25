@@ -7,14 +7,17 @@
 Status: active
 Lane: P01
 
-- Open current ChatGPT local-file action repair:
+- Closed current ChatGPT local-file action repair:
   [Plan 0370](docs/dev/plans/0370-2026-09-25-current-chatgpt-local-file-action.md).
-  Plan 0369 proved the retained route and current Pro model selection, then its
-  sole traced guard stopped before completed upload or prompt submission because
-  the live attachment menu did not satisfy the exact local-file action contract.
-  Inspect one disposable retained-browser tab without uploading, bind the
-  observed current menu/input structure fail closed, publish and install once,
-  then submit exactly one new provenance-complete round-one guard.
+  Personal commit `f9c98db3` binds the exact current home-menu buttons and
+  unique unrestricted `Attach files` chooser while preserving the legacy
+  contract. The installed modules match and retained Chrome stayed PID
+  `1829010`. Fresh traced guard
+  `document-f9c98db3-current-file-action-r1` failed earlier in the live path,
+  before attachment upload or prompt submission, because ChatGPT no longer
+  exposed the expected Chat-mode control. It produced no verdict, score,
+  review record, final-answer link, attachment receipt, or learning sync and
+  was not replayed.
 
 - Closed current-Pro `Latest` leaf recognition:
   [Plan 0369](docs/dev/plans/0369-2026-09-25-current-pro-latest-leaf.md).

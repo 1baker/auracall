@@ -13,6 +13,31 @@ browser-authority checks. After provider-free validation, publish through the
 personal `1baker` route, install once while preserving retained Chrome, and run
 exactly one new round-one `--require-learning-trace` document guard.
 
+Personal commit `f9c98db3` passed the focused and widened source checks,
+typecheck, production build, touched-file lint, diff hygiene, and CodeGraph
+sync. The full suite passed 3,540 tests with 55 skips; two deterministic
+failures repeat the existing raw-route-manifest debt, and one unrelated timing
+case passed all 7 tests alone. The commit was published through isolated
+personal `1baker` routing. The installed `chatgptComposerTool.js`,
+`attachments.js`, and `remoteFileTransfer.js` exactly match the checkout.
+Only AuraCall API restarted, as healthy PID `1893824`; retained Chrome kept
+PID/start token `1829010`/`3619174`.
+
+The immediate no-launch plan selected the exact retained profile/session,
+`attached_existing`, one compatible live browser, and `tab_new` with duplicate
+process launch disabled. Guard `document-f9c98db3-current-file-action-r1`,
+response `resp_idem_d63c23c347b628336b4ca3fffaf1e990`, preserved round 1,
+author `codex`, no parent, both exact prompt digests, Markdown, DOCX, PDF, and
+learning-trace digest
+`4c2f8660fd0a92b5ca5ac8e47d41b823691c78653fa356e7370580d17c772f77`.
+It failed before model selection, attachment upload, or prompt submission
+because the live page exposed no expected Chat-mode control. Therefore this run
+does not prove the installed attachment path. It has no browser verdict, score,
+review record/chat, conversation URL, Codex final-answer link, attachment
+receipt, or ModelLabs learning sync. The runner lease released, Agent Browser
+marked exact target `33708E9ED7CA817D92BE2B8B4F08D3B6` closed, retained
+Chrome stayed unchanged, and the terminal guard was not replayed.
+
 ## 2026-09-25 | Current Pro `Latest` leaf recognition
 
 Plan 0369 follows Plan 0368 without replaying its terminal guard. The retained

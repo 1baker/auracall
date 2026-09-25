@@ -1,6 +1,6 @@
 # Current ChatGPT Local-File Action | 0370-2026-09-25
 
-State: OPEN
+State: CLOSED
 Lane: P01
 
 ## Objective
@@ -15,7 +15,7 @@ evidence.
 - Plan 0369 proved the retained route and current Pro `Latest` model selection.
 - Its sole fresh learning-traced guard then stopped before the first completed
   upload or prompt submission with `local-file-action-not-found`.
-- The installed contract currently requires one exact `Add photos & files` row
+- The prior installed contract required one exact `Add photos & files` row
   whose description is `Upload from computer`, plus one unrestricted,
   multi-file `#upload-files` input.
 - The retained Chrome process is externally owned and must not be launched,
@@ -63,11 +63,11 @@ evidence.
 - [x] Focused tests, typecheck, production build, touched-file lint, diff
       hygiene, plan audit, and CodeGraph sync pass or disclose exact existing
       findings.
-- [ ] Personal GitHub publication is committed, pushed through isolated
+- [x] Personal GitHub publication is committed, pushed through isolated
       `1baker` routing, re-fetched, clean, and zero ahead/behind.
-- [ ] The installed runtime matches the published commit while retained Chrome
+- [x] The installed runtime matches the published commit while retained Chrome
       keeps its original process identity.
-- [ ] One fresh round-one learning trace preserves the immutable original
+- [x] One fresh round-one learning trace preserves the immutable original
       prompt, exact generation prompt, true author, no parent guard, reviewed
       Markdown/DOCX/PDF packet, and records the browser verdict, score, exact
       Codex final-answer link, and ModelLabs learning-sync result when present.
@@ -98,3 +98,40 @@ result.
   failed under full-suite load and then passed all 7 tests in isolation.
 - Plan audit repeats exactly three existing findings: the same raw route and
   Plan 0357's noncanonical and missing status headers.
+
+## Publication And Installation
+
+- Source checkpoint `f9c98db3` was pushed through the isolated personal
+  `1baker` route after staged diff hygiene and high-confidence secret scans
+  passed.
+- The combined user-runtime install restarted only `auracall-api.service`,
+  from PID `1669463` to healthy PID `1893824`.
+- Checkout and installed SHA-256 values match for
+  `chatgptComposerTool.js`, `attachments.js`, and `remoteFileTransfer.js`.
+- Retained Chrome preserved PID `1829010`, start token `3619174`, and start
+  time `Thu Sep 24 16:06:54 2026` across publication and installation.
+
+## Forward Review
+
+- The immediate no-launch plan selected profile/session
+  `chatgpt-stealth-linux-20260924`, browser
+  `session:chatgpt-stealth-linux-20260924`, `attached_existing`, one compatible
+  live browser, and `tab_new`; duplicate process launch remained disabled.
+- Guard `document-f9c98db3-current-file-action-r1`, response
+  `resp_idem_d63c23c347b628336b4ca3fffaf1e990`, preserved round 1, true author
+  `codex`, no parent, original-prompt SHA-256
+  `fbbeb677688fa4fb16735502c326954ab7bfd7312101fd6665762125ff5343eb`,
+  generation-prompt SHA-256
+  `ee4823fddb5ad5b6669c96f0e161e466263cd4d6d1db4cb385fd042a13853a9b`,
+  Markdown, DOCX, PDF, and learning-trace digest
+  `4c2f8660fd0a92b5ca5ac8e47d41b823691c78653fa356e7370580d17c772f77`.
+- The run failed before model selection, attachment upload, or prompt
+  submission because AuraCall could not find the live Chat-mode control. It
+  therefore does not establish live acceptance of the repaired attachment
+  path. There is no provider answer, verdict, score, review record/chat,
+  canonical conversation URL, Codex final-answer link, attachment receipt, or
+  ModelLabs learning sync.
+- The terminal guard was not replayed. Its runner lease released as failed,
+  Agent Browser reports exact target
+  `33708E9ED7CA817D92BE2B8B4F08D3B6` closed, and retained Chrome remains
+  unchanged.
