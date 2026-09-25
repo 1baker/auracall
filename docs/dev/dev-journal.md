@@ -3,11 +3,11 @@
 Plan 0367 continues only the blocked Plan 0366 forward review. Agent Browser
 install doctor is ready and converged. The retained ChatGPT browser remains PID
 `1829010`, start token `3619174`, CDP port `39415`; its service row is viable.
-The exact session daemon now listens at `127.0.0.1:45281` and its service-status
-endpoint responds successfully. A fresh no-launch access plan required reuse of
-browser/session `chatgpt-stealth-linux-20260924`, `tab_new` acquisition, and no
-duplicate browser process. No browser lifecycle action or Agent Browser source
-mutation was made.
+The exact session daemon listened at `127.0.0.1:45281` during preflight and its
+service-status endpoint responded successfully. A fresh no-launch access plan
+required reuse of browser/session `chatgpt-stealth-linux-20260924`, `tab_new`
+acquisition, and no duplicate browser process. No browser lifecycle action or
+Agent Browser source mutation was made.
 
 Fresh learning-traced guard `document-8c118aaa-daemon-rebound-r1`, response
 `resp_idem_eeb1b6db2aaf43f2ddba448db4ea4f76`, preserved both prompt digests,
@@ -16,7 +16,9 @@ the request path did not apply the required stealth launch binding and Agent
 Browser refused auto-launch or fallback. It produced no verdict, score, review
 artifact, final-answer link, or ModelLabs learning sync. The failed job owns no
 task tab. Chrome and daemon identities remained unchanged, and the guard was
-not replayed. Plan 0367 closes as a bounded blocked slice.
+not replayed. A later final-publication recheck found the daemon PID absent and
+port `45281` closed while retained Chrome remained unchanged; no agent action
+stopped or restarted it. Plan 0367 closes as a bounded blocked slice.
 
 ## 2026-09-25 | Make Premium follow the current versioned Pro row
 

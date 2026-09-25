@@ -18,9 +18,9 @@ fresh learning-traced document review through AuraCall.
 - A fresh no-launch Agent Browser access plan selects browser
   `session:chatgpt-stealth-linux-20260924`, session
   `chatgpt-stealth-linux-20260924`, and duplicate-process prohibition.
-- The exact retained session daemon now listens on loopback port `45281` and
-  returns a successful service-status response. No browser lifecycle action was
-  required.
+- The exact retained session daemon listened on loopback port `45281` during
+  preflight and returned a successful service-status response. No browser
+  lifecycle action was required.
 
 ## Scope
 
@@ -77,7 +77,9 @@ link, or ModelLabs learning sync. The failed service job owns no tab or browser
 lease, so there was no task tab to close. Post-run inspection preserved Chrome
 PID `1829010`, start token `3619174`, CDP port `39415`, and daemon PID `1307873`,
 start token `10815149`, port `45281`. No browser lifecycle action was taken.
-The guard was not replayed.
+The guard was not replayed. The final publication recheck later found daemon
+PID `1307873` absent and port `45281` closed while retained Chrome remained
+unchanged; no agent action stopped or restarted the daemon.
 
 ## Definition Of Done
 

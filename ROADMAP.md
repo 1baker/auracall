@@ -13,8 +13,9 @@ Lane: P01
   trace and document set, then failed before tab creation because `tab_new`
   could not apply the required stealth binding and correctly refused an
   auto-launch fallback. No verdict, score, final-answer link, or learning sync
-  exists. Retained Chrome and its daemon stayed unchanged; the guard was not
-  replayed.
+  exists. Retained Chrome stayed unchanged. The daemon was unchanged through
+  the immediate post-run check, then exited before final publication
+  verification; the guard was not replayed and the daemon was not restarted.
 
 - Closed current Premium model-intent repair:
   [Plan 0366](docs/dev/plans/0366-2026-09-25-current-premium-model-intent.md).

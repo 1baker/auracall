@@ -4,11 +4,11 @@
 
 Plan 0367 owns the exact successor to the Plan 0366 daemon-connection blocker.
 Read-only inspection preserved Chrome PID `1829010`, start token `3619174`, and
-CDP port `39415`. Agent Browser reports the retained browser viable; the exact
-session daemon now listens on loopback port `45281` and returns successful
-service status. A fresh no-launch access plan selects that browser and session,
-requires `tab_new` reuse, and prohibits a duplicate process. No browser launch,
-replacement, close, or lifecycle transfer was used.
+CDP port `39415`. Agent Browser reported the retained browser viable; the exact
+session daemon listened on loopback port `45281` and returned successful
+service status during preflight. A fresh no-launch access plan selected that
+browser and session, required `tab_new` reuse, and prohibited a duplicate
+process. No browser launch, replacement, close, or lifecycle transfer was used.
 
 Guard `document-8c118aaa-daemon-rebound-r1`, response
 `resp_idem_eeb1b6db2aaf43f2ddba448db4ea4f76`, preserved the immutable origin
@@ -21,7 +21,10 @@ score, review artifact/chat, Codex final-answer link, or ModelLabs learning
 sync. Chrome PID/start token `1829010`/`3619174` and daemon PID/start token
 `1307873`/`10815149` remained unchanged. Preserve this terminal result without
 replay; route repair needs to bind the already-validated retained browser proof
-to AuraCall's `tab_new` request rather than invoke auto-launch.
+to AuraCall's `tab_new` request rather than invoke auto-launch. The final
+publication recheck then found daemon PID `1307873` absent and port `45281`
+closed while Chrome remained unchanged. No agent action stopped or restarted
+the daemon.
 
 ## 2026-09-25 | Current Premium model intent
 
