@@ -7,8 +7,20 @@ Plan 0365 owns one narrow repair after guard
 and before prompt submission. The workbench menu check incorrectly used the
 same 2.5-second limit for page hydration and the retained browser's native
 broker round trip. The source repair moves that deadline into the page and adds
-a provider-free regression. Publication, installed parity, retained-process
-preservation, and one fresh learning-traced guard remain required.
+a provider-free regression. Personal commit `22bab5d7` was pushed through the
+isolated `1baker` route, installed with exact compiled-file parity, and restarted
+only the AuraCall API. Retained Chrome stayed at PID `1829010`, start token
+`3619174`.
+
+The fresh no-launch plan selected the exact retained browser and prohibited a
+duplicate process. Learning-traced guard
+`document-22bab5d7-readiness-forward-r1` preserved both prompt digests, author
+`codex`, the Markdown handoff, DOCX, and PDF, then failed before file transfer:
+the model menu exposed `5.6Pro`, but `chatgpt:premium` required `6 Pro`. Preserve
+response `resp_idem_72b56634095ec131488eff0778cc7251`; do not promote it or
+infer an attachment-path pass. It has no browser verdict, score, review record,
+Codex final-answer link, or ModelLabs learning sync. Plan 0365 is closed as a
+bounded blocked slice, not as an end-to-end pass.
 
 ## 2026-09-24 | Source-side ChatGPT attachment UI receipt
 

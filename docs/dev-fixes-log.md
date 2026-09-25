@@ -6,7 +6,14 @@
   transport bound. A regression delays the mocked broker result beyond 2.5
   seconds and still requires the verified workbench surface. Eighty-seven
   focused tests, no-emit typecheck, build, touched-file lint, diff hygiene, and
-  CodeGraph sync pass. Installed forward validation remains pending.
+  CodeGraph sync pass. Commit `22bab5d7` was published to personal GitHub and
+  installed with compiled parity while retained Chrome kept PID `1829010` and
+  start token `3619174`. Fresh traced guard
+  `document-22bab5d7-readiness-forward-r1` failed before upload because the
+  current menu exposed `5.6Pro` while `chatgpt:premium` required `6 Pro`.
+  Preserve response `resp_idem_72b56634095ec131488eff0778cc7251`; it has no
+  verdict, score, review record, or learning sync, so live attachment-path
+  acceptance remains unproved.
 
 - 2026-09-24: The attached-response observer's first source fixture used a
   review-correlation shape that did not match the real Pro Guard request, and

@@ -1,6 +1,6 @@
 # Brokered Attachment Readiness Budget | 0365-2026-09-25
 
-State: OPEN
+State: CLOSED
 Lane: P01
 
 ## Objective
@@ -52,9 +52,9 @@ ChatGPT workbench's short UI-hydration deadline.
 - [x] Focused tests, no-emit typecheck, production build, touched-file lint,
       diff hygiene, plan audit, and CodeGraph sync pass or disclose exact
       pre-existing findings.
-- [ ] Personal GitHub publication is committed, pushed through the isolated
+- [x] Personal GitHub publication is committed, pushed through the isolated
       `1baker` route, re-fetched, clean, and zero ahead/behind.
-- [ ] The user runtime matches the published commit while retained Chrome keeps
+- [x] The user runtime matches the published commit while retained Chrome keeps
       the same process identity.
 - [ ] One fresh `--require-learning-trace` review preserves its original
       prompt, exact generation prompt, true author, reviewed artifact, browser
@@ -81,3 +81,41 @@ slice only as a documented blocker; it is not a passing end-to-end result.
 - Full strict lint retains four errors and 23 warnings outside the two touched
   code/test files. The plan audit retains that raw-route finding plus Plan
   0357's pre-existing noncanonical and missing `State:` findings.
+
+## Publication And Installation
+
+- Personal commit `22bab5d7164250d4909469ace9d80aa9f1e00d06` was pushed
+  through the isolated `1baker` route, re-fetched, and verified clean at zero
+  ahead and zero behind.
+- The previous 278 MiB user runtime was preserved at
+  `/home/bak3r/.auracall/backups/user-runtime-pre-22bab5d7-20260925T0947`.
+- The published checkout was installed once. The installed and checkout
+  `dist/src/browser/actions/chatgptComposerTool.js` SHA-256 values both equal
+  `418690d651523714f1524481b98af6ae377684b77610657a7d6ad697a1b235f2`.
+- Only `auracall-api.service` restarted, at PID `1107587`. Retained Chrome kept
+  PID `1829010` and process start token `3619174` across installation and API
+  restart.
+
+## Forward Review
+
+- A fresh no-launch Agent Browser access plan selected profile
+  `chatgpt-stealth-linux-20260924`, browser
+  `session:chatgpt-stealth-linux-20260924`, and the same-named session with
+  `reuse_existing_browser`, no manual intervention, and no duplicate process.
+- Guard `document-22bab5d7-readiness-forward-r1`, response
+  `resp_idem_72b56634095ec131488eff0778cc7251`, recorded round 1, author
+  `codex`, no parent guard, original-prompt SHA-256
+  `fbbeb677688fa4fb16735502c326954ab7bfd7312101fd6665762125ff5343eb`,
+  generation-prompt SHA-256
+  `ee4823fddb5ad5b6669c96f0e161e466263cd4d6d1db4cb385fd042a13853a9b`,
+  and learning-trace digest
+  `0e25e60891e19a2180af25e0f2ac4e6f5d0f5efaaae7dc0f93b61af1d6479583`.
+  Its private handoff preserves the review goal, candidate Markdown, guide,
+  prompt, DOCX, and PDF with their exact digests.
+- The run failed before file transfer or prompt submission because the current
+  menu exposed `5.6Pro` while `chatgpt:premium` required `6 Pro`. The failure is
+  preserved without retry. There is no browser verdict, score,
+  `review-record.md`, exact Codex final-answer link, or ModelLabs learning sync.
+  The installed attachment-deadline repair therefore remains source- and
+  runtime-verified but did not receive live forward attachment-path proof in
+  this bounded slice.

@@ -8,6 +8,22 @@ the same UI deadline inside an awaited page expression and leaves the outer
 command under the established broker transport bound. This preserves strict UI
 readiness without treating authority or transport latency as UI drift.
 
+Published personal commit `22bab5d7` was installed after a recoverable runtime
+backup. Installed compiled parity passed, the API restarted healthy, and
+retained Chrome PID `1829010` with start token `3619174` did not change. A fresh
+no-launch plan selected that exact retained browser with duplicate launch
+disabled.
+
+The one fresh review was guard `document-22bab5d7-readiness-forward-r1`, response
+`resp_idem_72b56634095ec131488eff0778cc7251`. It preserved the immutable
+original and generation prompt digests, author `codex`, candidate Markdown, and
+both reference documents. It then failed before any attachment transfer or
+prompt submission because the workbench offered `5.6Pro` while
+`chatgpt:premium` required `6 Pro`. No retry was made. The terminal record has
+no verdict, score, review record, final-answer link, or ModelLabs learning sync.
+This closes the bounded repair slice with a new upstream UI blocker and does
+not establish live end-to-end attachment acceptance.
+
 ## 2026-09-24 | Reconcile attached-response recovery for publication
 
 Reviewed every dirty source, test and documentation path on
