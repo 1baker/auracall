@@ -17,6 +17,34 @@ corrupted text or a checked row alone. Bind `Latest` only to the exact expanded
 install, and submit one new learning-traced document guard after a fresh no-
 launch authority check.
 
+Personal commit `e4c3ba93` passed eight focused suites (`222` passed, one
+intentional skip), typecheck, production build, diff hygiene, touched-file
+error-level lint, and CodeGraph sync. Plan audit repeated only its three
+existing findings. The commit was published through isolated `1baker`, then
+the combined user-runtime install restarted only AuraCall API as healthy PID
+`1669463`. Source and installed `modelSelection.js` share SHA-256
+`eba61a70f514056b6c2da2f93f93b4e7ecaecd96cc994a2ee98c066a686f7541`.
+Retained Chrome kept PID/start token `1829010`/`3619174`.
+
+The immediate no-launch plan selected the exact retained profile/session,
+required `tab_new`, returned `attached_existing`, found one compatible browser,
+and prohibited a duplicate process. Guard
+`document-e4c3ba93-latest-model-r1`, response
+`resp_idem_7edfd2a31c24037336ffdcd1f9f241a9`, preserved the immutable original
+prompt, exact generation prompt, author `codex`, candidate Markdown, DOCX, PDF,
+their hashes, and learning-trace digest
+`3c545e0cd2426561d03f138681aa0f80e53fea6d5d2543a9603063f69fc27911`.
+The live run reused Chrome PID `1829010`, selected model `Latest`, and preserved
+the exact project route. It then failed closed before completing the first file
+upload or submitting the prompt: the workbench exposed no exact local-file
+action matching the required `Add photos & files` row plus unrestricted
+`#upload-files` input (`local-file-action-not-found`). There is no provider
+answer, verdict, score, review record/chat, canonical conversation URL, exact
+Codex final-answer link, attachment receipt, or ModelLabs learning sync. The
+guard was not replayed. Its runner lease released as failed, the task target is
+absent from the retained session, tab count returned to ten, and the retained
+browser remained unchanged.
+
 ## 2026-09-25 | Request-time retained route acceptance
 
 Plan 0368 owns the exact successor to Plan 0367's pre-tab launch-binding

@@ -10,8 +10,22 @@ the exact diagnostic tab was closed and Chrome PID `1829010` remained live.
 The repair uses the exact parent/view/leaf structure rather than fuzzy text or
 checked-state inference, preserves exact-version selectors, corrects the
 diagnostic escape, and covers both acceptance and rejection in a provider-free
-fake DOM. Publication, installed parity, retained-browser preservation, and
-one fresh learning-traced guard remain part of this slice.
+fake DOM. Personal commit `e4c3ba93` passed eight focused suites (`222` tests
+passed, one skipped), was published through isolated `1baker`, and installed
+with exact selector parity; only the AuraCall API restarted, as PID `1669463`.
+Retained Chrome remained PID `1829010`, start token `3619174`.
+
+The immediate no-launch plan required the exact retained browser/session and
+forbade a duplicate process. Guard `document-e4c3ba93-latest-model-r1`
+preserved its round-one prompt provenance, author `codex`, Markdown, DOCX, and
+PDF. Live logs prove `Model picker: Latest`, so the repaired model decision is
+accepted in the installed route. The run then failed before completing the
+first attachment upload or submitting the prompt because no exact local-file
+action matched the required attachment surface. Response
+`resp_idem_7edfd2a31c24037336ffdcd1f9f241a9` therefore has no provider answer,
+verdict, score, review artifact/chat, conversation URL, Codex final-answer link,
+attachment receipt, or ModelLabs learning sync. The lease released, the task
+tab was removed, retained tab count returned to ten, and no replay occurred.
 
 ## 2026-09-25 | Prove request-time retained route reuse
 

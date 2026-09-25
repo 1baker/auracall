@@ -7,14 +7,17 @@
 Status: active
 Lane: P01
 
-- Active current-Pro `Latest` leaf recognition:
+- Closed current-Pro `Latest` leaf recognition:
   [Plan 0369](docs/dev/plans/0369-2026-09-25-current-pro-latest-leaf.md).
-  Plan 0368 proved the retained request route, then exposed a model-menu drift:
-  the thinking-effort menu's exact `Select model` view reports a checked
-  `Latest` leaf instead of a versioned Pro label. The repair must bind `Latest`
-  to that exact model-selection structure, preserve explicit-version strictness,
-  publish and install without replacing retained Chrome, and run one new traced
-  document guard.
+  Personal commit `e4c3ba93` binds `Latest` only to the exact expanded
+  `Select model` view, keeps explicit version selectors strict, and corrects
+  option-label diagnostics. Eight suites passed 222 tests with one skip; the
+  installed build matches and retained Chrome stayed PID `1829010`. Guard
+  `document-e4c3ba93-latest-model-r1` selected `Latest` live, then failed before
+  completing its first file upload or submitting the prompt because the
+  attachment surface lacked the exact local-file action. It produced no
+  verdict, score, answer, final-answer link, or learning sync and was not
+  replayed.
 
 - Closed request-time retained-route acceptance:
   [Plan 0368](docs/dev/plans/0368-2026-09-25-request-time-retained-route-acceptance.md).

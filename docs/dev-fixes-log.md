@@ -1,3 +1,20 @@
+- 2026-09-25: ChatGPT split current model selection from thinking effort, so
+  `chatgpt:premium` could not recognize the exact checked `Latest` radio behind
+  the expanded `Select model` row. AuraCall now binds `Latest` only to that
+  proven model-selection structure, preserves strict explicit-version
+  selectors, and correctly escapes whitespace normalization in option
+  diagnostics. Eight focused suites pass 222 tests with one intentional skip;
+  typecheck, production build, error-level touched-file lint, diff hygiene, and
+  CodeGraph sync pass. Plan audit repeats three existing unrelated findings.
+  Personal commit `e4c3ba93` is published and installed with exact selector
+  parity while retained Chrome kept PID `1829010`. Fresh traced guard
+  `document-e4c3ba93-latest-model-r1` selected `Latest` live, then failed before
+  completing file upload or submitting the prompt because the attachment
+  surface lacked the exact local-file action. Response
+  `resp_idem_7edfd2a31c24037336ffdcd1f9f241a9` has no verdict, score, provider
+  answer, final-answer link, attachment receipt, or learning sync. Its lease and
+  task tab were released; the terminal guard was not replayed.
+
 - 2026-09-25: The stable `chatgpt:premium` selector incorrectly acted as an
   exact `6 Pro` pin, so a retained workbench offering `5.6Pro` stopped before
   upload or prompt submission. Premium now carries `Current Pro` intent while

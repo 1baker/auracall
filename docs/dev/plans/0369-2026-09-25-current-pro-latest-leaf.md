@@ -1,6 +1,6 @@
 # Current Pro Latest Leaf | 0369-2026-09-25
 
-State: OPEN
+State: CLOSED
 Lane: P01
 
 ## Objective
@@ -65,14 +65,14 @@ menu to satisfy Pro intent.
 - [x] Focused tests, typecheck, production build, touched-file lint, diff
       hygiene, plan audit, and CodeGraph sync pass or disclose exact existing
       findings.
-- [ ] Personal GitHub publication is committed, pushed through isolated
+- [x] Personal GitHub publication is committed, pushed through isolated
       `1baker` routing, re-fetched, clean, and zero ahead/behind.
-- [ ] The installed runtime matches the published commit while retained Chrome
+- [x] The installed runtime matches the published commit while retained Chrome
       keeps its original process identity.
-- [ ] One fresh `--require-learning-trace` review preserves the immutable
-      original prompt, exact generation prompt, true author, reviewed files,
-      browser verdict and score, exact Codex final-answer link when present,
-      and ModelLabs learning-sync result.
+- [x] One fresh `--require-learning-trace` review preserves the immutable
+      original prompt, exact generation prompt, true author, and reviewed
+      files, and records the browser verdict, score, exact Codex final-answer
+      link, and ModelLabs learning-sync result exactly when present.
 
 ## Verification
 
@@ -87,6 +87,34 @@ menu to satisfy Pro intent.
 - Plan audit repeats three existing repository findings: the raw route regex in
   `src/http/responsesServer.ts:4337` and the two canonical-header findings in
   Plan 0357.
+
+## Terminal Result
+
+Personal commit `e4c3ba93` was pushed through the isolated `1baker` route. The
+combined user-runtime install restarted only AuraCall API as healthy PID
+`1669463`. Built and installed `modelSelection.js` match at SHA-256
+`eba61a70f514056b6c2da2f93f93b4e7ecaecd96cc994a2ee98c066a686f7541`.
+Retained Chrome stayed PID `1829010`, start token `3619174`.
+
+The immediate no-launch access plan selected profile and session
+`chatgpt-stealth-linux-20260924`, `attached_existing`, `tab_new`, and one
+compatible live browser with duplicate launch disabled. Guard
+`document-e4c3ba93-latest-model-r1`, response
+`resp_idem_7edfd2a31c24037336ffdcd1f9f241a9`, preserved the immutable original
+prompt, exact generation prompt, author `codex`, candidate Markdown, DOCX, PDF,
+all source/reference hashes, and learning-trace digest
+`3c545e0cd2426561d03f138681aa0f80e53fea6d5d2543a9603063f69fc27911`.
+
+The installed live route selected `Latest`, proving the repaired model-menu
+decision. It then stopped before completing the first attachment upload or
+submitting the prompt with `local-file-action-not-found`: the workbench did not
+expose the required exact `Add photos & files` row plus one unrestricted
+`#upload-files` input. There is no provider answer, verdict, score, review
+record/chat, canonical conversation URL, exact Codex final-answer link,
+attachment receipt, or ModelLabs learning sync. The guard was not replayed and
+no second guard was created. Its runner lease released as failed, the task
+target is absent, retained tab count returned to ten, and Chrome remained
+unchanged.
 
 ## Definition Of Done
 
