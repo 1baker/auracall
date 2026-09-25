@@ -15,8 +15,24 @@ typecheck, production build, error-level touched-file lint, diff hygiene, and
 CodeGraph sync pass. The full suite passes 3,547 tests with 55 skips and repeats
 the two existing raw-route contract failures. Its two unrelated timing failures
 pass in isolated 31-test and 7-test reruns. Plan audit repeats only its three
-existing findings. Publication, installed parity, and the one bounded forward
-guard remain outstanding.
+existing findings. Personal commit `28690b3c` is published and installed with
+exact selector-byte parity; AuraCall API is healthy as PID `2278978` and
+retained Chrome kept PID/start token `1829010`/`3619174`.
+
+The fresh no-launch plan selected the sole retained browser/session and a new
+task tab with duplicate launch disabled. Guard
+`document-28690b3c-current-pro-flat-9bc370b9-r1`, response
+`resp_idem_e86bffb4dcddd1ff1b187056e3f91985`, preserved round 1, author
+`codex`, no parent, exact original and generation prompts, candidate Markdown,
+DOCX, PDF, and learning-trace digest
+`3c895fb4a9326a9e73bace721c0c459fd60af09a99da7cc8cb8e208bcaddefc4`.
+The run advanced beyond model selection, proving the installed repair in the
+retained route, then failed before upload or prompt submission because the
+attachment surface returned `menu-not-found`. It produced no browser answer,
+verdict, score, review file/chat, conversation URL, attachment receipt, exact
+Codex final-answer link, or ModelLabs learning sync. Its lease released;
+reconciliation marks target `D9D87A6314518C151FD4E87811394FA7` closed. The
+guard was not replayed and retained Chrome was not replaced or closed.
 
 ## 2026-09-25 | Inspect and repair the current Chat model-picker trigger
 

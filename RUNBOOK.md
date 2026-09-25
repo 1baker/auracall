@@ -19,8 +19,28 @@ intentional skip, typecheck, production build, error-level touched-file lint,
 diff hygiene, and CodeGraph sync. The full suite passed 3,547 tests with 55
 skips. Its two durable contract failures are the existing raw-route finding;
 the two unrelated timing failures pass in isolated 31-test and 7-test reruns.
-Plan audit repeats only the three existing findings. Publication, installation,
-and the one bounded forward guard remain pending.
+Plan audit repeats only the three existing findings. Personal commit
+`28690b3c` is published and installed; published, built, and installed selector
+bytes share SHA-256
+`94a23cabd3e38d7c3c00ac9caaea09734073d948a37166f123e517a6a9221ebf`.
+AuraCall API is healthy as PID `2278978`, while retained Chrome kept PID/start
+token `1829010`/`3619174`.
+
+The immediate no-launch plan selected the one retained browser/session,
+`attached_existing`, and one new task tab with duplicate launch disabled.
+Guard `document-28690b3c-current-pro-flat-9bc370b9-r1`, response
+`resp_idem_e86bffb4dcddd1ff1b187056e3f91985`, preserved round 1, author
+`codex`, no parent, both exact prompt digests, candidate Markdown, DOCX, PDF,
+and learning-trace digest
+`3c895fb4a9326a9e73bace721c0c459fd60af09a99da7cc8cb8e208bcaddefc4`.
+The run advanced beyond model selection, proving the repaired decision in the
+live route, then stopped before upload or prompt submission because ChatGPT's
+attachment surface returned `menu-not-found` for the exact local-file action.
+No browser answer, verdict, score, review file/chat, conversation URL,
+attachment receipt, exact Codex final-answer link, or ModelLabs learning sync
+exists. The runner lease released, reconciliation marks exact target
+`D9D87A6314518C151FD4E87811394FA7` closed, retained Chrome is unchanged, and
+the terminal guard was not replayed.
 
 ## 2026-09-25 | Current ChatGPT model-picker trigger scope
 

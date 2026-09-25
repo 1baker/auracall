@@ -1,6 +1,6 @@
 # Current Pro `Latest` Flat Menu | 0373-2026-09-25
 
-State: OPEN
+State: CLOSED
 Lane: P01
 
 ## Objective
@@ -66,11 +66,11 @@ control, without weakening explicit GPT-6 or GPT-5.6 Pro selection.
 - [x] Focused tests, typecheck, production build, touched-file lint, diff
       hygiene, plan audit, and CodeGraph sync pass or disclose exact existing
       findings.
-- [ ] Personal GitHub publication is committed, pushed through isolated
+- [x] Personal GitHub publication is committed, pushed through isolated
       `1baker` routing, re-fetched, clean, and zero ahead/behind.
-- [ ] The installed runtime matches the published commit while retained Chrome
+- [x] The installed runtime matches the published commit while retained Chrome
       keeps its original process identity.
-- [ ] One fresh round-one learning trace preserves the immutable original
+- [x] One fresh round-one learning trace preserves the immutable original
       prompt, exact generation prompt, true author, no parent guard, reviewed
       Markdown/DOCX/PDF packet, and records the browser verdict, score, exact
       Codex final-answer link, and ModelLabs learning-sync result when present.
@@ -89,6 +89,26 @@ control, without weakening explicit GPT-6 or GPT-5.6 Pro selection.
   reruns: 31/31 runtime-runner tests and 7/7 CLI integration tests.
 - Plan audit repeats three existing repository findings: the raw response-route
   regex and Plan 0357's noncanonical and missing state header.
+- Personal source commit `28690b3c` is published through isolated `1baker`
+  routing. Re-fetch proved the branch clean and zero ahead/behind.
+- The published, built, and installed `modelSelection.js` bytes all have SHA-256
+  `94a23cabd3e38d7c3c00ac9caaea09734073d948a37166f123e517a6a9221ebf`.
+  AuraCall API is healthy as PID `2278978`; retained Chrome kept PID/start
+  token `1829010`/`3619174`.
+- The fresh no-launch access plan selected the one retained browser/session,
+  `attached_existing`, and a new task tab with duplicate process launch
+  disabled. Guard `document-28690b3c-current-pro-flat-9bc370b9-r1`, response
+  `resp_idem_e86bffb4dcddd1ff1b187056e3f91985`, preserved round 1, author
+  `codex`, no parent, immutable prompt digests, candidate Markdown, DOCX, PDF,
+  and learning-trace digest
+  `3c895fb4a9326a9e73bace721c0c459fd60af09a99da7cc8cb8e208bcaddefc4`.
+  The run advanced beyond model selection and then failed before upload or
+  prompt submission because the attachment surface returned `menu-not-found`.
+  It therefore has no browser answer, verdict, score, review file/chat,
+  conversation URL, attachment receipt, exact Codex final-answer link, or
+  ModelLabs learning sync. The runner lease released and reconciliation marks
+  exact task target `D9D87A6314518C151FD4E87811394FA7` closed. The terminal
+  guard was not replayed.
 
 ## Definition Of Done
 

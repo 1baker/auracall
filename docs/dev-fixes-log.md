@@ -9,9 +9,20 @@
   touched-file lint, diff hygiene, and CodeGraph sync pass. The full suite
   passed 3,547 tests with 55 skips, repeated two existing raw-route contract
   failures, and its two unrelated timing failures passed in isolated reruns.
-  Plan audit repeats only its three existing findings. Publication, installed
-  parity, retained-browser preservation, and the slice's one traced forward
-  guard remain pending under Plan 0373.
+  Plan audit repeats only its three existing findings. Personal commit
+  `28690b3c` is published through isolated `1baker` routing and installed with
+  SHA-256 parity
+  `94a23cabd3e38d7c3c00ac9caaea09734073d948a37166f123e517a6a9221ebf`;
+  AuraCall API is healthy as PID `2278978` and retained Chrome kept PID/start
+  token `1829010`/`3619174`. Fresh traced guard
+  `document-28690b3c-current-pro-flat-9bc370b9-r1`, response
+  `resp_idem_e86bffb4dcddd1ff1b187056e3f91985`, preserved its immutable
+  round-one prompt and Markdown/DOCX/PDF provenance. It advanced beyond model
+  selection and then failed before upload or prompt submission because the
+  attachment surface returned `menu-not-found`. There is no verdict, score,
+  review record, final-answer link, attachment receipt, or learning sync. Its
+  lease released, exact target `D9D87A6314518C151FD4E87811394FA7` is closed,
+  and the guard was not replayed.
 
 - 2026-09-25: Chat model selection used generic case-sensitive
   `aria-label*="Model"` triggers, so project buttons such as

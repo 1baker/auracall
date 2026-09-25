@@ -7,13 +7,17 @@
 Status: active
 Lane: P01
 
-- Active current-Pro flat-menu compatibility repair:
+- Closed current-Pro flat-menu compatibility repair:
   [Plan 0373](docs/dev/plans/0373-2026-09-25-current-pro-latest-flat-menu.md).
-  Plan 0372 proved the exact current picker trigger and current flat model
-  menu, then failed closed before upload or prompt submission because semantic
-  `Current Pro` did not recognize its checked `Latest` row. Bind that row only
-  to the exact trigger and a containing model-menu structure, preserve strict
-  explicit versions, then publish, install, and run one fresh traced guard.
+  Personal commit `28690b3c` binds checked `Latest` only to the exact current
+  trigger and a containing flat model menu with a distinct recognized sibling;
+  explicit versions remain strict. The commit is published, installed with
+  exact compiled parity, and retained Chrome stayed PID `1829010`. Its one
+  traced guard advanced past model selection, then failed before upload or
+  prompt submission because the attachment surface returned `menu-not-found`.
+  It produced no verdict, score, review record, final-answer link, attachment
+  receipt, or learning sync; its exact task target is closed and it was not
+  replayed.
 
 - Closed current ChatGPT model-picker trigger repair:
   [Plan 0372](docs/dev/plans/0372-2026-09-25-current-model-picker-trigger-scope.md).
