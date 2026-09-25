@@ -168,7 +168,7 @@ describe('chatgpt composer tool selection', () => {
     expect(evaluate).toHaveBeenCalledWith(expect.objectContaining({ returnByValue: true }));
   });
 
-  test('brings a retained tab forward and uses the shared trusted-pointer attachment trigger', async () => {
+  test('brings a retained tab forward and uses a trusted-pointer attachment trigger', async () => {
     const events: string[] = [];
     let popoverReads = 0;
     const evaluate = vi.fn().mockImplementation(async ({ expression }: { expression?: string }) => {
@@ -205,19 +205,8 @@ describe('chatgpt composer tool selection', () => {
           },
         };
       }
-      if (source.includes('?.result || null')) {
-        return {
-          result: {
-            value: {
-              trusted: true,
-              matchedLabel: 'add files and more',
-              rootSelectorUsed: 'document',
-            },
-          },
-        };
-      }
-      if (source.includes('.some((node)')) {
-        return { result: { value: true } };
+      if (source.includes('const finish =') && source.includes('performance.now() + 2500')) {
+        return { result: { value: { trusted: true, ready: true } } };
       }
       if (source.includes('const rows = root')) {
         return {
@@ -271,6 +260,7 @@ describe('chatgpt composer tool selection', () => {
   test('keeps the page readiness deadline separate from broker transport latency', async () => {
     vi.useFakeTimers();
     let popoverReads = 0;
+    let targetCall: Record<string, unknown> | undefined;
     let readinessCall: Record<string, unknown> | undefined;
     let markReadinessStarted: (() => void) | undefined;
     const readinessStarted = new Promise<void>((resolve) => {
@@ -298,6 +288,7 @@ describe('chatgpt composer tool selection', () => {
         };
       }
       if (source.includes('const stateKey =') && source.includes('match.scrollIntoView')) {
+        targetCall = params;
         return {
           result: {
             value: {
@@ -309,24 +300,11 @@ describe('chatgpt composer tool selection', () => {
           },
         };
       }
-      if (source.includes('?.result || null')) {
-        return {
-          result: {
-            value: {
-              trusted: true,
-              matchedLabel: 'add files and more',
-              rootSelectorUsed: 'document',
-            },
-          },
-        };
-      }
-      const isLegacyReadinessCall =
-        source.includes('.some((node)') && source.includes('Boolean(node.querySelector');
-      if (source.includes('const deadline = performance.now() + 2500') || isLegacyReadinessCall) {
+      if (source.includes('const finish =') && source.includes('performance.now() + 2500')) {
         readinessCall = params;
         markReadinessStarted?.();
         return new Promise((resolve) => {
-          setTimeout(() => resolve({ result: { value: true } }), 2_600);
+          setTimeout(() => resolve({ result: { value: { trusted: true, ready: true } } }), 2_600);
         });
       }
       if (source.includes('const rows = root')) {
@@ -364,6 +342,8 @@ describe('chatgpt composer tool selection', () => {
         inputSelector: 'input[type="file"][aria-label="Attach files"]',
       });
 
+      expect(targetCall).toMatchObject({ returnByValue: true });
+      expect(targetCall).not.toHaveProperty('timeout');
       expect(readinessCall).toMatchObject({ returnByValue: true, awaitPromise: true });
       expect(readinessCall).not.toHaveProperty('timeout');
     } finally {

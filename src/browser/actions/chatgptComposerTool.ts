@@ -4,9 +4,9 @@ import {
   resolveBundledServiceComposerFileRequestLabels,
   resolveBundledServiceComposerKnownLabels,
   resolveBundledServiceComposerMoreLabels,
+  resolveBundledServiceComposerTopLevelSentinels,
   resolveBundledServiceComposerTopMenuSignalLabels,
   resolveBundledServiceComposerTopMenuSignalSubstrings,
-  resolveBundledServiceComposerTopLevelSentinels,
 } from '../../services/registry.js';
 import { ATTACHMENT_MENU_SELECTOR } from '../constants.js';
 import { logDomFailure } from '../domDebug.js';
@@ -21,7 +21,6 @@ import {
   dismissOpenMenus,
   openMenu,
   openSubmenu,
-  pressButtonWithTrustedPointer,
   selectAndVerifyNestedMenuPathOption,
 } from '../service/ui.js';
 import type { BrowserLogger, ChromeClient } from '../types.js';
@@ -521,32 +520,84 @@ async function openComposerPopoverWithTrustedPointer(
   if (existing) return existing;
   // A retained browser can have another tab focused. Bringing this target to
   // the front can reflow the workbench, so establish focus before measuring
-  // the composer trigger. The shared trusted-pointer helper re-resolves and
-  // hit-tests the control immediately before clicking, which avoids stale
-  // coordinates on the retained workbench.
+  // the composer trigger. Keep target preparation in one direct evaluation
+  // without an inner transport timeout: this path can run near the end of a
+  // broker authority window, while the page-local readiness deadline below
+  // should govern only ChatGPT UI hydration.
   await page.bringToFront().catch(() => undefined);
   await input.dispatchKeyEvent({ type: 'keyDown', key: 'Escape', code: 'Escape' }).catch(() => undefined);
   await input.dispatchKeyEvent({ type: 'keyUp', key: 'Escape', code: 'Escape' }).catch(() => undefined);
-  const pressed = await pressButtonWithTrustedPointer(
-    // biome-ignore lint/style/useNamingConvention: Chrome DevTools Protocol clients use these exact domain names.
-    { Runtime: runtime, Input: input },
-    {
-      selector: ATTACHMENT_MENU_SELECTOR,
-      requireVisible: true,
-      timeoutMs: 5_000,
-    },
-  );
-  if (!pressed.ok) {
+  const stateKey = '__auracallChatgptAttachmentPointer';
+  const prepared = await runtime.evaluate({
+    expression: `(() => {
+      const stateKey = ${JSON.stringify(stateKey)};
+      const prior = window[stateKey];
+      prior?.controller?.abort?.();
+      delete window[stateKey];
+      const match = document.querySelector(${JSON.stringify(ATTACHMENT_MENU_SELECTOR)});
+      if (!(match instanceof HTMLElement)) return { ok: false, reason: 'target-not-found' };
+      const disabled = match.matches(':disabled') || match.getAttribute('aria-disabled') === 'true';
+      if (disabled) return { ok: false, reason: 'target-disabled' };
+      match.scrollIntoView({ block: 'center', inline: 'center' });
+      const style = getComputedStyle(match);
+      const rect = match.getBoundingClientRect();
+      const visible = rect.width > 0 && rect.height > 0
+        && style.display !== 'none'
+        && style.visibility !== 'hidden'
+        && style.pointerEvents !== 'none';
+      if (!visible) return { ok: false, reason: 'target-not-visible' };
+      const x = rect.left + (rect.width / 2);
+      const y = rect.top + (rect.height / 2);
+      if (x < 0 || y < 0 || x > innerWidth || y > innerHeight) {
+        return { ok: false, reason: 'target-outside-viewport' };
+      }
+      const hit = document.elementFromPoint(x, y);
+      if (!(hit === match || (hit instanceof Node && match.contains(hit)))) {
+        return { ok: false, reason: 'target-obscured' };
+      }
+      const controller = new AbortController();
+      const state = { controller, result: null };
+      window[stateKey] = state;
+      match.addEventListener('click', (event) => {
+        state.result = { trusted: event.isTrusted };
+      }, { capture: true, once: true, signal: controller.signal });
+      return { ok: true, center: { x, y } };
+    })()`,
+    returnByValue: true,
+  });
+  const pointerTarget = prepared.result?.value as
+    | { ok?: boolean; center?: { x?: number; y?: number } }
+    | null
+    | undefined;
+  const pointerX = pointerTarget?.center?.x;
+  const pointerY = pointerTarget?.center?.y;
+  if (pointerTarget?.ok !== true || !Number.isFinite(pointerX) || !Number.isFinite(pointerY)) {
     return null;
   }
+  const x = Math.round(pointerX as number);
+  const y = Math.round(pointerY as number);
+  await input.dispatchMouseEvent({ type: 'mouseMoved', x, y, button: 'none' });
+  await input.dispatchMouseEvent({ type: 'mousePressed', x, y, button: 'left', clickCount: 1 });
+  await input.dispatchMouseEvent({ type: 'mouseReleased', x, y, button: 'left', clickCount: 1 });
   // Keep the short UI-hydration deadline inside the page. A retained browser's
   // brokered CDP command can legitimately spend longer than 2.5 seconds in
   // authority/transport work before this expression starts running; wrapping
   // that round trip in the UI deadline creates a false pre-upload failure.
   const readiness = await runtime.evaluate({
     expression: `(async () => {
+      const stateKey = ${JSON.stringify(stateKey)};
+      const finish = (value) => {
+        const state = window[stateKey];
+        state?.controller?.abort?.();
+        delete window[stateKey];
+        return value;
+      };
       const deadline = performance.now() + 2500;
       while (performance.now() < deadline) {
+        const state = window[stateKey];
+        if (state?.result && state.result.trusted !== true) {
+          return finish({ trusted: false, ready: false });
+        }
         const ready = Array.from(document.querySelectorAll(${JSON.stringify(CHATGPT_COMPOSER_POPOVER_SELECTOR)}))
           .some((node) => {
             if (!(node instanceof HTMLElement)) return false;
@@ -557,25 +608,20 @@ async function openComposerPopoverWithTrustedPointer(
             return rect.width > 0 && rect.height > 0
               && Boolean(node.querySelector(itemSelector));
           });
-        if (ready) return true;
+        if (state?.result?.trusted === true && ready) {
+          return finish({ trusted: true, ready: true });
+        }
         await new Promise((resolve) => setTimeout(resolve, 100));
       }
-      return false;
+      const state = window[stateKey];
+      return finish({ trusted: state?.result?.trusted === true, ready: false });
     })()`,
     returnByValue: true,
     awaitPromise: true,
   });
-  if (readiness.result?.value !== true) {
-    const fallback = await openMenu(runtime, {
-      trigger: {
-        ...buildComposerTriggerOptions(),
-        interactionStrategies: ['click'],
-      },
-      menuSelector: CHATGPT_COMPOSER_POPOVER_SELECTOR,
-      anchorSelector: ATTACHMENT_MENU_SELECTOR,
-      timeoutMs: 2_500,
-    });
-    if (!fallback.ok) return null;
+  const readinessValue = readiness.result?.value as { trusted?: boolean; ready?: boolean } | null | undefined;
+  if (readinessValue?.trusted !== true || readinessValue.ready !== true) {
+    return null;
   }
   return readComposerPopoverEntry(runtime);
 }
