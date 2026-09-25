@@ -134,6 +134,7 @@ export function resolveRunOptionsFromConfig({
 
 function resolveModelForChatgptSemanticSelection(selection: ChatgptSemanticModelSelection): ModelName {
   switch (selection.desiredModel) {
+    case 'Current Pro':
     case '6 Pro':
       return 'gpt-6-astra';
     case '5.6Pro':

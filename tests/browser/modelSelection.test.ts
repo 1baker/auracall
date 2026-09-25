@@ -71,6 +71,26 @@ describe('browser model selection matchers', () => {
     expect(clicks).toBe(0);
   });
 
+  it.each(['5.6\nPro', '6Pro'])('accepts a versioned %s composer pill for current Pro intent', async (label) => {
+    let clicks = 0;
+    class FakeElement {
+      textContent = label;
+      getAttribute() { return null; }
+      dispatchEvent() { clicks += 1; return true; }
+    }
+    const button = new FakeElement();
+    const context: Record<string, unknown> = {
+      setTimeout,
+      performance: { now: () => Date.now() },
+      document: { querySelector: () => button },
+    };
+    const result = runInNewContext(buildModelSelectionExpressionForTest('Current Pro'), context) as Promise<{
+      status: string; label: string;
+    }>;
+    await expect(result).resolves.toEqual({ status: 'already-selected', label });
+    expect(clicks).toBe(0);
+  });
+
   it('ends a persistent submenu retry before the native broker command timeout', async () => {
     vi.useFakeTimers();
     try {
@@ -173,7 +193,7 @@ describe('browser model selection matchers', () => {
     }
   });
 
-  it('opens the observed 5.6Pro submenu and then chooses its Pro leaf', async () => {
+  it('opens an observed versioned Pro submenu for current Pro intent and then chooses its Pro leaf', async () => {
     vi.useFakeTimers();
     try {
       let expanded = false;
@@ -216,7 +236,7 @@ describe('browser model selection matchers', () => {
         location: { href: 'https://chatgpt.com/c/test' },
       };
       context.window = context;
-      const result = runInNewContext(buildModelSelectionExpressionForTest('5.6Pro'), context) as Promise<{
+      const result = runInNewContext(buildModelSelectionExpressionForTest('Current Pro'), context) as Promise<{
         status: string; label: string;
       }>;
       await vi.advanceTimersByTimeAsync(1_000);
@@ -232,7 +252,16 @@ describe('browser model selection matchers', () => {
     expect(scoreModelPickerOptionForTest('6 Pro', { text: '5.6Pro' }).score).toBe(0);
     expect(scoreModelPickerOptionForTest('6 Pro', { text: 'Pro' }).score).toBe(0);
     expect(scoreModelPickerOptionForTest('5.6Pro', { text: '6 Pro' }).score).toBe(0);
+    expect(scoreModelPickerOptionForTest('5.6Pro', { text: 'Pro' }).score).toBe(0);
     expect(scoreModelPickerOptionForTest('5.6Pro', { text: '5.6Pro' }).score).toBeGreaterThan(0);
+  });
+
+  it('requires a versioned row for current Pro intent and prefers the newest visible version', () => {
+    const six = scoreModelPickerOptionForTest('Current Pro', { text: '6 Pro' }).score;
+    const fiveSix = scoreModelPickerOptionForTest('Current Pro', { text: '5.6Pro' }).score;
+    expect(scoreModelPickerOptionForTest('Current Pro', { text: 'Pro' }).score).toBe(0);
+    expect(six).toBeGreaterThan(fiveSix);
+    expect(fiveSix).toBeGreaterThan(0);
   });
 
   it('includes rich tokens for gpt-5.1 base selection', () => {

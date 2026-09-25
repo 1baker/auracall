@@ -1,3 +1,24 @@
+## 2026-09-25 | Make Premium follow the current versioned Pro row
+
+The Plan 0365 forward review exposed a semantic-selector mismatch, not an
+attachment failure: `chatgpt:premium` was a stable intent name but resolved to
+the exact `6 Pro` picker row. The retained workbench currently offered
+`5.6Pro`, so execution stopped before upload or submission. Plan 0366 changes
+only the stable Premium alias to `Current Pro`. Exact `chatgpt:gpt-6-astra`
+and `chatgpt:gpt-5.6-pro` selectors remain strict.
+
+Current-Pro selection accepts an exact versioned composer pill, prefers the
+newer recognized row when multiple versioned Pro rows are visible, and accepts
+a generic `Pro` leaf only after AuraCall deliberately opens its versioned
+parent submenu. Six focused suites pass 190 tests; no-emit TypeScript and the
+production build pass. Touched-file lint has zero errors and 14 existing
+warnings. The full suite passes 3,536 tests, skips 55, and reports four
+failures: two timing-sensitive cases pass alone, while the two remaining
+contract failures repeat the pre-existing raw-route manifest finding. The plan
+audit repeats that finding and Plan 0357's two known header findings. CodeGraph
+sync and diff hygiene pass. Publication, installation, and the single fresh
+learning-traced review remain pending.
+
 ## 2026-09-25 | Separate attachment UI time from broker transport time
 
 The first post-install document guard failed before transfer or prompt

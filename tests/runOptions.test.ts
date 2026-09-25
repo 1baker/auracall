@@ -55,7 +55,7 @@ describe('resolveRunOptionsFromConfig', () => {
     });
   });
 
-  it('maps ChatGPT Premium intent to GPT-6 Astra and the 6 Pro picker', () => {
+  it('maps ChatGPT Premium intent to GPT-6 Astra compatibility and the current Pro picker', () => {
     const { runOptions, resolvedEngine, browserModelSelection } = resolveRunOptionsFromConfig({
       prompt: basePrompt,
       model: 'chatgpt:premium',
@@ -63,7 +63,7 @@ describe('resolveRunOptionsFromConfig', () => {
     });
     expect(resolvedEngine).toBe('browser');
     expect(runOptions.model).toBe('gpt-6-astra');
-    expect(browserModelSelection).toEqual({ desiredModel: '6 Pro' });
+    expect(browserModelSelection).toEqual({ desiredModel: 'Current Pro' });
   });
 
   it('maps semantic ChatGPT Sol High to the Sol browser compatibility model', () => {

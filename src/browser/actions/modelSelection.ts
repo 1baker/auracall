@@ -201,8 +201,12 @@ function scoreModelPickerOption(targetModel: string, option: { text?: string | n
   };
   const requestedProVersion = proVersion(targetModel);
   const candidateProVersion = proVersion(`${option.text ?? ''} ${option.testId ?? ''}`);
+  const currentVersionedPro = normalizedTarget === 'current pro';
   if (requestedProVersion === '6' && candidateProVersion !== '6'
-    || requestedProVersion === '5.6' && candidateProVersion === '6') {
+    || requestedProVersion === '5.6' && candidateProVersion !== '5.6') {
+    return { score: 0, optionKind, normalizedText, normalizedTestId };
+  }
+  if (currentVersionedPro && candidateProVersion === null) {
     return { score: 0, optionKind, normalizedText, normalizedTestId };
   }
 
@@ -217,6 +221,9 @@ function scoreModelPickerOption(targetModel: string, option: { text?: string | n
     } else if (optionKind && optionKind !== matchers.semanticTarget) {
       return { score: 0, optionKind, normalizedText, normalizedTestId };
     }
+  }
+  if (currentVersionedPro) {
+    score += candidateProVersion === '6' ? 160 : 120;
   }
   if (normalizedTestId) {
     const exactMatch = matchers.testIdTokens.find((id) => id && normalizedTestId === id);
@@ -328,6 +335,7 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
       .map((token) => normalizeText(token))
       .filter(Boolean);
     const targetWords = normalizedTarget.split(' ').filter(Boolean);
+    const currentVersionedPro = normalizedTarget === 'current pro';
 
     let button = null;
     const buttonWaitStartedAt = performance.now();
@@ -350,12 +358,14 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
     const compactModelLabel = (value) => value.toLowerCase().replace(/[^a-z0-9]/g, '');
     const targetModelKey = compactModelLabel(PRIMARY_LABEL);
     const buttonModelKey = compactModelLabel(getButtonLabel());
+    const currentVersionedProPill = currentVersionedPro
+      && ['56pro', 'gpt56pro', '6pro', 'gpt6pro'].includes(buttonModelKey);
     const exactVersionedProPill =
       (['56pro', 'gpt56pro'].includes(targetModelKey)
         && ['56pro', 'gpt56pro'].includes(buttonModelKey)) ||
       (['6pro', 'gpt6pro'].includes(targetModelKey)
         && ['6pro', 'gpt6pro'].includes(buttonModelKey));
-    if (exactVersionedProPill) {
+    if (exactVersionedProPill || currentVersionedProPill) {
       return { status: 'already-selected', label: getButtonLabel() };
     }
     if (MODEL_STRATEGY === 'current') {
@@ -485,6 +495,11 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
       return modelIndex >= 0 ? { kind: 'open-model', node: nodes[modelIndex] } : null;
     };
 
+    let openedProSubmenuVersion = null;
+    const proVersion = (value) => {
+      const compact = value.toLowerCase().replace(/[^a-z0-9]/g, '');
+      return compact.includes('56pro') ? '5.6' : compact.includes('6pro') ? '6' : null;
+    };
     const scoreOption = (normalizedText, testid) => {
       // Assign a score to every node so we can pick the most likely match without brittle equality checks.
       if (!normalizedText && !testid) {
@@ -493,14 +508,17 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
       let score = 0;
       const normalizedTestId = (testid ?? '').toLowerCase();
       const optionKind = classifyOption(normalizedText, normalizedTestId);
-      const proVersion = (value) => {
-        const compact = value.toLowerCase().replace(/[^a-z0-9]/g, '');
-        return compact.includes('56pro') ? '5.6' : compact.includes('6pro') ? '6' : null;
-      };
       const requestedProVersion = proVersion(PRIMARY_LABEL);
       const candidateProVersion = proVersion(normalizedText + ' ' + normalizedTestId);
-      if (requestedProVersion === '6' && candidateProVersion !== '6'
-        || requestedProVersion === '5.6' && candidateProVersion === '6') {
+      const scopedVersionedProLeaf = candidateProVersion === null
+        && openedProSubmenuVersion !== null
+        && (currentVersionedPro || openedProSubmenuVersion === requestedProVersion);
+      if (requestedProVersion === '6' && candidateProVersion !== '6' && !scopedVersionedProLeaf
+        || requestedProVersion === '5.6' && candidateProVersion !== '5.6' && !scopedVersionedProLeaf) {
+        return 0;
+      }
+      if (currentVersionedPro && candidateProVersion === null
+        && !scopedVersionedProLeaf) {
         return 0;
       }
       if (SEMANTIC_TARGET) {
@@ -509,6 +527,9 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
         } else if (optionKind && optionKind !== SEMANTIC_TARGET) {
           return 0;
         }
+      }
+      if (currentVersionedPro && candidateProVersion !== null) {
+        score += candidateProVersion === '6' ? 160 : 120;
       }
       if (normalizedTestId) {
         // Exact testid matches take priority over substring matches
@@ -690,8 +711,14 @@ function buildModelSelectionExpression(targetModel: string, strategy: BrowserMod
               && match.node.getAttribute?.('aria-expanded') !== null) ||
             match.normalizedText.startsWith('model ');
           if (isSubmenu) {
+            const submenuProVersion = proVersion(match.normalizedText + ' ' + (match.testid ?? ''));
             if (match.node.getAttribute?.('aria-expanded') !== 'true') {
-              dispatchClickSequence(match.node);
+              const opened = dispatchClickSequence(match.node);
+              if (opened && submenuProVersion !== null) {
+                openedProSubmenuVersion = submenuProVersion;
+              }
+            } else if (submenuProVersion !== null) {
+              openedProSubmenuVersion = submenuProVersion;
             }
             setTimeout(attempt, REOPEN_INTERVAL_MS / 2);
             return;

@@ -10,7 +10,7 @@ import {
 
 describe('semantic model selectors', () => {
   it.each([
-    ['chatgpt:premium', { desiredModel: '6 Pro' }],
+    ['chatgpt:premium', { desiredModel: 'Current Pro' }],
     ['chatgpt:gpt-5.6-pro', { desiredModel: '5.6Pro' }],
     ['chatgpt:gpt-6-astra', { desiredModel: '6 Pro' }],
     ['astra', { desiredModel: '6 Pro' }],

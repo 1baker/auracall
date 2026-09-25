@@ -2018,13 +2018,13 @@ describe('configured stored-step executor', () => {
     expect(runBrowserModeImpl).toHaveBeenCalledWith(
       expect.objectContaining({
         config: expect.objectContaining({
-          desiredModel: '6 Pro',
+          desiredModel: 'Current Pro',
           modelStrategy: 'select',
         }),
       }),
     );
     expect(result?.output?.structuredData?.browserRun).toMatchObject({
-      desiredModel: '6 Pro',
+      desiredModel: 'Current Pro',
       modelSelector: 'chatgpt:premium',
       selectedModel: '6 Pro',
       modelSelectionStatus: 'already-selected',

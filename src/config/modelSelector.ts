@@ -1,7 +1,7 @@
 import type { ThinkingTimeLevel } from '../browser/types.js';
 
 export interface ChatgptSemanticModelSelection {
-  desiredModel: '6 Pro' | '5.6Pro' | 'GPT-5.6 Sol' | 'GPT-5.6 Terra' | 'GPT-5.6 Luna' | 'GPT-5.5';
+  desiredModel: 'Current Pro' | '6 Pro' | '5.6Pro' | 'GPT-5.6 Sol' | 'GPT-5.6 Terra' | 'GPT-5.6 Luna' | 'GPT-5.5';
   thinkingTime?: ThinkingTimeLevel;
 }
 
@@ -35,7 +35,7 @@ export const SEMANTIC_MODEL_SELECTORS: readonly SemanticModelSelectorDescriptor[
   { id: 'chatgpt:sol', service: 'chatgpt', label: 'ChatGPT GPT-5.6 Sol', executionReady: true },
   { id: 'chatgpt:terra', service: 'chatgpt', label: 'ChatGPT GPT-5.6 Terra', executionReady: true },
   { id: 'chatgpt:luna', service: 'chatgpt', label: 'ChatGPT GPT-5.6 Luna', executionReady: true },
-  { id: 'chatgpt:premium', service: 'chatgpt', label: 'ChatGPT Premium (6 Pro)', executionReady: true },
+  { id: 'chatgpt:premium', service: 'chatgpt', label: 'ChatGPT Premium (current Pro)', executionReady: true },
   { id: 'chatgpt:gpt-5.6-pro', service: 'chatgpt', label: 'ChatGPT GPT-5.6 Pro', executionReady: true },
   { id: 'chatgpt:gpt-5.5', service: 'chatgpt', label: 'ChatGPT GPT-5.5', executionReady: true },
   {
@@ -117,6 +117,7 @@ export function resolveChatgptSemanticModelSelector(
 
   switch (token) {
     case 'premium':
+      return { desiredModel: 'Current Pro' };
     case 'gpt-6':
     case 'gpt-6-pro':
     case 'gpt-6-astra':

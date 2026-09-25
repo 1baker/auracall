@@ -150,6 +150,7 @@ export async function resolveConfig(
 
 function resolveModelForChatgptSemanticSelection(selection: { desiredModel: string }): string {
   switch (selection.desiredModel) {
+    case 'Current Pro':
     case '6 Pro':
       return 'gpt-6-astra';
     case '5.6Pro':

@@ -1,5 +1,16 @@
 # RUNBOOK
 
+## 2026-09-25 | Current Premium model intent
+
+Plan 0366 owns the narrow successor to the Plan 0365 forward-review blocker.
+The stable `chatgpt:premium` alias currently hard-pins `6 Pro`, but the retained
+workbench exposes `5.6Pro`. Change the stable alias to current versioned-Pro
+intent while leaving explicit GPT-6 and GPT-5.6 Pro selectors strict. Validate
+provider-free, publish through personal `1baker`, install once without taking
+browser lifecycle ownership, and submit one fresh learning-traced file review.
+Record its terminal browser verdict, score, exact final-answer link when
+present, and ModelLabs learning-sync result; do not replay a terminal failure.
+
 ## 2026-09-25 | Brokered attachment readiness budget
 
 Plan 0365 owns one narrow repair after guard

@@ -90,12 +90,12 @@ describe('buildBrowserConfig', () => {
     expect(config.thinkingTime).toBe('extended');
   });
 
-  test('uses the Premium semantic selector metadata for the 6 Pro picker', async () => {
+  test('uses the Premium semantic selector metadata for the current Pro picker', async () => {
     const config = await buildBrowserConfig({
       model: 'gpt-6-astra',
-      chatgptSemanticModelSelection: { desiredModel: '6 Pro' },
+      chatgptSemanticModelSelection: { desiredModel: 'Current Pro' },
     });
-    expect(config.desiredModel).toBe('6 Pro');
+    expect(config.desiredModel).toBe('Current Pro');
   });
 
   test('lets explicit thinking-time flags override semantic selector depth', async () => {

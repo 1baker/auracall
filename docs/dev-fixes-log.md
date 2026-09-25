@@ -1,3 +1,15 @@
+- 2026-09-25: The stable `chatgpt:premium` selector incorrectly acted as an
+  exact `6 Pro` pin, so a retained workbench offering `5.6Pro` stopped before
+  upload or prompt submission. Premium now carries `Current Pro` intent while
+  explicit GPT-6 and GPT-5.6 selectors remain exact. The picker requires a
+  versioned row or pill and scopes a generic `Pro` leaf to an opened versioned
+  submenu. Six focused suites pass 190 tests; typecheck, production build,
+  error-level touched-file lint, diff hygiene, and CodeGraph sync pass. The
+  full suite's two persistent contract failures and plan audit repeat the
+  pre-existing raw-route manifest finding; two concurrent timing failures pass
+  in isolated reruns. Publication, installed parity, and one fresh traced
+  retained-browser review remain pending under Plan 0366.
+
 - 2026-09-25: A learning-traced document guard failed before its first file
   transfer or prompt submission because the ChatGPT attachment-menu check used
   one 2.5-second deadline for both page hydration and the retained browser's

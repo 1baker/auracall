@@ -7,6 +7,13 @@
 Status: active
 Lane: P01
 
+- Active current Premium model-intent repair:
+  [Plan 0366](docs/dev/plans/0366-2026-09-25-current-premium-model-intent.md).
+  The stable `chatgpt:premium` alias will follow the newest versioned Pro row
+  that the retained workbench offers while explicit model versions stay
+  strict. Source validation, personal publication, one installed rollout, and
+  one fresh traced file review are bounded by the plan.
+
 - Closed bounded brokered attachment readiness repair:
   [Plan 0365](docs/dev/plans/0365-2026-09-25-brokered-attachment-readiness-budget.md).
   Personal commit `22bab5d7` is published, installed with compiled parity, and
