@@ -7,6 +7,13 @@
 Status: active
 Lane: P01
 
+- Active brokered attachment readiness repair:
+  [Plan 0365](docs/dev/plans/0365-2026-09-25-brokered-attachment-readiness-budget.md).
+  Current state: the first traced document guard failed before file transfer or
+  prompt submission because a 2.5-second page-hydration deadline also bounded
+  the retained browser's brokered CDP round trip. The deadlines are being
+  separated before one published, installed, learning-traced forward review.
+
 - Closed ChatGPT attachment UI receipt:
   [Plan 0364](docs/dev/plans/0364-2026-09-24-chatgpt-attachment-ui-receipt.md).
   The installed retained-browser response now records confirmed upload and

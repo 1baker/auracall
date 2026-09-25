@@ -209,6 +209,85 @@ describe('chatgpt composer tool selection', () => {
     expect(input.dispatchMouseEvent).toHaveBeenCalledTimes(3);
   });
 
+  test('keeps the page readiness deadline separate from broker transport latency', async () => {
+    vi.useFakeTimers();
+    let popoverReads = 0;
+    let readinessCall: Record<string, unknown> | undefined;
+    let markReadinessStarted: (() => void) | undefined;
+    const readinessStarted = new Promise<void>((resolve) => {
+      markReadinessStarted = resolve;
+    });
+    const evaluate = vi.fn().mockImplementation(async (params: Record<string, unknown>) => {
+      const source = String(params.expression ?? '');
+      if (source.includes('data-auracall-chatgpt-composer-menu')) {
+        popoverReads += 1;
+        return {
+          result: {
+            value:
+              popoverReads === 1
+                ? null
+                : {
+                    selector: '[data-auracall-chatgpt-composer-menu="true"]',
+                    sourceSelector: '.popover',
+                    signature: 'current-workbench',
+                    rect: { x: 0, y: 0, width: 400, height: 600 },
+                    distanceToAnchor: null,
+                    items: [],
+                    itemLabels: [],
+                  },
+          },
+        };
+      }
+      if (source.includes('const node = document.querySelector')) {
+        return { result: { value: { x: 24, y: 24 } } };
+      }
+      const isLegacyReadinessCall =
+        source.includes('.some((node)') && source.includes('Boolean(node.querySelector');
+      if (source.includes('const deadline = performance.now() + 2500') || isLegacyReadinessCall) {
+        readinessCall = params;
+        markReadinessStarted?.();
+        return new Promise((resolve) => {
+          setTimeout(() => resolve({ result: { value: true } }), 2_600);
+        });
+      }
+      if (source.includes('const rows = root')) {
+        return {
+          result: {
+            value: {
+              rows: [{ label: 'Add photos & files', description: 'Upload from computer' }],
+              inputs: [{ id: 'upload-files', accept: null, multiple: true }],
+            },
+          },
+        };
+      }
+      return { result: { value: false } };
+    });
+    const input = {
+      dispatchKeyEvent: vi.fn().mockResolvedValue(undefined),
+      dispatchMouseEvent: vi.fn().mockResolvedValue(undefined),
+    };
+
+    try {
+      const pending = prepareChatgptWorkbenchLocalAttachment({
+        runtime: { evaluate } as unknown as Parameters<
+          typeof prepareChatgptWorkbenchLocalAttachment
+        >[0]['runtime'],
+        input: input as unknown as Parameters<typeof prepareChatgptWorkbenchLocalAttachment>[0]['input'],
+        page: { bringToFront: vi.fn().mockResolvedValue(undefined) } as unknown as Parameters<
+          typeof prepareChatgptWorkbenchLocalAttachment
+        >[0]['page'],
+      });
+      await readinessStarted;
+      await vi.advanceTimersByTimeAsync(2_600);
+      await expect(pending).resolves.toMatchObject({ status: 'ready', inputSelector: '#upload-files' });
+
+      expect(readinessCall).toMatchObject({ returnByValue: true, awaitPromise: true });
+      expect(readinessCall).not.toHaveProperty('timeout');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   test('accepts an optional provider library row but fails closed on generic input drift', () => {
     expect(
       resolveChatgptWorkbenchAttachmentSurfaceForTest({

@@ -1,5 +1,15 @@
 # RUNBOOK
 
+## 2026-09-25 | Brokered attachment readiness budget
+
+Plan 0365 owns one narrow repair after guard
+`document-b514afc9-runtime-regression-r1` failed before its first file transfer
+and before prompt submission. The workbench menu check incorrectly used the
+same 2.5-second limit for page hydration and the retained browser's native
+broker round trip. The source repair moves that deadline into the page and adds
+a provider-free regression. Publication, installed parity, retained-process
+preservation, and one fresh learning-traced guard remain required.
+
 ## 2026-09-24 | Source-side ChatGPT attachment UI receipt
 
 Plan 0364 adds an optional typed receipt to the ChatGPT browser result and

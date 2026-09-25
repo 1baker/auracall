@@ -1,3 +1,13 @@
+## 2026-09-25 | Separate attachment UI time from broker transport time
+
+The first post-install document guard failed before transfer or prompt
+submission with a 2.5-second predicate timeout. CodeGraph traced the failure to
+`openComposerPopoverWithCdp`: an intentionally short page-hydration deadline
+also wrapped the full native-broker `Runtime.evaluate` command. The repair keeps
+the same UI deadline inside an awaited page expression and leaves the outer
+command under the established broker transport bound. This preserves strict UI
+readiness without treating authority or transport latency as UI drift.
+
 ## 2026-09-24 | Reconcile attached-response recovery for publication
 
 Reviewed every dirty source, test and documentation path on

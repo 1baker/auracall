@@ -1,3 +1,13 @@
+- 2026-09-25: A learning-traced document guard failed before its first file
+  transfer or prompt submission because the ChatGPT attachment-menu check used
+  one 2.5-second deadline for both page hydration and the retained browser's
+  native-broker `Runtime.evaluate` round trip. The 2.5-second wait now runs
+  inside the page while the outer command remains under the broker's existing
+  transport bound. A regression delays the mocked broker result beyond 2.5
+  seconds and still requires the verified workbench surface. Eighty-seven
+  focused tests, no-emit typecheck, build, touched-file lint, diff hygiene, and
+  CodeGraph sync pass. Installed forward validation remains pending.
+
 - 2026-09-24: The attached-response observer's first source fixture used a
   review-correlation shape that did not match the real Pro Guard request, and
   native attachment-identity drift surfaced without typed after-submit details.

@@ -23,7 +23,6 @@ import {
   openMenu,
   openSubmenu,
   selectAndVerifyNestedMenuPathOption,
-  waitForPredicate,
 } from '../service/ui.js';
 
 type ComposerToolOutcome =
@@ -533,18 +532,30 @@ async function openComposerPopoverWithCdp(
     buttons: 0,
     clickCount: 1,
   });
-  const ready = await waitForPredicate(
-    Runtime,
-    `(() => Array.from(document.querySelectorAll(${JSON.stringify(CHATGPT_COMPOSER_POPOVER_SELECTOR)}))
-      .some((node) => {
-        if (!(node instanceof HTMLElement)) return false;
-        const rect = node.getBoundingClientRect();
-        return rect.width > 0 && rect.height > 0
-          && Boolean(node.querySelector(${JSON.stringify(CHATGPT_COMPOSER_POPOVER_ITEM_SELECTOR)}));
-      }))()`,
-    { timeoutMs: 2_500, pollMs: 100 },
-  );
-  if (!ready.ok) {
+  // Keep the short UI-hydration deadline inside the page. A retained browser's
+  // brokered CDP command can legitimately spend longer than 2.5 seconds in
+  // authority/transport work before this expression starts running; wrapping
+  // that round trip in the UI deadline creates a false pre-upload failure.
+  const readiness = await Runtime.evaluate({
+    expression: `(async () => {
+      const deadline = performance.now() + 2500;
+      while (performance.now() < deadline) {
+        const ready = Array.from(document.querySelectorAll(${JSON.stringify(CHATGPT_COMPOSER_POPOVER_SELECTOR)}))
+          .some((node) => {
+            if (!(node instanceof HTMLElement)) return false;
+            const rect = node.getBoundingClientRect();
+            return rect.width > 0 && rect.height > 0
+              && Boolean(node.querySelector(${JSON.stringify(CHATGPT_COMPOSER_POPOVER_ITEM_SELECTOR)}));
+          });
+        if (ready) return true;
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+      return false;
+    })()`,
+    returnByValue: true,
+    awaitPromise: true,
+  });
+  if (readiness.result?.value !== true) {
     const fallback = await openMenu(Runtime, {
       trigger: {
         ...buildComposerTriggerOptions(),
