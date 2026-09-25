@@ -7,12 +7,15 @@
 Status: active
 Lane: P01
 
-- Active current Premium model-intent repair:
+- Closed current Premium model-intent repair:
   [Plan 0366](docs/dev/plans/0366-2026-09-25-current-premium-model-intent.md).
-  The stable `chatgpt:premium` alias will follow the newest versioned Pro row
-  that the retained workbench offers while explicit model versions stay
-  strict. Source validation, personal publication, one installed rollout, and
-  one fresh traced file review are bounded by the plan.
+  Personal commit `8c118aaa` is published and installed; the stable
+  `chatgpt:premium` alias follows the current versioned Pro row while explicit
+  versions stay strict. Fresh traced guard
+  `document-8c118aaa-premium-forward-r1` failed before tab creation because
+  Agent Browser's retained-session daemon connection was refused. No files,
+  prompt, verdict, score, or learning sync occurred, and the run was not
+  replayed.
 
 - Closed bounded brokered attachment readiness repair:
   [Plan 0365](docs/dev/plans/0365-2026-09-25-brokered-attachment-readiness-budget.md).

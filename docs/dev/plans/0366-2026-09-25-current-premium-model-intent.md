@@ -1,6 +1,6 @@
 # Current Premium Model Intent | 0366-2026-09-25
 
-State: OPEN
+State: CLOSED
 Lane: P01
 
 ## Objective
@@ -59,9 +59,9 @@ label in response evidence.
 - [x] Focused tests, no-emit typecheck, production build, touched-file lint,
       diff hygiene, plan audit, and CodeGraph sync pass or disclose exact
       pre-existing findings.
-- [ ] Personal GitHub publication is committed, pushed through isolated
+- [x] Personal GitHub publication is committed, pushed through isolated
       `1baker` routing, re-fetched, clean, and zero ahead/behind.
-- [ ] The installed runtime matches the published commit while the retained
+- [x] The installed runtime matches the published commit while the retained
       browser keeps its original process identity.
 - [ ] One fresh `--require-learning-trace` review preserves its immutable
       original prompt, exact generation prompt, true author, reviewed files,
@@ -90,3 +90,43 @@ passing end-to-end result.
 - The plan audit retains that raw-route finding plus Plan 0357's pre-existing
   noncanonical and missing `State:` findings. CodeGraph sync is current at
   975 files, 18,553 nodes, and 72,448 edges.
+
+## Publication And Installation
+
+- Personal commit `8c118aaaee06678106903f45ef05a38b7da73b83` was pushed
+  through isolated `1baker` routing, re-fetched, and verified clean at zero
+  ahead and zero behind.
+- The previous user runtime is preserved at
+  `/home/bak3r/.auracall/backups/user-runtime-pre-8c118aaa-20260925T154130Z`.
+- The published checkout was installed once. The installed and checkout hashes
+  match for `modelSelector.js`, `modelSelection.js`, `runOptions.js`, and
+  `resolver.js`.
+- Only `auracall-api.service` restarted, at PID `1288310`. Retained Chrome kept
+  PID `1829010` and process start token `3619174` across installation and the
+  API restart.
+
+## Forward Review
+
+- A fresh no-launch Agent Browser plan selected profile and session
+  `chatgpt-stealth-linux-20260924`, required reuse of browser
+  `session:chatgpt-stealth-linux-20260924`, prohibited a duplicate process,
+  and required no manual action.
+- Guard `document-8c118aaa-premium-forward-r1`, response
+  `resp_idem_62e36aa8f44e1edfcacb90a0ee69adfb`, preserved round 1, author
+  `codex`, no parent, original-prompt SHA-256
+  `fbbeb677688fa4fb16735502c326954ab7bfd7312101fd6665762125ff5343eb`,
+  generation-prompt SHA-256
+  `ee4823fddb5ad5b6669c96f0e161e466263cd4d6d1db4cb385fd042a13853a9b`,
+  and learning-trace digest
+  `074c884091924370601663ec4676ca8476eb0ff82d59b121f5d6ec35741f541b`.
+  Its private handoff preserves review goal, candidate Markdown, guide,
+  prompt, DOCX, and PDF with exact digests.
+- The fresh run failed before Agent Browser created a task tab, file transfer,
+  model selection, or prompt submission. AuraCall received HTTP 502 from
+  `/api/service/request`: the retained session's browser daemon connection was
+  refused. The failure is preserved without retry.
+- There is no browser verdict, score, review artifact, review chat, exact Codex
+  final-answer link, or ModelLabs learning sync. Retained Chrome still reports
+  ready with PID `1829010` and start token `3619174`; repair of the missing
+  daemon route must preserve that browser and belongs to a separate bounded
+  operation.

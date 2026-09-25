@@ -11,6 +11,21 @@ browser lifecycle ownership, and submit one fresh learning-traced file review.
 Record its terminal browser verdict, score, exact final-answer link when
 present, and ModelLabs learning-sync result; do not replay a terminal failure.
 
+Personal commit `8c118aaa` passed the bounded source checks, was pushed through
+isolated `1baker`, installed with four compiled-module hash matches, and
+restarted only the AuraCall API at PID `1288310`. Retained Chrome stayed at PID
+`1829010`, start token `3619174`. The fresh no-launch plan required reuse of
+that browser with duplicate launch disabled.
+
+Guard `document-8c118aaa-premium-forward-r1`, response
+`resp_idem_62e36aa8f44e1edfcacb90a0ee69adfb`, preserved the two prompt digests,
+author `codex`, Markdown handoff, DOCX, and PDF. It failed before Agent Browser
+created a task tab because `/api/service/request` returned HTTP 502: the
+retained-session daemon connection was refused. No attachment, model selection,
+prompt, browser verdict, score, review artifact/chat, final-answer link, or
+ModelLabs learning sync exists. Preserve the terminal failure without replay;
+Plan 0366 closes as a bounded blocked slice.
+
 ## 2026-09-25 | Brokered attachment readiness budget
 
 Plan 0365 owns one narrow repair after guard

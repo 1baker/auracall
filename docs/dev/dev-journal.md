@@ -17,7 +17,22 @@ failures: two timing-sensitive cases pass alone, while the two remaining
 contract failures repeat the pre-existing raw-route manifest finding. The plan
 audit repeats that finding and Plan 0357's two known header findings. CodeGraph
 sync and diff hygiene pass. Publication, installation, and the single fresh
-learning-traced review remain pending.
+learning-traced review were the remaining gates at that point.
+
+Personal commit `8c118aaa` was then pushed through isolated `1baker`, installed
+with four compiled-module hash matches, and restarted only the AuraCall API.
+Retained Chrome kept PID `1829010` and start token `3619174`. The no-launch plan
+required exact browser/session reuse and prohibited a duplicate process.
+
+Fresh guard `document-8c118aaa-premium-forward-r1`, response
+`resp_idem_62e36aa8f44e1edfcacb90a0ee69adfb`, preserved the original prompt,
+exact generation prompt, author `codex`, Markdown handoff, DOCX, and PDF. It
+failed before task-tab creation when Agent Browser's `/api/service/request`
+returned HTTP 502 because the retained-session daemon connection was refused.
+No upload, prompt, verdict, score, review artifact/chat, final-answer link, or
+ModelLabs learning sync exists. The run was not replayed. The model-intent fix
+is published and installed, but live document acceptance remains blocked on
+restoring the daemon route without replacing the retained browser.
 
 ## 2026-09-25 | Separate attachment UI time from broker transport time
 

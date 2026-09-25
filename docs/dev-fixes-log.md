@@ -7,8 +7,13 @@
   error-level touched-file lint, diff hygiene, and CodeGraph sync pass. The
   full suite's two persistent contract failures and plan audit repeat the
   pre-existing raw-route manifest finding; two concurrent timing failures pass
-  in isolated reruns. Publication, installed parity, and one fresh traced
-  retained-browser review remain pending under Plan 0366.
+  in isolated reruns. Personal commit `8c118aaa` is published and installed
+  with compiled parity; retained Chrome kept PID `1829010`. Fresh traced guard
+  `document-8c118aaa-premium-forward-r1` failed before task-tab creation because
+  Agent Browser's retained-session daemon connection was refused. No upload,
+  prompt, verdict, score, review record, final-answer link, or learning sync
+  exists. Preserve the terminal failure without replay; Plan 0366 is closed as
+  a bounded blocked slice.
 
 - 2026-09-25: A learning-traced document guard failed before its first file
   transfer or prompt submission because the ChatGPT attachment-menu check used
