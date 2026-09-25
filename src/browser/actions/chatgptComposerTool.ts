@@ -634,7 +634,15 @@ export async function prepareChatgptWorkbenchLocalAttachment(
   },
 ): Promise<ChatgptWorkbenchAttachmentSurface> {
   const { runtime, input, page } = deps;
-  const popover = await openComposerPopoverWithTrustedPointer(runtime, input, page);
+  let popover = await openComposerPopoverWithTrustedPointer(runtime, input, page);
+  if (!popover) {
+    // A newly opened project can replace its composer while the project shell
+    // hydrates. Re-resolve and hit-test the exact opener once after the first
+    // page-local readiness window instead of treating that transient replacement
+    // as permanent selector drift. Keep this bounded and preserve the trusted
+    // pointer plus strict menu/action/input checks on both attempts.
+    popover = await openComposerPopoverWithTrustedPointer(runtime, input, page);
+  }
   if (!popover) {
     return { status: 'menu-not-found' };
   }

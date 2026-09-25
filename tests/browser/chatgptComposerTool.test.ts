@@ -257,6 +257,116 @@ describe('chatgpt composer tool selection', () => {
     });
   });
 
+  test('re-resolves the exact attachment opener once after project-shell hydration replaces it', async () => {
+    let popoverReads = 0;
+    let readinessReads = 0;
+    const evaluate = vi.fn().mockImplementation(async ({ expression }: { expression?: string }) => {
+      const source = String(expression ?? '');
+      if (source.includes('data-auracall-chatgpt-composer-menu')) {
+        popoverReads += 1;
+        return {
+          result: {
+            value:
+              popoverReads < 3
+                ? null
+                : {
+                    selector: '[data-auracall-chatgpt-composer-menu="true"]',
+                    sourceSelector: '.composer-home-top-menu',
+                    signature: 'hydrated-workbench',
+                    rect: { x: 0, y: 0, width: 400, height: 600 },
+                    distanceToAnchor: null,
+                    items: [],
+                    itemLabels: [],
+                  },
+          },
+        };
+      }
+      if (source.includes('const stateKey =') && source.includes('match.scrollIntoView')) {
+        return { result: { value: { ok: true, center: { x: 24, y: 24 } } } };
+      }
+      if (source.includes('const finish =') && source.includes('performance.now() + 2500')) {
+        readinessReads += 1;
+        return {
+          result: {
+            value:
+              readinessReads === 1
+                ? { trusted: true, ready: false }
+                : { trusted: true, ready: true },
+          },
+        };
+      }
+      if (source.includes('const rows = root')) {
+        return {
+          result: {
+            value: {
+              surface: 'composer-home-top-menu',
+              rows: [
+                { label: 'Add photos & files', description: '' },
+                { label: 'Add library files', description: '' },
+              ],
+              inputs: [{ id: '_r_54_', ariaLabel: 'Attach files', accept: null, multiple: true }],
+            },
+          },
+        };
+      }
+      return { result: { value: false } };
+    });
+    const input = {
+      dispatchKeyEvent: vi.fn().mockResolvedValue(undefined),
+      dispatchMouseEvent: vi.fn().mockResolvedValue(undefined),
+    };
+    const page = { bringToFront: vi.fn().mockResolvedValue(undefined) };
+
+    await expect(
+      prepareChatgptWorkbenchLocalAttachment({
+        runtime: { evaluate } as unknown as Parameters<
+          typeof prepareChatgptWorkbenchLocalAttachment
+        >[0]['runtime'],
+        input: input as unknown as Parameters<typeof prepareChatgptWorkbenchLocalAttachment>[0]['input'],
+        page: page as unknown as Parameters<typeof prepareChatgptWorkbenchLocalAttachment>[0]['page'],
+      }),
+    ).resolves.toMatchObject({
+      status: 'ready',
+      inputSelector: 'input[type="file"][aria-label="Attach files"]',
+    });
+
+    expect(page.bringToFront).toHaveBeenCalledTimes(2);
+    expect(input.dispatchMouseEvent).toHaveBeenCalledTimes(6);
+    expect(readinessReads).toBe(2);
+  });
+
+  test('fails closed after two exact trusted-pointer opener attempts', async () => {
+    let targetReads = 0;
+    const evaluate = vi.fn().mockImplementation(async ({ expression }: { expression?: string }) => {
+      const source = String(expression ?? '');
+      if (source.includes('data-auracall-chatgpt-composer-menu')) {
+        return { result: { value: null } };
+      }
+      if (source.includes('const stateKey =') && source.includes('match.scrollIntoView')) {
+        targetReads += 1;
+        return { result: { value: { ok: false, reason: 'target-not-found' } } };
+      }
+      return { result: { value: false } };
+    });
+
+    await expect(
+      prepareChatgptWorkbenchLocalAttachment({
+        runtime: { evaluate } as unknown as Parameters<
+          typeof prepareChatgptWorkbenchLocalAttachment
+        >[0]['runtime'],
+        input: {
+          dispatchKeyEvent: vi.fn().mockResolvedValue(undefined),
+          dispatchMouseEvent: vi.fn().mockResolvedValue(undefined),
+        } as unknown as Parameters<typeof prepareChatgptWorkbenchLocalAttachment>[0]['input'],
+        page: { bringToFront: vi.fn().mockResolvedValue(undefined) } as unknown as Parameters<
+          typeof prepareChatgptWorkbenchLocalAttachment
+        >[0]['page'],
+      }),
+    ).resolves.toEqual({ status: 'menu-not-found' });
+
+    expect(targetReads).toBe(2);
+  });
+
   test('keeps the page readiness deadline separate from broker transport latency', async () => {
     vi.useFakeTimers();
     let popoverReads = 0;

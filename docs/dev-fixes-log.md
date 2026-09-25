@@ -1,3 +1,16 @@
+- 2026-09-25: A newly opened ChatGPT project can replace its composer during
+  final shell hydration. Installed guard
+  `document-630d1247-attachment-budget-r1` passed route, Chat mode, Current Pro,
+  and project checks but its single exact opener attempt returned
+  `menu-not-found` before upload or prompt submission. The task tab reached its
+  hydrated project title only about two seconds before failure; a separate
+  task-owned diagnostic then proved the unchanged exact opener/menu/chooser
+  contract works after hydration. Re-resolve and trusted-click the same exact
+  opener at most once after the first page-local miss, keep strict action/input
+  validation, and fail closed after the second miss. Preserve the terminal
+  guard, release only task-owned tabs, and do not claim review or learning sync
+  without a later independent guard.
+
 - 2026-09-25: The exact current `Select ChatGPT model` control now opens a
   flat menu whose checked current-Pro row is `Latest`, so the older nested-view
   proof rejected a real current picker. AuraCall now carries exact-trigger

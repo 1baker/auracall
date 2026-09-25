@@ -1,5 +1,35 @@
 # RUNBOOK
 
+## 2026-09-25 | ChatGPT attachment hydration retry
+
+Plan 0375 follows the installed Plan 0374 rework without replaying any prior
+response. The fresh round-one guard
+`document-630d1247-attachment-budget-r1` / response
+`resp_idem_7c7cd55ce69126ead082c177fd0dadce` passed retained routing, login,
+default Chat, Current Pro, and project-context checks, then failed before the
+first upload or prompt submission with `menu-not-found`. Its immutable original
+and generation prompts, author `codex`, no-parent lineage, Markdown/DOCX/PDF
+packet, and learning-trace digest are preserved. No browser answer, verdict,
+score, review record, conversation URL, attachment receipt, exact Codex final-
+answer link, or ModelLabs learning sync exists.
+
+The guard task tab's title changed from generic `ChatGPT` to the hydrated
+project title only about two seconds before the failure. The runner released
+its lease and physically closed exact target
+`A279D75473EA3213B5CB74CEAF73B852`. A separate no-launch diagnostic opened one
+task-owned tab, confirmed the exact `Add files and more` opener still exposes
+the current menu, exact local-file action, optional library action, and one
+unrestricted multiple `Attach files` input after hydration, then physically
+closed target `AA8FFE0FD654F4C98627B4DFCD15BABA`. Retained Chrome stayed at PID/start
+token `1829010`/`3619174`.
+
+Repair only the one-attempt race: after one page-local menu-readiness miss,
+re-resolve, re-hit-test, and trusted-click the same exact opener once. Keep the
+strict menu/action/input resolver and fail closed after the second miss. Add no
+selector aliases or synthetic fallback, make no second provider submission in
+this slice, then validate, publish through personal `1baker`, install once, and
+record installed parity without replacing retained Chrome.
+
 ## 2026-09-25 | Current ChatGPT attachment opener
 
 Plan 0374 follows Plan 0373 without replaying its terminal guard. The retained

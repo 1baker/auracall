@@ -1,3 +1,25 @@
+## 2026-09-25 | Retry the exact attachment opener after project hydration
+
+Plan 0375 owns the next bounded blocker from the installed Plan 0374 rework.
+Fresh guard `document-630d1247-attachment-budget-r1`, response
+`resp_idem_7c7cd55ce69126ead082c177fd0dadce`, preserved its complete round-one
+learning trace and Markdown/DOCX/PDF review packet, passed route, login, Chat,
+Current Pro, and project-context checks, then failed before upload or prompt
+submission because the attachment preparation returned `menu-not-found`. No
+review output or ModelLabs learning sync exists and the guard will not be
+replayed.
+
+The exact task tab reached its hydrated project title only about two seconds
+before failure. A separate task-owned no-launch diagnostic proved the exact
+opener, menu, local-file action, optional library action, and unrestricted
+single chooser are still present and that the Agent Browser click opens the
+menu once the project shell is stable. Both task tabs were physically closed;
+retained Chrome PID/start token `1829010`/`3619174` is unchanged. The source
+repair re-resolves and trusted-clicks the same exact opener once after an
+initial page-local readiness miss, with no selector or input broadening, and
+fails closed after the second miss. No second provider submission is allowed
+in this slice.
+
 ## 2026-09-25 | Bind `Current Pro` to the current flat model menu
 
 Plan 0373 owns the next bounded blocker from Plan 0372. Its guard proved that

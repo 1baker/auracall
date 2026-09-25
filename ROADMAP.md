@@ -7,6 +7,16 @@
 Status: active
 Lane: P01
 
+- Open bounded ChatGPT attachment hydration repair:
+  [Plan 0375](docs/dev/plans/0375-2026-09-25-chatgpt-attachment-hydration-retry.md).
+  Fresh guard `document-630d1247-attachment-budget-r1` passed retained routing,
+  Chat mode, Current Pro, and project context, then failed before upload or
+  submission because its one exact attachment-opener attempt overlapped final
+  project-shell hydration. A task-owned no-launch diagnostic proved the exact
+  opener/menu/chooser still works after hydration and was physically released.
+  Re-resolve and trusted-click that same exact opener at most once; do not
+  broaden selectors or replay the terminal guard.
+
 - Closed current ChatGPT attachment-opener repair:
   [Plan 0374](docs/dev/plans/0374-2026-09-25-current-chatgpt-attachment-opener.md).
   The current exact opener/menu/chooser contract was unchanged. Personal commit
