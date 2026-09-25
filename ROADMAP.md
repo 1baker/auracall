@@ -7,14 +7,18 @@
 Status: active
 Lane: P01
 
-- Open current Chat-mode default-composer repair:
+- Closed current Chat-mode default-composer repair:
   [Plan 0371](docs/dev/plans/0371-2026-09-25-current-chat-mode-default-composer.md).
-  Plan 0370's sole traced guard failed before model selection, attachment
-  upload, or prompt submission because the live project page did not satisfy
-  AuraCall's exact Chat-mode control contract. Inspect one disposable retained
-  task tab read-only, bind the observed default-composer structure fail closed,
-  publish and install once, then submit exactly one new provenance-complete
-  round-one guard.
+  Personal commit `e29841bf` recognizes only the observed editable
+  `New chat in ...` project composer inside a form, with negative regressions
+  for project-like textareas and unbound textboxes. It is published, installed
+  with exact compiled parity, and retained Chrome stayed PID `1829010`.
+  Exactly one traced guard, `document-e29841bf-current-chat-mode-r1`, proved the
+  repaired default-Chat decision live, then failed before upload or prompt
+  submission because model selection opened the conversation-actions menu and
+  could not find `Current Pro`. No verdict, score, review record, final-answer
+  link, attachment receipt, or learning sync exists; the task target is closed
+  and the guard was not replayed.
 
 - Closed current ChatGPT local-file action repair:
   [Plan 0370](docs/dev/plans/0370-2026-09-25-current-chatgpt-local-file-action.md).

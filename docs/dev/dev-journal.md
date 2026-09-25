@@ -24,6 +24,24 @@ the existing raw-route contract failures. The other implicated files passed 76
 tests in a single-worker rerun, and the remaining detached-CLI timing test file
 then passed 7/7 alone.
 
+Personal commit `e29841bf` was published through isolated `1baker` and
+installed with exact compiled hash parity (`20ad134fc...dc8`). Only AuraCall
+API restarted, as healthy PID `2003672`; retained Chrome preserved PID/start
+token `1829010`/`3619174`. The final no-launch plan required the exact retained
+browser/session and forbade duplicate launch.
+
+The slice's sole new guard was
+`document-e29841bf-current-chat-mode-r1`, response
+`resp_idem_b5fba9e7f9e5fe35bdfcd1b67d6c8379`. Its learning trace preserves round
+1, author `codex`, no parent, both exact prompt digests, candidate Markdown,
+DOCX, and PDF. Installed logs prove the repaired default composer was accepted
+as Chat. The run then failed before upload or prompt submission because the
+`Current Pro` picker opened a conversation-actions menu. No provider answer,
+verdict, score, review file/chat, conversation URL, exact Codex final-answer
+link, attachment receipt, or ModelLabs learning sync exists. The lease is
+released, target `5C9677824847970E92F68D58EAD0635A` is absent from the final
+ten-tab inventory, retained Chrome is unchanged, and no replay occurred.
+
 ## 2026-09-25 | Inspect and repair the current ChatGPT local-file action
 
 Plan 0370 owns the next bounded blocker from Plan 0369. The prior guard proved

@@ -1,6 +1,6 @@
 # Current Chat-Mode Default Composer | 0371-2026-09-25
 
-State: OPEN
+State: CLOSED
 Lane: P01
 
 ## Objective
@@ -71,14 +71,41 @@ unrelated textbox or weakening explicit Work-mode selection.
 - [x] Focused tests, typecheck, production build, touched-file lint, diff
       hygiene, plan audit, and CodeGraph sync pass or disclose exact existing
       findings.
-- [ ] Personal GitHub publication is committed, pushed through isolated
+- [x] Personal GitHub publication is committed, pushed through isolated
       `1baker` routing, re-fetched, clean, and zero ahead/behind.
-- [ ] The installed runtime matches the published commit while retained Chrome
+- [x] The installed runtime matches the published commit while retained Chrome
       keeps its original process identity.
 - [ ] One fresh round-one learning trace preserves the immutable original
       prompt, exact generation prompt, true author, no parent guard, reviewed
       Markdown/DOCX/PDF packet, and records the browser verdict, score, exact
       Codex final-answer link, and ModelLabs learning-sync result when present.
+
+## Terminal Result
+
+- Personal commit `e29841bf` is published and installed. The compiled
+  `chatgptComposerMode.js` hash is
+  `20ad134fcab0b355fab9f1825d67308083c15be641f8396fe4730866899ccdc8`
+  in both checkout and installed runtime. AuraCall API restarted as healthy PID
+  `2003672`; retained Chrome preserved PID/start token
+  `1829010`/`3619174`.
+- Exactly one forward guard ran: `document-e29841bf-current-chat-mode-r1`,
+  response `resp_idem_b5fba9e7f9e5fe35bdfcd1b67d6c8379`. It preserved
+  round 1, author `codex`, no parent, learning-trace digest
+  `ac790635c88c90b9c0d1f3deee9761ee4bbfe26215a31f47286624f9da8c94da`,
+  both exact prompt digests, candidate Markdown, DOCX, and PDF.
+- Installed logs prove `ChatGPT mode: Chat (default composer; no mode switcher
+  present)`, accepting this repair. The run then failed before upload or prompt
+  submission because model selection opened the conversation-actions menu and
+  could not find `Current Pro` among `Share`, `Rename`, `Pin chat`, `Archive`,
+  `Delete`, `Move to project`, and `Remove from project`.
+- No reviewer answer, verdict, score, review record, conversation URL,
+  attachment receipt, exact Codex final-answer link, or ModelLabs learning sync
+  exists. The guard lease is released; exact task target
+  `5C9677824847970E92F68D58EAD0635A` is absent from the retained ten-tab
+  inventory, and no replay or second guard occurred.
+
+The unchecked review-output criterion is the exact terminal blocker, not an
+implicit pass. Any follow-up belongs to a new bounded model-picker slice.
 
 ## Definition Of Done
 

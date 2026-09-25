@@ -23096,3 +23096,9 @@ browser-stage lifecycle observability, not transcript truncation.
   non-empty label prefix together with exact textbox/contenteditable semantics
   and a containing form. Project-like textareas and unbound textboxes remain
   rejected, so UI drift does not broaden the contract to arbitrary inputs.
+- 2026-09-25: Installed guard `document-e29841bf-current-chat-mode-r1` proved
+  the repaired default-Chat decision, then exposed the next independent gate:
+  model selection opened the conversation-actions menu and could not match
+  `Current Pro`. The run failed before attachment upload or prompt submission,
+  retained no review verdict or learning sync, released its task target, and
+  was not replayed.

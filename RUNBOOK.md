@@ -12,6 +12,29 @@ provider-free validation, publish through personal `1baker`, install once while
 preserving retained Chrome, and run exactly one new round-one
 `--require-learning-trace` document guard.
 
+Personal commit `e29841bf` passed the focused/adjacent 118-test run,
+typecheck, production build, touched-file lint, diff hygiene, and CodeGraph
+sync. The all-at-once suite passed 3,526 tests with 55 skips; its two durable
+failures are the existing raw-route findings, while every load-sensitive
+failure passed in bounded single-worker or isolated reruns. The commit was
+published through isolated personal `1baker` routing. The installed
+`chatgptComposerMode.js` exactly matches the checkout at hash
+`20ad134fc...dc8`; AuraCall API restarted as PID `2003672`, while retained
+Chrome kept PID/start token `1829010`/`3619174`.
+
+The immediate no-launch plan selected the one retained browser/session,
+`attached_existing`, and `tab_new` with duplicate launch disabled. Guard
+`document-e29841bf-current-chat-mode-r1`, response
+`resp_idem_b5fba9e7f9e5fe35bdfcd1b67d6c8379`, preserved complete round-one
+prompt and Markdown/DOCX/PDF provenance. Installed logs prove the repaired
+default Chat composer was accepted. The run then failed before upload or
+prompt submission because `Current Pro` selection opened the conversation
+actions menu. It produced no answer, verdict, score, review record/chat,
+conversation URL, final-answer link, attachment receipt, or learning sync.
+Its lease released, exact task target
+`5C9677824847970E92F68D58EAD0635A` is absent from the retained ten-tab
+inventory, and no replay occurred.
+
 ## 2026-09-25 | Current ChatGPT local-file action
 
 Plan 0370 follows Plan 0369 without replaying its terminal guard. The retained
