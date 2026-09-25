@@ -16,8 +16,84 @@ describe('browser model selection matchers', () => {
     const expression = buildModelSelectionExpressionForTest('gpt-5.2-pro');
     expect(expression).toContain('[data-testid=\\"model-switcher-dropdown-button\\"]');
     expect(expression).toContain('button.__composer-pill');
+    expect(expression).toContain('button[aria-label=\\"Select ChatGPT model\\"]');
     expect(expression).toContain('button[aria-label=\\"Switch model\\"]');
-    expect(expression).toContain('button[aria-label*=\\"Model\\"]');
+    expect(expression).not.toContain('button[aria-label*=\\"Model\\"]');
+    expect(expression).not.toContain('button[aria-haspopup=\\"menu\\"][aria-label*=\\"Model\\"]');
+  });
+
+  it('prefers the exact current composer model trigger over a project-chat action', async () => {
+    let modelClicks = 0;
+    let actionClicks = 0;
+    class FakeElement {
+      constructor(public textContent: string, private readonly kind: 'model' | 'action') {}
+      getAttribute(name: string) {
+        if (name === 'aria-label') {
+          return this.kind === 'model'
+            ? 'Select ChatGPT model'
+            : 'Actions for Review ModelLabs Evidence';
+        }
+        return null;
+      }
+      dispatchEvent() {
+        if (this.kind === 'model') modelClicks += 1;
+        else actionClicks += 1;
+        return true;
+      }
+    }
+    const modelButton = new FakeElement('5.6 Pro', 'model');
+    const actionButton = new FakeElement('', 'action');
+    const context: Record<string, unknown> = {
+      setTimeout,
+      performance: { now: () => Date.now() },
+      document: {
+        querySelector: (selector: string) => {
+          if (selector === 'button[aria-label="Select ChatGPT model"]') return modelButton;
+          if (selector.includes('aria-label*="Model"')) return actionButton;
+          return null;
+        },
+      },
+    };
+    const result = runInNewContext(buildModelSelectionExpressionForTest('5.6Pro'), context) as Promise<{
+      status: string; label: string;
+    }>;
+    await expect(result).resolves.toEqual({ status: 'already-selected', label: '5.6 Pro' });
+    expect(modelClicks).toBe(0);
+    expect(actionClicks).toBe(0);
+  });
+
+  it('rejects a project-chat action when no exact model trigger is present', async () => {
+    vi.useFakeTimers();
+    try {
+      let actionClicks = 0;
+      class FakeElement {
+        textContent = '';
+        getAttribute(name: string) {
+          return name === 'aria-label' ? 'Actions for Review ModelLabs Evidence' : null;
+        }
+        dispatchEvent() {
+          actionClicks += 1;
+          return true;
+        }
+      }
+      const actionButton = new FakeElement();
+      const context: Record<string, unknown> = {
+        setTimeout,
+        performance: { now: () => Date.now() },
+        document: {
+          querySelector: (selector: string) =>
+            selector.includes('aria-label*="Model"') ? actionButton : null,
+        },
+      };
+      const result = runInNewContext(buildModelSelectionExpressionForTest('Current Pro'), context) as Promise<{
+        status: string;
+      }>;
+      await vi.advanceTimersByTimeAsync(13_000);
+      await expect(result).resolves.toEqual({ status: 'button-missing' });
+      expect(actionClicks).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('waits for the current model picker to mount before failing closed', () => {

@@ -7,6 +7,14 @@
 Status: active
 Lane: P01
 
+- Active current ChatGPT model-picker trigger repair:
+  [Plan 0372](docs/dev/plans/0372-2026-09-25-current-model-picker-trigger-scope.md).
+  Plan 0371 proved the default Chat composer, then exposed a distinct pre-send
+  failure: the Chat model selector opened the conversation-actions menu. This
+  slice will bind the true current model-picker control, reject the competing
+  chat-actions trigger, preserve retained Chrome, and run exactly one new
+  provenance-complete guard after personal publication and installation.
+
 - Closed current Chat-mode default-composer repair:
   [Plan 0371](docs/dev/plans/0371-2026-09-25-current-chat-mode-default-composer.md).
   Personal commit `e29841bf` recognizes only the observed editable

@@ -334,6 +334,11 @@ describe('service registry manifest helpers', () => {
     expect(selectors.input).toEqual(
       expect.arrayContaining(['textarea[data-id="prompt-textarea"]', '#prompt-textarea']),
     );
+    expect(selectors.modelButton).toContain('button[aria-label="Select ChatGPT model"]');
+    expect(selectors.modelButton).not.toContain('button[aria-label*="Model"]');
+    expect(selectors.modelButton).not.toContain(
+      'button[aria-haspopup="menu"][aria-label*="Model"]',
+    );
     expect(selectors.fileInput[0]).toBe('#upload-files');
     expect(selectors.fileInput).toEqual(
       expect.arrayContaining(['input[type="file"]', 'input[type="file"][data-testid*="file"]']),

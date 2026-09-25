@@ -1,5 +1,18 @@
 # RUNBOOK
 
+## 2026-09-25 | Current ChatGPT model-picker trigger scope
+
+Plan 0372 follows Plan 0371 without replaying its terminal guard. The retained
+route and default Chat composer are proved; the independent blocker is that the
+Chat model selector accepted a generic trigger and opened the conversation-
+actions menu. Start with a fresh no-launch access plan and one disposable
+task-owned retained-browser tab. Inspect only bounded control attributes and
+ancestry, submit no prompt or upload, and release only that exact tab. Then
+tighten the provider-owned trigger predicate, add provider-free positive and
+negative regressions, validate, publish through personal `1baker`, install
+once without replacing retained Chrome, and run exactly one new round-one
+`--require-learning-trace` document guard.
+
 ## 2026-09-25 | Current Chat-mode default composer
 
 Plan 0371 follows Plan 0370 without replaying its terminal guard. The retained

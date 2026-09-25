@@ -1,3 +1,13 @@
+## 2026-09-25 | Inspect and repair the current Chat model-picker trigger
+
+Plan 0372 owns the next bounded blocker from Plan 0371. The prior guard proved
+the exact default-Chat composer, then failed before upload or prompt submission
+because model selection opened the chat's conversation-actions menu. Use a
+fresh no-launch plan and one disposable task-owned tab to compare the actual
+model control with the competing trigger. Preserve retained Chrome and derive
+the repair from exact bounded DOM evidence; do not replay the prior response or
+guard identity.
+
 ## 2026-09-25 | Inspect and repair the current default Chat composer
 
 Plan 0371 owns the next bounded blocker from Plan 0370. The prior guard opened

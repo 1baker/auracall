@@ -278,6 +278,15 @@ Keep these provider-owned contracts separate:
   slider, optional **Show advanced options** expansion, exact **Model ...**
   submenu, and final Work model `menuitemradio`.
 
+The current Chat picker trigger has the exact accessible label
+`Select ChatGPT model`. Keep that exact provider-owned selector ahead of the
+older test-id, composer-pill, and `Switch model` compatibility selectors. Do
+not use a generic case-sensitive `aria-label*="Model"` trigger: project-chat
+action buttons such as `Actions for Review ModelLabs Evidence` can satisfy it
+outside the composer while the real lowercase-`model` control does not. When
+the exact picker is absent, fail closed instead of opening a conversation
+actions menu.
+
 Do not generalize the Work path into the Chat picker. If current provider DOM
 does not expose a distinct Work selector, fail closed and collect bounded DOM
 diagnostics. For the provider-free suite, live-effect gates, and cleanup
