@@ -23034,3 +23034,10 @@ browser-stage lifecycle observability, not transcript truncation.
   chip match for every expected filename with no upload indicator. Later prompt/send and sent-turn
   attachment gates remain strict. Source tests and build pass; live proof is
   still pending, and the old failed response is unchanged.
+- 2026-09-25: A live retained browser and listening session daemon do not prove
+  that a brokered `tab_new` will reuse them. Guard
+  `document-8c118aaa-daemon-rebound-r1` preserved its complete learning trace
+  and document packet, but the service request exposed an unapplied session
+  launch binding and failed closed before tab creation. Keep browser identity,
+  daemon health, and request-time binding as separate acceptance gates; never
+  convert an attach failure into an auto-launch fallback or replay the guard.

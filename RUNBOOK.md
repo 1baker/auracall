@@ -1,5 +1,28 @@
 # RUNBOOK
 
+## 2026-09-25 | Retained daemon forward review
+
+Plan 0367 owns the exact successor to the Plan 0366 daemon-connection blocker.
+Read-only inspection preserved Chrome PID `1829010`, start token `3619174`, and
+CDP port `39415`. Agent Browser reports the retained browser viable; the exact
+session daemon now listens on loopback port `45281` and returns successful
+service status. A fresh no-launch access plan selects that browser and session,
+requires `tab_new` reuse, and prohibits a duplicate process. No browser launch,
+replacement, close, or lifecycle transfer was used.
+
+Guard `document-8c118aaa-daemon-rebound-r1`, response
+`resp_idem_eeb1b6db2aaf43f2ddba448db4ea4f76`, preserved the immutable origin
+prompt, exact generation prompt, author `codex`, Markdown candidate, DOCX, and
+PDF. Agent Browser rejected its `tab_new` before creating a task tab: the
+session route had not applied the required stealth launch binding, so the
+broker refused to auto-launch or fall back to another Chromium build. The
+failed job owns no task tab or browser lease. There is no browser verdict,
+score, review artifact/chat, Codex final-answer link, or ModelLabs learning
+sync. Chrome PID/start token `1829010`/`3619174` and daemon PID/start token
+`1307873`/`10815149` remained unchanged. Preserve this terminal result without
+replay; route repair needs to bind the already-validated retained browser proof
+to AuraCall's `tab_new` request rather than invoke auto-launch.
+
 ## 2026-09-25 | Current Premium model intent
 
 Plan 0366 owns the narrow successor to the Plan 0365 forward-review blocker.

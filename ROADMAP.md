@@ -7,6 +7,15 @@
 Status: active
 Lane: P01
 
+- Closed retained-daemon forward review:
+  [Plan 0367](docs/dev/plans/0367-2026-09-25-retained-daemon-forward-review.md).
+  Guard `document-8c118aaa-daemon-rebound-r1` preserved its complete learning
+  trace and document set, then failed before tab creation because `tab_new`
+  could not apply the required stealth binding and correctly refused an
+  auto-launch fallback. No verdict, score, final-answer link, or learning sync
+  exists. Retained Chrome and its daemon stayed unchanged; the guard was not
+  replayed.
+
 - Closed current Premium model-intent repair:
   [Plan 0366](docs/dev/plans/0366-2026-09-25-current-premium-model-intent.md).
   Personal commit `8c118aaa` is published and installed; the stable
