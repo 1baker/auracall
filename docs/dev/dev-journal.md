@@ -20,6 +20,17 @@ to become visible and center-hit-testable, and preserves trusted-pointer,
 menu/action, and chooser gates. No additional provider submission is allowed
 in this slice.
 
+Personal commit `c75f630b` is published and installed. Seven focused/adjacent
+suites pass 114 tests; typecheck, production build, touched-file lint, diff
+hygiene, and CodeGraph sync/status pass. The full suite passes 3,549 tests with
+55 skips, repeats the two existing raw-route contract failures, and its two
+additional load-sensitive timing failures pass 1/1 and 7/7 when rerun alone.
+Plan audit repeats only its three existing findings. The three touched built
+artifacts exactly match their installed copies. AuraCall API is healthy as PID
+`3009591`; retained Chrome kept PID/start token `1829010`/`3619174`. No second
+provider submission was made, so a later fresh guard identity remains the live
+upload, review, and ModelLabs learning-sync acceptance gate.
+
 ## 2026-09-25 | Retry the exact attachment opener after project hydration
 
 Plan 0375 owns the next bounded blocker from the installed Plan 0374 rework.

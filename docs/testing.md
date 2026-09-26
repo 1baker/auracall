@@ -1,6 +1,6 @@
 # Testing quickstart
 
-- Current ChatGPT attachment-opener readiness (source candidate): run `pnpm exec vitest run tests/browser/chatgptComposerTool.test.ts tests/services/registry.test.ts --maxWorkers 1`. The provider selector binds
+- Current ChatGPT attachment-opener readiness (installed repair): run `pnpm exec vitest run tests/browser/chatgptComposerTool.test.ts tests/services/registry.test.ts --maxWorkers 1`. The provider selector binds
   the exact current `Add files and more` label alongside the legacy ID, and the
   trusted-pointer preparation gives each of its two bounded exact attempts at
   most 15 seconds inside the page for that exact visible, enabled, center-hit-

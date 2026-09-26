@@ -23197,3 +23197,9 @@ browser-stage lifecycle observability, not transcript truncation.
   center hit-test, trusted click, exact menu/action, and single unrestricted
   chooser checks. The failed guard has no reviewer output or learning sync and
   was not replayed.
+  Personal commit `c75f630b` is published and installed with exact parity for
+  the three touched built artifacts. Focused tests, typecheck, build, touched-
+  file lint, CodeGraph, and diff hygiene pass. The full suite retains only its
+  two existing raw-route failures after both load-sensitive failures pass in
+  isolation. API PID `3009591` is healthy, retained Chrome PID/start token
+  `1829010`/`3619174` is unchanged, and no additional provider request ran.

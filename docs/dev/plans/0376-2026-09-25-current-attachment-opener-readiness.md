@@ -1,6 +1,6 @@
 # Current ChatGPT Attachment Opener Readiness | 0376-2026-09-25
 
-State: OPEN
+State: CLOSED
 Lane: P01
 
 ## Objective
@@ -59,19 +59,37 @@ that composer later than AuraCall's two immediate opener attempts.
 
 ## Acceptance Criteria
 
-- [ ] The exact current `Add files and more` button is accepted alongside the
+- [x] The exact current `Add files and more` button is accepted alongside the
       legacy attachment opener ID; stale ID absence no longer causes a miss.
-- [ ] A newly opened project gets at most two bounded 15-second page-local
+- [x] A newly opened project gets at most two bounded 15-second page-local
       windows for the exact opener to mount before AuraCall fails closed.
-- [ ] Visibility, viewport, center hit-test, trusted pointer receipt, exact
+- [x] Visibility, viewport, center hit-test, trusted pointer receipt, exact
       menu/action labels, and the one unrestricted chooser remain required.
-- [ ] Focused tests, typecheck, production build, touched-file lint, diff
+- [x] Focused tests, typecheck, production build, touched-file lint, diff
       hygiene, plan audit, and CodeGraph sync pass or disclose exact existing
       findings.
-- [ ] Personal GitHub publication is committed, pushed through isolated
+- [x] Personal GitHub publication is committed, pushed through isolated
       `1baker` routing, re-fetched, clean, and zero ahead/behind.
-- [ ] The installed runtime matches the published build and retained Chrome
+- [x] The installed runtime matches the published build and retained Chrome
       keeps its original process identity.
+
+## Closeout Evidence
+
+- Personal commit `c75f630b` implements the semantic opener and bounded
+  readiness repair and is published through isolated `1baker` routing.
+- Seven focused/adjacent suites pass 114 tests. Typecheck, production build,
+  touched-file lint, diff hygiene, and CodeGraph sync/status pass.
+- The full suite passes 3,549 tests with 55 skips. Its two raw-route contract
+  failures are the existing repository finding; its two additional timing
+  failures pass 1/1 and 7/7 in isolated reruns. Plan audit repeats only the
+  same raw-route finding and two Plan 0357 header findings.
+- Built and installed `chatgptComposerTool.js`, `chatgpt.js`, and the bundled
+  service manifest have matching SHA-256 digests. AuraCall API is healthy as
+  PID `3009591`; retained Chrome kept PID/start token
+  `1829010`/`3619174`.
+- No additional provider submission occurred. Guard
+  `document-3df2aab4-hydration-acceptance-r1` remains terminal without reviewer
+  output or ModelLabs learning sync, and both task-owned tabs remain closed.
 
 ## Definition Of Done
 
