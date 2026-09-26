@@ -23186,3 +23186,14 @@ browser-stage lifecycle observability, not transcript truncation.
   AuraCall is healthy as PID `2470517`, retained Chrome is unchanged, and the
   guard task tab is closed. A new independent guard is still required for a
   successful live end-to-end proof.
+- 2026-09-25: Guard `document-3df2aab4-hydration-acceptance-r1` exposed two
+  distinct current-workbench facts before any file upload or prompt submission:
+  a project page can reach its final title before mounting the composer, and
+  the mounted attachment opener may have the exact accessible label `Add files
+  and more` without the former `#composer-plus-btn` ID. The provider selector
+  now binds that exact semantic control alongside the legacy ID, and trusted
+  pointer preparation gives each of the two existing exact attempts one bounded
+  15-second page-local readiness window while retaining visibility, viewport,
+  center hit-test, trusted click, exact menu/action, and single unrestricted
+  chooser checks. The failed guard has no reviewer output or learning sync and
+  was not replayed.

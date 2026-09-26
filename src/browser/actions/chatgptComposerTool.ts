@@ -84,6 +84,7 @@ const CHATGPT_LEGACY_LIBRARY_ACTION_LABEL = 'add from library';
 const CHATGPT_CURRENT_LIBRARY_ACTION_LABEL = 'add library files';
 const CHATGPT_CURRENT_LOCAL_FILE_INPUT_LABEL = 'attach files';
 const CHATGPT_CURRENT_LOCAL_FILE_INPUT_SELECTOR = 'input[type="file"][aria-label="Attach files"]';
+const CHATGPT_ATTACHMENT_OPENER_READY_TIMEOUT_MS = 15_000;
 
 export async function ensureChatgptComposerTool(
   client: ChromeClient,
@@ -529,41 +530,63 @@ async function openComposerPopoverWithTrustedPointer(
   await input.dispatchKeyEvent({ type: 'keyUp', key: 'Escape', code: 'Escape' }).catch(() => undefined);
   const stateKey = '__auracallChatgptAttachmentPointer';
   const prepared = await runtime.evaluate({
-    expression: `(() => {
+    expression: `(async () => {
       const stateKey = ${JSON.stringify(stateKey)};
       const prior = window[stateKey];
       prior?.controller?.abort?.();
       delete window[stateKey];
-      const match = document.querySelector(${JSON.stringify(ATTACHMENT_MENU_SELECTOR)});
-      if (!(match instanceof HTMLElement)) return { ok: false, reason: 'target-not-found' };
-      const disabled = match.matches(':disabled') || match.getAttribute('aria-disabled') === 'true';
-      if (disabled) return { ok: false, reason: 'target-disabled' };
-      match.scrollIntoView({ block: 'center', inline: 'center' });
-      const style = getComputedStyle(match);
-      const rect = match.getBoundingClientRect();
-      const visible = rect.width > 0 && rect.height > 0
-        && style.display !== 'none'
-        && style.visibility !== 'hidden'
-        && style.pointerEvents !== 'none';
-      if (!visible) return { ok: false, reason: 'target-not-visible' };
-      const x = rect.left + (rect.width / 2);
-      const y = rect.top + (rect.height / 2);
-      if (x < 0 || y < 0 || x > innerWidth || y > innerHeight) {
-        return { ok: false, reason: 'target-outside-viewport' };
+      const deadline = performance.now() + ${CHATGPT_ATTACHMENT_OPENER_READY_TIMEOUT_MS};
+      let match = null;
+      let center = null;
+      let lastReason = 'target-not-found';
+      while (performance.now() < deadline) {
+        const candidate = document.querySelector(${JSON.stringify(ATTACHMENT_MENU_SELECTOR)});
+        if (candidate instanceof HTMLElement) {
+          const disabled = candidate.matches(':disabled') || candidate.getAttribute('aria-disabled') === 'true';
+          if (disabled) {
+            lastReason = 'target-disabled';
+          } else {
+            candidate.scrollIntoView({ block: 'center', inline: 'center' });
+            const style = getComputedStyle(candidate);
+            const rect = candidate.getBoundingClientRect();
+            const visible = rect.width > 0 && rect.height > 0
+              && style.display !== 'none'
+              && style.visibility !== 'hidden'
+              && style.pointerEvents !== 'none';
+            if (!visible) {
+              lastReason = 'target-not-visible';
+            } else {
+              const x = rect.left + (rect.width / 2);
+              const y = rect.top + (rect.height / 2);
+              if (x < 0 || y < 0 || x > innerWidth || y > innerHeight) {
+                lastReason = 'target-outside-viewport';
+              } else {
+                const hit = document.elementFromPoint(x, y);
+                if (hit === candidate || (hit instanceof Node && candidate.contains(hit))) {
+                  match = candidate;
+                  center = { x, y };
+                  break;
+                }
+                lastReason = 'target-obscured';
+              }
+            }
+          }
+        } else {
+          lastReason = 'target-not-found';
+        }
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
-      const hit = document.elementFromPoint(x, y);
-      if (!(hit === match || (hit instanceof Node && match.contains(hit)))) {
-        return { ok: false, reason: 'target-obscured' };
-      }
+      if (!(match instanceof HTMLElement) || !center) return { ok: false, reason: lastReason };
       const controller = new AbortController();
       const state = { controller, result: null };
       window[stateKey] = state;
       match.addEventListener('click', (event) => {
         state.result = { trusted: event.isTrusted };
       }, { capture: true, once: true, signal: controller.signal });
-      return { ok: true, center: { x, y } };
+      return { ok: true, center };
     })()`,
     returnByValue: true,
+    awaitPromise: true,
   });
   const pointerTarget = prepared.result?.value as
     | { ok?: boolean; center?: { x?: number; y?: number } }

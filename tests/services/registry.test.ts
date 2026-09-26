@@ -343,7 +343,9 @@ describe('service registry manifest helpers', () => {
     expect(selectors.fileInput).toEqual(
       expect.arrayContaining(['input[type="file"]', 'input[type="file"][data-testid*="file"]']),
     );
-    expect(selectors.attachmentMenu[0]).toBe('#composer-plus-btn');
+    expect(selectors.attachmentMenu[0]).toBe(
+      '#composer-plus-btn, button[aria-label="Add files and more"]',
+    );
   });
 
   test('resolves chatgpt adapter dom selectors through the bundled manifest', () => {

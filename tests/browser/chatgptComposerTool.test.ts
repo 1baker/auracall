@@ -192,7 +192,7 @@ describe('chatgpt composer tool selection', () => {
           },
         };
       }
-      if (source.includes('const stateKey =') && source.includes('match.scrollIntoView')) {
+      if (source.includes('const stateKey =') && source.includes('candidate.scrollIntoView')) {
         events.push('trusted-target');
         return {
           result: {
@@ -281,7 +281,7 @@ describe('chatgpt composer tool selection', () => {
           },
         };
       }
-      if (source.includes('const stateKey =') && source.includes('match.scrollIntoView')) {
+      if (source.includes('const stateKey =') && source.includes('candidate.scrollIntoView')) {
         return { result: { value: { ok: true, center: { x: 24, y: 24 } } } };
       }
       if (source.includes('const finish =') && source.includes('performance.now() + 2500')) {
@@ -342,7 +342,7 @@ describe('chatgpt composer tool selection', () => {
       if (source.includes('data-auracall-chatgpt-composer-menu')) {
         return { result: { value: null } };
       }
-      if (source.includes('const stateKey =') && source.includes('match.scrollIntoView')) {
+      if (source.includes('const stateKey =') && source.includes('candidate.scrollIntoView')) {
         targetReads += 1;
         return { result: { value: { ok: false, reason: 'target-not-found' } } };
       }
@@ -397,7 +397,7 @@ describe('chatgpt composer tool selection', () => {
           },
         };
       }
-      if (source.includes('const stateKey =') && source.includes('match.scrollIntoView')) {
+      if (source.includes('const stateKey =') && source.includes('candidate.scrollIntoView')) {
         targetCall = params;
         return {
           result: {
@@ -454,6 +454,9 @@ describe('chatgpt composer tool selection', () => {
 
       expect(targetCall).toMatchObject({ returnByValue: true });
       expect(targetCall).not.toHaveProperty('timeout');
+      expect(targetCall).toMatchObject({ awaitPromise: true });
+      expect(String(targetCall?.expression)).toContain('performance.now() + 15000');
+      expect(String(targetCall?.expression)).toContain('button[aria-label=\\"Add files and more\\"]');
       expect(readinessCall).toMatchObject({ returnByValue: true, awaitPromise: true });
       expect(readinessCall).not.toHaveProperty('timeout');
     } finally {

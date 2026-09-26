@@ -1,3 +1,25 @@
+## 2026-09-25 | Wait for the current semantic attachment opener
+
+Plan 0376 owns the next bounded blocker from the installed Plan 0375 repair.
+Fresh guard `document-3df2aab4-hydration-acceptance-r1`, response
+`resp_idem_312b3ad596cf03e2c158dfd0f25ffdd3`, preserved its immutable prompt
+pair, round-one author/parent lineage, Markdown/DOCX/PDF packet, and required
+learning trace. It reused the exact retained project route but failed closed
+before upload or prompt submission with `menu-not-found`; no answer, verdict,
+score, review record, conversation URL, attachment receipt, exact final-answer
+link, or ModelLabs learning sync exists.
+
+A no-launch task-owned diagnostic proved the project shell can report its final
+title before mounting the composer. Once mounted, that composer had one visible
+button labeled exactly `Add files and more`, one unrestricted multiple `Attach
+files` input, and no `#composer-plus-btn`. The diagnostic and guard tabs were
+physically closed without replacing the retained browser. The bounded source
+repair keeps the legacy ID only as an explicit compatibility alternative,
+gives each of the two bounded exact attempts a page-local window for the opener
+to become visible and center-hit-testable, and preserves trusted-pointer,
+menu/action, and chooser gates. No additional provider submission is allowed
+in this slice.
+
 ## 2026-09-25 | Retry the exact attachment opener after project hydration
 
 Plan 0375 owns the next bounded blocker from the installed Plan 0374 rework.

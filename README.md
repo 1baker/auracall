@@ -68,6 +68,13 @@ For retained browsers, the workbench's short attachment-menu hydration wait is
 enforced inside the page rather than used as the native broker command timeout.
 This prevents normal broker authority or transport latency from being reported
 as a false 2.5-second UI failure while preserving the same page-readiness check.
+Each of the two bounded exact-opener attempts on a new project page now waits
+inside the page for at most 15 seconds for the attachment control to mount. The
+current opener is identified by its exact accessible label, `Add files and
+more`, while the legacy `#composer-plus-btn` identity remains an explicit
+compatibility alternative. The flow still requires visibility, a center
+hit-test, a trusted pointer event, the exact local-file menu action, and one
+unrestricted `Attach files` chooser before upload.
 
 Configured browser requests may set `metadata.browserPromptTransport` to
 `inline_required` when the complete request must remain in the browser

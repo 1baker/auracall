@@ -79,7 +79,7 @@ const CHATGPT_SELECTORS = resolveBundledServiceSelectors('chatgpt', {
     'input[type="file"][data-testid*="file"]',
   ],
   attachmentMenu: [
-    '#composer-plus-btn',
+    '#composer-plus-btn, button[aria-label="Add files and more"]',
     'button[data-testid="composer-plus-btn"]',
     'button[aria-label*="Attach"]',
     'button[aria-label*="Upload"]',

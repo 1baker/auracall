@@ -1,5 +1,13 @@
 # Testing quickstart
 
+- Current ChatGPT attachment-opener readiness (source candidate): run `pnpm exec vitest run tests/browser/chatgptComposerTool.test.ts tests/services/registry.test.ts --maxWorkers 1`. The provider selector binds
+  the exact current `Add files and more` label alongside the legacy ID, and the
+  trusted-pointer preparation gives each of its two bounded exact attempts at
+  most 15 seconds inside the page for that exact visible, enabled, center-hit-
+  testable control. The subsequent trusted-event, exact menu/action, and
+  unrestricted chooser gates remain unchanged. Provider-free tests are not a
+  live upload or review result.
+
 - Attached failed-response observation (source candidate): run
   `pnpm exec vitest run tests/runtime.responseRecoveryObservation.test.ts tests/browser/recoveryResponseBinding.test.ts tests/browser/attachmentsCompletion.test.ts --maxWorkers 1`.
   Fixtures require a post-submit receipt with exact saved files and user ID,
